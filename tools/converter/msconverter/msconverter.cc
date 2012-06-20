@@ -231,6 +231,16 @@ void saveState(Connection *con, MeasurementSet &ms) {
     NULL
   };
 
+  enum {
+    STATE_ID = 1,
+    SIG,
+    REF,
+    CAL,
+    LOAD,
+    SUB_SCAN,
+    OBS_MODE,
+    FLAG_ROW
+  };
   string sql = "insert into STATE (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
@@ -238,14 +248,14 @@ void saveState(Connection *con, MeasurementSet &ms) {
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
     int pos = 0;
-    stmt->setInt(++pos, i); // STATE_ID
-    stmt->setInt(++pos, cols.sig()(i)); // SIG
-    stmt->setInt(++pos, cols.ref()(i)); // REF
-    stmt->setDouble(++pos, cols.cal()(i)); // CAL
-    stmt->setDouble(++pos, cols.load()(i)); // LOAD
-    stmt->setInt(++pos, cols.subScan()(i)); // SUB_SCAN
-    stmt->setTransientString(++pos, cols.obsMode()(i).c_str()); // OBS_MODE
-    stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
+    stmt->setInt(STATE_ID, i);
+    stmt->setInt(SIG, cols.sig()(i));
+    stmt->setInt(REF, cols.ref()(i));
+    stmt->setDouble(CAL, cols.cal()(i));
+    stmt->setDouble(LOAD, cols.load()(i));
+    stmt->setInt(SUB_SCAN, cols.subScan()(i));
+    stmt->setTransientString(OBS_MODE, cols.obsMode()(i).c_str());
+    stmt->setInt(FLAG_ROW, cols.flagRow()(i));
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
   }
