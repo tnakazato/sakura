@@ -247,7 +247,6 @@ void saveState(Connection *con, MeasurementSet &ms) {
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    int pos = 0;
     stmt->setInt(STATE_ID, i);
     stmt->setInt(SIG, cols.sig()(i));
     stmt->setInt(REF, cols.ref()(i));
@@ -256,7 +255,6 @@ void saveState(Connection *con, MeasurementSet &ms) {
     stmt->setInt(SUB_SCAN, cols.subScan()(i));
     stmt->setTransientString(OBS_MODE, cols.obsMode()(i).c_str());
     stmt->setInt(FLAG_ROW, cols.flagRow()(i));
-    assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
   }
 }
