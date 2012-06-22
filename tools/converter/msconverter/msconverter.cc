@@ -802,7 +802,7 @@ int main(int argc, char const * const argv[]) {
     usage();
     return 1;
   }
-  cout << prefix << endl;
+  cerr << prefix << endl;
   double start = currenttime();
   conv(prefix, argv[argStart], argv[argStart + 1]);
   double end = currenttime();
