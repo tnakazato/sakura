@@ -1,7 +1,7 @@
 
 SRCROOT=.
 
-SUBDIRS=c++/lib tools/converter/msconverter
+SUBDIRS=sql c++/lib tools/converter/msconverter
 
 .PHONY: all install clean
 

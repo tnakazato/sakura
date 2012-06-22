@@ -1,6 +1,8 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <getopt.h>
 #include <cassert>
 #include <cstring>
 #include <string>
@@ -661,15 +663,86 @@ double currenttime() {
   return tv.tv_sec + ((double)tv.tv_usec) / 1000000.;
 }
 
-void conv(char const *msfile, char const *basename) {
+char *readFileContent(char const *filename) {
+  char *buf = NULL;
+  ifstream fs(filename);
+  try {
+    if (! fs) {
+      throw "Could not open file.";
+    }
+    streampos begPos = fs.tellg();
+    fs.seekg(0, fstream::end);
+    streampos eofPos = fs.tellg();
+    size_t size = eofPos - begPos;
+
+    fs.clear();
+    fs.seekg(0, fstream::beg);
+ 
+    buf = new char[size + 1];
+    memset(buf, 0, size + 1);
+    if (! fs.read(buf, size)) {
+      throw "failed to read.";
+    }
+    if (size != fs.gcount()) {
+      throw "failed to read.";
+    }
+  } catch (...) {
+    delete[] buf;
+    fs.close();
+    throw;
+  }
+  fs.close();
+  return buf;
+}
+
+void conv(char const *prefix, char const *msfile, char const *basename) {
   string msm = basename;
   msm += "m.db";
   cout << msm << endl;
   string mst = basename;
   mst += "t.db";
+
+  char const sql[] = "/sql/";
   // create empty master db from msm
+  {
+    char const ddl_file[] = "MSM.ddl";
+    size_t ddl_path_size = strlen(prefix) + strlen(sql) + strlen(ddl_file) + 1;
+    char ddl_path[ddl_path_size];
+    snprintf(ddl_path, ddl_path_size, "%s%s%s", prefix, sql, ddl_file);
+    cerr << ddl_path << endl;
+    char *msm_ddl = readFileContent(ddl_path);
+    try {
+      string dbfile = "file:";
+      dbfile += msm;
+      unique_ptr<Connection> con(Connection::open(dbfile.c_str()));
+      con->execute(msm_ddl);
+    } catch (...) {
+      delete[] msm_ddl;
+      throw;
+    }
+    delete[] msm_ddl;
+  }
+    
 
   // create empty transaction db from mst
+  {
+    char const ddl_file[] = "MST.ddl";
+    size_t ddl_path_size = strlen(prefix) + strlen(sql) + strlen(ddl_file) + 1;
+    char ddl_path[ddl_path_size];
+    snprintf(ddl_path, ddl_path_size, "%s%s%s", prefix, sql, ddl_file);
+    cerr << ddl_path << endl;
+    char *mst_ddl = readFileContent(ddl_path);
+    try {
+      string dbfile = "file:";
+      dbfile += mst;
+      unique_ptr<Connection> con(Connection::open(dbfile.c_str()));
+      con->execute(mst_ddl);
+    } catch (...) {
+      delete[] mst_ddl;
+      throw;
+    }
+    delete[] mst_ddl;
+  }
 
   // open empty transaction db attached with master db.
   {
@@ -684,18 +757,54 @@ void conv(char const *msfile, char const *basename) {
   }
 }
 
+char const *progName = "";
+
+void usage() {
+  cerr << "Usage: " << progName << " [options] MSFile basename\n";
+  cerr << "options:: \n";
+  cerr << "\t--prefix path\tA path where sakura is installed.\n";
+  cerr << "\t-p path\n";
 }
 
-int main(int argc, char const *argv[]) { 
-  char const *const progName = argv[0];
-  char *errmsg; 
+}
 
-  if (argc != 3) {
-    cerr << "Usage: " << progName << " MSFile basename\n";
+int main(int argc, char const * const argv[]) { 
+  progName = argv[0];
+  char const *prefix = "/opt/sakura";
+
+  static struct option const long_options[] = {
+    {"prefix", 1, NULL, 'p'},
+    {0, 0, NULL, 0}
+  };
+
+  for (;;) {
+    int option_index = 0;
+    int optCh = getopt_long (argc, const_cast<char *const *>(argv), "p:",
+			     long_options, &option_index);
+    if (optCh == -1) {
+      break;
+    }
+    switch (optCh) {
+    case 'p':
+      prefix = optarg;
+      break;
+    case '?':
+      usage();
+      return 1;
+    default:
+      assert(false);
+      return 1;
+    }
+  }
+
+  int argStart = optind;
+  if (argc - argStart != 2) {
+    usage();
     return 1;
   }
+  cout << prefix << endl;
   double start = currenttime();
-  conv(argv[1], argv[2]);
+  conv(prefix, argv[argStart], argv[argStart + 1]);
   double end = currenttime();
   cout << end - start << "sec\n";
   return 0;
