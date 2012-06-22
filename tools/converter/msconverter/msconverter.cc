@@ -102,6 +102,7 @@ void savePol(Connection *con, MeasurementSet &ms) {
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -178,6 +179,7 @@ void saveSw(Connection *con, MeasurementSet &ms) {
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -213,6 +215,7 @@ void saveDataDesc(Connection *con, MeasurementSet &ms) {
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -258,6 +261,7 @@ void saveState(Connection *con, MeasurementSet &ms) {
     stmt->setTransientString(OBS_MODE, cols.obsMode()(i).c_str());
     stmt->setInt(FLAG_ROW, cols.flagRow()(i));
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -305,6 +309,7 @@ void saveField(Connection *con, MeasurementSet &ms) {
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -395,6 +400,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
     bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.receptorAngle()(i));
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -472,6 +478,7 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -640,6 +647,58 @@ void saveMain(Connection *con, MeasurementSet &ms) {
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
+  }
+}
+
+void saveFlagCmd(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSFlagCmd &tab = ms.flagCmd();
+  ROMSFlagCmdColumns const cols(tab);
+
+  char const *dbcols[] = {
+    "FLAG_CMD_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "TIME", // NOT NULL,
+    "INTERVAL", // REAL NOT NULL,
+    "FLAG_TYPE", // TEXT NOT NULL,
+    "REASON", // TEXT NOT NULL,
+    "LEVEL", // INTEGER NOT NULL,
+    "SEVERITY", // INTEGER NOT NULL,
+    "APPLIED", // INTEGER NOT NULL, bool
+    "COMMAND", // TEXT NOT NULL
+    NULL
+  };
+
+  enum {
+    FLAG_CMD_ID = 1,
+    TIME,
+    INTERVAL,
+    FLAG_TYPE,
+    REASON,
+    LEVEL,
+    SEVERITY,
+    APPLIED,
+    COMMAND
+  };
+
+  string sql = "insert into FLAG_CMD (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    stmt->setInt(FLAG_CMD_ID, i);
+    stmt->setDouble(TIME, cols.time()(i));
+    stmt->setDouble(INTERVAL, cols.interval()(i));
+    stmt->setTransientString(FLAG_TYPE, cols.type()(i).c_str());
+    stmt->setTransientString(REASON, cols.reason()(i).c_str());
+    stmt->setInt(LEVEL, cols.level()(i));
+    stmt->setInt(SEVERITY, cols.severity()(i));
+    stmt->setInt(APPLIED, cols.applied()(i) ? 1 : 0);
+    stmt->setTransientString(COMMAND, cols.command()(i).c_str());
+    int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -647,7 +706,7 @@ void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     // savePol, saveSw, saveDataDesc,
-    saveState,
+    saveState, saveFlagCmd,
     // saveField, saveFeed, saveAntenna, saveMain,
     NULL
   };
@@ -685,7 +744,7 @@ char *readFileContent(char const *filename) {
     if (! fs.read(buf, size)) {
       throw "failed to read.";
     }
-    if (size != fs.gcount()) {
+    if (size != static_cast<size_t>(fs.gcount())) {
       throw "failed to read.";
     }
   } catch (...) {
@@ -725,7 +784,6 @@ void conv(char const *prefix, char const *msfile, char const *basename) {
     delete[] msm_ddl;
   }
     
-
   // create empty transaction db from mst
   {
     char const ddl_file[] = "MST.ddl";
