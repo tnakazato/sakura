@@ -22,8 +22,8 @@ vpath %.h ../include
 all: $(SONAME)$(SOVER)
 	-mkdir -p $(SRCROOT)/dist/lib
 	cp $(SONAME)$(SOVER) $(SRCROOT)/dist/lib
-	ln -s $(SRCROOT)/dist/lib/$(SONAME)$(SOVER) $(SRCROOT)/dist/lib/$(SONAME)
-	ln -s $(SRCROOT)/dist/lib/$(SONAME) $(SRCROOT)/dist/lib/$(SONAMEwoV)
+	-ln -s $(SRCROOT)/dist/lib/$(SONAME)$(SOVER) $(SRCROOT)/dist/lib/$(SONAME)
+	-ln -s $(SRCROOT)/dist/lib/$(SONAME) $(SRCROOT)/dist/lib/$(SONAMEwoV)
 	-mkdir -p $(SRCROOT)/dist/include
 	cp ../include/*.h $(SRCROOT)/dist/include
 
