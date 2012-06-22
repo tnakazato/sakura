@@ -646,8 +646,10 @@ void saveMain(Connection *con, MeasurementSet &ms) {
 void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
-    savePol, saveSw, saveDataDesc, saveState, saveField, saveFeed, saveAntenna,
-    saveMain, NULL
+    // savePol, saveSw, saveDataDesc,
+    saveState,
+    // saveField, saveFeed, saveAntenna, saveMain,
+    NULL
   };
   MeasurementSet ms(filename);
   for (size_t i = 0; funcs[i] != NULL; i++) {

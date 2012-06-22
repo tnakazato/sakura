@@ -37,3 +37,7 @@ clean:
 
 msconverter: $(OBJS)
 	$(LINKER) $(CXXFLAGS) -o $@ $(OBJS) -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasa_ms
+
+test:	msconverter
+	-ln -s /share4hpc/NightlyProfile/PerformanceTest/Data/x141.004Ants.ms .
+	./msconverter -p $(SRCROOT)/dist x141.004Ants.ms sqms
