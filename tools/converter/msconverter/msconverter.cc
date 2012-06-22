@@ -189,7 +189,7 @@ void saveDataDesc(Connection *con, MeasurementSet &ms) {
   ROMSDataDescColumns const cols(tab);
 
   char const *dbcols[] = {
-    "DATA_DESC_ID", // INTEGER NOT NULL,
+    "DATA_DESC_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
     "POLARIZATION_ID", //INTEGER NOT NULL,
     "LAG_ID", //INTEGER DEFAULT NULL,
@@ -217,6 +217,46 @@ void saveDataDesc(Connection *con, MeasurementSet &ms) {
     int result = stmt->executeUpdate();
     assert(result == 1);
   }
+}
+
+void saveFreqOffset(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSFreqOffset &tab = ms.freqOffset();
+  ROMSFreqOffsetColumns const cols(tab);
+  
+  // return if optional FREQ_OFFSET table doesn't exist
+  if (tab.isNull()) return;
+
+  char const *dbcols[] = {
+    "FREQ_OFFSET_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "ANTENNA1", // INTEGER NOT NULL,
+    "ANTENNA2", // INTEGER NOT NULL,
+    "FEED_ID", //INTEGER NOT NULL,
+    "SPECTRAL_WINDOW_ID", //INTEGER DEFAULT NULL,
+    "TIME", //REAL NOT NULL,
+    "INTERVAL", //REAL NOT NULL,
+    "OFFSET", //REAL NOT NULL,
+    NULL
+  };
+
+  string sql = "insert into FREQ_OFFSET (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    int pos = 0;
+    stmt->setInt(++pos, i); // FREQ_OFFSET_ID
+    stmt->setInt(++pos, cols.antenna1()(i)); // ANTENNA1
+    stmt->setInt(++pos, cols.antenna2()(i)); // ANTENNA2
+    stmt->setInt(++pos, cols.feedId()(i)); // FEED_ID
+    stmt->setInt(++pos, cols.spectralWindowId()(i)); // SPECTRAL_WINDOW_ID
+    stmt->setDouble(++pos, cols.time()(i)); // TIME
+    stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
+    stmt->setDouble(++pos, cols.offset()(i)); // OFFSET
+    assert(pos == stmt->getParameterCount());
+    int result = stmt->executeUpdate();
+  }  
 }
 
 void saveState(Connection *con, MeasurementSet &ms) {
@@ -270,15 +310,14 @@ void saveField(Connection *con, MeasurementSet &ms) {
   MSField &tab = ms.field();
   ROMSFieldColumns const cols(tab);
 
+  // FIELD table
+  {
   char const *dbcols[] = {
     "FIELD_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "NAME", // TEXT NOT NULL,
     "CODE", // TEXT NOT NULL,
     "TIME", // REAL NOT NULL,
     "NUM_POLY", // INTEGER NOT NULL,
-    "DELAY_DIR", // BLOB NOT NULL,
-    "PHASE_DIR", // BLOB NOT NULL,
-    "REFERENCE_DIR", // BLOB NOT NULL,
     "SOURCE_ID", // INTEGER NOT NULL,
     "EPHEMERIS_ID", // INTEGER DEFAULT NULL,
     "FLAG_ROW", // INTEGER NOT NULL
@@ -297,9 +336,6 @@ void saveField(Connection *con, MeasurementSet &ms) {
     stmt->setTransientString(++pos, cols.code()(i).c_str()); // CODE
     stmt->setDouble(++pos, cols.time()(i)); // TIME
     stmt->setInt(++pos, cols.numPoly()(i)); // NUM_POLY
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.delayDir()(i));
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.phaseDir()(i));
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.referenceDir()(i));
     stmt->setInt(++pos, cols.sourceId()(i)); // SOURCE_ID
     if (cols.ephemerisId().isNull()) {
       stmt->setNull(++pos);
@@ -311,6 +347,48 @@ void saveField(Connection *con, MeasurementSet &ms) {
     int result = stmt->executeUpdate();
     assert(result == 1);
   }
+  }
+
+  // FIELD_POLY table
+  {
+  char const *dbcols[] = {
+    "FIELD_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "IDX", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "DELAY_DIRX", // REAL NOT NULL,
+    "DELAY_DIRY", // REAL NOT NULL,
+    "PHASE_DIRX", // REAL NOT NULL,
+    "PHASE_DIRY", // REAL NOT NULL,
+    "REFERENCE_DIRX", // REAL NOT NULL,
+    "REFERENCE_DIRY", // REAL NOT NULL,
+    NULL
+  };
+  
+  string sql = "insert into FIELD_POLY (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  uInt id = 0;
+  for (uInt i = 0; i < nrow; i++) {
+    uInt npoly = cols.numPoly()(i)+1; // NUM_POLY+1
+    Matrix<Double> delayDir = cols.delayDir()(i);
+    Matrix<Double> phaseDir = cols.phaseDir()(i);
+    Matrix<Double> referenceDir = cols.referenceDir()(i);
+    for (uInt j = 0 ; j < npoly ; j++ ) {
+      int pos = 0;
+      stmt->setInt(++pos, i); // FIELD_ID
+      stmt->setInt(++pos, id++); // IDX
+      stmt->setDouble(++pos, delayDir(0,j)); // DELAY_DIRX
+      stmt->setDouble(++pos, delayDir(1,j)); // DELAY_DIRY
+      stmt->setDouble(++pos, phaseDir(0,j)); // PHASE_DIRX
+      stmt->setDouble(++pos, phaseDir(1,j)); // PHASE_DIRY
+      stmt->setDouble(++pos, referenceDir(0,j)); // REFERENCE_DIRX
+      stmt->setDouble(++pos, referenceDir(1,j)); // REFERENCE_DIRY
+      assert(pos == stmt->getParameterCount());
+      int result = stmt->executeUpdate();
+    }
+  }
+  }
 }
 
 void saveFeed(Connection *con, MeasurementSet &ms) {
@@ -318,6 +396,8 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
   MSFeed &tab = ms.feed();
   ROMSFeedColumns const cols(tab);
 
+  // FEED table
+  {
   char const *dbcols[] = {
     "FEED_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "ANTENNA_ID", // INTEGER NOT NULL,
@@ -326,15 +406,11 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
     "INTERVAL", // REAL NOT NULL,
     "NUM_RECEPTORS", // INTEGER NOT NULL,
     "BEAM_ID", // INTEGER NOT NULL,
-    "BEAM_OFFSET", // BLOB NOT NULL,
     "FOCUS_LENGTH", // REAL DEFAULT NULL,
     "PHASED_FEED_ID", // INTEGER DEFAULT NULL,
-    "POLARIZATION_TYPE", // BLOB NOT NULL,
-    "POL_RESPONSE", // BLOB NOT NULL,
     "POSITIONX", // REAL NOT NULL,
     "POSITIONY", // REAL NOT NULL,
     "POSITIONZ", // REAL NOT NULL,
-    "RECEPTOR_ANGLE", // BLOB NOT NULL,
     NULL
   };
 
@@ -352,7 +428,6 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
     stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
     stmt->setInt(++pos, cols.numReceptors()(i)); // NUM_RECEPTORS
     stmt->setInt(++pos, cols.beamId()(i)); // BEAM_ID
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.beamOffset()(i));
     if (cols.focusLength().isNull()) {
       stmt->setNull(++pos);
     } else {
@@ -364,31 +439,6 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
       stmt->setInt(++pos, cols.phasedFeedId()(i)); // PHASED_FEED_ID
     }
     {
-      Array< String > const &v = cols.polarizationType()(i); // POLARIZATION_TYPE
-      size_t elements = v.nelements();
-      size_t size = sizeof elements;
-      Array<String>::const_iterator end = v.end();
-      for (Array<String>::const_iterator it = v.begin(); it != end; ++it) {
-	size += it->size() + 1;
-      }
-      char *const blob = new char[size];
-      try {
-	char *ptr = blob;
-	*(size_t*)ptr = elements;
-	ptr += sizeof elements;
-	for (Array<String>::const_iterator it = v.begin(); it != end; ++it) {
-	  strcpy(ptr, (char const *)(it->c_str()));
-	  ptr += it->size() + 1;
-	}
-	stmt->setTransientBlob(++pos, blob, size); // POLARIZATION_TYPE
-      } catch (...) {
-	delete [] blob;
-	throw;
-      }
-      delete [] blob;
-    }
-    bindArrayAsBlob<Complex>(stmt.get(), ++pos, cols.polResponse()(i));
-    {
       Array< Double > const &v = cols.position()(i); // POSITION
       const IPosition &shape = v.shape();
       Double const *data = v.data();
@@ -397,10 +447,50 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
 	stmt->setDouble(++pos, data[i]);
       }
     }
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.receptorAngle()(i));
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
     assert(result == 1);
+  }
+  }
+
+  // FEED_RECEPTOR table
+  {
+  char const *dbcols[] = {
+    "FEED_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "IDX", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "BEAM_OFFSETX", // REAL NOT NULL,
+    "BEAM_OFFSETY", // REAL NOT NULL,
+    "POLARIZATION_TYPE", // TEXT NOT NULL,
+    "POL_RESPONSE", // BLOB NOT NULL,
+    "RECEPTOR_ANGLE", // REAL NOT NULL,
+    NULL
+  };
+
+  string sql = "insert into FEED_RECEPTOR (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  uInt id = 0 ;
+  for (uInt i = 0; i < nrow; i++) {
+    Int nrec = cols.numReceptors()(i);
+    Matrix<Double> beamOffset = cols.beamOffset()(i);
+    Vector<String> polType = cols.polarizationType()(i);
+    Matrix<Complex> polResponse = cols.polResponse()(i);
+    Vector<Double> recAngle = cols.receptorAngle()(i);
+    for (Int j = 0 ; j < nrec ; j++ ) {
+      int pos = 0;
+      stmt->setInt(++pos, i); // FEED_ID
+      stmt->setInt(++pos, id++); // IDX
+      stmt->setDouble(++pos, beamOffset(0,j)); // BEAMOFFSETX
+      stmt->setDouble(++pos, beamOffset(1,j)); // BEAMOFFSETY
+      stmt->setTransientString(++pos, polType[j].c_str()); // POLARIZATION_TYPE
+      bindArrayAsBlob<Complex>(stmt.get(), ++pos, polResponse.row(j)); // POL_RESPONSE
+      stmt->setDouble(++pos, recAngle(j)); // RECEPTOR_ANGLE
+      assert(pos == stmt->getParameterCount());
+      int result = stmt->executeUpdate();
+    }
+  }
   }
 }
 
@@ -705,9 +795,8 @@ void saveFlagCmd(Connection *con, MeasurementSet &ms) {
 void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
-    // savePol, saveSw, saveDataDesc,
+    saveDataDesc, saveField, saveFeed, saveFreqOffset, 
     saveState, saveFlagCmd,
-    // saveField, saveFeed, saveAntenna, saveMain,
     NULL
   };
   MeasurementSet ms(filename);
