@@ -1,7 +1,8 @@
 
 SRCROOT=.
+PREFIX=/opt/sakura
 
-SUBDIRS=sql c++/lib tools/converter/msconverter
+SUBDIRS=sql c++ tools/converter/msconverter
 
 .PHONY: all install clean
 

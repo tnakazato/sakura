@@ -597,7 +597,7 @@ void saveMain(Connection *con, MeasurementSet &ms) {
     "ARRAY_ID", // INTEGER NOT NULL,
     "OBSERVATION_ID", // INTEGER NOT NULL,
     "STATE_ID", // INTEGER NOT NULL,
-    "BASELINE_REF", // INTEGER DEFAULT NULL,
+    "BASELINE_REF", // INTEGER DEFAULT NULL, -- bool
     "U", // REAL NOT NULL,
     "V", // REAL NOT NULL,
     "W", // REAL NOT NULL,
@@ -614,129 +614,178 @@ void saveMain(Connection *con, MeasurementSet &ms) {
     "WEIGHT_SPECTRUM", // BLOB DEFAULT NULL,
     "FLAG", // BLOB NOT NULL,
     "FLAG_CATEGORY", // BLOB NOT NULL,
-    "FLAG_ROW", // INTEGER NOT NULL,
+    "FLAG_ROW", // INTEGER NOT NULL, -- bool
     NULL
+  };
+
+  enum {
+    MAIN_ID = 1,
+    TIME,
+    TIME_EXTRA_PREC,
+    ANTENNA1,
+    ANTENNA2,
+    ANTENNA3,
+    FEED1,
+    FEED2,
+    FEED3,
+    DATA_DESC_ID,
+    PROCESSOR_ID,
+    PHASE_ID,
+    FIELD_ID,
+    INTERVAL,
+    EXPOSURE,
+    TIME_CENTROID,
+    PULSAR_BIN,
+    PULSAR_GATE_ID,
+    SCAN_NUMBER,
+    ARRAY_ID,
+    OBSERVATION_ID,
+    STATE_ID,
+    BASELINE_REF,
+    U,
+    V,
+    W,
+    U2,
+    V2,
+    W2,
+    DATA,
+    FLOAT_DATA,
+    VIDEO_POINT,
+    LAG_DATA,
+    SIGMA,
+    SIGMA_SPECTRUM,
+    WEIGHT,
+    WEIGHT_SPECTRUM,
+    FLAG,
+    FLAG_CATEGORY,
+    FLAG_ROW
   };
 
   string sql = "insert into MAIN (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+
   uInt nrow = ms.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    int pos = 0;
-    stmt->setInt(++pos, i); // MAIN_ID
-    stmt->setDouble(++pos, cols.time()(i)); // TIME
+    stmt->setInt(MAIN_ID, i);
+    stmt->setDouble(TIME, cols.time()(i));
     if (cols.timeExtraPrec().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(TIME_EXTRA_PREC);
     } else {
-      stmt->setDouble(++pos, cols.timeExtraPrec()(i)); // TIME_EXTRA_PREC
+      stmt->setDouble(TIME_EXTRA_PREC, cols.timeExtraPrec()(i));
     }
-    stmt->setInt(++pos, cols.antenna1()(i)); // ANTENNA1
-    stmt->setInt(++pos, cols.antenna2()(i)); // ANTENNA2
+    stmt->setInt(ANTENNA1, cols.antenna1()(i));
+    stmt->setInt(ANTENNA2, cols.antenna2()(i));
     if (cols.antenna3().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(ANTENNA3);
     } else {
-      stmt->setInt(++pos, cols.antenna3()(i)); // ANTENNA3
+      stmt->setInt(ANTENNA3, cols.antenna3()(i));
     }
-    stmt->setInt(++pos, cols.feed1()(i)); // FEED1
-    stmt->setInt(++pos, cols.feed2()(i)); // FEED2
+    stmt->setInt(FEED1, cols.feed1()(i));
+    stmt->setInt(FEED2, cols.feed2()(i));
     if (cols.feed3().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(FEED3);
     } else {
-      stmt->setInt(++pos, cols.feed3()(i)); // FEED3
+      stmt->setInt(FEED3, cols.feed3()(i));
     }
-    stmt->setInt(++pos, cols.dataDescId()(i)); // DATA_DESC_ID
-    stmt->setInt(++pos, cols.processorId()(i)); // PROCESSOR_ID
+    stmt->setInt(DATA_DESC_ID, cols.dataDescId()(i));
+    stmt->setInt(PROCESSOR_ID, cols.processorId()(i));
     if (cols.phaseId().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(PHASE_ID);
     } else {
-      stmt->setInt(++pos, cols.phaseId()(i)); // PHASE_ID
+      stmt->setInt(PHASE_ID, cols.phaseId()(i));
     }
-    stmt->setInt(++pos, cols.fieldId()(i)); // FIELD_ID
-    stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
-    stmt->setDouble(++pos, cols.exposure()(i)); // EXPOSURE
-    stmt->setDouble(++pos, cols.timeCentroid()(i)); // TIME_CENTROID
+    stmt->setInt(FIELD_ID, cols.fieldId()(i));
+    stmt->setDouble(INTERVAL, cols.interval()(i));
+    stmt->setDouble(EXPOSURE, cols.exposure()(i));
+    stmt->setDouble(TIME_CENTROID, cols.timeCentroid()(i));
     if (cols.pulsarBin().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(PULSAR_BIN);
     } else {
-      stmt->setInt(++pos, cols.pulsarBin()(i)); // PULSAR_BIN
+      stmt->setInt(PULSAR_BIN, cols.pulsarBin()(i));
     }
     if (cols.pulsarGateId().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(PULSAR_GATE_ID);
     } else {
-      stmt->setInt(++pos, cols.pulsarGateId()(i)); // PULSAR_GATE_ID
+      stmt->setInt(PULSAR_GATE_ID, cols.pulsarGateId()(i));
     }
-    stmt->setInt(++pos, cols.scanNumber()(i)); // SCAN_NUMBER
-    stmt->setInt(++pos, cols.arrayId()(i)); // ARRAY_ID
-    stmt->setInt(++pos, cols.observationId()(i)); // OBSERVATION_ID
-    stmt->setInt(++pos, cols.stateId()(i)); // STATE_ID
+    stmt->setInt(SCAN_NUMBER, cols.scanNumber()(i));
+    stmt->setInt(ARRAY_ID, cols.arrayId()(i));
+    stmt->setInt(OBSERVATION_ID, cols.observationId()(i));
+    stmt->setInt(STATE_ID, cols.stateId()(i));
     if (cols.baselineRef().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(BASELINE_REF);
     } else {
-      stmt->setInt(++pos, cols.baselineRef()(i)); // BASELINE_REF
+      stmt->setInt(BASELINE_REF, cols.baselineRef()(i) ? 1 : 0);
     }
     {
       Array< Double > const &v = cols.uvw()(i);
-      const IPosition &shape = v.shape();
+      // const IPosition &shape = v.shape();
+      assert(v.nelements() == 3);
       Double const *data = v.data();
-      for (size_t i = 0; i < 3; i++) {
-	//"U", "V", "W"
-	stmt->setDouble(++pos, data[i]);
-      }
+      stmt->setDouble(U, data[0]);
+      stmt->setDouble(V, data[1]);
+      stmt->setDouble(W, data[2]);
     }
     if (cols.uvw2().isNull()) {
       for (size_t i = 0; i < 3; i++) {
-	stmt->setNull(++pos);
+	stmt->setNull(U2);
+	stmt->setNull(V2);
+	stmt->setNull(W2);
       }
     } else {
       Array< Double > const &v = cols.uvw2()(i);
-      const IPosition &shape = v.shape();
+      // const IPosition &shape = v.shape();
+      assert(v.nelements() == 3);
       Double const *data = v.data();
-      for (size_t i = 0; i < 3; i++) {
-	//"U2", "V2", "W2"
-	stmt->setDouble(++pos, data[i]);
-      }
+      stmt->setDouble(U2, data[0]);
+      stmt->setDouble(V2, data[1]);
+      stmt->setDouble(W2, data[2]);
     }
     if (cols.data().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(DATA);
     } else {
-      bindArrayAsBlob<Complex>(stmt.get(), ++pos, cols.data()(i));
+      bindArrayAsBlob<Complex>(stmt.get(), DATA, cols.data()(i));
     }
     if (cols.floatData().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(FLOAT_DATA);
     } else {
-      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.floatData()(i));
+      bindArrayAsBlob<Float>(stmt.get(), FLOAT_DATA, cols.floatData()(i));
     }
     if (cols.videoPoint().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(VIDEO_POINT);
     } else {
-      bindArrayAsBlob<Complex>(stmt.get(), ++pos, cols.videoPoint()(i));
+      bindArrayAsBlob<Complex>(stmt.get(), VIDEO_POINT, cols.videoPoint()(i));
     }
     if (cols.lagData().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(LAG_DATA);
     } else {
-      bindArrayAsBlob<Complex>(stmt.get(), ++pos, cols.lagData()(i));
+      bindArrayAsBlob<Complex>(stmt.get(), LAG_DATA, cols.lagData()(i));
     }
-    bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.sigma()(i));
+    bindArrayAsBlob<Float>(stmt.get(), SIGMA, cols.sigma()(i));
     if (cols.sigmaSpectrum().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(SIGMA_SPECTRUM);
     } else {
-      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.sigmaSpectrum()(i));
+      bindArrayAsBlob<Float>(stmt.get(), SIGMA_SPECTRUM, cols.sigmaSpectrum()(i));
     }
-    bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.weight()(i));
+    bindArrayAsBlob<Float>(stmt.get(), WEIGHT, cols.weight()(i));
     if (cols.weightSpectrum().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(WEIGHT_SPECTRUM);
     } else {
-      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.weightSpectrum()(i));
+      bindArrayAsBlob<Float>(stmt.get(), WEIGHT_SPECTRUM, cols.weightSpectrum()(i));
     }
-    bindArrayAsBlob<Bool>(stmt.get(), ++pos, cols.flag()(i));
-    bindArrayAsBlob<Bool>(stmt.get(), ++pos, cols.flagCategory()(i));
-    stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
-    assert(pos == stmt->getParameterCount());
+    bindArrayAsBlob<Bool>(stmt.get(), FLAG, cols.flag()(i));
+    bindArrayAsBlob<Bool>(stmt.get(), FLAG_CATEGORY, cols.flagCategory()(i));
+    stmt->setInt(FLAG_ROW, cols.flagRow()(i) ? 1 : 0);
     int result = stmt->executeUpdate();
     assert(result == 1);
   }
+}
+
+void saveMainCoordinate(Connection *con, MeasurementSet &ms) {
+  // There is no corresponding table in MeasurementSet.
+  // Nothing to do.
 }
 
 void saveFlagCmd(Connection *con, MeasurementSet &ms) {
