@@ -708,10 +708,10 @@ void savePointing(Connection *con, MeasurementSet &ms) {
     "NAME", // TEXT NOT NULL,
     "NUM_POLY", // INTEGER NOT NULL,
     "TIME_ORIGIN", // REAL NOT NULL,
-    "DIRECTION", // BLOBB
-    "TARGET", // BLOBB
-    "POINTING_OFFSET", // BLOBB 
-    "SOURCE_OFFSET", // BLOBB 
+    "DIRECTION", // BLOB
+    "TARGET", // BLOB
+    "POINTING_OFFSET", // BLOB 
+    "SOURCE_OFFSET", // BLOB 
     "ENCODERX", // REAL 
     "ENCODERY", // REAL 
     "POINTING_MODEL_ID", // INTEGER DEFAULT NULL,
@@ -748,8 +748,11 @@ void savePointing(Connection *con, MeasurementSet &ms) {
     } else {
       bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.sourceOffset()(i));//SOURCE_OFFSET
     }
-    {
-      Array< Double > const &v = cols.encoder()(i); // ENCODERX OENCODERY
+    if (cols.encoder().isNull()){
+      stmt->setNull(++pos);
+      stmt->setNull(++pos);
+    }else {
+      Array< Double > const &v = cols.encoder()(i); // ENCODERX ENCODERY
       const IPosition &shape = v.shape();
       Double const *data = v.data();
       for (size_t i = 0; i < 2; i++) {
@@ -794,18 +797,18 @@ void saveSysCal(Connection *con, MeasurementSet &ms) {
     "TIME", // REAL NOT NULL,
     "INTERVAL", // REAL NOT NULL,
     "PHASE_DIFF", // REAL DEFAULT NULL,
-    "TCAL", // BLOBB
-    "TRX", // BLOBB
-    "TSKY", // BLOBB
-    "TSYS", // BLOBB
-    "TANT", // BLOBB
-    "TANT_TSYS", // BLOBB
-    "TCAL_SPECTRUM", // BLOBB
-    "TRX_SPECTRUM", // BLOBB
-    "TSKY_SPECTRUM", // BLOBB
-    "TSYS_SPECTRUM", // BLOBB
-    "TANT_SPECTRUM", // BLOBB
-    "TANT_TSYS_SPECTRUM", // BLOBB
+    "TCAL", // BLOB
+    "TRX", // BLOB
+    "TSKY", // BLOB
+    "TSYS", // BLOB
+    "TANT", // BLOB
+    "TANT_TSYS", // BLOB
+    "TCAL_SPECTRUM", // BLOB
+    "TRX_SPECTRUM", // BLOB
+    "TSKY_SPECTRUM", // BLOB
+    "TSYS_SPECTRUM", // BLOB
+    "TANT_SPECTRUM", // BLOB
+    "TANT_TSYS_SPECTRUM", // BLOB
     "PHASE_DIFF_FLAG", // INTEGER DEFAULT NULL,
     "TCAL_FLAG", // INTEGER NOT NULL,
     "TRX_FLAG", // INTEGER NOT NULL,
@@ -816,7 +819,7 @@ void saveSysCal(Connection *con, MeasurementSet &ms) {
     NULL
   };
 
-  string sql = "insert into Syscal (";
+  string sql = "insert into SYSCAL (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
@@ -1212,8 +1215,8 @@ void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveDataDesc, saveField, saveFeed, saveFreqOffset, 
-    saveState, saveFlagCmd,
-    saveWeather,saveSysCal,//savePointing,
+    saveState, saveFlagCmd, saveAntenna,
+    saveWeather,saveSysCal,savePointing,
     saveMain, saveMainCoordinate,
     NULL
   };
