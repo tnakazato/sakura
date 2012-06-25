@@ -1213,8 +1213,8 @@ void mssave(Connection *con, char const*filename) {
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveDataDesc, saveField, saveFeed, saveFreqOffset, 
     saveState, saveFlagCmd,
-    saveMainCoordinate, saveMain,
     saveWeather,saveSysCal,//savePointing,
+    saveMain, saveMainCoordinate,
     NULL
   };
   MeasurementSet ms(filename);

@@ -10,6 +10,8 @@
 
 namespace sqlite {
 
+SQLException::~SQLException() {}
+
 Connection::Connection(sqlite3 *db): db(db) {}
 
 Connection::~Connection() throw (SQLException) {
@@ -272,7 +274,7 @@ std::string ResultSet::getColumnName(int pos) throw (SQLException) {
   return result;
 }
 
-bool ResultSet::wasNull(int pos) throw (SQLException) {
+bool ResultSet::isNull(int pos) throw (SQLException) {
   int type = sqlite3_column_type(stmt->stmt, pos - 1);
   if (SQLITE_NULL == type) {
     return true;

@@ -16,9 +16,17 @@ namespace sqlite {
  * ResultSet within PreparedStatement within Connection.
  */
 
+/**
+ * This exception will be raised when there is an error while using this API.
+ */
 class SQLException {
+ public:
+  virtual ~SQLException();
 };
 
+/**
+ * This is an abstract base class for all statement classes.
+ */
 class Statement {
  public:
   virtual ~Statement();
@@ -27,6 +35,13 @@ class Statement {
 class PreparedStatement;
 class Connection;
 
+/**
+ * This class represents a result of a query.
+ * You need to call {@link #next()} before fetching the first row
+ * since this class initially points a pseudo row
+ * just before the first result row.
+ *
+ */
 class ResultSet {
   PreparedStatement *const stmt;
 
@@ -34,20 +49,81 @@ class ResultSet {
   friend class PreparedStatement;
  public:
   virtual ~ResultSet() throw (SQLException);
+  /**
+   * Go to the next row if it exists.
+   * @return true if there was a next row, otherwise false.
+   */
   virtual bool next() throw (SQLException);
+  /**
+   * Returns a number of columns within the result.
+   * @return a number of columns.
+   */
   virtual int getColumnCount() throw (SQLException);
-  // pos starts with 1.
+  /**
+   * Get a column name for the pos-th column.
+   * @param pos The position of the column. It starts with 1.
+   * @return name of the column.
+   */
   virtual std::string getColumnName(int pos) throw (SQLException);
-  virtual bool wasNull(int pos) throw (SQLException);
+  /**
+   * Returns whether the specified column is null or not.
+   * This method must be called before any invocations of
+   * get&lt;Type&gt;() methods for the same column for each row.
+   * Generally, you should call this method before calling get&lt;Type&gt;()
+   * methods for the same column when accessing nullable column.
+   * @param pos The position of the column. It starts with 1.
+   * @return true if the value of the column is null, otherwise false.
+   */
+  virtual bool isNull(int pos) throw (SQLException);
+  /**
+   * Fetches an int value from the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @return an int value.
+   */
   virtual int getInt(int pos) throw (SQLException);
-  // Don't release returned area
+  /**
+   * Fetches a string value from the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param size A pointer to an integer in which size of the returned value
+   * (including trailing '\\0') will be stored.
+   * @return '\\0' terminated UTF-8 string value. The returned value is valid
+   * until calling {@link #next()} or get&lt;Type&gt;() methods for the same column
+   * or destructing the instance of this class. You must copy the value
+   * if you need to access it later.
+   * You must not release the returned area.
+   */
   virtual char const *getTransientString(int pos, int *size) throw (SQLException);
+  /**
+   * Fetches a float value from the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @return a float value.
+   */
   virtual float getFloat(int pos) throw (SQLException);
+  /**
+   * Fetches a double value from the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @return a double value.
+   */
   virtual double getDouble(int pos) throw (SQLException);
-  // Don't release returned area
+  /**
+   * Fetches a BLOB value from the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param size A pointer to an integer in which size of the returned value
+   * will be stored.
+   * @return a blob value. The returned value is valid
+   * until calling {@link #next()} or get&lt;Type&gt;() methods for the same column
+   * or destructing the instance of this class. You must copy the value
+   * if you need to access it later.
+   * You must not release the returned area.
+   */
   virtual void const *getTransientBlob(int pos, int *size) throw (SQLException);
 };
 
+/**
+ * This class represents a prepared statement.
+ * An instance of this class must exists while all instances created from
+ * the instance exist.
+ */
 class PreparedStatement: public Statement {
   Connection *const con;
   sqlite3_stmt *const stmt;
@@ -65,22 +141,86 @@ class PreparedStatement: public Statement {
   friend class Connection;
   virtual void reset(ResultSet *owner) throw (SQLException);
  public:
-  virtual int getParameterCount() throw (SQLException);
-  virtual void clearParameters() throw (SQLException);
-  // pos starts with 1.
-  virtual void setNull(int pos) throw (SQLException);
-  virtual void setInt(int pos, int value) throw (SQLException);
-  virtual void setStaticString(int pos, char const *value) throw (SQLException);
-  virtual void setTransientString(int pos, char const *value) throw (SQLException);
-  virtual void setDouble(int pos, double value) throw (SQLException);
-  virtual void setFloat(int pos, float value) throw (SQLException);
-  virtual void setStaticBlob(int pos, void const *value, int size) throw (SQLException);
-  virtual void setTransientBlob(int pos, void const *value, int size) throw (SQLException);
-  virtual int executeUpdate() throw (SQLException);
-  virtual ResultSet *executeQuery() throw (SQLException);
   ~PreparedStatement() throw (SQLException);
+  /**
+   * Returns a number of parameters in the SQL.
+   * @return a number of parameters.
+   */
+  virtual int getParameterCount() throw (SQLException);
+  /**
+   * Clears all values bound to parameters.
+   */
+  virtual void clearParameters() throw (SQLException);
+  /**
+   * Binds a null value to the specified column.
+   * @param pos The position of the column. It starts with 1.
+   */
+  virtual void setNull(int pos) throw (SQLException);
+  /**
+   * Binds an int value to the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param value an int value.
+   */
+  virtual void setInt(int pos, int value) throw (SQLException);
+  /**
+   * Binds a UTF-8 string value to the specified column.
+   * If `value' is a static data, use this method because this method is
+   * more efficient than {@link #setTransientString(int pos, char const *value)}.
+   * @param pos The position of the column. It starts with 1.
+   * @param value a UTF-8 string value.
+   */
+  virtual void setStaticString(int pos, char const *value) throw (SQLException);
+  /**
+   * Binds a UTF-8 string value to the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param value a UTF-8 string value.
+   */
+  virtual void setTransientString(int pos, char const *value) throw (SQLException);
+  /**
+   * Binds a double value to the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param value a double value.
+   */
+  virtual void setDouble(int pos, double value) throw (SQLException);
+  /**
+   * Binds a float value to the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param value a float value.
+   */
+  virtual void setFloat(int pos, float value) throw (SQLException);
+  /**
+   * Binds a BLOB value to the specified column.
+   * If `value' is a static data, use this method because this method is
+   * more efficient than {@link #setTransientBlob(int pos, void const *value, int size)}.
+   * @param pos The position of the column. It starts with 1.
+   * @param value a BLOB value.
+   */
+  virtual void setStaticBlob(int pos, void const *value, int size) throw (SQLException);
+  /**
+   * Binds a BLOB value to the specified column.
+   * @param pos The position of the column. It starts with 1.
+   * @param value a BLOB value.
+   */
+  virtual void setTransientBlob(int pos, void const *value, int size) throw (SQLException);
+  /**
+   * Executes a non-query statement.
+   * Before calling this method, bind all parameters by calling set&lt;Type&gt;() methods.
+   * @return a number of rows affected.
+   */
+  virtual int executeUpdate() throw (SQLException);
+  /**
+   * Executes a query.
+   * Before calling this method, bind all parameters by calling set&lt;Type&gt;() methods.
+   * @return a {@link ResultSet} instance to be used to access the result of the query.
+   */
+  virtual ResultSet *executeQuery() throw (SQLException);
 };
 
+/**
+ * This class represents a connection to SQLite DBMS.
+ * An instance of this class must exists while all instances created from
+ * the instance exist.
+ */
 class Connection {
   sqlite3 *const db;
   Connection(sqlite3 *db);
@@ -88,11 +228,28 @@ class Connection {
   friend class PreparedStatement;
  public:
   virtual ~Connection() throw (SQLException);
+  /**
+   * This is a factory method for this class.
+   * @param DB URL to be opened.
+   * @return a connection opened.
+   * @see http://www.sqlite.org/c3ref/open.html#urifilenamesinsqlite3open
+   */
   static Connection *open(char const *dburl) throw (SQLException);
     
+  /**
+   * Executes one or more SQL statements separated by ';'.
+   */
   virtual void execute(char const *sql) throw (SQLException);
+  /**
+   * Creates a prepared statement.
+   * @param sql an SQL statement.
+   * @return a prepared statement.
+   */
   virtual PreparedStatement *prepare(char const *sql) throw (SQLException);
-  // See the document of sqlite3_create_function_v2().
+  /**
+   * Creates an SQL function.
+   * @see http://www.sqlite.org/c3ref/create_function.html
+   */
   virtual void createFunction(
       char const *functionName,
       int nArg,
@@ -104,15 +261,41 @@ class Connection {
       void(*xDestroy)(void *)) throw (SQLException);
 };
 
+/**
+ * This class provides some useful utility functions.
+ */
 class SQL {
  public:
+  /**
+   * Returns a string which contains `values' with its order separated by `delimiter'.
+   * @param values a NULL terminated array of strings.
+   * @param delimiter a delimiter string.
+   * @return a string which contains `values' with its order separated by `delimiter'.
+  */
   static std::string join(char const * const values[], char const *delimiter=", ");
 
+  /**
+   * Returns a string which contains same number of bind characters('?') as elements in `values'
+   * (excluding a trailing NULL) separated by `delimiter'.
+   * @param values a NULL terminated array of pointers.
+   * This is used just to figure out a number of bind characters.
+   * @param delimiter a delimiter string.
+   * @return a bind character list string.
+   */
   template <typename T>
   static std::string bindChars(T *values[], char const *delimiter=", ") {
     return repeat<T>(values, "?", delimiter);
   }
 
+  /**
+   * Returns a string which contains same number of `rept' as elements in `values'
+   * (excluding a trailing NULL) separated by `delimiter'.
+   * @param values a NULL terminated array of pointers.
+   * This is used just to figure out a number of `rept' to be listed.
+   * @param rept a string to be listed.
+   * @param delimiter a delimiter string.
+   * @return a `rept' list string.
+   */
   template <typename T>
   static std::string repeat(T *values[], char const *rept, char const *delimiter=", ") {
     std::string result;
