@@ -368,7 +368,6 @@ void saveField(Connection *con, MeasurementSet &ms) {
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
-  uInt id = 0;
   for (uInt i = 0; i < nrow; i++) {
     uInt npoly = cols.numPoly()(i)+1; // NUM_POLY+1
     Matrix<Double> delayDir = cols.delayDir()(i);
@@ -377,7 +376,7 @@ void saveField(Connection *con, MeasurementSet &ms) {
     for (uInt j = 0 ; j < npoly ; j++ ) {
       int pos = 0;
       stmt->setInt(++pos, i); // FIELD_ID
-      stmt->setInt(++pos, id++); // IDX
+      stmt->setInt(++pos, j); // IDX
       stmt->setDouble(++pos, delayDir(0,j)); // DELAY_DIRX
       stmt->setDouble(++pos, delayDir(1,j)); // DELAY_DIRY
       stmt->setDouble(++pos, phaseDir(0,j)); // PHASE_DIRX
@@ -471,7 +470,6 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
-  uInt id = 0 ;
   for (uInt i = 0; i < nrow; i++) {
     Int nrec = cols.numReceptors()(i);
     Matrix<Double> beamOffset = cols.beamOffset()(i);
@@ -481,7 +479,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
     for (Int j = 0 ; j < nrec ; j++ ) {
       int pos = 0;
       stmt->setInt(++pos, i); // FEED_ID
-      stmt->setInt(++pos, id++); // IDX
+      stmt->setInt(++pos, j); // IDX
       stmt->setDouble(++pos, beamOffset(0,j)); // BEAMOFFSETX
       stmt->setDouble(++pos, beamOffset(1,j)); // BEAMOFFSETY
       stmt->setTransientString(++pos, polType[j].c_str()); // POLARIZATION_TYPE
