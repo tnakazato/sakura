@@ -539,7 +539,7 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
       }
     }
     {
-      Array< Double > const &v = cols.position()(i); // OFFSET
+      Array< Double > const &v = cols.offset()(i); // OFFSET
       const IPosition &shape = v.shape();
       Double const *data = v.data();
       for (size_t i = 0; i < 3; i++) {
@@ -567,6 +567,375 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
     assert(result == 1);
+  }
+}
+
+void saveWeather(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSWeather &tab = ms.weather();
+  ROMSWeatherColumns const cols(tab);
+
+  char const *dbcols[] = {
+    "ANTENNA_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "TIME", // REAL NOT NULL,
+    "INTERVAL", // REAL NOT NULL,
+    //    "H2O", // REAL DEFAULT NULL,
+    "IONOS_ELECTRON", // REAL DEFAULT NULL,
+    "PRESSURE", // REAL DEFAULT NULL,
+    "REL_HUMIDITY", // REAL DEFAULT NULL,
+    "TEMPERATURE", // REAL DEFAULT NULL,
+    "DEW_POINT", // REAL DEFAULT NULL,
+    "WIND_DIRECTION", // REAL DEFAULT NULL,
+    "WIND_SPEED", // REAL DEFAULT NULL,
+    //    "H2O_FLAG", // INTEGER DEFAULT NULL,
+    "IONOS_ELECTRON_FLAG", // INTEGER DEFAULT NULL,
+    "PRESSURE_FLAG",  // INTEGER DEFAULT NULL,
+    "REL_HUMIDITY_FLAG",  // INTEGER DEFAULT NULL,
+    "TEMPERATURE_FLAG",  // INTEGER DEFAULT NULL,
+    "DEW_POINT_FLAG",  // INTEGER DEFAULT NULL,
+    "WIND_DIRECTION_FLAG",  // INTEGER DEFAULT NULL,
+    "WIND_SPEED_FLAG",  // INTEGER DEFAULT NULL,
+    NULL
+  };
+
+  string sql = "insert into WEATHER (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    int pos = 0;
+    stmt->setInt(++pos, i); // ANTENNA_ID
+    stmt->setDouble(++pos, cols.time()(i)); // TIME
+    stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
+
+//     if (cols.h2o().isNull()) {
+//       stmt->setNull(++pos);
+//     } else {
+//       stmt->setDouble(++pos, cols.h2o()(i)); // H2O
+//     }
+
+    if (cols.ionosElectron().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.ionosElectron()(i)); // IONOS_ELECTRON
+    }
+    if (cols.pressure().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.pressure()(i)); // PRESSURE
+    }
+    if (cols.relHumidity().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.relHumidity()(i)); //REL_HUMIDITY 
+    }
+    if (cols.temperature().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.temperature()(i)); // TEMPERATURE
+    }
+    if (cols.dewPoint().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.dewPoint()(i)); // DEW_POINT
+    }
+    if (cols.windDirection().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.windDirection()(i)); // WIND_DIRECTION
+    }
+    if (cols.windSpeed().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setDouble(++pos, cols.windSpeed()(i)); // WIND_SPEED
+    }
+//     if (cols.h2oFlag().isNull()) {
+//       stmt->setNull(++pos);
+//     } else {
+//       stmt->setInt(++pos, cols.h2oFlag()(i)); // H2O_FLAG
+//     }
+    if (cols.ionosElectronFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.ionosElectronFlag()(i)); // IONOS_ELECTRON_FLAG
+    }
+    if (cols.pressureFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.pressureFlag()(i)); // PRESSURE_FLAG
+    }
+    if (cols.relHumidityFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.relHumidityFlag()(i)); // REL_HUMIDITY_FLAG
+    }
+    if (cols.temperatureFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.temperatureFlag()(i)); // TEMPERATURE_FLAG
+    }
+    if (cols.dewPointFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.dewPointFlag()(i)); // DEW_POINT_FLAG
+    }
+    if (cols.windDirectionFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.windDirectionFlag()(i)); // WIND_DIRECTION_FLAG
+    }
+    if (cols.windSpeedFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.windSpeedFlag()(i)); // WIND_SPEED_FLAG
+    }
+
+    assert(pos == stmt->getParameterCount());
+    int result = stmt->executeUpdate();
+  }
+}
+
+void savePointing(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSPointing &tab = ms.pointing();
+  ROMSPointingColumns const cols(tab);
+
+  char const *dbcols[] = {
+    "ANTENNA_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "TIME", // REAL NOT NULL,
+    "INTERVAL", // REAL NOT NULL,
+    "NAME", // TEXT NOT NULL,
+    "NUM_POLY", // INTEGER NOT NULL,
+    "TIME_ORIGIN", // REAL NOT NULL,
+    "DIRECTION", // BLOBB
+    "TARGET", // BLOBB
+    "POINTING_OFFSET", // BLOBB 
+    "SOURCE_OFFSET", // BLOBB 
+    "ENCODERX", // REAL 
+    "ENCODERY", // REAL 
+    "POINTING_MODEL_ID", // INTEGER DEFAULT NULL,
+    "TRACKING", // INTEGER NOT NULL,
+    "ON_SOURCE", // INTEGER DEFAULT NULL,
+    "OVER_THE_TOP", // INTEGER DEFAULT NULL,
+    NULL
+  };
+
+  string sql = "insert into POINTING (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    int pos = 0;
+    stmt->setInt(++pos, i); // ANTENNA_ID
+    stmt->setDouble(++pos, cols.time()(i)); // TIME
+    stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
+    stmt->setTransientString(++pos, cols.name()(i).c_str()); // NAME
+    stmt->setInt(++pos, cols.numPoly()(i)); // NUM_POLY
+
+    stmt->setDouble(++pos, cols.timeOrigin()(i)); // TIME_ORIGIN
+    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.direction()(i));//DIRECTION
+    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.target()(i));//TARGET
+
+    if (cols.pointingOffset().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.pointingOffset()(i));//POINTING_OFFSET
+    }
+    if (cols.sourceOffset().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.sourceOffset()(i));//SOURCE_OFFSET
+    }
+    {
+      Array< Double > const &v = cols.encoder()(i); // ENCODERX OENCODERY
+      const IPosition &shape = v.shape();
+      Double const *data = v.data();
+      for (size_t i = 0; i < 2; i++) {
+	// "ENCODERX", "ENCODERY"
+	stmt->setDouble(++pos, data[i]);
+      }
+    }
+    if (cols.pointingModelId().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.pointingModelId()(i)); // POINTING_MODEL_ID
+    }
+
+    stmt->setInt(++pos, cols.tracking()(i)); // TRACKING
+
+    if (cols.onSource().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.onSource()(i)); // ON_SOURCE
+    }
+    if (cols.overTheTop().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.overTheTop()(i)); // OVER_THE_TOP
+    }
+
+    assert(pos == stmt->getParameterCount());
+    int result = stmt->executeUpdate();
+  }
+}
+
+void saveSysCal(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSSysCal &tab = ms.sysCal();
+  ROMSSysCalColumns const cols(tab);
+
+  char const *dbcols[] = {
+    "SYSCAL_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "ANTENNA_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "FEED_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
+    "TIME", // REAL NOT NULL,
+    "INTERVAL", // REAL NOT NULL,
+    "PHASE_DIFF", // REAL DEFAULT NULL,
+    "TCAL", // BLOBB
+    "TRX", // BLOBB
+    "TSKY", // BLOBB
+    "TSYS", // BLOBB
+    "TANT", // BLOBB
+    "TANT_TSYS", // BLOBB
+    "TCAL_SPECTRUM", // BLOBB
+    "TRX_SPECTRUM", // BLOBB
+    "TSKY_SPECTRUM", // BLOBB
+    "TSYS_SPECTRUM", // BLOBB
+    "TANT_SPECTRUM", // BLOBB
+    "TANT_TSYS_SPECTRUM", // BLOBB
+    "PHASE_DIFF_FLAG", // INTEGER DEFAULT NULL,
+    "TCAL_FLAG", // INTEGER NOT NULL,
+    "TRX_FLAG", // INTEGER NOT NULL,
+    "TSKY_FLAG", // INTEGER NOT NULL,
+    "TSYS_FLAG", // INTEGER NOT NULL,
+    "TANT_FLAG", // INTEGER NOT NULL,
+    "TANT_TSYS_FLAG", // INTEGER NOT NULL,
+    NULL
+  };
+
+  string sql = "insert into Syscal (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    int pos = 0;
+    stmt->setInt(++pos, i); // SYSCAL_ID
+    stmt->setInt(++pos, cols.antennaId()(i)); // ANTENNA_ID
+    stmt->setInt(++pos, cols.feedId()(i)); // FEED_ID
+    stmt->setInt(++pos, cols.spectralWindowId()(i)); // SPECTRAL_WINDOW_ID
+
+    stmt->setDouble(++pos, cols.time()(i)); // TIME
+    stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
+
+    if (cols.phaseDiff().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setFloat(++pos, cols.phaseDiff()(i)); // PHASE_DIFF
+    }
+
+    if (cols.tcal().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tcal()(i));// TCAL 
+    }
+    if (cols.trx().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.trx()(i));// TRX
+    }
+    if (cols.tsky().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tsky()(i));// TSKY
+    }
+    if (cols.tsys().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tsys()(i));// TSYS
+    }
+    if (cols.tant().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tant()(i));// TANT
+    }
+    if (cols.tantTsys().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tantTsys()(i));// TANT_TSYS
+    }
+    if (cols.tcalSpectrum().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tcalSpectrum()(i));// TCAL_SPECTRUM
+    }
+    if (cols.trxSpectrum().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.trxSpectrum()(i));// TRX_SPECTRUM
+    }
+    if (cols.tskySpectrum().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tskySpectrum()(i));// TSKY_SPECTRUM
+    }
+    if (cols.tsysSpectrum().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tsysSpectrum()(i));// TSYS_SPECTRUM
+    }
+    if (cols.tantSpectrum().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tantSpectrum()(i));// TANT_SPECTRUM
+    }
+    if (cols.tantTsysSpectrum().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      bindArrayAsBlob<Float>(stmt.get(), ++pos, cols.tantTsysSpectrum()(i));// TANT_TSYS_SPECTRUM
+    }
+
+    if (cols.phaseDiffFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.phaseDiffFlag()(i)); // PHASE_DIFF_FLAG
+    }
+    if (cols.tcalFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.tcalFlag()(i)); // TCAL_FLAG
+    }
+    if (cols.trxFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.trxFlag()(i)); // TRX_FLAG
+    }
+    if (cols.tskyFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.tskyFlag()(i)); // TSKY_FLAG
+    }
+    if (cols.tsysFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.tsysFlag()(i)); // TSYS_FLAG
+    }
+    if (cols.tantFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.tantFlag()(i)); // TANT_FLAG
+    }
+    if (cols.tantTsysFlag().isNull()) {
+      stmt->setNull(++pos);
+    } else {
+      stmt->setInt(++pos, cols.tantTsysFlag()(i)); // TANT_TSYS_FLAG
+    }
+
+    assert(pos == stmt->getParameterCount());
+    int result = stmt->executeUpdate();
   }
 }
 
@@ -845,6 +1214,7 @@ void mssave(Connection *con, char const*filename) {
     saveDataDesc, saveField, saveFeed, saveFreqOffset, 
     saveState, saveFlagCmd,
     saveMainCoordinate, saveMain,
+    saveWeather,saveSysCal,//savePointing,
     NULL
   };
   MeasurementSet ms(filename);
