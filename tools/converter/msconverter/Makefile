@@ -1,4 +1,4 @@
-SRCROOT=../../..
+SRCROOT=$(abspath ../../..)
 
 CASA=/home/kohji/casahpc2/linux_64b
 SQLITE=/opt/sqlite
