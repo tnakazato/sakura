@@ -579,7 +579,7 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
     "ANTENNA_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "TIME", // REAL NOT NULL,
     "INTERVAL", // REAL NOT NULL,
-    //    "H2O", // REAL DEFAULT NULL,
+    "H2O", // REAL DEFAULT NULL,
     "IONOS_ELECTRON", // REAL DEFAULT NULL,
     "PRESSURE", // REAL DEFAULT NULL,
     "REL_HUMIDITY", // REAL DEFAULT NULL,
@@ -587,7 +587,7 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
     "DEW_POINT", // REAL DEFAULT NULL,
     "WIND_DIRECTION", // REAL DEFAULT NULL,
     "WIND_SPEED", // REAL DEFAULT NULL,
-    //    "H2O_FLAG", // INTEGER DEFAULT NULL,
+    "H2O_FLAG", // INTEGER DEFAULT NULL,
     "IONOS_ELECTRON_FLAG", // INTEGER DEFAULT NULL,
     "PRESSURE_FLAG",  // INTEGER DEFAULT NULL,
     "REL_HUMIDITY_FLAG",  // INTEGER DEFAULT NULL,
@@ -609,11 +609,11 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
     stmt->setDouble(++pos, cols.time()(i)); // TIME
     stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
 
-//     if (cols.h2o().isNull()) {
-//       stmt->setNull(++pos);
-//     } else {
-//       stmt->setDouble(++pos, cols.h2o()(i)); // H2O
-//     }
+     if (cols.H2O().isNull()) {
+       stmt->setNull(++pos);
+     } else {
+       stmt->setDouble(++pos, cols.H2O()(i)); // H2O
+     }
 
     if (cols.ionosElectron().isNull()) {
       stmt->setNull(++pos);
@@ -650,11 +650,11 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
     } else {
       stmt->setDouble(++pos, cols.windSpeed()(i)); // WIND_SPEED
     }
-//     if (cols.h2oFlag().isNull()) {
-//       stmt->setNull(++pos);
-//     } else {
-//       stmt->setInt(++pos, cols.h2oFlag()(i)); // H2O_FLAG
-//     }
+     if (cols.H2OFlag().isNull()) {
+       stmt->setNull(++pos);
+     } else {
+       stmt->setInt(++pos, cols.H2OFlag()(i)); // H2O_FLAG
+     }
     if (cols.ionosElectronFlag().isNull()) {
       stmt->setNull(++pos);
     } else {
