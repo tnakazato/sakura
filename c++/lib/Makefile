@@ -12,23 +12,33 @@ COMMON_FLAGS=-g -I../include -I$(SQLITE)/include -Wall -O2 -fopenmp -m64 -march=
 CFLAGS=-std=c99 $(COMMON_FLAGS)
 CXXFLAGS=$(COMMON_FLAGS)
 OBJS=SQLite.o
-SONAMEwoV=libSQLiteCDBC.so
-SONAME=$(SONAMEwoV).1
-SOVER=.0.0
+SONAME_CDBCwoV=libSQLiteCDBC.so
+SONAME_CDBC=$(SONAME_CDBCwoV).1
+SOVER_CDBC=.0.0
+
+SONAME_SQLFuncwoV=libSQLiteFunc.so
+SONAME_SQLFunc=$(SONAME_SQLFuncwoV).1
+SOVER_SQLFunc=.0.0
 
 vpath %.h ../include
 
 .PHONY: all install clean
-all: $(SONAME)$(SOVER)
+all: $(SONAME_CDBC)$(SOVER_CDBC) $(SONAME_SQLFunc)$(SOVER_SQLFunc)
 	-mkdir -p $(SRCROOT)/dist/lib
-	cp $(SONAME)$(SOVER) $(SRCROOT)/dist/lib
-	-ln -s $(SRCROOT)/dist/lib/$(SONAME)$(SOVER) $(SRCROOT)/dist/lib/$(SONAME)
-	-ln -s $(SRCROOT)/dist/lib/$(SONAME) $(SRCROOT)/dist/lib/$(SONAMEwoV)
+	cp $(SONAME_CDBC)$(SOVER_CDBC) $(SRCROOT)/dist/lib
+	-ln -s $(SRCROOT)/dist/lib/$(SONAME_CDBC)$(SOVER_CDBC) $(SRCROOT)/dist/lib/$(SONAME_CDBC)
+	-ln -s $(SRCROOT)/dist/lib/$(SONAME_CDBC) $(SRCROOT)/dist/lib/$(SONAME_CDBCwoV)
+	cp $(SONAME_SQLFunc)$(SOVER_SQLFunc) $(SRCROOT)/dist/lib
+	-ln -s $(SRCROOT)/dist/lib/$(SONAME_SQLFunc)$(SOVER_SQLFunc) $(SRCROOT)/dist/lib/$(SONAME_SQLFunc)
+	-ln -s $(SRCROOT)/dist/lib/$(SONAME_SQLFunc) $(SRCROOT)/dist/lib/$(SONAME_SQLFuncwoV)
 	-mkdir -p $(SRCROOT)/dist/include
 	cp ../include/*.h $(SRCROOT)/dist/include
 
-$(SONAME)$(SOVER): $(OBJS)
-	$(CXX) -shared $(CXXFLAGS) $(OBJS) -o $(SONAME)$(SOVER) -Wl,-soname,$(SONAME)
+$(SONAME_CDBC)$(SOVER_CDBC): SQLite.o
+	$(CXX) -shared $(CXXFLAGS) SQLite.o -o $(SONAME_CDBC)$(SOVER_CDBC) -Wl,-soname,$(SONAME_CDBC)
+
+$(SONAME_SQLFunc)$(SOVER_SQLFunc): sql-ext.o
+	$(CXX) -shared $(CXXFLAGS) sql-ext.o -o $(SONAME_SQLFunc)$(SOVER_SQLFunc) -Wl,-soname,$(SONAME_SQLFunc)
 
 .c.o:
 	$(CC) -fPIC $(CFLAGS) -o $@ -c $<
@@ -41,5 +51,7 @@ $(SONAME)$(SOVER): $(OBJS)
 
 SQLite.o: SQLite.cc SQLite.h
 
+sql-ext.o: sql-ext.cc
+
 clean:
-	-rm -f $(OBJS) $(SONAME)$(SOVER) *~
+	-rm -f $(OBJS) $(SONAME_CDBC)$(SOVER_CDBC) $(SONAME_SQLFunc)$(SOVER_SQLFunc)*~

@@ -1156,6 +1156,7 @@ void saveMain(Connection *con, MeasurementSet &ms) {
 }
 
 void saveMainCoordinate(Connection *con, MeasurementSet &ms) {
+  enter();
   // There is no corresponding table in MeasurementSet.
   // Nothing to do.
 }
@@ -1216,7 +1217,8 @@ void mssave(Connection *con, char const*filename) {
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveDataDesc, saveField, saveFeed, saveFreqOffset, 
     saveState, saveFlagCmd, saveAntenna,
-    saveWeather,saveSysCal,savePointing,
+    saveWeather, savePointing,
+    saveSysCal,
     saveMain, saveMainCoordinate,
     NULL
   };
