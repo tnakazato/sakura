@@ -40,7 +40,7 @@ void bindArrayAsBlob(PreparedStatement *stmt, int pos, Array<T> const &v) throw 
   T const *data = v.getStorage(deleteIt);
   try {
     size_t elements = v.nelements();
-    cout << "data: " << data <<", " << elements << endl;;
+    //cout << "data: " << data <<", " << elements << endl;;
     if (data == NULL) {
       assert(elements == 0);
       data = (T const *)DUMMY_AREA;
@@ -844,6 +844,7 @@ void mssave(Connection *con, char const*filename) {
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveDataDesc, saveField, saveFeed, saveFreqOffset, 
     saveState, saveFlagCmd,
+    saveMainCoordinate, saveMain,
     NULL
   };
   MeasurementSet ms(filename);

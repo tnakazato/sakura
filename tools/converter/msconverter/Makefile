@@ -40,4 +40,5 @@ msconverter: $(OBJS)
 
 test:	msconverter
 	-ln -s /share4hpc/NightlyProfile/PerformanceTest/Data/x141.004Ants.ms .
+	-rm sqms[mt].db
 	./msconverter -p $(SRCROOT)/dist x141.004Ants.ms sqms
