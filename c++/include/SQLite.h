@@ -8,13 +8,15 @@
 #define SQLDEBUG 1
 #endif
 
-namespace sqlite {
-
-// All strings should be UTF-8
 /**
+ * C++ wrapper library for SQLite.
+ * All strings handled by this library should be UTF-8.
+ *
  * Lifetime of following objects should be:
+ *
  * ResultSet within PreparedStatement within Connection.
  */
+namespace sqlite {
 
 /**
  * This exception will be raised when there is an error while using this API.
@@ -60,8 +62,8 @@ class ResultSet {
    */
   virtual int getColumnCount() throw (SQLException);
   /**
-   * Get a column name for the pos-th column.
-   * @param pos The position of the column. It starts with 1.
+   * Get a column name for the `pos'-th column.
+   * @param pos A position of the column. It starts with 1.
    * @return name of the column.
    */
   virtual std::string getColumnName(int pos) throw (SQLException);
@@ -71,49 +73,49 @@ class ResultSet {
    * get&lt;Type&gt;() methods for the same column for each row.
    * Generally, you should call this method before calling get&lt;Type&gt;()
    * methods for the same column when accessing nullable column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @return true if the value of the column is null, otherwise false.
    */
   virtual bool isNull(int pos) throw (SQLException);
   /**
    * Fetches an int value from the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @return an int value.
    */
   virtual int getInt(int pos) throw (SQLException);
   /**
    * Fetches a string value from the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param size A pointer to an integer in which size of the returned value
    * (including trailing '\\0') will be stored.
    * @return '\\0' terminated UTF-8 string value. The returned value is valid
    * until calling {@link #next()} or get&lt;Type&gt;() methods for the same column
    * or destructing the instance of this class. You must copy the value
-   * if you need to access it later.
+   * if you need to access it beyond such cases.
    * You must not release the returned area.
    */
   virtual char const *getTransientString(int pos, int *size) throw (SQLException);
   /**
    * Fetches a float value from the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @return a float value.
    */
   virtual float getFloat(int pos) throw (SQLException);
   /**
    * Fetches a double value from the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @return a double value.
    */
   virtual double getDouble(int pos) throw (SQLException);
   /**
    * Fetches a BLOB value from the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param size A pointer to an integer in which size of the returned value
    * will be stored.
    * @return a blob value. The returned value is valid
    * until calling {@link #next()} or get&lt;Type&gt;() methods for the same column
    * or destructing the instance of this class. You must copy the value
-   * if you need to access it later.
+   * if you need to access it beyond such cases.
    * You must not release the returned area.
    */
   virtual void const *getTransientBlob(int pos, int *size) throw (SQLException);
@@ -143,7 +145,8 @@ class PreparedStatement: public Statement {
  public:
   ~PreparedStatement() throw (SQLException);
   /**
-   * Returns a number of parameters in the SQL.
+   * Returns a number of parameters in the %SQL statement supplied for
+   * {@link Connection::prepare(char const *sql)}.
    * @return a number of parameters.
    */
   virtual int getParameterCount() throw (SQLException);
@@ -153,12 +156,12 @@ class PreparedStatement: public Statement {
   virtual void clearParameters() throw (SQLException);
   /**
    * Binds a null value to the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    */
   virtual void setNull(int pos) throw (SQLException);
   /**
    * Binds an int value to the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param value an int value.
    */
   virtual void setInt(int pos, int value) throw (SQLException);
@@ -166,25 +169,27 @@ class PreparedStatement: public Statement {
    * Binds a UTF-8 string value to the specified column.
    * If `value' is a static data, use this method because this method is
    * more efficient than {@link #setTransientString(int pos, char const *value)}.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param value a UTF-8 string value.
    */
   virtual void setStaticString(int pos, char const *value) throw (SQLException);
   /**
    * Binds a UTF-8 string value to the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * `value' is copied in this method, thus you are free to change `value'
+   * immediately after this method returns.
+   * @param pos A position of the column. It starts with 1.
    * @param value a UTF-8 string value.
    */
   virtual void setTransientString(int pos, char const *value) throw (SQLException);
   /**
    * Binds a double value to the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param value a double value.
    */
   virtual void setDouble(int pos, double value) throw (SQLException);
   /**
    * Binds a float value to the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param value a float value.
    */
   virtual void setFloat(int pos, float value) throw (SQLException);
@@ -192,13 +197,15 @@ class PreparedStatement: public Statement {
    * Binds a BLOB value to the specified column.
    * If `value' is a static data, use this method because this method is
    * more efficient than {@link #setTransientBlob(int pos, void const *value, int size)}.
-   * @param pos The position of the column. It starts with 1.
+   * @param pos A position of the column. It starts with 1.
    * @param value a BLOB value.
    */
   virtual void setStaticBlob(int pos, void const *value, int size) throw (SQLException);
   /**
    * Binds a BLOB value to the specified column.
-   * @param pos The position of the column. It starts with 1.
+   * `value' is copied in this method, thus you are free to change `value'
+   * immediately after this method returns.
+   * @param pos A position of the column. It starts with 1.
    * @param value a BLOB value.
    */
   virtual void setTransientBlob(int pos, void const *value, int size) throw (SQLException);
@@ -237,17 +244,17 @@ class Connection {
   static Connection *open(char const *dburl) throw (SQLException);
     
   /**
-   * Executes one or more SQL statements separated by ';'.
+   * Executes one or more %SQL statements separated by ';'.
    */
   virtual void execute(char const *sql) throw (SQLException);
   /**
    * Creates a prepared statement.
-   * @param sql an SQL statement.
+   * @param sql an %SQL statement.
    * @return a prepared statement.
    */
   virtual PreparedStatement *prepare(char const *sql) throw (SQLException);
   /**
-   * Creates an SQL function.
+   * Creates an %SQL function.
    * @see http://www.sqlite.org/c3ref/create_function.html
    */
   virtual void createFunction(
@@ -278,7 +285,7 @@ class SQL {
    * Returns a string which contains same number of bind characters('?') as elements in `values'
    * (excluding a trailing NULL) separated by `delimiter'.
    * @param values a NULL terminated array of pointers.
-   * This is used just to figure out a number of bind characters.
+   * This is used just to figure out a number of bind characters to be listed.
    * @param delimiter a delimiter string.
    * @return a bind character list string.
    */
