@@ -16,7 +16,7 @@
  *
  * ResultSet within PreparedStatement within Connection.
  * @author Kohji Nakamura
- * @version $Rev$
+ * @version $Id$
  */
 namespace sqlite {
 
