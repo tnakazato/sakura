@@ -1215,10 +1215,12 @@ void saveFlagCmd(Connection *con, MeasurementSet &ms) {
 void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
-    saveDataDesc, saveField, saveFeed, saveFreqOffset, 
     saveState, saveFlagCmd, saveAntenna,
-    saveWeather, savePointing,
-    saveSysCal,
+    saveWeather, savePointing, // depending on Antenna
+    saveDataDesc, // depending on SpectralWindow, Polarization
+    saveField, // depending on Source
+    saveFeed, // depending on Antenna, SpectralWindow
+    saveFreqOffset, saveSysCal, // depending on Feed, Antenna, SpectralWindow
     saveMain, saveMainCoordinate,
     NULL
   };
