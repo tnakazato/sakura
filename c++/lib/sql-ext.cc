@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <iostream>
 #include <cassert>
+#include <iostream>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sqlite3ext.h>
