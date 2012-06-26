@@ -291,9 +291,10 @@ sqlite3_extension_init(sqlite3 *db,
   }
 
   {
+    char (*func)(bool) = convertForDisplay<bool, char>; // to instantiate template
     static DumpFunc dumpFunc = {
       "%c", setResult<bool, 1, char>,
-      reinterpret_cast<DummyConvFunc_t>(convertForDisplay<bool, char>)
+      reinterpret_cast<DummyConvFunc_t>(func)
     };
     int result = registerDumpFuncs(db, pzErrMsg,
 				   "dump_blob_as_bool",
@@ -304,9 +305,10 @@ sqlite3_extension_init(sqlite3 *db,
   }
 
   {
+    double (*func)(double) = convertForDisplay<double, double>; // to instantiate template
     static DumpFunc dumpFunc = {
       "%g", setResult<double, 13, double>,
-      reinterpret_cast<DummyConvFunc_t>(convertForDisplay<bool, char>)
+      reinterpret_cast<DummyConvFunc_t>(func)
     };
     int result = registerDumpFuncs(db, pzErrMsg,
 				   "dump_blob_as_double",
