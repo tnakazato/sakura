@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <cassert>
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sqlite3ext.h>
 
@@ -72,10 +73,11 @@ int estimateSize(int formattedLen,
   return len;
 }
 
-template<typename T, int formattedLen>
+template<typename T, int formattedLen, typename DispType>
 void dumpData(char *&buf, char *const bufEnd,
 	      T const* data, int &dataIdx,
 	      char const format[],
+	      DispType (*conv)(T value),
 	      int dims, int elements[],
 	      char const opener[], char const closer[], char const separator[],
 	      int openerLen,
@@ -85,7 +87,7 @@ void dumpData(char *&buf, char *const bufEnd,
   *buf = '\0';
   strncat(buf, opener, bufEnd - buf);
   buf += openerLen;
-  assert(buf < bufEnd);
+  assert(buf <= bufEnd);
   char const *sep = "";
   int sepLen = 0;
   for (int i = 0; i < elements[0]; i++) {
@@ -94,19 +96,20 @@ void dumpData(char *&buf, char *const bufEnd,
     buf += sepLen;
 
     if (dims == 1) {
-      int chars = snprintf(buf, bufEnd - buf, format, data[dataIdx++]);
+      int chars = snprintf(buf, bufEnd - buf, format, conv(data[dataIdx++]));
+      assert(chars <= formattedLen);
       if (chars <= bufEnd - buf) {
 	buf += chars;
       } else {
 	buf = bufEnd;
       }
     } else {
-      dumpData<T, formattedLen>(buf, bufEnd,
-		  data, dataIdx,
-		  format,
-		  dims - 1, &elements[1],
-		  opener, closer, separator,
-		  openerLen, closerLen, separatorLen);
+      dumpData<T, formattedLen, DispType>(buf, bufEnd,
+		data, dataIdx,
+		format, conv,
+		dims - 1, &elements[1],
+		opener, closer, separator,
+		openerLen, closerLen, separatorLen);
     }
 
     sep = separator;
@@ -115,12 +118,13 @@ void dumpData(char *&buf, char *const bufEnd,
   *buf = '\0';
   strncat(buf, closer, bufEnd - buf);
   buf += closerLen;
-  assert(buf < bufEnd);
+  assert(buf <= bufEnd);
 }
 
-template<typename T, int formattedLen>
+template<typename T, int formattedLen, typename DispType>
 void setResult(sqlite3_context *ctx, void const *data, int dataSize,
 	       char const format[],
+	       void (*conv)(),
 	       int dims, int elements[],
 	       char const opener[], char const closer[], char const separator[]) {
   try {
@@ -136,12 +140,12 @@ void setResult(sqlite3_context *ctx, void const *data, int dataSize,
     T const *values = reinterpret_cast<T const *>(data);
     char * const buf = new char[bufSize + 1]; // +1 for '\0'
     try {
-      char * ptr = buf;
+      char *ptr = buf;
       char * const bufEnd = &buf[bufSize];
       int dataIdx = 0;
       dumpData<T, formattedLen>(ptr, bufEnd,
 		  values, dataIdx,
-		  format,
+		  format, reinterpret_cast<DispType (*)(T)>(conv),
 		  dims, elements,
 		  opener, closer, separator,
 		  openerLen, closerLen, sepLen);
@@ -165,10 +169,34 @@ T getParam(T (*func)(sqlite3_value *), sqlite3_value *value, T valueIfNull) {
   return func(value);
 }
 
+
+typedef void (*DummyConvFunc_t)(); // dummy signature
+
+struct DumpFunc {
+  char const *format;
+  void (*func)(sqlite3_context *ctx, void const *data, int dataSize,
+	       char const format[], DummyConvFunc_t conv,
+	       int dims, int elements[],
+	       char const opener[], char const closer[], char const separator[]);
+  DummyConvFunc_t conv;
+};
+
+template<typename T, typename DispType>
+DispType convertForDisplay(T value) {
+  return static_cast<DispType>(value);
+}
+
+template<>
+char convertForDisplay<bool, char>(bool value) {
+  return value ? 'T' : 'F';
+}
+
+
+
 extern "C" {
 
-// dump_blob_as_float(data, opener, closer, separator, [nElements, ...])
-static void dump_blob_as_float(sqlite3_context *ctx, int argc, sqlite3_value *argv[]) {
+// dump_blob_as_sometype(data, opener, closer, separator, [nElements, ...])
+static void dump_blob_as(sqlite3_context *ctx, int argc, sqlite3_value *argv[]) {
   assert(argc >= 4);
   if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
     sqlite3_result_null(ctx);
@@ -208,21 +236,26 @@ static void dump_blob_as_float(sqlite3_context *ctx, int argc, sqlite3_value *ar
     reinterpret_cast<char const *>(
 	getParam(sqlite3_value_text, argv[3], defaultSeparator));
 
-  setResult<float, 13>(ctx, data, dataSize, "%g", dims, elements,
-		  opener, closer, separator);
+  DumpFunc const *dumpFunc =
+    reinterpret_cast<DumpFunc const *>(sqlite3_user_data(ctx));
+  assert(dumpFunc != NULL);
+  dumpFunc->func(ctx, data, dataSize,
+		 dumpFunc->format, dumpFunc->conv,
+		 dims, elements,
+		 opener, closer, separator);
 }
 
 int registerDumpFuncs(sqlite3 *db,
 		      char **pzErrMsg,
 		      char const funcName[],
-		      void (*func)(sqlite3_context *ctx,
-				   int argc, sqlite3_value *argv[])) {
+		      DumpFunc const *dumpFunc) {
   for (int i = 4; i < 10; i++) {
-    int result = sqlite3_create_function_v2(db, "dump_blob_as_float", i,
-		      SQLITE_ANY,
-		      NULL,
-		      func, NULL, NULL,
-		      NULL);
+    int result =
+      sqlite3_create_function_v2(db, funcName, i,
+				 SQLITE_ANY,
+				 const_cast<DumpFunc *>(dumpFunc),
+				 dump_blob_as, NULL, NULL,
+				 NULL);
     if (result != SQLITE_OK) {
       *pzErrMsg = sqlite3_mprintf("Can't create function(s).");
       return 1;
@@ -243,11 +276,58 @@ sqlite3_extension_init(sqlite3 *db,
   SQLITE_EXTENSION_INIT2(pApi)
     ;
 
-  int result = registerDumpFuncs(db, pzErrMsg,
-				 "dump_blob_as_float",
-				 dump_blob_as_float);
-  if (result != 0) {
-    return result;
+  {
+    double (*func)(float) = convertForDisplay<float, double>; // to instantiate template
+    static DumpFunc dumpFunc = {
+      "%g", setResult<float, 13, double>,
+      reinterpret_cast<DummyConvFunc_t>(func)
+    };
+    int result = registerDumpFuncs(db, pzErrMsg,
+				   "dump_blob_as_float",
+				   &dumpFunc);
+    if (result != 0) {
+      return result;
+    }
+  }
+
+  {
+    static DumpFunc dumpFunc = {
+      "%c", setResult<bool, 1, char>,
+      reinterpret_cast<DummyConvFunc_t>(convertForDisplay<bool, char>)
+    };
+    int result = registerDumpFuncs(db, pzErrMsg,
+				   "dump_blob_as_bool",
+				   &dumpFunc);
+    if (result != 0) {
+      return result;
+    }
+  }
+
+  {
+    static DumpFunc dumpFunc = {
+      "%g", setResult<double, 13, double>,
+      reinterpret_cast<DummyConvFunc_t>(convertForDisplay<bool, char>)
+    };
+    int result = registerDumpFuncs(db, pzErrMsg,
+				   "dump_blob_as_double",
+				   &dumpFunc);
+    if (result != 0) {
+      return result;
+    }
+  }
+
+  {
+    int (*func)(int32_t) = convertForDisplay<int32_t, int>; // to instantiate template
+    static DumpFunc dumpFunc = {
+      "%d", setResult<int32_t, 11, int>,
+      reinterpret_cast<DummyConvFunc_t>(func)
+    };
+    int result = registerDumpFuncs(db, pzErrMsg,
+				   "dump_blob_as_int32",
+				   &dumpFunc);
+    if (result != 0) {
+      return result;
+    }
   }
 
   return 0;
