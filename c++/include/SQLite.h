@@ -15,6 +15,8 @@
  * Lifetime of following objects should be:
  *
  * ResultSet within PreparedStatement within Connection.
+ * @author Kohji Nakamura
+ * @version $Rev$
  */
 namespace sqlite {
 
