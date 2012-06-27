@@ -1212,6 +1212,147 @@ void saveFlagCmd(Connection *con, MeasurementSet &ms) {
   }
 }
 
+void saveHistory(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSHistory &tab = ms.history();
+  ROMSHistoryColumns const cols(tab);
+
+  // HISTORY table
+  {
+    /////
+    //cout << "Start HISTORY" << endl;
+    /////
+  char const *dbcols[] = {
+    "HISTORY_ID",  // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "TIME",  // REAL NOT NULL,
+    "OBSERVATION_ID",  // INTEGER NOT NULL,
+    "MESSAGE",  // TEXT NOT NULL,
+    "PRIORITY",  // TEXT NOT NULL,
+    "ORIGIN",  // TEXT NOT NULL,
+    "OBJECT_ID",  // TEXT NOT NULL,
+    "APPLICATION",  // TEXT NOT NULL
+    NULL
+  };
+
+  string sql = "insert into HISTORY (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    /////
+    //cout << "row = " << i << endl;
+    /////
+    int pos = 0;
+    stmt->setInt(++pos, i); // HISTORY_ID
+    stmt->setDouble(++pos, cols.time()(i)); // TIME
+    stmt->setInt(++pos, cols.observationId()(i)); // OBSERVATION_ID
+    stmt->setTransientString(++pos, cols.message()(i).c_str()); // MESSAGE
+    stmt->setTransientString(++pos, cols.priority()(i).c_str()); // PRIORITY
+    stmt->setTransientString(++pos, cols.origin()(i).c_str()); // ORIGIN
+    stmt->setInt(++pos, cols.objectId()(i)); // OBJECT_ID TEXT NOT NULL,
+    stmt->setTransientString(++pos, cols.application()(i).c_str()); // APPLICATION
+    assert(pos == stmt->getParameterCount());
+    int result = stmt->executeUpdate();
+    assert(result == 1);
+  }
+  }
+
+  // HISTORY_CMD table
+  {
+    /////
+    //cout << "Start HISTORY_CMD" << endl;
+    /////
+  char const *dbcols[] = {
+    "HISTORY_ID",  // INTEGER NOT NULL,
+    //	-- Starts with 0.
+    "IDX",  // INTEGER NOT NULL,
+    "CLI_COMMAND",  // TEXT NOT NULL,
+    //	FOREIGN KEY (HISTORY_ID)
+    //	REFERENCES HISTORY (HISTORY_ID)
+    NULL
+  };
+
+  string sql = "insert into HISTORY_COMMAND (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    /////
+    //cout << "row = " << i << endl;
+    /////
+    Array< String > const &v = cols.cliCommand()(i); // CLI_COMMAND
+    String const *data = v.data();
+    /////
+    //cout << "Nelements of CLI_COMMAND = " << int(v.nelements()) << endl;
+    /////
+    for (size_t j = 0; j < v.nelements(); j++) {
+      int pos = 0;
+    /////
+      //cout << ">>>> Elem " << j << "(pos = " << pos+1 << "):" << endl;
+      //cout << "HISTORY_ID = " << i << ", IDX = " << j << endl;
+      //cout << "COMMAND = " << data[j] << endl;
+    /////
+      stmt->setInt(++pos, i); // HISTORY_ID
+      stmt->setInt(++pos, j); // IDX
+      stmt->setTransientString(++pos, data[j].c_str()); // MESSAGE
+
+      assert(pos == stmt->getParameterCount());
+      int result = stmt->executeUpdate();
+      assert(result == 1);
+    }
+  }
+  }
+
+  // HISTORY_PARAM
+  {
+    /////
+    //cout << "Start HISTORY_PARAM" << endl;
+    /////
+  char const *dbcols[] = {
+    "HISTORY_ID",  // INTEGER NOT NULL,
+    //	-- Starts with 0.
+    "IDX",  // INTEGER NOT NULL,
+    "APP_PARAMS",  // TEXT NOT NULL,
+    //	FOREIGN KEY (HISTORY_ID)
+    //	REFERENCES HISTORY (HISTORY_ID)
+    NULL
+  };
+  string sql = "insert into HISTORY_PARAM (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    /////
+    //cout << "row = " << i << endl;
+    /////
+    Array< String > const &v = cols.appParams()(i); // CLI_COMMAND
+    String const *data = v.data();
+    /////
+    //cout << "Nelements of CLI_COMMAND = " << int(v.nelements()) << endl;
+    /////
+    for (size_t j = 0; j < v.nelements(); j++) {
+      int pos = 0;
+    /////
+      //cout << ">>>> Elem " << j << "(pos = " << pos+1 << "):" << endl;
+      //cout << "HISTORY_ID = " << i << ", IDX = " << j << endl;
+      //cout << "APP_PARAMS = " << data[j] << endl;
+    /////
+      stmt->setInt(++pos, i); // HISTORY_ID
+      stmt->setInt(++pos, j); // IDX
+      stmt->setTransientString(++pos, data[j].c_str()); // MESSAGE
+
+      assert(pos == stmt->getParameterCount());
+      int result = stmt->executeUpdate();
+      assert(result == 1);
+    }
+  }
+  }
+
+}
+
 void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
@@ -1222,6 +1363,7 @@ void mssave(Connection *con, char const*filename) {
     saveFeed, // depending on Antenna, SpectralWindow
     saveFreqOffset, saveSysCal, // depending on Feed, Antenna, SpectralWindow
     saveMain, saveMainCoordinate,
+    saveHistory,
     NULL
   };
   MeasurementSet ms(filename);
