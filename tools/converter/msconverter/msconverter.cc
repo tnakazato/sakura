@@ -1212,6 +1212,38 @@ void saveFlagCmd(Connection *con, MeasurementSet &ms) {
   }
 }
 
+void saveDoppler(Connection *con, MeasurementSet &ms) {
+  // Note: DOPPLER table is optional
+  enter();
+  MSDoppler &tab = ms.doppler();
+  ROMSDopplerColumns const cols(tab);
+
+  char const *dbcols[] = {
+    "DOPPLER_ID",  // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "SOURCE_ID",  // INTEGER NOT NULL -> REFERENCES SOURCE (SOURCE_ID)
+    "TRANSITION_ID", // INTEGER NOT NULL,
+    "VELDEF",  // REAL NOT NULL,
+    NULL
+  };
+  string sql = "insert into DOPPLER (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    int pos = 0;
+    stmt->setInt(++pos, i); // DOPPLER_ID
+    stmt->setInt(++pos, cols.sourceId()(i)); // SOURCE_ID
+    stmt->setInt(++pos, cols.transitionId()(i)); // TRANSITION_ID
+    stmt->setDouble(++pos, cols.velDef()(i)); // VELDEF
+
+    assert(pos == stmt->getParameterCount());
+    int result = stmt->executeUpdate();
+    assert(result == 1);
+  }
+}
+
 void saveHistory(Connection *con, MeasurementSet &ms) {
   enter();
   MSHistory &tab = ms.history();
@@ -1264,12 +1296,9 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
     //cout << "Start HISTORY_CMD" << endl;
     /////
   char const *dbcols[] = {
-    "HISTORY_ID",  // INTEGER NOT NULL,
-    //	-- Starts with 0.
-    "IDX",  // INTEGER NOT NULL,
+    "HISTORY_ID",  // INTEGER NOT NULL --> REFERENCES HISTORY (HISTORY_ID),
+    "IDX",  // INTEGER NOT NULL (Starts with 0),
     "CLI_COMMAND",  // TEXT NOT NULL,
-    //	FOREIGN KEY (HISTORY_ID)
-    //	REFERENCES HISTORY (HISTORY_ID)
     NULL
   };
 
@@ -1311,12 +1340,9 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
     //cout << "Start HISTORY_PARAM" << endl;
     /////
   char const *dbcols[] = {
-    "HISTORY_ID",  // INTEGER NOT NULL,
-    //	-- Starts with 0.
-    "IDX",  // INTEGER NOT NULL,
+    "HISTORY_ID",  // INTEGER NOT NULL -> REFERENCES HISTORY (HISTORY_ID),
+    "IDX",  // INTEGER NOT NULL (Starts with 0),
     "APP_PARAMS",  // TEXT NOT NULL,
-    //	FOREIGN KEY (HISTORY_ID)
-    //	REFERENCES HISTORY (HISTORY_ID)
     NULL
   };
   string sql = "insert into HISTORY_PARAM (";
@@ -1363,6 +1389,7 @@ void mssave(Connection *con, char const*filename) {
     saveFeed, // depending on Antenna, SpectralWindow
     saveFreqOffset, saveSysCal, // depending on Feed, Antenna, SpectralWindow
     saveMain, saveMainCoordinate,
+    saveDoppler, // depending on Source
     saveHistory,
     NULL
   };
