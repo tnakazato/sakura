@@ -207,8 +207,8 @@ void saveSw(Connection *con, MeasurementSet &ms) {
 
   //SPECTRAL_WINDOW_ASSOC table
   {
-  // return if optional ASSOC_NATURE column doesn't exist
-    if (cols.assocSpwId().isNull() || cols.assocNature().isNull()) return;
+  // return if optional ASSOC_SPW_ID and ASSOC_NATURE columns don't exist
+  if (cols.assocSpwId().isNull() && cols.assocNature().isNull()) return;
 
   char const *dbcols[] = {
     "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
@@ -229,15 +229,32 @@ void saveSw(Connection *con, MeasurementSet &ms) {
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    Array< Int > const &vId = cols.assocSpwId()(i); // ASSOC_SPW_ID
-    Int const *idData = vId.data();
-    Array< String > const &vNat = cols.assocNature()(i); // ASSOC_NATURE
-    String const *natData = vNat.data();
-    assert(vId.nelements() == vNat.nelements());
-    for (size_t j = 0; j < vId.nelements(); j++) {
+    Bool const isId = (!cols.assocSpwId().isNull());
+    Bool const isNat = (!cols.assocNature().isNull());
+    Vector< Int > assocSpwId;
+    Vector< String > assocNature;
+    size_t nelem = 0;
+    if (isId) {
+      assocSpwId = cols.assocSpwId()(i); // ASSOC_SPW_ID
+      nelem = assocSpwId.nelements();
+    }
+    if (isNat) {
+      assocNature = cols.assocNature()(i); // ASSOC_NATURE
+      if (isId) assert(assocNature.nelements() == nelem);
+      else nelem = assocNature.nelements();
+    }
+    for (size_t j = 0; j < nelem; j++) {
       stmt->setInt(SPECTRAL_WINDOW_ID, i);
-      stmt->setInt(ASSOC_SPW_ID, idData[j]);
-      stmt->setTransientString(ASSOC_NATURE, natData[j].c_str());
+      if (isId) {
+	stmt->setInt(ASSOC_SPW_ID, assocSpwId[j]);
+      } else {
+	stmt->setNull(ASSOC_SPW_ID);
+      }
+      if (isNat) {
+	stmt->setTransientString(ASSOC_NATURE, assocNature[j].c_str());
+      } else {
+	stmt->setNull(ASSOC_NATURE);
+      }
       int result = stmt->executeUpdate();
       assert(result == 1);
     }
@@ -279,6 +296,223 @@ void saveDataDesc(Connection *con, MeasurementSet &ms) {
     int result = stmt->executeUpdate();
     assert(result == 1);
   }
+}
+
+void saveSource(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSSource &tab = ms.source();
+  ROMSSourceColumns const cols(tab);
+
+  // return if optional SOURCE table doesn't exist
+  if (tab.isNull()) return;
+
+  // SOURCE table
+  {
+  char const *dbcols[] = {
+    "SOURCE_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "TIME", // REAL NOT NULL,
+    "INTERVAL", // REAL NOT NULL,
+    "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
+    "NUM_LINES", // INTEGER NOT NULL,
+    "NAME", // TEXT NOT NULL,
+    "CALIBRATION_GROUP", // INTEGER NOT NULL,
+    "CODE", // TEXT NOT NULL,
+    "DIRECTIONX", // REAL NOT NULL,
+    "DIRECTIONY", // REAL NOT NULL,
+    "POSITIONX", // REAL,
+    "POSITIONY", // REAL,
+    "POSITIONZ", // REAL,
+    "PROPER_MOTIONX", // REAL NOT NULL,
+    "PROPER_MOTIONY", // REAL NOT NULL,
+    "PULSAR_ID", // INTEGER,
+    NULL
+  };
+
+  enum {
+    SOURCE_ID = 1,
+    TIME,
+    INTERVAL,
+    SPECTRAL_WINDOW_ID,
+    NUM_LINES,
+    NAME,
+    CALIBRATION_GROUP,
+    CODE,
+    DIRECTIONX,
+    DIRECTIONY,
+    POSITIONX,
+    POSITIONY,
+    POSITIONZ,
+    PROPER_MOTIONX,
+    PROPER_MOTIONY,
+    PULSAR_ID
+  };
+
+  string sql = "insert into SOURCE (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    stmt->setInt(SOURCE_ID, cols.sourceId()(i));
+    stmt->setDouble(TIME, cols.time()(i));
+    stmt->setDouble(INTERVAL, cols.interval()(i));
+    stmt->setInt(SPECTRAL_WINDOW_ID, cols.spectralWindowId()(i));
+    stmt->setInt(NUM_LINES, cols.numLines()(i));
+    stmt->setTransientString(NAME, cols.name()(i).c_str());
+    stmt->setInt(CALIBRATION_GROUP, cols.calibrationGroup()(i));
+    stmt->setTransientString(CODE, cols.code()(i).c_str());
+    {
+      Array< Double > const &v = cols.direction()(i); // DIRECTION
+      Double const *data = v.data();
+      assert(v.nelements() == 2);
+      stmt->setDouble(DIRECTIONX, data[0]);
+      stmt->setDouble(DIRECTIONY, data[1]);
+    }
+    {
+      if (cols.position().isNull()) {
+	stmt->setNull(POSITIONX);
+	stmt->setNull(POSITIONY);
+	stmt->setNull(POSITIONZ);
+      } else {
+	Array< Double > const &v = cols.position()(i); // POSITION
+	assert(v.nelements() == 3);
+	Double const *data = v.data();
+	stmt->setDouble(POSITIONX, data[0]);
+	stmt->setDouble(POSITIONY, data[1]);
+	stmt->setDouble(POSITIONZ, data[2]);
+      }
+    }
+    {
+      Array< Double > const &v = cols.properMotion()(i); // PROPER_MOTION
+      Double const *data = v.data();
+      assert(v.nelements() == 2);
+      stmt->setDouble(PROPER_MOTIONX, data[0]);
+      stmt->setDouble(PROPER_MOTIONY, data[1]);
+    }
+    if (cols.pulsarId().isNull()) {
+      stmt->setNull(PULSAR_ID);
+    } else {
+      stmt->setInt(PULSAR_ID, cols.pulsarId()(i));
+    }
+    int result = stmt->executeUpdate();
+    assert(result == 1);
+  }
+  }
+
+  // SOURCE_LINE_ATTR table
+  {
+  // skip if none of optional TRANSITION, REST_FREQUENCY,
+  // and SYSVEL columns exists
+  if ( !cols.transition().isNull() || !cols.restFrequency().isNull() ||
+       !cols.sysvel().isNull() ) {
+
+    char const *dbcols[] = {
+      "SOURCE_ID", // INTEGER NOT NULL,
+      "IDX",  // INTEGER NOT NULL (Starts with 0),
+      "TRANSITION", // TEXT,
+      "REST_FREQUENCY", // REAL,
+      "SYSVEL", // REAL,
+    NULL
+    };
+
+    enum {
+      SOURCE_ID = 1,
+      IDX,
+      TRANSITION,
+      REST_FREQUENCY,
+      SYSVEL
+    };
+
+    string sql = "insert into SOURCE_LINE_ATTR (";
+    sql += SQL::join(dbcols) + ") values (";
+    sql += SQL::bindChars(dbcols) + ")";
+    unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+    uInt nrow = tab.nrow();
+    Bool const isTr = (!cols.transition().isNull());
+    Bool const isRf = (!cols.restFrequency().isNull());
+    Bool const isSys = (!cols.sysvel().isNull());
+    Vector< String > transition;
+    Vector< Double > restFrequency, sysvel;
+    for (uInt i = 0; i < nrow; i++) {
+      Int const nLine = cols.numLines()(i);
+      if (nLine > 0) {
+	if ( isTr ) {
+	  transition = cols.transition()(i); // TRANSITION
+	  assert(transition.nelements() == nLine);
+	}
+	if ( isRf ) {
+	  restFrequency = cols.restFrequency()(i); // REST_FREQUENCY
+	  assert(restFrequency.nelements() == nLine);
+	}
+	if ( isSys ) {
+	  sysvel = cols.sysvel()(i); // SYSVEL
+	  assert(sysvel.nelements() == nLine);
+	}
+	for (Int j = 0; j < nLine; j++) {
+	  stmt->setInt(SOURCE_ID, cols.sourceId()(i));
+	  stmt->setInt(IDX, j);
+	  if (isTr) {
+	    stmt->setTransientString(TRANSITION, transition[j].c_str());
+	  } else {
+	    stmt->setNull(TRANSITION);
+	  }
+	  if (isRf) {
+	    stmt->setDouble(REST_FREQUENCY, restFrequency[j]);
+	  } else {
+	    stmt->setNull(REST_FREQUENCY);
+	  }
+	  if (isSys) {
+	    stmt->setDouble(SYSVEL, sysvel[j]);
+	  } else {
+	    stmt->setNull(SYSVEL);
+	  }
+	  int result = stmt->executeUpdate();
+	  assert(result == 1);
+	}
+      }
+    }
+  }
+  }
+
+//   // SOURCE_MODEL table
+//   {
+//   // return if optional SOURCE_MODEL column doesn't exist
+//   if (cols.sourceModel().isNull()) return;
+//   char const *dbcols[] = {
+//     "SOURCE_ID", // INTEGER NOT NULL,
+//     "MODEL_KEY", // TEXT NOT NULL,
+//     "MODEL", // NONE (Table Record),
+//     NULL
+//   };
+
+//   enum {
+//     SOURCE_ID = 1,
+//     MODEL_KEY,
+//     MODEL
+//   };
+
+//   string sql = "insert into SOURCE_MODEL (";
+//   sql += SQL::join(dbcols) + ") values (";
+//   sql += SQL::bindChars(dbcols) + ")";
+//   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+//   uInt nrow = tab.nrow();
+//   for (uInt i = 0; i < nrow; i++) {
+//     TableRecord const &v = cols.sourceModel()(i);
+    
+//     if (v.nfields() > 0) {
+//       for (uInt j = 0; j < v.nfields(); j++) {
+// 	stmt->setInt(SOURCE_ID, cols.sourceId()(i));
+// 	cout << "FIELD = " << j << ":" << v.name(j).c_str() << endl;
+// 	//stmt->setTransientString(MODEL_KEY, v.name(j).c_str());
+// 	cout << "data type = " << v.type(j) << endl;
+
+// 	int result = stmt->executeUpdate();
+// 	assert(result == 1);
+//       }
+//     }
+//   }
+//   }
+
 }
 
 void saveFreqOffset(Connection *con, MeasurementSet &ms) {
@@ -1486,6 +1720,7 @@ void mssave(Connection *con, char const*filename) {
     saveState, saveFlagCmd, saveAntenna, saveSw,
     saveProcessor, 
     saveHistory,
+    saveSource, // depending on SpectralWindow
     saveWeather, savePointing, // depending on Antenna
     saveDataDesc, // depending on SpectralWindow, Polarization
     saveField, // depending on Source
