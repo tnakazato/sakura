@@ -111,6 +111,8 @@ void saveSw(Connection *con, MeasurementSet &ms) {
   MSSpectralWindow &tab = ms.spectralWindow();
   ROMSSpWindowColumns const cols(tab);
 
+  // SPECTRAL_WINDOW table
+  {
   char const *dbcols[] = {
     "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
     "NUM_CHAN", // INTEGER NOT NULL,
@@ -134,52 +136,112 @@ void saveSw(Connection *con, MeasurementSet &ms) {
     NULL
   };
 
+  enum {
+    SPECTRAL_WINDOW_ID = 1,
+    NUM_CHAN,
+    NAME,
+    REF_FREQUENCY,
+    CHAN_FREQ,
+    CHAN_WIDTH,
+    MEAS_FREQ_REF,
+    EFFECTIVE_BW,
+    RESOLUTION,
+    TOTAL_BANDWIDTH,
+    NET_SIDEBAND,
+    BBC_NO,
+    BBC_SIDEBAND,
+    IF_CONV_CHAIN,
+    RECEIVER_ID,
+    FREQ_GROUP,
+    FREQ_GROUP_NAME,
+    DOPPLER_ID,
+    FLAG_ROW
+  };
+
   string sql = "insert into SPECTRAL_WINDOW (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    int pos = 0;
-    stmt->setInt(++pos, i); // SPECTRAL_WINDOW_ID
-    stmt->setInt(++pos, cols.numChan()(i)); // NUM_CHAN
-    stmt->setTransientString(++pos, cols.name()(i).c_str()); // NAME
-    stmt->setDouble(++pos, cols.refFrequency()(i)); // REF_FREQUENCY
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.chanFreq()(i));
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.chanWidth()(i));
-    stmt->setInt(++pos, cols.measFreqRef()(i)); // MEAS_FREQ_REF
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.effectiveBW()(i));
-    bindArrayAsBlob<Double>(stmt.get(), ++pos, cols.resolution()(i));
-    stmt->setDouble(++pos, cols.totalBandwidth()(i)); // TOTAL_BANDWIDTH
-    stmt->setInt(++pos, cols.netSideband()(i)); // NET_SIDEBAND
+    stmt->setInt(SPECTRAL_WINDOW_ID, i);
+    stmt->setInt(NUM_CHAN, cols.numChan()(i));
+    stmt->setTransientString(NAME, cols.name()(i).c_str());
+    stmt->setDouble(REF_FREQUENCY, cols.refFrequency()(i));
+    bindArrayAsBlob<Double>(stmt.get(), CHAN_FREQ, cols.chanFreq()(i));
+    bindArrayAsBlob<Double>(stmt.get(), CHAN_WIDTH, cols.chanWidth()(i));
+    stmt->setInt(MEAS_FREQ_REF, cols.measFreqRef()(i));
+    bindArrayAsBlob<Double>(stmt.get(), EFFECTIVE_BW, cols.effectiveBW()(i));
+    bindArrayAsBlob<Double>(stmt.get(), RESOLUTION, cols.resolution()(i));
+    stmt->setDouble(TOTAL_BANDWIDTH, cols.totalBandwidth()(i));
+    stmt->setInt(NET_SIDEBAND, cols.netSideband()(i));
 
     if (cols.bbcNo().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(BBC_NO);
     } else {
-      stmt->setInt(++pos, cols.bbcNo()(i)); //BBC_NO
+      stmt->setInt(BBC_NO, cols.bbcNo()(i));
     }
     if (cols.bbcSideband().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(BBC_SIDEBAND);
     } else {
-      stmt->setInt(++pos, cols.bbcSideband()(i)); // BBC_SIDEBAND
+      stmt->setInt(BBC_SIDEBAND, cols.bbcSideband()(i));
     }
-    stmt->setInt(++pos, cols.ifConvChain()(i)); // IF_CONV_CHAIN
+    stmt->setInt(IF_CONV_CHAIN, cols.ifConvChain()(i));
     if (cols.receiverId().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(RECEIVER_ID);
     } else {
-      stmt->setInt(++pos, cols.receiverId()(i)); // RECEIVER_ID
+      stmt->setInt(RECEIVER_ID, cols.receiverId()(i));
     }
-    stmt->setInt(++pos, cols.freqGroup()(i)); // FREQ_GROUP
-    stmt->setTransientString(++pos, cols.freqGroupName()(i).c_str()); // FREQ_GROUP_NAME
+    stmt->setInt(FREQ_GROUP, cols.freqGroup()(i));
+    stmt->setTransientString(FREQ_GROUP_NAME, cols.freqGroupName()(i).c_str());
     if (cols.dopplerId().isNull()) {
-      stmt->setNull(++pos);
+      stmt->setNull(DOPPLER_ID);
     } else {
-      stmt->setInt(++pos, cols.dopplerId()(i)); // DOPPLER_ID
+      stmt->setInt(DOPPLER_ID, cols.dopplerId()(i));
     }
-    stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
-    assert(pos == stmt->getParameterCount());
+    stmt->setInt(FLAG_ROW, cols.flagRow()(i));
     int result = stmt->executeUpdate();
     assert(result == 1);
+  }
+  }
+
+  //SPECTRAL_WINDOW_ASSOC table
+  {
+  // return if optional ASSOC_NATURE column doesn't exist
+    if (cols.assocSpwId().isNull() || cols.assocNature().isNull()) return;
+
+  char const *dbcols[] = {
+    "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
+    "ASSOC_SPW_ID", // INTEGER NOT NULL,
+    "ASSOC_NATURE", // TEXT NOT NULL,
+    NULL
+  };
+
+  enum {
+    SPECTRAL_WINDOW_ID = 1,
+    ASSOC_SPW_ID,
+    ASSOC_NATURE
+  };
+
+  string sql = "insert into SPECTRAL_WINDOW_ASSOC (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    Array< Int > const &vId = cols.assocSpwId()(i); // ASSOC_SPW_ID
+    Int const *idData = vId.data();
+    Array< String > const &vNat = cols.assocNature()(i); // ASSOC_NATURE
+    String const *natData = vNat.data();
+    assert(vId.nelements() == vNat.nelements());
+    for (size_t j = 0; j < vId.nelements(); j++) {
+      stmt->setInt(SPECTRAL_WINDOW_ID, i);
+      stmt->setInt(ASSOC_SPW_ID, idData[j]);
+      stmt->setTransientString(ASSOC_NATURE, natData[j].c_str());
+      int result = stmt->executeUpdate();
+      assert(result == 1);
+    }
+  }
   }
 }
 
@@ -1216,6 +1278,9 @@ void saveDoppler(Connection *con, MeasurementSet &ms) {
   MSDoppler &tab = ms.doppler();
   ROMSDopplerColumns const cols(tab);
 
+  // return if optional DOPPLER table doesn't exist
+  if (tab.isNull()) return;
+
   char const *dbcols[] = {
     "DOPPLER_ID",  // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "SOURCE_ID",  // INTEGER NOT NULL -> REFERENCES SOURCE (SOURCE_ID)
@@ -1223,6 +1288,14 @@ void saveDoppler(Connection *con, MeasurementSet &ms) {
     "VELDEF",  // REAL NOT NULL,
     NULL
   };
+
+  enum {
+    DOPPLER_ID = 1,
+    SOURCE_ID,
+    TRANSITION_ID,
+    VELDEF
+  };
+
   string sql = "insert into DOPPLER (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
@@ -1230,13 +1303,11 @@ void saveDoppler(Connection *con, MeasurementSet &ms) {
 
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    int pos = 0;
-    stmt->setInt(++pos, i); // DOPPLER_ID
-    stmt->setInt(++pos, cols.sourceId()(i)); // SOURCE_ID
-    stmt->setInt(++pos, cols.transitionId()(i)); // TRANSITION_ID
-    stmt->setDouble(++pos, cols.velDef()(i)); // VELDEF
+    stmt->setInt(DOPPLER_ID, i);
+    stmt->setInt(SOURCE_ID, cols.sourceId()(i));
+    stmt->setInt(TRANSITION_ID, cols.transitionId()(i));
+    stmt->setDouble(VELDEF, cols.velDef()(i));
 
-    assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
     assert(result == 1);
   }
@@ -1249,9 +1320,6 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
 
   // HISTORY table
   {
-    /////
-    //cout << "Start HISTORY" << endl;
-    /////
   char const *dbcols[] = {
     "HISTORY_ID",  // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "TIME",  // REAL NOT NULL,
@@ -1259,9 +1327,20 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
     "MESSAGE",  // TEXT NOT NULL,
     "PRIORITY",  // TEXT NOT NULL,
     "ORIGIN",  // TEXT NOT NULL,
-    "OBJECT_ID",  // TEXT NOT NULL,
+    "OBJECT_ID",  // INTEGER NOT NULL,
     "APPLICATION",  // TEXT NOT NULL
     NULL
+  };
+
+  enum {
+    HISTORY_ID = 1,
+    TIME,
+    OBSERVATION_ID,
+    MESSAGE,
+    PRIORITY,
+    ORIGIN,
+    OBJECT_ID,
+    APPLICATION
   };
 
   string sql = "insert into HISTORY (";
@@ -1270,19 +1349,15 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    /////
-    //cout << "row = " << i << endl;
-    /////
-    int pos = 0;
-    stmt->setInt(++pos, i); // HISTORY_ID
-    stmt->setDouble(++pos, cols.time()(i)); // TIME
-    stmt->setInt(++pos, cols.observationId()(i)); // OBSERVATION_ID
-    stmt->setTransientString(++pos, cols.message()(i).c_str()); // MESSAGE
-    stmt->setTransientString(++pos, cols.priority()(i).c_str()); // PRIORITY
-    stmt->setTransientString(++pos, cols.origin()(i).c_str()); // ORIGIN
-    stmt->setInt(++pos, cols.objectId()(i)); // OBJECT_ID TEXT NOT NULL,
-    stmt->setTransientString(++pos, cols.application()(i).c_str()); // APPLICATION
-    assert(pos == stmt->getParameterCount());
+    stmt->setInt(HISTORY_ID, i);
+    stmt->setDouble(TIME, cols.time()(i));
+    stmt->setInt(OBSERVATION_ID, cols.observationId()(i));
+    stmt->setTransientString(MESSAGE, cols.message()(i).c_str());
+    stmt->setTransientString(PRIORITY, cols.priority()(i).c_str());
+    stmt->setTransientString(ORIGIN, cols.origin()(i).c_str());
+    stmt->setInt(OBJECT_ID, cols.objectId()(i));
+    stmt->setTransientString(APPLICATION, cols.application()(i).c_str());
+
     int result = stmt->executeUpdate();
     assert(result == 1);
   }
@@ -1290,14 +1365,17 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
 
   // HISTORY_CMD table
   {
-    /////
-    //cout << "Start HISTORY_CMD" << endl;
-    /////
   char const *dbcols[] = {
     "HISTORY_ID",  // INTEGER NOT NULL --> REFERENCES HISTORY (HISTORY_ID),
     "IDX",  // INTEGER NOT NULL (Starts with 0),
     "CLI_COMMAND",  // TEXT NOT NULL,
     NULL
+  };
+
+  enum {
+    HISTORY_ID = 1,
+    IDX,
+    CLI_COMMAND
   };
 
   string sql = "insert into HISTORY_COMMAND (";
@@ -1306,26 +1384,13 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    /////
-    //cout << "row = " << i << endl;
-    /////
     Array< String > const &v = cols.cliCommand()(i); // CLI_COMMAND
     String const *data = v.data();
-    /////
-    //cout << "Nelements of CLI_COMMAND = " << int(v.nelements()) << endl;
-    /////
     for (size_t j = 0; j < v.nelements(); j++) {
-      int pos = 0;
-    /////
-      //cout << ">>>> Elem " << j << "(pos = " << pos+1 << "):" << endl;
-      //cout << "HISTORY_ID = " << i << ", IDX = " << j << endl;
-      //cout << "COMMAND = " << data[j] << endl;
-    /////
-      stmt->setInt(++pos, i); // HISTORY_ID
-      stmt->setInt(++pos, j); // IDX
-      stmt->setTransientString(++pos, data[j].c_str()); // MESSAGE
+      stmt->setInt(HISTORY_ID, i);
+      stmt->setInt(IDX, j);
+      stmt->setTransientString(CLI_COMMAND, data[j].c_str());
 
-      assert(pos == stmt->getParameterCount());
       int result = stmt->executeUpdate();
       assert(result == 1);
     }
@@ -1334,41 +1399,32 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
 
   // HISTORY_PARAM
   {
-    /////
-    //cout << "Start HISTORY_PARAM" << endl;
-    /////
   char const *dbcols[] = {
     "HISTORY_ID",  // INTEGER NOT NULL -> REFERENCES HISTORY (HISTORY_ID),
     "IDX",  // INTEGER NOT NULL (Starts with 0),
     "APP_PARAMS",  // TEXT NOT NULL,
     NULL
   };
+
+  enum {
+    HISTORY_ID = 1,
+    IDX,
+    APP_PARAMS
+  };
+
   string sql = "insert into HISTORY_PARAM (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
-    /////
-    //cout << "row = " << i << endl;
-    /////
-    Array< String > const &v = cols.appParams()(i); // CLI_COMMAND
+    Array< String > const &v = cols.appParams()(i); // APP_PARAMS
     String const *data = v.data();
-    /////
-    //cout << "Nelements of CLI_COMMAND = " << int(v.nelements()) << endl;
-    /////
     for (size_t j = 0; j < v.nelements(); j++) {
-      int pos = 0;
-    /////
-      //cout << ">>>> Elem " << j << "(pos = " << pos+1 << "):" << endl;
-      //cout << "HISTORY_ID = " << i << ", IDX = " << j << endl;
-      //cout << "APP_PARAMS = " << data[j] << endl;
-    /////
-      stmt->setInt(++pos, i); // HISTORY_ID
-      stmt->setInt(++pos, j); // IDX
-      stmt->setTransientString(++pos, data[j].c_str()); // MESSAGE
+      stmt->setInt(HISTORY_ID, i);
+      stmt->setInt(IDX, j);
+      stmt->setTransientString(APP_PARAMS, data[j].c_str());
 
-      assert(pos == stmt->getParameterCount());
       int result = stmt->executeUpdate();
       assert(result == 1);
     }
@@ -1380,7 +1436,7 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
 void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
-    saveState, saveFlagCmd, saveAntenna,
+    saveState, saveFlagCmd, saveAntenna, saveSw,
     saveHistory,
     saveWeather, savePointing, // depending on Antenna
     saveDataDesc, // depending on SpectralWindow, Polarization
