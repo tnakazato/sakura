@@ -555,6 +555,136 @@ void saveFreqOffset(Connection *con, MeasurementSet &ms) {
   }  
 }
 
+void saveColumnKeyword(Connection *con, MeasurementSet &ms) {
+  //enter();
+  //MS &tab = ms.();
+  //ROMS const cols(tab);
+}
+
+void saveTableKeyword(Connection *con, MeasurementSet &ms) {
+  enter();
+  cout << "[ " << ms.keywordSet() << " ]" << flush;
+}
+
+void saveObs(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSObservation &tab = ms.observation();
+  ROMSObservationColumns const cols(tab);
+
+  // OBSERVATION table
+  {
+  char const *dbcols[] = {
+    "OBSERVATION_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "TELESCOPE_NAME", // TEXT NOT NULL,
+    "TIME_RANGE_START", // REAL NOT NULL,
+    "TIME_RANGE_END", // REAL NOT NULL,
+    "OBSERVER", // TEXT NOT NULL,
+    "SCHEDULE_TYPE", // TEXT NOT NULL,
+    "PROJECT", // TEXT NOT NULL,
+    "RELEASE_DATE", // REAL NOT NULL,
+    "FLAG_ROW", // INTEGER NOT NULL
+    NULL
+  };
+  enum {
+    OBSERVATION_ID = 1,
+    TELESCOPE_NAME,
+    TIME_RANGE_START,
+    TIME_RANGE_END,
+    OBSERVER,
+    SCHEDULE_TYPE,
+    PROJECT,
+    RELEASE_DATE,
+    FLAG_ROW
+  };
+  string sql = "insert into OBSERVATION (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    stmt->setInt(OBSERVATION_ID, i);
+    stmt->setTransientString(TELESCOPE_NAME, cols.telescopeName()(i).c_str());
+
+    Array<Double> const &v = cols.timeRange()(i);
+    assert(v.nelements() == 2);
+    Double const *data = v.data();
+    stmt->setDouble(TIME_RANGE_START, data[0]);
+    stmt->setDouble(TIME_RANGE_END, data[1]);
+    stmt->setTransientString(OBSERVER, cols.observer()(i).c_str());
+    stmt->setTransientString(SCHEDULE_TYPE, cols.scheduleType()(i).c_str());
+    stmt->setTransientString(PROJECT, cols.project()(i).c_str());
+    stmt->setDouble(RELEASE_DATE, cols.releaseDate()(i));
+    stmt->setInt(FLAG_ROW, cols.flagRow()(i));
+    int result = stmt->executeUpdate();
+    assert(result == 1);
+  }
+  }
+
+  // OBSERVATION_LOG table
+  {
+  char const *dbcols[] = {
+    "OBSERVATION_ID", // INTEGER NOT NULL,
+    "IDX", // INTEGER NOT NULL,
+    "LOG", // TEXT NOT NULL,
+    NULL
+  };
+  enum {
+    OBSERVATION_ID = 1,
+    IDX, 
+    LOG
+  };
+  string sql = "insert into OBSERVATION_LOG (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    Array<String> const &v = cols.log()(i);
+    String const *data = v.data();
+    uInt nlog = v.nelements();
+    for (uInt j = 0; j < nlog; j++) {
+      stmt->setInt(OBSERVATION_ID, i);
+      stmt->setInt(IDX, j);
+      stmt->setTransientString(LOG, data[j].c_str());
+      int result = stmt->executeUpdate();
+      assert(result == 1);
+    }
+  }
+  }
+
+  // OBSERVATION_SCHEDULE table
+  {
+  char const *dbcols[] = {
+    "OBSERVATION_ID", // INTEGER NOT NULL,
+    "IDX", // INTEGER NOT NULL,
+    "SCHEDULE", // TEXT NOT NULL,
+    NULL
+  };
+  enum {
+    OBSERVATION_ID = 1,
+    IDX,
+    SCHEDULE
+  };
+  string sql = "insert into OBSERVATION_SCHEDULE (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    Array<String> const &schedule = cols.schedule()(i);
+    String const *data = schedule.data();
+    for (uInt j = 0; j < schedule.nelements(); j++) {
+      stmt->setInt(OBSERVATION_ID, i);
+      stmt->setInt(IDX, j);
+      stmt->setTransientString(SCHEDULE, data[j].c_str());
+      int result = stmt->executeUpdate();
+      assert(result == 1);
+    }
+  }
+  }
+
+}
+
 void saveProcessor(Connection *con, MeasurementSet &ms) {
   enter();
   MSProcessor &tab = ms.processor();
@@ -1717,9 +1847,11 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
 void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
+    saveTableKeyword,
     saveState, saveFlagCmd, saveAntenna, saveSw,
     saveProcessor, 
     saveHistory,
+    saveObs,
     saveSource, // depending on SpectralWindow
     saveWeather, savePointing, // depending on Antenna
     saveDataDesc, // depending on SpectralWindow, Polarization
