@@ -441,9 +441,9 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
       Array< Double > const &v = cols.position()(i); // POSITION
       const IPosition &shape = v.shape();
       Double const *data = v.data();
-      for (size_t i = 0; i < 3; i++) {
+      for (size_t j = 0; j < 3; j++) {
 	//"POSITIONX", "POSITIONY", "POSITIONZ"
-	stmt->setDouble(++pos, data[i]);
+	stmt->setDouble(++pos, data[j]);
       }
     }
     assert(pos == stmt->getParameterCount());
@@ -533,18 +533,18 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
       Array< Double > const &v = cols.position()(i); // POSITION
       const IPosition &shape = v.shape();
       Double const *data = v.data();
-      for (size_t i = 0; i < 3; i++) {
+      for (size_t j = 0; j < 3; j++) {
 	//"POSITIONX", "POSITIONY", "POSITIONZ"
-	stmt->setDouble(++pos, data[i]);
+	stmt->setDouble(++pos, data[j]);
       }
     }
     {
       Array< Double > const &v = cols.offset()(i); // OFFSET
       const IPosition &shape = v.shape();
       Double const *data = v.data();
-      for (size_t i = 0; i < 3; i++) {
+      for (size_t j = 0; j < 3; j++) {
 	// "OFFSETX", "OFFSETY", "OFFSETZ"
-	stmt->setDouble(++pos, data[i]);
+	stmt->setDouble(++pos, data[j]);
       }
     }
     stmt->setDouble(++pos, cols.dishDiameter()(i)); // DISH_DIAMETER
@@ -755,9 +755,9 @@ void savePointing(Connection *con, MeasurementSet &ms) {
       Array< Double > const &v = cols.encoder()(i); // ENCODERX ENCODERY
       const IPosition &shape = v.shape();
       Double const *data = v.data();
-      for (size_t i = 0; i < 2; i++) {
+      for (size_t j = 0; j < 2; j++) {
 	// "ENCODERX", "ENCODERY"
-	stmt->setDouble(++pos, data[i]);
+	stmt->setDouble(++pos, data[j]);
       }
     }
     if (cols.pointingModelId().isNull()) {
@@ -1101,11 +1101,9 @@ void saveMain(Connection *con, MeasurementSet &ms) {
       stmt->setDouble(W, data[2]);
     }
     if (cols.uvw2().isNull()) {
-      for (size_t i = 0; i < 3; i++) {
-	stmt->setNull(U2);
-	stmt->setNull(V2);
-	stmt->setNull(W2);
-      }
+      stmt->setNull(U2);
+      stmt->setNull(V2);
+      stmt->setNull(W2);
     } else {
       Array< Double > const &v = cols.uvw2()(i);
       // const IPosition &shape = v.shape();
@@ -1383,14 +1381,15 @@ void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveState, saveFlagCmd, saveAntenna,
+    saveHistory,
     saveWeather, savePointing, // depending on Antenna
     saveDataDesc, // depending on SpectralWindow, Polarization
     saveField, // depending on Source
+    saveDoppler, // depending on Source
     saveFeed, // depending on Antenna, SpectralWindow
     saveFreqOffset, saveSysCal, // depending on Feed, Antenna, SpectralWindow
-    saveMain, saveMainCoordinate,
-    saveDoppler, // depending on Source
-    saveHistory,
+    saveMain, // depending on Processor, State, DataDescription, Field, Feed, Antenna
+    saveMainCoordinate, // depending on Main
     NULL
   };
   MeasurementSet ms(filename);
