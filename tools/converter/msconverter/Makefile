@@ -1,6 +1,6 @@
 SRCROOT=$(abspath ../../..)
 
-CASA=/home/kohji/casahpc2/linux_64b
+CASA=/home/wataru/casadevel/casa/linux_64b
 SQLITE=/opt/sqlite
 LIBPATH=$(SRCROOT)/dist/lib:$(SQLITE)/lib:$(CASA)/lib
 CC=gcc

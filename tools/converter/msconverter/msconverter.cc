@@ -321,6 +321,53 @@ void saveFreqOffset(Connection *con, MeasurementSet &ms) {
   }  
 }
 
+void saveProcessor(Connection *con, MeasurementSet &ms) {
+  enter();
+  MSProcessor &tab = ms.processor();
+  ROMSProcessorColumns const cols(tab);
+
+  char const *dbcols[] = {
+    "PROCESSOR_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "PROCESSOR_TYPE", // TEXT NOT NULL,
+    "SUB_TYPE", //  TEXT NOT NULL,
+    "TYPE_ID", // INTEGER NOT NULL,
+    "MODE_ID", // INTEGER NOT NULL,
+    "PASS_ID", // INTEGER,
+    "FLAG_ROW", // INTEGER NOT NULL
+    NULL
+  };
+
+  enum {
+    PROCESSOR_ID = 1,
+    PROCESSOR_TYPE,
+    SUB_TYPE,
+    TYPE_ID,
+    MODE_ID,
+    PASS_ID,
+    FLAG_ROW
+  };
+  string sql = "insert into PROCESSOR (";
+  sql += SQL::join(dbcols) + ") values (";
+  sql += SQL::bindChars(dbcols) + ")";
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
+  uInt nrow = tab.nrow();
+  for (uInt i = 0; i < nrow; i++) {
+    stmt->setInt(PROCESSOR_ID, i);
+    stmt->setTransientString(PROCESSOR_TYPE, cols.type()(i).c_str());
+    stmt->setTransientString(SUB_TYPE, cols.subType()(i).c_str());
+    stmt->setInt(TYPE_ID, cols.typeId()(i));
+    stmt->setInt(MODE_ID, cols.modeId()(i));
+    if (cols.passId().isNull()) {
+      stmt->setNull(PASS_ID);
+    } else {
+      stmt->setInt(PASS_ID, cols.passId()(i));
+    }
+    stmt->setInt(FLAG_ROW, cols.flagRow()(i));
+    int result = stmt->executeUpdate();
+    assert(result == 1);
+  }
+}
+
 void saveState(Connection *con, MeasurementSet &ms) {
   enter();
   MSState &tab = ms.state();
@@ -1437,6 +1484,7 @@ void mssave(Connection *con, char const*filename) {
   enter();
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveState, saveFlagCmd, saveAntenna, saveSw,
+    saveProcessor, 
     saveHistory,
     saveWeather, savePointing, // depending on Antenna
     saveDataDesc, // depending on SpectralWindow, Polarization
