@@ -563,7 +563,7 @@ void saveColumnKeyword(Connection *con, MeasurementSet &ms) {
 
 void saveTableKeyword(Connection *con, MeasurementSet &ms) {
   enter();
-  cout << "[ " << ms.keywordSet() << " ]" << flush;
+  //cout << "[ " << ms.keywordSet() << " ]" << flush;
 }
 
 void saveObs(Connection *con, MeasurementSet &ms) {
