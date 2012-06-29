@@ -9,7 +9,7 @@ CXX=g++
 #CXX=icc
 #LINKER=icpc
 LINKER=LD_LIBRARY_PATH=$(LIBPATH) LD_RUN_PATH=$(LIBPATH) $(CXX)
-COMMON_FLAGS=-g -I$(SRCROOT)/dist/include -I$(SQLITE)/include -I$(CASA)/include/casacore -Wall -O2 -fopenmp -m64 -march=native #-ftree-vectorize -funroll-loops -floop-interchange -D_XOPEN_SOURCE=600 #-DSQLDEBUG=1 #-D_FILE_OFFSET_BITS=64
+COMMON_FLAGS=-g -DPREFIX='"$(SRCROOT)/dist"' -I$(SRCROOT)/dist/include -I$(SQLITE)/include -I$(CASA)/include/casacore -Wall -O2 -fopenmp -m64 -march=native #-ftree-vectorize -funroll-loops -floop-interchange -D_XOPEN_SOURCE=600 #-DSQLDEBUG=1 #-D_FILE_OFFSET_BITS=64
 CFLAGS=-std=c99 $(COMMON_FLAGS)
 CXXFLAGS=$(COMMON_FLAGS)
 OBJS=msconverter.o
@@ -41,5 +41,5 @@ msconverter: $(OBJS)
 test:	msconverter
 	-ln -s /share4hpc/NightlyProfile/PerformanceTest/Data/x141.004Ants.ms .
 	-rm sqms[mt].db
-	./msconverter -p $(SRCROOT)/dist x141.004Ants.ms sqms
+	SAKURA_ROOT=$(SRCROOT)/dist ./msconverter x141.004Ants.ms sqms
 	LD_LIBRARY_PATH=$(SRCROOT)/dist/lib $(SQLITE)/bin/sqlite3 -header -nullvalue '.null.' -init test.sql sqmst.db

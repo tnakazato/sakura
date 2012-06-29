@@ -1,10 +1,10 @@
 #include <sys/time.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <cstdio>
 #include <cassert>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 #include <memory>
 #include <iostream>
@@ -26,6 +26,8 @@ using namespace casa;
 using namespace sqlite;
 
 namespace {
+char const ENV_VAR_SAKURA_ROOT[] = "SAKURA_ROOT";
+
 union {
   int i;
   float f;
@@ -1912,7 +1914,6 @@ char *readFileContent(char const *filename) {
 void conv(char const *prefix, char const *msfile, char const *basename) {
   string msm = basename;
   msm += "m.db";
-  cout << msm << endl;
   string mst = basename;
   mst += "t.db";
 
@@ -1923,7 +1924,6 @@ void conv(char const *prefix, char const *msfile, char const *basename) {
     size_t ddl_path_size = strlen(prefix) + strlen(sql) + strlen(ddl_file) + 1;
     char ddl_path[ddl_path_size];
     snprintf(ddl_path, ddl_path_size, "%s%s%s", prefix, sql, ddl_file);
-    cerr << ddl_path << endl;
     char *msm_ddl = readFileContent(ddl_path);
     try {
       string dbfile = "file:";
@@ -1943,7 +1943,6 @@ void conv(char const *prefix, char const *msfile, char const *basename) {
     size_t ddl_path_size = strlen(prefix) + strlen(sql) + strlen(ddl_file) + 1;
     char ddl_path[ddl_path_size];
     snprintf(ddl_path, ddl_path_size, "%s%s%s", prefix, sql, ddl_file);
-    cerr << ddl_path << endl;
     char *mst_ddl = readFileContent(ddl_path);
     try {
       string dbfile = "file:";
@@ -1983,7 +1982,12 @@ void usage() {
 
 int main(int argc, char const * const argv[]) { 
   progName = argv[0];
-  char const *prefix = "/opt/sakura";
+  char const *prefix = PREFIX;
+
+  char const *root = getenv(ENV_VAR_SAKURA_ROOT);
+  if (root != NULL) {
+    prefix = root;
+  }
 
   static struct option const long_options[] = {
     {"prefix", 1, NULL, 'p'},
@@ -2015,7 +2019,7 @@ int main(int argc, char const * const argv[]) {
     usage();
     return 1;
   }
-  cerr << prefix << endl;
+  cout << "SAKURA_ROOT: " << prefix << endl;
   double start = currenttime();
   conv(prefix, argv[argStart], argv[argStart + 1]);
   double end = currenttime();
