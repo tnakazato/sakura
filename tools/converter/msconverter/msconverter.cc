@@ -436,7 +436,7 @@ void saveSource(Connection *con, MeasurementSet &ms) {
     Vector< String > transition;
     Vector< Double > restFrequency, sysvel;
     for (uInt i = 0; i < nrow; i++) {
-      Int const nLine = cols.numLines()(i);
+      uInt const nLine = cols.numLines()(i);
       if (nLine > 0) {
 	if ( isTr ) {
 	  transition = cols.transition()(i); // TRANSITION
@@ -450,7 +450,7 @@ void saveSource(Connection *con, MeasurementSet &ms) {
 	  sysvel = cols.sysvel()(i); // SYSVEL
 	  assert(sysvel.nelements() == nLine);
 	}
-	for (Int j = 0; j < nLine; j++) {
+	for (uInt j = 0; j < nLine; j++) {
 	  stmt->setInt(SOURCE_ID, cols.sourceId()(i));
 	  stmt->setInt(IDX, j);
 	  if (isTr) {
@@ -554,6 +554,7 @@ void saveFreqOffset(Connection *con, MeasurementSet &ms) {
     stmt->setDouble(++pos, cols.offset()(i)); // OFFSET
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }  
 }
 
@@ -640,18 +641,25 @@ void saveObs(Connection *con, MeasurementSet &ms) {
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
-  for (uInt i = 0; i < nrow; i++) {
-    Array<String> const &v = cols.log()(i);
-    String const *data = v.data();
-    uInt nlog = v.nelements();
-    for (uInt j = 0; j < nlog; j++) {
-      stmt->setInt(OBSERVATION_ID, i);
-      stmt->setInt(IDX, j);
-      stmt->setTransientString(LOG, data[j].c_str());
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+  try {
+    for (uInt i = 0; i < nrow; i++) {
+      Array<String> const &v = cols.log()(i);
+      String const *data = v.data();
+      uInt nlog = v.nelements();
+      for (uInt j = 0; j < nlog; j++) {
+	stmt->setInt(OBSERVATION_ID, i);
+	stmt->setInt(IDX, j);
+	stmt->setTransientString(LOG, data[j].c_str());
+	int result = stmt->executeUpdate();
+	assert(result == 1);
+      }
     }
+  } catch (AipsError x) {
+    // do not create OBSERVATION_LOG table if LOG contains no data.
   }
+
+
+
   }
 
   // OBSERVATION_SCHEDULE table
@@ -672,17 +680,22 @@ void saveObs(Connection *con, MeasurementSet &ms) {
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
-  for (uInt i = 0; i < nrow; i++) {
-    Array<String> const &schedule = cols.schedule()(i);
-    String const *data = schedule.data();
-    for (uInt j = 0; j < schedule.nelements(); j++) {
-      stmt->setInt(OBSERVATION_ID, i);
-      stmt->setInt(IDX, j);
-      stmt->setTransientString(SCHEDULE, data[j].c_str());
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+  try {
+    for (uInt i = 0; i < nrow; i++) {
+      Array<String> const &schedule = cols.schedule()(i);
+      String const *data = schedule.data();
+      for (uInt j = 0; j < schedule.nelements(); j++) {
+	stmt->setInt(OBSERVATION_ID, i);
+	stmt->setInt(IDX, j);
+	stmt->setTransientString(SCHEDULE, data[j].c_str());
+	int result = stmt->executeUpdate();
+	assert(result == 1);
+      }
     }
+  } catch (AipsError x) {
+    // do not create OBSERVATION_SCHEDULE table if SCHEDULE contains no data.
   }
+
   }
 
 }
@@ -860,6 +873,7 @@ void saveField(Connection *con, MeasurementSet &ms) {
       stmt->setDouble(++pos, referenceDir(1,j)); // REFERENCE_DIRY
       assert(pos == stmt->getParameterCount());
       int result = stmt->executeUpdate();
+      assert(result == 1);
     }
   }
   }
@@ -914,7 +928,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
     }
     {
       Array< Double > const &v = cols.position()(i); // POSITION
-      const IPosition &shape = v.shape();
+      //const IPosition &shape = v.shape();
       Double const *data = v.data();
       for (size_t j = 0; j < 3; j++) {
 	//"POSITIONX", "POSITIONY", "POSITIONZ"
@@ -962,6 +976,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
       stmt->setDouble(++pos, recAngle(j)); // RECEPTOR_ANGLE
       assert(pos == stmt->getParameterCount());
       int result = stmt->executeUpdate();
+      assert(result == 1);
     }
   }
   }
@@ -1006,7 +1021,7 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
     stmt->setTransientString(++pos, cols.mount()(i).c_str()); // MOUNT
     {
       Array< Double > const &v = cols.position()(i); // POSITION
-      const IPosition &shape = v.shape();
+      //const IPosition &shape = v.shape();
       Double const *data = v.data();
       for (size_t j = 0; j < 3; j++) {
 	//"POSITIONX", "POSITIONY", "POSITIONZ"
@@ -1015,7 +1030,7 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
     }
     {
       Array< Double > const &v = cols.offset()(i); // OFFSET
-      const IPosition &shape = v.shape();
+      //const IPosition &shape = v.shape();
       Double const *data = v.data();
       for (size_t j = 0; j < 3; j++) {
 	// "OFFSETX", "OFFSETY", "OFFSETZ"
@@ -1168,6 +1183,7 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
 
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -1228,7 +1244,7 @@ void savePointing(Connection *con, MeasurementSet &ms) {
       stmt->setNull(++pos);
     }else {
       Array< Double > const &v = cols.encoder()(i); // ENCODERX ENCODERY
-      const IPosition &shape = v.shape();
+      //const IPosition &shape = v.shape();
       Double const *data = v.data();
       for (size_t j = 0; j < 2; j++) {
 	// "ENCODERX", "ENCODERY"
@@ -1256,6 +1272,7 @@ void savePointing(Connection *con, MeasurementSet &ms) {
 
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -1414,6 +1431,7 @@ void saveSysCal(Connection *con, MeasurementSet &ms) {
 
     assert(pos == stmt->getParameterCount());
     int result = stmt->executeUpdate();
+    assert(result == 1);
   }
 }
 
@@ -1875,7 +1893,8 @@ void mssave(Connection *con, char const*filename) {
 
 double currenttime() {
   struct timeval tv;
-  int result = gettimeofday(&tv, NULL);
+  //int result = gettimeofday(&tv, NULL);
+  gettimeofday(&tv, NULL);
   return tv.tv_sec + ((double)tv.tv_usec) / 1000000.;
 }
 
