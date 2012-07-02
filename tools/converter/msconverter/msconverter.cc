@@ -230,29 +230,31 @@ void saveSw(Connection *con, MeasurementSet &ms) {
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
+  Bool const isId = (!cols.assocSpwId().isNull());
+  Bool const isNat = (!cols.assocNature().isNull());
   for (uInt i = 0; i < nrow; i++) {
-    Bool const isId = (!cols.assocSpwId().isNull());
-    Bool const isNat = (!cols.assocNature().isNull());
     Vector< Int > assocSpwId;
     Vector< String > assocNature;
     size_t nelem = 0;
-    if (isId) {
+    Bool const isIdRow = isId && cols.assocSpwId().isDefined(i);
+    Bool const isNatRow = isNat && cols.assocNature().isDefined(i);
+    if (isIdRow) {
       assocSpwId = cols.assocSpwId()(i); // ASSOC_SPW_ID
       nelem = assocSpwId.nelements();
     }
-    if (isNat) {
+    if (isNatRow) {
       assocNature = cols.assocNature()(i); // ASSOC_NATURE
-      if (isId) assert(assocNature.nelements() == nelem);
+      if (isIdRow) assert(assocNature.nelements() == nelem);
       else nelem = assocNature.nelements();
     }
     for (size_t j = 0; j < nelem; j++) {
       stmt->setInt(SPECTRAL_WINDOW_ID, i);
-      if (isId) {
+      if (isIdRow) {
 	stmt->setInt(ASSOC_SPW_ID, assocSpwId[j]);
       } else {
 	stmt->setNull(ASSOC_SPW_ID);
       }
-      if (isNat) {
+      if (isNatRow) {
 	stmt->setTransientString(ASSOC_NATURE, assocNature[j].c_str());
       } else {
 	stmt->setNull(ASSOC_NATURE);
@@ -1815,6 +1817,7 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
+    if ( ! cols.cliCommand().isDefined(i) ) continue;
     Array< String > const &v = cols.cliCommand()(i); // CLI_COMMAND
     String const *data = v.data();
     for (size_t j = 0; j < v.nelements(); j++) {
@@ -1849,6 +1852,7 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
+    if ( ! cols.appParams().isDefined(i) ) continue;
     Array< String > const &v = cols.appParams()(i); // APP_PARAMS
     String const *data = v.data();
     for (size_t j = 0; j < v.nelements(); j++) {
