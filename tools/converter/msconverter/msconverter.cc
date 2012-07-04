@@ -42,12 +42,13 @@ void bindArrayAsBlob(PreparedStatement *stmt, int pos, Array<T> const &v) throw 
   T const *data = v.getStorage(deleteIt);
   try {
     size_t elements = v.nelements();
+    T const *blobData = data;
     //cout << "data: " << data <<", " << elements << endl;;
     if (data == NULL) {
       assert(elements == 0);
-      data = (T const *)DUMMY_AREA;
+      blobData = (T const *)DUMMY_AREA;
     }
-    stmt->setTransientBlob(pos, data, sizeof(T) * elements);
+    stmt->setTransientBlob(pos, blobData, sizeof(T) * elements);
   } catch (...) {
     v.freeStorage(data, deleteIt);
     throw;
