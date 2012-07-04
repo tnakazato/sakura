@@ -1,4 +1,4 @@
-ATTACH DATABASE 'msm.db' AS msm;
+-- ATTACH DATABASE 'msm.db' AS msm;
 
 /* Drop Indexes */
 DROP INDEX IF EXISTS IDX_MAIN_TIME;

@@ -1937,9 +1937,9 @@ char *readFileContent(char const *filename) {
 
 void conv(char const *prefix, char const *msfile, char const *basename) {
   string msm = basename;
-  msm += "m.db";
+  msm += ".mdb";
   string mst = basename;
-  mst += "t.db";
+  mst += ".tdb";
 
   char const sql[] = "/sql/";
   // create empty master db from msm

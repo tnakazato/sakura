@@ -40,6 +40,6 @@ msconverter: $(OBJS)
 
 test:	msconverter
 	-ln -s /share4hpc/NightlyProfile/PerformanceTest/Data/x141.004Ants.ms .
-	-rm sqms[mt].db
+	-rm sqms.[mt]db
 	SAKURA_ROOT=$(SRCROOT)/dist ./msconverter x141.004Ants.ms sqms
-	LD_LIBRARY_PATH=$(SRCROOT)/dist/lib $(SQLITE)/bin/sqlite3 -header -nullvalue '.null.' -init test.sql sqmst.db
+	LD_LIBRARY_PATH=$(SRCROOT)/dist/lib $(SQLITE)/bin/sqlite3 -header -nullvalue '.null.' -init test.sql sqms.tdb
