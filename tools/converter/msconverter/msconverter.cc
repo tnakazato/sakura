@@ -827,7 +827,11 @@ void saveField(Connection *con, MeasurementSet &ms) {
     stmt->setTransientString(++pos, cols.code()(i).c_str()); // CODE
     stmt->setDouble(++pos, cols.time()(i)); // TIME
     stmt->setInt(++pos, cols.numPoly()(i)); // NUM_POLY
-    stmt->setInt(++pos, cols.sourceId()(i)); // SOURCE_ID
+    Int sourceId = cols.sourceId()(i); // SOURCE_ID
+    if ( sourceId < 0 )
+      stmt->setNull(++pos);
+    else
+      stmt->setInt(++pos, cols.sourceId()(i));
     if (cols.ephemerisId().isNull()) {
       stmt->setNull(++pos);
     } else {
