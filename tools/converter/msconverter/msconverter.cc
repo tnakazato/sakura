@@ -831,7 +831,7 @@ void saveField(Connection *con, MeasurementSet &ms) {
     if ( sourceId < 0 )
       stmt->setNull(++pos);
     else
-      stmt->setInt(++pos, cols.sourceId()(i));
+      stmt->setInt(++pos, sourceId);
     if (cols.ephemerisId().isNull()) {
       stmt->setNull(++pos);
     } else {
@@ -1881,7 +1881,7 @@ void mssave(Connection *con, char const*filename) {
     saveProcessor, 
     saveHistory,
     saveObs,
-    saveSource, // depending on SpectralWindow
+    //saveSource, // depending on SpectralWindow
     saveWeather, savePointing, // depending on Antenna
     saveDataDesc, // depending on SpectralWindow, Polarization
     saveField, // depending on Source

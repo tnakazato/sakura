@@ -201,6 +201,7 @@ class PreparedStatement: public Statement {
    * more efficient than {@link #setTransientBlob(int pos, void const *value, int size)}.
    * @param pos A position of the column. It starts with 1.
    * @param value a BLOB value.
+   * @param size a size of the `value' in bytes.
    */
   virtual void setStaticBlob(int pos, void const *value, int size) throw (SQLException);
   /**
@@ -209,6 +210,7 @@ class PreparedStatement: public Statement {
    * immediately after this method returns.
    * @param pos A position of the column. It starts with 1.
    * @param value a BLOB value.
+   * @param size a size of the `value' in bytes.
    */
   virtual void setTransientBlob(int pos, void const *value, int size) throw (SQLException);
   /**
@@ -239,7 +241,7 @@ class Connection {
   virtual ~Connection() throw (SQLException);
   /**
    * This is a factory method for this class.
-   * @param DB URL to be opened.
+   * @param dburl DB URL to be opened.
    * @return a connection opened.
    * @see http://www.sqlite.org/c3ref/open.html#urifilenamesinsqlite3open
    */
@@ -255,6 +257,16 @@ class Connection {
    * @return a prepared statement.
    */
   virtual PreparedStatement *prepare(char const *sql) throw (SQLException);
+  /**
+   * Returns the most recent successful inserted RowId.
+   * This method is convenient when you want to know a INTEGER AUTOINCREMENTed
+   * primary key for the last inserted row.
+   * @return the most recent successful inserted RowId,
+   * or 0 if no successful INSERTs have ever occurred on this connection.
+   * @see http://www.sqlite.org/c3ref/last_insert_rowid.html
+   * @see last_insert_rowid() described in http://www.sqlite.org/lang_corefunc.html
+   */
+  virtual int64_t getLastInsertRowId() throw (SQLException);
   /**
    * Creates an %SQL function.
    * @see http://www.sqlite.org/c3ref/create_function.html

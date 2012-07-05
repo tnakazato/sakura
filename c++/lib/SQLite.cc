@@ -49,6 +49,11 @@ void Connection::execute(char const *sql) throw (SQLException) {
   sqlite3_free(errmsg);
 }
 
+int64_t Connection::getLastInsertRowId() throw (SQLException) {
+  sqlite3_int64 result = sqlite3_last_insert_rowid(db);
+  return result;
+}
+
 void Connection::createFunction(char const *functionName,
 				int nArg,
 				int eTextRep,
