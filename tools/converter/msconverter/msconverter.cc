@@ -1878,6 +1878,7 @@ void mssave(Connection *con, char const*filename) {
   static void (*funcs[])(Connection *, MeasurementSet &) = {
     saveTableKeyword,
     saveState, saveFlagCmd, saveAntenna, saveSw,
+    savePol,
     saveProcessor, 
     saveHistory,
     saveObs,
