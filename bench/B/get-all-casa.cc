@@ -35,6 +35,25 @@ double currenttime() {
   return tv.tv_sec + ((double)tv.tv_usec) / 1000000.;
 }
 
+void fetchAllFloat_(MeasurementSet &ms) {
+  enter();
+  ROMSColumns const cols(ms);
+  const ROArrayColumn< Float > &floatCol = cols.floatData();
+  uInt nrow = ms.nrow();
+  double start = currenttime();
+  for (uInt i = 0; i < nrow; i++) {
+    Array< Float > t = floatCol(i);
+  }
+  double end = currenttime();
+  cout << "Fetched: " << end - start << "sec\n";
+}
+
+void fetchAllFloat(char const*filename) {
+  enter();
+  MeasurementSet ms(filename);
+  fetchAllFloat_(ms);
+}
+
 void fetchAllTime_(MeasurementSet &ms) {
   enter();
   ROMSColumns const cols(ms);
@@ -93,6 +112,7 @@ struct Entry {
   char const *option;
   void (*func)(char const*filename);
 } entries[] = {
+  {"float", fetchAllFloat},
   {"time", fetchAllTime},
   {"timeSort", fetchAllTimeSort},
   {"scanNumber", fetchAllScanNumber},

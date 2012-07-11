@@ -34,6 +34,7 @@ void timing(string msg, double t) {
 }
 
 void fetchReal(Connection *con, char const *sql) {
+  enter();
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
   unique_ptr<ResultSet> rs(stmt->executeQuery());
   while (rs->next()) {
@@ -43,6 +44,7 @@ void fetchReal(Connection *con, char const *sql) {
 }
 
 void fetchInt(Connection *con, char const *sql) {
+  enter();
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
   unique_ptr<ResultSet> rs(stmt->executeQuery());
   while (rs->next()) {
@@ -51,11 +53,22 @@ void fetchInt(Connection *con, char const *sql) {
   }
 }
 
+void fetchBlob(Connection *con, char const *sql) {
+  enter();
+  unique_ptr<PreparedStatement> stmt(con->prepare(sql));
+  unique_ptr<ResultSet> rs(stmt->executeQuery());
+  while (rs->next()) {
+    int size;
+    void const *p = rs->getTransientBlob(1, &size);
+  }
+}
+
 struct Entry {
   char const *option;
   char const *sql;
   void (*func)(Connection *con, char const *sql);
 } entries[] = {
+  {"float", "select float_data from main;", fetchBlob},
   {"time", "select time from main;", fetchReal},
   {"timeSort", "select time from main order by time;", fetchReal},
   {"scanNumber", "select scan_number from main;", fetchInt},
