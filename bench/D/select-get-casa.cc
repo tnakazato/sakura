@@ -40,27 +40,27 @@ double currenttime() {
 template<class T> 
 void fetch_( const Table &tab, const String colname )
 {
-  double start = currenttime();
+//   double start = currenttime();
   ROScalarColumn<T> col( tab, colname ) ;
   Vector<T> val = col.getColumn() ;
-  uInt len = val.nelements() ;
-  double end = currenttime();
-  cout << colname << ": Fetched " << len << " rows within " 
-       << end - start << "sec\n";
+//   uInt len = val.nelements() ;
+//   double end = currenttime();
+//   cout << colname << ": Fetched " << len << " rows within " 
+//        << end - start << "sec\n";
 }
  
 template<class T, class U>
 void fetch2_( const Table &tab, const String name1, const String name2 )
 {
-  double start = currenttime();
+//   double start = currenttime();
   ROScalarColumn<T> col1( tab, name1 ) ;
   ROScalarColumn<U> col2( tab, name2 ) ;
   Vector<T> val1 = col1.getColumn() ;
   Vector<U> val2 = col2.getColumn() ;
-  uInt len = val1.nelements() ;
-  double end = currenttime();
-  cout << name1 << "," << name2 << ": Fetched " << len << " rows within " 
-       << end - start << "sec\n";
+//   uInt len = val1.nelements() ;
+//   double end = currenttime();
+//   cout << name1 << "," << name2 << ": Fetched " << len << " rows within " 
+//        << end - start << "sec\n";
 }
 
 Table select_( char const*filename,
