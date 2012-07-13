@@ -60,26 +60,22 @@ void fetchAllPointing_(MeasurementSet &ms) {
   for (uInt i = 0; i < nrow; i++) {
     Double dt = timeCol(i);// Time
     Double dinte = intervalCol(i);// INTERVAL
-    String snam = nameCol(i);// NAME
-    Int unpol = numPolyCol(i);// NAME
+    const String& snam = nameCol(i);// NAME
+    Int unpol = numPolyCol(i);// NUM_POLY
     Double dto = timeOrigCol(i);// TIME ORIGIN
-    Array< Double > t_d = directionCol(i);// DIRECTION
-    Array< Double > t_t = targetCol(i);// TARGET
+    const Array< Double >& t_d = directionCol(i);// DIRECTION
+    const Array< Double >& t_t = targetCol(i);// TARGET
 
     if (cols.pointingOffset().isNull()) {
-      Array< Double > t_poff;
     }else{
-    Array< Double > t_poff = pointingOffsetCol(i);//POINTING_OFFSET
+    const Array< Double >& t_poff = pointingOffsetCol(i);//POINTING_OFFSET
     }
     if (cols.sourceOffset().isNull()) {
-      Array< Double > t_soff;
     }else{
-    Array< Double > t_soff = sourceOffsetCol(i); //SOURCE_OFFSET
+    const Array< Double >& t_soff = sourceOffsetCol(i); //SOURCE_OFFSET
     }
     if (cols.encoder().isNull()) {
-      Array< Double > v;
     }else{
-    //Array< Double > const &v = cols.encoder()(i); // ENCODERX ENCODERY
     double const *data = v(i).data();
      for (size_t j = 0; j < 2; j++) {
        Double t_encoXY = data[j];// "ENCODERX", "ENCODERY"
