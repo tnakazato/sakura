@@ -50,7 +50,7 @@ void fetchAllPointing_(MeasurementSet &ms) {
   const ROArrayColumn< Double > &targetCol = cols.target();
   const ROArrayColumn< Double > &pointingOffsetCol = cols.pointingOffset(); 
   const ROArrayColumn< Double > &sourceOffsetCol = cols.sourceOffset(); 
-  const ROArrayColumn< Double > &v = cols.encoder();
+  const ROArrayColumn< Double > &encoderCol = cols.encoder();
   const ROScalarColumn< Int > &pointingModelIdCol = cols.pointingModelId(); 
   const ROScalarColumn< bool > &trackingCol = cols.tracking(); 
   const ROScalarColumn< bool > &onSourceCol = cols.onSource(); 
@@ -68,36 +68,30 @@ void fetchAllPointing_(MeasurementSet &ms) {
 
     if (cols.pointingOffset().isNull()) {
     }else{
-    const Array< Double >& t_poff = pointingOffsetCol(i);//POINTING_OFFSET
+      const Array< Double >& t_poff = pointingOffsetCol(i);//POINTING_OFFSET
     }
     if (cols.sourceOffset().isNull()) {
     }else{
-    const Array< Double >& t_soff = sourceOffsetCol(i); //SOURCE_OFFSET
+      const Array< Double >& t_soff = sourceOffsetCol(i); //SOURCE_OFFSET
     }
     if (cols.encoder().isNull()) {
     }else{
-    double const *data = v(i).data();
-     for (size_t j = 0; j < 2; j++) {
-       Double t_encoXY = data[j];// "ENCODERX", "ENCODERY"
-     }
+      const Array< Double >& t_enco = encoderCol(i); // ENCODER
     }
     if (cols.pointingModelId().isNull()) {
-      Int ipmodelid;
     }else{
-    Int ipmodelid = pointingModelIdCol(i);  // POINTING_MODEL_ID
+      Int ipmodelid = pointingModelIdCol(i);  // POINTING_MODEL_ID
     }
 
     Bool itracki = trackingCol(i); // TRACKING
 
     if (cols.onSource().isNull()) {
-      Bool ionso;
     }else{
-     Bool ionso = onSourceCol(i); // ON_SOURCE
+      Bool ionso = onSourceCol(i); // ON_SOURCE
     }
     if (cols.overTheTop().isNull()) {
-      Bool iovtop;
     }else{
-     Bool iovtop = overTheTopCol(i); // OVER_THE_TOP
+      Bool iovtop = overTheTopCol(i); // OVER_THE_TOP
     }
   }
   double end = currenttime();
