@@ -17,7 +17,7 @@ OBJS=select-get-casa.o select-get-sqlite.o
 vpath %.h       .:$(SRCROOT)/dist/include
 
 .PHONY: all clean
-all: select-get-casa #select-get-sqlite
+all: select-get-casa select-get-sqlite
 
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -29,7 +29,7 @@ all: select-get-casa #select-get-sqlite
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 select-get-casa.o: select-get-casa.cc
-#select-get-sqlite.o: select-get-sqlite.cc SQLite.h
+select-get-sqlite.o: select-get-sqlite.cc SQLite.h
 
 clean:
 	-rm -f $(OBJS) select-get-casa select-get-sqlite *~
@@ -37,8 +37,8 @@ clean:
 select-get-casa: select-get-casa.o
 	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
 
-#select-get-sqlite: select-get-sqlite.o
-#	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
+select-get-sqlite: select-get-sqlite.o
+	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
 
 test:
 	#SAKURA_ROOT=$(SRCROOT)/dist ./msconverter x141.004Ants.ms sqms

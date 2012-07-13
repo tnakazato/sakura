@@ -9,6 +9,7 @@
 #include <memory>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Inputs/Input.h>
@@ -48,6 +49,20 @@ void fetch_( const Table &tab, const String colname )
        << end - start << "sec\n";
 }
  
+template<class T, class U>
+void fetch2_( const Table &tab, const String name1, const String name2 )
+{
+  double start = currenttime();
+  ROScalarColumn<T> col1( tab, name1 ) ;
+  ROScalarColumn<U> col2( tab, name2 ) ;
+  Vector<T> val1 = col1.getColumn() ;
+  Vector<U> val2 = col2.getColumn() ;
+  uInt len = val1.nelements() ;
+  double end = currenttime();
+  cout << name1 << "," << name2 << ": Fetched " << len << " rows within " 
+       << end - start << "sec\n";
+}
+
 Table select_( char const*filename,
 	       double from,
 	       double to,
@@ -72,8 +87,9 @@ void fetchTimeAndAntennaByTime( char const*filename,
 				double to )
 {
   Table tsel = select_( filename, from, to, "TIME" ) ;
-  fetch_<Double>( tsel, "TIME" ) ;
-  fetch_<Int>( tsel, "ANTENNA_ID" ) ;
+//   fetch_<Double>( tsel, "TIME" ) ;
+//   fetch_<Int>( tsel, "ANTENNA_ID" ) ;
+  fetch2_<Double,Int>( tsel, "TIME", "ANTENNA_ID" ) ;
 }
 
 void fetchNameAndIntervalByTime( char const*filename,
@@ -81,8 +97,9 @@ void fetchNameAndIntervalByTime( char const*filename,
 				 double to )
 {
   Table tsel = select_( filename, from, to, "TIME" ) ;
-  fetch_<String>( tsel, "NAME" ) ;
-  fetch_<Double>( tsel, "INTERVAL" ) ;
+//   fetch_<String>( tsel, "NAME" ) ;
+//   fetch_<Double>( tsel, "INTERVAL" ) ;
+  fetch2_<String,Double>( tsel, "NAME", "INTERVAL" ) ;
 }
 
 void fetchNameAndIntervalByTimeOrigin( char const*filename,
@@ -90,8 +107,9 @@ void fetchNameAndIntervalByTimeOrigin( char const*filename,
 				       double to )
 {
   MSPointing tsel = select_( filename, from, to, "TIME_ORIGIN" ) ;
-  fetch_<String>( tsel, "NAME" ) ;
-  fetch_<Double>( tsel, "INTERVAL" ) ;
+//   fetch_<String>( tsel, "NAME" ) ;
+//   fetch_<Double>( tsel, "INTERVAL" ) ;
+  fetch2_<String,Double>( tsel, "NAME", "INTERVAL" ) ;
 }
 
 
