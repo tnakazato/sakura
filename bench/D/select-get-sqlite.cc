@@ -40,15 +40,14 @@ void fetchStringAndReal( Connection *con, char const *sql )
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
   unique_ptr<ResultSet> rs(stmt->executeQuery());
   int n = 0 ;
-  int count = 0 ;
+//   int count = 0 ;
   while (rs->next()) {
     const char *c = rs->getTransientString( 1, &n ) ;
     double d = rs->getDouble( 2 ) ;
-    //cout << c << endl ;
-    //cout << setprecision(14) << d << endl;
-    count++ ;
+//     cout << c << ", " << setprecision(14) << d << endl;
+//     count++ ;
   }
-  cout << "fetched " << count << " records" << endl ;
+//   cout << "fetched " << count << " records" << endl ;
 }
 
 void fetchRealAndInt( Connection *con, char const *sql )
@@ -56,15 +55,14 @@ void fetchRealAndInt( Connection *con, char const *sql )
   enter();
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
   unique_ptr<ResultSet> rs(stmt->executeQuery());
-  int count = 0 ;
+//   int count = 0 ;
   while (rs->next()) {
     double d = rs->getDouble( 1 ) ;
     int i = rs->getInt( 2 ) ;
-    //cout << setprecision(14) << d << endl ;
-    //cout << i << endl ;
-    count++ ;
+//     cout << setprecision(14) << d << ", " << i << endl ;
+//     count++ ;
   }
-  cout << "fetched " << count << " records" << endl ;
+//   cout << "fetched " << count << " records" << endl ;
 }
 
 struct Entry {
