@@ -86,18 +86,18 @@ void fetchAllPointingSQL(Connection *con, char const *sql) {
     double d1 = rs->getDouble(pos++); // time
     double d2 = rs->getDouble(pos++); // interval
     void const *p1 = rs->getTransientString(pos++, &size); // name
-    // int n1 = rs->getInt(pos++); // numPoly
-    //double d4 = rs->getDouble(pos++); // timeOrigin
+    int n1 = rs->getInt(pos++); // numPoly
+    double d4 = rs->getDouble(pos++); // timeOrigin
     void const *p2 = rs->getTransientBlob(pos++, &size); // direction
     void const *p3 = rs->getTransientBlob(pos++, &size); // target
-    //void const *p4 = rs->getTransientBlob(pos++, &size); // pointingOffset
-    //void const *p5 = rs->getTransientBlob(pos++, &size); // sourceOffset
+    void const *p4 = rs->getTransientBlob(pos++, &size); // pointingOffset
+    void const *p5 = rs->getTransientBlob(pos++, &size); // sourceOffset
     void const *p6 = rs->getTransientBlob(pos++, &size); // encoderx
     void const *p7 = rs->getTransientBlob(pos++, &size); // encodery
-    //int n2 = rs->getInt(pos++); // pointingModelId
+    int n2 = rs->getInt(pos++); // pointingModelId
     int n3 = rs->getInt(pos++); // tracking
-    //int n4 = rs->getInt(pos++); // onSource
-    //int n5 = rs->getInt(pos++); // overTheTop
+    int n4 = rs->getInt(pos++); // onSource
+    int n5 = rs->getInt(pos++); // overTheTop
  }
 }
 struct Entry {
@@ -105,8 +105,7 @@ struct Entry {
   char const *sql;
   void (*func)(Connection *con, char const *sql);
 } entries[] = {
-    {"all", "select antenna_id,time,interval,name,direction,target,encoderx,encodery,tracking from pointing;", fetchAllPointingSQL}
-//   {"all", "select antenna_id,time,interval,name,numPoly,timeOrigin,direction,target,pointingOffset,sourceOffset,encoder,pointingModelId,tracking,onSource,overTheTop from pointing;", fetchAllPointingSQL}
+   {"all", "select antenna_id,time,interval,name,num_Poly,time_Origin,direction,target,pointing_Offset,source_Offset,encoderx,encodery,pointing_Model_Id,tracking,on_Source,over_The_Top from pointing;", fetchAllPointingSQL}
 };
 
 char const *progName = "";
