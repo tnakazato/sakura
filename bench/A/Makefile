@@ -1,7 +1,7 @@
 SRCROOT=$(abspath ../..)
 
 #CASA=/opt/casapy-34.0.19988-002-64b
-CASA=/home/kawakami/casa/linux_64b
+CASA=/opt/casapy-34.0.19988-002-64b
 SQLITE=/opt/sqlite
 LIBPATH=$(SRCROOT)/dist/lib:$(SQLITE)/lib:$(CASA)/lib
 CC=gcc
@@ -36,7 +36,7 @@ clean:
 	-rm -f $(OBJS) fetchAllPointing *~
 
 fetchAllPointing: fetchAllPointing.o
-	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(CASA)/lib -lcasa_ms
+	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(CASA)/lib -lcasacore -ldl
 
 #get-all-sqlite: get-all-sqlite.o
 #	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
