@@ -34,10 +34,13 @@ void timing(string msg, double t) {
   cout << "Timing: " << msg << ": " << t << " sec\n";
 }
 
-void fetchStringAndReal( Connection *con, char const *sql )
+void fetchStringAndReal( Connection *con, char const *sql,
+			 double &fromTime, double &toTime )
 {
   enter();
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
+  stmt->setDouble( 1, fromTime ) ;
+  stmt->setDouble( 2, toTime ) ;
   unique_ptr<ResultSet> rs(stmt->executeQuery());
   int n = 0 ;
 //   int count = 0 ;
@@ -50,10 +53,13 @@ void fetchStringAndReal( Connection *con, char const *sql )
 //   cout << "fetched " << count << " records" << endl ;
 }
 
-void fetchRealAndInt( Connection *con, char const *sql )
+void fetchRealAndInt( Connection *con, char const *sql,
+			 double &fromTime, double &toTime )
 {
   enter();
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
+  stmt->setDouble( 1, fromTime ) ;
+  stmt->setDouble( 2, toTime ) ;
   unique_ptr<ResultSet> rs(stmt->executeQuery());
 //   int count = 0 ;
   while (rs->next()) {
@@ -68,12 +74,11 @@ void fetchRealAndInt( Connection *con, char const *sql )
 struct Entry {
   char const *option;
   char const *sql;
-  char const *key;
-  void (*func)(Connection *con, char const *sql);
+  void (*func)(Connection *con, char const *sql, double&, double&);
 } entries[] = {
-  {"timeAndAntennaByTime", "select time, antenna_id from pointing ?;", "time", fetchRealAndInt},
-  {"nameAndIntervalByTime", "select name, interval from pointing ?;", "time", fetchStringAndReal},
-  {"nameAndIntervalByTimeOrigin", "select name, interval from pointing ?;", "time_origin", fetchStringAndReal}  
+  {"timeAndAntennaByTime", "select time, antenna_id from pointing where time >= ? and time <= ?;", fetchRealAndInt},
+  {"nameAndIntervalByTime", "select name, interval from pointing where time >= ? and time <= ?;", fetchStringAndReal},
+  {"nameAndIntervalByTimeOrigin", "select name, interval from pointing where time_origin >= ? and time_origin <= ?;", fetchStringAndReal}  
 };
 
 char const *progName = "";
@@ -131,14 +136,12 @@ int main(int argc, char const *argv[]) {
     return 1;
   }
   cout << "SAKURA_ROOT: " << prefix << endl;
-  void (*func)(Connection *con, char const *sql) = NULL;
+  void (*func)(Connection *con, char const *sql, double&, double&) = NULL;
   char const *sql = NULL;
-  char const *key = NULL;
   for (size_t i = 0; i < elementsof(entries); i++) {
     if (strcmp(entries[i].option, argv[argStart]) == 0) {
       func = entries[i].func;
       sql = entries[i].sql;
-      key = entries[i].key;
     }
   }
   if (func == NULL) {
@@ -147,26 +150,15 @@ int main(int argc, char const *argv[]) {
   }
   double fromTime = 4819385780.3519993 ; 
   double toTime = 4819386236.5440006 ;
-  stringstream oss ;
-  oss << " where " << key << " >= " 
-      << setprecision(16) << fromTime 
-      << " and " << key << " <= " 
-      << setprecision(16) << toTime ;
-  string sel = oss.str() ;
   {
     double start = currenttime();
     string tdb = "file:";
     tdb += argv[argStart + 1];
     tdb += "?mode=ro";
 
-    string sqlsel = sql ;
-    sqlsel.replace( sqlsel.find( "?" ), 1, sel ) ;
-    cout << "sqlsel: " << sqlsel << endl ;
-
     cout << "Opening: " << tdb << endl;
     unique_ptr<Connection> con(Connection::open(tdb.c_str()));
-//     func(con.get(), sql);
-    func(con.get(), sqlsel.c_str());
+    func(con.get(), sql, fromTime, toTime);
     double end = currenttime();
     timing("Total: ", end - start);
   }
