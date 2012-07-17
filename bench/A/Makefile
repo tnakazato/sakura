@@ -12,12 +12,12 @@ LINKER=LD_LIBRARY_PATH=$(LIBPATH) LD_RUN_PATH=$(LIBPATH) $(CXX)
 COMMON_FLAGS=-g -DPREFIX='"$(SRCROOT)/dist"' -I$(SRCROOT)/dist/include -I$(SQLITE)/include -I$(CASA)/include -I$(CASA)/include/casacore -Wall -O2 -fopenmp -m64 -march=native #-ftree-vectorize -funroll-loops -floop-interchange -D_XOPEN_SOURCE=600 #-DSQLDEBUG=1 #-D_FILE_OFFSET_BITS=64
 CFLAGS=-std=c99 $(COMMON_FLAGS)
 CXXFLAGS=$(COMMON_FLAGS)
-OBJS=fetchAllPointing.o fetchAllPointing-sqlite.o
+OBJS=fetchAllPointing.o fetchAllPointing-sqlite.o insertToPointing.o
 
 vpath %.h       .:$(SRCROOT)/dist/include
 
 .PHONY: all clean
-all: fetchAllPointing fetchAllPointing-sqlite
+all: fetchAllPointing fetchAllPointing-sqlite insertToPointing
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
 
@@ -29,14 +29,18 @@ all: fetchAllPointing fetchAllPointing-sqlite
 
 fetchAllPointing.o: fetchAllPointing.cc
 fetchAllPointing-sqlite.o: fetchAllPointing-sqlite.cc SQLite.h
+insertToPointing.o: insertToPointing.cc
 
 clean:
-	-rm -f $(OBJS) fetchAllPointing fetchAllPointing-sqlite *~
+	-rm -f $(OBJS) fetchAllPointing fetchAllPointing-sqlite insertToPointing *~
 
 fetchAllPointing: fetchAllPointing.o
 	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
 
 fetchAllPointing-sqlite: fetchAllPointing-sqlite.o
+	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
+
+insertToPointing: insertToPointing.o
 	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
 
 test:
