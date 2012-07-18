@@ -43,11 +43,8 @@ double currenttime() {
   return tv.tv_sec + ((double)tv.tv_usec) / 1000000.;
 }
 
-void insertToPointing(char const*filename) {
+void insertToPointing(char const *filename) {
   enter();
-  MeasurementSet ms(filename);
-  MSPointing &tab = ms.pointing();
-  ROMSPointingColumns rocols(tab);
 
   casa::MeasurementSet *mstable_ ;
   TableDesc msDesc = MeasurementSet::requiredTableDesc() ;
@@ -75,34 +72,36 @@ void insertToPointing(char const*filename) {
   mstable_->rwKeywordSet().defineTable( MeasurementSet::keywordName( MeasurementSet::POINTING ), Table( pointingTab ) ) ;
   mstable_->initRefs();
 
-  uInt nrow = tab.nrow();
+  uInt nrow = atoi(filename);
+  cout << "row# = " << nrow << endl;
 
   MSPointing mspo = mstable_->pointing() ;
   mspo.addRow( nrow, True );
   MSPointingColumns cols(mspo);
 
-  // ANTENNA_ID is always 0
-  Vector<Int> antIdArr( nrow, 0 ) ;
-  cols.antennaId().putColumn( antIdArr ) ;
+  Matrix<Double> mDirTarg(2,1);
+  mDirTarg(0,0)=3.13347;
+  mDirTarg(1,0)=-0.329554;
+  Vector<Double> vEnco(2);
+  vEnco[0]=3.14;
+  vEnco[1]=0.40;
 
-  Vector< Double > tmpVect(1);
-  tmpVect[0]=7.77;
   Double intervalvalue=1.152;
 
   double start = currenttime();
   for (uInt i = 0; i < nrow; i++) {
-    //cols.antennaId().put(i,ante) ;
-    cols.time().put(i,2012.0) ;// TIME
+    cols.antennaId().put(i,0) ;
+    cols.time().put(i,9999999999.0+i*0.1) ;// TIME
     cols.interval().put(i,intervalvalue) ;// INTERVAL
-    cols.name().put(i,"kawa-kami") ;// NAME
-    cols.numPoly().put(i,77);// NUM_POLY
-    cols.timeOrigin().put(i,0.314);// TIME_ORIGIN
-    //cols.direction().put(i,tmpVect);// DIRECTION
-    cols.target().put(i,tmpVect);// TARGET
-    cols.pointingOffset().put(i,tmpVect);//POINTING_OFFSET
-    cols.sourceOffset().put(i,tmpVect); //SOURCE_OFFSET
-    cols.encoder().put(i,tmpVect); // ENCODER
-    cols.pointingModelId().put(i,8);  // POINTING_MODEL_ID
+    cols.name().put(i,"Antennae") ;// NAME
+    cols.numPoly().put(i,0);// NUM_POLY
+    cols.timeOrigin().put(i,4.8e+09);// TIME_ORIGIN
+    cols.direction().put(i,mDirTarg);// DIRECTION
+    cols.target().put(i,mDirTarg);// TARGET
+    cols.pointingOffset().put(i,mDirTarg);//POINTING_OFFSET
+    cols.sourceOffset().put(i,mDirTarg); //SOURCE_OFFSET
+    cols.encoder().put(i,vEnco); // ENCODER
+    cols.pointingModelId().put(i,0);  // POINTING_MODEL_ID
     cols.tracking().put(i,1); // TRACKING
     cols.onSource().put(i,1); // ON_SOURCE
     cols.overTheTop().put(i,1); // OVER_THE_TOP
@@ -118,13 +117,6 @@ void insertToPointing(char const*filename) {
   double end = currenttime();
   cout << "Inserted: " << end - start << "sec\n";
 }
-
-// void insertToPointing(char const*filename) {
-//  enter();
-//  MeasurementSet ms(filename);
-//  insertToPointing_(ms);
-// }
-
 
 struct Entry {
   char const *option;
