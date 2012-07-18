@@ -136,6 +136,7 @@ int main(int argc, char const *argv[]) {
     if (strcmp(entries[i].option, argv[argStart]) == 0) {
       func = entries[i].func;
       sql = entries[i].sql;
+      cout << "SQL: " << sql << endl;
     }
   }
   if (func == NULL) {
@@ -152,7 +153,7 @@ int main(int argc, char const *argv[]) {
     unique_ptr<Connection> con(Connection::open(tdb.c_str()));
     func(con.get(), sql);
     double end = currenttime();
-    timing("Total: ", end - start);
+    timing("Total", end - start);
   }
   return 0;
 }
