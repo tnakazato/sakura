@@ -32,7 +32,7 @@ void timing(string msg, double t) {
   cout << "Timing: " << msg << ": " << t << " sec\n";
 }
 
-void insertToPointingSQL_(Connection *con, char const *filename){
+void insertToPointingSQL_(Connection *con, int nrow){
   enter();
 
   char const *dbcols[] = {
@@ -59,7 +59,6 @@ void insertToPointingSQL_(Connection *con, char const *filename){
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
   unique_ptr<PreparedStatement> stmt(con->prepare(sql.c_str()));
-  int nrow = atoi(filename);
 
   cout << "row# = " << nrow << endl;
 
@@ -97,16 +96,17 @@ void insertToPointingSQL_(Connection *con, char const *filename){
   cout << "inserted(SQL):" << end_insert - start_insert <<" sec\n";
 }
 
-void insertToPointingSQL(Connection *con,char const *filename) {
+void insertToPointingSQL(Connection *con,char const *nrow) {
   enter();
-  static void (*funcs[])(Connection *,char const *) = {
+  int nrow_ = atoi(nrow);
+  static void (*funcs[])(Connection *,int) = {
     insertToPointingSQL_, // 
     NULL
   };
 
   for (size_t i = 0; funcs[i] != NULL; i++) {
     con->execute("BEGIN");
-    funcs[i](con,filename);
+    funcs[i](con,nrow_);
     con->execute("COMMIT");
   }
 }
@@ -144,7 +144,7 @@ char *readFileContent(char const *filename) {
   return buf;
 }
 
-void conv(char const *prefix,char const *basename,char const *filename) {
+void conv(char const *prefix,char const *basename,char const *nrow) {
   enter();
   string msm = basename;
   msm += ".mdb";
@@ -162,7 +162,7 @@ void conv(char const *prefix,char const *basename,char const *filename) {
       dbfile += msm;
       unique_ptr<Connection> con(Connection::open(dbfile.c_str()));
       con->execute(msm_ddl);
-      insertToPointingSQL(con.get(), filename);
+      insertToPointingSQL(con.get(), nrow);
     } catch (...) {
       delete[] msm_ddl;
       throw;
@@ -173,7 +173,7 @@ void conv(char const *prefix,char const *basename,char const *filename) {
 
 struct Entry {
   char const *option;
-  void (*func)(char const *prefix,char const *basename,char const *filename);
+  void (*func)(char const *prefix,char const *basename,char const *nrow);
   //void (*func)(Connection *con,char const *filename);
 } entries[] = {
   // {"pointing", insertToPointingSQL}
@@ -183,7 +183,7 @@ struct Entry {
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action tdbFile\n";
+  cerr << "Usage: " << progName << " [options] action num_of_row\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";

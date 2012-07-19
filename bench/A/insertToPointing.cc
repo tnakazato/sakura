@@ -43,39 +43,33 @@ double currenttime() {
   return tv.tv_sec + ((double)tv.tv_usec) / 1000000.;
 }
 
-void insertToPointing(char const *filename) {
+void insertToPointing_(int nrow) {
   enter();
 
   casa::MeasurementSet *mstable_ ;
-  TableDesc msDesc = MeasurementSet::requiredTableDesc() ;
-  SetupNewTable newtab( "kawakami.ms", msDesc, Table::New ) ;
+  TableDesc mspointingDesc = MSPointing::requiredTableDesc() ;
 
-  mstable_ = new MeasurementSet( newtab ) ;
-  TableDesc pointingDesc = MSPointing::requiredTableDesc() ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::ANTENNA_ID) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::TIME) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::INTERVAL ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::NAME ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::NUM_POLY ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::TIME_ORIGIN ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::DIRECTION ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::TARGET ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::POINTING_OFFSET ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::SOURCE_OFFSET ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::ENCODER ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::POINTING_MODEL_ID ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::TRACKING ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::ON_SOURCE ) ;
-  MSPointing::addColumnToDesc( pointingDesc, MSPointingEnums::OVER_THE_TOP ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::ANTENNA_ID) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::TIME) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::INTERVAL ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::NAME ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::NUM_POLY ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::TIME_ORIGIN ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::DIRECTION ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::TARGET ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::POINTING_OFFSET ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::SOURCE_OFFSET ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::ENCODER ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::POINTING_MODEL_ID ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::TRACKING ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::ON_SOURCE ) ;
+  MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::OVER_THE_TOP ) ;
 
-  SetupNewTable pointingTab( mstable_->pointingTableName(), pointingDesc, Table::New ) ;
-  mstable_->rwKeywordSet().defineTable( MeasurementSet::keywordName( MeasurementSet::POINTING ), Table( pointingTab ) ) ;
-  mstable_->initRefs();
+  SetupNewTable pointingTab( "POINTING", mspointingDesc, Table::New ) ;
 
-  uInt nrow = atoi(filename);
   cout << "row# = " << nrow << endl;
 
-  MSPointing mspo = mstable_->pointing() ;
+  MSPointing mspo(pointingTab);
   mspo.addRow( nrow, True );
   MSPointingColumns cols(mspo);
 
@@ -90,7 +84,7 @@ void insertToPointing(char const *filename) {
 
   double start = currenttime();
   for (uInt i = 0; i < nrow; i++) {
-    cols.antennaId().put(i,0) ;
+    cols.antennaId().put(i,0) ; // ANTENNA_ID
     cols.time().put(i,9999999999.0+i*0.1) ;// TIME
     cols.interval().put(i,intervalvalue) ;// INTERVAL
     cols.name().put(i,"Antennae") ;// NAME
@@ -108,19 +102,21 @@ void insertToPointing(char const *filename) {
     }
 
   // Finalize
-  MeasurementSet mstableTmp_ ;
-  mstableTmp_ = MeasurementSet( (*mstable_)) ;
-  delete mstable_ ;
-  mstableTmp_.closeSubTables() ;
-  mstableTmp_.unlock() ;
+  mspo.closeSubTables() ;
+  mspo.unlock() ;
 
   double end = currenttime();
   cout << "Inserted: " << end - start << "sec\n";
 }
 
+void insertToPointing(char const *nrow) {
+  int nrow_ = atoi(nrow);
+  insertToPointing_(nrow_);
+}
+
 struct Entry {
   char const *option;
-  void (*func)(char const*filename);
+  void (*func)(char const *nrow);
 } entries[] = {
   {"pointing", insertToPointing}
 };
@@ -128,7 +124,7 @@ struct Entry {
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action MSFile\n";
+  cerr << "Usage: " << progName << " [options] action num_of_row\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
@@ -180,7 +176,7 @@ int main(int argc, char const * const argv[]) {
     return 1;
   }
   cout << "SAKURA_ROOT: " << prefix << endl;
-  void (*func)(char const*filename) = NULL;
+  void (*func)(char const *nrow) = NULL;
   for (size_t i = 0; i < elementsof(entries); i++) {
     if (strcmp(entries[i].option, argv[argStart]) == 0) {
       func = entries[i].func;
