@@ -54,7 +54,6 @@ void insertToPointingSQL_(Connection *con, int nrow){
     "OVER_THE_TOP", // INTEGER DEFAULT NULL,
     NULL
   };
-
   string sql = "insert into POINTING (";
   sql += SQL::join(dbcols) + ") values (";
   sql += SQL::bindChars(dbcols) + ")";
@@ -70,7 +69,7 @@ void insertToPointingSQL_(Connection *con, int nrow){
   for (int i = 0; i < nrow; i++) {
     int pos = 0;
     stmt->setInt(++pos, 0); // ANTENNA_ID
-    stmt->setDouble(++pos, 9999999999.0+i*0.1); // TIME
+    stmt->setDouble(++pos, 9999999999.0+i*0.001); // TIME
     stmt->setDouble(++pos,1.152); // INTERVAL
     stmt->setTransientString(++pos,"Antennae" ); // NAME
     stmt->setInt(++pos, 0); // NUM_POLY
@@ -99,16 +98,9 @@ void insertToPointingSQL_(Connection *con, int nrow){
 void insertToPointingSQL(Connection *con,char const *nrow) {
   enter();
   int nrow_ = atoi(nrow);
-  static void (*funcs[])(Connection *,int) = {
-    insertToPointingSQL_, // 
-    NULL
-  };
-
-  for (size_t i = 0; funcs[i] != NULL; i++) {
-    con->execute("BEGIN");
-    funcs[i](con,nrow_);
-    con->execute("COMMIT");
-  }
+  con->execute("BEGIN");
+  insertToPointingSQL_(con,nrow_);
+  con->execute("COMMIT");
 }
 
 char *readFileContent(char const *filename) {
@@ -144,9 +136,9 @@ char *readFileContent(char const *filename) {
   return buf;
 }
 
-void conv(char const *prefix,char const *basename,char const *nrow) {
+  void conv(char const *prefix,char const *basename,char const *nrow,char const *outfilename) {
   enter();
-  string msm = basename;
+  string msm = outfilename;
   msm += ".mdb";
 
   char const sql[] = "/sql/";
@@ -173,17 +165,15 @@ void conv(char const *prefix,char const *basename,char const *nrow) {
 
 struct Entry {
   char const *option;
-  void (*func)(char const *prefix,char const *basename,char const *nrow);
-  //void (*func)(Connection *con,char const *filename);
+  void (*func)(char const *prefix,char const *basename,char const *nrow, char const *outfilename);
 } entries[] = {
-  // {"pointing", insertToPointingSQL}
    {"pointing", conv}
 };
 
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action num_of_row\n";
+  cerr << "Usage: " << progName << " [options] action num_of_row outfilename\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
@@ -230,13 +220,13 @@ int main(int argc, char const * const argv[]) {
   }
 
   int argStart = optind;
-  if (argc - argStart != 2) {
+  if (argc - argStart != 3) {
     usage();
     return 1;
   }
   cout << "SAKURA_ROOT: " << prefix << endl;
   double start = currenttime();
-  conv(prefix,argv[argStart],argv[argStart+1]);
+  conv(prefix,argv[argStart],argv[argStart+1],argv[argStart+2]);
   double end = currenttime();
   cout << "Total: " << end - start << "sec\n";
   return 0;

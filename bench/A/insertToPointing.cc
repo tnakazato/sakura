@@ -43,7 +43,7 @@ double currenttime() {
   return tv.tv_sec + ((double)tv.tv_usec) / 1000000.;
 }
 
-void insertToPointing_(int nrow) {
+void insertToPointing_(int nrow,char const *outfilename) {
   enter();
 
   casa::MeasurementSet *mstable_ ;
@@ -65,7 +65,7 @@ void insertToPointing_(int nrow) {
   MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::ON_SOURCE ) ;
   MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::OVER_THE_TOP ) ;
 
-  SetupNewTable pointingTab( "POINTING", mspointingDesc, Table::New ) ;
+  SetupNewTable pointingTab( outfilename, mspointingDesc, Table::New ) ;
 
   cout << "row# = " << nrow << endl;
 
@@ -85,7 +85,7 @@ void insertToPointing_(int nrow) {
   double start = currenttime();
   for (uInt i = 0; i < nrow; i++) {
     cols.antennaId().put(i,0) ; // ANTENNA_ID
-    cols.time().put(i,9999999999.0+i*0.1) ;// TIME
+    cols.time().put(i,9999999999.0+i*0.001) ;// TIME
     cols.interval().put(i,intervalvalue) ;// INTERVAL
     cols.name().put(i,"Antennae") ;// NAME
     cols.numPoly().put(i,0);// NUM_POLY
@@ -109,14 +109,14 @@ void insertToPointing_(int nrow) {
   cout << "Inserted: " << end - start << "sec\n";
 }
 
-void insertToPointing(char const *nrow) {
+void insertToPointing(char const *nrow,char const *outfilename) {
   int nrow_ = atoi(nrow);
-  insertToPointing_(nrow_);
+  insertToPointing_(nrow_,outfilename);
 }
 
 struct Entry {
   char const *option;
-  void (*func)(char const *nrow);
+  void (*func)(char const *nrow,char const *outfilename);
 } entries[] = {
   {"pointing", insertToPointing}
 };
@@ -124,7 +124,7 @@ struct Entry {
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action num_of_row\n";
+  cerr << "Usage: " << progName << " [options] action num_of_row outfilename\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
@@ -171,12 +171,12 @@ int main(int argc, char const * const argv[]) {
   }
 
   int argStart = optind;
-  if (argc - argStart != 2) {
+  if (argc - argStart != 3) {
     usage();
     return 1;
   }
   cout << "SAKURA_ROOT: " << prefix << endl;
-  void (*func)(char const *nrow) = NULL;
+  void (*func)(char const *nrow,char const *outfilename) = NULL;
   for (size_t i = 0; i < elementsof(entries); i++) {
     if (strcmp(entries[i].option, argv[argStart]) == 0) {
       func = entries[i].func;
@@ -187,7 +187,7 @@ int main(int argc, char const * const argv[]) {
     return 1;
   }
   double start = currenttime();
-  func(argv[argStart + 1]);
+  func(argv[argStart + 1],argv[argStart + 2]);
   double end = currenttime();
   cout << "Total: " << end - start << "sec\n";
   return 0;
