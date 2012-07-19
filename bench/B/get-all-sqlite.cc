@@ -21,7 +21,6 @@ using namespace sqlite;
 #define elementsof(x) (sizeof(x) / sizeof(*(x)))
 
 namespace {
-
 char const ENV_VAR_SAKURA_ROOT[] = "SAKURA_ROOT";
 
 double currenttime() {
