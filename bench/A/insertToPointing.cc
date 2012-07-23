@@ -25,6 +25,11 @@
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/TableRow.h>
 
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSPolIndex.h>
+#include <ms/MeasurementSets/MSDataDescIndex.h>
+#include <ms/MeasurementSets/MSSourceIndex.h>
 
 #define unique_ptr auto_ptr
 #define enter() do { cout << "Enter: " << __FUNCTION__ << endl; } while (0)
@@ -47,6 +52,9 @@ void insertToPointing_(int nrow,char const *outfilename) {
   enter();
 
   casa::MeasurementSet *mstable_ ;
+  TableDesc msDesc = MeasurementSet::requiredTableDesc() ;
+  SetupNewTable newtab( outfilename, msDesc, Table::New ) ;
+  mstable_ = new MeasurementSet( newtab ) ;
   TableDesc mspointingDesc = MSPointing::requiredTableDesc() ;
 
   MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::ANTENNA_ID) ;
@@ -65,13 +73,16 @@ void insertToPointing_(int nrow,char const *outfilename) {
   MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::ON_SOURCE ) ;
   MSPointing::addColumnToDesc( mspointingDesc, MSPointingEnums::OVER_THE_TOP ) ;
 
-  SetupNewTable pointingTab( outfilename, mspointingDesc, Table::New ) ;
+  SetupNewTable pointingTab( mstable_->pointingTableName(), mspointingDesc, Table::New ) ;
+  mstable_->rwKeywordSet().defineTable( MeasurementSet::keywordName( MeasurementSet::POINTING ), Table( pointingTab ) ) ;
+  mstable_->initRefs();
 
   cout << "row# = " << nrow << endl;
 
-  MSPointing mspo(pointingTab);
+  MSPointing mspo = mstable_->pointing();
   mspo.addRow( nrow, True );
   MSPointingColumns cols(mspo);
+  mspo.rwKeywordSet().define("MS_VERSION", Float(2.0));
 
   Matrix<Double> mDirTarg(2,1);
   mDirTarg(0,0)=3.13347;
@@ -102,8 +113,9 @@ void insertToPointing_(int nrow,char const *outfilename) {
     }
 
   // Finalize
-  mspo.closeSubTables() ;
-  mspo.unlock() ;
+  mstable_->closeSubTables() ;
+  mstable_->unlock() ;
+  delete mstable_;
 
   double end = currenttime();
   cout << "Inserted: " << end - start << "sec\n";
