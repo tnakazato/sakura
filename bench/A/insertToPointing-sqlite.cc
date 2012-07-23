@@ -68,12 +68,13 @@ void insertToPointingSQL_(Connection *con, int nrow){
   double start_insert = currenttime();
   for (int i = 0; i < nrow; i++) {
     int pos = 0;
+    double t = 9000000000.0+i*0.001;
     stmt->setInt(++pos, 0); // ANTENNA_ID
-    stmt->setDouble(++pos, 9999999999.0+i*0.001); // TIME
+    stmt->setDouble(++pos, t); // TIME
     stmt->setDouble(++pos,1.152); // INTERVAL
     stmt->setTransientString(++pos,"Antennae" ); // NAME
     stmt->setInt(++pos, 0); // NUM_POLY
-    stmt->setDouble(++pos, 4.8e+09); // TIME_ORIGIN
+    stmt->setDouble(++pos, t); // TIME_ORIGIN
     stmt->setTransientBlob(++pos, blobData, sizeof(double) * elements);//DIRECTION
     stmt->setTransientBlob(++pos, blobData, sizeof(double) * elements);//TARGET
     stmt->setTransientBlob(++pos, blobData, sizeof(double) * elements);//POINTING_OFFSET

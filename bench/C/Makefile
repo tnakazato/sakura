@@ -34,8 +34,7 @@ clean:
 	-rm -f $(OBJS) addcol-casa *~
 
 addcol-casa: addcol-casa.o
-	#$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(SQLITE)/lib -L $(CASA)/lib -lSQLiteCDBC -lsqlite3 -lcasacore
-	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(CASA)/lib -lcasacore
+	$(LINKER) $(CXXFLAGS) -o $@ $< -L $(SRCROOT)/dist/lib -L $(CASA)/lib -lcasacore -ldl
 
 test:
 	#SAKURA_ROOT=$(SRCROOT)/dist ./msconverter x141.004Ants.ms sqms

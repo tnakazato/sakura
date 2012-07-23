@@ -52,15 +52,15 @@ void fetch_( const Table &tab, const String colname )
 template<class T, class U>
 void fetch2_( const Table &tab, const String name1, const String name2 )
 {
-//   double start = currenttime();
+  double start = currenttime();
   ROScalarColumn<T> col1( tab, name1 ) ;
   ROScalarColumn<U> col2( tab, name2 ) ;
   Vector<T> val1 = col1.getColumn() ;
   Vector<U> val2 = col2.getColumn() ;
-//   uInt len = val1.nelements() ;
-//   double end = currenttime();
-//   cout << name1 << "," << name2 << ": Fetched " << len << " rows within " 
-//        << end - start << "sec\n";
+  uInt len = val1.nelements() ;
+  double end = currenttime();
+  cout << name1 << "," << name2 << ": Fetched " << len << " rows within " 
+       << end - start << "sec\n";
 }
 
 Table select_( char const*filename,
@@ -126,7 +126,7 @@ struct Entry {
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action MSFile\n";
+  cerr << "Usage: " << progName << " [options] action MSFile lowerRange upplerRange\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
@@ -173,7 +173,7 @@ int main(int argc, char const * const argv[]) {
   }
 
   int argStart = optind;
-  if (argc - argStart != 2) {
+  if (argc - argStart != 4) {
     usage();
     return 1;
   }
@@ -188,8 +188,8 @@ int main(int argc, char const * const argv[]) {
     usage();
     return 1;
   }
-  double fromTime = 4819385780.3519993 ; 
-  double toTime = 4819386236.5440006 ;
+  double fromTime = atof(argv[argStart + 2]); 
+  double toTime = atof(argv[argStart + 3]);
   double start = currenttime();
   func(argv[argStart + 1], fromTime, toTime);
   double end = currenttime();

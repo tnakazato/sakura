@@ -100,7 +100,7 @@ struct Entry {
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action MSFile\n";
+  cerr << "Usage: " << progName << " [options] action MSFile lowerRange upperRange\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
@@ -147,7 +147,7 @@ int main(int argc, char const * const argv[]) {
   }
 
   int argStart = optind;
-  if (argc - argStart != 2) {
+  if (argc - argStart != 4) {
     usage();
     return 1;
   }
@@ -162,8 +162,8 @@ int main(int argc, char const * const argv[]) {
     usage();
     return 1;
   }
-  double fromTime = 4819385780.3519993 ; 
-  double toTime   = 4819471300.0000000 ;  // 2414 out of 12236 columns to be updated for x141.004Ants.ms.
+  double fromTime = atof(argv[argStart + 2]); 
+  double toTime   = atof(argv[argStart + 3]);
   double start = currenttime();
   func(argv[argStart + 1], fromTime, toTime);
   double end = currenttime();

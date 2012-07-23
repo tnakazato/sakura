@@ -75,6 +75,7 @@ void fetchBlob(Connection *con, char const *sql) {
 
 void fetchAllPointingSQL(Connection *con, char const *sql) {
   enter();
+  double start = currenttime();
   unique_ptr<PreparedStatement> stmt(con->prepare(sql));
   unique_ptr<ResultSet> rs(stmt->executeQuery());
 
@@ -98,7 +99,9 @@ void fetchAllPointingSQL(Connection *con, char const *sql) {
     int n3 = rs->getInt(pos++); // tracking
     int n4 = rs->getInt(pos++); // onSource
     int n5 = rs->getInt(pos++); // overTheTop
- }
+  }
+  double end = currenttime();
+  timing("Fetched: ", end - start);
 }
 struct Entry {
   char const *option;

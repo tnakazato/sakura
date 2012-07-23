@@ -95,12 +95,13 @@ void insertToPointing_(int nrow,char const *outfilename) {
 
   double start = currenttime();
   for (uInt i = 0; i < nrow; i++) {
+    double t = 9000000000.0+i*0.001;
     cols.antennaId().put(i,0) ; // ANTENNA_ID
-    cols.time().put(i,9999999999.0+i*0.001) ;// TIME
+    cols.time().put(i,t) ;// TIME
     cols.interval().put(i,intervalvalue) ;// INTERVAL
     cols.name().put(i,"Antennae") ;// NAME
     cols.numPoly().put(i,0);// NUM_POLY
-    cols.timeOrigin().put(i,4.8e+09);// TIME_ORIGIN
+    cols.timeOrigin().put(i,t);// TIME_ORIGIN
     cols.direction().put(i,mDirTarg);// DIRECTION
     cols.target().put(i,mDirTarg);// TARGET
     cols.pointingOffset().put(i,mDirTarg);//POINTING_OFFSET

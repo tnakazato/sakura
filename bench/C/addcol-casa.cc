@@ -71,6 +71,7 @@ void addIntCol(char const*filename) {
   double end = currenttime();
   cout << "Added: " << end - start << " sec" << endl;
 
+#if 0
   // Value check 
   uInt nRow = tab.nrow();
   cout << "Total rows: " << nRow << endl;
@@ -83,6 +84,7 @@ void addIntCol(char const*filename) {
  
   // Final clear up
   clearCol_(tab, colname);
+#endif
 }
 
 void addNullCol(char const*filename) {
@@ -109,6 +111,7 @@ void addNullCol(char const*filename) {
   double end = currenttime();
   cout << "Added: " << end - start << "sec" << endl;
 
+#if 0
   // Value check 
   ROScalarColumn<Int> roCol( tab, colname );
   cout << "---> Checking values in the column ..." << endl;
@@ -120,6 +123,7 @@ void addNullCol(char const*filename) {
  
   // Final clear up
   clearCol_(tab, colname);
+#endif
 }
 
 

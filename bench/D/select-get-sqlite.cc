@@ -84,7 +84,7 @@ struct Entry {
 char const *progName = "";
 
 void usage() {
-  cerr << "Usage: " << progName << " [options] action tdbFile\n";
+  cerr << "Usage: " << progName << " [options] action tdbFile lowerRange upperRange\n";
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
@@ -131,7 +131,7 @@ int main(int argc, char const *argv[]) {
   }
 
   int argStart = optind;
-  if (argc - argStart != 2) {
+  if (argc - argStart != 4) {
     usage();
     return 1;
   }
@@ -148,8 +148,8 @@ int main(int argc, char const *argv[]) {
     usage();
     return 1;
   }
-  double fromTime = 4819385780.3519993 ; 
-  double toTime = 4819386236.5440006 ;
+  double fromTime = atof(argv[argStart + 2]); 
+  double toTime = atof(argv[argStart + 3]);
   {
     double start = currenttime();
     string tdb = "file:";
