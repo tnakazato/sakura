@@ -1,6 +1,6 @@
 SRCROOT=$(abspath ../..)
 
-CASA=/opt/casapy-34.0.19988-002-64b
+CASA=/opt/share/casa/current/release
 SQLITE=/opt/sqlite
 LIBPATH=$(SRCROOT)/dist/lib:$(SQLITE)/lib:$(CASA)/lib
 CC=gcc
