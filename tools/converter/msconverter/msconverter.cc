@@ -894,7 +894,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
   // FEED table
   {
   char const *dbcols[] = {
-    "FEED_ID", // INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "FEED_ID", // INTEGER NOT NULL,
     "ANTENNA_ID", // INTEGER NOT NULL,
     "SPECTRAL_WINDOW_ID", // INTEGER NOT NULL,
     "TIME", // REAL NOT NULL,
@@ -916,7 +916,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
     int pos = 0;
-    stmt->setInt(++pos, i); // FEED_ID
+    stmt->setInt(++pos, cols.feedId()(i));
     stmt->setInt(++pos, cols.antennaId()(i)); // ANTENNA_ID
     stmt->setInt(++pos, cols.spectralWindowId()(i)); // SPECTRAL_WINDOW_ID
     stmt->setDouble(++pos, cols.time()(i)); // TIME
