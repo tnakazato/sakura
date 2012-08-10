@@ -1102,7 +1102,7 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
     int pos = 0;
-    stmt->setInt(++pos, i); // ANTENNA_ID
+    stmt->setInt(++pos, cols.antennaId()(i)); // ANTENNA_ID
     stmt->setDouble(++pos, cols.time()(i)); // TIME
     stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
 
@@ -1226,7 +1226,7 @@ void savePointing(Connection *con, MeasurementSet &ms) {
   uInt nrow = tab.nrow();
   for (uInt i = 0; i < nrow; i++) {
     int pos = 0;
-    stmt->setInt(++pos, i); // ANTENNA_ID
+    stmt->setInt(++pos, cols.antennaId()(i)); // ANTENNA_ID
     stmt->setDouble(++pos, cols.time()(i)); // TIME
     stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
     stmt->setTransientString(++pos, cols.name()(i).c_str()); // NAME
