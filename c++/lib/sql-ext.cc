@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <cassert>
 #include <iostream>
 #include <sys/types.h>
@@ -335,4 +335,4 @@ sqlite3_extension_init(sqlite3 *db,
   return 0;
 }
 
-};
+}
