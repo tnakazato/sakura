@@ -219,8 +219,8 @@ static void dump_blob_as(sqlite3_context *ctx, int argc, sqlite3_value *argv[]) 
   }
 
   // TODO check type
-  void const *data = sqlite3_value_blob(argv[0]);
   int dataSize = sqlite3_value_bytes(argv[0]);
+  void const *data = sqlite3_value_blob(argv[0]);
 
   unsigned char const defaultOpener[] = "{";
   unsigned char const defaultCloser[] = "}";

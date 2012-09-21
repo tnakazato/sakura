@@ -2,6 +2,7 @@
 #define SQLITE_H_
 
 #include <string>
+#include <stdint.h>
 #include <sqlite3.h>
 
 #ifdef DEBUG
@@ -84,7 +85,7 @@ class ResultSet {
    * @param pos A position of the column. It starts with 1.
    * @return an int value.
    */
-  virtual int getInt(int pos) throw (SQLException);
+  virtual int64_t getInt(int pos) throw (SQLException);
   /**
    * Fetches a string value from the specified column.
    * @param pos A position of the column. It starts with 1.
@@ -166,7 +167,7 @@ class PreparedStatement: public Statement {
    * @param pos A position of the column. It starts with 1.
    * @param value an int value.
    */
-  virtual void setInt(int pos, int value) throw (SQLException);
+  virtual void setInt(int pos, int64_t value) throw (SQLException);
   /**
    * Binds a UTF-8 string value to the specified column.
    * If `value' is a static data, use this method because this method is

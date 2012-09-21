@@ -135,8 +135,8 @@ void PreparedStatement::setNull(int pos) throw (SQLException) {
   } 
 }
 
-void PreparedStatement::setInt(int pos, int value) throw (SQLException) {
-  int result = sqlite3_bind_int(stmt, pos, value);
+void PreparedStatement::setInt(int pos, int64_t value) throw (SQLException) {
+  int result = sqlite3_bind_int64(stmt, pos, value);
   if (SQLITE_OK != result) {
     fprintf(stderr, "%s: %d %s\n", __FUNCTION__, result, sqlite3_errmsg(con->db)); 
     throw SQLException();
@@ -287,8 +287,8 @@ bool ResultSet::isNull(int pos) throw (SQLException) {
   return false;
 }
 
-int ResultSet::getInt(int pos) throw (SQLException) {
-  int value = sqlite3_column_int(stmt->stmt, pos - 1);
+int64_t ResultSet::getInt(int pos) throw (SQLException) {
+  sqlite3_int64 value = sqlite3_column_int64(stmt->stmt, pos - 1);
   return value;
 }
 
