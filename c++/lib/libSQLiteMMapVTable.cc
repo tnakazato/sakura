@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <memory>
+#include <algorithm>
 #include <vector>
 #include <fcntl.h>
 #include <stdint.h>
@@ -24,24 +25,50 @@ using namespace std;
 
 namespace a {
 
+#define THROWS(x) throw x
+#define UNUSED_VARIABLE(x) (void)(x)
 #define unique_ptr auto_ptr
 #define elementsof(x) (sizeof(x) / sizeof(*(x)))
 #define sizeofMember(t,m) (sizeof(reinterpret_cast<t*>(0)->m))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define PERROR(x) perror(__FILE__  ":" #x)
+#define DEB false
 #define enter() do { \
-    if (false) {\
-      cout << "Enter: " << __PRETTY_FUNCTION__ << endl;\
+    if (DEB) {\
+      cout << "Enter> " << __PRETTY_FUNCTION__ << endl;\
+    }\
+}while(0)
+#define enterP(ptr) do { \
+    if (DEB) {\
+      cout << "Enter> " << __PRETTY_FUNCTION__ << ": " << \
+	reinterpret_cast<void*>(ptr) << endl; \
     }\
 }while(0)
 #define leave() do{ \
-    if (false) {\
-      cout << "Leave: " << __PRETTY_FUNCTION__ << endl;\
+    if (DEB) {\
+      cout << "Leave< " << __PRETTY_FUNCTION__ << endl;\
+    }\
+}while(0)
+#define leaveP(ptr) do{ \
+    if (DEB) {\
+      cout << "Leave< " << __PRETTY_FUNCTION__ << ": " << \
+	reinterpret_cast<void*>(ptr) << endl; \
     }\
 }while(0)
 
-#define LOG if (false)
+#define LOG if (DEB)
+
+  class RTException {
+    char const *msg;
+  public:
+    RTException(char const *staticString = "") : msg(staticString) {}
+    RTException(RTException const &other) : msg(other.msg) {}
+    char const *getMessage() const { return msg; }
+    virtual ~RTException() {}
+  };
+
+  RTException ASSERTION_ERROR("Assertion error");
 
   template<typename ArrayElementType>
   class ArrayReleaser {
@@ -49,7 +76,7 @@ namespace a {
   public:
     ArrayReleaser(ArrayElementType *array)
       : str(array) {}
-    virtual ~ArrayReleaser() {
+    virtual ~ArrayReleaser() THROWS((RTException)) {
       if (str) {
 	delete[] str;
       }
@@ -67,7 +94,7 @@ namespace a {
     }
   };
 
-  char const *StrDup(char const *str) throw(bad_alloc) {
+  char const *StrDup(char const *str) THROWS((bad_alloc)) {
     assert(str != NULL);
     size_t len = strlen(str);
     char *p = new char[len + 1];
@@ -75,7 +102,7 @@ namespace a {
     return p;
   }
 
-  char const *StrNDup(char const *str, size_t len_) throw(bad_alloc) {
+  char const *StrNDup(char const *str, size_t len_) THROWS((bad_alloc)) {
     assert(str != NULL);
     size_t len = min(strlen(str), len_);
     char *p = new char[len + 1];
@@ -129,27 +156,16 @@ namespace a {
     delete[] (T*)data;
   }
 
-  class RTException {
-    char const *msg;
-  public:
-    RTException(char const *staticString = "") : msg(staticString) {}
-    RTException(RTException const &other) : msg(other.msg) {}
-    char const *getMessage() { return msg; }
-    virtual ~RTException() {}
-  };
-
-  RTException ASSERTION_ERROR("Assertion error");
-
   class Openable {
   public:
-    virtual void open() throw(RTException) = 0;
-    virtual ~Openable() {}
+    virtual void open() THROWS((RTException)) = 0;
+    virtual ~Openable() THROWS((RTException)) {}
   };
 
   class Closable {
   public:
-    virtual void close() throw(RTException) = 0;
-    virtual ~Closable() {}
+    virtual void close() THROWS((RTException)) = 0;
+    virtual ~Closable() THROWS((RTException)) {}
   };
 
   class Closer {
@@ -158,7 +174,7 @@ namespace a {
       assert(false);
       throw ASSERTION_ERROR;
     }
-    void close() throw(RTException) {
+    void close() THROWS((RTException)) {
       if (closable_) {
 	closable_->close();
 	closable_ = NULL;
@@ -170,11 +186,11 @@ namespace a {
     }
     Closer() : closable_(NULL) {
     }
-    virtual ~Closer() throw(RTException) {
+    virtual ~Closer() THROWS((RTException)) {
       close();
     }
 
-    void reset(Closable *closable) throw(RTException) {
+    void reset(Closable *closable) THROWS((RTException)) {
       try {
 	close();
       } catch (...) {
@@ -186,8 +202,10 @@ namespace a {
       closable_ = closable;
     }
 
-    void release() {
+    Closable *release() {
+      Closable *tmp = closable_;
       closable_ = NULL;
+      return tmp;
     }
   };
 
@@ -195,10 +213,11 @@ namespace a {
   class LockHolder {
     Mutex *mutex;
     friend class Mutex;
-    void lock(Mutex *m) throw(RTException);
+    void lock(Mutex *m) THROWS((RTException));
   public:
     LockHolder(): mutex(NULL) {}
-    virtual ~LockHolder() throw(RTException);
+    void release() THROWS((RTException));
+    virtual ~LockHolder() THROWS((RTException));
   };
 
   class Mutex: public virtual Closable {
@@ -212,7 +231,7 @@ namespace a {
       throw ASSERTION_ERROR;
     }
   public:
-    Mutex() throw(RTException) {
+    Mutex() THROWS((RTException)) {
       int result = pthread_mutex_init(&mutex, NULL);
       if (result != 0) {
 	static RTException ex("pthread_mutex_init error");
@@ -220,7 +239,7 @@ namespace a {
       }
     }
 
-    virtual ~Mutex() throw(RTException) {
+    virtual ~Mutex() THROWS((RTException)) {
       int result = pthread_mutex_destroy(&mutex);
       if (result != 0) {
 	static RTException ex("pthread_mutex_destroy error");
@@ -228,8 +247,8 @@ namespace a {
       }
     }
 
-    void lock() throw(RTException) {
-      enter();
+    void lock() THROWS((RTException)) {
+      enterP(this);
       int result = pthread_mutex_lock(&mutex);
       if (result != 0) {
 	static RTException ex("pthread_mutex_lock error");
@@ -240,8 +259,8 @@ namespace a {
      * Returns true if this thread could lock.
      * Returns false if already locked.
      */
-    bool try_lock() throw(RTException) {
-      enter();
+    bool try_lock() THROWS((RTException)) {
+      enterP(this);
       int result = pthread_mutex_trylock(&mutex);
       if (result == 0) {
 	return true;
@@ -253,8 +272,8 @@ namespace a {
       throw ex;
     }
 
-    void unlock() throw(RTException) {
-      enter();
+    void unlock() THROWS((RTException)) {
+      enterP(this);
       int result = pthread_mutex_unlock(&mutex);
       if (result != 0) {
 	static RTException ex("pthread_mutex_unlock error");
@@ -262,68 +281,158 @@ namespace a {
       }
     }
 
-    void takeLock(LockHolder &holder) throw(RTException) {
+    void takeLock(LockHolder &holder) THROWS((RTException)) {
       holder.lock(this);
     }
 
-    virtual void close() throw(RTException) {
+    virtual void close() THROWS((RTException)) {
       unlock();
     }
   };
 
-  void LockHolder::lock(Mutex *m) throw(RTException) {
+  void LockHolder::lock(Mutex *m) THROWS((RTException)) {
     mutex = m;
     if (mutex) {
       mutex->lock();
     }
   }
 
-  LockHolder::~LockHolder() throw(RTException) {
+  LockHolder::~LockHolder() THROWS((RTException)) {
     if (mutex) {
       mutex->unlock();
     }
   }
 
+  void LockHolder::release() THROWS((RTException)) {
+    if (mutex) {
+      mutex->unlock();
+      mutex = NULL;
+    }
+  }
+
   size_t PAGE_SIZE;
 
-  void init_module() throw(RTException) {
+  void init_module() THROWS((RTException)) {
     long pageSize = sysconf(_SC_PAGE_SIZE);
     if (pageSize <= 0) {
       static RTException ex("Failed to get page size.");
       throw ex;
     }
+    if (pageSize < 4096) {
+      static RTException ex("Too small age size.");
+      throw ex;
+    }
     PAGE_SIZE = pageSize;
   }
 
-  class File: public virtual Openable, public virtual Closable {
+  class RefCountable {
+    Mutex lock;
+    size_t refCount;
+  public:
+    RefCountable() : lock(), refCount(0) {
+      enterP(this);
+    }
+    virtual ~RefCountable() {
+      enterP(this);
+      // without lock because there should be no referer.
+      assert(refCount == 0);
+    }
+
+    void ref() { 
+      enterP(this);
+      lock.lock();
+      refCount++;
+      lock.unlock();
+    }
+
+    void unref() {
+      enterP(this);
+      lock.lock();
+      assert(refCount > 0);
+      refCount--;
+      lock.unlock();
+    }
+
+    size_t getRefCount() const {
+      return refCount;
+    }
+
+    void takeLockOfRefCountable(LockHolder &holder) THROWS((RTException)) {
+      lock.takeLock(holder);
+    }
+  };
+
+  template <typename T>
+  class Referer {
+    T *ref;
+    static RefCountable *typeCheckDummy(T *obj) {
+      RefCountable *p = obj; // T must be subclass of RefCountable.
+      return p;
+    }
+    void init(T *reference, bool increment) {
+      ref = reference;
+      if (ref && increment) {
+	ref->ref();
+      }
+    }
+  public:
+    Referer(T *reference, bool incrementOnConstruction = false) : ref(NULL) {
+      typeCheckDummy(0);
+      init(reference, incrementOnConstruction);
+    }
+    virtual ~Referer() {
+      if (ref) {
+	ref->unref();
+      }
+    }
+    void release() {
+      if (ref) {
+	ref->unref();
+	ref = NULL;
+      }
+    }
+    void reset(T *reference) {
+      release();
+      init(reference, false);
+    }
+    T *get() const {
+      return ref;
+    }
+    T &operator *() const THROWS((RTException)) {
+      assert(ref != NULL);
+      return *ref;
+    }
+    T *operator ->() const THROWS((RTException)) {
+      assert(ref != NULL);
+      return ref;
+    }
+  };
+
+  class MMap;
+  class File: public RefCountable,
+	      public virtual Openable, public virtual Closable {
     friend class MMap;
     Mutex lock;
+    vector<MMap *>mmaps;
     string filename_;
     int mode_;
     int omode;
     int fd;
-    size_t refCount;
 
-    void ref() { 
-      lock.lock();
-      Closer autoUnlock(&lock);
-      refCount++;
-    }
-    void unref() {
-      lock.lock();
-      Closer autoUnlock(&lock);
-      assert(refCount > 0);
-      refCount--;
-    }
+    /**
+     * Call this method from protected region.
+     */
+    void gcMaps() THROWS((RTException));
+
   public:
     enum Mode {
       Mode_Read = PROT_READ,
       Mode_Write = PROT_WRITE,
       Mode_None = PROT_NONE
     };
-    File(char const filename[], int mode) throw(RTException)
-      : filename_(filename), mode_(mode), omode(0), fd(-1), refCount(0) {
-      enter();
+    File(char const filename[], int mode) THROWS((RTException))
+      : filename_(filename), mode_(mode), omode(0), fd(-1) {
+      enterP(this);
       assert(filename != NULL);
       assert(mode_ == Mode_None || mode_ == Mode_Read || mode_ == Mode_Write
 	     || mode_ == (Mode_Read|Mode_Write));
@@ -342,18 +451,30 @@ namespace a {
 	break;
       }
     }
-    virtual ~File() throw(RTException) {
-      enter();
-      // without lock there should be no referer.
+    virtual ~File() THROWS((RTException)) {
+      enterP(this);
+      // without lock because there should be no referer.
+      try {
+	gcMaps();
+	assert(mmaps.size() == 0);
+      } catch (...) {
+	if (fd >= 0) {
+	  close();
+	}
+	leaveP(this);
+	throw;
+      }
       if (fd >= 0) {
 	close();
       }
-      assert(refCount == 0);
+      leaveP(this);
     }
+
     int getMode() const {
       return mode_;
     }
-    virtual void open() throw(RTException) {
+
+    virtual void open() THROWS((RTException)) {
       enter();
       lock.lock();
       Closer autoUnlock(&lock);
@@ -367,7 +488,7 @@ namespace a {
 	}
       }
     }
-    virtual void close() throw(RTException) {
+    virtual void close() THROWS((RTException)) {
       enter();
       lock.lock();
       Closer autoUnlock(&lock);
@@ -381,16 +502,23 @@ namespace a {
 	fd = -1;
       }
     }
+
+    /**
+     * This returns an MMap object whose reference counter has been
+     * incremented for caller.
+     */
+    MMap *makeMapForRegion(off_t offset, size_t size) THROWS((RTException));
   };
 
-  class MMap: public virtual Openable, public virtual Closable {
+  class MMap: public virtual RefCountable,
+	      public virtual Openable, public virtual Closable {
     Mutex lock;
-    File *file_;
+    Referer<File> file_;
     void *mappedAddr;
     size_t size_;
     off_t fileOffset_;
 
-    void extend() throw(RTException) {
+    void extend() THROWS((RTException)) {
       enter();
       static char const zero[4096] = {0};
       off_t fend = lseek(file_->fd, 0, SEEK_END);
@@ -399,33 +527,37 @@ namespace a {
 	throw ex;
       }
       off_t tail = fileOffset_ + size_;
+      LOG cout << "fend: " << fend << endl;
+      LOG cout << "tail: " << tail << endl;
       if (fend < tail && tail > 1) {
 	off_t newFend = lseek(file_->fd, tail - 1, SEEK_SET);
 	if (newFend == static_cast<off_t>(-1)) {
 	  static RTException ex("failed to lseek");
+	  leave();
 	  throw ex;
 	}
 	int wrote = write(file_->fd, zero, 1);
 	if (wrote != 1) {
 	  static RTException ex("failed to write");
+	  leave();
 	  throw ex;
 	}
       }
+      leave();
     }
 
   public:
-    MMap(File *file) throw(RTException)
-      : file_(file), mappedAddr(MAP_FAILED), size_(0), fileOffset_(0) {
-      enter();
-      assert(file_ != NULL);
-      file_->ref();
+    MMap(File *file) THROWS((RTException))
+      : file_(file, true), mappedAddr(MAP_FAILED), size_(0), fileOffset_(0) {
+      enterP(this);
+      assert(file_.get() != NULL);
     }
-    virtual ~MMap() throw(RTException) {
-      enter();
-      file_->unref();
+    virtual ~MMap() THROWS((RTException)) {
+      enterP(this);
       if (mappedAddr != MAP_FAILED) { // without lock because there should be no referer.
 	unmap();
       }
+      leaveP(this);
     }
 
     static size_t getPageSize() {
@@ -433,8 +565,9 @@ namespace a {
       return PAGE_SIZE;
     }
 
-    void setMapRegion(off_t offset, size_t size) throw(RTException) {
+    void setMapRegion(off_t offset, size_t size) THROWS((RTException)) {
       enter();
+      LOG cout << "Range: " << offset << " + " << size << endl;
       assert(offset >= 0 && offset % getPageSize() == 0);
       if (mappedAddr != MAP_FAILED) {
 	static RTException ex("unmap before changing map region.");
@@ -452,14 +585,25 @@ namespace a {
       return false;
     }
 
+    static void alignRegion(off_t *newOffset_, size_t *newSize_,
+			     off_t offset, size_t size) {
+      assert(newOffset_ != NULL);
+      assert(newSize_ != NULL);
+      off_t newOffset = (offset / getPageSize()) * getPageSize();
+      size_t newSize = offset + size - newOffset;
+      newSize = ((newSize + getPageSize() - 1) / getPageSize())
+	* getPageSize();
+      *newOffset_ = newOffset;
+      *newSize_ = newSize;
+    }
+
     template <typename T>
-    T *remapForRegion(off_t offset, size_t size) throw(RTException) {
-      if (mappedAddr == MAP_FAILED || inRange(offset, size)) {
+    T *remapForRegion(off_t offset, size_t size) THROWS((RTException)) {
+      if (mappedAddr == MAP_FAILED || ! inRange(offset, size)) {
 	unmap();
-	off_t newOffset = (offset / getPageSize()) * getPageSize();
-	size_t newSize = offset + size - newOffset;
-	newSize = (newSize + getPageSize() - 1)
-	  / getPageSize() * getPageSize();
+	off_t newOffset = 0;
+	size_t newSize = 0;
+	alignRegion(&newOffset, &newSize, offset, size);
 	setMapRegion(newOffset, newSize);
 	map<void>();
       }
@@ -469,7 +613,7 @@ namespace a {
     }
 
     template <typename T>
-    T *getMappedAddr() throw(RTException) {
+    T *getMappedAddr() THROWS((RTException)) {
       if (mappedAddr == MAP_FAILED) {
 	static RTException ex("trial of getting mapped address w/o mapping.");
 	throw ex;
@@ -478,7 +622,7 @@ namespace a {
     }
 
     template <typename T>
-    T *map() throw(RTException) {
+    T *map() THROWS((RTException)) {
       enter();
       if (mappedAddr == MAP_FAILED) {
 	extend();
@@ -487,13 +631,17 @@ namespace a {
 	if (mappedAddr == MAP_FAILED) {
 	  PERROR(mmap);
 	  static RTException ex("mmap error");
+	  leave();
 	  throw ex;
 	}
       }
+      LOG cout << "mapped: " << mappedAddr << " .. " <<
+	reinterpret_cast<void *>(reinterpret_cast<char *>(mappedAddr) + size_) << " size: " << size_ << endl;
+      leave();
       return reinterpret_cast<T *>(mappedAddr);
     }
 
-    void unmap() throw(RTException) {
+    void unmap() THROWS((RTException)) {
       enter();
       if (mappedAddr != MAP_FAILED) {
 	if (munmap(mappedAddr, size_) != 0) {
@@ -505,17 +653,83 @@ namespace a {
       }
     }
 
-    virtual void open() throw(RTException) {
+    virtual void open() THROWS((RTException)) {
       map<void>();
     }
-    virtual void close() throw(RTException) {
+    virtual void close() THROWS((RTException)) {
       unmap();
     }
 
-    void takeLock(LockHolder &holder) throw(RTException) {
+    void takeLock(LockHolder &holder) THROWS((RTException)) {
       lock.takeLock(holder);
     }
   };
+
+  void File::gcMaps() THROWS((RTException)) {
+    vector<MMap *>::size_type end = mmaps.size();
+    vector<MMap *>::size_type dest = 0;
+    for (vector<MMap *>::size_type i = 0; i < end; i++) {
+      LockHolder lh;
+      mmaps[i]->takeLockOfRefCountable(lh);
+      if (mmaps[i]->getRefCount() == 0) {
+	try {
+	  lh.release();
+	  delete mmaps[i];
+	} catch (...) {
+	  mmaps[i] = NULL;
+	  // throw;
+	}
+	mmaps[i] = NULL;
+      } else {
+	mmaps[dest] = mmaps[i];
+	dest++;
+      }
+    }
+    assert(dest <= end);
+    for (vector<MMap *>::size_type i = dest; i < end; i++) {
+      assert(mmaps[i] == NULL);
+    }
+    mmaps.resize(dest);
+  }
+
+  MMap *File::makeMapForRegion(off_t offset, size_t size)
+    THROWS((RTException)) {
+    enter();
+    lock.lock();
+    Closer autoUnlock(&lock);
+    {
+      vector<MMap *>::size_type end = mmaps.size();
+      for (vector<MMap *>::size_type i = 0; i < end; i++) {
+	if (mmaps[i]->inRange(offset, size)) {
+	  mmaps[i]->ref();
+	  leave();
+	  return mmaps[i];
+	}
+      }
+
+      if (end > 8) {
+	gcMaps();
+      }
+    }
+    unique_ptr<MMap> map(new MMap(this));
+    off_t newOffset = 0;
+    size_t newSize = 0;
+    MMap::alignRegion(&newOffset, &newSize, offset, size);
+    off_t fend = lseek(fd, 0, SEEK_END);
+    if (fend == static_cast<off_t>(-1)) {
+      static RTException ex("failed to lseek");
+      leave();
+      throw ex;
+    }
+    newSize = min(static_cast<size_t>(fend - newOffset),
+		  max(newSize, MMap::getPageSize() * 1024 * 80));
+    map->setMapRegion(newOffset, newSize);
+    map->map<void>();
+    mmaps.push_back(map.get());
+    map->ref();
+    leave();
+    return map.release();
+  }
 
   enum SQLType {
     SQLTYPE_INTEGER = SQLITE_INTEGER,
@@ -563,9 +777,8 @@ namespace a {
     bool notNull_;
   protected:
     unique_ptr<File> file;
-    unique_ptr<MMap> map;
 
-    File *openFile(char const suffix[]) throw(RTException);
+    File *openFile(char const suffix[]) THROWS((RTException));
 
   private:
     friend class Table;
@@ -616,16 +829,17 @@ namespace a {
     Column(ColumnDesc const &colDesc)
       : table(NULL), name_(colDesc.name), type_(colDesc.type),
 	isPK_(colDesc.isPK), notNull_(colDesc.isNotNull),
-	file(), map() {
+	file() {
       init(colDesc.name);
     }
     Column(char const name[], SQLType type, bool isPk, bool notNull)
       : table(NULL), name_(name), type_(type),
 	isPK_(isPk), notNull_(notNull),
-	file(), map() {
+	file() {
       init(name);
     }
-    virtual ~Column() {
+    virtual ~Column() THROWS((RTException)) {
+      enterP(this);
     }
 
     void save(ColumnDesc *colDesc) const {
@@ -637,7 +851,7 @@ namespace a {
       strncpy(colDesc->name, name_.c_str(), sizeof(colDesc->name) - 1);
     }
 
-    virtual void open() throw(RTException) {
+    virtual void open() THROWS((RTException)) {
       enter();
       if (isPK()) {
 	return;
@@ -645,47 +859,32 @@ namespace a {
       file.reset(openFile(".0"));
       try {
 	file->open();
-	try {
-	  map.reset(new MMap(file.get()));
-	} catch (...) {
-	  file->close();
-	  throw;
-	}
       } catch (...) {
 	file.reset(NULL);
 	throw;
       }
     }
-    virtual void close() throw(RTException) {
+    virtual void close() THROWS((RTException)) {
       enter();
       if (isPK()) {
 	return;
-      }
-      try {
-	if (map.get() != NULL) {
-	  map->close();
-	}
-      } catch (...) {
-	if (file.get() != NULL) {
-	  file->close();
-	}
-	throw;
       }
       if (file.get() != NULL) {
 	file->close();
       }
     }
 
-    virtual void insert(sqlite_int64 rowId, sqlite3_value *value) throw(RTException) {
+    virtual void insert(sqlite_int64 rowId, sqlite3_value *value) THROWS((RTException)) {
       enter();
       assert(notNull_);
       assert(rowId > 0);
       assert(size > 0);
       assert(sqlite3_value_type(value) != SQLITE_NULL);
       {
+	off_t offset = (rowId - 1) * size;
+	Referer<MMap> map(file->makeMapForRegion(offset, size));
 	LockHolder protect;
 	map->takeLock(protect);
-	off_t offset = (rowId - 1) * size;
 	switch (type_) {
 	case SQLTYPE_INTEGER: {
 	  assert(sqlite3_value_type(value) == SQLITE_INTEGER);
@@ -706,7 +905,7 @@ namespace a {
       }
     }
 
-    void fetch(sqlite3_context *pCtx, sqlite_int64 rowId) throw(RTException) {
+    void fetch(sqlite3_context *pCtx, sqlite_int64 rowId) THROWS((RTException)) {
       switch (type_) {
       case SQLTYPE_INTEGER:
 	fetch(pCtx, rowId, setInteger);
@@ -727,14 +926,15 @@ namespace a {
     }
     virtual void fetch(sqlite3_context *pCtx, sqlite_int64 rowId,
 		       ResultSetter setter)
-      throw(RTException) {
+      THROWS((RTException)) {
       enter();
       assert(rowId > 0);
       assert(setter > 0);
       {
+	off_t offset = (rowId - 1) * size;
+	Referer<MMap> map(file->makeMapForRegion(offset, size));
 	LockHolder protect;
 	map->takeLock(protect);
-	off_t offset = (rowId - 1) * size;
 	switch (type_) {
 	case SQLTYPE_INTEGER:
 	case SQLTYPE_FLOAT:
@@ -770,7 +970,6 @@ namespace a {
   class VariableSizeColumn: public Column {
     unique_ptr<File> dataFile;
     unique_ptr<MMap> headerMap;
-    unique_ptr<MMap> dataMap;
     struct Entry {
       off_t offset;
       size_t size;
@@ -789,78 +988,69 @@ namespace a {
     }
   public:
     VariableSizeColumn(ColumnDesc const &colDesc)
-      :Column(colDesc), dataFile(), headerMap(), dataMap() {
+      :Column(colDesc), dataFile(), headerMap() {
     }
     VariableSizeColumn(char const name[], SQLType type, bool isPk, bool notNull)
-      : Column(name, type, isPk, notNull), dataFile(), headerMap(), dataMap() {
+      : Column(name, type, isPk, notNull), dataFile(), headerMap() {
     }
-    virtual ~VariableSizeColumn() {
+    virtual ~VariableSizeColumn() THROWS((RTException)) {
+      enterP(this);
     }
 
-    virtual void open() throw(RTException) {
+    virtual void open() THROWS((RTException)) {
       enter();
       Column::open();
       dataFile.reset(openFile(".data"));
       try {
 	dataFile->open();
 	Closer dataFileCloser(dataFile.get());
-	dataMap.reset(new MMap(dataFile.get()));
+	headerMap.reset(new MMap(dataFile.get()));
 	try {
-	  headerMap.reset(new MMap(dataFile.get()));
-	  try {
-	    headerMap->setMapRegion(0, MMap::getPageSize());
-	    DataHeader *header = headerMap->map<DataHeader>();
-	    if (header->tail < static_cast<off_t>(offsetof(DataHeader, data))) {
-	      header->tail = offsetof(DataHeader, data);
-	      assert(alignUp(offsetof(DataHeader, data))
-		     == offsetof(DataHeader, data));
-	    }
-	    dataFileCloser.release();
-	  } catch (...) {
-	    headerMap.reset(NULL);
+	  headerMap->setMapRegion(0, MMap::getPageSize());
+	  DataHeader *header = headerMap->map<DataHeader>();
+	  if (header->tail < static_cast<off_t>(offsetof(DataHeader, data))) {
+	    header->tail = offsetof(DataHeader, data);
+	    assert(alignUp(offsetof(DataHeader, data))
+		   == offsetof(DataHeader, data));
 	  }
+	  dataFileCloser.release();
 	} catch (...) {
-	  dataMap.reset(NULL);
+	  headerMap.reset(NULL);
+	  throw;
 	}
       } catch (...) {
 	dataFile.reset(NULL);
 	throw;
       }
     }
-    virtual void close() throw(RTException) {
-      enter();
-      Closer dataFileCloser(dataFile.get());
+    virtual void close() THROWS((RTException)) {
+      enterP(this);
       try {
+	Closer dataFileCloser(dataFile.get());
 	Closer headerMapCloser;
-	Closer dataMapCloser;
 	if (headerMap.get() != NULL) {
 	  headerMapCloser.reset(headerMap.get());
 	}
-	if (dataMap.get() != NULL) {
-	  dataMapCloser.reset(dataMap.get());
-	}
-	if (dataFile.get() != NULL) {
-	  dataFile->close();
-	}
       } catch (...) {
 	Column::close();
+	leaveP(this);
 	throw;
       }
       Column::close();
+      leaveP(this);
     }
 
-    virtual void insert(sqlite_int64 rowId, sqlite3_value *value) throw(RTException) {
+    virtual void insert(sqlite_int64 rowId, sqlite3_value *value) THROWS((RTException)) {
       enter();
+      assert(rowId > 0);
+      off_t offset = (rowId - 1) * sizeof(Entry);
       {
+	Referer<MMap> map(file->makeMapForRegion(offset, sizeof(Entry)));
 	LockHolder protect;
 	LockHolder protectHeader;
-	LockHolder protectData;
 	map->takeLock(protect);
 	headerMap->takeLock(protectHeader);
-	dataMap->takeLock(protectData);
 
-	assert(rowId > 0);
-	off_t offset = (rowId - 1) * sizeof(Entry);
 	Entry *entry = map->remapForRegion<Entry>(offset, sizeof(Entry));
 	int type = sqlite3_value_type(value);
 	if (type == SQLITE_NULL) {
@@ -872,45 +1062,54 @@ namespace a {
 	  DataHeader *header = headerMap->getMappedAddr<DataHeader>();
 	  off_t dataLocation = alignUp(header->tail);
 	  int size = sqlite3_value_bytes(value);
-	  void *data = dataMap->remapForRegion<void>(dataLocation, size);
-	  void const *src = NULL;
-	  switch (type) {
-	  case SQLITE_TEXT:
-	    src = sqlite3_value_text(value);
-	    break;
-	  case SQLITE_BLOB:
-	    src = sqlite3_value_blob(value);
-	    break;
-	  default:
-	    assert(false);
-	    throw ASSERTION_ERROR;
+	  {
+	    Referer<MMap> dataMap(dataFile->makeMapForRegion(dataLocation,
+							     size));
+	    LockHolder protectData;
+	    dataMap->takeLock(protectData);
+	    void *data = dataMap->remapForRegion<void>(dataLocation, size);
+	    void const *src = NULL;
+	    switch (type) {
+	    case SQLITE_TEXT:
+	      src = sqlite3_value_text(value);
+	      break;
+	    case SQLITE_BLOB:
+	      src = sqlite3_value_blob(value);
+	      break;
+	    default:
+	      assert(false);
+	      leave();
+	      throw ASSERTION_ERROR;
+	    }
+	    memcpy(data, src, size);
+	    header->tail = dataLocation + size;
+	    entry->offset = dataLocation;
+	    entry->size = size;
 	  }
-	  memcpy(data, src, size);
-	  header->tail = dataLocation + size;
-	  entry->offset = dataLocation;
-	  entry->size = size;
 	}
       }
+      leave();
     }
 
     virtual void fetch(sqlite3_context *pCtx, sqlite_int64 rowId,
 		       ResultSetter setter)
-      throw(RTException) {
+      THROWS((RTException)) {
       enter();
+      assert(rowId > 0);
+      off_t offset = (rowId - 1) * sizeof(Entry);
       {
+	Referer<MMap> map(file->makeMapForRegion(offset, sizeof(Entry)));
 	LockHolder protect;
-	LockHolder protectHeader;
-	LockHolder protectData;
 	map->takeLock(protect);
-	headerMap->takeLock(protectHeader);
-	dataMap->takeLock(protectData);
 
-	assert(rowId > 0);
-	off_t offset = (rowId - 1) * sizeof(Entry);
 	Entry *entry = map->remapForRegion<Entry>(offset, sizeof(Entry));
 	if (entry->offset == 0) { // NULL SQL value
 	  sqlite3_result_null(pCtx);
 	} else {
+	  Referer<MMap> dataMap(dataFile->makeMapForRegion(entry->offset,
+							   entry->size));
+	  LockHolder protectData;
+	  dataMap->takeLock(protectData);
 	  void *data = dataMap->remapForRegion<void>(entry->offset, entry->size);
 	  setter(pCtx, data, entry->size);
 	}
@@ -919,7 +1118,7 @@ namespace a {
   };
 
   Column *createColumn(char const name[], SQLType type,
-		       bool isPk, bool notNull) throw(RTException) {
+		       bool isPk, bool notNull) THROWS((RTException)) {
     switch (type) {
     case SQLITE_TEXT:
     case SQLITE_BLOB:
@@ -933,6 +1132,7 @@ namespace a {
   }
 
   class Table: public virtual Openable, public virtual Closable  {
+    Mutex lock;
     string name_;
     string path_;
     vector<Column *> cols;
@@ -940,6 +1140,7 @@ namespace a {
     int pkIdx;
     unique_ptr<File> tableDescFile;
     unique_ptr<MMap> tableDescMap;
+    bool opened;
 
     struct TableDescPage {
       char name[32];
@@ -948,7 +1149,7 @@ namespace a {
       Column::ColumnDesc columns[1];
     };
 
-    void selfOpen() throw(RTException) {
+    void selfOpen() THROWS((RTException)) {
       enter();
       string tablePath = getTablePath();
       string tableDesc = strprintf("%s/%s", tablePath.c_str(), "_.desc");
@@ -985,16 +1186,20 @@ namespace a {
       }
       leave();
     }
-    void selfClose() throw(RTException) {
+    void selfClose() THROWS((RTException)) {
+      enterP(this);
+      Closer fileCloser;
+      Closer mapCloser;
       if (tableDescMap.get() != NULL) {
-	tableDescMap->close();
+	mapCloser.reset(tableDescMap.release());
       }
       if (tableDescFile.get() != NULL) {
-	tableDescFile->close();
+	fileCloser.reset(tableDescFile.release());
       }
+      leaveP(this);
     }
     void closeCols(uint16_t startCol)
-      throw(RTException) {
+      THROWS((RTException)) {
       if (startCol < cols.size()) {
 	try {
 	  cols[startCol]->close();
@@ -1009,22 +1214,36 @@ namespace a {
       }
     }
   public:
-    Table(char const name[], char const path[]) throw(RTException)
+    Table(char const name[], char const path[]) THROWS((RTException))
       : name_(name), path_(path), cols(), nRows(0), pkIdx(-1),
-	tableDescFile(), tableDescMap() {
-      enter();
+	tableDescFile(), tableDescMap(), opened(false) {
+      enterP(this);
       if (strlen(name) >= sizeofMember(TableDescPage, name)) {
 	static RTException ex("too long table name");
 	throw ex;
       }
     }
-    virtual ~Table() {
-      enter();
+    virtual ~Table() THROWS((RTException)) {
+      enterP(this);
+      assert(opened == false);
       vector<Column *>::size_type end = cols.size();
       for (vector<Column *>::size_type i = 0; i < end; i++) {
-	delete cols[i];
+	try {
+	  LOG cout << "Del " << cols[i] << endl;
+	  delete cols[i];
+	  LOG cout << "Deled \n";
+	} catch (RTException const &ex) {
+	  LOG cout << "RTException: " << ex.getMessage() << endl;
+	  leaveP(this);
+	  throw; // TODO try to delete all of cols
+	}
 	cols[i] = NULL;
       }
+      leaveP(this);
+    }
+
+    void takeLock(LockHolder &holder) THROWS((RTException)) {
+      lock.takeLock(holder);
     }
 
     string getTablePath() const {
@@ -1032,8 +1251,9 @@ namespace a {
       return tableDir;
     }
 
-    virtual void open() throw(RTException) {
-      enter();
+    virtual void open() THROWS((RTException)) {
+      enterP(this);
+      assert(opened == false);
       selfOpen();
 
       uint16_t closeUpTo = 0;
@@ -1050,24 +1270,34 @@ namespace a {
 	  } catch (...) {
 	  }
 	}
-	leave();
+	try {
+	  selfClose();
+	} catch (...) {
+	}
+	leaveP(this);
 	throw;
       }
-      leave();
+      opened = true;
+      leaveP(this);
     }
 
-    virtual void close() throw(RTException) {
-      enter();
+    virtual void close() THROWS((RTException)) {
+      enterP(this);
+      assert(opened == true);
       try {
 	closeCols(0);
       } catch (...) {
 	selfClose();
+	// opened = false;
+	leaveP(this);
 	throw;
       }
       selfClose();
+      opened = false;
+      leaveP(this);
     }
 
-    void load() throw(RTException) {
+    void load() THROWS((RTException)) {
       enter();
       TableDescPage *desc = tableDescMap->getMappedAddr<TableDescPage>();
       nRows = desc->nRows;
@@ -1076,7 +1306,7 @@ namespace a {
 	throw ex;
       }
     }
-    void save() throw(RTException) {
+    void save() THROWS((RTException)) {
       enter();
       TableDescPage *desc = tableDescMap->getMappedAddr<TableDescPage>();
       strcpy(desc->name, name_.c_str());
@@ -1087,7 +1317,7 @@ namespace a {
       }
       leave();
     }
-    void create() throw(RTException) {
+    void create() THROWS((RTException)) {
       enter();
       string tableDir = getTablePath();
       cout << "Parent dir of table: " << tableDir << endl;
@@ -1101,7 +1331,7 @@ namespace a {
 	}
       }
     }
-    void addColumn(Column *col) throw(RTException) {
+    void addColumn(Column *col) THROWS((RTException)) {
       assert(col != NULL);
       vector<Column *>::size_type idx = cols.size();
       if (&reinterpret_cast<TableDescPage*>(0)->columns[idx + 1] >
@@ -1134,7 +1364,7 @@ namespace a {
     sqlite_int64 getNumberOfRows() const {
       return nRows;
     }
-    void remove(sqlite_int64 rowId) throw(RTException) {
+    void remove(sqlite_int64 rowId) THROWS((RTException)) {
       enter();
       if (1 <= rowId && rowId == nRows) {
 	// TODO delete
@@ -1144,7 +1374,7 @@ namespace a {
       throw ex;
     }
     sqlite_int64 insert(sqlite_int64 rowId,
-			int argc, sqlite3_value **argv) throw(RTException) {
+			int argc, sqlite3_value **argv) THROWS((RTException)) {
       enter();
       if (rowId < 0) {
 	rowId = nRows + 1;
@@ -1163,7 +1393,7 @@ namespace a {
       LOG cout << "Table::inserted" << nRows << endl;
       return rowId;
     }
-    virtual void drop() throw(RTException) {
+    virtual void drop() THROWS((RTException)) {
       enter();
       string tableDir = getTablePath();
       string command = strprintf("/bin/rm -rf %s", tableDir.c_str());
@@ -1175,7 +1405,7 @@ namespace a {
     }
   };
 
-  File *Column::openFile(char const suffix[]) throw(RTException) {
+  File *Column::openFile(char const suffix[]) THROWS((RTException)) {
     string dir = table->getTablePath();
     string filepath = strprintf("%s/%s%s", dir.c_str(), name_.c_str(), suffix);
     return new File(filepath.c_str(),
@@ -1184,7 +1414,7 @@ namespace a {
 
   class PredicateBase {
   public:
-    virtual ~PredicateBase() {}
+    virtual ~PredicateBase() THROWS((RTException)) {}
     //virtual bool isMatch(void const *lhsValue) = 0;
     /**
      * rowId starts with 1.
@@ -1211,13 +1441,13 @@ namespace a {
     }
     virtual sqlite_int64 nextMatch(sqlite_int64 rowId, sqlite_int64 nRow)
       const {
+      enter();
       sqlite_int64 rValue = static_cast<sqlite_int64>(this->rValue);
-      if (rValue <= nRow) {
+      if (rowId <= rValue && rValue <= nRow) {
 	return rValue;
       }
       return nRow + 1; // not found
     }
-
   };
 
   template <typename T>
@@ -1303,7 +1533,7 @@ namespace a {
       : lock(), state(NotSearchedYet), table_(table), rowId(0), preds() {
       enter();
     }
-    virtual ~Cursor() {
+    virtual ~Cursor() THROWS((RTException)) {
       enter();
       vector<PredicateBase *>::size_type end = preds.size();
       for (vector<PredicateBase *>::size_type i = 0; i < end; i++) {
@@ -1335,24 +1565,31 @@ namespace a {
     void next() {
       enter();
       assert(state == Scanning);
-      sqlite_int64 const nRows = table_->getNumberOfRows();
-      //cout << "Cursor::next: nRows: " << nRows << endl;
+      {
+	LockHolder tableLH;
+	table_->takeLock(tableLH);
+	sqlite_int64 const nRows = table_->getNumberOfRows();
+	LOG cout << "nRows: " << nRows << endl;
 
-      rowId++;
-      //cout << "Cursor::next: rowId: " << rowId << endl;
-      for (sqlite_int64 lastRowId = rowId; rowId <= nRows; lastRowId = rowId) {
-	vector<PredicateBase *>::size_type end = preds.size();
-	//cout << "Cursor::next: preds: " << end << endl;
-	for (vector<PredicateBase *>::size_type i = 0; i < end; i++) {
-	  rowId = preds[i]->nextMatch(rowId, nRows);
+	rowId++;
+	LOG cout << "rowId: " << rowId << endl;
+	vector<PredicateBase *>::size_type const end = preds.size();
+	LOG cout << "number of preds: " << end << endl;
+
+	for (sqlite_int64 lastRowId = rowId; rowId <= nRows; lastRowId = rowId) {
+	  for (vector<PredicateBase *>::size_type i = 0; i < end; i++) {
+	    rowId = preds[i]->nextMatch(rowId, nRows);
+	  }
+	  if (rowId > nRows || lastRowId == rowId) { // matches all preds or not matches at all.
+	    break;
+	  }
 	}
-	if (lastRowId == rowId) { // matches all preds or not matches at all.
-	  break;
+	if (rowId > nRows) {
+	  LOG cout << "eof reached\n";
+	  state = EOFReached;
+	} else {
+	  LOG cout << "found: " << rowId << endl;
 	}
-      }
-      if (rowId > nRows) {
-	//cout << "Cursor::next: eof reached: " << endl;
-	state = EOFReached;
       }
     }
 
@@ -1369,7 +1606,7 @@ namespace a {
       throw ex;
     }
 
-    virtual void close() throw(RTException) {
+    virtual void close() THROWS((RTException)) {
       enter();
       // TODO implement here
     }
@@ -1411,7 +1648,7 @@ extern "C" {
       *ctx = str;
     }
     E nextToken(char const **ctx, E tokenOfEOF, E invalidToken,
-		char const **invalidTokenStr, size_t *invalidTokenStrLen) const throw(RTException) {
+		char const **invalidTokenStr, size_t *invalidTokenStrLen) const THROWS((RTException)) {
       assert(ctx != NULL);
       assert(invalidTokenStr != NULL);
       assert(invalidTokenStrLen != NULL);
@@ -1467,7 +1704,7 @@ extern "C" {
   public:
     static SQLType parse(char const *str,
 			 char const **name, size_t *nameLen,
-			 bool *isPK, bool *notNull) throw(RTException) {
+			 bool *isPK, bool *notNull) THROWS((RTException)) {
       assert(str != NULL);
       assert(name != NULL);
       assert(nameLen != NULL);
@@ -1599,7 +1836,9 @@ extern "C" {
       return SQLITE_ERROR;
     }
     char const *modName = argv[0];
+    UNUSED_VARIABLE(modName);
     char const *dbName = argv[1];
+    UNUSED_VARIABLE(dbName);
     char const *vtName = argv[2];
     string sqlStr(argv[3]);
     string::size_type start = 0;
@@ -1696,7 +1935,7 @@ extern "C" {
   }
 
   int mmapDisconnectMethod(sqlite3_vtab *pVTab) throw() {
-    enter();
+    enterP(pVTab);
     assert(pVTab != NULL);
     MMapVTab *mmapVtab = reinterpret_cast<MMapVTab *>(pVTab);
     Table *tab = mmapVtab->table;
@@ -1711,8 +1950,14 @@ extern "C" {
     } catch (...) {
       result = SQLITE_ERROR;
     }
-    delete tab;
+    try {
+      LOG cout << "RTDELE\n";
+      delete tab;
+    } catch (...) {
+      result = SQLITE_ERROR;
+    }
     sqlite3_free(mmapVtab);
+    leaveP(pVTab);
     return result;
   }
 
@@ -1732,7 +1977,13 @@ extern "C" {
     } catch (...) {
       result = SQLITE_ERROR;
     }
-    delete tab;
+
+    try {
+      delete tab;
+    } catch (RTException const &ex) {
+      LOG cout << "RTException: " << ex.getMessage() << endl;
+      result = SQLITE_ERROR;
+    }
     sqlite3_free(mmapVtab);
     return result;
   }
@@ -1988,6 +2239,8 @@ extern "C" {
       if (sqlite3_value_type(argv[i]) == SQLITE_INTEGER) {
 	sqlite_int64 rowId = sqlite3_value_int(argv[i]);
 	try {
+	  LockHolder tableLH;
+	  tab->takeLock(tableLH);
 	  tab->remove(rowId);
 	} catch (...) {
 	  return SQLITE_ERROR;
@@ -2009,6 +2262,8 @@ extern "C" {
 	}
       }
       try {
+	LockHolder tableLH;
+	tab->takeLock(tableLH);
 	rowId = tab->insert(rowId, argc - 2, &argv[2]);
 	*pRowid = rowId;
       } catch (...) {
@@ -2058,13 +2313,19 @@ extern "C" {
 } // namespace
 
 using namespace a;
+
 extern "C" {
   int sqlite3_extension_init(sqlite3 *db,
 			     char **pzErrMsg,
 			     const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi)
       ;
-    init_module();
+    try {
+      init_module();
+    } catch (...) {
+      *pzErrMsg = sqlite3_mprintf("Failed to initialize MMapVTable module.");
+      return SQLITE_ERROR;
+    }
     void *pClientData = NULL;         /* Client data for xCreate/xConnect */
     void(*xDestroy)(void*) = NULL;     /* Module destructor function */
     int result = sqlite3_create_module_v2(db,
