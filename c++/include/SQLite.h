@@ -281,6 +281,11 @@ class Connection {
       void (*xStep)(sqlite3_context *, int, sqlite3_value **),
       void (*xFinal)(sqlite3_context *),
       void(*xDestroy)(void *)) throw (SQLException);
+  /**
+   * Enables/disables loadable extentions.
+   * This is an SQLite3 dependent feature.
+   */
+  virtual void sqlite3AllowLoadExtension(bool isAllowed) throw (SQLException);
 };
 
 /**

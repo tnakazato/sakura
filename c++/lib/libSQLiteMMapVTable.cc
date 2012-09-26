@@ -34,28 +34,41 @@ namespace a {
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define PERROR(x) perror(__FILE__  ":" #x)
 #define DEB false
-#define enter() do { \
-    if (DEB) {\
-      cout << "Enter> " << __PRETTY_FUNCTION__ << endl;\
-    }\
-}while(0)
-#define enterP(ptr) do { \
-    if (DEB) {\
-      cout << "Enter> " << __PRETTY_FUNCTION__ << ": " << \
-	reinterpret_cast<void*>(ptr) << endl; \
-    }\
-}while(0)
-#define leave() do{ \
-    if (DEB) {\
-      cout << "Leave< " << __PRETTY_FUNCTION__ << endl;\
-    }\
-}while(0)
-#define leaveP(ptr) do{ \
-    if (DEB) {\
-      cout << "Leave< " << __PRETTY_FUNCTION__ << ": " << \
-	reinterpret_cast<void*>(ptr) << endl; \
-    }\
-}while(0)
+
+#define enter_() do {					\
+    cout << "Enter> " << __PRETTY_FUNCTION__ << endl;	\
+  }while(0)
+#define enter() do {				\
+    if (DEB) {					\
+      enter_();					\
+    }						\
+  }while(0)
+#define enterP_(ptr) do {				  \
+    cout << "Enter> " << __PRETTY_FUNCTION__ << ": " <<	  \
+      reinterpret_cast<void*>(ptr) << endl;		  \
+  }while(0)
+#define enterP(ptr) do {			\
+    if (DEB) {					\
+      enterP_(ptr);				\
+    }						\
+  }while(0)
+#define leave_() do{					\
+    cout << "Leave< " << __PRETTY_FUNCTION__ << endl;	\
+  }while(0)
+#define leave() do{				\
+    if (DEB) {					\
+      leave_();					\
+    }						\
+  }while(0)
+#define leaveP_(ptr) do{				  \
+    cout << "Leave< " << __PRETTY_FUNCTION__ << ": " <<	  \
+      reinterpret_cast<void*>(ptr) << endl;		  \
+  }while(0)
+#define leaveP(ptr) do{					\
+    if (DEB) {						\
+      leaveP_(ptr);					\
+    }							\
+  }while(0)
 
 #define LOG if (DEB)
 
@@ -312,19 +325,6 @@ namespace a {
 
   size_t PAGE_SIZE;
 
-  void init_module() THROWS((RTException)) {
-    long pageSize = sysconf(_SC_PAGE_SIZE);
-    if (pageSize <= 0) {
-      static RTException ex("Failed to get page size.");
-      throw ex;
-    }
-    if (pageSize < 4096) {
-      static RTException ex("Too small age size.");
-      throw ex;
-    }
-    PAGE_SIZE = pageSize;
-  }
-
   class RefCountable {
     Mutex lock;
     size_t refCount;
@@ -375,24 +375,27 @@ namespace a {
 	ref->ref();
       }
     }
+    void unref() {
+      if (ref) {
+	ref->unref();
+	ref = NULL;
+      }
+    }
   public:
     Referer(T *reference, bool incrementOnConstruction = false) : ref(NULL) {
       typeCheckDummy(0);
       init(reference, incrementOnConstruction);
     }
     virtual ~Referer() {
-      if (ref) {
-	ref->unref();
-      }
+      unref();
     }
-    void release() {
-      if (ref) {
-	ref->unref();
-	ref = NULL;
-      }
+    T *release() {
+      T *result = ref;
+      ref = NULL;
+      return result;
     }
     void reset(T *reference) {
-      release();
+      unref();
       init(reference, false);
     }
     T *get() const {
@@ -523,6 +526,7 @@ namespace a {
       static char const zero[4096] = {0};
       off_t fend = lseek(file_->fd, 0, SEEK_END);
       if (fend == static_cast<off_t>(-1)) {
+	PERROR(lseek);
 	static RTException ex("failed to lseek");
 	throw ex;
       }
@@ -530,18 +534,29 @@ namespace a {
       LOG cout << "fend: " << fend << endl;
       LOG cout << "tail: " << tail << endl;
       if (fend < tail && tail > 1) {
+#if 1
+	int result = posix_fallocate(file_->fd, fileOffset_, size_);
+	if (result != 0) {
+	  static RTException ex("failed to posix_fallocate");
+	  leave();
+	  throw ex;
+	}
+#else
 	off_t newFend = lseek(file_->fd, tail - 1, SEEK_SET);
 	if (newFend == static_cast<off_t>(-1)) {
+	  PERROR(lseek);
 	  static RTException ex("failed to lseek");
 	  leave();
 	  throw ex;
 	}
 	int wrote = write(file_->fd, zero, 1);
 	if (wrote != 1) {
+	  PERROR(write);
 	  static RTException ex("failed to write");
 	  leave();
 	  throw ex;
 	}
+#endif
       }
       leave();
     }
@@ -626,13 +641,28 @@ namespace a {
       enter();
       if (mappedAddr == MAP_FAILED) {
 	extend();
+#if 0
+	{
+	  int result = readahead(file_->fd, fileOffset_, size_);
+	  if (result != 0) {
+	    PERROR(readahead);
+	  }
+	}
+#endif
+	//cout << "mapping\n";
 	mappedAddr = mmap(NULL, size_, file_->getMode(),
-			  MAP_SHARED, file_->fd, fileOffset_);
+			  MAP_SHARED|MAP_NORESERVE|MAP_POPULATE,
+			  file_->fd, fileOffset_);
+	//cout << fileOffset_ << "[" << size_ << "] is mapped at " << mappedAddr << endl;
 	if (mappedAddr == MAP_FAILED) {
 	  PERROR(mmap);
 	  static RTException ex("mmap error");
 	  leave();
 	  throw ex;
+	}
+	int result = madvise(mappedAddr, size_, MADV_WILLNEED);
+	if (result != 0) {
+	  PERROR(madvise);
 	}
       }
       LOG cout << "mapped: " << mappedAddr << " .. " <<
@@ -644,11 +674,13 @@ namespace a {
     void unmap() THROWS((RTException)) {
       enter();
       if (mappedAddr != MAP_FAILED) {
+	//cout << "unmapping\n";
 	if (munmap(mappedAddr, size_) != 0) {
 	  PERROR(munmap);
 	  static RTException ex("munmap error");
 	  throw ex;
 	}
+	//cout << "unmapped " << mappedAddr << endl;
 	mappedAddr = MAP_FAILED;
       }
     }
@@ -722,7 +754,8 @@ namespace a {
       throw ex;
     }
     newSize = min(static_cast<size_t>(fend - newOffset),
-		  max(newSize, MMap::getPageSize() * 1024 * 80));
+		  max(newSize, MMap::getPageSize() * 1024 * 40
+		      ));
     map->setMapRegion(newOffset, newSize);
     map->map<void>();
     mmaps.push_back(map.get());
@@ -755,6 +788,94 @@ namespace a {
     assert(false);
     return "";
   }
+
+  template <typename PTR_T, size_t N>
+  class Destructor {
+  public:
+    typedef void (*destructor_t)(void *);
+
+  private:
+    struct DestructorEntry {
+      destructor_t dtor;
+      bool used;
+    };
+
+    static size_t idx;
+    static PTR_T ptrs[N];
+    static DestructorEntry dtors[N];
+    static void (*realDtor)(PTR_T);
+    static Mutex lock;
+
+    template<size_t M>
+    static void dtorFunc(void *ptr) {
+      assert(dtors[M].used == true);
+      realDtor(ptrs[M]);
+      ptrs[M] = PTR_T();
+      dtors[M].used = false;
+    }
+
+    template <size_t M, typename U>
+    struct Tmp {
+      static void initDtor() {
+	dtors[M].dtor = dtorFunc<M>;
+	Tmp<M-1, void>::initDtor();
+      }
+    };
+
+    template <typename U>
+    struct Tmp<0, U> {
+      static void initDtor() {
+	dtors[0].dtor = dtorFunc<0>;
+      }
+    };
+
+  public:
+    static void init(void (*dtor)(PTR_T)) {
+      assert(dtor != NULL);
+      realDtor = dtor;
+      idx = 0;
+      Tmp<N, void>::initDtor();
+      for (size_t i = 0; i < N; i++) {
+	dtors[i].used = false;
+      }
+    }
+
+    static destructor_t getDestructor(PTR_T context) {
+      LockHolder lh;
+      {
+	lock.takeLock(lh);
+	for (size_t i = 0; i < N; i++) {
+	  size_t newIdx = (idx + i) % N;
+	  if (! dtors[newIdx].used) {
+	    dtors[newIdx].used = true;
+	    ptrs[newIdx] = context;
+	    destructor_t result = dtors[newIdx].dtor;
+	    idx = newIdx + 1;
+	    return result;
+	  }
+	}
+      }
+      return NULL;
+    }
+  };
+
+  template <typename PTR_T, size_t N>
+  size_t Destructor<PTR_T, N>::idx;
+
+  template <typename PTR_T, size_t N>
+  void (*Destructor<PTR_T, N>::realDtor)(PTR_T);
+
+  template <typename PTR_T, size_t N>
+  Mutex Destructor<PTR_T, N>::lock;
+
+  template <typename PTR_T, size_t N>
+  PTR_T Destructor<PTR_T, N>::ptrs[N];
+
+  template <typename PTR_T, size_t N>
+  typename Destructor<PTR_T, N>::DestructorEntry
+  Destructor<PTR_T, N>::dtors[N];
+
+  typedef Destructor<MMap *, 128> Destructor_t;
 
   class Table;
   class Column: public virtual Openable, public virtual Closable {
@@ -803,29 +924,49 @@ namespace a {
     }
 
     static void setInteger(sqlite3_context *pCtx,
-			   void const*ptr, size_t size) {
+			   void const*ptr, size_t size,
+			   Referer<MMap> &mapRef) {
       sqlite3_result_int64(pCtx, *reinterpret_cast<sqlite_int64 const*>(ptr));
     }
 
     static void setReal(sqlite3_context *pCtx,
-			void const*ptr, size_t size) {
+			void const*ptr, size_t size,
+			Referer<MMap> &mapRef) {
       sqlite3_result_double(pCtx, *reinterpret_cast<double const*>(ptr));
     }
 
     static void setBlob(sqlite3_context *pCtx,
-			void const*ptr, size_t size) {
-      sqlite3_result_blob(pCtx, ptr, size, SQLITE_TRANSIENT);
+			void const*ptr, size_t size,
+			Referer<MMap> &mapRef) {
+      Destructor_t::destructor_t dtor =
+	Destructor_t::getDestructor(mapRef.get());
+      if (dtor) {
+	mapRef.release();
+	sqlite3_result_blob(pCtx, ptr, size, dtor);
+      } else {
+	sqlite3_result_blob(pCtx, ptr, size, SQLITE_TRANSIENT);
+      }
     }
 
     static void setText(sqlite3_context *pCtx,
-			void const*ptr, size_t size) {
-      sqlite3_result_text(pCtx, reinterpret_cast<char const*>(ptr), size,
-			  SQLITE_TRANSIENT);
+			void const*ptr, size_t size,
+			Referer<MMap> &mapRef) {
+      Destructor_t::destructor_t dtor =
+	Destructor_t::getDestructor(mapRef.get());
+      if (dtor) {
+	mapRef.release();
+	sqlite3_result_text(pCtx, reinterpret_cast<char const*>(ptr), size,
+			    dtor);
+      } else {
+	sqlite3_result_text(pCtx, reinterpret_cast<char const*>(ptr), size,
+			    SQLITE_TRANSIENT);
+      }
     }
 
   public:
     typedef void (*ResultSetter)(sqlite3_context *pCtx,
-				 void const*ptr, size_t size);
+				 void const*ptr, size_t size,
+				 Referer<MMap>&mapRef);
     Column(ColumnDesc const &colDesc)
       : table(NULL), name_(colDesc.name), type_(colDesc.type),
 	isPK_(colDesc.isPK), notNull_(colDesc.isNotNull),
@@ -940,7 +1081,7 @@ namespace a {
 	case SQLTYPE_FLOAT:
 	  {
 	    void const *p = map->remapForRegion<void const>(offset, size);
-	    setter(pCtx, p, size);
+	    setter(pCtx, p, size, map);
 	  }
 	  break;
 	default:
@@ -1111,7 +1252,7 @@ namespace a {
 	  LockHolder protectData;
 	  dataMap->takeLock(protectData);
 	  void *data = dataMap->remapForRegion<void>(entry->offset, entry->size);
-	  setter(pCtx, data, entry->size);
+	  setter(pCtx, data, entry->size, map);
 	}
       }
     }
@@ -1191,10 +1332,10 @@ namespace a {
       Closer fileCloser;
       Closer mapCloser;
       if (tableDescMap.get() != NULL) {
-	mapCloser.reset(tableDescMap.release());
+	mapCloser.reset(tableDescMap.get());
       }
       if (tableDescFile.get() != NULL) {
-	fileCloser.reset(tableDescFile.release());
+	fileCloser.reset(tableDescFile.get());
       }
       leaveP(this);
     }
@@ -1628,6 +1769,30 @@ extern "C" {
 
 #endif
 
+  /*------------------------------------------------*/
+
+  void unrefMMap(MMap *mmap) {
+    assert(mmap);
+    mmap->unref();
+  }
+
+  void init_module() THROWS((RTException)) {
+    long pageSize = sysconf(_SC_PAGE_SIZE);
+    if (pageSize <= 0) {
+      static RTException ex("Failed to get page size.");
+      throw ex;
+    }
+    if (pageSize < 4096) {
+      static RTException ex("Too small age size.");
+      throw ex;
+    }
+    PAGE_SIZE = pageSize;
+
+    Destructor_t::init(unrefMMap);
+  }
+
+  /*------------------------------------------------*/
+
   template <typename E>
   class Scanner {
     E const *tokenId_;
@@ -1816,6 +1981,8 @@ extern "C" {
 			  NewTableParser::tokenStrs,
 			  elementsof(NewTableParser::tokens),
 			  strncasecmp, " \t\n\r");
+
+  /*------------------------------------------------*/
 
   struct MMapVTab {
     sqlite3_vtab base;

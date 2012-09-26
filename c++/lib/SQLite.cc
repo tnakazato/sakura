@@ -75,6 +75,16 @@ void Connection::createFunction(char const *functionName,
   } 
 }
 
+void Connection::sqlite3AllowLoadExtension(bool isAllowed)
+  throw (SQLException) {
+  int result =
+    sqlite3_enable_load_extension(db, static_cast<int>(isAllowed));
+  if (SQLITE_OK != result) {
+    fprintf(stderr, "%s: %d %s\n", __FUNCTION__, result, sqlite3_errmsg(db)); 
+    throw SQLException();
+  }
+}
+
 PreparedStatement *Connection::prepare(char const *sql) throw (SQLException) {
   sqlite3_stmt *stmt = NULL;
   const char *nextSql = NULL;
