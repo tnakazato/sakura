@@ -661,11 +661,13 @@ namespace a {
 	  leave();
 	  throw ex;
 	}
+#if 0 // 1 for HDD
 	int result = madvise(mappedAddr, size_, MADV_WILLNEED);
 	if (result != 0) {
 	  PERROR(madvise);
 	}
 	LOG cout << "madviced\n";
+#endif
       }
       LOG cout << "mapped: " << mappedAddr << " .. " <<
 	reinterpret_cast<void *>(reinterpret_cast<char *>(mappedAddr) + size_) << " size: " << size_ << endl;
