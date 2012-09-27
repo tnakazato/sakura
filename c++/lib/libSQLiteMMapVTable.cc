@@ -748,7 +748,7 @@ namespace a {
     unique_ptr<MMap> map(new MMap(this));
     off_t newOffset = 0;
     size_t newSize = 0;
-    MMap::alignRegion(&newOffset, &newSize, offset, max(size_t(1), size));
+    MMap::alignRegion(&newOffset, &newSize, offset, size);
     off_t fend = lseek(fd, 0, SEEK_END);
     if (fend == static_cast<off_t>(-1)) {
       static RTException ex("failed to lseek");
@@ -756,12 +756,14 @@ namespace a {
       throw ex;
     }
 #if 0 // 1 to map whole file
-    newSize = static_cast<size_t>(fend - newOffset);
+    newSize = max(MMap::getPageSize(),
+		  static_cast<size_t>(fend - newOffset));
 #else
-    newSize = min(static_cast<size_t>(fend - newOffset),
-		  max(newSize,
-		      MMap::getPageSize() * 1024 * 40
-		      ));
+    newSize = max(MMap::getPageSize(),
+		  min(static_cast<size_t>(fend - newOffset),
+		      max(newSize,
+			  MMap::getPageSize() * 1024 * 40
+			  )));
 #endif
     map->setMapRegion(newOffset, newSize);
     map->map<void>();
