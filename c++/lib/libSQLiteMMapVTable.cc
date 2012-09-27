@@ -329,7 +329,7 @@ namespace a {
     Mutex lock;
     size_t refCount;
   public:
-    RefCountable() : lock(), refCount(0) {
+    RefCountable() : refCount(0) {
       enterP(this);
     }
     virtual ~RefCountable() {
@@ -479,8 +479,8 @@ namespace a {
 
     virtual void open() THROWS((RTException)) {
       enter();
-      lock.lock();
-      Closer autoUnlock(&lock);
+      LockHolder lh;
+      lock.takeLock(lh);
       if (fd == -1) {
 	LOG cout << "omode: " << omode << endl;
 	fd = ::open(filename_.c_str(), omode, 0666);
@@ -493,8 +493,8 @@ namespace a {
     }
     virtual void close() THROWS((RTException)) {
       enter();
-      lock.lock();
-      Closer autoUnlock(&lock);
+      LockHolder lh;
+      lock.takeLock(lh);
       if (fd >= 0) {
 	int result = ::close(fd);
 	if (result < 0) {
@@ -649,11 +649,12 @@ namespace a {
 	  }
 	}
 #endif
-	//cout << "mapping\n";
+	LOG cout << "mapping\n";
 	mappedAddr = mmap(NULL, size_, file_->getMode(),
-			  MAP_SHARED|MAP_NORESERVE|MAP_POPULATE,
+			  //MAP_SHARED|MAP_NORESERVE|MAP_POPULATE,
+			  MAP_SHARED|MAP_NORESERVE,
 			  file_->fd, fileOffset_);
-	//cout << fileOffset_ << "[" << size_ << "] is mapped at " << mappedAddr << endl;
+	LOG cout << fileOffset_ << "[" << size_ << "] is mapped at " << mappedAddr << endl;
 	if (mappedAddr == MAP_FAILED) {
 	  PERROR(mmap);
 	  static RTException ex("mmap error");
@@ -664,6 +665,7 @@ namespace a {
 	if (result != 0) {
 	  PERROR(madvise);
 	}
+	LOG cout << "madviced\n";
       }
       LOG cout << "mapped: " << mappedAddr << " .. " <<
 	reinterpret_cast<void *>(reinterpret_cast<char *>(mappedAddr) + size_) << " size: " << size_ << endl;
@@ -727,8 +729,8 @@ namespace a {
   MMap *File::makeMapForRegion(off_t offset, size_t size)
     THROWS((RTException)) {
     enter();
-    lock.lock();
-    Closer autoUnlock(&lock);
+    LockHolder lh;
+    lock.takeLock(lh);
     {
       vector<MMap *>::size_type end = mmaps.size();
       for (vector<MMap *>::size_type i = 0; i < end; i++) {
@@ -753,9 +755,14 @@ namespace a {
       leave();
       throw ex;
     }
+#if 0
+    newSize = static_cast<size_t>(fend - newOffset);
+#else
     newSize = min(static_cast<size_t>(fend - newOffset),
-		  max(newSize, MMap::getPageSize() * 1024 * 40
+		  max(newSize,
+		      MMap::getPageSize() * 1024 * 40
 		      ));
+#endif
     map->setMapRegion(newOffset, newSize);
     map->map<void>();
     mmaps.push_back(map.get());
@@ -842,17 +849,15 @@ namespace a {
 
     static destructor_t getDestructor(PTR_T context) {
       LockHolder lh;
-      {
-	lock.takeLock(lh);
-	for (size_t i = 0; i < N; i++) {
-	  size_t newIdx = (idx + i) % N;
-	  if (! dtors[newIdx].used) {
-	    dtors[newIdx].used = true;
-	    ptrs[newIdx] = context;
-	    destructor_t result = dtors[newIdx].dtor;
-	    idx = newIdx + 1;
-	    return result;
-	  }
+      lock.takeLock(lh);
+      for (size_t i = 0; i < N; i++) {
+	size_t newIdx = (idx + i) % N;
+	if (! dtors[newIdx].used) {
+	  dtors[newIdx].used = true;
+	  ptrs[newIdx] = context;
+	  destructor_t result = dtors[newIdx].dtor;
+	  idx = newIdx + 1;
+	  return result;
 	}
       }
       return NULL;
@@ -888,6 +893,7 @@ namespace a {
     };
 
   private:
+    Mutex lock;
     Table *table;
     string name_;
   protected:
@@ -983,6 +989,10 @@ namespace a {
       enterP(this);
     }
 
+    void takeLock(LockHolder &holder) THROWS((RTException)) {
+      lock.takeLock(holder);
+    }
+
     void save(ColumnDesc *colDesc) const {
       assert(colDesc != NULL);
       colDesc->type = type_;
@@ -992,26 +1002,40 @@ namespace a {
       strncpy(colDesc->name, name_.c_str(), sizeof(colDesc->name) - 1);
     }
 
+    /**
+     * MT unsafe, callser shoud protect.
+     */
     virtual void open() THROWS((RTException)) {
       enter();
       if (isPK()) {
 	return;
       }
-      file.reset(openFile(".0"));
-      try {
-	file->open();
-      } catch (...) {
-	file.reset(NULL);
-	throw;
+      if (file.get() == NULL) {
+	file.reset(openFile(".0"));
+	try {
+	  file->open();
+	} catch (...) {
+	  file.reset(NULL);
+	  throw;
+	}
       }
     }
+    /**
+     * MT unsafe, callser shoud protect.
+     */
     virtual void close() THROWS((RTException)) {
       enter();
       if (isPK()) {
 	return;
       }
       if (file.get() != NULL) {
-	file->close();
+	try {
+	  file->close();
+	} catch (...) {
+	  file.reset(NULL);
+	  throw;
+	}
+	file.reset(NULL);
       }
     }
 
@@ -1140,44 +1164,48 @@ namespace a {
 
     virtual void open() THROWS((RTException)) {
       enter();
-      Column::open();
-      dataFile.reset(openFile(".data"));
-      try {
-	dataFile->open();
-	Closer dataFileCloser(dataFile.get());
-	headerMap.reset(new MMap(dataFile.get()));
+      if (dataFile.get() == NULL) { // is not opended yet
+	Column::open();
+	dataFile.reset(openFile(".data"));
 	try {
-	  headerMap->setMapRegion(0, MMap::getPageSize());
-	  DataHeader *header = headerMap->map<DataHeader>();
-	  if (header->tail < static_cast<off_t>(offsetof(DataHeader, data))) {
-	    header->tail = offsetof(DataHeader, data);
-	    assert(alignUp(offsetof(DataHeader, data))
-		   == offsetof(DataHeader, data));
+	  dataFile->open();
+	  Closer dataFileCloser(dataFile.get());
+	  headerMap.reset(new MMap(dataFile.get()));
+	  try {
+	    headerMap->setMapRegion(0, MMap::getPageSize());
+	    DataHeader *header = headerMap->map<DataHeader>();
+	    if (header->tail < static_cast<off_t>(offsetof(DataHeader, data))) {
+	      header->tail = offsetof(DataHeader, data);
+	      assert(alignUp(offsetof(DataHeader, data))
+		     == offsetof(DataHeader, data));
+	    }
+	    dataFileCloser.release();
+	  } catch (...) {
+	    headerMap.reset(NULL);
+	    throw;
 	  }
-	  dataFileCloser.release();
 	} catch (...) {
-	  headerMap.reset(NULL);
+	  dataFile.reset(NULL);
 	  throw;
 	}
-      } catch (...) {
-	dataFile.reset(NULL);
-	throw;
       }
     }
     virtual void close() THROWS((RTException)) {
       enterP(this);
-      try {
-	Closer dataFileCloser(dataFile.get());
-	Closer headerMapCloser;
-	if (headerMap.get() != NULL) {
-	  headerMapCloser.reset(headerMap.get());
+      if (dataFile.get() != NULL) { // is opended
+	try {
+	  Closer dataFileCloser(dataFile.get());
+	  Closer headerMapCloser;
+	  if (headerMap.get() != NULL) {
+	    headerMapCloser.reset(headerMap.get());
+	  }
+	} catch (...) {
+	  Column::close();
+	  leaveP(this);
+	  throw;
 	}
-      } catch (...) {
 	Column::close();
-	leaveP(this);
-	throw;
       }
-      Column::close();
       leaveP(this);
     }
 
@@ -1397,6 +1425,7 @@ namespace a {
       assert(opened == false);
       selfOpen();
 
+#if 1 // 0 if open on demand
       uint16_t closeUpTo = 0;
       try {
 	for (uint16_t i = 0; i < cols.size(); ) {
@@ -1418,6 +1447,7 @@ namespace a {
 	leaveP(this);
 	throw;
       }
+#endif
       opened = true;
       leaveP(this);
     }
@@ -1527,6 +1557,7 @@ namespace a {
       for (int i = 0; i < argc; i++) {
 	LOG cout << "Inserting column[" << i << "]\n";
 	if (! cols[i]->isPK()) {
+	  cols[i]->open();
 	  cols[i]->insert(rowId, argv[i]);
 	}
       }
@@ -1542,6 +1573,15 @@ namespace a {
       if (result != 0) {
 	static RTException ex("failed to remove dir");
 	throw ex;
+      }
+    }
+    virtual void fetch(sqlite_int64 rowId, int pos, sqlite3_context *pCtx) THROWS((RTException)) {
+      Column *col = getColumn(pos);
+      if (col->isPK()) { // PK should be rowid because of restriction.
+	sqlite3_result_int64(pCtx, rowId);
+      } else {
+	col->open();
+	col->fetch(pCtx, rowId);
       }
     }
   };
@@ -2380,12 +2420,10 @@ extern "C" {
       return SQLITE_IOERR;
     }
     try {
-      Column *col = cursor->getTable()->getColumn(pos);
-      if (col->isPK()) { // PK should be rowid because of restriction.
-	sqlite3_result_int64(pCtx, cursor->getRowId());
-      } else {
-	col->fetch(pCtx, cursor->getRowId());
-      }
+      LockHolder tableLH;
+      Table *tab = cursor->getTable();
+      tab->takeLock(tableLH);
+      tab->fetch(cursor->getRowId(), pos, pCtx);
     } catch (...) {
       return SQLITE_ERROR;
     }
@@ -2447,6 +2485,8 @@ extern "C" {
     assert(pVTab != NULL);
     MMapVTab *mmapVtab = reinterpret_cast<MMapVTab *>(pVTab);
     Table *tab = mmapVtab->table;
+    LockHolder tableLH;
+    tab->takeLock(tableLH);
     // TODO support rename
     return SQLITE_ERROR;
   }
