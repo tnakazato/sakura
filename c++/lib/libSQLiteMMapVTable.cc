@@ -561,6 +561,23 @@ namespace a {
       leave();
     }
 
+    struct MAdviseInfo {
+      void *addr;
+      size_t size;
+      int advice;
+    };
+
+    static void *doAdvise(void *info_) {
+      MAdviseInfo *info = reinterpret_cast<MAdviseInfo *>(info_);
+      int result = madvise(info->addr, info->size, info->advice);
+      if (result != 0) {
+	PERROR(madvise);
+      }
+      LOG cout << "madvised: " << info->addr << "[" << info->size << "]\n";
+      delete info;
+      return 0;
+    }
+
   public:
     MMap(File *file) THROWS((RTException))
       : file_(file, true), mappedAddr(MAP_FAILED), size_(0), fileOffset_(0) {
@@ -661,12 +678,29 @@ namespace a {
 	  leave();
 	  throw ex;
 	}
-#if 0 // 1 for HDD
+#if 1 // 1 for HDD
+#if 1
 	int result = madvise(mappedAddr, size_, MADV_WILLNEED);
 	if (result != 0) {
 	  PERROR(madvise);
 	}
-	LOG cout << "madviced\n";
+	LOG cout << "madvised\n";
+#else
+	unique_ptr<MAdviseInfo> info(new MAdviseInfo);
+	info->addr = mappedAddr;
+	info->size = size_;
+	info->advice = MADV_WILLNEED;
+
+	pthread_attr_t attr;
+	int result = pthread_attr_init(&attr);
+	result = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_t thr;
+	result = pthread_create(&thr, &attr, doAdvise, info.get());
+	pthread_attr_destroy(&attr);
+	if (result == 0) {
+	  info.release();
+	}
+#endif
 #endif
       }
       LOG cout << "mapped: " << mappedAddr << " .. " <<
