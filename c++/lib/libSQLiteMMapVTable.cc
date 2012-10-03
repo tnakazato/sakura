@@ -668,8 +668,8 @@ namespace a {
 #endif
 	LOG cout << "mapping\n";
 	mappedAddr = mmap(NULL, size_, file_->getMode(),
-			  //MAP_SHARED|MAP_NORESERVE|MAP_POPULATE,
-			  MAP_SHARED|MAP_NORESERVE,
+			  MAP_SHARED|MAP_NORESERVE|MAP_POPULATE,
+			  ////MAP_SHARED|MAP_NORESERVE,
 			  file_->fd, fileOffset_);
 	LOG cout << fileOffset_ << "[" << size_ << "] is mapped at " << mappedAddr << endl;
 	if (mappedAddr == MAP_FAILED) {
@@ -678,7 +678,7 @@ namespace a {
 	  leave();
 	  throw ex;
 	}
-#if 1 // 1 for HDD
+#if 0 // 1 for HDD
 #if 1
 	int result = madvise(mappedAddr, size_, MADV_WILLNEED);
 	if (result != 0) {
@@ -798,7 +798,7 @@ namespace a {
     newSize = max(MMap::getPageSize(),
 		  min(static_cast<size_t>(fend - newOffset),
 		      max(newSize,
-			  MMap::getPageSize() * 1024 * 40
+			  MMap::getPageSize() * 1024 * 20
 			  )));
 #endif
     map->setMapRegion(newOffset, newSize);
