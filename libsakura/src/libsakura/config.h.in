@@ -1,0 +1,2 @@
+#define libsakura_VERSION_MAJOR @libsakura_VERSION_MAJOR@
+#define libsakura_VERSION_MINOR @libsakura_VERSION_MINOR@
