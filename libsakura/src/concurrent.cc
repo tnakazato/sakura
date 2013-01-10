@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <limits.h>
+#include "libsakura/config.h"
 #include "libsakura/concurrent.h"
 
 //#define LOG(x) do {}while(false)
