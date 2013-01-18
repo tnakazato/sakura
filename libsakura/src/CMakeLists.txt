@@ -16,6 +16,9 @@ set(libsakura_VERSION_MAJOR 0)
 set(libsakura_VERSION_MINOR 1)
 set(CMAKE_INSTALL_PREFIX /usr/local)
 
+option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
+set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
+
 set(CMAKE_BUILD_TYPE Release)
 set(ADDITIONAL_CXXFLAGS_Default "-DARCH_SUFFIX=Default")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
@@ -25,8 +28,24 @@ set(UNI_SOURCE concurrent.cc OptimizedImplementationFactory.cc)
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"
   "${PROJECT_BINARY_DIR}/libsakura/config.h"
-  @ONLY
-  )
+  @ONLY)
+if(BUILD_DOC)
+	find_package(Doxygen)
+	if (NOT DOXYGEN_FOUND)
+		message(FATAL_ERROR 
+			"Doxygen is needed to build the API documentation.")
+	endif(NOT DOXYGEN_FOUND)
+
+	configure_file (
+	  "${PROJECT_SOURCE_DIR}/Doxyfile.in"
+	  "${PROJECT_BINARY_DIR}/Doxyfile"
+	  @ONLY)
+	add_custom_target(apidoc
+		mkdir -p "${PROJECT_BINARY_DIR}/docs"
+		COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
+		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+		COMMENT "Generating the API documentation with Doxygen")
+endif(BUILD_DOC)
 
 include_directories("${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 

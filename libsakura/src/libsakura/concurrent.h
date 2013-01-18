@@ -16,6 +16,13 @@
 #include <pthread.h>
 
 namespace concurrent {
+	/**
+ * universal comment
+ * @~english
+ * english comment
+ * @~japanese
+ * 日本語コメント
+ */
 	class PCException {
 	public:
 		virtual void raise() /*throw(PCException)*/ { throw *this; }
