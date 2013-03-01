@@ -7,63 +7,70 @@
 
 #include <complex>
 #include <stdint.h>
+#include <libsakura/sakura.h>
 
-namespace sakura {
-  class Gridding {
-  public:
-    typedef int32_t integer;
-    typedef unsigned char flag_t;
-    //typedef std::complex<float> value_t;
-    typedef float value_t;
-    virtual void gridsd(double const xy[/*nrow*/][2],
+namespace libsakura_PREFIX {
+
+class Gridding {
+public:
+	typedef int32_t integer;
+	typedef unsigned char flag_t;
+	//typedef std::complex<float> value_t;
+	typedef float value_t;
+
+	virtual ~Gridding() {
+	}
+
+	virtual void gridsd(double const xy[/*nrow*/][2],
 			value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
-			integer nvispol, integer nvischan, 
-			bool dowt,
+			integer nvispol, integer nvischan, bool dowt,
 			flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
 			integer const rflag[/*nrow*/],
-			float const weight/*[nrow]*/[/*nvischan*/],
-			integer nrow, integer irow,
-			value_t grid/*[nchan][npol][ny]*/[/*nx*/],
-			float wgrid/*[nchan][npol][ny]*/[/*nx*/],
-			integer nx, integer ny, integer npol, integer nchan, 
-			integer support, integer sampling,
-			float const convTable[],
-			integer const chanmap[/*nvischan*/],
+			float const weight/*[nrow]*/[/*nvischan*/], integer nrow,
+			integer irow, value_t grid/*[nchan][npol][ny]*/[/*nx*/],
+			float wgrid/*[nchan][npol][ny]*/[/*nx*/], integer nx, integer ny,
+			integer npol, integer nchan, integer support, integer sampling,
+			float const convTable[], integer const chanmap[/*nvischan*/],
 			integer const polmap[/*nvispol*/],
-			double sumwt/*[nchan]*/[/*npol*/]) = 0;
-    virtual void gridsdForSpeed(double const xy[/*nrow*/][2],
+			double sumwt/*[nchan]*/[/*npol*/]) const = 0;
+	virtual void gridsdForSpeed(double const xy[/*nrow*/][2],
 			value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
-			integer nvispol, integer nvischan, 
-			bool dowt,
+			integer nvispol, integer nvischan, bool dowt,
 			flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
 			integer const rflag[/*nrow*/],
-			float const weight/*[nrow]*/[/*nvischan*/],
-			integer nrow, integer irow,
-			value_t grid/*[ny][nx][nchan]*/[/*npol*/],
-			float wgrid/*[ny][nx][nchan]*/[/*npol*/],
-			integer nx, integer ny, integer npol, integer nchan, 
-			integer support, integer sampling,
-			float const convTable[],
-			integer const chanmap[/*nvischan*/],
+			float const weight/*[nrow]*/[/*nvischan*/], integer nrow,
+			integer irow, value_t grid/*[ny][nx][nchan]*/[/*npol*/],
+			float wgrid/*[ny][nx][nchan]*/[/*npol*/], integer nx, integer ny,
+			integer npol, integer nchan, integer support, integer sampling,
+			float const convTable[], integer const chanmap[/*nvischan*/],
 			integer const polmap[/*nvispol*/],
-			double sumwt/*[nchan]*/[/*npol*/]) = 0;
-    virtual void transform(
-			integer ny, integer nx, integer nchan,  integer npol,
+			double sumwt/*[nchan]*/[/*npol*/]) const = 0;
+	virtual void transform(integer ny, integer nx, integer nchan, integer npol,
 			value_t gridFrom/*[ny][nx][nchan]*/[/*npol*/],
 			float wgridFrom/*[ny][nx][nchan]*/[/*npol*/],
 			value_t gridTo/*[nchan][npol][ny]*/[/*nx*/],
-			float wgridTo/*[nchan][npol][ny]*/[/*nx*/]) = 0;
-    virtual ~Gridding() {}
-  };
+			float wgridTo/*[nchan][npol][ny]*/[/*nx*/]) const = 0;
+};
 
-  class OptimizedImplementationFactory {
-  protected:
-    OptimizedImplementationFactory() {}
-  public:
-    virtual ~OptimizedImplementationFactory() {}
-    virtual Gridding *getGriddingImpl() = 0;
-    static OptimizedImplementationFactory *getFactory();
-  };
+class Statistics {
+public:
+	virtual ~Statistics() {
+	}
+	virtual void reduce(libsakura_symbol(statistics_result) &result,
+			float const *data, bool const *mask, size_t elements) const = 0;
+};
+
+class OptimizedImplementationFactory {
+protected:
+	OptimizedImplementationFactory() {
+	}
+public:
+	virtual ~OptimizedImplementationFactory() {
+	}
+	virtual Gridding const *getGriddingImpl() const = 0;
+	virtual Statistics const *getStatisticsImpl() const = 0;
+	static OptimizedImplementationFactory const *getFactory();
+};
 }
 
 #endif /* _OPTIMIZED_IMPLEMENTATION_FACTORY_H */

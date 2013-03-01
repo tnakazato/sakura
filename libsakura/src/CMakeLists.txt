@@ -3,27 +3,37 @@
 cmake_minimum_required(VERSION 2.6)
 find_package(Threads)
 find_package(OpenMP)
+find_package(Eigen3 REQUIRED)
 if(OPENMP_FOUND)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}
 		${OpenMP_EXE_LINKER_FLAGS}")
 endif(OPENMP_FOUND)
+if(EIGEN3_FOUND)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${EIGEN3_INCLUDE_DIR}")
+endif(EIGEN3_FOUND)
 
 
 project(libsakura)
 set(libsakura_VERSION_MAJOR 0)
 set(libsakura_VERSION_MINOR 1)
+set(libsakura_PREFIX sakura)
 set(CMAKE_INSTALL_PREFIX /usr/local)
 
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
 
 set(CMAKE_BUILD_TYPE Release)
+
+set(CMAKE_CXX_FLAGS "-std=c++11")
+message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -ftree-vectorizer-verbose=3")
+message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 set(ADDITIONAL_CXXFLAGS_Default "-DARCH_SUFFIX=Default")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
-set(MULTI_SOURCE gridding.cc)
-set(UNI_SOURCE concurrent.cc OptimizedImplementationFactory.cc)
+set(MULTI_SOURCE gridding.cc statistics.cc)
+set(UNI_SOURCE concurrent.cc OptimizedImplementationFactory.cc gen-statistics.cc gen-util.c)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"
@@ -47,7 +57,7 @@ if(BUILD_DOC)
 		COMMENT "Generating the API documentation with Doxygen")
 endif(BUILD_DOC)
 
-include_directories("${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
+include_directories(${EIGEN3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 
 foreach(_file ${MULTI_SOURCE})
 	get_filename_component(_base ${_file} NAME_WE)
@@ -79,6 +89,7 @@ message(${OPTIMIZED_SOURCES})
 add_library(sakura SHARED ${UNI_SOURCE} ${OPTIMIZED_SOURCES})
 set(public_headers
 	libsakura/concurrent.h
+	libsakura/sakura.h
 	libsakura/OptimizedImplementationFactory.h
 	libsakura/OptimizedImplementationFactoryImpl.h
 	${PROJECT_BINARY_DIR}/libsakura/config.h

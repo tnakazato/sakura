@@ -1,2 +1,6 @@
 #define libsakura_VERSION_MAJOR @libsakura_VERSION_MAJOR@
 #define libsakura_VERSION_MINOR @libsakura_VERSION_MINOR@
+#ifndef libsakura_PREFIX
+# define libsakura_PREFIX	@libsakura_PREFIX@
+#endif
+#define libsakura_symbol(x)	@libsakura_PREFIX@ ## _ ## x
