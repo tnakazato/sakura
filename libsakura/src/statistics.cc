@@ -66,6 +66,33 @@ struct StatVisitor {
 	}
 };
 
+template<typename Scalar, typename ScararOther, typename Index>
+struct StatVisitor2 {
+	size_t count;
+	Scalar sum;
+	Scalar min, max;
+	Scalar sqSum;
+	StatVisitor2() :
+			count(0), sum(0), min(NAN), max(NAN), sqSum(0) {
+	}
+// called for the first coefficient
+	inline void init(const Scalar& value, const ScararOther &valueOther, int i,
+			int j) {
+		(*this)(value, valueOther, i, j);
+	}
+// called for all other coefficients
+	inline void operator()(const Scalar& value, const ScararOther & valueOther,
+			int i, int j) {
+		int tmp = static_cast<int>(valueOther);
+		count += tmp;
+		float tmpf = static_cast<float>(tmp);
+		sum += value * tmpf;
+		min = valueOther ? (min == NAN ? value : std::min(min, value)) : min;
+		max = valueOther ? (max == NAN ? value : std::max(max, value)) : max;
+		sqSum += value * value * tmpf;
+	}
+};
+
 template<typename DataType>
 inline void stat(libsakura_symbol(statistics_result) &result,
 		DataType const *data, bool const *mask, size_t elements) {
@@ -87,7 +114,7 @@ inline void stat(libsakura_symbol(statistics_result) &result,
 #else // masked mean
 #warning Masked Stats
 	StatVisitor<DataType, bool,
-			typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
+	typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
 	data_.visitWith(mask_, visitor);
 #endif
 	result.count = visitor.count;
@@ -95,9 +122,9 @@ inline void stat(libsakura_symbol(statistics_result) &result,
 	result.mean = result.count == 0 ? NAN : result.sum / result.count;
 	result.min = visitor.min;
 	result.max = visitor.max;
-	result.rms =
-			result.count == 0 ? NAN : std::sqrt(visitor.sqSum / result.count);
-	result.stddev = NAN;
+	float rms2 = result.count == 0 ? NAN : visitor.sqSum / result.count;
+	result.rms = std::sqrt(rms2);
+	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
 	//printf("%f\n", result.mean);
 }
 
@@ -164,7 +191,7 @@ inline int32_t add_horizontally_128(__m128i packedValues) {
 }
 
 void simd(libsakura_symbol(statistics_result) &result,float const *data, bool const *mask, size_t elements) {
-	assert(elements % sizeof(__m256) == 0);
+	assert(elements % sizeof(__m256) == 0); // TODO support arbitrary elements
 	assert(sizeof(m256) == sizeof(__m256));
 
 	__m256 sum = _mm256_setzero_ps();
@@ -191,7 +218,6 @@ void simd(libsakura_symbol(statistics_result) &result,float const *data, bool co
 				zero, _CMP_NEQ_UQ);
 		__m256 value = data_[i];
 		sum += _mm256_blendv_ps(zero, value, maskf);
-
 		min = _mm256_min_ps(min, _mm256_blendv_ps(min, value, maskf));
 		max = _mm256_max_ps(max, _mm256_blendv_ps(max, value, maskf));
 
@@ -239,7 +265,9 @@ void simd(libsakura_symbol(statistics_result) &result,float const *data, bool co
 	}
 
 	float total = add_horizontally(sqSum);
-	result.rms = result.count == 0 ? NAN : std::sqrt(total / result.count);
+	float rms2 = result.count == 0 ? NAN : total / result.count;
+	result.rms = std::sqrt(rms2);
+	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
 }
 #endif
 }
@@ -249,7 +277,7 @@ namespace libsakura_PREFIX {
 void ADDSUFFIX(Statistics, ARCH_SUFFIX)::reduce(
 	libsakura_symbol(statistics_result) &result, float const *data,
 	bool const *mask, size_t elements) const {
-#if 1
+#if 0
 stat(result, data, mask, elements);
 //printf("%f\n", result);
 #else

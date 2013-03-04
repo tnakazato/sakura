@@ -106,3 +106,4 @@ target_link_libraries(sakura ${CMAKE_THREAD_LIBS_INIT})
 install(TARGETS sakura
 	LIBRARY DESTINATION lib
 	PUBLIC_HEADER DESTINATION include/libsakura)
+install(DIRECTORY "${PROJECT_BINARY_DIR}/docs/api" DESTINATION share/doc/libsakura)
