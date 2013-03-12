@@ -49,20 +49,24 @@ struct StatVisitor {
 // called for the first coefficient
 	inline void init(const Scalar& value, const ScararOther &valueOther, int i,
 			int j) {
-		count += valueOther ? 1 : 0;
-		sum += valueOther ? value : 0;
-		min = valueOther ? (min == NAN ? value : std::min(min, value)) : min;
-		max = valueOther ? (max == NAN ? value : std::max(max, value)) : max;
-		sqSum += valueOther ? value * value : 0;
+		if (valueOther) {
+			count++;
+			sum += value;
+			min = (min == NAN ? value : std::min(min, value));
+			max = (max == NAN ? value : std::max(max, value));
+			sqSum += value * value;
+		}
 	}
 // called for all other coefficients
 	inline void operator()(const Scalar& value, const ScararOther & valueOther,
 			int i, int j) {
-		count += valueOther ? 1 : 0;
-		sum += valueOther ? value : 0;
-		min = valueOther ? (min == NAN ? value : std::min(min, value)) : min;
-		max = valueOther ? (max == NAN ? value : std::max(max, value)) : max;
-		sqSum += valueOther ? value * value : 0;
+		if (valueOther) {
+			count++;
+			sum += value;
+			min = (min == NAN ? value : std::min(min, value));
+			max = (max == NAN ? value : std::max(max, value));
+			sqSum += value * value;
+		}
 	}
 };
 
@@ -114,7 +118,7 @@ inline void stat(libsakura_symbol(statistics_result) &result,
 #else // masked mean
 #warning Masked Stats
 	StatVisitor<DataType, bool,
-	typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
+			typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
 	data_.visitWith(mask_, visitor);
 #endif
 	result.count = visitor.count;
@@ -127,13 +131,6 @@ inline void stat(libsakura_symbol(statistics_result) &result,
 	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
 	//printf("%f\n", result.mean);
 }
-
-/*
- template<>
- void sdstat<float>(float const *data_, char const *mask, size_t elements) {
- Map<ArrayXf> data(const_cast<float *>(data_), elements);
- }
- */
 
 #if 0
 // actual statistic calculations
