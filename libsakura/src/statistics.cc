@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstddef>
 #include <cmath>
 #include <algorithm>
 #include <libsakura/sakura.h>
@@ -47,67 +48,35 @@ struct StatVisitor {
 			count(0), sum(0), min(NAN), max(NAN), sqSum(0) {
 	}
 // called for the first coefficient
-	inline void init(const Scalar& value, const ScararOther &valueOther, int i,
+	inline void init(const Scalar& value, const ScararOther &isInvalid, int i,
 			int j) {
-		if (valueOther) {
-			count++;
-			sum += value;
-			min = (min == NAN ? value : std::min(min, value));
-			max = (max == NAN ? value : std::max(max, value));
-			sqSum += value * value;
-		}
+		(*this)(value, isInvalid, i, j);
 	}
 // called for all other coefficients
-	inline void operator()(const Scalar& value, const ScararOther & valueOther,
+	inline void operator()(const Scalar& value, const ScararOther & isInvalid,
 			int i, int j) {
-		if (valueOther) {
+		if (! isInvalid) {
 			count++;
+			assert(value != NAN);
 			sum += value;
-			min = (min == NAN ? value : std::min(min, value));
-			max = (max == NAN ? value : std::max(max, value));
+			min = isnanf(min) ? value : std::min(min, value);
+			max = isnanf(max) ? value : std::max(max, value);
 			sqSum += value * value;
 		}
-	}
-};
-
-template<typename Scalar, typename ScararOther, typename Index>
-struct StatVisitor2 {
-	size_t count;
-	Scalar sum;
-	Scalar min, max;
-	Scalar sqSum;
-	StatVisitor2() :
-			count(0), sum(0), min(NAN), max(NAN), sqSum(0) {
-	}
-// called for the first coefficient
-	inline void init(const Scalar& value, const ScararOther &valueOther, int i,
-			int j) {
-		(*this)(value, valueOther, i, j);
-	}
-// called for all other coefficients
-	inline void operator()(const Scalar& value, const ScararOther & valueOther,
-			int i, int j) {
-		int tmp = static_cast<int>(valueOther);
-		count += tmp;
-		float tmpf = static_cast<float>(tmp);
-		sum += value * tmpf;
-		min = valueOther ? (min == NAN ? value : std::min(min, value)) : min;
-		max = valueOther ? (max == NAN ? value : std::max(max, value)) : max;
-		sqSum += value * value * tmpf;
 	}
 };
 
 template<typename DataType>
 inline void stat(libsakura_symbol(statistics_result) &result,
-		DataType const *data, bool const *mask, size_t elements) {
+		DataType const *data, bool const *isInvalid, size_t elements) {
 	assert(false);
 
 	assert(libsakura_symbol(is_aligned)(data));
 	Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
 			elements);
 
-	assert(libsakura_symbol(is_aligned)(mask));
-	Map<Array<bool, Dynamic, 1>, Aligned> mask_(const_cast<bool *>(mask),
+	assert(libsakura_symbol(is_aligned)(isInvalid));
+	Map<Array<bool, Dynamic, 1>, Aligned> isInvalid_(const_cast<bool *>(isInvalid),
 			elements);
 
 #if 0 // SimpleMean
@@ -119,7 +88,7 @@ inline void stat(libsakura_symbol(statistics_result) &result,
 #warning Masked Stats
 	StatVisitor<DataType, bool,
 			typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
-	data_.visitWith(mask_, visitor);
+	data_.visitWith(isInvalid_, visitor);
 #endif
 	result.count = visitor.count;
 	result.sum = visitor.sum;
@@ -145,7 +114,7 @@ statDictOut["max_abc"] = get_stats_pos(scantableIn, channelMask, "max_abc")
 statDictOut["min_abc"] = get_stats_pos(scantableIn, channelMask, "min_abc")
 #endif
 
-#if defined( __AVX__)
+#if defined(__AVX__)
 #include <immintrin.h>
 #include <cstdint>
 #warning Optimized for SIMD
@@ -174,45 +143,47 @@ inline int32_t add_horizontally(__m256i packedValues) {
 	__m128i count4w = _mm_hadd_epi32(_mm256_castsi256_si128(packedValues), count2);
 	count4w = _mm_hadd_epi32(count4w, count4w);
 	count4w = _mm_hadd_epi32(count4w, count4w);
-	int32_t total;
-	_mm_store_ss((float*)&total, (__m128)count4w);
+	int32_t total = _mm_extract_epi32(count4w, 0);
 	return total;
 }
 
 inline int32_t add_horizontally_128(__m128i packedValues) {
 	packedValues = _mm_hadd_epi32(packedValues, packedValues);
 	packedValues = _mm_hadd_epi32(packedValues, packedValues);
-	int32_t total;
-	_mm_store_ss((float*)&total, (__m128)packedValues);
+	int32_t total = _mm_extract_epi32(packedValues, 0);
 	return total;
 }
 
-void simd(libsakura_symbol(statistics_result) &result,float const *data, bool const *mask, size_t elements) {
+void simd(libsakura_symbol(statistics_result) &result,float const *data, bool const *isInvalid, size_t elements) {
 	assert(elements % sizeof(__m256) == 0); // TODO support arbitrary elements
 	assert(sizeof(m256) == sizeof(__m256));
 
 	__m256 sum = _mm256_setzero_ps();
-	__m256 zero = _mm256_setzero_ps();
-	__m256i zeroi = _mm256_setzero_si256();
-	__m256i onei = _mm256_set1_epi32(1);
+	__m256 const zero = _mm256_setzero_ps();
+	__m256i const zeroi = _mm256_setzero_si256();
+	__m128i const zero128i = _mm_setzero_si128();
+	__m256i const onei = _mm256_set1_epi32(1);
+	__m128i const one128i = _mm_set1_epi32(1);
 	__m128i count = _mm_setzero_si128();
-	__m256 nan = _mm256_set1_ps(NAN);
+	__m256 const nan = _mm256_set1_ps(NAN);
 	__m256 min = nan;
 	__m256 max = nan;
 	__m256 sqSum = zero;
-	float const *mask_ = (float const *)mask;
+	float const *mask_ = (float const *)isInvalid;
 	__m256 const *data_ = (__m256 const *)data;
 	for (int i = 0; i < elements/(sizeof(__m256)/sizeof(float)); i++) {
 		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i*2]));
 		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i*2+1]));
-		__m128i first4 = _mm_cvtepu8_epi32(mask0); // first 4bytes
-		__m128i second4 = _mm_cvtepu8_epi32(mask1);// second 4bytes
-		count = _mm_add_epi32(_mm_add_epi32(first4, second4), count);
+		mask0 = _mm_cvtepu8_epi32(mask0); // first 4bytes
+		mask1 = _mm_cvtepu8_epi32(mask1);// second 4bytes
+		mask0 = _mm_cmpeq_epi32(mask0, zero128i);
+		mask1 = _mm_cmpeq_epi32(mask1, zero128i);
+		// mask[01] == 0xffffffff means valid data, 0 means invalid data.
+		count = _mm_sub_epi32(_mm_sub_epi32(count, mask0), mask1);
 
-		__m256i mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(first4),
-				second4, 1);
-		__m256 maskf = _mm256_cmp_ps(_mm256_cvtepi32_ps(mask8),
-				zero, _CMP_NEQ_UQ);
+		__m256i mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask0),
+				mask1, 1);
+		__m256 maskf = _mm256_cvtepi32_ps(mask8);
 		__m256 value = data_[i];
 		sum += _mm256_blendv_ps(zero, value, maskf);
 		min = _mm256_min_ps(min, _mm256_blendv_ps(min, value, maskf));
@@ -273,13 +244,13 @@ void simd(libsakura_symbol(statistics_result) &result,float const *data, bool co
 namespace libsakura_PREFIX {
 void ADDSUFFIX(Statistics, ARCH_SUFFIX)::reduce(
 	libsakura_symbol(statistics_result) &result, float const *data,
-	bool const *mask, size_t elements) const {
+	bool const *isInvalid, size_t elements) const {
 #if 0
-stat(result, data, mask, elements);
+stat(result, data, isInvalid, elements);
 //printf("%f\n", result);
 #else
 #if defined( __AVX__)
-simd(result, data, mask, elements);
+simd(result, data, isInvalid, elements);
 #endif
 #endif
 }
