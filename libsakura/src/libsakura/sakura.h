@@ -8,11 +8,12 @@
  *      Author: kohji
  */
 
-#ifndef SAKURA_H_
-#define SAKURA_H_
+#ifndef LIBSAKURA_LIBSAKURA_SAKURA_H_
+#define LIBSAKURA_LIBSAKURA_SAKURA_H_
 
 #include <stddef.h>
 #include <stdbool.h>
+
 #include <libsakura/config.h>
 
 #ifdef __cplusplus
@@ -27,7 +28,7 @@ extern "C" {
  * @~
  * @author Kohji Nakamura
  */
-double libsakura_symbol(currenttime)();
+double LIBSAKURA_SYMBOL(GetCurrentTime)();
 
 /*
  * memory alignment(for SIMD)
@@ -37,14 +38,16 @@ double libsakura_symbol(currenttime)();
  * @brief SAKURAが想定するアライメントに、@a ptr が合っているか調べる
  * @param ptr アラインされているか調べたいアドレス
  * @return アラインされているなら true , そうでないなら false
- */bool libsakura_symbol(is_aligned)(void const *ptr);
+ */
+
+bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
 
 /**
  * @~japanese
  * @brief SAKURAがベクトル演算を行う配列に期待するアライメントを返す
  * @return 戻り値の倍数アドレスにアラインされることを期待する
  */
-size_t libsakura_symbol (get_alignment)();
+size_t LIBSAKURA_SYMBOL (GetAlignment)();
 
 /**
  * @~japanese
@@ -57,15 +60,15 @@ size_t libsakura_symbol (get_alignment)();
  * @return アラインされたアドレス。もし、 @a size_required を格納するのに
  * 十分な大きさの@a size_of_arena が無いならば、 nullptr を返す。
  */
-void const *libsakura_symbol(align_any)(void const *vp, size_t size_of_arena,
+void const *LIBSAKURA_SYMBOL(AlignAny)(void const *vp, size_t size_of_arena,
 		size_t size_required);
-float const *libsakura_symbol(align_float)(float const *fp,
+float const *LIBSAKURA_SYMBOL(AlignFloat)(float const *fp,
 		size_t elements_of_arena, size_t elements_required);
-double const *libsakura_symbol(align_double)(double const *dp,
+double const *LIBSAKURA_SYMBOL(AlignDouble)(double const *dp,
 		size_t elements_of_arena, size_t elements_required);
 
 /**
- * @ref sakura_statistics の結果を格納する構造体。
+ * @ref sakura_ComputeStatistics の結果を格納する構造体。
  */
 typedef struct {
 	size_t count; /**< 個数 */
@@ -75,25 +78,25 @@ typedef struct {
 	float max; /**< 最大 */
 	float rms; /**< 二乗平均平方根 */
 	float stddev; /**< 分散 */
-} libsakura_symbol(statistics_result);
+}LIBSAKURA_SYMBOL(StatisticsResult);
 
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
- * @ref sakura_statistics_result を参照。
- * @param result 結果の格納先
+ * @ref sakura_StatisticsResult を参照。
  * @param data 対象となるデータ
- * @param mask データのマスク。この値が true だと、
+ * @param is_invalid データのマスク。この値が true だと、
  * 対応する@a data の要素が無視される
  * @param elements @a data 及び@a mask の要素の数
+ * @param result 結果の格納先
  */
-void libsakura_symbol(statistics)
-(libsakura_symbol(statistics_result) *result,
-		float const data[], bool const mask[], size_t elements);
+void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
+		bool const is_invalid[], size_t elements,
+		LIBSAKURA_SYMBOL(StatisticsResult) *result);
 
 #ifdef __cplusplus
 }
 /* extern "C" */
 #endif
 
-#endif /* SAKURA_H_ */
+#endif /* LIBSAKURA_LIBSAKURA_SAKURA_H_ */

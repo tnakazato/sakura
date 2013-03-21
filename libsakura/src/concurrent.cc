@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <limits.h>
+
 #include "libsakura/config.h"
 #include "libsakura/concurrent.h"
 
@@ -24,35 +25,31 @@
 
 namespace concurrent {
 /* ======================= Mutex ======================= */
-Mutex::Mutex() throw(int)
-{
-	int result = pthread_mutex_init(&mutex, NULL);
+Mutex::Mutex() throw (int) {
+	int result = pthread_mutex_init(&mutex_, NULL);
 	if (result != 0) {
 		LOG(result);
 		throw result;
 	}
 }
 
-Mutex::~Mutex()
-{
-	int result = pthread_mutex_destroy(&mutex);
+Mutex::~Mutex() {
+	int result = pthread_mutex_destroy(&mutex_);
 	if (result != 0) {
 		LOG(result);
 	}
 }
 
-void Mutex::lock() throw(int)
-{
-	int result = pthread_mutex_lock(&mutex);
+void Mutex::Lock() throw (int) {
+	int result = pthread_mutex_lock(&mutex_);
 	if (result != 0) {
 		LOG(result);
 		throw result;
 	}
 }
 
-bool Mutex::try_lock() throw(int)
-{
-	int result = pthread_mutex_trylock(&mutex);
+bool Mutex::TryLock() throw (int) {
+	int result = pthread_mutex_trylock(&mutex_);
 	if (result == 0) {
 		return true;
 	}
@@ -63,9 +60,8 @@ bool Mutex::try_lock() throw(int)
 	throw result;
 }
 
-void Mutex::unlock() throw(int)
-{
-	int result = pthread_mutex_unlock(&mutex);
+void Mutex::Unlock() throw (int) {
+	int result = pthread_mutex_unlock(&mutex_);
 	if (result != 0) {
 		LOG(result);
 		throw result;
@@ -73,40 +69,37 @@ void Mutex::unlock() throw(int)
 }
 
 /* ======================= Semaphore ======================= */
-Semaphore::Semaphore(unsigned initial) throw(int)
-{
-	//mutex = PTHREAD_MUTEX_INITIALIZER;
-	//cond = PTHREAD_COND_INITIALIZER;
-	sem = initial;
+Semaphore::Semaphore(unsigned initial) throw (int) {
+	//mutex_ = PTHREAD_MUTEX_INITIALIZER;
+	//condition_ = PTHREAD_COND_INITIALIZER;
+	semaphore_ = initial;
 
-	int result = pthread_mutex_init(&mutex, NULL);
+	int result = pthread_mutex_init(&mutex_, NULL);
 	if (result != 0) {
 		LOG(result);
 		throw result;
 	}
 
-	result = pthread_cond_init(&cond, NULL);
+	result = pthread_cond_init(&condition_, NULL);
 	if (result != 0) {
-		pthread_mutex_destroy(&mutex);
+		pthread_mutex_destroy(&mutex_);
 		LOG(result);
 		throw result;
 	}
 }
 
-Semaphore::~Semaphore()
-{
-	int result = pthread_mutex_destroy(&mutex);
-	result = pthread_cond_destroy(&cond);
+Semaphore::~Semaphore() {
+	int result = pthread_mutex_destroy(&mutex_);
+	result = pthread_cond_destroy(&condition_);
 }
 
-void Semaphore::up(unsigned amount) throw(int)
-{
-	assert(0 < amount && amount <= UINT_MAX - sem);
-	int result = pthread_mutex_lock(&mutex);
+void Semaphore::Up(unsigned amount) throw (int) {
+	assert(0 < amount && amount <= UINT_MAX - semaphore_);
+	int result = pthread_mutex_lock(&mutex_);
 	if (result == 0) {
-		sem += amount;
-		result = pthread_cond_signal(&cond);
-		int result2 = pthread_mutex_unlock(&mutex);
+		semaphore_ += amount;
+		result = pthread_cond_signal(&condition_);
+		int result2 = pthread_mutex_unlock(&mutex_);
 		if (result == 0 && result2 == 0) {
 			return;
 		}
@@ -122,22 +115,21 @@ void Semaphore::up(unsigned amount) throw(int)
 	throw result;
 }
 
-void Semaphore::down(unsigned amount) throw(int)
-{
+void Semaphore::Down(unsigned amount) throw (int) {
 	assert(0 < amount);
-	int result = pthread_mutex_lock(&mutex);
+	int result = pthread_mutex_lock(&mutex_);
 	if (result == 0) {
-		while (sem < amount) {
-			result = pthread_cond_wait(&cond, &mutex);
+		while (semaphore_ < amount) {
+			result = pthread_cond_wait(&condition_, &mutex_);
 			if (result != 0) {
 				LOG(result);
 				break;
 			}
 		}
-		if (sem >= amount) {
-			sem -= amount;
+		if (semaphore_ >= amount) {
+			semaphore_ -= amount;
 		}
-		int result2 = pthread_mutex_unlock(&mutex);
+		int result2 = pthread_mutex_unlock(&mutex_);
 		if (result == 0 && result2 == 0) {
 			return;
 		}
@@ -154,40 +146,34 @@ void Semaphore::down(unsigned amount) throw(int)
 }
 
 /* ======================= Broker ======================= */
-Broker::Broker(bool (*producer)(void *context) throw(PCException),
-			   void (*consumer)(void *context) throw(PCException))
-{
-	this->producer = producer;
-	this->consumer = consumer;
+Broker::Broker(bool (*producer)(void *context) throw (PCException),
+void (*consumer)(void *context) throw (PCException)) {
+	this->producer_ = producer;
+	this->consumer_ = consumer;
 }
 
-Broker::~Broker()
-{
+Broker::~Broker() {
 }
 
-void Broker::enableNested()
-{
+void Broker::EnableNested() {
 #ifdef _OPENMP
 	omp_set_nested(1);
 #endif
 }
 
-void Broker::disableNested()
-{
+void Broker::DisableNested() {
 #ifdef _OPENMP
 	omp_set_nested(0);
 #endif
 }
 
-void Broker::setNestedState(bool nested)
-{
+void Broker::SetNestedState(bool nested) {
 #ifdef _OPENMP
 	omp_set_nested(static_cast<int>(nested));
 #endif
 }
 
-bool Broker::getNestedState()
-{
+bool Broker::GetNestedState() {
 #ifdef _OPENMP
 	return omp_get_nested() ? true : false;
 #else
@@ -195,126 +181,121 @@ bool Broker::getNestedState()
 #endif
 }
 
-void Broker::runProducerAsMasterThread(void *context, unsigned do_ahead)
-	throw(PCException)
-{
-	_run(context, do_ahead, ProdAsMaster);
+void Broker::RunProducerAsMasterThread(void *context, unsigned do_ahead)
+		throw (PCException) {
+	_Run(context, do_ahead, kProdAsMaster);
 }
 
-void Broker::runConsumerAsMasterThread(void *context, unsigned do_ahead)
-	throw(PCException)
-{
-	_run(context, do_ahead, ConsAsMaster);
+void Broker::RunConsumerAsMasterThread(void *context, unsigned do_ahead)
+		throw (PCException) {
+	_Run(context, do_ahead, kConsAsMaster);
 }
 
-void Broker::run(void *context, unsigned do_ahead) throw(PCException)
-{
-	_run(context, do_ahead, Unspecified);
+void Broker::Run(void *context, unsigned do_ahead) throw (PCException) {
+	_Run(context, do_ahead, kUnspecified);
 }
 
-void Broker::_run(void *context, unsigned do_ahead, ThreadSpec threadSpec)
-	throw(PCException)
-{
+void Broker::_Run(void *context, unsigned do_ahead, ThreadSpec thread_spec)
+		throw (PCException) {
 	assert(do_ahead > 0);
-#ifdef _OPENMP
-	PCException *prodEx = NULL;
-	PCException *consEx = NULL;
-	unsigned queuedJobs = 0;
-	int consumerTerminated = 0;
+#if defined(_OPENMP)
+	PCException const *prod_ex = NULL;
+	PCException const *cons_ex = NULL;
+	unsigned queued_jobs = 0;
+	int consumer_terminated = 0;
 	Semaphore semaphore_for_consumer;
 	Semaphore semaphore_for_producer(do_ahead);
 
-	#pragma omp parallel num_threads(2) \
+#pragma omp parallel num_threads(2) \
 		shared(semaphore_for_consumer, semaphore_for_producer, \
-			   consumerTerminated, queuedJobs)
+			   consumer_terminated, queued_jobs)
 	{
 		//fprintf(stderr, "run: %p %d\n", context, omp_get_thread_num());
-		bool runProd = true;
-		if (threadSpec == Unspecified) {
-			#pragma omp single
+		bool run_prod = true;
+		if (thread_spec == kUnspecified) {
+#pragma omp single
 			{
-				runProd = false;
+				run_prod = false;
 			}
 		} else {
-			bool isMaster = false;
-			#pragma omp master
+			bool is_master = false;
+#pragma omp master
 			{
-				isMaster = true;
+				is_master = true;
 			}
-			if (threadSpec == ProdAsMaster) {
-				runProd = isMaster;
+			if (thread_spec == kProdAsMaster) {
+				run_prod = is_master;
 			} else { // ConsAsMaster
-				runProd = ! isMaster;
+				run_prod = ! is_master;
 			}
 		}
 
-		if (runProd) { // producer
+		if (run_prod) { // producer
 			for (;;) {
-				semaphore_for_producer.down();
-				int consumerDead = 0;
-				#pragma omp atomic
-				consumerDead += consumerTerminated;
-				if (consumerDead) {
+				semaphore_for_producer.Down();
+				int consumers_dead = 0;
+#pragma omp atomic
+				consumers_dead += consumer_terminated;
+				if (consumers_dead) {
 					break;
 				}
 				try {
-					bool produced = producer(context);
+					bool produced = producer_(context);
 					if (! produced) {
 						break;
 					}
-				} catch (PCException &e) {
-					prodEx = &e;
+				} catch (PCException const &e) {
+					prod_ex = &e;
 					break;
 				}
-				#pragma omp atomic
-				queuedJobs++;
-				semaphore_for_consumer.up();
+#pragma omp atomic
+				++queued_jobs;
+				semaphore_for_consumer.Up();
 			}
 			// additional 'up' to give consumer a chance to terminate.
-			semaphore_for_consumer.up();
+			semaphore_for_consumer.Up();
 		} else { // consumer
 			for (;;) {
-				semaphore_for_consumer.down();
-				unsigned remainingJobs = 0U;
-				#pragma omp atomic
-				remainingJobs += queuedJobs;
-				if (remainingJobs == 0U) {
+				semaphore_for_consumer.Down();
+				unsigned remaining_jobs = 0U;
+#pragma omp atomic
+				remaining_jobs += queued_jobs;
+				if (remaining_jobs == 0U) {
 					break;
 				}
-				#pragma omp atomic
-				queuedJobs--;
+#pragma omp atomic
+				--queued_jobs;
 				try {
-					consumer(context);
-				} catch (PCException &e) {
-					consEx = &e;
+					consumer_(context);
+				} catch (PCException const &e) {
+					cons_ex = &e;
 					break;
 				}
-				semaphore_for_producer.up();
+				semaphore_for_producer.Up();
 			}
-			#pragma omp atomic
-			consumerTerminated++;
+#pragma omp atomic
+			++consumer_terminated;
 			// additional 'up' to give producer a chance to terminate.
-			semaphore_for_producer.up();
+			semaphore_for_producer.Up();
 		}
 	}
-	if (prodEx) {
-		prodEx->raise();
-	} else if (consEx) {
-		consEx->raise();
+	if (prod_ex) {
+		prod_ex->Raise();
+	} else if (cons_ex) {
+		cons_ex->Raise();
 	}
 #else
-	runSequential(context);
+	RunSequential(context);
 #endif
 }
 
-void Broker::runSequential(void *context) throw(PCException)
-{
+void Broker::RunSequential(void *context) throw (PCException) {
 	for (;;) {
-		bool produced = producer(context);
-		if (! produced) {
+		bool produced = producer_(context);
+		if (!produced) {
 			break;
 		}
-		consumer(context);
+		consumer_(context);
 	}
 }
 

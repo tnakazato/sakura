@@ -5,8 +5,8 @@
  *      Author: kohji
  */
 
-#ifndef LOCALDEF_H_
-#define LOCALDEF_H_
+#ifndef LIBSAKURA_LIBSAKURA_LOCALDEF_H_
+#define LIBSAKURA_LIBSAKURA_LOCALDEF_H_
 
 /* Don't include this header file from other header files.
  * This file includes the definitions only for internal use of libsakura.
@@ -18,6 +18,6 @@
 #define CONCAT_SYM(A, B) A ## B
 #define ADDSUFFIX(A, B) CONCAT_SYM(A, B)
 
-#define elementsof(x) (sizeof(x) / sizeof((x)[0]))
+#define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
 
-#endif /* LOCALDEF_H_ */
+#endif /* LIBSAKURA_LIBSAKURA_LOCALDEF_H_ */

@@ -5,27 +5,29 @@
 #include <iostream>
 #include <cstdio>
 #include <cassert>
-#include <libsakura/OptimizedImplementationFactoryImpl.h>
-#include <libsakura/localdef.h>
 
-using namespace std;
-using namespace libsakura_PREFIX;
+#include "libsakura/optimized_implementation_factory_impl.h"
+#include "libsakura/localdef.h"
+
+using ::LIBSAKURA_PREFIX::Gridding;
+using ::std::cout;
+using ::std::endl;
 
 namespace {
-typedef sakura::Gridding::integer integer;
+typedef Gridding::integer integer;
 
 template<typename T>
-T square(T n) {
+T Square(T n) {
 	return n * n;
 }
 
 template<typename INT, typename REAL>
-INT nint(REAL v) {
+INT NInt(REAL v) {
 	return INT(v >= 0. ? v + REAL(0.5) : v - REAL(0.5));
 }
 
 // overload conj(complex)
-inline float conj(float v) {
+inline float Conj(float v) {
 	return v;
 }
 
@@ -44,8 +46,8 @@ void gridPos(double const xy[/*2*/], integer sampling, integer loc[/*2*/],
 		integer off[/*2*/]) {
 	for (integer idim = 0; idim < 2; ++idim) {
 		float pos = xy[idim];
-		loc[idim] = nint<integer, float>(pos);
-		off[idim] = nint<integer, float>((loc[idim] - pos) * sampling);
+		loc[idim] = NInt<integer, float>(pos);
+		off[idim] = NInt<integer, float>((loc[idim] - pos) * sampling);
 	}
 }
 
@@ -72,7 +74,7 @@ struct WeightedValue {
 			Gridding::value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
 			integer nvischan, integer nvispol, integer irow, integer ichan,
 			integer ipol) {
-		return weight * conj(values[at3(nvischan, nvispol, irow, ichan, ipol)]);
+		return weight * Conj(values[at3(nvischan, nvispol, irow, ichan, ipol)]);
 	}
 };
 
@@ -186,7 +188,7 @@ struct WeightedValue {
 	static inline Gridding::value_t func(float weight,
 			Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],
 			integer nvischan, integer irow, integer ichan, integer ipol) {
-		return weight * conj(values[at2(nvischan, irow, ichan)][ipol]);
+		return weight * Conj(values[at2(nvischan, irow, ichan)][ipol]);
 	}
 };
 
@@ -243,12 +245,12 @@ inline void doGrid(
 #if defined( __AVX__)
 #include <immintrin.h>
 
-template <typename T, typename U>
+template<typename T, typename U>
 void dump(T x) {
 	union {
 		T v;
 		U f[4];
-	}tmp;
+	} tmp;
 	tmp.v = x;
 	for (int i = 0; i < 4; i++) {
 		cout << tmp.f[i] << ",";
@@ -260,97 +262,95 @@ inline __m128 shuffleps(__m128 x, __m128i mask) {
 	return _mm_castsi128_ps(_mm_shuffle_epi8(_mm_castps_si128(x), mask));
 }
 
-template <integer nvispol>
+template<integer nvispol>
 struct WeightOnlySIMD {
-	static inline __m128
-	func(__m128 weight,
+	static inline __m128 func(__m128 weight,
 			Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],
-			integer nvischan,
-			integer irow, integer ichan) {
+			integer nvischan, integer irow, integer ichan) {
 		return weight;
 	}
 };
 
-template <integer nvispol>
+template<integer nvispol>
 struct WeightedValueSIMD {
-	static inline __m128
-	func(__m128 weight,
+	static inline __m128 func(__m128 weight,
 			Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],
-			integer nvischan,
-			integer irow, integer ichan) {
+			integer nvischan, integer irow, integer ichan) {
 		return _mm_mul_ps(weight,
 				_mm_load_ps(values[at2(nvischan, irow, ichan)]));
 	}
 };
 
-template <typename T>
-inline void
-doGridSIMD(Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
+template<typename T>
+inline void doGridSIMD(
+		Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
 		integer nvischan,
 		Gridding::flag_t const flag/*[nrow]*/[/*nvischan*/][4],
 		float const weight/*[nrow]*/[/*nvischan*/],
 		Gridding::value_t grid/*[ny][nx]*/[/*nchan*/][4],
-		float wgrid/*[ny][nx]*/[/*nchan*/][4],
-		integer nx, integer ny, integer nchan,
-		integer support,
-		float const convTable[],
-		integer const chanmap[/*nvischan*/],
-		integer const polmap[/*nvispol*/],
-		double sumwt[/*nchan*/][4],
-		integer locx, integer locy,
-		integer const irad[/*square(Wsupport)*/],
-		integer const Wsupport,
+		float wgrid/*[ny][nx]*/[/*nchan*/][4], integer nx, integer ny,
+		integer nchan, integer support, float const convTable[],
+		integer const chanmap[/*nvischan*/], integer const polmap[/*nvispol*/],
+		double sumwt[/*nchan*/][4], integer locx, integer locy,
+		integer const irad[/*square(Wsupport)*/], integer const Wsupport,
 		integer irow) {
 	size_t const npol = 4;
 	size_t const nvispol = 4;
-	__m128 const zero = _mm_setzero_ps();
-	__m128i const one = _mm_set1_epi32(1);
-	__m128i const destMap[4] = {
-		_mm_set_epi32( -1, -1, -1, 0x03020100 ),
-		_mm_set_epi32( -1, -1, 0x03020100, -1 ),
-		_mm_set_epi32( -1, 0x03020100, -1, -1 ),
-		_mm_set_epi32( 0x03020100, -1, -1, -1 )
-	};
+	__m128  const zero = _mm_setzero_ps();
+	__m128i  const one = _mm_set1_epi32(1);
+	__m128i  const destMap[4] = { _mm_set_epi32(-1, -1, -1, 0x03020100),
+			_mm_set_epi32(-1, -1, 0x03020100, -1), _mm_set_epi32(-1, 0x03020100,
+					-1, -1), _mm_set_epi32(0x03020100, -1, -1, -1) };
 
-	__m128i const src0 = _mm_set1_epi32(0x03020100);
-	__m128i const src1 = _mm_set1_epi32(0x07060504);
-	__m128i const src2 = _mm_set1_epi32(0x0B0A0908);
-	__m128i const src3 = _mm_set1_epi32(0x0F0E0D0C);
+	__m128i  const src0 = _mm_set1_epi32(0x03020100);
+	__m128i  const src1 = _mm_set1_epi32(0x07060504);
+	__m128i  const src2 = _mm_set1_epi32(0x0B0A0908);
+	__m128i  const src3 = _mm_set1_epi32(0x0F0E0D0C);
 
-	__m128 const shufMask0_ = _mm_castsi128_ps(_mm_shuffle_epi8(src0, destMap[polmap[0]]));
-	__m128 const shufMask1_ = _mm_castsi128_ps(_mm_shuffle_epi8(src1, destMap[polmap[1]]));
-	__m128 const shufMask2_ = _mm_castsi128_ps(_mm_shuffle_epi8(src2, destMap[polmap[2]]));
-	__m128 const shufMask3_ = _mm_castsi128_ps(_mm_shuffle_epi8(src3, destMap[polmap[3]]));
+	__m128  const shufMask0_ = _mm_castsi128_ps(
+			_mm_shuffle_epi8(src0, destMap[polmap[0]]));
+	__m128  const shufMask1_ = _mm_castsi128_ps(
+			_mm_shuffle_epi8(src1, destMap[polmap[1]]));
+	__m128  const shufMask2_ = _mm_castsi128_ps(
+			_mm_shuffle_epi8(src2, destMap[polmap[2]]));
+	__m128  const shufMask3_ = _mm_castsi128_ps(
+			_mm_shuffle_epi8(src3, destMap[polmap[3]]));
 
-	__m128i const shufMask0 = _mm_castps_si128(_mm_or_ps(_mm_cmpeq_ps(shufMask0_, zero), shufMask0_));
-	__m128i const shufMask1 = _mm_castps_si128(_mm_or_ps(_mm_cmpeq_ps(shufMask1_, zero), shufMask1_));
-	__m128i const shufMask2 = _mm_castps_si128(_mm_or_ps(_mm_cmpeq_ps(shufMask2_, zero), shufMask2_));
-	__m128i const shufMask3 = _mm_castps_si128(_mm_or_ps(_mm_cmpeq_ps(shufMask3_, zero), shufMask3_));
+	__m128i  const shufMask0 = _mm_castps_si128(
+			_mm_or_ps(_mm_cmpeq_ps(shufMask0_, zero), shufMask0_));
+	__m128i  const shufMask1 = _mm_castps_si128(
+			_mm_or_ps(_mm_cmpeq_ps(shufMask1_, zero), shufMask1_));
+	__m128i  const shufMask2 = _mm_castps_si128(
+			_mm_or_ps(_mm_cmpeq_ps(shufMask2_, zero), shufMask2_));
+	__m128i  const shufMask3 = _mm_castps_si128(
+			_mm_or_ps(_mm_cmpeq_ps(shufMask3_, zero), shufMask3_));
 
 	integer ir = 0;
 	// do iy=-support,support
-	for (integer iy=0; iy < Wsupport; ++iy) {
+	for (integer iy = 0; iy < Wsupport; ++iy) {
 		integer ay = locy + iy;
 		// do ix=-support,support
-		for (integer ix=0; ix < Wsupport; ++ix) {
+		for (integer ix = 0; ix < Wsupport; ++ix) {
 			integer ax = locx + ix;
 			__m128 wt = _mm_set1_ps(convTable[irad[ir]]);
-			for (integer ichan=0; ichan < nvischan; ++ichan) {
+			for (integer ichan = 0; ichan < nvischan; ++ichan) {
 				integer achan = chanmap[ichan];
 				integer idx = at3(nx, nchan, ay, ax, achan);
 				float weight_ = weight[at2(nvischan, irow, ichan)];
 				__m128 weight = _mm_set1_ps(weight_);
 				__m128 mask = _mm_cmpgt_ps(weight, zero);
 				__m128i flag_ =
-				_mm_cvtepu8_epi32(_mm_castps_si128(
-								_mm_load_ss((float*)flag[at2(nvischan, irow, ichan)])));
+						_mm_cvtepu8_epi32(
+								_mm_castps_si128(
+										_mm_load_ss(
+												(float*) flag[at2(nvischan,
+														irow, ichan)])));
 				mask = _mm_and_ps(mask,
 						_mm_cmpeq_ps(_mm_castsi128_ps(flag_), zero));
 
 				__m128 wt_ = _mm_and_ps(wt, mask);
 
-				__m128 nvalue =
-				T::func(weight, values, nvischan, irow, ichan);
+				__m128 nvalue = T::func(weight, values, nvischan, irow, ichan);
 
 				{
 					//wgrid[idx] += weight * wt_;
@@ -383,72 +383,40 @@ doGridSIMD(Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
 	} // iy
 }
 
-template <>
-inline void
-doGrid<WeightOnly<4>, 4, 4>(Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
+template<>
+inline void doGrid<WeightOnly<4>, 4, 4>(
+		Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
 		integer nvischan,
 		Gridding::flag_t const flag/*[nrow]*/[/*nvischan*/][4],
 		float const weight/*[nrow]*/[/*nvischan*/],
 		Gridding::value_t grid/*[ny][nx]*/[/*nchan*/][4],
-		float wgrid/*[ny][nx]*/[/*nchan*/][4],
-		integer nx, integer ny, integer nchan,
-		integer support,
-		float const convTable[],
-		integer const chanmap[/*nvischan*/],
-		integer const polmap[/*nvispol*/],
-		double sumwt[/*nchan*/][4],
-		integer locx, integer locy,
-		integer const irad[/*square(Wsupport)*/],
-		integer const Wsupport,
+		float wgrid/*[ny][nx]*/[/*nchan*/][4], integer nx, integer ny,
+		integer nchan, integer support, float const convTable[],
+		integer const chanmap[/*nvischan*/], integer const polmap[/*nvispol*/],
+		double sumwt[/*nchan*/][4], integer locx, integer locy,
+		integer const irad[/*square(Wsupport)*/], integer const Wsupport,
 		integer irow) {
-	doGridSIMD<WeightOnlySIMD<4> >(
-			values,
-			nvischan,
-			flag, weight,
-			grid, wgrid,
-			nx, ny,
-			nchan,
-			support, convTable,
-			chanmap, polmap,
-			sumwt,
-			locx, locy,
-			irad,
-			Wsupport,
-			irow);
+	doGridSIMD<WeightOnlySIMD<4> >(values, nvischan, flag, weight, grid, wgrid,
+			nx, ny, nchan, support, convTable, chanmap, polmap, sumwt, locx,
+			locy, irad, Wsupport, irow);
 }
 
-template <>
-inline void
-doGrid<WeightedValue<4>, 4, 4>(Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
+template<>
+inline void doGrid<WeightedValue<4>, 4, 4>(
+		Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
 		integer nvischan,
 		Gridding::flag_t const flag/*[nrow]*/[/*nvischan*/][4],
 		float const weight/*[nrow]*/[/*nvischan*/],
 		Gridding::value_t grid/*[ny][nx]*/[/*nchan*/][4],
-		float wgrid/*[ny][nx]*/[/*nchan*/][4],
-		integer nx, integer ny, integer nchan,
-		integer support,
-		float const convTable[],
-		integer const chanmap[/*nvischan*/],
-		integer const polmap[/*nvispol*/],
-		double sumwt[/*nchan*/][4],
-		integer locx, integer locy,
-		integer const irad[/*square(Wsupport)*/],
-		integer const Wsupport,
+		float wgrid/*[ny][nx]*/[/*nchan*/][4], integer nx, integer ny,
+		integer nchan, integer support, float const convTable[],
+		integer const chanmap[/*nvischan*/], integer const polmap[/*nvispol*/],
+		double sumwt[/*nchan*/][4], integer locx, integer locy,
+		integer const irad[/*square(Wsupport)*/], integer const Wsupport,
 		integer irow) {
-	doGridSIMD<WeightedValueSIMD<4> >(
-			values,
-			nvischan,
-			flag, weight,
-			grid, wgrid,
-			nx, ny,
-			nchan,
-			support, convTable,
-			chanmap, polmap,
-			sumwt,
-			locx, locy,
-			irad,
-			Wsupport,
-			irow);
+	doGridSIMD<WeightedValueSIMD<4> >(values, nvischan, flag, weight, grid,
+			wgrid, nx, ny, nchan, support, convTable, chanmap, polmap, sumwt,
+			locx, locy, irad, Wsupport, irow);
 }
 #endif
 
@@ -545,13 +513,13 @@ struct Adapter {
 			float const weight/*[nrow]*/[/*nvischan*/],
 			Gridding::value_t grid[], float wgrid[], integer nx, integer ny,
 			integer npol, integer nchan, integer support,
-			float const convTable[], integer const chanmap[/*nvischan*/],
+			float const conv_table[], integer const chanmap[/*nvischan*/],
 			integer const polmap[/*nvispol*/],
 			double sumwt/*[nchan]*/[/*npol*/], integer locx, integer locy,
 			integer const irad[/*square(Wsupport)*/], integer const Wsupport,
 			integer irow) {
 		func(values, nvischan, flag, weight, grid, wgrid, nx, ny, nchan,
-				support, convTable, chanmap, polmap, sumwt, locx, locy, irad,
+				support, conv_table, chanmap, polmap, sumwt, locx, locy, irad,
 				Wsupport, irow);
 	}
 };
@@ -566,7 +534,7 @@ inline void internalGridsd(double const xy[/*nrow*/][2],
 		float const weight/*[nrow]*/[/*nvischan*/], integer nrow, integer irow,
 		Gridding::value_t grid[], float wgrid[], integer nx, integer ny,
 		integer npol, integer nchan, integer support, integer sampling,
-		float const convTable[], integer const chanmap[/*nvischan*/],
+		float const conv_table[], integer const chanmap[/*nvischan*/],
 		integer const polmap[/*nvispol*/], double sumwt/*[nchan]*/[/*npol*/]) {
 	assert(sizeof(Gridding::flag_t) == 1);
 	T::check(nvispol, npol, polmap, nvischan, nchan, chanmap);
@@ -584,7 +552,7 @@ inline void internalGridsd(double const xy[/*nrow*/][2],
 			integer loc[2], off[2];
 			gridPos(xy[irow], sampling, loc, off);
 			if (onGrid(nx, ny, loc, support)) {
-				integer irad[square(Wsupport)];
+				integer irad[Square(Wsupport)];
 				{
 					float rlocyInitial = -(support + 1) * sampling + off[0];
 					float rlocy = -(support + 1) * sampling + off[1];
@@ -595,14 +563,14 @@ inline void internalGridsd(double const xy[/*nrow*/][2],
 						for (integer ix = 0; ix < Wsupport; ++ix) {
 							rlocx += sampling;
 							irad[ir] = static_cast<integer>(sqrt(
-									square(rlocx) + square(rlocy)));
+									Square(rlocx) + Square(rlocy)));
 							++ir;
 						}
 					}
 				}
 
 				T::callFunc(gridFunc, values, nvispol, nvischan, flag, weight,
-						grid, wgrid, nx, ny, npol, nchan, support, convTable,
+						grid, wgrid, nx, ny, npol, nchan, support, conv_table,
 						chanmap, polmap, sumwt, loc[0] - support,
 						loc[1] - support, irad, Wsupport, irow);
 			}
@@ -611,8 +579,8 @@ inline void internalGridsd(double const xy[/*nrow*/][2],
 }
 }
 
-namespace libsakura_PREFIX {
-void ADDSUFFIX(Gridding, ARCH_SUFFIX)::gridsd(double const xy[/*nrow*/][2],
+namespace LIBSAKURA_PREFIX {
+void ADDSUFFIX(Gridding, ARCH_SUFFIX)::GridSd(double const xy[/*nrow*/][2],
 		Gridding::value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
 		integer nvispol, integer nvischan, bool dowt,
 		Gridding::flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
@@ -621,14 +589,14 @@ void ADDSUFFIX(Gridding, ARCH_SUFFIX)::gridsd(double const xy[/*nrow*/][2],
 		Gridding::value_t grid/*[nchan][npol][ny]*/[/*nx*/],
 		float wgrid/*[nchan][npol][ny]*/[/*nx*/], integer nx, integer ny,
 		integer npol, integer nchan, integer support, integer sampling,
-		float const convTable[], integer const chanmap[/*nvischan*/],
+		float const conv_table[], integer const chanmap[/*nvischan*/],
 		integer const polmap[/*nvispol*/],
 		double sumwt/*[nchan]*/[/*npol*/]) const {
 	internalGridsd<ForSpace::Adapter>(xy, values, nvispol, nvischan, dowt, flag,
 			rflag, weight, nrow, irow, grid, wgrid, nx, ny, npol, nchan,
-			support, sampling, convTable, chanmap, polmap, sumwt);
+			support, sampling, conv_table, chanmap, polmap, sumwt);
 }
-void ADDSUFFIX(Gridding, ARCH_SUFFIX)::gridsdForSpeed(
+void ADDSUFFIX(Gridding, ARCH_SUFFIX)::GridSdForSpeed(
 		double const xy[/*nrow*/][2],
 		Gridding::value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
 		integer nvispol, integer nvischan, bool dowt,
@@ -638,18 +606,18 @@ void ADDSUFFIX(Gridding, ARCH_SUFFIX)::gridsdForSpeed(
 		Gridding::value_t grid/*[ny][nx][nchan]*/[/*npol*/],
 		float wgrid/*[ny][nx][nchan]*/[/*npol*/], integer nx, integer ny,
 		integer npol, integer nchan, integer support, integer sampling,
-		float const convTable[], integer const chanmap[/*nvischan*/],
+		float const conv_table[], integer const chanmap[/*nvischan*/],
 		integer const polmap[/*nvispol*/],
 		double sumwt/*[nchan]*/[/*npol*/]) const {
 	internalGridsd<ForSpeed::Adapter>(xy, values, nvispol, nvischan, dowt, flag,
 			rflag, weight, nrow, irow, grid, wgrid, nx, ny, npol, nchan,
-			support, sampling, convTable, chanmap, polmap, sumwt);
+			support, sampling, conv_table, chanmap, polmap, sumwt);
 }
 
-void ADDSUFFIX(Gridding, ARCH_SUFFIX)::transform(integer ny, integer nx,
+void ADDSUFFIX(Gridding, ARCH_SUFFIX)::Transform(integer ny, integer nx,
 		integer nchan, integer npol,
-		Gridding::value_t gridFrom/*[ny][nx][nchan]*/[/*npol*/],
-		float wgridFrom/*[ny][nx][nchan]*/[/*npol*/],
+		Gridding::value_t grid_from/*[ny][nx][nchan]*/[/*npol*/],
+		float wgrid_from/*[ny][nx][nchan]*/[/*npol*/],
 		Gridding::value_t gridTo/*[nchan][npol][ny]*/[/*nx*/],
 		float wgridTo/*[nchan][npol][ny]*/[/*nx*/]) const {
 	for (integer iy = 0; iy < ny; ++iy) {
@@ -657,9 +625,9 @@ void ADDSUFFIX(Gridding, ARCH_SUFFIX)::transform(integer ny, integer nx,
 			for (integer ichan = 0; ichan < nchan; ++ichan) {
 				for (integer ipol = 0; ipol < npol; ++ipol) {
 					gridTo[at4(npol, ny, nx, ichan, ipol, iy, ix)] =
-							gridFrom[at4(nx, nchan, npol, iy, ix, ichan, ipol)];
+							grid_from[at4(nx, nchan, npol, iy, ix, ichan, ipol)];
 					wgridTo[at4(npol, ny, nx, ichan, ipol, iy, ix)] =
-							wgridFrom[at4(nx, nchan, npol, iy, ix, ichan, ipol)];
+							wgrid_from[at4(nx, nchan, npol, iy, ix, ichan, ipol)];
 				}
 			}
 		}

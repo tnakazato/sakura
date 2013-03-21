@@ -33,7 +33,7 @@ message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 set(ADDITIONAL_CXXFLAGS_Default "-DARCH_SUFFIX=Default")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
 set(MULTI_SOURCE gridding.cc statistics.cc)
-set(UNI_SOURCE concurrent.cc OptimizedImplementationFactory.cc gen-statistics.cc gen-util.c)
+set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_statistics.cc gen_util.c)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"
@@ -90,8 +90,8 @@ add_library(sakura SHARED ${UNI_SOURCE} ${OPTIMIZED_SOURCES})
 set(public_headers
 	libsakura/concurrent.h
 	libsakura/sakura.h
-	libsakura/OptimizedImplementationFactory.h
-	libsakura/OptimizedImplementationFactoryImpl.h
+	libsakura/optimized_implementation_factory.h
+	libsakura/optimized_implementation_factory_impl.h
 	${PROJECT_BINARY_DIR}/libsakura/config.h
 	)
 

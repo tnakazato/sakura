@@ -5,8 +5,8 @@
  *      Author: kohji
  */
 
-#ifndef EIGENBINARYVISITORPLUGIN_H_
-#define EIGENBINARYVISITORPLUGIN_H_
+#ifndef LIBSAKURA_LIBSAKURA_EIGENBINARYVISITORPLUGIN_H_
+#define LIBSAKURA_LIBSAKURA_EIGENBINARYVISITORPLUGIN_H_
 
 template<typename Visitor_, typename Derived_, typename OtherDerived,
 		int UnrollCount>
@@ -28,7 +28,7 @@ template<typename Visitor_, typename Derived_, typename OtherDerived>
 struct binary_visitor_impl<Visitor_, Derived_, OtherDerived, 1> {
 	static inline void run(const Derived_ &mat, const OtherDerived &mat2,
 			Visitor_& visitor) {
-		visitor.init(mat.coeff(0, 0), mat2.coeff(0, 0), 0, 0);
+		visitor.Init(mat.coeff(0, 0), mat2.coeff(0, 0), 0, 0);
 	}
 };
 
@@ -37,12 +37,24 @@ struct binary_visitor_impl<Visitor_, Derived_, OtherDerived, Dynamic> {
 	typedef typename Derived_::Index Index;
 	static inline void run(const Derived_& mat, const OtherDerived &mat2,
 			Visitor_& visitor) {
-		visitor.init(mat.coeff(0, 0), mat2.coeff(0, 0), 0, 0);
-		for (Index i = 1; i < mat.rows(); ++i)
-			visitor(mat.coeff(i, 0), mat2.coeff(i, 0), i, 0);
-		for (Index j = 1; j < mat.cols(); ++j)
-			for (Index i = 0; i < mat.rows(); ++i)
+		Index i, j;
+		for (j = 0; j < mat.cols(); ++j) {
+			for (i = 0; i < mat.rows(); ++i) {
+				bool init_phase_finished = visitor.Init(mat.coeff(i, j), mat2.coeff(i, j), i, j);
+				if (init_phase_finished) {
+					goto doRest;
+				}
+			}
+		}
+doRest:
+		for (++i; i < mat.rows(); ++i) {
+			visitor(mat.coeff(i, j), mat2.coeff(i, j), i, j);
+		}
+		for (++j; j < mat.cols(); ++j) {
+			for (Index i = 0; i < mat.rows(); ++i) {
 				visitor(mat.coeff(i, j), mat2.coeff(i, j), i, j);
+			}
+		}
 	}
 };
 
@@ -65,4 +77,4 @@ void visitWith(const DenseBase<OtherDerived> &other, Visitor &visitor) {
 			visitor);
 }
 
-#endif /* EIGENBINARYVISITORPLUGIN_H_ */
+#endif /* LIBSAKURA_LIBSAKURA_EIGENBINARYVISITORPLUGIN_H_ */

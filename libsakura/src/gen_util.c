@@ -6,11 +6,11 @@
  */
 
 #include <sys/time.h>
-#include <libsakura/sakura.h>
 
-double libsakura_symbol(currenttime)() {
+#include "libsakura/sakura.h"
+
+double LIBSAKURA_SYMBOL(GetCurrentTime)() {
 	struct timeval tv;
 	int result = gettimeofday(&tv, NULL );
 	return tv.tv_sec + ((double) tv.tv_usec) / 1000000.;
 }
-

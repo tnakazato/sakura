@@ -1,6 +1,11 @@
-#define libsakura_VERSION_MAJOR @libsakura_VERSION_MAJOR@
-#define libsakura_VERSION_MINOR @libsakura_VERSION_MINOR@
-#ifndef libsakura_PREFIX
-# define libsakura_PREFIX	@libsakura_PREFIX@
+#ifndef LIBSAKURA_LIBSAKURA_CONFIG_H_
+#define LIBSAKURA_LIBSAKURA_CONFIG_H_
+
+#define LIBSAKURA_VERSION_MAJOR @libsakura_VERSION_MAJOR@
+#define LIBSAKURA_VERSION_MINOR @libsakura_VERSION_MINOR@
+#ifndef LIBSAKURA_PREFIX
+# define LIBSAKURA_PREFIX	@libsakura_PREFIX@
 #endif
-#define libsakura_symbol(x)	@libsakura_PREFIX@ ## _ ## x
+#define LIBSAKURA_SYMBOL(x)	@libsakura_PREFIX@ ## _ ## x
+
+#endif /* LIBSAKURA_LIBSAKURA_CONFIG_H_ */
