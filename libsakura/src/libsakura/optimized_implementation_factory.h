@@ -57,7 +57,7 @@ class Statistics {
 public:
 	virtual ~Statistics() {
 	}
-	virtual void Reduce(float const *data, bool const *mask, size_t elements,
+	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
 			LIBSAKURA_SYMBOL(StatisticsResult) &result) const = 0;
 };
 

@@ -20,13 +20,29 @@
 extern "C" {
 #endif
 
+typedef enum {
+	LIBSAKURA_SYMBOL(Status_kOK) = 0,
+	LIBSAKURA_SYMBOL(Status_kNG) = 1
+} LIBSAKURA_SYMBOL(Status);
+
+/**
+ * @~english
+ * @brief Initializes Sakura Library
+ * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
+ * @~japanese
+ * @brief Sakuraライブラリを初期化する。
+ * @~
+ * MT-unsafe
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)();
+
 /**
  * @~english
  * @brief Returns the current time.
  * @~japanese
  * @brief 現在時刻(単位は秒)を返す。精度はgettimeofday(2)依存。
  * @~
- * @author Kohji Nakamura
+ * MT-safe
  */
 double LIBSAKURA_SYMBOL(GetCurrentTime)();
 
@@ -38,6 +54,8 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
  * @brief SAKURAが想定するアライメントに、@a ptr が合っているか調べる
  * @param ptr アラインされているか調べたいアドレス
  * @return アラインされているなら true , そうでないなら false
+ * @~
+ * MT-safe
  */
 
 bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
@@ -46,6 +64,8 @@ bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
  * @~japanese
  * @brief SAKURAがベクトル演算を行う配列に期待するアライメントを返す
  * @return 戻り値の倍数アドレスにアラインされることを期待する
+ * @~
+ * MT-safe
  */
 size_t LIBSAKURA_SYMBOL (GetAlignment)();
 
@@ -59,6 +79,8 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
  * @param size_required アライン後も利用可能でなければならないサイズ
  * @return アラインされたアドレス。もし、 @a size_required を格納するのに
  * 十分な大きさの@a size_of_arena が無いならば、 nullptr を返す。
+ * @~
+ * MT-safe
  */
 void const *LIBSAKURA_SYMBOL(AlignAny)(void const *vp, size_t size_of_arena,
 		size_t size_required);
@@ -85,13 +107,15 @@ typedef struct {
  * @brief 統計値を計算する。どのような統計値を算出するかは
  * @ref sakura_StatisticsResult を参照。
  * @param data 対象となるデータ
- * @param is_invalid データのマスク。この値が true だと、
+ * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
- * @param elements @a data 及び@a mask の要素の数
+ * @param elements @a data 及び@a is_valid の要素の数
  * @param result 結果の格納先
+ * @~
+ * MT-safe
  */
 void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
-		bool const is_invalid[], size_t elements,
+		bool const is_valid[], size_t elements,
 		LIBSAKURA_SYMBOL(StatisticsResult) *result);
 
 #ifdef __cplusplus
