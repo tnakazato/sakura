@@ -7,94 +7,6 @@
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
-#define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
-#include <Eigen/Core>
-
-using ::Eigen::Map;
-using ::Eigen::Array;
-using ::Eigen::Dynamic;
-using ::Eigen::Aligned;
-
-namespace {
-
-template<typename Scalar, typename ScararOther, typename Index>
-class StatVisitor {
-public:
-	StatVisitor() :
-			count(0), sum(0), min(NAN), max(NAN), square_sum(0) {
-	}
-// called for the first coefficient
-	inline bool Init(const Scalar& value, const ScararOther &is_valid, int i,
-			int j) {
-		if (!is_valid) {
-			return false;
-		}
-		count = 1;
-		sum = value;
-		min = max = value;
-		square_sum = value * value;
-		return true;
-	}
-// called for all other coefficients
-	inline void operator()(const Scalar& value, const ScararOther & is_valid,
-			int i, int j) {
-		if (is_valid) {
-			++count;
-			assert(!isnanf(value));
-			sum += value;
-			min = std::min(min, value);
-			max = std::max(max, value);
-			square_sum += value * value;
-		}
-	}
-
-	size_t count;
-	Scalar sum;
-	Scalar min, max;
-	Scalar square_sum;
-};
-
-} /* anonymous namespace */
-
-namespace {
-
-template<typename DataType>
-inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid, size_t elements,
-		LIBSAKURA_SYMBOL(StatisticsResult) &result) {
-	assert(false);
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
-			elements);
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
-	Map<Array<bool, Dynamic, 1>, Aligned> is_valid_(
-			const_cast<bool *>(is_valid), elements);
-
-	StatVisitor<DataType, bool,
-			typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
-	data_.VisitWith(is_valid_, visitor);
-	result.count = visitor.count;
-	result.sum = visitor.sum;
-	result.mean = result.sum / result.count;
-	result.min = visitor.min;
-	result.max = visitor.max;
-	float rms2 = visitor.square_sum / result.count;
-	result.rms = std::sqrt(rms2);
-	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
-	//printf("%f\n", result.mean);
-}
-
-#if 0
-/* actual statistic calculations
- statDictOut["median"] = get_stats(scantableIn, channelMask, "median")
- statDictOut["max_abc"] = get_stats_pos(scantableIn, channelMask, "max_abc")
- statDictOut["min_abc"] = get_stats_pos(scantableIn, channelMask, "min_abc")
- */
-#endif
-
-} /* anonymous namespace */
-
 #if defined(__AVX__)
 #include <immintrin.h>
 #include <cstdint>
@@ -232,20 +144,105 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[], size_t ele
 	result.rms = std::sqrt(rms2);
 	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
 }
+
 } /* anonymous namespace */
 
+#else /* defined(__AVX__) */
+
+#define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
+#include <Eigen/Core>
+
+using ::Eigen::Map;
+using ::Eigen::Array;
+using ::Eigen::Dynamic;
+using ::Eigen::Aligned;
+
+namespace {
+
+template<typename Scalar, typename ScararOther, typename Index>
+class StatVisitor {
+public:
+	StatVisitor() :
+			count(0), sum(0), min(NAN), max(NAN), square_sum(0) {
+	}
+// called for the first coefficient
+	inline bool Init(const Scalar& value, const ScararOther &is_valid, int i,
+			int j) {
+		if (!is_valid) {
+			return false;
+		}
+		count = 1;
+		sum = value;
+		min = max = value;
+		square_sum = value * value;
+		return true;
+	}
+// called for all other coefficients
+	inline void operator()(const Scalar& value, const ScararOther & is_valid,
+			int i, int j) {
+		if (is_valid) {
+			++count;
+			assert(!isnanf(value));
+			sum += value;
+			min = std::min(min, value);
+			max = std::max(max, value);
+			square_sum += value * value;
+		}
+	}
+
+	size_t count;
+	Scalar sum;
+	Scalar min, max;
+	Scalar square_sum;
+};
+
+template<typename DataType>
+inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid, size_t elements,
+		LIBSAKURA_SYMBOL(StatisticsResult) &result) {
+	assert(false);
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
+			elements);
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+	Map<Array<bool, Dynamic, 1>, Aligned> is_valid_(
+			const_cast<bool *>(is_valid), elements);
+
+	StatVisitor<DataType, bool,
+			typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
+	data_.VisitWith(is_valid_, visitor);
+	result.count = visitor.count;
+	result.sum = visitor.sum;
+	result.mean = result.sum / result.count;
+	result.min = visitor.min;
+	result.max = visitor.max;
+	float rms2 = visitor.square_sum / result.count;
+	result.rms = std::sqrt(rms2);
+	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
+	//printf("%f\n", result.mean);
+}
+
+#if 0
+/* actual statistic calculations
+ statDictOut["median"] = get_stats(scantableIn, channelMask, "median")
+ statDictOut["max_abc"] = get_stats_pos(scantableIn, channelMask, "max_abc")
+ statDictOut["min_abc"] = get_stats_pos(scantableIn, channelMask, "min_abc")
+ */
 #endif
+
+} /* anonymous namespace */
+
+#endif /* defined(__AVX__) */
 
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Statistics, ARCH_SUFFIX)::ComputeStatistics(float const data[],
 		bool const is_valid[], size_t elements,
 		LIBSAKURA_SYMBOL(StatisticsResult) &result) const {
-#if 0
-	ComputeStatisticsEigen(data, is_valid, elements, result);
-#else
 #if defined( __AVX__)
 	ComputeStatisticsSimd(data, is_valid, elements, result);
-#endif
+#else
+	ComputeStatisticsEigen(data, is_valid, elements, result);
 #endif
 }
 }

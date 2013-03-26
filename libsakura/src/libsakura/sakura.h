@@ -21,10 +21,8 @@ extern "C" {
 #endif
 
 typedef enum {
-	LIBSAKURA_SYMBOL(Status_kOK) = 0,
-	LIBSAKURA_SYMBOL(Status_kNG) = 1
-} LIBSAKURA_SYMBOL(Status);
-
+	LIBSAKURA_SYMBOL(Status_kOK) = 0, LIBSAKURA_SYMBOL(Status_kNG) = 1
+}LIBSAKURA_SYMBOL(Status);
 /**
  * @~english
  * @brief Initializes Sakura Library
@@ -33,8 +31,7 @@ typedef enum {
  * @brief Sakuraライブラリを初期化する。
  * @~
  * MT-unsafe
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)();
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)();
 
 /**
  * @~english
@@ -110,13 +107,27 @@ typedef struct {
  * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
  * @param elements @a data 及び@a is_valid の要素の数
- * @param result 結果の格納先
+ * @param result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
  * @~
  * MT-safe
  */
 void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
 		bool const is_valid[], size_t elements,
 		LIBSAKURA_SYMBOL(StatisticsResult) *result);
+
+/**
+ * @~japanese
+ * @brief validな値のみを先頭に詰めてソートする。
+ * @param is_valid データのマスク。この値が false だと、
+ * 対応する@a data の要素が無視される
+ * @param elements @a data 及び@a is_valid の要素の数
+ * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
+ * @return (validでないデータを除いた)ソートされた要素数( <= elements)
+ * @~
+ * MT-safe
+ */
+size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(bool const is_valid[],
+		size_t elements, float data[]);
 
 #ifdef __cplusplus
 }
