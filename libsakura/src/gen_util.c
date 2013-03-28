@@ -6,9 +6,16 @@
  */
 
 #include <sys/time.h>
+#include <assert.h>
 #include <stdint.h>
 
 #include "libsakura/sakura.h"
+
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)() {
+	/* any code to initialize libsakura */
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
 
 double LIBSAKURA_SYMBOL(GetCurrentTime)() {
 	struct timeval tv;

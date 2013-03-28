@@ -49,7 +49,7 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
 /**
  * @~japanese
  * @brief SAKURAが想定するアライメントに、@a ptr が合っているか調べる
- * @param ptr アラインされているか調べたいアドレス
+ * @param ptr アラインされているか調べたいアドレス。NULL も受け付ける。
  * @return アラインされているなら true , そうでないなら false
  * @~
  * MT-safe
