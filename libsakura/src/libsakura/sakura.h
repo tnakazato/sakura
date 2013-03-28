@@ -93,21 +93,25 @@ typedef struct {
 	size_t count; /**< 個数 */
 	float sum; /**< 合計 */
 	float mean; /**< 平均 */
-	float min; /**< 最小 */
-	float max; /**< 最大 */
 	float rms; /**< 二乗平均平方根 */
 	float stddev; /**< 分散 */
+	float min; /**< 最小 */
+	float max; /**< 最大 */
+	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
+	int index_of_max; /**< 最大値のインデックス(有効な値がなければ-1) */
 }LIBSAKURA_SYMBOL(StatisticsResult);
 
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
  * @ref sakura_StatisticsResult を参照。
- * @param data 対象となるデータ
+ * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、NaNであってはならない。
  * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
  * @param elements @a data 及び@a is_valid の要素の数
  * @param result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
+ * 同じ値が複数あった場合、どの値のインデックスが@a index_of_min, @a index_of_maxに格納されるかは不定である。
+ *
  * @~
  * MT-safe
  */
@@ -122,6 +126,7 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
  * 対応する@a data の要素が無視される
  * @param elements @a data 及び@a is_valid の要素の数
  * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
+ * 対応する@a is_valid がtrueの場合、NaNであってはならない。
  * @return (validでないデータを除いた)ソートされた要素数( <= elements)
  * @~
  * MT-safe

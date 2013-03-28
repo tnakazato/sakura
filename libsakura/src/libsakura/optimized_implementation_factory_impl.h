@@ -77,13 +77,13 @@ public:
 class StatisticsDefault: public Statistics {
 public:
 	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) &result) const;
+			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
 
 class StatisticsAfterSandyBridge: public Statistics {
 public:
 	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) &result) const;
+			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
 
 } // namespace LIBSAKURA_PREFIX

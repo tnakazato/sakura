@@ -58,7 +58,7 @@ public:
 	virtual ~Statistics() {
 	}
 	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) &result) const = 0;
+			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
 };
 
 class OptimizedImplementationFactory {

@@ -90,7 +90,7 @@
 		<buildTargets>
 			<target name="Run_Cmake" path="build" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>cmake</buildCommand>
-				<buildArguments>-DCMAKE_MODULE_PATH=${ProjDirPath}/cmake-modules chdir ${ProjDirPath}/build cmake -DCMAKE_INSTALL_PREFIX:PATH=${ProjDirPath}/build -DBUILD_DOC:BOOL=ON ..</buildArguments>
+				<buildArguments>-DCMAKE_MODULE_PATH=${ProjDirPath}/cmake-modules chdir ${ProjDirPath}/build cmake -DCMAKE_INSTALL_PREFIX:PATH=${ProjDirPath}/build/installed -DBUILD_DOC:BOOL=ON ..</buildArguments>
 				<buildTarget/>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
