@@ -121,7 +121,7 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
 
 /**
  * @~japanese
- * @brief validな値のみを先頭に詰めてソートする。
+ * @brief validな値のみを先頭に詰めて昇順にソートする。
  * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
  * @param elements @a data 及び@a is_valid の要素の数
