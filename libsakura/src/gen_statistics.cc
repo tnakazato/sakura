@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdlib>
+#include <climits>
 
 #include "libsakura/sakura.h"
 #include "libsakura/optimized_implementation_factory.h"
@@ -21,26 +22,39 @@ extern "C" void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
 
 namespace {
 
-template <typename T>
+template<typename T, typename COMPARATOR>
+void QuickSort(T data[], size_t elements) {
+	// TODO implement quick sort using expression template to avoid overhead of calling COMPARATOR.
+	qsort(data, elements, sizeof(T),
+			reinterpret_cast<int (*)(void const*,
+					void const*)>(COMPARATOR::Compare));
+}
+
+template<typename T>
 class AscendingOrder {
 public:
 	static int Compare(T const*a, T const*b) {
-		// TODO try to optimize below to eliminate branch
-		if (*a < *b) {
-			return -1;
-		} else		if (*a > *b) {
-			return 1;
+		if (false) {
+			auto tmp = *a - *b;
+			int sign = static_cast<int>(std::abs(tmp) / tmp);
+			if (static_cast<int>(0. / 0.) == INT_MIN) {
+				sign <<= 1;
+			} else if (static_cast<int>(0. / 0.) == 0) {
+			} else {
+				assert(false);
+			}
+			return sign;
 		} else {
-			return 0;
+			if (*a < *b) {
+				return -1;
+			} else if (*a > *b) {
+				return 1;
+			} else {
+				return 0;
+			}
 		}
 	}
 };
-
-template <typename T, typename COMPARATOR >
-void QuickSort(T data[], size_t elements) {
-	// TODO implement so that calling COMPARATOR inline for better performance.
-	qsort(data, elements, sizeof(T), reinterpret_cast<int (*)(void const*, void const*)>(COMPARATOR::Compare));
-}
 
 }
 
@@ -54,6 +68,7 @@ extern "C" size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(
 	size_t valid_count = 0;
 	for (size_t i = 0; i < elements; ++i) {
 		if (is_valid[i]) {
+			assert(!isnanf(data[i]));
 			data[valid_count] = data[i];
 			++valid_count;
 		}
