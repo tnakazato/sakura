@@ -37,9 +37,9 @@ bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) {
 	return addr % ALIGNMENT == 0;
 }
 
-void const *LIBSAKURA_SYMBOL(AlignAny)(void const *vp, size_t size_of_arena,
+void const *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void const *vp,
 		size_t size_required) {
-	assert(vp != NULL );
+	assert(vp != NULL);
 	if (vp == NULL ) {
 		return NULL ;
 	}
@@ -51,14 +51,14 @@ void const *LIBSAKURA_SYMBOL(AlignAny)(void const *vp, size_t size_of_arena,
 	return (void const *) new_addr;
 }
 
-float const *LIBSAKURA_SYMBOL(AlignFloat)(float const *fp,
-		size_t elements_of_arena, size_t elements_required) {
-	return LIBSAKURA_SYMBOL(AlignAny)(fp, elements_of_arena * sizeof(float),
+float const *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
+		float const *fp, size_t elements_required) {
+	return LIBSAKURA_SYMBOL(AlignAny)(elements_in_arena * sizeof(float), fp,
 			elements_required * sizeof(float));
 }
 
-double const *LIBSAKURA_SYMBOL(AlignDouble)(double const *dp,
-		size_t elements_of_arena, size_t elements_required) {
-	return LIBSAKURA_SYMBOL(AlignAny)(dp, elements_of_arena * sizeof(double),
+double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
+		double const *dp, size_t elements_required) {
+	return LIBSAKURA_SYMBOL(AlignAny)(elements_in_arena * sizeof(double), dp,
 			elements_required * sizeof(double));
 }

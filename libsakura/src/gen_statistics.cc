@@ -6,8 +6,8 @@
 #include "libsakura/optimized_implementation_factory.h"
 #include "libsakura/localdef.h"
 
-extern "C" void LIBSAKURA_SYMBOL(ComputeStatistics)(float const data[],
-		bool const is_valid[], size_t elements,
+extern "C" void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t elements,
+		float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResult) *result) {
 	assert(data != nullptr);
 	assert(is_valid != nullptr);
@@ -27,8 +27,7 @@ void QuickSort(T data[], size_t elements) {
 	// TODO implement quick sort using expression template to avoid overhead of calling COMPARATOR.
 	qsort(data, elements, sizeof(T),
 			reinterpret_cast<int (*)(void const*,
-					void const*)>(COMPARATOR::Compare));
-}
+					void const*)>(COMPARATOR::Compare));}
 
 template<typename T>
 class AscendingOrder {
@@ -58,8 +57,8 @@ public:
 
 }
 
-extern "C" size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(
-		bool const is_valid[], size_t elements, float data[]) {
+extern "C" size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t elements,
+		bool const is_valid[], float data[]) {
 	assert(data != nullptr);
 	assert(is_valid != nullptr);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));

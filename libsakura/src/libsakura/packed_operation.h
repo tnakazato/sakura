@@ -131,28 +131,28 @@ public:
 template<typename Arch, typename ElementType>
 class LIBSAKURA_SYMBOL(SimdCompare) {
 public:
-	static inline typename Arch::PacketType Eq(
+	static inline typename Arch::PacketType Equal(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Ne(
+	static inline typename Arch::PacketType NotEqual(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Lt(
+	static inline typename Arch::PacketType LessThan(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Le(
+	static inline typename Arch::PacketType LessOrEqual(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
@@ -165,7 +165,7 @@ template<typename Arch>
 class LIBSAKURA_SYMBOL(SimdCompare)<Arch, float> {
 	typedef float Type;
 public:
-	static inline typename Arch::PacketType Eq(
+	static inline typename Arch::PacketType Equal(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -177,7 +177,7 @@ public:
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Ne(
+	static inline typename Arch::PacketType NotEqual(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -189,7 +189,7 @@ public:
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Lt(
+	static inline typename Arch::PacketType LessThan(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -201,7 +201,7 @@ public:
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Le(
+	static inline typename Arch::PacketType LessOrEqual(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -219,7 +219,7 @@ template<typename Arch>
 class LIBSAKURA_SYMBOL(SimdCompare)<Arch, double> {
 	typedef double Type;
 public:
-	static inline typename Arch::PacketType Eq(
+	static inline typename Arch::PacketType Equal(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -231,7 +231,7 @@ public:
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Ne(
+	static inline typename Arch::PacketType NotEqual(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -243,7 +243,7 @@ public:
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Lt(
+	static inline typename Arch::PacketType LessThan(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -255,7 +255,7 @@ public:
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Le(
+	static inline typename Arch::PacketType LessOrEqual(
 			typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
@@ -347,7 +347,7 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchAVX), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Eq(
+	static inline Arch::PacketType Equal(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -355,7 +355,7 @@ public:
 				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_EQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType Ne(
+	static inline Arch::PacketType NotEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -363,7 +363,7 @@ public:
 				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NEQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType Lt(
+	static inline Arch::PacketType LessThan(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -371,7 +371,7 @@ public:
 				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NGE_UQ);
 		return result;
 	}
-	static inline Arch::PacketType Le(
+	static inline Arch::PacketType LessOrEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -385,7 +385,7 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchAVX), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Eq(
+	static inline Arch::PacketType Equal(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -393,7 +393,7 @@ public:
 				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_EQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType Ne(
+	static inline Arch::PacketType NotEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -401,7 +401,7 @@ public:
 				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NEQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType Lt(
+	static inline Arch::PacketType LessThan(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -409,7 +409,7 @@ public:
 				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NGE_UQ);
 		return result;
 	}
-	static inline Arch::PacketType Le(
+	static inline Arch::PacketType LessOrEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -499,7 +499,7 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Eq(
+	static inline Arch::PacketType Equal(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -507,7 +507,7 @@ public:
 				_mm_cmpeq_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Ne(
+	static inline Arch::PacketType NotEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -515,7 +515,7 @@ public:
 				_mm_cmpneq_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Lt(
+	static inline Arch::PacketType LessThan(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -523,7 +523,7 @@ public:
 				_mm_cmplt_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Le(
+	static inline Arch::PacketType LessOrEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -537,7 +537,7 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchSSE), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Eq(
+	static inline Arch::PacketType Equal(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -545,7 +545,7 @@ public:
 				_mm_cmpeq_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Ne(
+	static inline Arch::PacketType NotEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -553,7 +553,7 @@ public:
 				_mm_cmpneq_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Lt(
+	static inline Arch::PacketType LessThan(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -561,7 +561,7 @@ public:
 				_mm_cmplt_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Le(
+	static inline Arch::PacketType LessOrEqual(
 			Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -615,7 +615,7 @@ public:
  */
 template<typename Arch, typename ScalarType, typename PacketAction, typename ScalarAction,
 		typename Context>
-void LIBSAKURA_SYMBOL(SimdIterate)(ScalarType data[], size_t elements,
+void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 		Context *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	size_t const kUnit =
