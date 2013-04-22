@@ -20,8 +20,14 @@
 extern "C" {
 #endif
 
+/**
+ * @~japanese
+ * @brief 関数の呼び出し結果を表す。
+ *
+ */
 typedef enum {
-	LIBSAKURA_SYMBOL(Status_kOK) = 0, LIBSAKURA_SYMBOL(Status_kNG) = 1
+	LIBSAKURA_SYMBOL(Status_kOK) = 0, /**< 成功または正常 */
+	LIBSAKURA_SYMBOL(Status_kNG) = 1 /**< 失敗または異常 */
 }LIBSAKURA_SYMBOL(Status);
 /**
  * @~english
@@ -29,15 +35,34 @@ typedef enum {
  * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
  * @~japanese
  * @brief Sakuraライブラリを初期化する。
+ *
+ * 他の全てのSakuraライブラリAPIの呼び出しに先立って、呼び出すこと。
+ * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
+ * @ref sakura_CleanUp() の呼び出しを挟まず、複数回この関数を呼び出してはならない。
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)();
 
 /**
  * @~english
+ * @brief Cleans up Sakura Library
+ * @~japanese
+ * @brief Sakuraライブラリをクリーンアップする。
+ *
+ * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
+ * また、この関数を呼び出す時点で、他のSakuraライブラリの呼び出しは全て完了しており、以後の呼び出しも発生しないこと。
+ * @~
+ * MT-unsafe
+ */
+void LIBSAKURA_SYMBOL(CleanUp)();
+
+/**
+ * @~english
  * @brief Returns the current time.
  * @~japanese
- * @brief 現在時刻(単位は秒)を返す。精度はgettimeofday(2)依存。
+ * @brief 現在時刻(単位は秒)を返す。
+ *
+ * 精度はgettimeofday(2)依存。
  * @~
  * MT-safe
  */
@@ -48,7 +73,8 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
  */
 /**
  * @~japanese
- * @brief SAKURAが想定するアライメントに、@a ptr が合っているか調べる
+ * @brief Sakuraライブラリが想定するアライメントに、@a ptr が合っているか調べる
+ *
  * @param ptr アラインされているか調べたいアドレス。NULL も受け付ける。
  * @return アラインされているなら true , そうでないなら false
  * @~
@@ -59,8 +85,9 @@ bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
 
 /**
  * @~japanese
- * @brief SAKURAがベクトル演算を行う配列に期待するアライメントを返す
- * @return 戻り値の倍数アドレスにアラインされることを期待する
+ * @brief Sakuraライブラリがベクトル演算を行う配列に期待するアライメントを返す
+ *
+ * @return Sakuraライブラリは、戻り値の倍数アドレスにアラインされることを期待する
  * @~
  * MT-safe
  */
@@ -71,6 +98,7 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
  * @brief @a arena がアラインされていないならば、
  * アドレスを必要最小限増加させ、アラインされたアドレスを返す。
  * @a arena がアラインされていれば@a arena を返す。
+ *
  * @param arena 確保されている領域の先頭アドレス
  * @param size_of_arena 確保されている領域のサイズ
  * @param size_required アライン後も利用可能でなければならないサイズ
@@ -95,8 +123,8 @@ typedef struct {
 	float mean; /**< 平均 */
 	float rms; /**< 二乗平均平方根 */
 	float stddev; /**< 分散 */
-	float min; /**< 最小 */
-	float max; /**< 最大 */
+	float min; /**< 最小値 */
+	float max; /**< 最大値 */
 	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
 	int index_of_max; /**< 最大値のインデックス(有効な値がなければ-1) */
 }LIBSAKURA_SYMBOL(StatisticsResult);
@@ -105,6 +133,7 @@ typedef struct {
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
  * @ref sakura_StatisticsResult を参照。
+ *
  * @param elements @a data 及び@a is_valid の要素の数
  * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、NaNであってはならない。
  * @param is_valid データのマスク。この値が false だと、
@@ -121,6 +150,7 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t elements, float const data[],
 /**
  * @~japanese
  * @brief validな値のみを先頭に詰めて昇順にソートする。
+ *
  * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
  * @param elements @a data 及び@a is_valid の要素の数

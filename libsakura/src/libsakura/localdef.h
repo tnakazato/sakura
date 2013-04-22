@@ -8,7 +8,7 @@
 #ifndef LIBSAKURA_LIBSAKURA_LOCALDEF_H_
 #define LIBSAKURA_LIBSAKURA_LOCALDEF_H_
 
-/* Don't include this header file from other header files.
+/** Don't include this header file from other header files.
  * This file includes the definitions only for internal use of libsakura.
  */
 
