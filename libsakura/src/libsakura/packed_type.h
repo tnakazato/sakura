@@ -19,6 +19,12 @@
 
 #include <immintrin.h>
 
+/**
+ * @~japanese
+ * @brief 	一度のベクトル演算で処理するデータの固まり(Packet)を格納する型(AVX用)である。
+ *
+ * 各メンバーの詳細は@ref sakura_SimdPacketMMX を参照。
+ */
 union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 	enum {
 		kSize = sizeof(__m256 ),
@@ -60,7 +66,15 @@ typedef struct {
 	typedef LIBSAKURA_SYMBOL(SimdPacketAVX) PacketType;
 }LIBSAKURA_SYMBOL(SimdArchAVX);
 
+/**
+ * @~japanese
+ * @brief サポートされている最新のSIMDアーキテクチャー
+ */
 typedef LIBSAKURA_SYMBOL(SimdArchAVX) LIBSAKURA_SYMBOL(SimdArchNative);
+/**
+ * @~japanese
+ * @brief サポートされている最新のSIMDアーキテクチャーのパケット型
+ */
 typedef LIBSAKURA_SYMBOL(SimdPacketAVX) LIBSAKURA_SYMBOL(SimdPacketNative);
 #define LIBSAKURA_PACKET_NATIVE_DEFINED 1
 
@@ -70,6 +84,12 @@ typedef LIBSAKURA_SYMBOL(SimdPacketAVX) LIBSAKURA_SYMBOL(SimdPacketNative);
 
 #include <xmmintrin.h>
 
+/**
+ * @~japanese
+ * @brief 	一度のベクトル演算で処理するデータの固まり(Packet)を格納する型(SSE用)である。
+ *
+ * 各メンバーの詳細は@ref sakura_SimdPacketMMX を参照。
+ */
 union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 	enum {
 		kSize = sizeof(__m128),
@@ -118,13 +138,12 @@ typedef LIBSAKURA_SYMBOL(SimdPacketSSE) LIBSAKURA_SYMBOL(SimdPacketNative);
 
 #endif /* defined(__SSE__) */
 
-#if defined(__MMX__)
+#if defined(__MMX__) || defined(__x86_64__)
 /* for 64 bit CPU */
 
 /**
- * @brief
  * @~japanese
- * 	一度のベクトル演算で処理するデータの固まり(Packet)を格納する型である。
+ * @brief 	一度のベクトル演算で処理するデータの固まり(Packet)を格納する型(MMX用)である。
  */
 union LIBSAKURA_SYMBOL(SimdPacketMMX) {
 	enum {

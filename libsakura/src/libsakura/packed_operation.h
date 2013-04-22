@@ -21,7 +21,7 @@
 /**
  * @~japanese
  * ベクトル演算する要素の型の特性を表現する型
- * @tparam Arch SIMDアーキテクチャーを識別する型。通常は、LIBSAKURA_SYMBOL(SimdArchNative)を指定すれば良い。
+ * @tparam Arch SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
  * @tparam ElementType ベクトル演算する要素の型。float or double or int32_t or int64_t
  */
 template<typename Arch, typename ElementType>
@@ -36,7 +36,7 @@ struct LIBSAKURA_SYMBOL(SimdScalarType) {
 /**
  * @~japanese
  *
- * @tparam Arch SIMDアーキテクチャーを識別する型。通常は、LIBSAKURA_SYMBOL(SimdArchNative)を指定すれば良い。
+ * @tparam Arch SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
  * @tparam ElementType ベクトル演算する要素の型。float or double or int32_t or int64_t
  */
 template<typename Arch, typename ElementType>
@@ -575,14 +575,16 @@ public:
 
 /**
  * @~japanese
+ * @brief アラインされたデータ(要素数はSIMDパケット長の倍数でなくても良い)を、ベクトル処理とスカラー処理を組み合わせて、繰り返し処理する。
+ *
  * 次のように処理することで、@a data 配列を処理する。
  *
  * @a PacketAction::prologueを1回、@a PacketAction::action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::epilogueを一回呼ぶ。
  *
  * 次に、@a ScalarAction::prologueを1回、@a ScalarAction::action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::epilogueを一回呼ぶ。
  *
- * @tparam Arch	SIMDアーキテクチャーを識別する型。通常は、LIBSAKURA_SYMBOL(SimdArchNative)を指定すれば良い。
- *  LIBSAKURA_SYMBOL(SimdArchAVX) or LIBSAKURA_SYMBOL(SimdArchSSE) or LIBSAKURA_SYMBOL(SimdArchMMX)
+ * @tparam Arch	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
+ *  @ref sakura_SimdArchAVX or @ref sakura_SimdArchSSE or @ref sakura_SimdArchMMX
  * @tparam ScalarType	@a data の要素(スカラー)の型
  * @tparam PacketAction	SIMD処理の内容。次のメソッドを備えた型であること。
  * <pre>

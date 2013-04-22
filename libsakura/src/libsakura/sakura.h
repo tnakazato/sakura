@@ -26,8 +26,14 @@ extern "C" {
  *
  */
 typedef enum {
-	LIBSAKURA_SYMBOL(Status_kOK) = 0, /**< 成功または正常 */
-	LIBSAKURA_SYMBOL(Status_kNG) = 1 /**< 失敗または異常 */
+	/**
+	 * @~japanese
+	 * @brief 成功または正常
+	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
+	/**
+	 * @~japanese
+	 * @brief 失敗または異常
+	 */LIBSAKURA_SYMBOL(Status_kNG) = 1
 }LIBSAKURA_SYMBOL(Status);
 /**
  * @~english
@@ -156,7 +162,7 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t elements, float const data[],
  * @param elements @a data 及び@a is_valid の要素の数
  * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
  * 対応する@a is_valid がtrueの場合、NaNであってはならない。
- * @return (validでないデータを除いた)ソートされた要素数( <= elements)
+ * @return (validでないデータを除いた)ソートされた要素数( <= @a elements)
  * @~
  * MT-safe
  */
