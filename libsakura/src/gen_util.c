@@ -17,6 +17,10 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)() {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+void LIBSAKURA_SYMBOL(CleanUp)() {
+	/* any code to cleanup libsakura */
+}
+
 double LIBSAKURA_SYMBOL(GetCurrentTime)() {
 	struct timeval tv;
 	int result = gettimeofday(&tv, NULL );
