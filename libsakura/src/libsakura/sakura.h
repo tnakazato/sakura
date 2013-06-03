@@ -120,7 +120,25 @@ float const *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
 double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
 		double const *arena, size_t elements_required);
 
+
 /**
+ * @~japanese
+ * Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型。
+ * 関数はリエントラントな実装でなければならない。
+ * @param size
+ */
+typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
+
+/**
+ * @~japanese
+ * Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型。
+ * 関数はリエントラントな実装でなければならない。
+ * @param pointer
+ */
+typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
+
+/**
+ * @~japanese
  * @ref sakura_ComputeStatistics の結果を格納する構造体。
  */
 typedef struct {
@@ -140,7 +158,7 @@ typedef struct {
  * @brief 統計値を計算する。どのような統計値を算出するかは
  * @ref sakura_StatisticsResult を参照。
  *
- * @param elements @a data 及び@a is_valid の要素の数
+ * @param num_data @a data 及び@a is_valid の要素の数
  * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、NaNであってはならない。
  * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
@@ -150,7 +168,7 @@ typedef struct {
  * @~
  * MT-safe
  */
-void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t elements, float const data[],
+void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data, float const data[],
 		bool const is_valid[], LIBSAKURA_SYMBOL(StatisticsResult) *result);
 
 /**
@@ -159,14 +177,14 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t elements, float const data[],
  *
  * @param is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
- * @param elements @a data 及び@a is_valid の要素の数
+ * @param num_data @a data 及び@a is_valid の要素の数
  * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
  * 対応する@a is_valid がtrueの場合、NaNであってはならない。
- * @return (validでないデータを除いた)ソートされた要素数( <= @a elements)
+ * @return (validでないデータを除いた)ソートされた要素数( <= @a num_data)
  * @~
  * MT-safe
  */
-size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t elements,
+size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
 		bool const is_valid[], float data[]);
 
 #ifdef __cplusplus
