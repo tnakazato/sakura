@@ -13,6 +13,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include <libsakura/config.h>
 
@@ -33,8 +34,17 @@ typedef enum {
 	/**
 	 * @~japanese
 	 * @brief 失敗または異常
-	 */LIBSAKURA_SYMBOL(Status_kNG) = 1
+	 */LIBSAKURA_SYMBOL(Status_kNG) = 1,
+	/**
+	 * @~japanese
+	 * @brief 引数が不正だった。
+	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2,
+	/**
+	 * @~japanese
+	 * @brief 原因不明のエラー。
+	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
 }LIBSAKURA_SYMBOL(Status);
+
 /**
  * @~english
  * @brief Initializes Sakura Library
@@ -186,6 +196,59 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data, float const data[],
  */
 size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
 		bool const is_valid[], float data[]);
+
+/**
+ * @~japanese
+ * @brief 畳み込みしながらグリッドする。
+ * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
+ * @param start_spectrum
+ * @param end_spectrum
+ * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。
+ * @param x
+ * @param y
+ * @param support
+ * @param sampling
+ * @param num_polarizations
+ * @param polarization_map	各要素の値は、[0,num_polarization_for_grid)でなければならない。要素数は、num_polarizationでなければならない。
+ * @param num_channels
+ * @param channel_map	各要素の値は、[0,num_channels_for_grid)でなければならない。要素数は、num_channelsでなければならない。
+ * @param mask
+ * @param value
+ * @param weight
+ * @param do_weight
+ * @param num_convolution_table >= ceil(sqrt(2.)*(support+1)*sampling)
+ * @param convolution_table
+ * @param num_polarization_for_grid
+ * @param num_channels_for_grid
+ * @param width
+ * @param height
+ * @param weight_sum
+ * @param weight_of_grid
+ * @param grid
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
+		size_t start_spectrum, size_t end_spectrum,
+		bool const spectrum_mask[/*num_spectra*/],
+		double const x[/*num_spectra*/],
+		double const y[/*num_spectra*/],
+		size_t support, size_t sampling,
+		size_t num_polarization,
+		uint32_t const polarization_map[/*num_polarization*/],
+		size_t num_channels,
+		uint32_t const channel_map[/*num_channels*/],
+		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
+		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
+		float const weight/*[num_spectra]*/[/*num_channels*/],
+		bool do_weight,
+		size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
+		float const convolution_table[/*num_convolution_table*/],
+		size_t num_polarization_for_grid, size_t num_channels_for_grid,
+		size_t width, size_t height,
+		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
+		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
+		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
+		);
+
 
 #ifdef __cplusplus
 }

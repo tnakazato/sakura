@@ -25,15 +25,16 @@ option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
 
 set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11 -m64")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG -ftree-vectorizer-verbose=3")
+set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorizer-verbose=3")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
-set(ADDITIONAL_CXXFLAGS_Default "-DARCH_SUFFIX=Default")
+set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
 set(MULTI_SOURCE gridding.cc statistics.cc)
-set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_statistics.cc gen_util.c)
+set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_statistics.cc gen_util.c gen_gridding.cc)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"

@@ -22,35 +22,36 @@ public:
 	virtual ~Gridding() {
 	}
 
-	virtual void GridSd(double const xy[/*nrow*/][2],
-			value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
-			integer nvispol, integer nvischan, bool dowt,
-			flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
-			integer const rflag[/*nrow*/],
-			float const weight/*[nrow]*/[/*nvischan*/], integer nrow,
-			integer irow, value_t grid/*[nchan][npol][ny]*/[/*nx*/],
-			float wgrid/*[nchan][npol][ny]*/[/*nx*/], integer nx, integer ny,
-			integer npol, integer nchan, integer support, integer sampling,
-			float const conv_table[], integer const chanmap[/*nvischan*/],
-			integer const polmap[/*nvispol*/],
-			double sumwt/*[nchan]*/[/*npol*/]) const = 0;
-	virtual void GridSdForSpeed(double const xy[/*nrow*/][2],
-			value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
-			integer nvispol, integer nvischan, bool dowt,
-			flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
-			integer const rflag[/*nrow*/],
-			float const weight/*[nrow]*/[/*nvischan*/], integer nrow,
-			integer irow, value_t grid/*[ny][nx][nchan]*/[/*npol*/],
-			float wgrid/*[ny][nx][nchan]*/[/*npol*/], integer nx, integer ny,
-			integer npol, integer nchan, integer support, integer sampling,
-			float const conv_table[], integer const chanmap[/*nvischan*/],
-			integer const polmap[/*nvispol*/],
-			double sumwt/*[nchan]*/[/*npol*/]) const = 0;
+	virtual void GridConvolving(size_t num_spectra,
+			size_t start_spectrum, size_t end_spectrum,
+			bool const spectrum_mask[/*num_spectra*/],
+			double const x[/*num_spectra*/],
+			double const y[/*num_spectra*/],
+			size_t support, size_t sampling,
+			size_t num_polarization,
+			uint32_t const polarization_map[/*num_polarization*/],
+			size_t num_channels,
+			uint32_t const channel_map[/*num_channels*/],
+			bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
+			float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
+			float const weight/*[num_spectra]*/[/*num_channels*/],
+			bool do_weight,
+			size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
+			float const convolution_table[/*num_convolution_table*/],
+			size_t num_polarization_for_grid, size_t num_channels_for_grid,
+			size_t width, size_t height,
+			double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
+			float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
+			float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
+			) const = 0;
+
+#if 0
 	virtual void Transform(integer ny, integer nx, integer nchan, integer npol,
 			value_t grid_from/*[ny][nx][nchan]*/[/*npol*/],
 			float wgrid_from/*[ny][nx][nchan]*/[/*npol*/],
 			value_t gridTo/*[nchan][npol][ny]*/[/*nx*/],
 			float wgridTo/*[nchan][npol][ny]*/[/*nx*/]) const = 0;
+#endif
 };
 
 class Statistics {

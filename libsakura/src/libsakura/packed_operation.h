@@ -18,6 +18,16 @@
 
 // namespace {
 
+class LIBSAKURA_SYMBOL(SimdConvert) {
+public:
+	static inline LIBSAKURA_SYMBOL(SimdPacketSSE)
+	byteToFloat(LIBSAKURA_SYMBOL(SimdPacketMMX) bytes) {
+		LIBSAKURA_SYMBOL(SimdPacketSSE) result;
+		result.raw_float = _mm_cvtpi8_ps(bytes.raw_int64);
+		return result;
+	}
+};
+
 /**
  * @~japanese
  * ベクトル演算する要素の型の特性を表現する型
@@ -30,7 +40,6 @@ struct LIBSAKURA_SYMBOL(SimdScalarType) {
 	enum LIBSAKURA_SYMBOL(SimdElementsInPacket) {
 		kElementsInPacket = Arch::PacketType::kSize / sizeof(Type)
 	};
-
 };
 
 /**
@@ -98,6 +107,20 @@ public:
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
+	static inline typename Arch::PacketType Mul(
+			typename Arch::PacketType lhs,
+			typename Arch::PacketType rhs) {
+		assert(false);
+		typename Arch::PacketType result = { 0 };
+		return result;
+	}
+	static inline typename Arch::PacketType Div(
+			typename Arch::PacketType lhs,
+			typename Arch::PacketType rhs) {
+		assert(false);
+		typename Arch::PacketType result = { 0 };
+		return result;
+	}
 };
 
 template<typename Arch>
@@ -123,6 +146,28 @@ public:
 				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_float.v[i] = lhs.v_float.v[i] - rhs.v_float.v[i];
+		}
+		return result;
+	}
+	static inline typename Arch::PacketType Mul(
+			typename Arch::PacketType const &lhs,
+			typename Arch::PacketType const &rhs) {
+		typename Arch::PacketType result;
+		for (size_t i = 0;
+				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				++i) {
+			result.v_float.v[i] = lhs.v_float.v[i] * rhs.v_float.v[i];
+		}
+		return result;
+	}
+	static inline typename Arch::PacketType Div(
+			typename Arch::PacketType lhs,
+			typename Arch::PacketType rhs) {
+		typename Arch::PacketType result;
+		for (size_t i = 0;
+				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				++i) {
+			result.v_float.v[i] = lhs.v_float.v[i] / rhs.v_float.v[i];
 		}
 		return result;
 	}
@@ -339,6 +384,22 @@ public:
 				rhs.raw_float);
 		return result;
 	}
+	static inline Arch::PacketType Mul(
+			Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_mul_ps(lhs.raw_float,
+				rhs.raw_float);
+		return result;
+	}
+	static inline Arch::PacketType Div(
+			Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_div_ps(lhs.raw_float,
+				rhs.raw_float);
+		return result;
+	}
 };
 
 /*----------------------------------------------------*/
@@ -421,7 +482,7 @@ public:
 
 #endif /* defined(__AVX__) */
 
-#if defined(__SSE__)
+#if defined(__SSE4_1__)
 
 template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
@@ -488,6 +549,22 @@ public:
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float = _mm_sub_ps(lhs.raw_float,
+				rhs.raw_float);
+		return result;
+	}
+	static inline Arch::PacketType Mul(
+			Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm_mul_ps(lhs.raw_float,
+				rhs.raw_float);
+		return result;
+	}
+	static inline Arch::PacketType Div(
+			Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm_div_ps(lhs.raw_float,
 				rhs.raw_float);
 		return result;
 	}
