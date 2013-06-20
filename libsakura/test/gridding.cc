@@ -75,7 +75,7 @@ public:
 
 typedef AlignedMemory<32> AlignedMem;
 
-#define NROW (size_t(1024))
+#define NROW (size_t(1024)/2)
 #define ROW_FACTOR (size_t(1)) //NROW * ROW_FACTOR分の行を処理する
 #define NVISCHAN (size_t(1024))
 #define NVISPOL (size_t(4))
@@ -100,6 +100,8 @@ bool rflag_[NROW] AVX;
 float weight[NROW][NVISCHAN] AVX;
 double sumwt[NCHAN][NPOL] AVX;
 double sumwt2[NPOL][NCHAN] AVX;
+
+double fortran_time;
 
 void initTabs() {
 	for (size_t i = 0; i < elementsof(convTab); i++) {
@@ -252,7 +254,7 @@ bool cmpsumwt(double (*a)[NCHAN][NPOL], double (*b)[NPOL][NCHAN]) {
 		for (size_t j = 0; j < elementsof((*a)[0]); j++) {
 			double aa = (*a)[i][j];
 			double bb = (*b)[j][i];
-			if (aa == bb || (abs(aa-bb) / (abs(aa) + abs(bb))) < 0.0000001) {
+			if (aa == bb || (abs(aa-bb) / (abs(aa) + abs(bb))) < 0.0000002) {
 				if (differ) {
 					cout << "... just before [" << i << "][" << j << "]\n";
 				}
@@ -321,7 +323,10 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 			EXPECT_EQ(result, sakura_Status_kOK);
 		}
 		double end = currenttime();
-		cout << "done. " << end - start << " sec\n";
+		double new_time = end - start;
+		cout << "done. " << new_time << " sec\n";
+		cout << "ratio: " << (new_time / fortran_time) << ", "
+				<< (fortran_time / new_time) << "times faster" << endl;
 	}
 #if !NO_VERIFY
 	EXPECT_TRUE(cmpgrid(grid, grid2));
@@ -351,7 +356,8 @@ TEST(Gridding, Basic) {
 			(*xy_)[i][1] = (*y_)[i] = NY * drand48();
 		}
 		double end = currenttime();
-		cout << "done. " << end - start << " sec\n";
+		double new_time = end - start;
+		cout << "done. " << new_time << " sec\n";
 	}
 
 	AlignedMem *valueMem = AlignedMem::newAlignedMemory(
@@ -420,7 +426,8 @@ TEST(Gridding, Basic) {
 #endif
 		}
 		double end = currenttime();
-		cout << "done. " << end - start << " sec\n";
+		fortran_time = end - start;
+		cout << "done. " << fortran_time << " sec\n";
 	}
 #if NO_VERIFY
 	delete gridMem;

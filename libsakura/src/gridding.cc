@@ -90,6 +90,33 @@ struct VWeightedValue {
 	}
 };
 
+template<typename WeightFunc>
+struct ScalarImpl {
+	static inline void ChannelLoop(
+			float convolution_factor,
+			integer const num_channels,
+			uint32_t const channel_map[/*num_channels*/],
+			float const weight[/*num_channels*/],
+			bool const mask[/*num_channels*/],
+			float const value[/*num_channels*/],
+			integer num_channels_for_grid,
+			double weight_sum[/*num_channels_for_grid*/],
+			float grid[/*num_channels_for_grid*/],
+			float weight_of_grid[/*num_channels_for_grid*/]
+			) {
+		for (integer ichan = 0; ichan < num_channels; ++ichan) {
+			if (mask[ichan]) {
+				integer out_chan = channel_map[ichan];
+				float the_weight = weight[ichan] * convolution_factor;
+				float nvalue = WeightFunc::func(the_weight, value[ichan]);
+				grid[out_chan] += nvalue;
+				weight_of_grid[out_chan] += the_weight;
+				weight_sum[out_chan] += the_weight;
+			}
+		}
+	}
+};
+
 #if defined(__AVX__)
 template<typename WeightFunc>
 struct VectorizedImpl {
@@ -107,42 +134,66 @@ struct VectorizedImpl {
 			) {
 		LIBSAKURA_SYMBOL(SimdPacketNative) pconvolution_factor;
 		pconvolution_factor.set1(convolution_factor);
-		LIBSAKURA_SYMBOL(SimdPacketMMX) const*vmask =
-				(LIBSAKURA_SYMBOL(SimdPacketMMX) const*)mask;
+
+		float const *vmask = reinterpret_cast<float const *>(mask);
 
 		LIBSAKURA_SYMBOL(SimdPacketNative) const *vvalue =
 				(LIBSAKURA_SYMBOL(SimdPacketNative) const *)value;
 
 		LIBSAKURA_SYMBOL(SimdPacketNative) const *vweight =
 				(LIBSAKURA_SYMBOL(SimdPacketNative) const *)weight;
+
+		LIBSAKURA_SYMBOL(SimdPacketNative) *vgrid =
+				(LIBSAKURA_SYMBOL(SimdPacketNative) *)grid;
+		LIBSAKURA_SYMBOL(SimdPacketNative) *vweight_of_grid =
+				(LIBSAKURA_SYMBOL(SimdPacketNative) *)weight_of_grid;
+
+		LIBSAKURA_SYMBOL(SimdPacketNative) *vweight_sum =
+				(LIBSAKURA_SYMBOL(SimdPacketNative) *)weight_sum;
+
 		for (integer ichan = 0;
 				ichan < num_channels
 								/ LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
 				++ichan) {
-
 			LIBSAKURA_SYMBOL(SimdPacketNative) pweight;
-			pweight.v_prior[0] = LIBSAKURA_SYMBOL(SimdConvert)::byteToFloat(vmask[0]);
-			pweight.v_prior[1] = LIBSAKURA_SYMBOL(SimdConvert)::byteToFloat(vmask[1]);
-			vmask+=2;
+			pweight.raw_float =
+			_mm256_cvtepi32_ps(_mm256_castps_si256(_mm256_insertf128_ps(_mm256_castps128_ps256(
+					_mm_castsi128_ps(_mm_cvtepi8_epi32(_mm_castps_si128(_mm_load1_ps(&vmask[0]))))),
+					_mm_castsi128_ps(_mm_cvtepi8_epi32(_mm_castps_si128(_mm_load1_ps(&vmask[1])))),
+					1)));
 			pweight = LIBSAKURA_SYMBOL(SimdMath)<
 					LIBSAKURA_SYMBOL(SimdArchNative), float>::Mul(pweight,
 					pconvolution_factor);
 			pweight = LIBSAKURA_SYMBOL(SimdMath)<
 					LIBSAKURA_SYMBOL(SimdArchNative), float>::Mul(pweight,
 					*vweight);
-			vweight++;
-			LIBSAKURA_SYMBOL(SimdPacketNative) pvalue = WeightFunc::func(pweight, *vvalue);
-			vvalue++;
-#if 0
-			for (int i = 0; i < LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
-					i++) {
-				uint32_t out_chan = channel_map[i];
-				grid[out_chan] += pvalue.v_float.v[i];
-				weight_of_grid[out_chan] += pweight.v_float.v[i];
-				weight_sum[out_chan] += pweight.v_float.v[i];
-			}
-#else
-#endif
+			++vweight;
+			LIBSAKURA_SYMBOL(SimdPacketNative) pvalue = WeightFunc::func(
+					pweight, *vvalue);
+			++vvalue;
+			*vgrid = LIBSAKURA_SYMBOL(SimdMath)<
+					LIBSAKURA_SYMBOL(SimdArchNative), float>::Add(*vgrid,
+					pvalue);
+			++vgrid;
+
+			*vweight_of_grid = LIBSAKURA_SYMBOL(SimdMath)<
+					LIBSAKURA_SYMBOL(SimdArchNative), float>::Add(
+					*vweight_of_grid, pweight);
+			++vweight_of_grid;
+
+			vweight_sum[0] = LIBSAKURA_SYMBOL(SimdMath)<
+					LIBSAKURA_SYMBOL(SimdArchNative), double>::Add(
+					vweight_sum[0],
+					LIBSAKURA_SYMBOL(SimdConvert)<
+							LIBSAKURA_SYMBOL(SimdArchNative)>::FloatToDouble(
+							pweight.v_prior.v[0]));
+			vweight_sum[1] = LIBSAKURA_SYMBOL(SimdMath)<
+					LIBSAKURA_SYMBOL(SimdArchNative), double>::Add(
+					vweight_sum[1],
+					LIBSAKURA_SYMBOL(SimdConvert)<
+							LIBSAKURA_SYMBOL(SimdArchNative)>::FloatToDouble(
+							pweight.v_prior.v[1]));
+			vweight_sum += 2;
 			channel_map += LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
 		}
 	}
@@ -162,62 +213,11 @@ struct VectorizedImpl {
 			float grid[/*num_channels_for_grid*/],
 			float weight_of_grid[/*num_channels_for_grid*/]
 			) {
-	}
-	static inline void ChannelLoop_(
-			float convolution_factor,
-			integer const num_channels,
-			uint32_t const channel_map[/*num_channels*/],
-			float const weight[/*num_channels*/],
-			bool const mask[/*num_channels*/],
-			float const value[/*num_channels*/],
-			integer num_channels_for_grid,
-			double weight_sum[/*num_channels_for_grid*/],
-			float grid[/*num_channels_for_grid*/],
-			float weight_of_grid[/*num_channels_for_grid*/]
-			) {
-		/* READONLY
-		 */
-		for (integer ichan = 0; ichan < num_channels; ++ichan) {
-			integer out_chan = channel_map[ichan];
-			float conv_factor = mask[ichan] ? convolution_factor : 0.;
-			float the_weight = weight[ichan] * conv_factor;
-			float nvalue = WeightFunc::func(the_weight, value[ichan]);
-			grid[out_chan] += nvalue;
-			weight_of_grid[out_chan] += the_weight;
-			weight_sum[out_chan] += the_weight;
-		}
+		assert(false);
 	}
 };
 
 #endif
-
-template<typename WeightFunc>
-struct ScalarImpl {
-	static inline void ChannelLoop(
-			float convolution_factor,
-			integer const num_channels,
-			uint32_t const channel_map[/*num_channels*/],
-			float const weight[/*num_channels*/],
-			bool const mask[/*num_channels*/],
-			float const value[/*num_channels*/],
-			integer num_channels_for_grid,
-			double weight_sum[/*num_channels_for_grid*/],
-			float grid[/*num_channels_for_grid*/],
-			float weight_of_grid[/*num_channels_for_grid*/]
-			) {
-		/* READONLY
-		 */
-		for (integer ichan = 0; ichan < num_channels; ++ichan) {
-			integer out_chan = channel_map[ichan];
-			float conv_factor = mask[ichan] ? convolution_factor : 0.;
-			float the_weight = weight[ichan] * conv_factor;
-			float nvalue = WeightFunc::func(the_weight, value[ichan]);
-			grid[out_chan] += nvalue;
-			weight_of_grid[out_chan] += the_weight;
-			weight_sum[out_chan] += the_weight;
-		}
-	}
-};
 
 template <typename Impl>
 inline void Grid(
@@ -322,229 +322,6 @@ inline void doGrid(
 	} // iy
 }
 
-#if defined( __AVX__)
-#include <immintrin.h>
-
-template<typename T, typename U>
-void dump(T x) {
-	union {
-		T v;
-		U f[4];
-	} tmp;
-	tmp.v = x;
-	for (int i = 0; i < 4; i++) {
-		cout << tmp.f[i] << ",";
-	}
-	cout << endl;
-}
-
-inline __m128 shuffleps(__m128 x, __m128i mask) {
-	return _mm_castsi128_ps(_mm_shuffle_epi8(_mm_castps_si128(x), mask));
-}
-
-template<integer nvispol>
-struct WeightOnlySIMD {
-	static inline __m128 func(__m128 weight,
-			Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],
-			integer nvischan, integer irow, integer ichan) {
-		return weight;
-	}
-};
-
-template<integer nvispol>
-struct WeightedValueSIMD {
-	static inline __m128 func(__m128 weight,
-			Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],
-			integer nvischan, integer irow, integer ichan) {
-		return _mm_mul_ps(weight,
-				_mm_load_ps(values[At2(nvischan, irow, ichan)]));
-	}
-};
-
-template<typename T>
-inline void doGridSIMD(
-		Gridding::value_t const values/*[nrow]*/[/*nvischan*/][4],
-		integer nvischan,
-		Gridding::flag_t const flag/*[nrow]*/[/*nvischan*/][4],
-		float const weight/*[nrow]*/[/*nvischan*/],
-		Gridding::value_t grid/*[ny][nx]*/[/*nchan*/][4],
-		float wgrid/*[ny][nx]*/[/*nchan*/][4], integer nx, integer ny,
-		integer nchan, integer support, float const convTable[],
-		integer const chanmap[/*nvischan*/], integer const polmap[/*nvispol*/],
-		double sumwt[/*nchan*/][4], integer locx, integer locy,
-		integer const irad[/*square(Wsupport)*/], integer const Wsupport,
-		integer irow) {
-	size_t const npol = 4;
-	size_t const nvispol = 4;
-	__m128  const zero = _mm_setzero_ps();
-	__m128i  const one = _mm_set1_epi32(1);
-	__m128i  const destMap[4] = { _mm_set_epi32(-1, -1, -1, 0x03020100),
-			_mm_set_epi32(-1, -1, 0x03020100, -1), _mm_set_epi32(-1, 0x03020100,
-					-1, -1), _mm_set_epi32(0x03020100, -1, -1, -1) };
-
-	__m128i  const src0 = _mm_set1_epi32(0x03020100);
-	__m128i  const src1 = _mm_set1_epi32(0x07060504);
-	__m128i  const src2 = _mm_set1_epi32(0x0B0A0908);
-	__m128i  const src3 = _mm_set1_epi32(0x0F0E0D0C);
-
-	__m128  const shufMask0_ = _mm_castsi128_ps(
-			_mm_shuffle_epi8(src0, destMap[polmap[0]]));
-	__m128  const shufMask1_ = _mm_castsi128_ps(
-			_mm_shuffle_epi8(src1, destMap[polmap[1]]));
-	__m128  const shufMask2_ = _mm_castsi128_ps(
-			_mm_shuffle_epi8(src2, destMap[polmap[2]]));
-	__m128  const shufMask3_ = _mm_castsi128_ps(
-			_mm_shuffle_epi8(src3, destMap[polmap[3]]));
-
-	__m128i  const shufMask0 = _mm_castps_si128(
-			_mm_or_ps(_mm_cmpeq_ps(shufMask0_, zero), shufMask0_));
-	__m128i  const shufMask1 = _mm_castps_si128(
-			_mm_or_ps(_mm_cmpeq_ps(shufMask1_, zero), shufMask1_));
-	__m128i  const shufMask2 = _mm_castps_si128(
-			_mm_or_ps(_mm_cmpeq_ps(shufMask2_, zero), shufMask2_));
-	__m128i  const shufMask3 = _mm_castps_si128(
-			_mm_or_ps(_mm_cmpeq_ps(shufMask3_, zero), shufMask3_));
-
-	integer ir = 0;
-	// do iy=-support,support
-	for (integer iy = 0; iy < Wsupport; ++iy) {
-		integer ay = locy + iy;
-		// do ix=-support,support
-		for (integer ix = 0; ix < Wsupport; ++ix) {
-			integer ax = locx + ix;
-			__m128 wt = _mm_set1_ps(convTable[irad[ir]]);
-			for (integer ichan = 0; ichan < nvischan; ++ichan) {
-				integer achan = chanmap[ichan];
-				integer idx = At3(nx, nchan, ay, ax, achan);
-				float weight_ = weight[At2(nvischan, irow, ichan)];
-				__m128 weight = _mm_set1_ps(weight_);
-				__m128 mask = _mm_cmpgt_ps(weight, zero);
-				__m128i flag_ =
-						_mm_cvtepu8_epi32(
-								_mm_castps_si128(
-										_mm_load_ss(
-												(float*) flag[At2(nvischan,
-														irow, ichan)])));
-				mask = _mm_and_ps(mask,
-						_mm_cmpeq_ps(_mm_castsi128_ps(flag_), zero));
-
-				__m128 wt_ = _mm_and_ps(wt, mask);
-
-				__m128 nvalue = T::func(weight, values, nvischan, irow, ichan);
-
-				{
-					//wgrid[idx] += weight * wt_;
-					__m128 tmp = _mm_mul_ps(weight, wt_);
-					__m128 sum = shuffleps(tmp, shufMask0);
-					sum = _mm_add_ps(sum, shuffleps(tmp, shufMask1));
-					sum = _mm_add_ps(sum, shuffleps(tmp, shufMask2));
-					sum = _mm_add_ps(sum, shuffleps(tmp, shufMask3));
-					_mm_store_ps(wgrid[idx],
-							_mm_add_ps(sum, _mm_load_ps(wgrid[idx])));
-
-					//sumwt[achan] += weight * wt_;
-					_mm256_store_pd(sumwt[achan],
-							_mm256_add_pd(_mm256_cvtps_pd(sum),
-									_mm256_load_pd(sumwt[achan])));
-				}
-				{
-					//grid[idx] += nvalue * wt_;
-					__m128 tmp = _mm_mul_ps(nvalue, wt_);
-					__m128 sum = shuffleps(tmp, shufMask0);
-					sum = _mm_add_ps(sum, shuffleps(tmp, shufMask1));
-					sum = _mm_add_ps(sum, shuffleps(tmp, shufMask2));
-					sum = _mm_add_ps(sum, shuffleps(tmp, shufMask3));
-					_mm_store_ps(grid[idx],
-							_mm_add_ps(sum, _mm_load_ps(grid[idx])));
-				}
-			} // ichan
-			ir++;
-		} // ix
-	} // iy
-}
-
-#endif
-
-#define FUNCTYPE(W,nvispol,npol)			\
-    GridFunc_ ## W ## _ ## nvispol ## _ ## npol ## _t
-#define FUNCTYPEDEF(W,nvispol,npol)		\
-    typedef  void (*FUNCTYPE(W, nvispol, npol))				\
-    (Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],	\
-     integer nvischan,							\
-     Gridding::flag_t const flag/*[nrow]*/[/*nvischan*/][nvispol],	\
-     float const weight/*[nrow]*/[/*nvischan*/],			\
-     Gridding::value_t grid/*[ny][nx]*/[/*nchan*/][npol],		\
-     float wgrid/*[ny][nx]*/[/*nchan*/][npol],				\
-     integer nx, integer ny, integer nchan,				\
-     integer support,							\
-     float const convTable[],						\
-     integer const chanmap[/*nvischan*/],				\
-     integer const polmap[/*nvispol*/],					\
-     double sumwt[/*nchan*/][npol],					\
-     integer locx, integer locy,					\
-     integer const irad[/*square(Wsupport)*/],				\
-     integer const Wsupport,						\
-     integer irow);
-#define FUNC(W,P,Q) FUNCTYPEDEF(W, P, Q)
-#define FUNCS(W,P) FUNC(W, P, 1) FUNC(W, P, 2) FUNC(W, P, 3) FUNC(W, P, 4)
-#define FUNCSS(W) FUNCS(W,1) FUNCS(W,2) FUNCS(W,3) FUNCS(W,4)
-FUNCSS(WeightedValue)
-FUNCSS(WeightOnly)
-#undef FUNCTYPEDEF
-#undef FUNC
-
-#define FUNC(W,nvispol,npol)  FUNCTYPE(W, nvispol, npol)		\
-    gridFunc_ ## W ## _ ## nvispol ## _ ## npol = doGrid<W<nvispol>, nvispol, npol>;
-/* To instantiate template functions */
-
-#undef FUNC
-#undef FUNCS
-#undef FUNCSS
-
-typedef void (*GridFunc_t)(
-		Gridding::value_t const values/*[nrow][nvischan]*/[/*nvispol*/],
-		integer nvischan,
-		Gridding::flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
-		float const weight/*[nrow]*/[/*nvischan*/],
-		Gridding::value_t grid/*[ny][nx][nchan]*/[/*npol*/],
-		float wgrid/*[ny][nx][nchan]*/[/*npol*/], integer nx, integer ny,
-		integer nchan, integer support, float const convTable[],
-		integer const chanmap[/*nvischan*/], integer const polmap[/*nvispol*/],
-		double sumwt/*[nchan]*/[/*npol*/], integer locx, integer locy,
-		integer const irad[/*square(Wsupport)*/], integer const Wsupport,
-		integer irow);
-
-GridFunc_t gridFuncs[2][/*nvispol*/4][/*npol*/4] = {
-	};
-#undef FUNCSS
-#undef FUNCS
-#undef FUNC
-#undef FUNCTYPE
-
-struct Adapter {
-	typedef GridFunc_t FuncType;
-
-	static inline FuncType chooseFunc(bool do_weight, integer num_channels) {
-
-	}
-
-	static inline void callFunc(FuncType func,
-			float const values/*[nrow][nvischan]*/[/*nvispol*/],
-			integer nvispol, integer nvischan,
-			Gridding::flag_t const flag/*[nrow][nvischan]*/[/*nvispol*/],
-			float const weight/*[nrow]*/[/*nvischan*/],
-			float grid[], float wgrid[], integer nx, integer ny,
-			integer npol, integer nchan, integer support,
-			float const conv_table[], integer const chanmap[/*nvischan*/],
-			integer const polmap[/*nvispol*/],
-			double sumwt/*[nchan]*/[/*npol*/], integer locx, integer locy,
-			integer const irad[/*square(Wsupport)*/], integer const Wsupport,
-			integer irow) {
-		func(values, nvischan, flag, weight, grid, wgrid, nx, ny, nchan,
-				support, conv_table, chanmap, polmap, sumwt, locx, locy, irad,
-				Wsupport, irow);
-	}
-};
 } // ForSpeed
 
 template<typename OptimizedImpl>
@@ -618,13 +395,22 @@ inline void InternalGrid(
 	}
 }
 
-inline bool IsVectorOperationApplicable(int num_channels) {
-	size_t elements_in_packet = LIBSAKURA_SYMBOL(GetAlignment)() / sizeof(float);
-	if (num_channels % elements_in_packet == 0
-			&& num_channels >= elements_in_packet * 2) {
-		return true;
-	}
+inline bool IsVectorOperationApplicable(integer num_channels,
+		uint32_t const channel_map[/*num_channels*/]) {
+#if !defined(__AVX__)
 	return false;
+#endif
+	size_t elements_in_packet = LIBSAKURA_SYMBOL(GetAlignment)() / sizeof(float);
+	if (num_channels % elements_in_packet != 0
+			|| num_channels < elements_in_packet) {
+		return false;
+	}
+	for (integer i = 0; i < num_channels; ++i) {
+		if (channel_map[i] != i) {
+			return false;
+		}
+	}
+	return true;
 }
 
 void GridConvolvingCasted(integer num_spectra,
@@ -650,7 +436,7 @@ void GridConvolvingCasted(integer num_spectra,
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
 		) {
 	if (do_weight) {
-		if (IsVectorOperationApplicable(num_channels)) {
+		if (IsVectorOperationApplicable(num_channels, channel_map)) {
 			InternalGrid<ForSpeed::VectorizedImpl<ForSpeed::VWeightOnly> >(num_spectra,
 					start_spectrum, end_spectrum,
 					spectrum_mask,
@@ -692,7 +478,7 @@ void GridConvolvingCasted(integer num_spectra,
 					grid);
 		}
 	} else {
-		if (IsVectorOperationApplicable(num_channels)) {
+		if (IsVectorOperationApplicable(num_channels, channel_map)) {
 			InternalGrid<ForSpeed::VectorizedImpl<ForSpeed::VWeightedValue> >(num_spectra,
 					start_spectrum, end_spectrum,
 					spectrum_mask,

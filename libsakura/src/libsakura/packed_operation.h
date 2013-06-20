@@ -18,15 +18,24 @@
 
 // namespace {
 
+template<typename Arch>
 class LIBSAKURA_SYMBOL(SimdConvert) {
 public:
-	static inline LIBSAKURA_SYMBOL(SimdPacketSSE)
-	byteToFloat(LIBSAKURA_SYMBOL(SimdPacketMMX) bytes) {
-		LIBSAKURA_SYMBOL(SimdPacketSSE) result;
-		result.raw_float = _mm_cvtpi8_ps(bytes.raw_int64);
+	static inline typename Arch::PacketType
+	ByteToFloat(typename Arch::PriorArch::PacketType bytes) {
+		assert(false);
+		typename Arch::PacketType result = { 0 };
+		return result;
+	}
+
+	static inline typename Arch::PacketType
+	FloatToDouble(typename Arch::PriorArch::PacketType floats) {
+		assert(false);
+		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 };
+
 
 /**
  * @~japanese
@@ -317,6 +326,33 @@ public:
 #if defined(__AVX__)
 
 template<>
+class LIBSAKURA_SYMBOL(SimdConvert)<LIBSAKURA_SYMBOL(SimdArchAVX)> {
+public:
+	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType
+	ByteToFloat(LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
+		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
+#if defined(__AVX2__)
+		result.raw_float = _mm256_cvtepi32_ps(
+				_mm256_cvtepi8_epi32(bytes.raw_int32));
+
+#else
+		result.v_prior.v[0].raw_int32 = _mm_cvtepi8_epi32(bytes.raw_int32);
+		result.v_prior.v[1].raw_int32 = _mm_cvtepi8_epi32(
+				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)));
+		result.raw_float = _mm256_cvtepi32_ps(result.raw_int32);
+#endif
+		return result;
+	}
+
+	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType
+	FloatToDouble(LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType floats) {
+		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
+		result.raw_double = _mm256_cvtps_pd(floats.raw_float);
+		return result;
+	}
+};
+
+template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchAVX), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
@@ -398,6 +434,45 @@ public:
 		Arch::PacketType result;
 		result.raw_float = _mm256_div_ps(lhs.raw_float,
 				rhs.raw_float);
+		return result;
+	}
+};
+
+template<>
+class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), double> {
+	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
+	typedef double Type;
+public:
+	static inline Arch::PacketType Add(
+			Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm256_add_pd(lhs.raw_double,
+				rhs.raw_double);
+		return result;
+	}
+	static inline Arch::PacketType Sub(
+			Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm256_sub_pd(lhs.raw_double,
+				rhs.raw_double);
+		return result;
+	}
+	static inline Arch::PacketType Mul(
+			Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm256_mul_pd(lhs.raw_double,
+				rhs.raw_double);
+		return result;
+	}
+	static inline Arch::PacketType Div(
+			Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm256_div_pd(lhs.raw_double,
+				rhs.raw_double);
 		return result;
 	}
 };
@@ -485,6 +560,24 @@ public:
 #if defined(__SSE4_1__)
 
 template<>
+class LIBSAKURA_SYMBOL(SimdConvert)<LIBSAKURA_SYMBOL(SimdArchSSE)> {
+public:
+	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType
+	ByteToFloat(LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
+		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
+		result.raw_float = _mm_cvtpi8_ps(bytes.raw_int64);
+		return result;
+	}
+
+	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType
+	FloatToDouble(LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType floats) {
+		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
+		result.raw_double = _mm_cvtps_pd((__m128)_mm_set_epi64(floats.raw_int64, floats.raw_int64));
+		return result;
+	}
+};
+
+template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
@@ -566,6 +659,45 @@ public:
 		Arch::PacketType result;
 		result.raw_float = _mm_div_ps(lhs.raw_float,
 				rhs.raw_float);
+		return result;
+	}
+};
+
+template<>
+class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), double> {
+	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
+	typedef double Type;
+public:
+	static inline Arch::PacketType Add(
+			Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm_add_pd(lhs.raw_double,
+				rhs.raw_double);
+		return result;
+	}
+	static inline Arch::PacketType Sub(
+			Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm_sub_pd(lhs.raw_double,
+				rhs.raw_double);
+		return result;
+	}
+	static inline Arch::PacketType Mul(
+			Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm_mul_pd(lhs.raw_double,
+				rhs.raw_double);
+		return result;
+	}
+	static inline Arch::PacketType Div(
+			Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_double = _mm_div_pd(lhs.raw_double,
+				rhs.raw_double);
 		return result;
 	}
 };

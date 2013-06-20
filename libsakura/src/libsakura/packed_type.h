@@ -56,10 +56,10 @@ union LIBSAKURA_SYMBOL(SimdPacketMMX) {
 	typedef struct {double dummy[kNumDouble];}RawDouble;
 	typedef struct {int32_t dummy[kNumInt32];}RawInt32;
 	typedef __m64 RawInt64;
+	RawInt64 raw_int64;
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
-	RawInt64 raw_int64;
 
 	inline void set1(double value) {
 		v_double.v[0] = value;
@@ -164,10 +164,10 @@ union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 	typedef __m128d RawDouble;
 	typedef __m128i RawInt32;
 	typedef __m128i RawInt64;
+	RawInt32 raw_int64;
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
-	RawInt32 raw_int64;
 
 	inline void set1(double value) {
 		raw_double = _mm_set1_pd(value);
@@ -205,12 +205,16 @@ union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 	VInt32 v_int32;
 	VInt64 v_int64;
 
-	LIBSAKURA_SYMBOL(SimdPacketMMX) v_prior[kSize / LIBSAKURA_SYMBOL(SimdPacketMMX)::kSize];
+	typedef struct {
+		LIBSAKURA_SYMBOL(SimdPacketMMX) v[kSize / LIBSAKURA_SYMBOL(SimdPacketMMX)::kSize];
+	} VPrior;
+	VPrior v_prior;
 };
 
 typedef struct {
 	// 128bit
 	typedef LIBSAKURA_SYMBOL(SimdPacketSSE) PacketType;
+	typedef LIBSAKURA_SYMBOL(SimdArchMMX) PriorArch;
 }LIBSAKURA_SYMBOL(SimdArchSSE);
 
 #endif /* defined(__SSE__) */
@@ -238,10 +242,10 @@ union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 	typedef __m256d RawDouble;
 	typedef __m256i RawInt32;
 	typedef __m256i RawInt64;
+	RawInt32 raw_int64;
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
-	RawInt32 raw_int64;
 
 
 	inline void set1(double value) {
@@ -280,12 +284,16 @@ union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 	VInt32 v_int32;
 	VInt64 v_int64;
 
-	LIBSAKURA_SYMBOL(SimdPacketSSE) v_prior[kSize / LIBSAKURA_SYMBOL(SimdPacketSSE)::kSize];
+	typedef struct {
+		LIBSAKURA_SYMBOL(SimdPacketSSE) v[kSize / LIBSAKURA_SYMBOL(SimdPacketSSE)::kSize];
+	} VPrior;
+	VPrior v_prior;
 };
 
 typedef struct {
 	// 256bit
 	typedef LIBSAKURA_SYMBOL(SimdPacketAVX) PacketType;
+	typedef LIBSAKURA_SYMBOL(SimdArchSSE) PriorArch;
 }LIBSAKURA_SYMBOL(SimdArchAVX);
 #endif /* defined(__AVX__) */
 
