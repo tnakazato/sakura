@@ -61,7 +61,6 @@ inline bool OnGrid(integer width, integer height, integer loc[/*2*/], integer su
 			&& (y + support < height);
 }
 
-namespace ForSpeed {
 struct WeightOnly {
 	static inline float func(float weight,
 			float value) {
@@ -272,58 +271,6 @@ inline void Grid(
 	} // iy
 }
 
-template<typename T, integer nvispol, integer npol>
-inline void doGrid(
-		Gridding::value_t const values/*[nrow]*/[/*nvischan*/][nvispol],
-		integer nvischan,
-		Gridding::flag_t const flag/*[nrow]*/[/*nvischan*/][nvispol],
-		float const weight/*[nrow]*/[/*nvischan*/],
-		Gridding::value_t grid/*[ny][nx]*/[/*nchan*/][npol],
-		float wgrid/*[ny][nx]*/[/*nchan*/][npol], integer nx, integer ny,
-		integer nchan, integer support, float const convTable[],
-		integer const chanmap[/*nvischan*/], integer const polmap[/*nvispol*/],
-		double sumwt[/*nchan*/][npol], integer locx, integer locy,
-		integer const irad[/*square(Wsupport)*/], integer const Wsupport,
-		integer irow) {
-	integer ir = 0;
-	// do iy=-support,support
-	for (integer iy = 0; iy < Wsupport; ++iy) {
-		integer ay = locy + iy;
-		// do ix=-support,support
-		for (integer ix = 0; ix < Wsupport; ++ix) {
-			integer ax = locx + ix;
-			float wt = convTable[irad[ir]];
-			for (integer ichan = 0; ichan < nvischan; ++ichan) {
-				integer achan = chanmap[ichan];
-				float weight_ = weight[At2(nvischan, irow, ichan)];
-				bool nop = bool(weight_ > 0.0);
-				integer idx = At3(nx, nchan, ay, ax, achan);
-				for (integer ipol = 0; ipol < nvispol; ++ipol) {
-					integer apol = polmap[ipol];
-					float wt_ =
-							wt
-									* (nop
-											&& (!flag[At2(nvischan, irow, ichan)][ipol]));
-					Gridding::value_t nvalue = T::func(weight_, values,
-							nvischan, irow, ichan, ipol);
-#if 1
-					grid[idx][apol] += nvalue * wt_;
-					wgrid[idx][apol] += weight_ * wt_;
-#else
-					integer idx = At4(npol, ny, nx, achan, apol, ay, ax);
-					((Gridding::value_t*)grid)[idx] += nvalue * wt_;
-					((float *)wgrid)[idx] += weight_ * wt_;
-#endif
-					sumwt[achan][apol] += weight_ * wt_;
-				} // ipol
-			} // ichan
-			ir++;
-		} // ix
-	} // iy
-}
-
-} // ForSpeed
-
 template<typename OptimizedImpl>
 inline void InternalGrid(
 		integer num_spectra,
@@ -372,7 +319,7 @@ inline void InternalGrid(
 					}
 				}
 
-				ForSpeed::Grid<OptimizedImpl>(
+				Grid<OptimizedImpl>(
 						point[0] - support, point[1] - support,
 						doubled_support, sampling,
 						integral_radius,
@@ -437,7 +384,7 @@ void GridConvolvingCasted(integer num_spectra,
 		) {
 	if (do_weight) {
 		if (IsVectorOperationApplicable(num_channels, channel_map)) {
-			InternalGrid<ForSpeed::VectorizedImpl<ForSpeed::VWeightOnly> >(num_spectra,
+			InternalGrid<VectorizedImpl<VWeightOnly> >(num_spectra,
 					start_spectrum, end_spectrum,
 					spectrum_mask,
 					x, y,
@@ -457,7 +404,7 @@ void GridConvolvingCasted(integer num_spectra,
 					weight_of_grid,
 					grid);
 		} else {
-			InternalGrid<ForSpeed::ScalarImpl<ForSpeed::WeightOnly> >(num_spectra,
+			InternalGrid<ScalarImpl<WeightOnly> >(num_spectra,
 					start_spectrum, end_spectrum,
 					spectrum_mask,
 					x, y,
@@ -479,7 +426,7 @@ void GridConvolvingCasted(integer num_spectra,
 		}
 	} else {
 		if (IsVectorOperationApplicable(num_channels, channel_map)) {
-			InternalGrid<ForSpeed::VectorizedImpl<ForSpeed::VWeightedValue> >(num_spectra,
+			InternalGrid<VectorizedImpl<VWeightedValue> >(num_spectra,
 					start_spectrum, end_spectrum,
 					spectrum_mask,
 					x, y,
@@ -499,7 +446,7 @@ void GridConvolvingCasted(integer num_spectra,
 					weight_of_grid,
 					grid);
 		} else {
-			InternalGrid<ForSpeed::ScalarImpl<ForSpeed::WeightedValue> >(num_spectra,
+			InternalGrid<ScalarImpl<WeightedValue> >(num_spectra,
 					start_spectrum, end_spectrum,
 					spectrum_mask,
 					x, y,

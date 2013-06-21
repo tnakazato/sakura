@@ -158,6 +158,13 @@ void clearTabs(A *grid,
 	memset(*sumwt, 0, sizeof(*sumwt));
 }
 
+template<typename T>
+inline bool NearlyEqual(T aa, T bb) {
+	T threshold = 0.00007;
+	//T threshold = 0.0000003;
+	return aa == bb || (abs(aa-bb) / (abs(aa) + abs(bb))) < threshold;
+}
+
 bool cmpgrid(complex<float> (*a)[NCHAN][NPOL][NY][NX],
 		float (*b)[NY][NX][NPOL][NCHAN]) {
 	cout << "comparing grid\n";
@@ -170,7 +177,7 @@ bool cmpgrid(complex<float> (*a)[NCHAN][NPOL][NY][NX],
 				for (size_t l = 0; l < elementsof((*a)[0][0][0]); l++) {
 					float aa = (*a)[i][j][k][l].real();
 					float bb = (*b)[k][l][j][i];
-					if (aa == bb) {
+					if (NearlyEqual<float>(aa, bb)) {
 						if (differ) {
 							cout << "... just before [" << i << "][" << j
 									<< "][" << k << "][" << l << "]\n";
@@ -213,7 +220,7 @@ bool cmpwgrid(float (*a)[NCHAN][NPOL][NY][NX],
 				for (size_t l = 0; l < elementsof((*a)[0][0][0]); l++) {
 					float aa = (*a)[i][j][k][l];
 					float bb = (*b)[k][l][j][i];
-					if (aa == bb) {
+					if (NearlyEqual<float>(aa, bb)) {
 						//if (bb != 0.) cout << aa << ", " << bb << endl;
 						if (differ) {
 							cout << "... just before [" << i << "][" << j
@@ -254,7 +261,7 @@ bool cmpsumwt(double (*a)[NCHAN][NPOL], double (*b)[NPOL][NCHAN]) {
 		for (size_t j = 0; j < elementsof((*a)[0]); j++) {
 			double aa = (*a)[i][j];
 			double bb = (*b)[j][i];
-			if (aa == bb || (abs(aa-bb) / (abs(aa) + abs(bb))) < 0.0000002) {
+			if (NearlyEqual<double>(aa, bb)) {
 				if (differ) {
 					cout << "... just before [" << i << "][" << j << "]\n";
 				}
