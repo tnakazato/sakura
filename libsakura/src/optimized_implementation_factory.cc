@@ -15,6 +15,9 @@ using ::LIBSAKURA_PREFIX::GriddingAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::Statistics;
 using ::LIBSAKURA_PREFIX::StatisticsDefault;
 using ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::BitOperation;
+using ::LIBSAKURA_PREFIX::BitOperationDefault;
+using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
 
 struct CPURegister {
 	uint32_t eax, ebx, ecx, edx;
@@ -65,6 +68,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 
 GriddingDefault const gridding_default;
 StatisticsDefault const statistics_default;
+BitOperationDefault const bit_operation_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -74,11 +78,15 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_default;
 	}
+	virtual BitOperation const *GetBitOperationImpl() const {
+		return &bit_operation_default;
+	}
 
 } default_factory;
 
 GriddingAfterSandyBridge const gridding_after_sandy_bridge;
 StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
+BitOperationAfterSandyBridge const bit_operation_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -87,6 +95,10 @@ public:
 	}
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_sandy_bridge;
+	}
+	virtual BitOperation const *GetBitOperationImpl() const {
+		/* return &bit_operation_after_sandy_bridge;*/
+		return &bit_operation_default;
 	}
 } after_sandy_bridge;
 

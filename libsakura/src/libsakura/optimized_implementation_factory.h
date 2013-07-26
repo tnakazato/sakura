@@ -62,12 +62,23 @@ public:
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
 };
 
+class BitOperation {
+public:
+	virtual ~BitOperation() {
+	}
+	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			uint8_t out[/*num_in*/]) const = 0;
+};
+
+
 class OptimizedImplementationFactory {
 public:
 	virtual ~OptimizedImplementationFactory() {
 	}
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
+	virtual BitOperation const *GetBitOperationImpl() const = 0;
 	static OptimizedImplementationFactory const *GetFactory();
 protected:
 	OptimizedImplementationFactory() {

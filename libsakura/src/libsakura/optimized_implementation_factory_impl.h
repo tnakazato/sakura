@@ -72,6 +72,24 @@ public:
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
 
+class BitOperationDefault: public BitOperation {
+public:
+	virtual ~BitOperationDefault() {
+	}
+	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			uint8_t out[]) const;
+};
+
+class BitOperationAfterSandyBridge: public BitOperation {
+public:
+	virtual ~BitOperationAfterSandyBridge() {
+	}
+	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			uint8_t out[/*num_in*/]) const;
+};
+
 } // namespace LIBSAKURA_PREFIX
 
 #endif /* LIBSAKURA_LIBSAKURA_OPTIMIZED_IMPLEMENTATION_FACTORY_IMPL_H_ */
