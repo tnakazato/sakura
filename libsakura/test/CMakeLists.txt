@@ -36,12 +36,16 @@ include_directories(${PROJECT_SOURCE_DIR}/../src ${PROJECT_BINARY_DIR}/../bin "$
 
 add_executable(testInit init.cc)
 add_executable(testGridding gridding.cc fgridsd.f)
+add_executable(testBitOperation bit_operation.cc)
 target_link_libraries (testInit ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testGridding ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread -lgfortran)
+target_link_libraries (testBitOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 add_test(NAME testInit COMMAND ./testInit)
 add_test(NAME testGridding COMMAND ./testGridding)
+add_test(NAME testBitOperation COMMAND ./testBitOperation)
 
 add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testGridding
+	COMMAND ./testBitOperation
 	)
