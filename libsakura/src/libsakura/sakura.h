@@ -252,7 +252,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 /**
  * @~english
  * @brief Invoke bit operation AND between an utint8_t value and array.
- * @details Invokes the following bit operation to @i- th element of @a out : @n
+ * @details Invokes the following bit operation to @a i- th element of @a out : @n
  * @a out [i] = ( @a edit_mask [i] ? (@a bit_maks & @a in [i]) : @a in [i] )
  *
  * @param bit_mask An uint8_t value. The bit operation is invoked
@@ -285,6 +285,28 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(uint8_t bit_mask, size_t num_in,
 		uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/], uint8_t out[/*num_in*/]);
 
+/**
+ * @~
+ * @brief Invoke bit operation AND between an utint32_t value and array.
+ * @details Invokes the following bit operation to @a i- th element of @a out : @n
+ * @a out [i] = ( @a edit_mask [i] ? (@a bit_maks & @a in [i]) : @a in [i] )
+ *
+ * @param bit_mask An uint32_t value. The bit operation is invoked
+ * between this value and the array, @a in.
+ * @param num_in The number of elements in the arrays, @a in,
+ * @a edit_mask, and @a out.
+ * @param in An input array (uint32_t) of size, @a num_in. The bit operation
+ * is invoked between this array and @a bit_mask.
+ * @param edit_mask A boolean mask array of size, @a num_in. The bit operation
+ * is skipped for the elements with the value, false.
+ * @param out The output array (uint32_t) of size, @a num_in. It stores the result
+ * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
+ * and the value in array, @a in, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false.
+ * @return @a sakura_Status
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(uint32_t bit_mask, size_t num_in,
+		uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
 
 #ifdef __cplusplus
 }
