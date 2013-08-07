@@ -35,9 +35,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
 				num_interpolated, x_interpolated, y_interpolated);
 		break;
 	default:
-		std::cerr << "Invalid interpolation method" << std::endl;
+		std::cerr << "ERROR: Invalid interpolation method type" << std::endl;
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	std::cout << "sakura_Interpolate1dFloat called" << std::endl;
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

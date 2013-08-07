@@ -167,7 +167,7 @@ void Interpolate1dNearestEigen(size_t num_base, double const x_base[], DataType 
 			else {
 				double dx_left = fabs(x_interpolated[index] - x_base[location-1]);
 				double dx_right = fabs(x_interpolated[index] - x_base[location]);
-				if (dx_left < dx_right) {
+				if (dx_left <= dx_right) {
 					y_interpolated_vector[index] = y_base_vector[location-1];
 				}
 				else {
@@ -190,7 +190,6 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Interpolate1dFloatNearest(size_t num
 		size_t num_interpolated,
 		double const x_interpolated[/*num_interpolated*/],
 		float y_interpolated[/*num_interpolated*/]) const {
-	std::cout << "Interpolate1dFloatNearest is called" << std::endl;
 #if defined(__AVX__)
 	Interpolate1dNearestSimd<float>(num_base, x_base, y_base,
 			num_interpolated, x_interpolated, y_interpolated);
@@ -205,7 +204,6 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Interpolate1dFloatLinear(size_t num_
 		size_t num_interpolated,
 		double const x_interpolated[/*num_interpolated*/],
 		float y_interpolated[/*num_interpolated*/]) const {
-	std::cout << "Interpolate1dFloatLinear is called" << std::endl;
 }
 
 void ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Interpolate1dFloatPolynomial(int polynomial_order,
@@ -214,7 +212,6 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Interpolate1dFloatPolynomial(int pol
 		size_t num_interpolated,
 		double const x_interpolated[/*num_interpolated*/],
 		float y_interpolated[/*num_interpolated*/]) const {
-	std::cout << "Interpolate1dFloatPolynomial is called" << std::endl;
 }
 
 void ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Interpolate1dFloatSpline(size_t num_base,
@@ -222,7 +219,6 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Interpolate1dFloatSpline(size_t num_
 		size_t num_interpolated,
 		double const x_interpolated[/*num_interpolated*/],
 		float y_interpolated[/*num_interpolated*/]) const {
-	std::cout << "Interpolate1dFloatSpline is called" << std::endl;
 }
 
 int ADDSUFFIX(Interpolation, ARCH_SUFFIX)::Locate(int start_position, int end_position,
