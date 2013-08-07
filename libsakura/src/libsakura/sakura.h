@@ -200,6 +200,7 @@ size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
 /**
  * @~japanese
  * @brief 畳み込みしながらグリッドする。
+ * 各浮動小数点の数値はNaN/+-Infであってはならない。
  * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
  * @param start_spectrum
  * @param end_spectrum
