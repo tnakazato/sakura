@@ -98,6 +98,54 @@ public:
 			uint32_t out[/*num_in*/]) const;
 };
 
+class InterpolationDefault: public Interpolation {
+public:
+	virtual void Interpolate1dFloatNearest(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dFloatLinear(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dFloatPolynomial(int polynomial_order, size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dFloatSpline(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+};
+
+class InterpolationAfterSandyBridge: public Interpolation {
+public:
+	virtual void Interpolate1dFloatNearest(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dFloatLinear(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dFloatPolynomial(int polynomial_order, size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dFloatSpline(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const;
+};
+
 } // namespace LIBSAKURA_PREFIX
 
 #endif /* LIBSAKURA_LIBSAKURA_OPTIMIZED_IMPLEMENTATION_FACTORY_IMPL_H_ */

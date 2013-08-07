@@ -78,6 +78,31 @@ public:
 			uint32_t out[/*num_in*/]) const = 0;
 };
 
+class Interpolation {
+public:
+	virtual ~Interpolation() {
+	}
+	virtual void Interpolate1dFloatNearest(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const = 0;
+	virtual void Interpolate1dFloatLinear(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const = 0;
+	virtual void Interpolate1dFloatPolynomial(int polynomial_order, size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const = 0;
+	virtual void Interpolate1dFloatSpline(size_t num_base,
+			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double x_interpolated[/*num_interpolated*/],
+			float y_interpolated[/*num_interpolated*/]) const = 0;
+};
 
 class OptimizedImplementationFactory {
 public:
@@ -86,6 +111,7 @@ public:
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
 	virtual BitOperation const *GetBitOperationImpl() const = 0;
+	virtual Interpolation const *GetInterpolationImpl() const = 0;
 	static OptimizedImplementationFactory const *GetFactory();
 protected:
 	OptimizedImplementationFactory() {

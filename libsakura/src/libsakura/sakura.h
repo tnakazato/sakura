@@ -309,6 +309,54 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(uint8_t bit_mask,
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(uint32_t bit_mask, size_t num_in,
 		uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
 
+
+/**
+ * @~japanese
+ * @brief 補間方法を定義するための列挙型。
+ * @~english
+ * @brief Enumerations to define interpolation types.
+ **/
+typedef enum {
+	/**
+	 * @brief Nearest interpolation
+	 **/
+	LIBSAKURA_SYMBOL(InterpolationMethod_kNearest),
+	/**
+	 * @brief Linear interpolation
+	 **/
+	LIBSAKURA_SYMBOL(InterpolationMethod_kLinear),
+	/**
+	 * @brief Polynomial interpolation
+	 **/
+	LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial),
+	/**
+	 * @brief Spline interpolation
+	 **/
+	LIBSAKURA_SYMBOL(InterpolationMethod_kSpline),
+	/**
+	 * @brief Number of interpolation methods implemented
+	 **/
+	LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod)
+} LIBSAKURA_SYMBOL(InterpolationMethod);
+
+
+/**
+ * @brief Perform one-dimensional interpolation
+ **/
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(LIBSAKURA_SYMBOL(
+		InterpolationMethod) interoplation_method, int polynomial_order,
+		size_t num_base, double const x_base[], float const y_base[],
+		size_t num_interpolated, double x_interpolated[], float y_interpolated[]);
+
+
+/**
+ * @brief Perform pseudo two-dimensional interpolation
+ **/
+//LIBSAKURA_SYMBOL(Status) InterpolatePseudo2dFloat(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+//		int polynomial_order, double x_interpolated, size_t num_base, double x_base[],
+//		size_t num_array, float *y_base[], float y_interpolated[]);
+
+
 #ifdef __cplusplus
 }
 /* extern "C" */

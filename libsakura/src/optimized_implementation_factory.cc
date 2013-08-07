@@ -18,6 +18,9 @@ using ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BitOperationDefault;
 using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::Interpolation;
+using ::LIBSAKURA_PREFIX::InterpolationDefault;
+using ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge;
 
 struct CPURegister {
 	uint32_t eax, ebx, ecx, edx;
@@ -69,6 +72,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 GriddingDefault const gridding_default;
 StatisticsDefault const statistics_default;
 BitOperationDefault const bit_operation_default;
+InterpolationDefault const interpolation_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -81,12 +85,16 @@ public:
 	virtual BitOperation const *GetBitOperationImpl() const {
 		return &bit_operation_default;
 	}
+	virtual Interpolation const *GetInterpolationImpl() const {
+		return &interpolation_default;
+	}
 
 } default_factory;
 
 GriddingAfterSandyBridge const gridding_after_sandy_bridge;
 StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 BitOperationAfterSandyBridge const bit_operation_after_sandy_bridge;
+InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -99,6 +107,10 @@ public:
 	virtual BitOperation const *GetBitOperationImpl() const {
 		/* return &bit_operation_after_sandy_bridge;*/
 		return &bit_operation_default;
+	}
+	virtual Interpolation const *GetInterpolationImpl() const {
+		// return &interpolation_after_sandy_bridge;
+		return &interpolation_default;
 	}
 } after_sandy_bridge;
 

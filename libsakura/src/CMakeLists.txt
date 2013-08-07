@@ -33,8 +33,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorize
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
-set(MULTI_SOURCE gridding.cc statistics.cc bit_operation.cc)
-set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_statistics.cc gen_util.c gen_gridding.cc gen_bit_operation.cc)
+set(MULTI_SOURCE gridding.cc statistics.cc bit_operation.cc interpolation.cc)
+set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_statistics.cc gen_util.c gen_gridding.cc gen_bit_operation.cc gen_interpolation.cc)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"
@@ -94,6 +94,7 @@ set(public_headers
 	libsakura/optimized_implementation_factory.h
 	libsakura/optimized_implementation_factory_impl.h
 	${PROJECT_BINARY_DIR}/libsakura/config.h
+	libsakura/interpolation.h
 	)
 
 set_target_properties(sakura PROPERTIES
