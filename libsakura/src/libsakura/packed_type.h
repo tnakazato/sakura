@@ -29,7 +29,7 @@ union LIBSAKURA_SYMBOL(SimdPacketMMX) {
 		 * @~japanese
 		 *  パケットのサイズ
 		 */
-		kSize = sizeof(double),
+		kSize = sizeof(__m64 ),
 		/**
 		 * @~japanese
 		 *  パケットに格納できるfloatの要素数
@@ -52,32 +52,62 @@ union LIBSAKURA_SYMBOL(SimdPacketMMX) {
 		kNumInt64 = kSize / sizeof(int64_t),
 	};
 
-	typedef struct {float dummy[kNumFloat];}RawFloat;
-	typedef struct {double dummy[kNumDouble];}RawDouble;
-	typedef struct {int32_t dummy[kNumInt32];}RawInt32;
+	typedef struct {
+		float dummy[kNumFloat];
+	} RawFloat;
+	typedef struct {
+		double dummy[kNumDouble];
+	} RawDouble;
+	typedef struct {
+		int32_t dummy[kNumInt32];
+	} RawInt32;
 	typedef __m64 RawInt64;
 	RawInt64 raw_int64;
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
 
+	/**
+	 * @~japanese
+	 * @brief @a value を各要素に設定して初期化する。
+	 */
 	inline void set1(double value) {
 		v_double.v[0] = value;
 	}
+	/**
+	 * @~japanese
+	 * @brief @a value を各要素に設定して初期化する。
+	 */
 	inline void set1(float value) {
 		v_float.v[0] = value;
 		v_float.v[1] = value;
 	}
+	/**
+	 * @~japanese
+	 * @brief @a value を各要素に設定して初期化する。
+	 */
 	inline void set1(int8_t value) {
-		raw_int64 = _mm_set_pi8(value, value, value, value,
-				value, value, value, value);
+		raw_int64 = _mm_set_pi8(value, value, value, value, value, value, value,
+				value);
 	}
+	/**
+	 * @~japanese
+	 * @brief @a value を各要素に設定して初期化する。
+	 */
 	inline void set1(int16_t value) {
-		raw_int64 =  _mm_set_pi16(value, value, value, value);
+		raw_int64 = _mm_set_pi16(value, value, value, value);
 	}
+	/**
+	 * @~japanese
+	 * @brief @a value を各要素に設定して初期化する。
+	 */
 	inline void set1(int32_t value) {
-		raw_int64 =  _mm_set_pi32(value, value);
+		raw_int64 = _mm_set_pi32(value, value);
 	}
+	/**
+	 * @~japanese
+	 * @brief @a value を各要素に設定して初期化する。
+	 */
 	inline void set1(int64_t value) {
 		raw_int64 = _mm_cvtsi64_m64(value);
 	}
@@ -132,17 +162,20 @@ union LIBSAKURA_SYMBOL(SimdPacketMMX) {
 	VInt64 v_int64;
 };
 
-/*
- * SIMDアーキテクチャーを識別する型
+/**
+ * SIMDアーキテクチャーを識別する型(MMX)
  */
 typedef struct {
 	// 64bit
+	/**
+	 * @~japanese
+	 * @brief
+	 * このアーキテクチャーにおけるPacket型
+	 */
 	typedef LIBSAKURA_SYMBOL(SimdPacketMMX) PacketType;
 }LIBSAKURA_SYMBOL(SimdArchMMX);
 
-#endif /* defined(__MMX__) || defined(__x86_64__) */
-
-#if defined(__SSE4_1__)
+#if defined(__SSE4_2__)
 
 #include <smmintrin.h>
 
@@ -154,7 +187,7 @@ typedef struct {
  */
 union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 	enum {
-		kSize = sizeof(__m128),
+		kSize = sizeof(__m128 ),
 		kNumFloat = kSize / sizeof(float),
 		kNumDouble = kSize / sizeof(double),
 		kNumInt32 = kSize / sizeof(int32_t),
@@ -205,19 +238,39 @@ union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 	VInt32 v_int32;
 	VInt64 v_int64;
 
+	/**
+	 * @~japanese
+	 * @brief 	前の世代のSIMDアーキテクチャーのPacket型(@ref sakura_SimdPacketMMX)
+	 */
 	typedef struct {
-		LIBSAKURA_SYMBOL(SimdPacketMMX) v[kSize / LIBSAKURA_SYMBOL(SimdPacketMMX)::kSize];
+		LIBSAKURA_SYMBOL(SimdPacketMMX) v[kSize
+				/ LIBSAKURA_SYMBOL(SimdPacketMMX)::kSize];
 	} VPrior;
+	/**
+	 * @~japanese
+	 * @brief 	前の世代のSIMDアーキテクチャーのPacket型(@ref sakura_SimdPacketMMX)の配列としてアクセスするためのメンバー
+	 */
 	VPrior v_prior;
 };
 
+/**
+ * SIMDアーキテクチャーを識別する型(SSE)
+ */
 typedef struct {
 	// 128bit
+	/**
+	 * @~japanese
+	 * @brief
+	 * このアーキテクチャーにおけるPacket型
+	 */
 	typedef LIBSAKURA_SYMBOL(SimdPacketSSE) PacketType;
+	/**
+	 * @~japanese
+	 * @brief
+	 * 前の世代のSIMDアーキテクチャーの型
+	 */
 	typedef LIBSAKURA_SYMBOL(SimdArchMMX) PriorArch;
 }LIBSAKURA_SYMBOL(SimdArchSSE);
-
-#endif /* defined(__SSE__) */
 
 #if defined(__AVX__)
 
@@ -246,7 +299,6 @@ union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
-
 
 	inline void set1(double value) {
 		raw_double = _mm256_set1_pd(value);
@@ -284,19 +336,40 @@ union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 	VInt32 v_int32;
 	VInt64 v_int64;
 
+	/**
+	 * @~japanese
+	 * @brief 	前の世代のSIMDアーキテクチャーのPacket型(@ref sakura_SimdPacketSSE)
+	 */
 	typedef struct {
-		LIBSAKURA_SYMBOL(SimdPacketSSE) v[kSize / LIBSAKURA_SYMBOL(SimdPacketSSE)::kSize];
+		LIBSAKURA_SYMBOL(SimdPacketSSE) v[kSize
+				/ LIBSAKURA_SYMBOL(SimdPacketSSE)::kSize];
 	} VPrior;
+	/**
+	 * @~japanese
+	 * @brief 	前の世代のSIMDアーキテクチャーのPacket型(@ref sakura_SimdPacketSSE)の配列としてアクセスするためのメンバー
+	 */
 	VPrior v_prior;
 };
 
+/**
+ * SIMDアーキテクチャーを識別する型(AVX)
+ */
 typedef struct {
 	// 256bit
+	/**
+	 * @~japanese
+	 * @brief
+	 * このアーキテクチャーにおけるPacket型
+	 */
 	typedef LIBSAKURA_SYMBOL(SimdPacketAVX) PacketType;
+	/**
+	 * @~japanese
+	 * @brief
+	 * 前の世代のSIMDアーキテクチャーの型
+	 */
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) PriorArch;
 }LIBSAKURA_SYMBOL(SimdArchAVX);
 #endif /* defined(__AVX__) */
-
 
 #if defined(__AVX__)
 /**
@@ -313,31 +386,33 @@ typedef LIBSAKURA_SYMBOL(SimdPacketAVX) LIBSAKURA_SYMBOL(SimdPacketNative);
 
 #endif /* defined(__AVX__) */
 
-
-#if defined(__SSE4_1__)
 #if ! defined(LIBSAKURA_PACKET_NATIVE_DEFINED)
+/**
+ * @~japanese
+ * @brief サポートされている最新のSIMDアーキテクチャー
+ */
 typedef LIBSAKURA_SYMBOL(SimdArchSSE) LIBSAKURA_SYMBOL(SimdArchNative);
+/**
+ * @~japanese
+ * @brief サポートされている最新のSIMDアーキテクチャーのパケット型
+ */
 typedef LIBSAKURA_SYMBOL(SimdPacketSSE) LIBSAKURA_SYMBOL(SimdPacketNative);
 #define LIBSAKURA_PACKET_NATIVE_DEFINED 1
 #endif
 
-#endif /* defined(__SSE__) */
+#endif /* defined(__SSE4_2__) */
 
-
-#if defined(__MMX__) || defined(__x86_64__)
 #if ! defined(LIBSAKURA_PACKET_NATIVE_DEFINED)
 /**
- * @brief
  * @~japanese
- * 	現在のコンパイル条件におけるネイティブなSIMDアーキテクチャの型を表す。
+ * @brief サポートされている最新のSIMDアーキテクチャー
  */
 typedef LIBSAKURA_SYMBOL(SimdArchMMX) LIBSAKURA_SYMBOL(SimdArchNative);
 /**
- * @brief
  * @~japanese
- * 	現在のコンパイル条件における最大のパケット型を表す。
+ * @brief サポートされている最新のSIMDアーキテクチャーのパケット型
  */
-	typedef LIBSAKURA_SYMBOL(SimdPacketMMX) LIBSAKURA_SYMBOL(SimdPacketNative);
+typedef LIBSAKURA_SYMBOL(SimdPacketMMX) LIBSAKURA_SYMBOL(SimdPacketNative);
 #define LIBSAKURA_PACKET_NATIVE_DEFINED 1
 #endif
 

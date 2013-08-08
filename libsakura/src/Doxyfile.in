@@ -1014,7 +1014,7 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = "__x86_64__=1" \
 	"__MMX__=1" \
-	"__SSE__=1" \
+	"__SSE4_2__=1" \
 	"__AVX__=1"
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 

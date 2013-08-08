@@ -21,28 +21,27 @@
 template<typename Arch>
 class LIBSAKURA_SYMBOL(SimdConvert) {
 public:
-	static inline typename Arch::PacketType
-	ByteToInt32SignExtend(typename Arch::PriorArch::PacketType bytes) {
+	static inline typename Arch::PacketType ByteToInt32SignExtend(
+			typename Arch::PriorArch::PacketType bytes) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 
-	static inline typename Arch::PacketType
-	ByteToFloat(typename Arch::PriorArch::PacketType bytes) {
+	static inline typename Arch::PacketType ByteToFloat(
+			typename Arch::PriorArch::PacketType bytes) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 
-	static inline typename Arch::PacketType
-	FloatToDouble(typename Arch::PriorArch::PacketType floats) {
+	static inline typename Arch::PacketType FloatToDouble(
+			typename Arch::PriorArch::PacketType floats) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 };
-
 
 /**
  * @~japanese
@@ -109,29 +108,25 @@ public:
 template<typename Arch, typename ElementType>
 class LIBSAKURA_SYMBOL(SimdMath) {
 public:
-	static inline typename Arch::PacketType Add(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Add(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Sub(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Sub(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Mul(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Mul(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Div(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Div(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
@@ -143,22 +138,19 @@ public:
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType And(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType And(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Or(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Or(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Xor(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Xor(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
@@ -175,18 +167,19 @@ public:
 			typename Arch::PacketType const &rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_float.v[i] = lhs.v_float.v[i] + rhs.v_float.v[i];
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Sub(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Sub(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_float.v[i] = lhs.v_float.v[i] - rhs.v_float.v[i];
 		}
@@ -197,18 +190,19 @@ public:
 			typename Arch::PacketType const &rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_float.v[i] = lhs.v_float.v[i] * rhs.v_float.v[i];
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Div(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Div(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_float.v[i] = lhs.v_float.v[i] / rhs.v_float.v[i];
 		}
@@ -225,30 +219,26 @@ public:
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
-	static inline typename Arch::PacketType Equal(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Equal(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 	static inline typename Arch::PacketType NotEqual(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 	static inline typename Arch::PacketType LessThan(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
 	}
 	static inline typename Arch::PacketType LessOrEqual(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
@@ -263,18 +253,19 @@ public:
 			typename Arch::PacketType operand) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
-			result.v_int32.v[i] = ~ operand.v_int32.v[i];
+			result.v_int32.v[i] = ~operand.v_int32.v[i];
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Equal(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Equal(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int32.v[i] =
 					lhs.v_float.v[i] == rhs.v_float.v[i] ? -1LL : 0;
@@ -282,11 +273,11 @@ public:
 		return result;
 	}
 	static inline typename Arch::PacketType NotEqual(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int32.v[i] =
 					lhs.v_float.v[i] != rhs.v_float.v[i] ? -1LL : 0;
@@ -294,11 +285,11 @@ public:
 		return result;
 	}
 	static inline typename Arch::PacketType LessThan(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int32.v[i] =
 					lhs.v_float.v[i] < rhs.v_float.v[i] ? -1LL : 0;
@@ -306,11 +297,11 @@ public:
 		return result;
 	}
 	static inline typename Arch::PacketType LessOrEqual(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int32.v[i] =
 					lhs.v_float.v[i] <= rhs.v_float.v[i] ? -1LL : 0;
@@ -327,18 +318,19 @@ public:
 			typename Arch::PacketType operand) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
-			result.v_int64.v[i] = ~ operand.v_int64.v[i];
+			result.v_int64.v[i] = ~operand.v_int64.v[i];
 		}
 		return result;
 	}
-	static inline typename Arch::PacketType Equal(
-			typename Arch::PacketType lhs,
+	static inline typename Arch::PacketType Equal(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int64.v[i] =
 					lhs.v_double.v[i] == rhs.v_double.v[i] ? -1LL : 0;
@@ -346,11 +338,11 @@ public:
 		return result;
 	}
 	static inline typename Arch::PacketType NotEqual(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int64.v[i] =
 					lhs.v_double.v[i] != rhs.v_double.v[i] ? -1LL : 0;
@@ -358,11 +350,11 @@ public:
 		return result;
 	}
 	static inline typename Arch::PacketType LessThan(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int64.v[i] =
 					lhs.v_double.v[i] < rhs.v_double.v[i] ? -1LL : 0;
@@ -370,11 +362,11 @@ public:
 		return result;
 	}
 	static inline typename Arch::PacketType LessOrEqual(
-			typename Arch::PacketType lhs,
-			typename Arch::PacketType rhs) {
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs) {
 		typename Arch::PacketType result;
 		for (size_t i = 0;
-				i < LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
 				++i) {
 			result.v_int64.v[i] =
 					lhs.v_double.v[i] <= rhs.v_double.v[i] ? -1LL : 0;
@@ -388,25 +380,26 @@ public:
 template<>
 class LIBSAKURA_SYMBOL(SimdConvert)<LIBSAKURA_SYMBOL(SimdArchSSE)> {
 public:
-	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType
-	ByteToInt32(LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
+	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType ByteToInt32(
+			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
 		result.v_prior.v[0] = bytes;
 		result.raw_int32 = _mm_cvtepi8_epi32(result.raw_int32);
 		return result;
 	}
 
-	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType
-	ByteToFloat(LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
+	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType ByteToFloat(
+			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
 		result.raw_float = _mm_cvtpi8_ps(bytes.raw_int64);
 		return result;
 	}
 
-	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType
-	FloatToDouble(LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType floats) {
+	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType FloatToDouble(
+			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType floats) {
 		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
-		result.raw_double = _mm_cvtps_pd((__m128)_mm_set_epi64(floats.raw_int64, floats.raw_int64));
+		result.raw_double = _mm_cvtps_pd(
+				(__m128 ) _mm_set_epi64(floats.raw_int64, floats.raw_int64));
 		return result;
 	}
 };
@@ -415,10 +408,8 @@ template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Blend(
-			Arch::PacketType condition,
-			Arch::PacketType false_value,
-			Arch::PacketType true_value) {
+	static inline Arch::PacketType Blend(Arch::PacketType condition,
+			Arch::PacketType false_value, Arch::PacketType true_value) {
 		Arch::PacketType result;
 		result.raw_float = _mm_blendv_ps(false_value.raw_float,
 				true_value.raw_float, condition.raw_float);
@@ -430,10 +421,8 @@ template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchSSE), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Blend(
-			Arch::PacketType condition,
-			Arch::PacketType false_value,
-			Arch::PacketType true_value) {
+	static inline Arch::PacketType Blend(Arch::PacketType condition,
+			Arch::PacketType false_value, Arch::PacketType true_value) {
 		Arch::PacketType result;
 		result.raw_double = _mm_blendv_pd(false_value.raw_double,
 				true_value.raw_double, condition.raw_double);
@@ -445,10 +434,8 @@ template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchSSE), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Blend(
-			Arch::PacketType condition,
-			Arch::PacketType false_value,
-			Arch::PacketType true_value) {
+	static inline Arch::PacketType Blend(Arch::PacketType condition,
+			Arch::PacketType false_value, Arch::PacketType true_value) {
 		Arch::PacketType result;
 		result.raw_float = _mm_blendv_ps(false_value.raw_float,
 				true_value.raw_float, condition.raw_float);
@@ -463,29 +450,25 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef int32_t Type;
 public:
-	static inline Arch::PacketType Add(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_add_epi32(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType Sub(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_sub_epi32(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType Mul(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_mul_epi32(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType Div(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		//result.raw_int32 = _mm_div_epi32(lhs.raw_int32, rhs.raw_int32);
@@ -495,28 +478,24 @@ public:
 		result.v_int32.v[3] = lhs.v_int32.v[3] / rhs.v_int32.v[3];
 		return result;
 	}
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		Arch::PacketType all_one;
-		all_one.set1(~ static_cast<int32_t>(0));
+		all_one.set1(~static_cast<int32_t>(0));
 		return Xor(operand, all_one);
 	}
-	static inline Arch::PacketType And(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType And(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_and_si128(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType Or(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Or(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_or_si128(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType Xor(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Xor(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_xor_si128(lhs.raw_int32, rhs.raw_int32);
@@ -529,36 +508,28 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef float Type;
 public:
-	static inline Arch::PacketType Add(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm_add_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm_add_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Sub(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm_sub_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm_sub_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Mul(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm_mul_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm_mul_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Div(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm_div_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm_div_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
 };
@@ -568,36 +539,28 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef double Type;
 public:
-	static inline Arch::PacketType Add(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm_add_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm_add_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Sub(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm_sub_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm_sub_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Mul(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm_mul_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm_mul_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Div(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm_div_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm_div_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
 };
@@ -608,32 +571,26 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchSSE), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		return LIBSAKURA_SYMBOL(SimdMath)<Arch, int32_t>::Not(operand);
 	}
-	static inline Arch::PacketType Equal(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Equal(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_int32 =
-				_mm_cmpeq_epi32(lhs.raw_int32, rhs.raw_int32);
+		result.raw_int32 = _mm_cmpeq_epi32(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType NotEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		return Not(Equal(lhs, rhs));
 	}
-	static inline Arch::PacketType LessThan(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_int32 = _mm_cmplt_epi32(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
-	static inline Arch::PacketType LessOrEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		return Not(LessThan(rhs, lhs));
 	}
@@ -643,40 +600,31 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		return LIBSAKURA_SYMBOL(SimdMath)<Arch, int32_t>::Not(operand);
 	}
-	static inline Arch::PacketType Equal(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Equal(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float =
-				_mm_cmpeq_ps(lhs.raw_float, rhs.raw_float);
+		result.raw_float = _mm_cmpeq_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType NotEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float =
-				_mm_cmpneq_ps(lhs.raw_float, rhs.raw_float);
+		result.raw_float = _mm_cmpneq_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType LessThan(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float =
-				_mm_cmplt_ps(lhs.raw_float, rhs.raw_float);
+		result.raw_float = _mm_cmplt_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType LessOrEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float =
-				_mm_cmple_ps(lhs.raw_float, rhs.raw_float);
+		result.raw_float = _mm_cmple_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
 };
@@ -685,67 +633,58 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchSSE), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 public:
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		return LIBSAKURA_SYMBOL(SimdMath)<Arch, int32_t>::Not(operand);
 	}
-	static inline Arch::PacketType Equal(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Equal(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double =
-				_mm_cmpeq_pd(lhs.raw_double, rhs.raw_double);
+		result.raw_double = _mm_cmpeq_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType NotEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double =
-				_mm_cmpneq_pd(lhs.raw_double, rhs.raw_double);
+		result.raw_double = _mm_cmpneq_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType LessThan(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double =
-				_mm_cmplt_pd(lhs.raw_double, rhs.raw_double);
+		result.raw_double = _mm_cmplt_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType LessOrEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double =
-				_mm_cmple_pd(lhs.raw_double, rhs.raw_double);
+		result.raw_double = _mm_cmple_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
 };
 
-#endif /* defined(__SSE__) */
+#endif /* defined(__SSE4_2__) */
 
 #if defined(__AVX__)
 
 template<>
 class LIBSAKURA_SYMBOL(SimdConvert)<LIBSAKURA_SYMBOL(SimdArchAVX)> {
 public:
-	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType
-	ByteToInt32SignExtend(LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
+	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType ByteToInt32SignExtend(
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
 #if defined(__AVX2__)
 		result.raw_int32 =
-				_mm256_cvtepi8_epi32(bytes.raw_int32);
+		_mm256_cvtepi8_epi32(bytes.raw_int32);
 #else
 		result.v_prior.v[0].raw_int32 = _mm_cvtepi8_epi32(bytes.raw_int32);
 		result.v_prior.v[1].raw_int32 = _mm_cvtepi8_epi32(
-				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)));
+				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)) );
 #endif
 		return result;
 	}
 
-	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType
-	ByteToFloat(LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
+	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType ByteToFloat(
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
 #if defined(__AVX2__)
 		result.raw_float = _mm256_cvtepi32_ps(
@@ -754,14 +693,14 @@ public:
 #else
 		result.v_prior.v[0].raw_int32 = _mm_cvtepi8_epi32(bytes.raw_int32);
 		result.v_prior.v[1].raw_int32 = _mm_cvtepi8_epi32(
-				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)));
+				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)) );
 		result.raw_float = _mm256_cvtepi32_ps(result.raw_int32);
 #endif
 		return result;
 	}
 
-	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType
-	FloatToDouble(LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType floats) {
+	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType FloatToDouble(
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType floats) {
 		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
 		result.raw_double = _mm256_cvtps_pd(floats.raw_float);
 		return result;
@@ -772,10 +711,8 @@ template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchAVX), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Blend(
-			Arch::PacketType condition,
-			Arch::PacketType false_value,
-			Arch::PacketType true_value) {
+	static inline Arch::PacketType Blend(Arch::PacketType condition,
+			Arch::PacketType false_value, Arch::PacketType true_value) {
 		Arch::PacketType result;
 		result.raw_float = _mm256_blendv_ps(false_value.raw_float,
 				true_value.raw_float, condition.raw_float);
@@ -787,10 +724,8 @@ template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchAVX), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Blend(
-			Arch::PacketType condition,
-			Arch::PacketType false_value,
-			Arch::PacketType true_value) {
+	static inline Arch::PacketType Blend(Arch::PacketType condition,
+			Arch::PacketType false_value, Arch::PacketType true_value) {
 		Arch::PacketType result;
 		result.raw_double = _mm256_blendv_pd(false_value.raw_double,
 				true_value.raw_double, condition.raw_double);
@@ -802,10 +737,8 @@ template<>
 class LIBSAKURA_SYMBOL(SimdBlend)<LIBSAKURA_SYMBOL(SimdArchAVX), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Blend(
-			Arch::PacketType condition,
-			Arch::PacketType false_value,
-			Arch::PacketType true_value) {
+	static inline Arch::PacketType Blend(Arch::PacketType condition,
+			Arch::PacketType false_value, Arch::PacketType true_value) {
 		Arch::PacketType result;
 		result.raw_float = _mm256_blendv_ps(false_value.raw_float,
 				true_value.raw_float, condition.raw_float);
@@ -820,82 +753,79 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 	typedef int32_t Type;
 public:
-	static inline Arch::PacketType Add(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
 		result.raw_int32 = _mm256_add_epi32(lhs.raw_int32,
 				rhs.raw_int32);
 #else
-		result.v_prior.v[0].raw_int32 = _mm_add_epi32(lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
-		result.v_prior.v[1].raw_int32 = _mm_add_epi32(lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
+		result.v_prior.v[0].raw_int32 = _mm_add_epi32(
+				lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
+		result.v_prior.v[1].raw_int32 = _mm_add_epi32(
+				lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
 #endif
 		return result;
 	}
-	static inline Arch::PacketType Sub(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
 		result.raw_int32 = _mm256_sub_epi32(lhs.raw_int32,
 				rhs.raw_int32);
 #else
-		result.v_prior.v[0].raw_int32 = _mm_sub_epi32(lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
-		result.v_prior.v[1].raw_int32 = _mm_sub_epi32(lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
+		result.v_prior.v[0].raw_int32 = _mm_sub_epi32(
+				lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
+		result.v_prior.v[1].raw_int32 = _mm_sub_epi32(
+				lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
 #endif
 		return result;
 	}
-	static inline Arch::PacketType Mul(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
 		result.raw_int32 = _mm256_mul_epi32(lhs.raw_int32,
 				rhs.raw_int32);
 #else
-		result.v_prior.v[0].raw_int32 = _mm_mul_epi32(lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
-		result.v_prior.v[1].raw_int32 = _mm_mul_epi32(lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
+		result.v_prior.v[0].raw_int32 = _mm_mul_epi32(
+				lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
+		result.v_prior.v[1].raw_int32 = _mm_mul_epi32(
+				lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
 #endif
 		return result;
 	}
-	static inline Arch::PacketType Div(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		// result.raw_int32 = _mm256_div_epi32(lhs.raw_int32, rhs.raw_int32);
-		result.v_prior.v[0] = LIBSAKURA_SYMBOL(SimdMath)<Arch::PriorArch, int32_t>::Div(lhs.v_prior.v[0], rhs.v_prior.v[0]);
-		result.v_prior.v[1] = LIBSAKURA_SYMBOL(SimdMath)<Arch::PriorArch, int32_t>::Div(lhs.v_prior.v[1], rhs.v_prior.v[1]);
+		result.v_prior.v[0] = LIBSAKURA_SYMBOL(SimdMath)<Arch::PriorArch,
+				int32_t>::Div(lhs.v_prior.v[0], rhs.v_prior.v[0]);
+		result.v_prior.v[1] = LIBSAKURA_SYMBOL(SimdMath)<Arch::PriorArch,
+				int32_t>::Div(lhs.v_prior.v[1], rhs.v_prior.v[1]);
 		return result;
 	}
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		Arch::PacketType all_one;
-		all_one.set1(~ static_cast<int32_t>(0));
+		all_one.set1(~static_cast<int32_t>(0));
 		return Xor(operand, all_one);
 	}
-	static inline Arch::PacketType And(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType And(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_and_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_and_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Or(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Or(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_or_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_or_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Xor(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Xor(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_xor_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_xor_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
 };
@@ -905,36 +835,28 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 	typedef float Type;
 public:
-	static inline Arch::PacketType Add(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_add_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_add_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Sub(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_sub_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_sub_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Mul(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_mul_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_mul_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
-	static inline Arch::PacketType Div(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_float = _mm256_div_ps(lhs.raw_float,
-				rhs.raw_float);
+		result.raw_float = _mm256_div_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
 };
@@ -944,36 +866,28 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 	typedef double Type;
 public:
-	static inline Arch::PacketType Add(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm256_add_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm256_add_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Sub(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm256_sub_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm256_sub_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Mul(
-			Arch::PacketType const &lhs,
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm256_mul_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm256_mul_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
-	static inline Arch::PacketType Div(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
-		result.raw_double = _mm256_div_pd(lhs.raw_double,
-				rhs.raw_double);
+		result.raw_double = _mm256_div_pd(lhs.raw_double, rhs.raw_double);
 		return result;
 	}
 };
@@ -984,43 +898,42 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchAVX), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		return LIBSAKURA_SYMBOL(SimdMath)<Arch, int32_t>::Not(operand);
 	}
-	static inline Arch::PacketType Equal(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Equal(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
 		result.raw_float =
-				 _mm256_cmpeq_epi32(lhs.raw_int32, rhs.raw_int32);
+		_mm256_cmpeq_epi32(lhs.raw_int32, rhs.raw_int32);
 #else
-		result.v_prior.v[0].raw_int32 = _mm_cmpeq_epi32(lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
-		result.v_prior.v[1].raw_int32 = _mm_cmpeq_epi32(lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
+		result.v_prior.v[0].raw_int32 = _mm_cmpeq_epi32(
+				lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
+		result.v_prior.v[1].raw_int32 = _mm_cmpeq_epi32(
+				lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
 #endif
 		return result;
 	}
-	static inline Arch::PacketType NotEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		return Not(Equal(lhs, rhs));
 	}
-	static inline Arch::PacketType LessThan(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
 		result.raw_float =
-				 _mm256_cmpgt_epi32(rhs.raw_int32, lhs.raw_int32);
+		_mm256_cmpgt_epi32(rhs.raw_int32, lhs.raw_int32);
 #else
-		result.v_prior.v[0].raw_int32 = _mm_cmplt_epi32(lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
-		result.v_prior.v[1].raw_int32 = _mm_cmplt_epi32(lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
+		result.v_prior.v[0].raw_int32 = _mm_cmplt_epi32(
+				lhs.v_prior.v[0].raw_int32, rhs.v_prior.v[0].raw_int32);
+		result.v_prior.v[1].raw_int32 = _mm_cmplt_epi32(
+				lhs.v_prior.v[1].raw_int32, rhs.v_prior.v[1].raw_int32);
 #endif
 		return result;
 	}
-	static inline Arch::PacketType LessOrEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		return Not(LessThan(rhs, lhs));
 	}
@@ -1030,36 +943,31 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchAVX), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		return LIBSAKURA_SYMBOL(SimdMath)<Arch, int32_t>::Not(operand);
 	}
-	static inline Arch::PacketType Equal(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Equal(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
 				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_EQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType NotEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
 				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NEQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType LessThan(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
 				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NGE_UQ);
 		return result;
 	}
-	static inline Arch::PacketType LessOrEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
@@ -1072,36 +980,31 @@ template<>
 class LIBSAKURA_SYMBOL(SimdCompare)<LIBSAKURA_SYMBOL(SimdArchAVX), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 public:
-	static inline Arch::PacketType Not(
-			Arch::PacketType operand) {
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
 		return LIBSAKURA_SYMBOL(SimdMath)<Arch, int32_t>::Not(operand);
 	}
-	static inline Arch::PacketType Equal(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType Equal(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
 				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_EQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType NotEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
 				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NEQ_UQ);
 		return result;
 	}
-	static inline Arch::PacketType LessThan(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
 				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NGE_UQ);
 		return result;
 	}
-	static inline Arch::PacketType LessOrEqual(
-			Arch::PacketType lhs,
+	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
@@ -1154,8 +1057,8 @@ public:
  * @param elements	@a data の要素数
  * @param context		処理のコンテキスト情報へのポインタ
  */
-template<typename Arch, typename ScalarType, typename PacketAction, typename ScalarAction,
-		typename Context>
+template<typename Arch, typename ScalarType, typename PacketAction,
+		typename ScalarAction, typename Context>
 void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 		Context *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
