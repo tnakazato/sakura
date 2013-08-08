@@ -108,6 +108,15 @@ protected:
 			double const x_base[/*num_base*/], double x_located) const = 0;
 };
 
+class Convolution {
+public:
+	virtual ~Convolution() {
+	}
+
+	virtual void CreateConvole1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+};
+
 class OptimizedImplementationFactory {
 public:
 	virtual ~OptimizedImplementationFactory() {
