@@ -156,6 +156,20 @@ protected:
 			double const x_base[/*num_base*/], double x_located) const;
 };
 
+
+class ConvolutionDefault: public Convolution {
+public:
+	virtual void CreateConvole1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+};
+
+class ConvolutionAfterSandyBridge: public Convolution {
+public:
+	virtual void CreateConvole1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+};
+
+
 } // namespace LIBSAKURA_PREFIX
 
 #endif /* LIBSAKURA_LIBSAKURA_OPTIMIZED_IMPLEMENTATION_FACTORY_IMPL_H_ */
