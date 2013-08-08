@@ -126,6 +126,7 @@ public:
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const = 0;
 	virtual Interpolation const *GetInterpolationImpl() const = 0;
+	virtual Convolution const *GetConvolutionImpl() const = 0;
 	static OptimizedImplementationFactory const *GetFactory();
 protected:
 	OptimizedImplementationFactory() {
