@@ -62,20 +62,21 @@ public:
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
 };
 
+template<typename DataType>
 class BitOperation {
 public:
 	virtual ~BitOperation() {
 	}
-//	template<typename DataType>
-//	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-//			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-//			DataType out[/*num_in*/]) const = 0;
-	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
-			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			uint8_t out[/*num_in*/]) const = 0;
-	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
-			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			uint32_t out[/*num_in*/]) const = 0;
+
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
+			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			DataType out[/*num_in*/]) const = 0;
+//	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+//			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//			uint8_t out[/*num_in*/]) const = 0;
+//	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
+//			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//			uint32_t out[/*num_in*/]) const = 0;
 };
 
 class Interpolation {
@@ -113,7 +114,8 @@ public:
 	}
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
-	virtual BitOperation const *GetBitOperationImpl() const = 0;
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const = 0;
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const = 0;
 	virtual Interpolation const *GetInterpolationImpl() const = 0;
 	static OptimizedImplementationFactory const *GetFactory();
 protected:

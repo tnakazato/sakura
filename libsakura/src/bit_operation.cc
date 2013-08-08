@@ -66,26 +66,32 @@ inline void OperateBitsAndEigen(DataType bit_mask, size_t num_in, DataType const
 #endif /* defined(__AVX__) */
 
 namespace LIBSAKURA_PREFIX {
-//template<typename DataType>
-//void ADDSUFFIX(BitOperation, ARCH_SUFFIX)::OperateBitsAnd(DataType bit_mask, size_t num_in,
-//		DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-//		DataType out[/*num_in*/]) const {
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)::OperateBitsAnd(uint8_t bit_mask, size_t num_in,
-		uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-		uint8_t out[/*num_in*/]) const {
+template<typename DataType>
+void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsAnd(DataType bit_mask, size_t num_in,
+		DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+		DataType out[/*num_in*/]) const {
 #if defined( __AVX__) && (! FORCE_EIGEN)
 	OperateBitsAndSimd(bit_mask, num_in, in, edit_mask, out);
 #else
 	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
 #endif
 }
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)::OperateBitsAnd(uint32_t bit_mask, size_t num_in,
-		uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-		uint32_t out[/*num_in*/]) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	OperateBitsAndSimd(bit_mask, num_in, in, edit_mask, out);
-#else
-	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
-#endif
-}
+//void ADDSUFFIX(BitOperation, ARCH_SUFFIX)::OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+//		uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//		uint8_t out[/*num_in*/]) const {
+//#if defined( __AVX__) && (! FORCE_EIGEN)
+//	OperateBitsAndSimd(bit_mask, num_in, in, edit_mask, out);
+//#else
+//	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
+//#endif
+//}
+//void ADDSUFFIX(BitOperation, ARCH_SUFFIX)::OperateBitsAnd(uint32_t bit_mask, size_t num_in,
+//		uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//		uint32_t out[/*num_in*/]) const {
+//#if defined( __AVX__) && (! FORCE_EIGEN)
+//	OperateBitsAndSimd(bit_mask, num_in, in, edit_mask, out);
+//#else
+//	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
+//#endif
+//}
 }

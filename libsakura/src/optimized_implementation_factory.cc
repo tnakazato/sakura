@@ -71,7 +71,8 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 
 GriddingDefault const gridding_default;
 StatisticsDefault const statistics_default;
-BitOperationDefault const bit_operation_default;
+BitOperationDefault<uint8_t> const bit_operation_default_uint8;
+BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 InterpolationDefault const interpolation_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
@@ -82,8 +83,11 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_default;
 	}
-	virtual BitOperation const *GetBitOperationImpl() const {
-		return &bit_operation_default;
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const {
+		return &bit_operation_default_uint8;
+	}
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const {
+		return &bit_operation_default_uint32;
 	}
 	virtual Interpolation const *GetInterpolationImpl() const {
 		return &interpolation_default;
@@ -93,7 +97,8 @@ public:
 
 GriddingAfterSandyBridge const gridding_after_sandy_bridge;
 StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
-BitOperationAfterSandyBridge const bit_operation_after_sandy_bridge;
+BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
+BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
@@ -104,9 +109,13 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_sandy_bridge;
 	}
-	virtual BitOperation const *GetBitOperationImpl() const {
-		/* return &bit_operation_after_sandy_bridge;*/
-		return &bit_operation_default;
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const {
+		/* return &bit_operation_after_sandy_bridge_uint8;*/
+		return &bit_operation_default_uint8;
+	}
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const {
+		/* return &bit_operation_after_sandy_bridge_uint32;*/
+		return &bit_operation_default_uint32;
 	}
 	virtual Interpolation const *GetInterpolationImpl() const {
 		// return &interpolation_after_sandy_bridge;

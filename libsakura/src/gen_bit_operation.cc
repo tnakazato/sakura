@@ -24,7 +24,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(uint8_
 	*/
 
 	auto bitop =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImpl();
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUInt8();
 	bitop->OperateBitsAnd(bit_mask, num_in, in, edit_mask, out);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -48,7 +48,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(uint3
 	*/
 
 	auto bitop =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImpl();
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUInt32();
 	bitop->OperateBitsAnd(bit_mask, num_in, in, edit_mask, out);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);

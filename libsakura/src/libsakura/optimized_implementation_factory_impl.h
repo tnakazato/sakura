@@ -72,30 +72,34 @@ public:
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
 
-class BitOperationDefault: public BitOperation {
+template<typename DataType>
+class BitOperationDefault: public BitOperation<DataType> {
 public:
-//	template<typename DataType> virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-//			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-//			DataType out[]) const;
-	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
-			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			uint8_t out[/*num_in*/]) const;
-	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
-			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			uint32_t out[/*num_in*/]) const;
+	virtual ~BitOperationDefault(){}
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
+			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			DataType out[]) const;
+//	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+//			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//			uint8_t out[/*num_in*/]) const;
+//	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
+//			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//			uint32_t out[/*num_in*/]) const;
 };
 
-class BitOperationAfterSandyBridge: public BitOperation {
+template<typename DataType>
+class BitOperationAfterSandyBridge: public BitOperation<DataType> {
 public:
-//	template<typename DataType> virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-//			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-//			DataType out[/*num_in*/]) const;
-	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
-			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			uint8_t out[/*num_in*/]) const;
-	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
-			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			uint32_t out[/*num_in*/]) const;
+	virtual ~BitOperationAfterSandyBridge(){}
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
+			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			DataType out[/*num_in*/]) const;
+//	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
+//			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//			uint8_t out[/*num_in*/]) const;
+//	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
+//			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+//			uint32_t out[/*num_in*/]) const;
 };
 
 class InterpolationDefault: public Interpolation {
