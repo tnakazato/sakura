@@ -39,6 +39,14 @@ inline void CreateConvole1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Conv
         size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) {
 	std::cout << " CreateConvole1DContextEigen function is called" << std::endl;
 
+    //const double ln2 = 0.6931471805599453094172321;
+    //const double pi = 3.141592653589793238462643;
+    //const double sigma = width / sqrt(double(8.0) * ln2);
+    //const double refPix = double(nPixels)/2;
+    //double norm;
+	// norm = 1.0 / (sigma * sqrt(2.0 * pi));
+    //const Gaussian1D<double> gauss(norm, refPix, double(width));
+    //for (uint j=0; j<nPixels; j++) kernel[j] = gauss(double(j));
 }
 
 } /* anonymous namespace */
