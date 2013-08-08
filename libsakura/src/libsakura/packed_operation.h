@@ -1042,7 +1042,7 @@ public:
  * </pre>
  * @tparam ScalarAction	スカラー処理の内容。次のメソッドを備えた型であること。
  * <pre>
- * template &lt;typename Arch, typename Context&gt;
+ * template &lt;typename ScalarType, typename Context&gt;
  * struct ScalarAction {
  * 	static inline void prologue(Context *context) {
  * 	}
@@ -1064,8 +1064,8 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	size_t const kUnit =
 			LIBSAKURA_SYMBOL(SimdScalarType)<Arch, ScalarType>::kElementsInPacket;
-	size_t const packet_count = elements >= kUnit * 4 ? elements / kUnit : 0;
-	auto ptr = reinterpret_cast<typename Arch::PacketType *>(data);
+	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
+	auto ptr = const_cast<typename Arch::PacketType *>(reinterpret_cast<typename Arch::PacketType const *>(data));
 	PacketAction::prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
 		PacketAction::action(i, &ptr[i], context);
@@ -1074,6 +1074,151 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 	ScalarAction::prologue(context);
 	for (size_t i = packet_count * kUnit; i < elements; ++i) {
 		ScalarAction::action(i, &data[i], context);
+	}
+	ScalarAction::epilogue(context);
+}
+
+/**
+ * @~japanese
+ * @brief アラインされたデータ(要素数はSIMDパケット長の倍数でなくても良い)を、ベクトル処理とスカラー処理を組み合わせて、繰り返し処理する。
+ *
+ * 次のように処理することで、@a data 配列を処理する。
+ *
+ * @a PacketAction::prologueを1回、@a PacketAction::action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::epilogueを一回呼ぶ。
+ *
+ * 次に、@a ScalarAction::prologueを1回、@a ScalarAction::action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::epilogueを一回呼ぶ。
+ *
+ * @tparam Arch1	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
+ *  @ref sakura_SimdArchAVX or @ref sakura_SimdArchSSE or @ref sakura_SimdArchMMX。
+ *  PacketActionによる処理単位はArch1によって決定される。
+ * @tparam Arch2	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
+ * @tparam ScalarType1	@a data1 の要素(スカラー)の型
+ * @tparam ScalarType2	@a data2 の要素(スカラー)の型
+ * @tparam PacketAction	SIMD処理の内容。次のメソッドを備えた型であること。
+ * <pre>
+ * template &lt;typename Arch1, typename Arch2, typename Context&gt;
+ * struct PacketAction {
+ * 	static inline void prologue(Context *context) {
+ * 	}
+ * 	static inline void action(size_t idx, typename Arch1::PacketType *data1, typename Arch2::PacketType *data2, Context *context) {
+ * 	}
+ * 	static inline void epilogue(Context *context) {
+ * 	}
+ * };
+ * </pre>
+ * @tparam ScalarAction	スカラー処理の内容。次のメソッドを備えた型であること。
+ * <pre>
+ * template &lt;typename ScalarType1, typename ScalarType2, typename Context&gt;
+ * struct ScalarAction {
+ * 	static inline void prologue(Context *context) {
+ * 	}
+ * 	static inline void action(size_t idx, ScalarType1 *data1, ScalarType2 *data2, Context *context) {
+ * 	}
+ * 	static inline void epilogue(Context *context) {
+ * 	}
+ * };
+ * </pre>
+ * @tparam Context	処理のコンテキスト情報の型
+ * @param data1	アライメントされたデータ
+ * @param data2	アライメントされたデータ
+ * @param elements	@a data1, @a data2 の要素数
+ * @param context		処理のコンテキスト情報へのポインタ
+ */
+template<typename Arch1, typename ScalarType1, typename Arch2,
+		typename ScalarType2, typename PacketAction, typename ScalarAction,
+		typename Context>
+void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
+		ScalarType2 data2[], Context *context) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data1));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
+	size_t const kUnit =
+			LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
+	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
+	auto ptr1 = const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
+	auto ptr2 = const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
+	PacketAction::prologue(context);
+	for (size_t i = 0; i < packet_count; ++i) {
+		PacketAction::action(i, &ptr1[i], &ptr2[i], context);
+	}
+	PacketAction::epilogue(context);
+	ScalarAction::prologue(context);
+	for (size_t i = packet_count * kUnit; i < elements; ++i) {
+		ScalarAction::action(i, &data1[i], &data2[i], context);
+	}
+	ScalarAction::epilogue(context);
+}
+
+/**
+ * @~japanese
+ * @brief アラインされたデータ(要素数はSIMDパケット長の倍数でなくても良い)を、ベクトル処理とスカラー処理を組み合わせて、繰り返し処理する。
+ *
+ * 次のように処理することで、@a data 配列を処理する。
+ *
+ * @a PacketAction::prologueを1回、@a PacketAction::action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::epilogueを一回呼ぶ。
+ *
+ * 次に、@a ScalarAction::prologueを1回、@a ScalarAction::action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::epilogueを一回呼ぶ。
+ *
+ * @tparam Arch1	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
+ *  @ref sakura_SimdArchAVX or @ref sakura_SimdArchSSE or @ref sakura_SimdArchMMX。
+ *  PacketActionによる処理単位はArch1によって決定される。
+ * @tparam Arch2	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
+ * @tparam Arch3	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
+ * @tparam ScalarType1	@a data1 の要素(スカラー)の型
+ * @tparam ScalarType2	@a data2 の要素(スカラー)の型
+ * @tparam ScalarType3	@a data3 の要素(スカラー)の型
+ * @tparam PacketAction	SIMD処理の内容。次のメソッドを備えた型であること。
+ * <pre>
+ * template &lt;typename Arch1, typename Arch2, typename Arch3, typename Context&gt;
+ * struct PacketAction {
+ * 	static inline void prologue(Context *context) {
+ * 	}
+ * 	static inline void action(size_t idx, typename Arch1::PacketType *data1, typename Arch2::PacketType *data2, typename Arch3::PacketType *data3, Context *context) {
+ * 	}
+ * 	static inline void epilogue(Context *context) {
+ * 	}
+ * };
+ * </pre>
+ * @tparam ScalarAction	スカラー処理の内容。次のメソッドを備えた型であること。
+ * <pre>
+ * template &lt;typename ScalarType1, typename ScalarType2, typename ScalarType3, typename Context&gt;
+ * struct ScalarAction {
+ * 	static inline void prologue(Context *context) {
+ * 	}
+ * 	static inline void action(size_t idx, ScalarType1 *data1, ScalarType2 *data2, ScalarType3 *data3, Context *context) {
+ * 	}
+ * 	static inline void epilogue(Context *context) {
+ * 	}
+ * };
+ * </pre>
+ * @tparam Context	処理のコンテキスト情報の型
+ * @param data1	アライメントされたデータ
+ * @param data2	アライメントされたデータ
+ * @param data3	アライメントされたデータ
+ * @param elements	@a data1, @a data2, @a data3 の要素数
+ * @param context		処理のコンテキスト情報へのポインタ
+ */
+template<typename Arch1, typename ScalarType1, typename Arch2,
+		typename ScalarType2, typename Arch3, typename ScalarType3,
+		typename PacketAction, typename ScalarAction, typename Context>
+void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
+		ScalarType2 data2[], ScalarType3 data3[], Context *context) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data1));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data3));
+	size_t const kUnit =
+			LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
+	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
+	auto ptr1 = const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
+	auto ptr2 = const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
+	auto ptr3 = const_cast<typename Arch3::PacketType *>(reinterpret_cast<typename Arch3::PacketType const *>(data3));
+	PacketAction::prologue(context);
+	for (size_t i = 0; i < packet_count; ++i) {
+		PacketAction::action(i, &ptr1[i], &ptr2[i], &ptr3[i], context);
+	}
+	PacketAction::epilogue(context);
+	ScalarAction::prologue(context);
+	for (size_t i = packet_count * kUnit; i < elements; ++i) {
+		ScalarAction::action(i, &data1[i], &data2[i], &data3[i], context);
 	}
 	ScalarAction::epilogue(context);
 }
