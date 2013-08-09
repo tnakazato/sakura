@@ -23,25 +23,25 @@ extern "C" {
 
 /**
  * @~japanese
- * @brief ���������������������������������������
+ * @brief 関数の呼び出し結果を表す。
  *
  */
 typedef enum {
 	/**
 	 * @~japanese
-	 * @brief ���������������������
+	 * @brief 成功または正常
 	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
 	/**
 	 * @~japanese
-	 * @brief ���������������������
+	 * @brief 失敗または異常
 	 */LIBSAKURA_SYMBOL(Status_kNG) = 1,
 	/**
 	 * @~japanese
-	 * @brief ���������������������������
+	 * @brief 引数が不正だった。
 	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2,
 	/**
 	 * @~japanese
-	 * @brief ���������������������������
+	 * @brief 原因不明のエラー。
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
 }LIBSAKURA_SYMBOL(Status);
 
@@ -50,11 +50,11 @@ typedef enum {
  * @brief Initializes Sakura Library
  * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
  * @~japanese
- * @brief Sakura������������������������������������
+ * @brief Sakuraライブラリを初期化する。
  *
- * ���������������Sakura���������������API������������������������������������������������������
- * ���������������������������������������������������������������������������������������������������
- * @ref sakura_CleanUp() ���������������������������������������������������������������������������������������
+ * 他の全てのSakuraライブラリAPIの呼び出しに先立って、呼び出すこと。
+ * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
+ * @ref sakura_CleanUp() の呼び出しを挟まず、複数回この関数を呼び出してはならない。
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)();
@@ -63,10 +63,10 @@ typedef enum {
  * @~english
  * @brief Cleans up Sakura Library
  * @~japanese
- * @brief Sakura������������������������������������������������
+ * @brief Sakuraライブラリをクリーンアップする。
  *
- * ���������������������������������������������������������������������������������������������������
- * ������������������������������������������������������Sakura������������������������������������������������������������������������������������������������������������
+ * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
+ * また、この関数を呼び出す時点で、他のSakuraライブラリの呼び出しは全て完了しており、以後の呼び出しも発生しないこと。
  * @~
  * MT-unsafe
  */
@@ -76,9 +76,9 @@ void LIBSAKURA_SYMBOL(CleanUp)();
  * @~english
  * @brief Returns the current time.
  * @~japanese
- * @brief ������������(������������)������������
+ * @brief 現在時刻(単位は秒)を返す。
  *
- * ���������gettimeofday(2)���������
+ * 精度はgettimeofday(2)依存。
  * @~
  * MT-safe
  */
@@ -89,10 +89,10 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
  */
 /**
  * @~japanese
- * @brief Sakura������������������������������������������������������@a ptr ������������������������������
+ * @brief Sakuraライブラリが想定するアライメントに、@a ptr が合っているか調べる
  *
- * @param ptr ���������������������������������������������������������NULL ���������������������
- * @return ��������������������������������� true , ��������������������� false
+ * @param ptr アラインされているか調べたいアドレス。NULL も受け付ける。
+ * @return アラインされているなら true , そうでないなら false
  * @~
  * MT-safe
  */
@@ -101,9 +101,9 @@ bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
 
 /**
  * @~japanese
- * @brief Sakura���������������������������������������������������������������������������������������������
+ * @brief Sakuraライブラリがベクトル演算を行う配列に期待するアライメントを返す
  *
- * @return Sakura������������������������������������������������������������������������������������������������
+ * @return Sakuraライブラリは、戻り値の倍数アドレスにアラインされることを期待する
  * @~
  * MT-safe
  */
@@ -111,15 +111,15 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
 
 /**
  * @~japanese
- * @brief @a arena ���������������������������������������������
- * ������������������������������������������������������������������������������������������
- * @a arena ���������������������������������@a arena ������������
+ * @brief @a arena がアラインされていないならば、
+ * アドレスを必要最小限増加させ、アラインされたアドレスを返す。
+ * @a arena がアラインされていれば@a arena を返す。
  *
- * @param arena ������������������������������������������������
- * @param size_of_arena ���������������������������������������
- * @param size_required ������������������������������������������������������������������
- * @return ��������������������������������������������� @a size_required ���������������������
- * ���������������������@a size_of_arena ��������������������� nullptr ������������
+ * @param arena 確保されている領域の先頭アドレス
+ * @param size_of_arena 確保されている領域のサイズ
+ * @param size_required アライン後も利用可能でなければならないサイズ
+ * @return アラインされたアドレス。もし、 @a size_required を格納するのに
+ * 十分な大きさの@a size_of_arena が無いならば、 nullptr を返す。
  * @~
  * MT-safe
  */
@@ -133,47 +133,47 @@ double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
 
 /**
  * @~japanese
- * Sakura������������������������������������������������������������������������������������������
- * ���������������������������������������������������������������������
+ * Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型。
+ * 関数はリエントラントな実装でなければならない。
  * @param size
  */
 typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
 
 /**
  * @~japanese
- * Sakura������������������������������������������������������������������������������������������������������
- * ���������������������������������������������������������������������
+ * Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型。
+ * 関数はリエントラントな実装でなければならない。
  * @param pointer
  */
 typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 
 /**
  * @~japanese
- * @ref sakura_ComputeStatistics ������������������������������������
+ * @ref sakura_ComputeStatistics の結果を格納する構造体。
  */
 typedef struct {
-	size_t count; /**< ������ */
-	float sum; /**< ������ */
-	float mean; /**< ������ */
-	float rms; /**< ��������������������� */
-	float stddev; /**< ������ */
-	float min; /**< ��������� */
-	float max; /**< ��������� */
-	int index_of_min; /**< ������������������������������(���������������������������-1) */
-	int index_of_max; /**< ������������������������������(���������������������������-1) */
+	size_t count; /**< 個数 */
+	float sum; /**< 合計 */
+	float mean; /**< 平均 */
+	float rms; /**< 二乗平均平方根 */
+	float stddev; /**< 分散 */
+	float min; /**< 最小値 */
+	float max; /**< 最大値 */
+	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
+	int index_of_max; /**< 最大値のインデックス(有効な値がなければ-1) */
 }LIBSAKURA_SYMBOL(StatisticsResult);
 
 /**
  * @~japanese
- * @brief ������������������������������������������������������������������������
- * @ref sakura_StatisticsResult ������������The bit operation is invoked
+ * @brief 統計値を計算する。どのような統計値を算出するかは
+ * @ref sakura_StatisticsResult を参照。The bit operation is invoked
  *
- * @param num_data @a data ������@a is_valid ���������������
- * @param data ���������������������������������������@a is_valid ���true������������NaN������������������������������
- * @param is_valid ������������������������������������ false ���������
- * ������������@a data ���������������������������
- * @param result ���������������������������������������������������������������������������������������NaN���������������������
- * ���������������������������������������������������������������������@a index_of_min, @a index_of_max������������������������������������������
+ * @param num_data @a data 及び@a is_valid の要素の数
+ * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、NaNであってはならない。
+ * @param is_valid データのマスク。この値が false だと、
+ * 対応する@a data の要素が無視される
+ * @param result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
+ * 同じ値が複数あった場合、どの値のインデックスが@a index_of_min, @a index_of_maxに格納されるかは不定である。
  *
  * @~
  * MT-safe
@@ -183,14 +183,14 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data, float const data[],
 
 /**
  * @~japanese
- * @brief valid������������������������������������������������������������
+ * @brief validな値のみを先頭に詰めて昇順にソートする。
  *
- * @param is_valid ������������������������������������ false ���������
- * ������������@a data ���������������������������
- * @param num_data @a data ������@a is_valid ���������������
- * @param data ������������������������������In place������������������������������������������������������������������������
- * ������������@a is_valid ���true������������NaN������������������������������
- * @return (valid������������������������������)���������������������������( <= @a num_data)
+ * @param is_valid データのマスク。この値が false だと、
+ * 対応する@a data の要素が無視される
+ * @param num_data @a data 及び@a is_valid の要素の数
+ * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
+ * 対応する@a is_valid がtrueの場合、NaNであってはならない。
+ * @return (validでないデータを除いた)ソートされた要素数( <= @a num_data)
  * @~
  * MT-safe
  */
@@ -199,20 +199,20 @@ size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
 
 /**
  * @~japanese
- * @brief ���������������������������������������������
- * ������������������������������NaN/+-Inf������������������������������
- * @param num_spectra ������������������������������������������ 0 <= start_spectrum <= end_spectrum <= num_spectra
+ * @brief 畳み込みしながらグリッドする。
+ * 各浮動小数点の数値はNaN/+-Infであってはならない。
+ * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
  * @param start_spectrum
  * @param end_spectrum
- * @param spectrum_mask	������������num_spectra���false���������������������������������������
+ * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。
  * @param x
  * @param y
  * @param support
  * @param sampling
  * @param num_polarizations
- * @param polarization_map	���������������������[0,num_polarization_for_grid)���������������������������������������������num_polarization������������������������������
+ * @param polarization_map	各要素の値は、[0,num_polarization_for_grid)でなければならない。要素数は、num_polarizationでなければならない。
  * @param num_channels
- * @param channel_map	���������������������[0,num_channels_for_grid)���������������������������������������������num_channels������������������������������
+ * @param channel_map	各要素の値は、[0,num_channels_for_grid)でなければならない。要素数は、num_channelsでなければならない。
  * @param mask
  * @param value
  * @param weight
@@ -275,11 +275,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
  * @a out [i] = ( @a edit_mask[i] ? (@a bit_maks & @a in [i]) : @a in [i] )
  *
  * @param bit_mask TBD
- * @param num_in @a in, @a edit_mask ������@a out ������������������
+ * @param num_in @a in, @a edit_mask 及び@a out の要素の数。
  * @param in TBD
- * @param edit_mask ������������������������������������ false ���������
- * ���������������������TBD������������������
- * @param out ���������������������
+ * @param edit_mask データのマスク。この値が false だと、
+ * 対応する要素のTBDが無視される
+ * @param out 結果の格納先。
  * @return @a sakura_Status
  *
  */
@@ -312,7 +312,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(uint32_t bit_mas
 
 /**
  * @~japanese
- * @brief ������������������������������������������������
+ * @brief 補間方法を定義するための列挙型。
  * @~english
  * @brief Enumerations to define interpolation types.
  **/
