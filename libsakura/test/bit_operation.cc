@@ -69,7 +69,8 @@ protected:
 	}
 
 	void PrintInputs(){
-		cout << "bit_mask = " << BToS(bit_mask_) << endl;
+		cout << "bit_mask = " << BToS(bit_mask_) ;
+		cout << endl;
 		PrintArray("in", NUM_IN, in_);
 	}
 
