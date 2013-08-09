@@ -21,6 +21,9 @@ using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::Interpolation;
 using ::LIBSAKURA_PREFIX::InterpolationDefault;
 using ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::Convolution;
+using ::LIBSAKURA_PREFIX::ConvolutionDefault;
+using ::LIBSAKURA_PREFIX::ConvolutionAfterSandyBridge;
 
 struct CPURegister {
 	uint32_t eax, ebx, ecx, edx;
@@ -74,6 +77,7 @@ StatisticsDefault const statistics_default;
 BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 InterpolationDefault const interpolation_default;
+ConvolutionDefault const convolution_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -92,6 +96,9 @@ public:
 	virtual Interpolation const *GetInterpolationImpl() const {
 		return &interpolation_default;
 	}
+	virtual Convolution const *GetConvolutionImpl() const {
+		return &convolution_default;
+	}
 
 } default_factory;
 
@@ -100,6 +107,7 @@ StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
+ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -120,6 +128,10 @@ public:
 	virtual Interpolation const *GetInterpolationImpl() const {
 		// return &interpolation_after_sandy_bridge;
 		return &interpolation_default;
+	}
+	virtual Convolution const *GetConvolutionImpl() const {
+		// return &convolution_after_sandy_bridge;
+		return &convolution_after_sandy_bridge;
 	}
 } after_sandy_bridge;
 

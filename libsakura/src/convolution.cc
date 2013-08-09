@@ -16,7 +16,7 @@
 
 namespace {
 
-void CreateConvole1DContextSimd(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+void CreateConvolve1DContextSimd(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
         size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) {
 	std::cout << "This function is not implemented yet." << std::endl;
 }
@@ -35,7 +35,7 @@ using ::Eigen::Aligned;
 
 namespace {
 
-inline void CreateConvole1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
         size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) {
 	std::cout << " CreateConvole1DContextEigen function is called" << std::endl;
 
@@ -54,12 +54,12 @@ inline void CreateConvole1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Conv
 #endif /* defined(__AVX__) */
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvole1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
         size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const {
 #if defined( __AVX__) && (! FORCE_EIGEN)
-	CreateConvole1DContextSimd(num_channel,kernel_type,kernel_width,use_fft,context);
+	CreateConvolve1DContextSimd(num_channel,kernel_type,kernel_width,use_fft,context);
 #else
-	CreateConvole1DContextEigen(num_channel,kernel_type,kernel_width,use_fft,context);
+	CreateConvolve1DContextEigen(num_channel,kernel_type,kernel_width,use_fft,context);
 #endif
 }
 
