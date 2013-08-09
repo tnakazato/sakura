@@ -6,9 +6,11 @@
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
+#include <type_traits>
 #include <complex>
 
 #include <libsakura/sakura.h>
+#include "aligned_memory.h"
 #include "gtest/gtest.h"
 
 #define NO_TRANSFORM 0
@@ -16,6 +18,7 @@
 #define DO_FORTRAN (1 || !NO_VERIFY)
 
 #define AVX __attribute__((aligned (32)))
+#define SIMD // alignas(32)
 #define elementsof(x) (sizeof(x) / sizeof((x)[0]))
 
 using namespace std;
@@ -45,35 +48,6 @@ inline integer at4(integer B, integer C, integer D, integer a, integer b,
 	return a * (B * C * D) + at3(C, D, b, c, d);
 }
 
-template<size_t ALIGN>
-class AlignedMemory {
-	char buf[ALIGN - 1];
-	AlignedMemory() {
-	}
-public:
-	static void *operator new(size_t size, size_t realSize) {
-		void *p = new char[size + realSize];
-		cerr << "alloc: " << p << endl;
-		return p;
-	}
-	static void operator delete(void *p) {
-		cerr << "free: " << p << endl;
-		delete[] reinterpret_cast<char *>(p);
-	}
-
-	static AlignedMemory *newAlignedMemory(size_t size) {
-		AlignedMemory *p = new (size) AlignedMemory();
-		return p;
-	}
-	template<typename T>
-	T *memory() {
-		uint64_t addr = reinterpret_cast<uint64_t>(&buf[ALIGN - 1]);
-		addr &= ~(ALIGN - 1);
-		return reinterpret_cast<T *>(addr);
-	}
-};
-
-typedef AlignedMemory<32> AlignedMem;
 
 #define NROW (size_t(1024)/2)
 #define ROW_FACTOR (size_t(1)) //NROW * ROW_FACTOR分の行を処理する
@@ -87,19 +61,19 @@ typedef AlignedMemory<32> AlignedMem;
 #define NY (size_t(180))
 #define CONV_TABLE_SIZE (size_t(ceil(sqrt(2.)*((SUPPORT+1) * SAMPLING))))
 
-float convTab[CONV_TABLE_SIZE] AVX;
-uint32_t chanmap[NVISCHAN] AVX;
-uint32_t polmap[NVISPOL] AVX;
+SIMD float convTab[CONV_TABLE_SIZE] AVX;
+SIMD uint32_t chanmap[NVISCHAN] AVX;
+SIMD uint32_t polmap[NVISPOL] AVX;
 
-integer flag[NROW][NVISCHAN][NVISPOL] AVX;
-bool flag_[NROW][NVISPOL][NVISCHAN] AVX;
+SIMD integer flag[NROW][NVISCHAN][NVISPOL] AVX;
+SIMD bool flag_[NROW][NVISPOL][NVISCHAN] AVX;
 
-integer rflag[NROW] AVX;
-bool rflag_[NROW] AVX;
+SIMD integer rflag[NROW] AVX;
+SIMD bool rflag_[NROW] AVX;
 
-float weight[NROW][NVISCHAN] AVX;
-double sumwt[NCHAN][NPOL] AVX;
-double sumwt2[NPOL][NCHAN] AVX;
+SIMD float weight[NROW][NVISCHAN] AVX;
+SIMD double sumwt[NCHAN][NPOL] AVX;
+SIMD double sumwt2[NPOL][NCHAN] AVX;
 
 double fortran_time;
 
@@ -296,8 +270,8 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 		double (*x)[NROW], double (*y)[NROW],
 		complex<float> (*grid)[NCHAN][NPOL][NY][NX],
 		float (*wgrid)[NCHAN][NPOL][NY][NX],
-		AlignedMem *grid2Mem, float (*grid2)[NY][NX][NPOL][NCHAN],
-		AlignedMem *wgrid2Mem, float (*wgrid2)[NY][NX][NPOL][NCHAN]) {
+		DefaultAlignedMemory *grid2Mem, float (*grid2)[NY][NX][NPOL][NCHAN],
+		DefaultAlignedMemory *wgrid2Mem, float (*wgrid2)[NY][NX][NPOL][NCHAN]) {
 	{
 		cout << "Zeroing values... " << flush;
 		double start = currenttime();
@@ -326,7 +300,6 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 					sumwt2[0],
 					(*wgrid2)[0][0][0],
 					(*grid2)[0][0][0]);
-			assert(result == sakura_Status_kOK);
 			EXPECT_EQ(result, sakura_Status_kOK);
 		}
 		double end = currenttime();
@@ -346,14 +319,32 @@ TEST(Gridding, Basic) {
 	sakura_Status result = sakura_Initialize();
 	EXPECT_EQ(result, sakura_Status_kOK);
 
+	result = sakura_GridConvolving(NROW, 0, NROW,
+			0, 0, 0,
+			SUPPORT, SAMPLING,
+			NVISPOL, (uint32_t*)polmap,
+			NVISCHAN, (uint32_t*)chanmap,
+			flag_[0][0],
+			0,
+			weight[0],
+			false,
+			elementsof(convTab),
+			convTab,
+			NPOL, NCHAN,
+			NX, NY,
+			0,
+			0,
+			0);
+	EXPECT_EQ(result, sakura_Status_kInvalidArgument);
+
 	srand48(0);
 	initTabs();
-	AlignedMem *xy = AlignedMem::newAlignedMemory(sizeof(double[NROW][2]));
+	DefaultAlignedMemory *xy = DefaultAlignedMemory::newAlignedMemory(sizeof(double[NROW][2]));
 	double (*xy_)[NROW][2] = xy->memory<double[NROW][2]>();
 
-	AlignedMem *x = AlignedMem::newAlignedMemory(sizeof(double[NROW]));
+	DefaultAlignedMemory *x = DefaultAlignedMemory::newAlignedMemory(sizeof(double[NROW]));
 	double (*x_)[NROW] = x->memory<double[NROW]>();
-	AlignedMem *y = AlignedMem::newAlignedMemory(sizeof(double[NROW]));
+	DefaultAlignedMemory *y = DefaultAlignedMemory::newAlignedMemory(sizeof(double[NROW]));
 	double (*y_)[NROW] = y->memory<double[NROW]>();
 	cout << "Initializing xy... " << flush;
 	{
@@ -367,12 +358,12 @@ TEST(Gridding, Basic) {
 		cout << "done. " << new_time << " sec\n";
 	}
 
-	AlignedMem *valueMem = AlignedMem::newAlignedMemory(
+	DefaultAlignedMemory *valueMem = DefaultAlignedMemory::newAlignedMemory(
 			sizeof(complex<float> [NROW][NVISCHAN][NVISPOL]));
 	complex<float> (*values)[NROW][NVISCHAN][NVISPOL] = valueMem->memory<
 			complex<float> [NROW][NVISCHAN][NVISPOL]>();
 
-	AlignedMem *valueMem2 = AlignedMem::newAlignedMemory(
+	DefaultAlignedMemory *valueMem2 = DefaultAlignedMemory::newAlignedMemory(
 			sizeof(float[NROW][NVISPOL][NVISCHAN]));
 	float (*values2)[NROW][NVISPOL][NVISCHAN] = valueMem2->memory<
 			float[NROW][NVISPOL][NVISCHAN]>();
@@ -391,12 +382,12 @@ TEST(Gridding, Basic) {
 		cout << "done. " << end - start << " sec\n";
 	}
 
-	AlignedMem *gridMem = AlignedMem::newAlignedMemory(
+	DefaultAlignedMemory *gridMem = DefaultAlignedMemory::newAlignedMemory(
 			sizeof(complex<float> [NCHAN][NPOL][NY][NX]));
 	complex<float> (*grid)[NCHAN][NPOL][NY][NX] = gridMem->memory<
 			complex<float> [NCHAN][NPOL][NY][NX]>();
 
-	AlignedMem *wgridMem = AlignedMem::newAlignedMemory(
+	DefaultAlignedMemory *wgridMem = DefaultAlignedMemory::newAlignedMemory(
 			sizeof(float[NCHAN][NPOL][NY][NX]));
 	float (*wgrid)[NCHAN][NPOL][NY][NX] = wgridMem->memory<
 			float[NCHAN][NPOL][NY][NX]>();
@@ -447,11 +438,11 @@ TEST(Gridding, Basic) {
 
 	delete valueMem;
 
-	AlignedMem *grid2Mem = AlignedMem::newAlignedMemory(
+	DefaultAlignedMemory *grid2Mem = DefaultAlignedMemory::newAlignedMemory(
 			sizeof(float[NY][NX][NPOL][NCHAN]));
 	float (*grid2)[NY][NX][NPOL][NCHAN] = grid2Mem->memory<
 			float[NY][NX][NPOL][NCHAN]>();
-	AlignedMem *wgrid2Mem = AlignedMem::newAlignedMemory(
+	DefaultAlignedMemory *wgrid2Mem = DefaultAlignedMemory::newAlignedMemory(
 			sizeof(float[NY][NX][NPOL][NCHAN]));
 	float (*wgrid2)[NY][NX][NPOL][NCHAN] = wgrid2Mem->memory<
 			float[NY][NX][NPOL][NCHAN]>();
