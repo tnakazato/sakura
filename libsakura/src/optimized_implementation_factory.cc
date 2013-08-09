@@ -83,10 +83,10 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_default;
 	}
-	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const {
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_default_uint8;
 	}
-	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const {
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const {
 		return &bit_operation_default_uint32;
 	}
 	virtual Interpolation const *GetInterpolationImpl() const {
@@ -109,11 +109,11 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_sandy_bridge;
 	}
-	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const {
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		/* return &bit_operation_after_sandy_bridge_uint8;*/
 		return &bit_operation_default_uint8;
 	}
-	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const {
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const {
 		/* return &bit_operation_after_sandy_bridge_uint32;*/
 		return &bit_operation_default_uint32;
 	}

@@ -117,8 +117,8 @@ public:
 	}
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
-	virtual BitOperation<uint8_t> const *GetBitOperationImplUInt8() const = 0;
-	virtual BitOperation<uint32_t> const *GetBitOperationImplUInt32() const = 0;
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
 	virtual Interpolation const *GetInterpolationImpl() const = 0;
 //	virtual Convolution const *GetConvolutionImpl() const = 0;
 	static OptimizedImplementationFactory const *GetFactory();

@@ -43,7 +43,7 @@ namespace {
 template<typename DataType>
 inline void OperateBitsAndEigen(DataType bit_mask, size_t num_in, DataType const *in,
 		bool const *edit_mask, DataType *out) {
-	std::cout << "OperateBitsAndEigen function is called" << std::endl;
+	//std::cout << "OperateBitsAndEigen function is called" << std::endl;
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
