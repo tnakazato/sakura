@@ -71,12 +71,6 @@ public:
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
 			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
 			DataType out[/*num_in*/]) const = 0;
-//	virtual void OperateBitsAnd(uint8_t bit_mask, size_t num_in,
-//			uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-//			uint8_t out[/*num_in*/]) const = 0;
-//	virtual void OperateBitsAnd(uint32_t bit_mask, size_t num_in,
-//			uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-//			uint32_t out[/*num_in*/]) const = 0;
 };
 
 class Interpolation {
