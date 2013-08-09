@@ -11,9 +11,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
 		             size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context){
 
 
-	auto createconv =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
-	createconv->CreateConvole1DContext(num_channel,kernel_type,kernel_width,use_fft,context);
+//	auto createconv =
+//			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
+//	createconv->CreateConvole1DContext(num_channel,kernel_type,kernel_width,use_fft,context);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
