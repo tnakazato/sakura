@@ -76,6 +76,10 @@ void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsAnd(DataType bit
 	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
 #endif
 }
+
+template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint8_t>;
+template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint32_t>;
+
 //void ADDSUFFIX(BitOperation, ARCH_SUFFIX)::OperateBitsAnd(uint8_t bit_mask, size_t num_in,
 //		uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/],
 //		uint8_t out[/*num_in*/]) const {
