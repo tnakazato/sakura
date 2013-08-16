@@ -12,6 +12,33 @@
 
 namespace LIBSAKURA_PREFIX {
 
+class BasicOperation {
+public:
+	virtual ~BasicOperation() {
+	}
+
+	virtual void OperateBoolsAnd(size_t num_in, bool const in1[/*num_in*/],
+			bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
+};
+
+template<typename DataType>
+class BitOperation {
+public:
+	virtual ~BitOperation() {
+	}
+
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
+			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			DataType out[/*num_in*/]) const = 0;
+};
+
+class Convolution {
+public:
+	virtual ~Convolution() {}
+	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+};
+
 class Gridding {
 public:
 	typedef int32_t integer;
@@ -54,25 +81,6 @@ public:
 #endif
 };
 
-class Statistics {
-public:
-	virtual ~Statistics() {
-	}
-	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
-};
-
-template<typename DataType>
-class BitOperation {
-public:
-	virtual ~BitOperation() {
-	}
-
-	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			DataType out[/*num_in*/]) const = 0;
-};
-
 class Interpolation {
 public:
 	virtual ~Interpolation() {
@@ -102,24 +110,26 @@ protected:
 			double const x_base[/*num_base*/], double x_located) const = 0;
 };
 
-class Convolution {
+class Statistics {
 public:
-	virtual ~Convolution() {}
-	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+	virtual ~Statistics() {
+	}
+	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
+			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
 };
 
 class OptimizedImplementationFactory {
 public:
+	static OptimizedImplementationFactory const *GetFactory();
 	virtual ~OptimizedImplementationFactory() {
 	}
-	virtual Gridding const *GetGriddingImpl() const = 0;
-	virtual Statistics const *GetStatisticsImpl() const = 0;
+	virtual BasicOperation const *GetBasicOperationImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
-	virtual Interpolation const *GetInterpolationImpl() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
-	static OptimizedImplementationFactory const *GetFactory();
+	virtual Gridding const *GetGriddingImpl() const = 0;
+	virtual Interpolation const *GetInterpolationImpl() const = 0;
+	virtual Statistics const *GetStatisticsImpl() const = 0;
 protected:
 	OptimizedImplementationFactory() {
 	}

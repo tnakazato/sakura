@@ -32,9 +32,10 @@ message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorizer-verbose=3")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default")
-set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
-set(MULTI_SOURCE gridding.cc statistics.cc bit_operation.cc interpolation.cc convolution.cc)
-set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_statistics.cc gen_util.c gen_gridding.cc gen_bit_operation.cc gen_interpolation.cc gen_convolution.cc)
+#set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
+set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=core2 -DARCH_SUFFIX=AfterSandyBridge")
+set(MULTI_SOURCE basic_operation.cc bit_operation.cc convolution.cc gridding.cc interpolation.cc statistics.cc)
+set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_basic_operation.cc gen_bit_operation.cc gen_convolution.cc gen_gridding.cc gen_interpolation.cc gen_statistics.cc gen_util.c)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"

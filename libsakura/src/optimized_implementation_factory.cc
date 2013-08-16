@@ -9,21 +9,24 @@
 #include "libsakura/localdef.h"
 
 namespace {
-using ::LIBSAKURA_PREFIX::Gridding;
-using ::LIBSAKURA_PREFIX::GriddingDefault;
-using ::LIBSAKURA_PREFIX::GriddingAfterSandyBridge;
-using ::LIBSAKURA_PREFIX::Statistics;
-using ::LIBSAKURA_PREFIX::StatisticsDefault;
-using ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::BasicOperation;
+using ::LIBSAKURA_PREFIX::BasicOperationDefault;
+using ::LIBSAKURA_PREFIX::BasicOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BitOperationDefault;
 using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
-using ::LIBSAKURA_PREFIX::Interpolation;
-using ::LIBSAKURA_PREFIX::InterpolationDefault;
-using ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::Convolution;
 using ::LIBSAKURA_PREFIX::ConvolutionDefault;
 using ::LIBSAKURA_PREFIX::ConvolutionAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::Gridding;
+using ::LIBSAKURA_PREFIX::GriddingDefault;
+using ::LIBSAKURA_PREFIX::GriddingAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::Interpolation;
+using ::LIBSAKURA_PREFIX::InterpolationDefault;
+using ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::Statistics;
+using ::LIBSAKURA_PREFIX::StatisticsDefault;
+using ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge;
 
 struct CPURegister {
 	uint32_t eax, ebx, ecx, edx;
@@ -72,20 +75,18 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
-GriddingDefault const gridding_default;
-StatisticsDefault const statistics_default;
+BasicOperationDefault const basic_operation_default;
 BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 BitOperationDefault<uint32_t> const bit_operation_default_uint32;
-InterpolationDefault const interpolation_default;
 ConvolutionDefault const convolution_default;
+GriddingDefault const gridding_default;
+InterpolationDefault const interpolation_default;
+StatisticsDefault const statistics_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
-	virtual Gridding const *GetGriddingImpl() const {
-		return &gridding_default;
-	}
-	virtual Statistics const *GetStatisticsImpl() const {
-		return &statistics_default;
+	virtual BasicOperation const *GetBasicOperationImpl() const {
+		return &basic_operation_default;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_default_uint8;
@@ -93,29 +94,34 @@ public:
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const {
 		return &bit_operation_default_uint32;
 	}
+	virtual Convolution const *GetConvolutionImpl() const {
+		return &convolution_default;
+	}
+	virtual Gridding const *GetGriddingImpl() const {
+		return &gridding_default;
+	}
 	virtual Interpolation const *GetInterpolationImpl() const {
 		return &interpolation_default;
 	}
-	virtual Convolution const *GetConvolutionImpl() const {
-		return &convolution_default;
+	virtual Statistics const *GetStatisticsImpl() const {
+		return &statistics_default;
 	}
 
 } default_factory;
 
-GriddingAfterSandyBridge const gridding_after_sandy_bridge;
-StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
+BasicOperationAfterSandyBridge const basic_operation_after_sandy_bridge;
 BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
-InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
 ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
+GriddingAfterSandyBridge const gridding_after_sandy_bridge;
+InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
+StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
-	virtual Gridding const *GetGriddingImpl() const {
-		return &gridding_after_sandy_bridge;
-	}
-	virtual Statistics const *GetStatisticsImpl() const {
-		return &statistics_after_sandy_bridge;
+	virtual BasicOperation const *GetBasicOperationImpl() const {
+		// return &basic_operation_after_sandy_bridge;
+		return &basic_operation_default;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		/* return &bit_operation_after_sandy_bridge_uint8;*/
@@ -125,13 +131,19 @@ public:
 		/* return &bit_operation_after_sandy_bridge_uint32;*/
 		return &bit_operation_default_uint32;
 	}
+	virtual Convolution const *GetConvolutionImpl() const {
+		// return &convolution_after_sandy_bridge;
+		return &convolution_after_sandy_bridge;
+	}
+	virtual Gridding const *GetGriddingImpl() const {
+		return &gridding_after_sandy_bridge;
+	}
 	virtual Interpolation const *GetInterpolationImpl() const {
 		// return &interpolation_after_sandy_bridge;
 		return &interpolation_default;
 	}
-	virtual Convolution const *GetConvolutionImpl() const {
-		// return &convolution_after_sandy_bridge;
-		return &convolution_after_sandy_bridge;
+	virtual Statistics const *GetStatisticsImpl() const {
+		return &statistics_after_sandy_bridge;
 	}
 } after_sandy_bridge;
 

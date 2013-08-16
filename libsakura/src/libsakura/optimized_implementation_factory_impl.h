@@ -8,6 +8,50 @@
 #include <libsakura/optimized_implementation_factory.h>
 
 namespace LIBSAKURA_PREFIX {
+class BasicOperationDefault: public BasicOperation {
+public:
+	virtual ~BasicOperationDefault(){}
+	virtual void OperateBoolsAnd(size_t num_in, bool const in1[/*num_in*/],
+			bool const in2[/*num_in*/], bool out[/*num_in*/]) const;
+};
+
+class BasicOperationAfterSandyBridge: public BasicOperation {
+public:
+	virtual ~BasicOperationAfterSandyBridge(){}
+	virtual void OperateBoolsAnd(size_t num_in, bool const in1[/*num_in*/],
+			bool const in2[/*num_in*/], bool out[/*num_in*/]) const;
+};
+
+template<typename DataType>
+class BitOperationDefault: public BitOperation<DataType> {
+public:
+	virtual ~BitOperationDefault(){}
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
+			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			DataType out[/*num_in*/]) const;
+};
+
+template<typename DataType>
+class BitOperationAfterSandyBridge: public BitOperation<DataType> {
+public:
+	virtual ~BitOperationAfterSandyBridge(){}
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
+			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
+			DataType out[/*num_in*/]) const;
+};
+
+class ConvolutionDefault: public Convolution {
+public:
+	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
+};
+
+class ConvolutionAfterSandyBridge: public Convolution {
+public:
+	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
+};
+
 class GriddingDefault: public Gridding {
 public:
 	virtual void GridConvolving(size_t num_spectra,
@@ -58,36 +102,6 @@ public:
 			float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 			float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
 			) const;
-};
-
-class StatisticsDefault: public Statistics {
-public:
-	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
-};
-
-class StatisticsAfterSandyBridge: public Statistics {
-public:
-	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
-};
-
-template<typename DataType>
-class BitOperationDefault: public BitOperation<DataType> {
-public:
-	virtual ~BitOperationDefault(){}
-	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			DataType out[/*num_in*/]) const;
-};
-
-template<typename DataType>
-class BitOperationAfterSandyBridge: public BitOperation<DataType> {
-public:
-	virtual ~BitOperationAfterSandyBridge(){}
-	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			DataType out[/*num_in*/]) const;
 };
 
 class InterpolationDefault: public Interpolation {
@@ -144,19 +158,17 @@ protected:
 			double const x_base[/*num_base*/], double x_located) const;
 };
 
-
-class ConvolutionDefault: public Convolution {
+class StatisticsDefault: public Statistics {
 public:
-	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context)const;
+	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
+			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
 
-class ConvolutionAfterSandyBridge: public Convolution {
+class StatisticsAfterSandyBridge: public Statistics {
 public:
-	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
+	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
+			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
-
 
 } // namespace LIBSAKURA_PREFIX
 
