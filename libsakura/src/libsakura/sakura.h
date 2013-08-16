@@ -396,6 +396,12 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
              size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
              size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context);
 
+/**
+ * @brief Logical operation AND between two boolean arrays.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBoolsAnd)(size_t num_in,
+		bool const in1[/*num_in*/], bool const in2[/*num_in*/], bool out[/*num_in*/]);
+
 #ifdef __cplusplus
 }
 /* extern "C" */
