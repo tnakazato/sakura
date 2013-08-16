@@ -16,9 +16,9 @@
 
 namespace {
 
-void OperateBoolsAndSimd(size_t num_in, bool const in1[],
-		bool const in2[], bool out[]) {
-	std::cout << "OperateBoolsAndSimd function is called. This function is not implemented yet." << std::endl;
+void OperateFloatSubtractionSimd(size_t num_in, float const in1[],
+		float const in2[], float out[]) {
+	std::cout << "OperateFloatSubtractionSimd function is called. This function is not implemented yet." << std::endl;
 }
 
 } /* anonymous namespace */
@@ -35,22 +35,22 @@ using ::Eigen::Aligned;
 
 namespace {
 
-inline void OperateBoolsAndEigen(size_t num_in, bool const *in1,
-		bool const *in2, bool *out) {
-	//std::cout << "OperateBoolsAndEigen function is called" << std::endl;
+inline void OperateFloatSubtractionEigen(size_t num_in, float const *in1,
+		float const *in2, float *out) {
+	//std::cout << "OperateFloatSubtractionEigen function is called" << std::endl;
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<bool, Dynamic, 1>, Aligned> in1_(const_cast<bool *>(in1),
+	Map<Array<float, Dynamic, 1>, Aligned> in1_(const_cast<float *>(in1),
 			num_in);
-	Map<Array<bool, Dynamic, 1>, Aligned> in2_(const_cast<bool *>(in2),
+	Map<Array<float, Dynamic, 1>, Aligned> in2_(const_cast<float *>(in2),
 			num_in);
-	Map<Array<bool, Dynamic, 1>, Aligned> out_(const_cast<bool *>(out),
+	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
 			num_in);
 
 	for (size_t i=0; i < num_in ; i++){
-		out[i] = in1_[i] && in2_[i];
+		out[i] = in1_[i] - in2_[i];
 	}
 }
 
@@ -59,13 +59,13 @@ inline void OperateBoolsAndEigen(size_t num_in, bool const *in1,
 #endif /* defined(__AVX__) */
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(BasicOperation, ARCH_SUFFIX)::OperateBoolsAnd(size_t num_in,
-		bool const in1[/*num_in*/], bool const in2[/*num_in*/],
-		bool out[/*num_in*/]) const {
+void ADDSUFFIX(AlgebraicOperation, ARCH_SUFFIX)::OperateFloatSubtraction(size_t num_in,
+		float const in1[/*num_in*/], float const in2[/*num_in*/],
+		float out[/*num_in*/]) const {
 #if defined( __AVX__) && (! FORCE_EIGEN)
-	OperateBoolsAndSimd(num_in, in1, in2, out);
+	OperateFloatSubtractionSimd(num_in, in1, in2, out);
 #else
-	OperateBoolsAndEigen(num_in, in1, in2, out);
+	OperateFloatSubtractionEigen(num_in, in1, in2, out);
 #endif
 }
 

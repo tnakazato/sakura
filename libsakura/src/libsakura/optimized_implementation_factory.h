@@ -12,13 +12,13 @@
 
 namespace LIBSAKURA_PREFIX {
 
-class BasicOperation {
+class AlgebraicOperation {
 public:
-	virtual ~BasicOperation() {
+	virtual ~AlgebraicOperation() {
 	}
 
-	virtual void OperateBoolsAnd(size_t num_in, bool const in1[/*num_in*/],
-			bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
+	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
+			float const in2[/*num_in*/], float out[/*num_in*/]) const = 0;
 };
 
 template<typename DataType>
@@ -110,6 +110,15 @@ protected:
 			double const x_base[/*num_base*/], double x_located) const = 0;
 };
 
+class LogicalOperation {
+public:
+	virtual ~LogicalOperation() {
+	}
+
+	virtual void OperateLogicalAnd(size_t num_in, bool const in1[/*num_in*/],
+			bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
+};
+
 class Statistics {
 public:
 	virtual ~Statistics() {
@@ -123,12 +132,13 @@ public:
 	static OptimizedImplementationFactory const *GetFactory();
 	virtual ~OptimizedImplementationFactory() {
 	}
-	virtual BasicOperation const *GetBasicOperationImpl() const = 0;
+	virtual AlgebraicOperation const *GetAlgebraicOperationImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Interpolation const *GetInterpolationImpl() const = 0;
+	virtual LogicalOperation const *GetLogicalOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
 protected:
 	OptimizedImplementationFactory() {

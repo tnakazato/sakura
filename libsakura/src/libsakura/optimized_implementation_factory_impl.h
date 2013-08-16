@@ -8,18 +8,18 @@
 #include <libsakura/optimized_implementation_factory.h>
 
 namespace LIBSAKURA_PREFIX {
-class BasicOperationDefault: public BasicOperation {
+class AlgebraicOperationDefault: public AlgebraicOperation {
 public:
-	virtual ~BasicOperationDefault(){}
-	virtual void OperateBoolsAnd(size_t num_in, bool const in1[/*num_in*/],
-			bool const in2[/*num_in*/], bool out[/*num_in*/]) const;
+	virtual ~AlgebraicOperationDefault(){}
+	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
+			float const in2[/*num_in*/], float out[/*num_in*/]) const;
 };
 
-class BasicOperationAfterSandyBridge: public BasicOperation {
+class AlgebraicOperationAfterSandyBridge: public AlgebraicOperation {
 public:
-	virtual ~BasicOperationAfterSandyBridge(){}
-	virtual void OperateBoolsAnd(size_t num_in, bool const in1[/*num_in*/],
-			bool const in2[/*num_in*/], bool out[/*num_in*/]) const;
+	virtual ~AlgebraicOperationAfterSandyBridge(){}
+	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
+			float const in2[/*num_in*/], float out[/*num_in*/]) const;
 };
 
 template<typename DataType>
@@ -156,6 +156,20 @@ public:
 protected:
 	virtual int Locate(int start_position, int end_position, size_t num_base,
 			double const x_base[/*num_base*/], double x_located) const;
+};
+
+class LogicalOperationDefault: public LogicalOperation {
+public:
+	virtual ~LogicalOperationDefault(){}
+	virtual void OperateLogicalAnd(size_t num_in, bool const in1[/*num_in*/],
+			bool const in2[/*num_in*/], bool out[/*num_in*/]) const;
+};
+
+class LogicalOperationAfterSandyBridge: public LogicalOperation {
+public:
+	virtual ~LogicalOperationAfterSandyBridge(){}
+	virtual void OperateLogicalAnd(size_t num_in, bool const in1[/*num_in*/],
+			bool const in2[/*num_in*/], bool out[/*num_in*/]) const;
 };
 
 class StatisticsDefault: public Statistics {

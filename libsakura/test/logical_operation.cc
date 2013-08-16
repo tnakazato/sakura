@@ -10,16 +10,16 @@
 using namespace std;
 
 /*
- * A super class to test basic operations of array(s)
+ * A super class to test logical operations of array(s)
  * INPUTS:
  * - in1 = [ F, F, T, T ]
  * - in2 = [ F, T, F, T ]
  */
-class BasicOperation : public ::testing::Test
+class LogicalOperation : public ::testing::Test
 {
 protected:
 
-	BasicOperation() : verbose(false)
+	LogicalOperation() : verbose(false)
 	{}
 
 	virtual void SetUp()
@@ -59,18 +59,18 @@ protected:
 };
 
 /*
- * Test logical operation AND by sakura_OperateBoolsAnd
+ * Test logical operation AND by sakura_OperateLogocalAnd
  * RESULT:
  * out = [false, false, false, true]
  */
-TEST_F(BasicOperation, And) {
+TEST_F(LogicalOperation, And) {
 	bool out[NUM_IN];
 	bool result[NUM_IN] = {false, false, false, true};
 	size_t const num_in(NUM_IN);
 
 	if (verbose) PrintInputs();
 
-	sakura_OperateBoolsAnd(num_in, in1_, in2_, out);
+	sakura_OperateLogicalAnd(num_in, in1_, in2_, out);
 
 	if (verbose) PrintArray("out", num_in, out);
 

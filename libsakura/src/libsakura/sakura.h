@@ -399,8 +399,14 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
 /**
  * @brief Logical operation AND between two boolean arrays.
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBoolsAnd)(size_t num_in,
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
 		bool const in1[/*num_in*/], bool const in2[/*num_in*/], bool out[/*num_in*/]);
+
+/**
+ * @brief Compute subtraction between two float arrays (in1 - in2).
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(size_t num_in,
+		float const in1[/*num_in*/], float const in2[/*num_in*/], float out[/*num_in*/]);
 
 #ifdef __cplusplus
 }
