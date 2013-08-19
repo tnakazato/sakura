@@ -15,9 +15,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(si
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
-	auto algop =
+	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	algop->OperateFloatSubtraction(num_in, in1, in2, out);
+	numop->OperateFloatSubtraction(num_in, in1, in2, out);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
