@@ -10,7 +10,7 @@
 using namespace std;
 
 /*
- * A super class to test logical operations of array(s)
+ * A super class to test numeric operations of array(s)
  * INPUTS:
  * - in1 = [ 0.0, 1.0, 2.0, -3.0, -4.0 ]
  * - in2 = [ 5.0, 4.0, -1.0, 2.0, -3.0 ]
@@ -79,4 +79,30 @@ TEST_F(NumericOperation, Subtraction) {
 	for (size_t i = 0 ; i < num_in ; i++){
 		ASSERT_EQ(out[i], result[i]);
 	}
+}
+
+/*
+ * Test sakura_GetLeastSquareMatrix
+ * RESULT:
+ * out = []
+ */
+TEST_F(NumericOperation, GetLeastSquareMatrix) {
+	// yet to be implemented
+}
+
+/*
+ * Test sakura_SolveSimultaneousEquationsByLU
+ * RESULT:
+ * out = []
+ */
+TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
+	// yet to be implemented
+}
+/*
+ * Test sakura_DoGetBestFitModel
+ * RESULT:
+ * out = []
+ */
+TEST_F(NumericOperation, DoGetBestFitModel) {
+	// yet to be implemented
 }

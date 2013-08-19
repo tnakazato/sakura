@@ -9,9 +9,6 @@
 #include "libsakura/localdef.h"
 
 namespace {
-using ::LIBSAKURA_PREFIX::NumericOperation;
-using ::LIBSAKURA_PREFIX::NumericOperationDefault;
-using ::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BitOperationDefault;
 using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
@@ -27,6 +24,9 @@ using ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::LogicalOperation;
 using ::LIBSAKURA_PREFIX::LogicalOperationDefault;
 using ::LIBSAKURA_PREFIX::LogicalOperationAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::NumericOperation;
+using ::LIBSAKURA_PREFIX::NumericOperationDefault;
+using ::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::Statistics;
 using ::LIBSAKURA_PREFIX::StatisticsDefault;
 using ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge;
@@ -78,20 +78,17 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
-NumericOperationDefault const numeric_operation_default;
 BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 ConvolutionDefault const convolution_default;
 GriddingDefault const gridding_default;
 InterpolationDefault const interpolation_default;
 LogicalOperationDefault const logical_operation_default;
+NumericOperationDefault const numeric_operation_default;
 StatisticsDefault const statistics_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
-	virtual NumericOperation const *GetNumericOperationImpl() const {
-		return &numeric_operation_default;
-	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_default_uint8;
 	}
@@ -110,27 +107,26 @@ public:
 	virtual LogicalOperation const *GetLogicalOperationImpl() const {
 		return &logical_operation_default;
 	}
+	virtual NumericOperation const *GetNumericOperationImpl() const {
+		return &numeric_operation_default;
+	}
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_default;
 	}
 
 } default_factory;
 
-NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
 BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
 GriddingAfterSandyBridge const gridding_after_sandy_bridge;
 InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
 LogicalOperationAfterSandyBridge const logical_operation_after_sandy_bridge;
+NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
 StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
-	virtual NumericOperation const *GetNumericOperationImpl() const {
-		// return &numeric_operation_after_sandy_bridge;
-		return &numeric_operation_default;
-	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		/* return &bit_operation_after_sandy_bridge_uint8;*/
 		return &bit_operation_default_uint8;
@@ -153,6 +149,10 @@ public:
 	virtual LogicalOperation const *GetLogicalOperationImpl() const {
 		// return &logical_operation_after_sandy_bridge;
 		return &logical_operation_default;
+	}
+	virtual NumericOperation const *GetNumericOperationImpl() const {
+		// return &numeric_operation_after_sandy_bridge;
+		return &numeric_operation_default;
 	}
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_sandy_bridge;

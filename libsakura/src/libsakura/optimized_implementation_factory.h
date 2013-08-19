@@ -12,15 +12,6 @@
 
 namespace LIBSAKURA_PREFIX {
 
-class NumericOperation {
-public:
-	virtual ~NumericOperation() {
-	}
-
-	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
-			float const in2[/*num_in*/], float out[/*num_in*/]) const = 0;
-};
-
 template<typename DataType>
 class BitOperation {
 public:
@@ -117,6 +108,25 @@ public:
 
 	virtual void OperateLogicalAnd(size_t num_in, bool const in1[/*num_in*/],
 			bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
+};
+
+class NumericOperation {
+public:
+	virtual ~NumericOperation() {
+	}
+
+	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
+			float const in2[/*num_in*/], float out[/*num_in*/]) const = 0;
+	virtual void GetLeastSquareMatrix(size_t num_in, float const in_data[/*num_in*/],
+			bool const in_mask[/*num_in*/], size_t num_model,
+			double const model[/*num_model * num_in*/],
+			double out[/*num_model * num_model*/], double out_vector[/*num_model*/]) const = 0;
+	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
+			double const lsq_matrix0[/*num_eqn * num_eqn*/],
+			double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]) const = 0;
+	virtual void DoGetBestFitModel(size_t num_chan, size_t num_eqn,
+			double const model[/*num_eqn * num_chan*/], double const coeff[/*num_eqn*/],
+			float out[/*num_in*/]) const = 0;
 };
 
 class Statistics {
