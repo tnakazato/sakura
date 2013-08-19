@@ -59,7 +59,7 @@ inline void OperateFloatSubtractionEigen(size_t num_in, float const *in1,
 #endif /* defined(__AVX__) */
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(AlgebraicOperation, ARCH_SUFFIX)::OperateFloatSubtraction(size_t num_in,
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::OperateFloatSubtraction(size_t num_in,
 		float const in1[/*num_in*/], float const in2[/*num_in*/],
 		float out[/*num_in*/]) const {
 #if defined( __AVX__) && (! FORCE_EIGEN)

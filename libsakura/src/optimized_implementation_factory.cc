@@ -9,9 +9,9 @@
 #include "libsakura/localdef.h"
 
 namespace {
-using ::LIBSAKURA_PREFIX::AlgebraicOperation;
-using ::LIBSAKURA_PREFIX::AlgebraicOperationDefault;
-using ::LIBSAKURA_PREFIX::AlgebraicOperationAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::NumericOperation;
+using ::LIBSAKURA_PREFIX::NumericOperationDefault;
+using ::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BitOperationDefault;
 using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
@@ -78,7 +78,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
-AlgebraicOperationDefault const algebraic_operation_default;
+NumericOperationDefault const numeric_operation_default;
 BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 ConvolutionDefault const convolution_default;
@@ -89,8 +89,8 @@ StatisticsDefault const statistics_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
-	virtual AlgebraicOperation const *GetAlgebraicOperationImpl() const {
-		return &algebraic_operation_default;
+	virtual NumericOperation const *GetNumericOperationImpl() const {
+		return &numeric_operation_default;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_default_uint8;
@@ -116,7 +116,7 @@ public:
 
 } default_factory;
 
-AlgebraicOperationAfterSandyBridge const algebraic_operation_after_sandy_bridge;
+NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
 BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
@@ -127,9 +127,9 @@ StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
-	virtual AlgebraicOperation const *GetAlgebraicOperationImpl() const {
-		// return &algebraic_operation_after_sandy_bridge;
-		return &algebraic_operation_default;
+	virtual NumericOperation const *GetNumericOperationImpl() const {
+		// return &numeric_operation_after_sandy_bridge;
+		return &numeric_operation_default;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		/* return &bit_operation_after_sandy_bridge_uint8;*/

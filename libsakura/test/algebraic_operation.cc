@@ -15,11 +15,11 @@ using namespace std;
  * - in1 = [ 0.0, 1.0, 2.0, -3.0, -4.0 ]
  * - in2 = [ 5.0, 4.0, -1.0, 2.0, -3.0 ]
  */
-class AlgebraicOperation : public ::testing::Test
+class NumericOperation : public ::testing::Test
 {
 protected:
 
-	AlgebraicOperation() : verbose(false)
+	NumericOperation() : verbose(false)
 	{}
 
 	virtual void SetUp()
@@ -64,7 +64,7 @@ protected:
  * RESULT:
  * out = [ -5.0, -3.0, 3.0, -5.0, -1.0 ]
  */
-TEST_F(AlgebraicOperation, Subtraction) {
+TEST_F(NumericOperation, Subtraction) {
 	float out[NUM_IN];
 	float result[NUM_IN] = {-5.0, -3.0, 3.0, -5.0, -1.0};
 	size_t const num_in(NUM_IN);

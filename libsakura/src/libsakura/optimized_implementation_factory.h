@@ -12,9 +12,9 @@
 
 namespace LIBSAKURA_PREFIX {
 
-class AlgebraicOperation {
+class NumericOperation {
 public:
-	virtual ~AlgebraicOperation() {
+	virtual ~NumericOperation() {
 	}
 
 	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
@@ -132,7 +132,7 @@ public:
 	static OptimizedImplementationFactory const *GetFactory();
 	virtual ~OptimizedImplementationFactory() {
 	}
-	virtual AlgebraicOperation const *GetAlgebraicOperationImpl() const = 0;
+	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;

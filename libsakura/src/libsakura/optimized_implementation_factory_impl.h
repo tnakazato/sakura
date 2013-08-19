@@ -8,16 +8,16 @@
 #include <libsakura/optimized_implementation_factory.h>
 
 namespace LIBSAKURA_PREFIX {
-class AlgebraicOperationDefault: public AlgebraicOperation {
+class NumericOperationDefault: public NumericOperation {
 public:
-	virtual ~AlgebraicOperationDefault(){}
+	virtual ~NumericOperationDefault(){}
 	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
 			float const in2[/*num_in*/], float out[/*num_in*/]) const;
 };
 
-class AlgebraicOperationAfterSandyBridge: public AlgebraicOperation {
+class NumericOperationAfterSandyBridge: public NumericOperation {
 public:
-	virtual ~AlgebraicOperationAfterSandyBridge(){}
+	virtual ~NumericOperationAfterSandyBridge(){}
 	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
 			float const in2[/*num_in*/], float out[/*num_in*/]) const;
 };
