@@ -430,6 +430,14 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_chan,
 		size_t num_eqn, double const model[/*num_eqn * num_chan*/],
 		double const coeff[/*num_eqn*/], float out[/*num_in*/]);
 
+/**
+ * @brief Compute the best-fit model spectrum by least-square fitting.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
+		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
+		size_t num_model, double const model[/*num_model * num_in*/],
+		float out[/*num_in*/]);
+
 #ifdef __cplusplus
 }
 /* extern "C" */

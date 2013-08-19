@@ -82,6 +82,15 @@ TEST_F(NumericOperation, Subtraction) {
 }
 
 /*
+ * Test sakura_GetBestFitModel
+ * RESULT:
+ * out = []
+ */
+TEST_F(NumericOperation, GetBestFitModel) {
+	// yet to be implemented
+}
+
+/*
  * Test sakura_GetLeastSquareMatrix
  * RESULT:
  * out = []
@@ -98,6 +107,7 @@ TEST_F(NumericOperation, GetLeastSquareMatrix) {
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	// yet to be implemented
 }
+
 /*
  * Test sakura_DoGetBestFitModel
  * RESULT:

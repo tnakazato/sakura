@@ -29,9 +29,13 @@ void SolveSimultaneousEquationsByLUSimd(size_t num_eqn,
 		double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
 	std::cout << "SolveSimultaneousEquationsByLUSimd function is called. This function is not implemented yet." << std::endl;
 }
-void DoGetBestFitModel(size_t num_chan, size_t num_eqn,
+void DoGetBestFitModelSimd(size_t num_chan, size_t num_eqn,
 		double const model[], double const coeff[], float out[]) {
 	std::cout << "DoGetBestFitModelSimd function is called. This function is not implemented yet." << std::endl;
+}
+void GetBestFitModelSimd(size_t num_in, float const in_data[], bool const in_mask[],
+		size_t num_model, double const model[], float out[]) {
+	std::cout << "GetBestFitModelSimd function is called. This function is not implemented yet." << std::endl;
 }
 
 } /* anonymous namespace */
@@ -164,6 +168,35 @@ inline void DoGetBestFitModelEigen(size_t num_chan, size_t num_eqn,
 		}
 	}
 }
+
+inline void GetBestFitModelEigen(size_t num_in, float const *in_data,
+		bool const *in_mask, size_t num_model, double const *model,
+		float *out) {
+	//std::cout << "GetBestFitModelEigen function is called" << std::endl;
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	Map<Array<float, Dynamic, 1>, Aligned> in_data_(const_cast<float *>(in_data),
+			num_in);
+	Map<Array<bool, Dynamic, 1>, Aligned> in_mask_(const_cast<bool *>(in_mask),
+			num_in);
+	Map<Array<double, Dynamic, 1>, Aligned> model_(const_cast<double *>(model),
+			num_model*num_in);
+	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
+			num_in);
+
+	double *lsq_matrix0;
+	double *lsq_vector0;
+	double *coeff;
+	GetLeastSquareMatrixEigen(num_in, in_data,
+			in_mask, num_model, model, lsq_matrix0, lsq_vector0);
+	SolveSimultaneousEquationsByLUEigen(num_model,
+			lsq_matrix0, lsq_vector0, coeff);
+	DoGetBestFitModelEigen(num_in, num_model, model, coeff, out);
+}
+
 } /* anonymous namespace */
 
 #endif /* defined(__AVX__) */
@@ -207,6 +240,17 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::DoGetBestFitModel(size_t num_chan
 	DoGetBestFitModelSimd(num_chan, num_eqn, model, coeff, out);
 #else
 	DoGetBestFitModelEigen(num_chan, num_eqn, model, coeff, out);
+#endif
+}
+
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(size_t num_in,
+		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
+		size_t num_model, double const model[/*num_model * num_in*/],
+		float out[/*num_in*/]) const {
+#if defined( __AVX__) && (! FORCE_EIGEN)
+	GetBestFitModelSimd(num_in, in_data, in_mask, num_model, model, out);
+#else
+	GetBestFitModelEigen(num_in, in_data, in_mask, num_model, model, out);
 #endif
 }
 
