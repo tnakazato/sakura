@@ -12,6 +12,25 @@
 
 namespace LIBSAKURA_PREFIX {
 
+class Baseline {
+public:
+	virtual ~Baseline() {
+	}
+	virtual void SubtractBaselinePolynomial(
+			size_t num_chan, float const in_data[/*num_chan*/],
+			bool const in_mask[/*num_chan*/], int order,
+			float clipping_threshold_sigma, int clipping_max_iteration,
+			bool get_residual, float out[/*num_chan*/]) const = 0;
+	virtual void GetBaselineModel(
+			size_t num_chan, int order, double out[/*(order+1)*num_chan*/]) const = 0;
+	virtual void DoSubtractBaseline(
+			size_t num_chan, float const in_data[/*num_chan*/],
+			bool const in_mask[/*num_chan*/], size_t num_model,
+			double model_data[/*num_model * num_chan*/],
+			float clipping_threshold_sigma, int clipping_max_iteration,
+			bool get_residual, float out[/*num_chan*/]) const = 0;
+};
+
 template<typename DataType>
 class BitOperation {
 public:
@@ -145,13 +164,14 @@ public:
 	static OptimizedImplementationFactory const *GetFactory();
 	virtual ~OptimizedImplementationFactory() {
 	}
-	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
+	virtual Baseline const *GetBaselineImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Interpolation const *GetInterpolationImpl() const = 0;
 	virtual LogicalOperation const *GetLogicalOperationImpl() const = 0;
+	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
 protected:
 	OptimizedImplementationFactory() {

@@ -8,6 +8,43 @@
 #include <libsakura/optimized_implementation_factory.h>
 
 namespace LIBSAKURA_PREFIX {
+
+class BaselineDefault : public Baseline {
+public:
+	virtual ~BaselineDefault(){}
+	virtual void SubtractBaselinePolynomial(
+			size_t num_chan, float const in_data[/*num_chan*/],
+			bool const in_mask[/*num_chan*/], int order,
+			float clipping_threshold_sigma, int clipping_max_iteration,
+			bool get_residual, float out[/*num_chan*/]) const;
+	virtual void GetBaselineModel(
+			size_t num_chan, int order, double out[/*(order+1)*num_chan*/]) const;
+	virtual void DoSubtractBaseline(
+			size_t num_chan, float const in_data[/*num_chan*/],
+			bool const in_mask[/*num_chan*/], size_t num_model,
+			double model_data[/*num_model * num_chan*/],
+			float clipping_threshold_sigma, int clipping_max_iteration,
+			bool get_residual, float out[/*num_chan*/]) const;
+};
+
+class BaselineAfterSandyBridge : public Baseline {
+public:
+	virtual ~BaselineAfterSandyBridge(){}
+	virtual void SubtractBaselinePolynomial(
+			size_t num_chan, float const in_data[/*num_chan*/],
+			bool const in_mask[/*num_chan*/], int order,
+			float clipping_threshold_sigma, int clipping_max_iteration,
+			bool get_residual, float out[/*num_chan*/]) const;
+	virtual void GetBaselineModel(
+			size_t num_chan, int order, double out[/*(order+1)*num_chan*/]) const;
+	virtual void DoSubtractBaseline(
+			size_t num_chan, float const in_data[/*num_chan*/],
+			bool const in_mask[/*num_chan*/], size_t num_model,
+			double model_data[/*num_model * num_chan*/],
+			float clipping_threshold_sigma, int clipping_max_iteration,
+			bool get_residual, float out[/*num_chan*/]) const;
+};
+
 template<typename DataType>
 class BitOperationDefault: public BitOperation<DataType> {
 public:

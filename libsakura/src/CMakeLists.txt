@@ -34,8 +34,8 @@ message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default")
 #set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=core2 -DARCH_SUFFIX=AfterSandyBridge")
-set(MULTI_SOURCE bit_operation.cc convolution.cc gridding.cc interpolation.cc logical_operation.cc numeric_operation.cc statistics.cc)
-set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_bit_operation.cc gen_convolution.cc gen_gridding.cc gen_interpolation.cc gen_logical_operation.cc gen_numeric_operation.cc gen_statistics.cc gen_util.c)
+set(MULTI_SOURCE baseline.cc bit_operation.cc convolution.cc gridding.cc interpolation.cc logical_operation.cc numeric_operation.cc statistics.cc)
+set(UNI_SOURCE concurrent.cc optimized_implementation_factory.cc gen_baseline.cc gen_bit_operation.cc gen_convolution.cc gen_gridding.cc gen_interpolation.cc gen_logical_operation.cc gen_numeric_operation.cc gen_statistics.cc gen_util.c)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"

@@ -9,6 +9,9 @@
 #include "libsakura/localdef.h"
 
 namespace {
+using ::LIBSAKURA_PREFIX::Baseline;
+using ::LIBSAKURA_PREFIX::BaselineDefault;
+using ::LIBSAKURA_PREFIX::BaselineAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BitOperationDefault;
 using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
@@ -78,6 +81,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
+BaselineDefault const baseline_default;
 BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 ConvolutionDefault const convolution_default;
@@ -94,6 +98,9 @@ public:
 	}
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const {
 		return &bit_operation_default_uint32;
+	}
+	virtual Baseline const *GetBaselineImpl() const {
+		return &baseline_default;
 	}
 	virtual Convolution const *GetConvolutionImpl() const {
 		return &convolution_default;
@@ -116,6 +123,7 @@ public:
 
 } default_factory;
 
+BaselineAfterSandyBridge const baseline_after_sandy_bridge;
 BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
@@ -127,6 +135,10 @@ StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
+	virtual Baseline const *GetBaselineImpl() const {
+		// return &baseline_after_sandy_bridge;
+		return &baseline_default;
+	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		/* return &bit_operation_after_sandy_bridge_uint8;*/
 		return &bit_operation_default_uint8;

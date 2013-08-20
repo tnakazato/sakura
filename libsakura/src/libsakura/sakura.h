@@ -438,6 +438,31 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
 		size_t num_model, double const model[/*num_model * num_in*/],
 		float out[/*num_in*/]);
 
+/**
+ * @brief Fit a baseline and subtract it from input spectrum.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
+		size_t num_chan, float const in_data[/*num_chan*/],
+		bool const in_mask[/*num_chan*/], int order,
+		float clipping_threshold_sigma, int clipping_max_iteration,
+		bool get_residual, float out[/*num_chan*/]);
+
+/**
+ * @brief Compute a set of model spectra.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
+		size_t num_chan, int order, double out[/*(order+1)*num_chan*/]);
+
+/**
+ * @brief Actually fit a baseline and subtract it from input spectrum.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
+		size_t num_chan, float const in_data[/*num_chan*/],
+		bool const in_mask[/*num_chan*/], size_t num_model,
+		double model_data[/*num_model * num_chan*/],
+		float clipping_threshold_sigma, int clipping_max_iteration,
+		bool get_residual, float out[/*num_chan*/]);
+
 #ifdef __cplusplus
 }
 /* extern "C" */
