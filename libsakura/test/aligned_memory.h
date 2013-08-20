@@ -40,4 +40,5 @@ public:
 
 typedef AlignedMemory<32> DefaultAlignedMemory; // for AVX
 
+#define SIMD_ALIGN alignas(32) // for AVX
 #endif /* ALIGNED_MEMORY_H_ */

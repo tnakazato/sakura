@@ -17,8 +17,11 @@
 #define NO_VERIFY 0
 #define DO_FORTRAN (1 || !NO_VERIFY)
 
-#define AVX __attribute__((aligned (32)))
-#define SIMD // alignas(32)
+//#define AVX __attribute__((aligned (32)))
+#define AVX
+#ifndef SIMD_ALIGN
+#define SIMD_ALIGN alignas(32)
+#endif
 #define elementsof(x) (sizeof(x) / sizeof((x)[0]))
 
 using namespace std;
@@ -61,19 +64,19 @@ inline integer at4(integer B, integer C, integer D, integer a, integer b,
 #define NY (size_t(180))
 #define CONV_TABLE_SIZE (size_t(ceil(sqrt(2.)*((SUPPORT+1) * SAMPLING))))
 
-SIMD float convTab[CONV_TABLE_SIZE] AVX;
-SIMD uint32_t chanmap[NVISCHAN] AVX;
-SIMD uint32_t polmap[NVISPOL] AVX;
+SIMD_ALIGN float convTab[CONV_TABLE_SIZE] AVX;
+SIMD_ALIGN uint32_t chanmap[NVISCHAN] AVX;
+SIMD_ALIGN uint32_t polmap[NVISPOL] AVX;
 
-SIMD integer flag[NROW][NVISCHAN][NVISPOL] AVX;
-SIMD bool flag_[NROW][NVISPOL][NVISCHAN] AVX;
+SIMD_ALIGN integer flag[NROW][NVISCHAN][NVISPOL] AVX;
+SIMD_ALIGN bool flag_[NROW][NVISPOL][NVISCHAN] AVX;
 
-SIMD integer rflag[NROW] AVX;
-SIMD bool rflag_[NROW] AVX;
+SIMD_ALIGN integer rflag[NROW] AVX;
+SIMD_ALIGN bool rflag_[NROW] AVX;
 
-SIMD float weight[NROW][NVISCHAN] AVX;
-SIMD double sumwt[NCHAN][NPOL] AVX;
-SIMD double sumwt2[NPOL][NCHAN] AVX;
+SIMD_ALIGN float weight[NROW][NVISCHAN] AVX;
+SIMD_ALIGN double sumwt[NCHAN][NPOL] AVX;
+SIMD_ALIGN double sumwt2[NPOL][NCHAN] AVX;
 
 double fortran_time;
 
@@ -300,7 +303,7 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 					sumwt2[0],
 					(*wgrid2)[0][0][0],
 					(*grid2)[0][0][0]);
-			EXPECT_EQ(result, sakura_Status_kOK);
+			EXPECT_EQ(sakura_Status_kOK, result);
 		}
 		double end = currenttime();
 		double new_time = end - start;
@@ -317,7 +320,7 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 
 TEST(Gridding, Basic) {
 	sakura_Status result = sakura_Initialize();
-	EXPECT_EQ(result, sakura_Status_kOK);
+	EXPECT_EQ(sakura_Status_kOK, result);
 
 	result = sakura_GridConvolving(NROW, 0, NROW,
 			0, 0, 0,
@@ -335,7 +338,7 @@ TEST(Gridding, Basic) {
 			0,
 			0,
 			0);
-	EXPECT_EQ(result, sakura_Status_kInvalidArgument);
+	EXPECT_EQ(sakura_Status_kInvalidArgument, result);
 
 	srand48(0);
 	initTabs();
