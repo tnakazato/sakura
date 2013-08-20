@@ -51,7 +51,6 @@ inline integer at4(integer B, integer C, integer D, integer a, integer b,
 	return a * (B * C * D) + at3(C, D, b, c, d);
 }
 
-
 #define NROW (size_t(1024)/2)
 #define ROW_FACTOR (size_t(1)) //NROW * ROW_FACTOR分の行を処理する
 #define NVISCHAN (size_t(1024))
@@ -88,7 +87,7 @@ void initTabs() {
 		chanmap[i] = i % NCHAN;
 	}
 	for (size_t i = 0; i < elementsof(polmap); i++) {
-		polmap[i] =  i % NPOL;
+		polmap[i] = i % NPOL;
 	}
 	for (size_t i = 0; i < elementsof(flag); i++) {
 		for (size_t j = 0; j < elementsof(flag[0]); j++) {
@@ -128,8 +127,7 @@ void clearTabs(float (*grid)[NCHAN][NPOL][NY][NX],
 #endif
 
 template<typename A, typename B>
-void clearTabs(A *grid,
-		A *wgrid, B *sumwt) {
+void clearTabs(A *grid, A *wgrid, B *sumwt) {
 	memset(*grid, 0, sizeof(*grid));
 	memset(*wgrid, 0, sizeof(*wgrid));
 	memset(*sumwt, 0, sizeof(*sumwt));
@@ -139,7 +137,7 @@ template<typename T>
 inline bool NearlyEqual(T aa, T bb) {
 	T threshold = 0.00007;
 	//T threshold = 0.0000003;
-	return aa == bb || (abs(aa-bb) / (abs(aa) + abs(bb))) < threshold;
+	return aa == bb || (abs(aa - bb) / (abs(aa) + abs(bb))) < threshold;
 }
 
 bool cmpgrid(complex<float> (*a)[NCHAN][NPOL][NY][NX],
@@ -164,9 +162,8 @@ bool cmpgrid(complex<float> (*a)[NCHAN][NPOL][NY][NX],
 					} else {
 						if (count < 20) {
 							cout << "[" << i << "][" << j << "][" << k << "]["
-									<< l << "]: " << setprecision(10)
-									<< aa << " <> "
-									<< bb << endl;
+									<< l << "]: " << setprecision(10) << aa
+									<< " <> " << bb << endl;
 							differ = true;
 						}
 						count++;
@@ -208,9 +205,8 @@ bool cmpwgrid(float (*a)[NCHAN][NPOL][NY][NX],
 					} else {
 						if (count < 20) {
 							cout << "[" << i << "][" << j << "][" << k << "]["
-									<< l << "]: " << setprecision(10)
-									<< aa << " <> "
-									<< bb << endl;
+									<< l << "]: " << setprecision(10) << aa
+									<< " <> " << bb << endl;
 							differ = true;
 						}
 						count++;
@@ -272,9 +268,9 @@ void ggridsd_(double const xy[][2], const complex<float>*, integer*, integer*,
 void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 		double (*x)[NROW], double (*y)[NROW],
 		complex<float> (*grid)[NCHAN][NPOL][NY][NX],
-		float (*wgrid)[NCHAN][NPOL][NY][NX],
-		DefaultAlignedMemory *grid2Mem, float (*grid2)[NY][NX][NPOL][NCHAN],
-		DefaultAlignedMemory *wgrid2Mem, float (*wgrid2)[NY][NX][NPOL][NCHAN]) {
+		float (*wgrid)[NCHAN][NPOL][NY][NX], DefaultAlignedMemory *grid2Mem,
+		float (*grid2)[NY][NX][NPOL][NCHAN], DefaultAlignedMemory *wgrid2Mem,
+		float (*wgrid2)[NY][NX][NPOL][NCHAN]) {
 	{
 		cout << "Zeroing values... " << flush;
 		double start = currenttime();
@@ -287,21 +283,11 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 		cout << "Gridding by C++(Speed) ... " << flush;
 		double start = currenttime();
 		for (size_t i = 0; i < ROW_FACTOR; ++i) {
-			sakura_Status result = sakura_GridConvolving(NROW, 0, NROW,
-					rflag_, *x, *y,
-					SUPPORT, SAMPLING,
-					NVISPOL, (uint32_t*)polmap,
-					NVISCHAN, (uint32_t*)chanmap,
-					flag_[0][0],
-					(*values_)[0][0],
-					weight[0],
-					dowt,
-					elementsof(convTab),
-					convTab,
-					NPOL, NCHAN,
-					NX, NY,
-					sumwt2[0],
-					(*wgrid2)[0][0][0],
+			sakura_Status result = sakura_GridConvolving(NROW, 0, NROW, rflag_,
+					*x, *y, SUPPORT, SAMPLING, NVISPOL, (uint32_t*) polmap,
+					NVISCHAN, (uint32_t*) chanmap, flag_[0][0],
+					(*values_)[0][0], weight[0], dowt, elementsof(convTab),
+					convTab, NPOL, NCHAN, NX, NY, sumwt2[0], (*wgrid2)[0][0][0],
 					(*grid2)[0][0][0]);
 			EXPECT_EQ(sakura_Status_kOK, result);
 		}
@@ -322,32 +308,23 @@ TEST(Gridding, Basic) {
 	sakura_Status result = sakura_Initialize();
 	EXPECT_EQ(sakura_Status_kOK, result);
 
-	result = sakura_GridConvolving(NROW, 0, NROW,
-			0, 0, 0,
-			SUPPORT, SAMPLING,
-			NVISPOL, (uint32_t*)polmap,
-			NVISCHAN, (uint32_t*)chanmap,
-			flag_[0][0],
-			0,
-			weight[0],
-			false,
-			elementsof(convTab),
-			convTab,
-			NPOL, NCHAN,
-			NX, NY,
-			0,
-			0,
-			0);
+	result = sakura_GridConvolving(NROW, 0, NROW, 0, 0, 0, SUPPORT, SAMPLING,
+			NVISPOL, (uint32_t*) polmap, NVISCHAN, (uint32_t*) chanmap,
+			flag_[0][0], 0, weight[0], false, elementsof(convTab), convTab,
+			NPOL, NCHAN, NX, NY, 0, 0, 0);
 	EXPECT_EQ(sakura_Status_kInvalidArgument, result);
 
 	srand48(0);
 	initTabs();
-	DefaultAlignedMemory *xy = DefaultAlignedMemory::newAlignedMemory(sizeof(double[NROW][2]));
+	DefaultAlignedMemory *xy = DefaultAlignedMemory::newAlignedMemory(
+			sizeof(double[NROW][2]));
 	double (*xy_)[NROW][2] = xy->memory<double[NROW][2]>();
 
-	DefaultAlignedMemory *x = DefaultAlignedMemory::newAlignedMemory(sizeof(double[NROW]));
+	DefaultAlignedMemory *x = DefaultAlignedMemory::newAlignedMemory(
+			sizeof(double[NROW]));
 	double (*x_)[NROW] = x->memory<double[NROW]>();
-	DefaultAlignedMemory *y = DefaultAlignedMemory::newAlignedMemory(sizeof(double[NROW]));
+	DefaultAlignedMemory *y = DefaultAlignedMemory::newAlignedMemory(
+			sizeof(double[NROW]));
 	double (*y_)[NROW] = y->memory<double[NROW]>();
 	cout << "Initializing xy... " << flush;
 	{
@@ -422,8 +399,8 @@ TEST(Gridding, Basic) {
 			ggridsd_((*xy_), (*values)[0][0], &nvispol, &nvischan, &dowt_,
 					flag[0][0], rflag, weight[0], &nrow, &irow,
 					(*grid)[0][0][0], (*wgrid)[0][0][0], &nx, &ny, &npol,
-					&nchan, &support, &sampling, convTab, (int*)chanmap, (int*)polmap,
-					sumwt[0]);
+					&nchan, &support, &sampling, convTab, (int*) chanmap,
+					(int*) polmap, sumwt[0]);
 #endif
 		}
 		double end = currenttime();
