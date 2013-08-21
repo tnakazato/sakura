@@ -16,17 +16,16 @@ class Baseline {
 public:
 	virtual ~Baseline() {
 	}
-	virtual void SubtractBaselinePolynomial(
-			size_t num_chan, float const in_data[/*num_chan*/],
-			bool const in_mask[/*num_chan*/], int order,
-			float clipping_threshold_sigma, int clipping_max_iteration,
-			bool get_residual, float out[/*num_chan*/]) const = 0;
-	virtual void GetBaselineModel(
-			size_t num_chan, int order, double out[/*(order+1)*num_chan*/]) const = 0;
-	virtual void DoSubtractBaseline(
-			size_t num_chan, float const in_data[/*num_chan*/],
-			bool const in_mask[/*num_chan*/], size_t num_model,
-			double model_data[/*num_model * num_chan*/],
+	virtual void SubtractBaselinePolynomial(size_t num_chan,
+			float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
+			int order, float clipping_threshold_sigma,
+			int clipping_max_iteration, bool get_residual,
+			float out[/*num_chan*/]) const = 0;
+	virtual void GetBaselineModel(size_t num_chan, int order,
+			double out[/*(order+1)*num_chan*/]) const = 0;
+	virtual void DoSubtractBaseline(size_t num_chan,
+			float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
+			size_t num_model, double model_data[/*num_model * num_chan*/],
 			float clipping_threshold_sigma, int clipping_max_iteration,
 			bool get_residual, float out[/*num_chan*/]) const = 0;
 };
@@ -44,9 +43,12 @@ public:
 
 class Convolution {
 public:
-	virtual ~Convolution() {}
-	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-            size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+	virtual ~Convolution() {
+	}
+	virtual void CreateConvolve1DContext(size_t num_channel,
+			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+			size_t kernel_width, bool use_fft,
+			LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
 };
 
 class Gridding {
@@ -59,16 +61,12 @@ public:
 	virtual ~Gridding() {
 	}
 
-	virtual void GridConvolving(size_t num_spectra,
-			size_t start_spectrum, size_t end_spectrum,
-			bool const spectrum_mask[/*num_spectra*/],
-			double const x[/*num_spectra*/],
-			double const y[/*num_spectra*/],
-			size_t support, size_t sampling,
-			size_t num_polarization,
+	virtual void GridConvolving(size_t num_spectra, size_t start_spectrum,
+			size_t end_spectrum, bool const spectrum_mask[/*num_spectra*/],
+			double const x[/*num_spectra*/], double const y[/*num_spectra*/],
+			size_t support, size_t sampling, size_t num_polarization,
 			uint32_t const polarization_map[/*num_polarization*/],
-			size_t num_channels,
-			uint32_t const channel_map[/*num_channels*/],
+			size_t num_channels, uint32_t const channel_map[/*num_channels*/],
 			bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
 			float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
 			float const weight/*[num_spectra]*/[/*num_channels*/],
@@ -79,8 +77,7 @@ public:
 			size_t width, size_t height,
 			double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 			float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-			float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
-			) const = 0;
+			float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) const = 0;
 
 #if 0
 	virtual void Transform(integer ny, integer nx, integer nchan, integer npol,
@@ -105,9 +102,9 @@ public:
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			float y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dFloatPolynomial(int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
-			size_t num_interpolated,
+	virtual void Interpolate1dFloatPolynomial(int polynomial_order,
+			size_t num_base, double const x_base[/*num_base*/],
+			float const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			float y_interpolated[/*num_interpolated*/]) const = 0;
 	virtual void Interpolate1dFloatSpline(size_t num_base,
@@ -134,36 +131,52 @@ public:
 	virtual ~NumericOperation() {
 	}
 
-	virtual void OperateFloatSubtraction(size_t num_in, float const in1[/*num_in*/],
-			float const in2[/*num_in*/], float out[/*num_in*/]) const = 0;
+	virtual void OperateFloatSubtraction(size_t num_in,
+			float const in1[/*num_in*/], float const in2[/*num_in*/],
+			float out[/*num_in*/]) const = 0;
 	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
 			bool const in_mask[/*num_in*/], size_t num_model,
-			double const model[/*num_model * num_in*/], float out[/*num_in*/]) const = 0;
-	virtual void GetLeastSquareMatrix(size_t num_in, float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
-			double out[/*num_model * num_model*/], double out_vector[/*num_model*/]) const = 0;
+			float out[/*num_in*/]) const = 0;
+	virtual void GetLeastSquareMatrix(size_t num_in,
+			float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
+			size_t num_model, double const model[/*num_model * num_in*/],
+			double out[/*num_model * num_model*/],
+			double out_vector[/*num_model*/]) const = 0;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
-			double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]) const = 0;
+			double const lsq_vector0[/*num_eqn*/],
+			double out[/*num_eqn*/]) const = 0;
 	virtual void DoGetBestFitModel(size_t num_chan, size_t num_eqn,
-			double const model[/*num_eqn * num_chan*/], double const coeff[/*num_eqn*/],
-			float out[/*num_in*/]) const = 0;
+			double const model[/*num_eqn * num_chan*/],
+			double const coeff[/*num_eqn*/], float out[/*num_in*/]) const = 0;
 };
 
 class Statistics {
 public:
 	virtual ~Statistics() {
 	}
-	virtual void ComputeStatistics(float const data[], bool const mask[], size_t elements,
+	virtual void ComputeStatistics(float const data[], bool const mask[],
+			size_t elements,
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
 };
 
 class OptimizedImplementationFactory {
 public:
+	/**
+	 * @~
+	 * MT-unsafe
+	 */
+	static void InitializeFactory(char const *simd_spec);
+	/**
+	 * @~
+	 * MT-unsafe
+	 */
+	static void CleanUpFactory();
 	static OptimizedImplementationFactory const *GetFactory();
 	virtual ~OptimizedImplementationFactory() {
 	}
+	virtual char const *GetName() const = 0;
 	virtual Baseline const *GetBaselineImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
@@ -174,6 +187,7 @@ public:
 	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
 protected:
+	static OptimizedImplementationFactory const *factory_;
 	OptimizedImplementationFactory() {
 	}
 };

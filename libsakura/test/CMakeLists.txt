@@ -40,26 +40,30 @@ add_executable(testGridding         gridding.cc fgridsd.f)
 add_executable(testInit             init.cc)
 add_executable(testInterpolation    interpolation.cc)
 add_executable(testLogicalOperation logical_operation.cc)
+add_executable(testStatistics statistics.cc)
 
+target_link_libraries (testInit             ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+target_link_libraries (testStatistics ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+target_link_libraries (testGridding         ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread -lgfortran)
 target_link_libraries (testNumericOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBitOperation     ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
-target_link_libraries (testInit             ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testInterpolation    ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
-target_link_libraries (testGridding         ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread -lgfortran)
 target_link_libraries (testLogicalOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 
+add_custom_target(testInitRun             COMMAND ./testInit             DEPENDS testInit)
+add_custom_target(testStatisticsRun COMMAND ./testStatistics DEPENDS testStatistics)
+add_custom_target(testGriddingRun         COMMAND ./testGridding         DEPENDS testGridding)
 add_custom_target(testNumericOperationRun COMMAND ./testNumericOperation DEPENDS testNumericOperation)
 add_custom_target(testBitOperationRun     COMMAND ./testBitOperation     DEPENDS testBitOperation)
-add_custom_target(testGriddingRun         COMMAND ./testGridding         DEPENDS testGridding)
-add_custom_target(testInitRun             COMMAND ./testInit             DEPENDS testInit)
 add_custom_target(testInterpolationRun    COMMAND ./testInterpolation    DEPENDS testInterpolation)
 add_custom_target(testLogicalOperationRun COMMAND ./testLogicalOperation DEPENDS testLogicalOperation)
 
 add_custom_target(test
+	COMMAND ./testInit
+	COMMAND ./testStatistics
+	COMMAND ./testGridding
 	COMMAND ./testNumericOperation
 	COMMAND ./testBitOperation
-	COMMAND ./testGridding
-	COMMAND ./testInit
 	COMMAND ./testInterpolation
 	COMMAND ./testLogicalOperation
 	)

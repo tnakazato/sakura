@@ -10,7 +10,8 @@ find_path(GTEST_INCLUDE_DIRS gtest/gtest.h PATHS ${PROJECT_SOURCE_DIR}/gtest/inc
 set(GTEST_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest.a)
 set(GTEST_MAIN_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest_main.a)
 
-set(CMAKE_BUILD_TYPE Release)
+# set CMAKE_BUILD_TYPE with cmake -D option
+#set(CMAKE_BUILD_TYPE Release)
 
 add_subdirectory(src bin)
 add_subdirectory(gtest bingtest)

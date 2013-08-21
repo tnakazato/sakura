@@ -30,21 +30,17 @@ typedef enum {
 	/**
 	 * @~japanese
 	 * @brief 成功または正常
-	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
-	/**
+	 */LIBSAKURA_SYMBOL(Status_kOK) = 0, /**
 	 * @~japanese
 	 * @brief 失敗または異常
-	 */LIBSAKURA_SYMBOL(Status_kNG) = 1,
-	/**
+	 */LIBSAKURA_SYMBOL(Status_kNG) = 1, /**
 	 * @~japanese
 	 * @brief 引数が不正だった。
-	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2,
-	/**
+	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2, /**
 	 * @~japanese
 	 * @brief 原因不明のエラー。
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
 }LIBSAKURA_SYMBOL(Status);
-
 /**
  * @~english
  * @brief Initializes Sakura Library
@@ -130,7 +126,6 @@ float const *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
 double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
 		double const *arena, size_t elements_required);
 
-
 /**
  * @~japanese
  * Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型。
@@ -166,15 +161,16 @@ typedef struct {
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
- * @ref sakura_StatisticsResult を参照。The bit operation is invoked
+ * @ref sakura_StatisticsResult を参照。
  *
  * @param num_data @a data 及び@a is_valid の要素の数
- * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、NaNであってはならない。
+ * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、Inf/NaNであってはならない。
+ * <br/>must-be-aligned
  * @param is_valid データのマスク。この値が false だと、
- * 対応する@a data の要素が無視される
+ * 対応する@a data の要素が無視される。
+ * <br/>must-be-aligned
  * @param result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
  * 同じ値が複数あった場合、どの値のインデックスが@a index_of_min, @a index_of_maxに格納されるかは不定である。
- *
  * @~
  * MT-safe
  */
@@ -196,7 +192,6 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data, float const data[],
  */
 size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
 		bool const is_valid[], float data[]);
-
 /**
  * @~japanese
  * @brief 畳み込みしながらグリッドする。
@@ -226,30 +221,23 @@ size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
  * @param weight_sum
  * @param weight_of_grid
  * @param grid
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
-		double const x[/*num_spectra*/],
-		double const y[/*num_spectra*/],
-		size_t support, size_t sampling,
-		size_t num_polarization,
+		double const x[/*num_spectra*/], double const y[/*num_spectra*/],
+		size_t support, size_t sampling, size_t num_polarization,
 		uint32_t const polarization_map[/*num_polarization*/],
-		size_t num_channels,
-		uint32_t const channel_map[/*num_channels*/],
+		size_t num_channels, uint32_t const channel_map[/*num_channels*/],
 		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
-		float const weight/*[num_spectra]*/[/*num_channels*/],
-		bool do_weight,
+		float const weight/*[num_spectra]*/[/*num_channels*/], bool do_weight,
 		size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
 		float const convolution_table[/*num_convolution_table*/],
 		size_t num_polarization_for_grid, size_t num_channels_for_grid,
 		size_t width, size_t height,
 		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
-		);
-
+		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]);
 /**
  * @~english
  * @brief Invoke bit operation AND between an utint8_t value and array.
@@ -282,10 +270,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
  * @param out 結果の格納先。
  * @return @a sakura_Status
  *
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(uint8_t bit_mask, size_t num_in,
-		uint8_t const in[/*num_in*/], bool const edit_mask[/*num_in*/], uint8_t out[/*num_in*/]);
-
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
+		uint8_t bit_mask, size_t num_in, uint8_t const in[/*num_in*/],
+		bool const edit_mask[/*num_in*/], uint8_t out[/*num_in*/]);
 /**
  * @~
  * @brief Invoke bit operation AND between an utint32_t value and array.
@@ -305,10 +292,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(uint8_t bit_mask,
  * and the value in array, @a in, is adopted for the elements where corresponding
  * elements in @a edit_mask is false.
  * @return @a sakura_Status
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(uint32_t bit_mask, size_t num_in,
-		uint32_t const in[/*num_in*/], bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
-
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
+		uint32_t bit_mask, size_t num_in, uint32_t const in[/*num_in*/],
+		bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
 
 /**
  * @~japanese
@@ -319,35 +305,24 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(uint32_t bit_mas
 typedef enum {
 	/**
 	 * @brief Nearest interpolation
-	 **/
-	LIBSAKURA_SYMBOL(InterpolationMethod_kNearest),
-	/**
+	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kNearest), /**
 	 * @brief Linear interpolation
-	 **/
-	LIBSAKURA_SYMBOL(InterpolationMethod_kLinear),
-	/**
+	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kLinear), /**
 	 * @brief Polynomial interpolation
-	 **/
-	LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial),
-	/**
+	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial), /**
 	 * @brief Spline interpolation
-	 **/
-	LIBSAKURA_SYMBOL(InterpolationMethod_kSpline),
-	/**
+	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kSpline), /**
 	 * @brief Number of interpolation methods implemented
-	 **/
-	LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod)
-} LIBSAKURA_SYMBOL(InterpolationMethod);
-
-
+	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod)
+}LIBSAKURA_SYMBOL(InterpolationMethod);
 /**
  * @brief Perform one-dimensional interpolation
- **/
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(LIBSAKURA_SYMBOL(
-		InterpolationMethod) interoplation_method, int polynomial_order,
+ **/LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
+		LIBSAKURA_SYMBOL(
+				InterpolationMethod) interoplation_method, int polynomial_order,
 		size_t num_base, double const x_base[], float const y_base[],
-		size_t num_interpolated, double x_interpolated[], float y_interpolated[]);
-
+		size_t num_interpolated, double x_interpolated[],
+		float y_interpolated[]);
 
 /**
  * @brief Perform pseudo two-dimensional interpolation
@@ -355,7 +330,6 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(LIBSAKURA_SYMBOL(
 //LIBSAKURA_SYMBOL(Status) InterpolatePseudo2dFloat(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 //		int polynomial_order, double x_interpolated, size_t num_base, double x_base[],
 //		size_t num_array, float *y_base[], float y_interpolated[]);
-
 /**
  * @~japanese
  * @brief スムージングに使うカーネルタイプを列挙
@@ -365,101 +339,76 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(LIBSAKURA_SYMBOL(
 typedef enum {
 	/**
 	 * @brief Gaussian
-	 **/
-	LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),
-	/**
+	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), /**
 	 * @brief BoxCar
-	 **/
-	LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar),
-	/**
+	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar), /**
 	 * @brief Hanning
-	 **/
-	LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning),
-	/**
+	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning), /**
 	 * @brief Hamming
-	 **/
-	LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
-} LIBSAKURA_SYMBOL(Convolve1DKernelType);
+	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
+}LIBSAKURA_SYMBOL(Convolve1DKernelType);
 
 /**
  * @brief Context struct for Convolution
  **/
 typedef struct {
-  float fft_applied_kernel[0];
+	float fft_applied_kernel[0];
 }LIBSAKURA_SYMBOL(Convole1DContext);
-
 /**
  * @brief Creating 1D Kernel with FFT or without FFT
- **/
-
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
-             size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-             size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context);
-
+ **/LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
+		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+		size_t kernel_width, bool use_fft,
+		LIBSAKURA_SYMBOL(Convole1DContext) **context);
 /**
  * @brief Logical operation AND between two boolean arrays.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
-		bool const in1[/*num_in*/], bool const in2[/*num_in*/], bool out[/*num_in*/]);
-
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
+		bool const in1[/*num_in*/], bool const in2[/*num_in*/],
+		bool out[/*num_in*/]);
 /**
  * @brief Compute subtraction between two float arrays (in1 - in2).
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(size_t num_in,
-		float const in1[/*num_in*/], float const in2[/*num_in*/], float out[/*num_in*/]);
-
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
+		size_t num_in, float const in1[/*num_in*/], float const in2[/*num_in*/],
+		float out[/*num_in*/]);
 /**
  * @brief Compute values for Least-Square fitting from input data and a set of model data.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(size_t num_in,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(size_t num_in,
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
-		double out[/*num_model * num_model*/], double out_vector[/*num_model*/]);
-
+		double out[/*num_model * num_model*/],
+		double out_vector[/*num_model*/]);
 /**
  * @brief Solve simultaneous equations via LU decomposition.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(size_t num_eqn,
-		double const lsq_matrix0[/*num_eqn * num_eqn*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+		size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
 		double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
-
 /**
  * @brief Compute the best-fit model spectrum using model spectra and coefficients.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_chan,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_chan,
 		size_t num_eqn, double const model[/*num_eqn * num_chan*/],
 		double const coeff[/*num_eqn*/], float out[/*num_in*/]);
-
 /**
  * @brief Compute the best-fit model spectrum by least-square fitting.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
 		float out[/*num_in*/]);
-
 /**
  * @brief Fit a baseline and subtract it from input spectrum.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_chan, float const in_data[/*num_chan*/],
 		bool const in_mask[/*num_chan*/], int order,
 		float clipping_threshold_sigma, int clipping_max_iteration,
 		bool get_residual, float out[/*num_chan*/]);
-
 /**
  * @brief Compute a set of model spectra.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
-		size_t num_chan, int order, double out[/*(order+1)*num_chan*/]);
-
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(size_t num_chan,
+		int order, double out[/*(order+1)*num_chan*/]);
 /**
  * @brief Actually fit a baseline and subtract it from input spectrum.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
-		size_t num_chan, float const in_data[/*num_chan*/],
-		bool const in_mask[/*num_chan*/], size_t num_model,
-		double model_data[/*num_model * num_chan*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_chan,
+		float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
+		size_t num_model, double model_data[/*num_model * num_chan*/],
 		float clipping_threshold_sigma, int clipping_max_iteration,
 		bool get_residual, float out[/*num_chan*/]);
 

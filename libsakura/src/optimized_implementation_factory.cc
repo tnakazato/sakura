@@ -3,7 +3,9 @@
 // Copyright: See COPYING file that comes with this distribution
 
 #include <cstdio>
-#include <stdint.h>
+#include <cassert>
+#include <cstring>
+#include <cstdint>
 
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
@@ -93,6 +95,9 @@ StatisticsDefault const statistics_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
+	virtual char const *GetName() const {
+		return "Default";
+	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_default_uint8;
 	}
@@ -135,6 +140,9 @@ StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
+	virtual char const *GetName() const {
+		return "AfterSandyBridge";
+	}
 	virtual Baseline const *GetBaselineImpl() const {
 		// return &baseline_after_sandy_bridge;
 		return &baseline_default;
@@ -174,14 +182,38 @@ public:
 }
 
 namespace LIBSAKURA_PREFIX {
-OptimizedImplementationFactory const *
-OptimizedImplementationFactory::GetFactory() {
+OptimizedImplementationFactory const *OptimizedImplementationFactory::factory_ =
+		nullptr;
+
+void OptimizedImplementationFactory::InitializeFactory(char const *simd_spec) {
 	SimdFeature simd_feature;
 	GetCpuFeature(simd_feature);
 
-	if (simd_feature.avx) {
-		return &after_sandy_bridge;
+	if (strcmp(simd_spec, "adaptive") == 0) {
+		if (simd_feature.avx) {
+			factory_ = &after_sandy_bridge;
+		} else {
+			factory_ = &default_factory;
+		}
+	} else if (simd_feature.avx && strcmp(simd_spec, "avx") == 0) {
+		factory_ = &after_sandy_bridge;
+	} else if (strcmp(simd_spec, "disabled") == 0) {
+		factory_ = &default_factory;
+	} else {
+		factory_ = &default_factory;
 	}
-	return &default_factory;
+#ifndef NDEBUG
+	fprintf(stderr, "SIMD implementation: %s\n", factory_->GetName());
+#endif
+}
+
+void OptimizedImplementationFactory::CleanUpFactory() {
+	factory_ = nullptr;
+}
+
+OptimizedImplementationFactory const *
+OptimizedImplementationFactory::GetFactory() {
+	assert("Call LIBSAKURA_SYMBOL(Initialize)() first." && factory_ != nullptr);
+	return factory_;
 }
 }
