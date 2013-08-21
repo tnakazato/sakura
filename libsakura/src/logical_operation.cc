@@ -49,9 +49,7 @@ inline void OperateLogicalAndEigen(size_t num_in, bool const *in1,
 	Map<Array<bool, Dynamic, 1>, Aligned> out_(const_cast<bool *>(out),
 			num_in);
 
-	for (size_t i=0; i < num_in ; i++){
-		out[i] = in1_[i] && in2_[i];
-	}
+	out = in1_ && in2_;
 }
 
 } /* anonymous namespace */

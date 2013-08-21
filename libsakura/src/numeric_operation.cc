@@ -67,9 +67,7 @@ inline void OperateFloatSubtractionEigen(size_t num_in, float const *in1,
 	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
 			num_in);
 
-	for (size_t i=0; i < num_in ; i++){
-		out[i] = in1_[i] - in2_[i];
-	}
+	out = in1_ - in2_;
 }
 
 inline void GetLeastSquareMatrixEigen(size_t num_in, float const *in_data,
@@ -190,8 +188,8 @@ inline void GetBestFitModelEigen(size_t num_in, float const *in_data,
 	double *lsq_matrix0;
 	double *lsq_vector0;
 	double *coeff;
-	GetLeastSquareMatrixEigen(num_in, in_data,
-			in_mask, num_model, model, lsq_matrix0, lsq_vector0);
+	GetLeastSquareMatrixEigen(num_in, in_data, in_mask,
+			num_model, model, lsq_matrix0, lsq_vector0);
 	SolveSimultaneousEquationsByLUEigen(num_model,
 			lsq_matrix0, lsq_vector0, coeff);
 	DoGetBestFitModelEigen(num_in, num_model, model, coeff, out);
