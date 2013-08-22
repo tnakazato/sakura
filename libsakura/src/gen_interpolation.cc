@@ -10,7 +10,7 @@
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
 		LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, int polynomial_order,
 		size_t num_base, double const x_base[], float const y_base[],
-		size_t num_interpolated, double x_interpolated[], float y_interpolated[]) {
+		size_t num_interpolated, double const x_interpolated[], float y_interpolated[]) {
 
 	// get object optimized to run-time environment
 	auto interpolator =
@@ -136,6 +136,11 @@ int LocateData(int start_position, int end_position, size_t num_base,
 
 namespace LIBSAKURA_PREFIX {
 
+// Returns right hand side index of the range that brackets x_located.
+// For example, x_located locates between x_base[i] and x_base[i+1],
+// Locate returns i+1. If x_located is out of range, Locate returns
+// either 0 or num_base depending on which side x_located locates w.r.t.
+// x_base array.
 template<typename DataType>
 int InterpolationImpl<DataType>::Locate(int start_position, int end_position, size_t num_base,
 			double const x_base[/*num_base*/], double x_located) const

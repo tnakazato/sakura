@@ -321,7 +321,7 @@ typedef enum {
 		LIBSAKURA_SYMBOL(
 				InterpolationMethod) interoplation_method, int polynomial_order,
 		size_t num_base, double const x_base[], float const y_base[],
-		size_t num_interpolated, double x_interpolated[],
+		size_t num_interpolated, double const x_interpolated[],
 		float y_interpolated[]);
 
 /**
