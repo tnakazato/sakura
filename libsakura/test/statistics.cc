@@ -100,7 +100,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 		EXPECT_EQ(static_cast<size_t>(-1), new_elements);
 	}
-	sakura_CleanUp();
+	LIBSAKURA_SYMBOL(CleanUp)();
 }
 
 TEST(Statistics, ComputeStatistics) {
@@ -116,7 +116,7 @@ TEST(Statistics, ComputeStatistics) {
 			data[i] = i;
 			is_valid[i] = true;
 		}
-		LIBSAKURA_SYMBOL (StatisticsResult) result;
+		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL (ComputeStatistics)(
 				ELEMENTSOF(data), data, is_valid, &result);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -142,7 +142,7 @@ TEST(Statistics, ComputeStatistics) {
 			data[i] = i;
 			is_valid[i] = true;
 		}
-		LIBSAKURA_SYMBOL (StatisticsResult) result;
+		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL (ComputeStatistics)(
 				ELEMENTSOF(data), data, is_valid, &result);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -165,7 +165,7 @@ TEST(Statistics, ComputeStatistics) {
 		static float data[1] = { 3.f };
 		SIMD_ALIGN
 		static bool is_valid[ELEMENTSOF(data)] = { true };
-		LIBSAKURA_SYMBOL (StatisticsResult) result;
+		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL (ComputeStatistics)(
 				ELEMENTSOF(data), data, is_valid, &result);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -186,7 +186,7 @@ TEST(Statistics, ComputeStatistics) {
 		static float data[0];
 		SIMD_ALIGN
 		static bool is_valid[ELEMENTSOF(data)];
-		LIBSAKURA_SYMBOL (StatisticsResult) result;
+		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL (ComputeStatistics)(
 				ELEMENTSOF(data), data, is_valid, &result);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -223,7 +223,7 @@ TEST(Statistics, ComputeStatistics) {
 		EXPECT_TRUE(isnanf(result.rms));
 		EXPECT_TRUE(isnanf(result.stddev));
 	}
-	sakura_CleanUp();
+	LIBSAKURA_SYMBOL(CleanUp)();
 }
 
 TEST(Statistics, ComputeStatistics_Speed) {
@@ -239,7 +239,7 @@ TEST(Statistics, ComputeStatistics_Speed) {
 			data[i] = i;
 			is_valid[i] = i % 2 == 0;
 		}
-		LIBSAKURA_SYMBOL (StatisticsResult) result;
+		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		{
 			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 
@@ -255,5 +255,5 @@ TEST(Statistics, ComputeStatistics_Speed) {
 		assert(ELEMENTSOF(data) % 2 == 0);
 		EXPECT_EQ(ELEMENTSOF(data) / 2, result.count);
 	}
-	sakura_CleanUp();
+	LIBSAKURA_SYMBOL(CleanUp)();
 }
