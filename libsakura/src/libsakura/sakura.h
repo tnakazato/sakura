@@ -197,21 +197,21 @@ typedef struct {
  * @brief 畳み込みしながらグリッドする。
  * 各浮動小数点の数値はNaN/+-Infであってはならない。
  * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
- * @param start_spectrum
- * @param end_spectrum
+ * @param start_spectrum 開始spectrumの添字
+ * @param end_spectrum 終了spectrumの添字+1
  * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。
- * @param x
- * @param y
- * @param support
- * @param sampling
+ * @param x 2次元平面に投射済みのx座標
+ * @param y 2次元平面に投射済みのy座標
+ * @param support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)
+ * @param sampling 畳み込みカーネルの精度(/pixel)
  * @param num_polarizations
  * @param polarization_map	各要素の値は、[0,num_polarization_for_grid)でなければならない。要素数は、num_polarizationでなければならない。
  * @param num_channels
  * @param channel_map	各要素の値は、[0,num_channels_for_grid)でなければならない。要素数は、num_channelsでなければならない。
  * @param mask
- * @param value
- * @param weight
- * @param do_weight
+ * @param value グリッディングする値
+ * @param weight 重み
+ * @param weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
  * @param num_convolution_table >= ceil(sqrt(2.)*(support+1)*sampling)
  * @param convolution_table
  * @param num_polarization_for_grid
@@ -220,7 +220,7 @@ typedef struct {
  * @param height
  * @param weight_sum
  * @param weight_of_grid
- * @param grid
+ * @param grid グリッディング結果
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
@@ -230,7 +230,7 @@ typedef struct {
 		size_t num_channels, uint32_t const channel_map[/*num_channels*/],
 		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
-		float const weight/*[num_spectra]*/[/*num_channels*/], bool do_weight,
+		float const weight/*[num_spectra]*/[/*num_channels*/], bool weight_only,
 		size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
 		float const convolution_table[/*num_convolution_table*/],
 		size_t num_polarization_for_grid, size_t num_channels_for_grid,
