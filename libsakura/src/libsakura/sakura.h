@@ -157,7 +157,6 @@ typedef struct {
 	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
 	int index_of_max; /**< 最大値のインデックス(有効な値がなければ-1) */
 }LIBSAKURA_SYMBOL(StatisticsResult);
-
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
@@ -171,12 +170,12 @@ typedef struct {
  * <br/>must-be-aligned
  * @param result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
  * 同じ値が複数あった場合、どの値のインデックスが@a index_of_min, @a index_of_maxに格納されるかは不定である。
+ * @return 終了ステータス
  * @~
  * MT-safe
- */
-void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data, float const data[],
-		bool const is_valid[], LIBSAKURA_SYMBOL(StatisticsResult) *result);
-
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data,
+		float const data[], bool const is_valid[],
+		LIBSAKURA_SYMBOL(StatisticsResult) *result);
 /**
  * @~japanese
  * @brief validな値のみを先頭に詰めて昇順にソートする。
@@ -186,12 +185,13 @@ void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data, float const data[],
  * @param num_data @a data 及び@a is_valid の要素の数
  * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
  * 対応する@a is_valid がtrueの場合、NaNであってはならない。
- * @return (validでないデータを除いた)ソートされた要素数( <= @a num_data)
+ * @param new_num_data (validでないデータを除いた)ソートされた要素数( <= @a num_data) の格納先
+ * @return 終了ステータス
  * @~
  * MT-safe
- */
-size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t num_data,
-		bool const is_valid[], float data[]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
+		size_t num_data, bool const is_valid[], float data[],
+		size_t *new_num_data);
 /**
  * @~japanese
  * @brief 畳み込みしながらグリッドする。

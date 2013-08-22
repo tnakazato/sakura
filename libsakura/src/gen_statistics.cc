@@ -6,18 +6,25 @@
 #include "libsakura/optimized_implementation_factory.h"
 #include "libsakura/localdef.h"
 
-extern "C" void LIBSAKURA_SYMBOL(ComputeStatistics)(size_t elements,
-		float const data[], bool const is_valid[],
+#define CHECK_ARGS(x) do { \
+	if (!(x)) { \
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument); \
+	} \
+} while (false)
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(
+		size_t elements, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResult) *result) {
-	assert(data != nullptr);
-	assert(is_valid != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
-	assert(result != nullptr);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(is_valid != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+	CHECK_ARGS(result != nullptr);
 
 	auto stat =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetStatisticsImpl();
 	stat->ComputeStatistics(data, is_valid, elements, result);
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 namespace {
@@ -57,12 +64,14 @@ public:
 
 }
 
-extern "C" size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t elements,
-		bool const is_valid[], float data[]) {
-	assert(data != nullptr);
-	assert(is_valid != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
+		size_t elements, bool const is_valid[], float data[],
+		size_t *new_elements) {
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(is_valid != nullptr);
+	CHECK_ARGS(new_elements != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
 
 	size_t valid_count = 0;
 	for (size_t i = 0; i < elements; ++i) {
@@ -74,5 +83,6 @@ extern "C" size_t LIBSAKURA_SYMBOL(SortValidValuesDensely)(size_t elements,
 	}
 
 	QuickSort<float, AscendingOrder<float> >(data, valid_count);
-	return valid_count;
+	*new_elements = valid_count;
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }

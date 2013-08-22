@@ -283,13 +283,13 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 		cout << "Gridding by C++(Speed) ... " << flush;
 		double start = currenttime();
 		for (size_t i = 0; i < ROW_FACTOR; ++i) {
-			sakura_Status result = sakura_GridConvolving(NROW, 0, NROW, rflag_,
-					*x, *y, SUPPORT, SAMPLING, NVISPOL, (uint32_t*) polmap,
-					NVISCHAN, (uint32_t*) chanmap, flag_[0][0],
-					(*values_)[0][0], weight[0], dowt, elementsof(convTab),
-					convTab, NPOL, NCHAN, NX, NY, sumwt2[0], (*wgrid2)[0][0][0],
-					(*grid2)[0][0][0]);
-			EXPECT_EQ(sakura_Status_kOK, result);
+			LIBSAKURA_SYMBOL(Status) result = sakura_GridConvolving(NROW, 0,
+					NROW, rflag_, *x, *y, SUPPORT, SAMPLING, NVISPOL,
+					(uint32_t*) polmap, NVISCHAN, (uint32_t*) chanmap,
+					flag_[0][0], (*values_)[0][0], weight[0], dowt,
+					elementsof(convTab), convTab, NPOL, NCHAN, NX, NY,
+					sumwt2[0], (*wgrid2)[0][0][0], (*grid2)[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 		}
 		double end = currenttime();
 		double new_time = end - start;
@@ -305,14 +305,14 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 }
 
 TEST(Gridding, Basic) {
-	sakura_Status result = sakura_Initialize();
-	EXPECT_EQ(sakura_Status_kOK, result);
+	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)();
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 	result = sakura_GridConvolving(NROW, 0, NROW, 0, 0, 0, SUPPORT, SAMPLING,
 			NVISPOL, (uint32_t*) polmap, NVISCHAN, (uint32_t*) chanmap,
 			flag_[0][0], 0, weight[0], false, elementsof(convTab), convTab,
 			NPOL, NCHAN, NX, NY, 0, 0, 0);
-	EXPECT_EQ(sakura_Status_kInvalidArgument, result);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
 	srand48(0);
 	initTabs();
