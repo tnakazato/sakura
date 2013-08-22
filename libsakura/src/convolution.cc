@@ -36,17 +36,24 @@ using ::Eigen::Aligned;
 namespace {
 
 inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-        size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) {
+        size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext)** context) {
 	std::cout << " CreateConvole1DContextEigen function is called" << std::endl;
 
-    //const double ln2 = 0.6931471805599453094172321;
-    //const double pi = 3.141592653589793238462643;
-    //const double sigma = width / sqrt(double(8.0) * ln2);
-    //const double refPix = double(nPixels)/2;
-    //double norm;
-	// norm = 1.0 / (sigma * sqrt(2.0 * pi));
-    //const Gaussian1D<double> gauss(norm, refPix, double(width));
-    //for (uint j=0; j<nPixels; j++) kernel[j] = gauss(double(j));
+	const float ln2 = 0.6931471805599453094172321;
+	const float pi = 3.141592653589793238462643;
+	const float sigma = kernel_width / sqrt(float(8.0) * ln2);
+	const float center = float(num_channel)/2;
+	float height = 1.0 / (sigma * sqrt(2.0 * pi));
+	float fwhm2int(float(1.0)/sqrt(log(float(16.0))));
+
+	(*context)=(LIBSAKURA_SYMBOL(Convole1DContext) *)malloc(sizeof( LIBSAKURA_SYMBOL(Convole1DContext)) + sizeof(size_t)*num_channel);
+
+	for (uint j=0; j<num_channel; j++) {
+	  float value = (j - center)/kernel_width/fwhm2int;
+	  (*context)->fft_applied_kernel[j] = height * exp(-(value*value));
+	}
+	free(*context);
+
 }
 
 } /* anonymous namespace */
