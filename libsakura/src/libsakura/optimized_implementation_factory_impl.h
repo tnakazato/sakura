@@ -127,58 +127,69 @@ public:
 			) const;
 };
 
-class InterpolationDefault: public Interpolation {
+template<typename DataType>
+class InterpolationImpl: public Interpolation<DataType> {
 public:
-	virtual void Interpolate1dFloatNearest(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
-			size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-	virtual void Interpolate1dFloatLinear(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
-			size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-	virtual void Interpolate1dFloatPolynomial(int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
-			size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-	virtual void Interpolate1dFloatSpline(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
-			size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
+	virtual ~InterpolationImpl() {
+	}
 protected:
 	virtual int Locate(int start_position, int end_position, size_t num_base,
 			double const x_base[/*num_base*/], double x_located) const;
 };
 
-class InterpolationAfterSandyBridge: public Interpolation {
+
+template<typename DataType>
+class InterpolationDefault: public InterpolationImpl<DataType> {
 public:
-	virtual void Interpolate1dFloatNearest(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+	virtual ~InterpolationDefault() {
+	}
+	virtual void Interpolate1dNearest(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-	virtual void Interpolate1dFloatLinear(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dLinear(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-	virtual void Interpolate1dFloatPolynomial(int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dPolynomial(int polynomial_order, size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-	virtual void Interpolate1dFloatSpline(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dSpline(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const;
-protected:
-	virtual int Locate(int start_position, int end_position, size_t num_base,
-			double const x_base[/*num_base*/], double x_located) const;
+			DataType y_interpolated[/*num_interpolated*/]) const;
+};
+
+template<typename DataType>
+class InterpolationAfterSandyBridge: public InterpolationImpl<DataType> {
+public:
+	virtual ~InterpolationAfterSandyBridge() {
+	}
+	virtual void Interpolate1dNearest(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double const x_interpolated[/*num_interpolated*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dLinear(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double const x_interpolated[/*num_interpolated*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dPolynomial(int polynomial_order, size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double const x_interpolated[/*num_interpolated*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
+	virtual void Interpolate1dSpline(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
+			size_t num_interpolated,
+			double const x_interpolated[/*num_interpolated*/],
+			DataType y_interpolated[/*num_interpolated*/]) const;
 };
 
 class LogicalOperationDefault: public LogicalOperation {

@@ -88,7 +88,7 @@ BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 ConvolutionDefault const convolution_default;
 GriddingDefault const gridding_default;
-InterpolationDefault const interpolation_default;
+InterpolationDefault<float> const interpolation_default;
 LogicalOperationDefault const logical_operation_default;
 NumericOperationDefault const numeric_operation_default;
 StatisticsDefault const statistics_default;
@@ -113,7 +113,7 @@ public:
 	virtual Gridding const *GetGriddingImpl() const {
 		return &gridding_default;
 	}
-	virtual Interpolation const *GetInterpolationImpl() const {
+	virtual Interpolation<float> const *GetInterpolationImpl() const {
 		return &interpolation_default;
 	}
 	virtual LogicalOperation const *GetLogicalOperationImpl() const {
@@ -133,7 +133,7 @@ BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uin
 BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
 GriddingAfterSandyBridge const gridding_after_sandy_bridge;
-InterpolationAfterSandyBridge const interpolation_after_sandy_bridge;
+InterpolationAfterSandyBridge<float> const interpolation_after_sandy_bridge;
 LogicalOperationAfterSandyBridge const logical_operation_after_sandy_bridge;
 NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
 StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
@@ -162,7 +162,7 @@ public:
 	virtual Gridding const *GetGriddingImpl() const {
 		return &gridding_after_sandy_bridge;
 	}
-	virtual Interpolation const *GetInterpolationImpl() const {
+	virtual Interpolation<float> const *GetInterpolationImpl() const {
 		// return &interpolation_after_sandy_bridge;
 		return &interpolation_default;
 	}

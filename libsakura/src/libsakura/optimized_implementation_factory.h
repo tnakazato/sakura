@@ -88,30 +88,31 @@ public:
 #endif
 };
 
+template<typename DataType>
 class Interpolation {
 public:
 	virtual ~Interpolation() {
 	}
-	virtual void Interpolate1dFloatNearest(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+	virtual void Interpolate1dNearest(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dFloatLinear(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			DataType y_interpolated[/*num_interpolated*/]) const = 0;
+	virtual void Interpolate1dLinear(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dFloatPolynomial(int polynomial_order,
+			DataType y_interpolated[/*num_interpolated*/]) const = 0;
+	virtual void Interpolate1dPolynomial(int polynomial_order,
 			size_t num_base, double const x_base[/*num_base*/],
-			float const y_base[/*num_base*/], size_t num_interpolated,
+			DataType const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dFloatSpline(size_t num_base,
-			double const x_base[/*num_base*/], float const y_base[/*num_base*/],
+			DataType y_interpolated[/*num_interpolated*/]) const = 0;
+	virtual void Interpolate1dSpline(size_t num_base,
+			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
 			size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
-			float y_interpolated[/*num_interpolated*/]) const = 0;
+			DataType y_interpolated[/*num_interpolated*/]) const = 0;
 protected:
 	virtual int Locate(int start_position, int end_position, size_t num_base,
 			double const x_base[/*num_base*/], double x_located) const = 0;
@@ -182,7 +183,7 @@ public:
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
-	virtual Interpolation const *GetInterpolationImpl() const = 0;
+	virtual Interpolation<float> const *GetInterpolationImpl() const = 0;
 	virtual LogicalOperation const *GetLogicalOperationImpl() const = 0;
 	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
