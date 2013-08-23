@@ -61,9 +61,9 @@ add_custom_target(testLogicalOperationRun COMMAND ./testLogicalOperation DEPENDS
 add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testStatistics
+	COMMAND ./testInterpolation
 	COMMAND ./testGridding
 	COMMAND ./testNumericOperation
 	COMMAND ./testBitOperation
-	COMMAND ./testInterpolation
 	COMMAND ./testLogicalOperation
 	)
