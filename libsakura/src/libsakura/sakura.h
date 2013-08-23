@@ -240,7 +240,7 @@ typedef struct {
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]);
 /**
  * @~english
- * @brief Invoke bit operation AND between an utint8_t value and array.
+ * @brief Invoke bit operation AND between an uint8_t value and array.
  * @details Invokes the following bit operation to @a i- th element of @a out : @n
  * @a out [i] = ( @a edit_mask [i] ? (@a bit_maks & @a in [i]) : @a in [i] )
  *
@@ -250,31 +250,40 @@ typedef struct {
  * @a edit_mask, and @a out.
  * @param in An input array (uint8_t) of size, @a num_in. The bit operation
  * is invoked between this array and @a bit_mask.
+ * <br/>must-be-aligned
  * @param edit_mask A boolean mask array of size, @a num_in. The bit operation
  * is skipped for the elements with the value, false.
+ * <br/>must-be-aligned
  * @param out The output array (uint8_t) of size, @a num_in. It stores the result
  * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
  * and the value in array, @a in, is adopted for the elements where corresponding
  * elements in @a edit_mask is false.
+ * <br/>must-be-aligned
  * @return @a sakura_Status
  * @~japanese
- * @brief TBD
- * @details Invokes the following bit operation to @a i- th element of @a out : @n
+ * @brief ビットマスク（uint8_t型）と一次元配列（uint8_t型）のビット積を取る。
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a out を返す: @n
  * @a out [i] = ( @a edit_mask[i] ? (@a bit_maks & @a in [i]) : @a in [i] )
  *
- * @param bit_mask TBD
+ * @param bit_mask ビットマスク（uint8_t型）
  * @param num_in @a in, @a edit_mask 及び@a out の要素の数。
- * @param in TBD
- * @param edit_mask データのマスク。この値が false だと、
- * 対応する要素のTBDが無視される
- * @param out 結果の格納先。
+ * @param in 入力配列（uint8_t型）。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
+ * @param edit_mask データのマスク。要素数は@a num_in でなければならない。
+ * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a in の要素がそのまま出力となる。
+ * <br/>must-be-aligned
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
  * @return @a sakura_Status
+ *@~
+ * MT-safe
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 		uint8_t bit_mask, size_t num_in, uint8_t const in[/*num_in*/],
 		bool const edit_mask[/*num_in*/], uint8_t out[/*num_in*/]);
 /**
- * @~
+ * @~english
  * @brief Invoke bit operation AND between an utint32_t value and array.
  * @details Invokes the following bit operation to @a i- th element of @a out : @n
  * @a out [i] = ( @a edit_mask [i] ? (@a bit_maks & @a in [i]) : @a in [i] )
@@ -285,13 +294,34 @@ typedef struct {
  * @a edit_mask, and @a out.
  * @param in An input array (uint32_t) of size, @a num_in. The bit operation
  * is invoked between this array and @a bit_mask.
+ * <br/>must-be-aligned
  * @param edit_mask A boolean mask array of size, @a num_in. The bit operation
  * is skipped for the elements with the value, false.
+ * <br/>must-be-aligned
  * @param out The output array (uint32_t) of size, @a num_in. It stores the result
  * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
  * and the value in array, @a in, is adopted for the elements where corresponding
  * elements in @a edit_mask is false.
+ * <br/>must-be-aligned
  * @return @a sakura_Status
+ * @~japanese
+ * @brief ビットマスク（uint32_t型）と一次元配列（uint32_t型）のビット積を取る。
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a out を返す: @n
+ * @a out [i] = ( @a edit_mask[i] ? (@a bit_maks & @a in [i]) : @a in [i] )
+ *
+ * @param bit_mask ビットマスク（uint32_t型）
+ * @param num_in @a in, @a edit_mask 及び@a out の要素の数。
+ * @param in 入力配列（uint32_t型）。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
+ * @param edit_mask データのマスク。要素数は@a num_in でなければならない。
+ * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a in の要素がそのまま出力となる。
+ * <br/>must-be-aligned
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
+ * @return @a sakura_Status
+ *@~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 		uint32_t bit_mask, size_t num_in, uint32_t const in[/*num_in*/],
 		bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
