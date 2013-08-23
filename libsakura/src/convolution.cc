@@ -46,7 +46,7 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 	float height = 1.0 / (sigma * sqrt(2.0 * pi));
 	float fwhm2int(float(1.0)/sqrt(log(float(16.0))));
 
-	(*context)=(LIBSAKURA_SYMBOL(Convole1DContext) *)malloc(sizeof( LIBSAKURA_SYMBOL(Convole1DContext)) + sizeof(flaot)*num_channel);
+	(*context)=(LIBSAKURA_SYMBOL(Convole1DContext) *)malloc(sizeof( LIBSAKURA_SYMBOL(Convole1DContext)) + sizeof(float)*num_channel);
 
 	for (uint j=0; j<num_channel; j++) {
 	  float value = (j - center)/kernel_width/fwhm2int;
