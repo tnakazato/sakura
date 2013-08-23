@@ -410,10 +410,10 @@ TEST(Gridding, Basic) {
 #if NO_VERIFY
 	delete gridMem;
 	delete wgridMem;
-	gridMem = 0;
-	wgridMem = 0;
-	grid = 0;
-	wgrid = 0;
+	gridMem = nullptr;
+	wgridMem = nullptr;
+	grid = nullptr;
+	wgrid = nullptr;
 #endif
 
 	delete valueMem;
@@ -430,5 +430,9 @@ TEST(Gridding, Basic) {
 	trySpeed(dowt, values2, x_, y_, grid, wgrid, grid2Mem, grid2, wgrid2Mem,
 			wgrid2);
 
+	delete gridMem;
+	delete wgridMem;
+	delete grid2Mem;
+	delete wgrid2Mem;
 	sakura_CleanUp();
 }
