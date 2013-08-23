@@ -2,6 +2,7 @@
 #include <string>
 
 #include <libsakura/sakura.h>
+#include "aligned_memory.h"
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
@@ -35,10 +36,17 @@ protected:
 			bit_mask_ = 2; /* bit pattern of 0...010 */
 			edit_mask_[i] = (i/ntype > 0); /*{F, F, F, F, T, T, T, T};*/
 		}
+
+		// Initialize sakura
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)();
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 
 	virtual void TearDown()
-	{}
+	{
+		// Clean-up sakura
+		LIBSAKURA_SYMBOL(CleanUp)();
+	}
 
 	/* Converts an input value to a bit pattern.*/
 //	char* BToS(DataType in_value) {
@@ -82,9 +90,9 @@ protected:
 		cout << " ]" << endl;
 	}
 
-	DataType in_[NUM_IN];
+	SIMD_ALIGN DataType in_[NUM_IN];
 	DataType bit_mask_;
-	bool edit_mask_[NUM_IN];
+	SIMD_ALIGN bool edit_mask_[NUM_IN];
 	bool verbose;
 	size_t bit_size;
 	//size_t const bit_size = sizeof(DataType)*8;
@@ -118,7 +126,7 @@ class BitOperation8 : public BitOperation<uint8_t>
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010 ]
  */
 TEST_F(BitOperation8, And) {
-	uint8_t out[NUM_IN];
+	SIMD_ALIGN uint8_t out[NUM_IN];
 	uint8_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
 	//uint8_t result[NUM_IN];
 	size_t const num_in(NUM_IN);
@@ -128,11 +136,12 @@ TEST_F(BitOperation8, And) {
 
 	if (verbose) PrintInputs();
 
-	sakura_OperateBitsUint8And(bit_mask_, num_in, in_, edit_mask_, out);
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_, num_in, in_, edit_mask_, out);
 
 	if (verbose) PrintArray("out", num_in, out);
 
 	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; i++){
 		ASSERT_EQ(out[i], result[i]);
 	}
@@ -144,7 +153,7 @@ TEST_F(BitOperation8, And) {
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010 ]
  */
 TEST_F(BitOperation32, And) {
-	uint32_t out[NUM_IN];
+	SIMD_ALIGN uint32_t out[NUM_IN];
 	uint32_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
 	size_t const num_in(NUM_IN);
 	//uint32_t result[NUM_IN];
@@ -154,11 +163,12 @@ TEST_F(BitOperation32, And) {
 
 	if (verbose) PrintInputs();
 
-	sakura_OperateBitsUint32And(bit_mask_, num_in, in_, edit_mask_, out);
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_, num_in, in_, edit_mask_, out);
 
 	if (verbose) PrintArray("out", num_in, out);
 
 	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; i++){
 		ASSERT_EQ(out[i], result[i]);
 	}
