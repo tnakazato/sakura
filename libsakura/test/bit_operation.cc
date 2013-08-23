@@ -31,7 +31,7 @@ protected:
 	virtual void SetUp()
 	{
 		size_t const ntype(4);
-		for (size_t i = 0; i < NUM_IN; i++){
+		for (size_t i = 0; i < NUM_IN; ++i){
 			in_[i] = i % ntype; /* repeat bit pattern of *00, *01, *10, *11,... */
 			bit_mask_ = 2; /* bit pattern of 0...010 */
 			edit_mask_[i] = (i/ntype > 0); /*{F, F, F, F, T, T, T, T};*/
@@ -53,7 +53,7 @@ protected:
 	string BToS(DataType in_value) {
 		char buff[bit_size+1];
 		buff[bit_size] = '\0';
-		for (size_t i = 0; i < bit_size ; i++){
+		for (size_t i = 0; i < bit_size ; ++i){
 			if((in_value>>i) % 2 == 0)
 				buff[bit_size-1-i] = '0';
 			else
@@ -71,7 +71,7 @@ protected:
 			result <<= 1;
 			if (in_bit[i] == '1')
 				result += 1;
-			i++;
+			++i;
 		}
 		return result;
 	}
@@ -84,7 +84,7 @@ protected:
 
 	void PrintArray(char const *name, size_t num_in, DataType *in){
 		cout << name << " = [";
-		for (size_t i = 0; i < num_in-1; i++)
+		for (size_t i = 0; i < num_in-1; ++i)
 			cout << BToS(in[i]) << ", " ;
 		cout << BToS(in[num_in-1]) ;
 		cout << " ]" << endl;
@@ -142,7 +142,7 @@ TEST_F(BitOperation8, And) {
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_in ; i++){
+	for (size_t i = 0 ; i < num_in ; ++i){
 		ASSERT_EQ(out[i], result[i]);
 	}
 }
@@ -169,7 +169,7 @@ TEST_F(BitOperation32, And) {
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_in ; i++){
+	for (size_t i = 0 ; i < num_in ; ++i){
 		ASSERT_EQ(out[i], result[i]);
 	}
 }
