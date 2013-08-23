@@ -10,25 +10,25 @@
 
 #define FORCE_EIGEN 0
 
-#if defined(__AVX__) && (! FORCE_EIGEN)
-#include <immintrin.h>
-#include <cstdint>
-
-namespace {
-
-void OperateBitsAndSimd(uint8_t bit_mask, size_t num_in,
-		uint8_t const in[], bool const edit_mask[], uint8_t out[]) {
-	std::cout << "OperateBitsAndSimd function for uint8_t is called. This function is not implemented yet." << std::endl;
-}
-
-void OperateBitsAndSimd(uint32_t bit_mask, size_t num_in,
-		uint32_t const in[], bool const edit_mask[], uint32_t out[]) {
-	std::cout << "OperateBitsAndSimd function for uint32_t is called. This function is not implemented yet." << std::endl;
-}
-
-} /* anonymous namespace */
-
-#else /* defined(__AVX__) */
+//#if defined(__AVX__) && (! FORCE_EIGEN)
+//#include <immintrin.h>
+//#include <cstdint>
+//
+//namespace {
+//
+//void OperateBitsAndSimd(uint8_t bit_mask, size_t num_in,
+//		uint8_t const in[], bool const edit_mask[], uint8_t out[]) {
+//	std::cout << "OperateBitsAndSimd function for uint8_t is called. This function is not implemented yet." << std::endl;
+//}
+//
+//void OperateBitsAndSimd(uint32_t bit_mask, size_t num_in,
+//		uint32_t const in[], bool const edit_mask[], uint32_t out[]) {
+//	std::cout << "OperateBitsAndSimd function for uint32_t is called. This function is not implemented yet." << std::endl;
+//}
+//
+//} /* anonymous namespace */
+//
+//#else /* defined(__AVX__) */
 
 #define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
 #include <Eigen/Core>
@@ -63,18 +63,19 @@ inline void OperateBitsAndEigen(DataType bit_mask, size_t num_in, DataType const
 
 } /* anonymous namespace */
 
-#endif /* defined(__AVX__) */
+//#endif /* defined(__AVX__) */
 
 namespace LIBSAKURA_PREFIX {
 template<typename DataType>
 void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsAnd(DataType bit_mask, size_t num_in,
 		DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
 		DataType out[/*num_in*/]) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	OperateBitsAndSimd(bit_mask, num_in, in, edit_mask, out);
-#else
 	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
-#endif
+//#if defined( __AVX__) && (! FORCE_EIGEN)
+//	OperateBitsAndSimd(bit_mask, num_in, in, edit_mask, out);
+//#else
+//	OperateBitsAndEigen(bit_mask, num_in, in, edit_mask, out);
+//#endif
 }
 
 template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint8_t>;
