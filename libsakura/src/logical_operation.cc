@@ -49,7 +49,7 @@ inline void OperateLogicalAndEigen(size_t num_in, bool const *in1,
 	Map<Array<bool, Dynamic, 1>, Aligned> out_(const_cast<bool *>(out),
 			num_in);
 
-	out = in1_ && in2_;
+	out_ = in1_ && in2_;
 }
 
 } /* anonymous namespace */

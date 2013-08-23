@@ -67,7 +67,7 @@ inline void OperateFloatSubtractionEigen(size_t num_in, float const *in1,
 	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
 			num_in);
 
-	out = in1_ - in2_;
+	out_ = in1_ - in2_;
 }
 
 inline void GetLeastSquareMatrixEigen(size_t num_in, float const *in_data,
