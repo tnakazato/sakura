@@ -38,6 +38,9 @@ typedef enum {
 	 * @brief 引数が不正だった。
 	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2, /**
 	 * @~japanese
+	 * @brief メモリーが足りない。
+	 */LIBSAKURA_SYMBOL(Status_kNoMemory) = 3, /**
+	 * @~japanese
 	 * @brief 原因不明のエラー。
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
 }LIBSAKURA_SYMBOL(Status);
@@ -348,8 +351,8 @@ typedef enum {
 /**
  * @brief Perform one-dimensional interpolation
  **/LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
-		LIBSAKURA_SYMBOL(
-				InterpolationMethod) interoplation_method, int polynomial_order,
+LIBSAKURA_SYMBOL(
+		InterpolationMethod) interoplation_method, int polynomial_order,
 		size_t num_base, double const x_base[], float const y_base[],
 		size_t num_interpolated, double const x_interpolated[],
 		float y_interpolated[]);
@@ -393,8 +396,8 @@ typedef struct {
 /**
  * @brief Logical operation AND between two boolean arrays.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
-		bool const in1[/*num_in*/], bool const in2[/*num_in*/],
-		bool out[/*num_in*/]);
+bool const in1[/*num_in*/], bool const in2[/*num_in*/],
+bool out[/*num_in*/]);
 /**
  * @brief Compute subtraction between two float arrays (in1 - in2).
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
