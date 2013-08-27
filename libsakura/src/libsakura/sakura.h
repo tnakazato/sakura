@@ -334,23 +334,23 @@ typedef struct {
  * @brief 補間方法を定義するための列挙型。
  * @~english
  * @brief Enumerations to define interpolation types.
- **/
+ */
 typedef enum {
 	/**
 	 * @brief Nearest interpolation
-	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kNearest), /**
+	 */LIBSAKURA_SYMBOL(InterpolationMethod_kNearest), /**
 	 * @brief Linear interpolation
-	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kLinear), /**
+	 */LIBSAKURA_SYMBOL(InterpolationMethod_kLinear), /**
 	 * @brief Polynomial interpolation
-	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial), /**
+	 */LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial), /**
 	 * @brief Spline interpolation
-	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kSpline), /**
+	 */LIBSAKURA_SYMBOL(InterpolationMethod_kSpline), /**
 	 * @brief Number of interpolation methods implemented
-	 **/LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod)
+	 */LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod)
 }LIBSAKURA_SYMBOL(InterpolationMethod);
 /**
  * @brief Perform one-dimensional interpolation
- **/LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interoplation_method, int polynomial_order,
 		size_t num_base, double const x_base[], float const y_base[],
@@ -359,7 +359,7 @@ LIBSAKURA_SYMBOL(
 
 /**
  * @brief Perform pseudo two-dimensional interpolation
- **/
+ */
 //LIBSAKURA_SYMBOL(Status) InterpolatePseudo2dFloat(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 //		int polynomial_order, double x_interpolated, size_t num_base, double x_base[],
 //		size_t num_array, float *y_base[], float y_interpolated[]);
@@ -368,28 +368,28 @@ LIBSAKURA_SYMBOL(
  * @brief スムージングに使うカーネルタイプを列挙
  * @~english
  * @brief Enumerations to define kernel types.
- **/
+ */
 typedef enum {
 	/**
 	 * @brief Gaussian
-	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), /**
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), /**
 	 * @brief BoxCar
-	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar), /**
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar), /**
 	 * @brief Hanning
-	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning), /**
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning), /**
 	 * @brief Hamming
-	 **/LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
 }LIBSAKURA_SYMBOL(Convolve1DKernelType);
 
 /**
  * @brief Context struct for Convolution
- **/
+ */
 typedef struct {
 	float fft_applied_kernel[0];
 }LIBSAKURA_SYMBOL(Convole1DContext);
 /**
  * @brief Creating 1D Kernel with FFT or without FFT
- **/LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convole1DContext) **context);
