@@ -62,8 +62,8 @@ add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testStatistics
 	COMMAND ./testInterpolation
+	COMMAND ./testBitOperation
 	COMMAND ./testGridding
 	COMMAND ./testNumericOperation
-	COMMAND ./testBitOperation
 	COMMAND ./testLogicalOperation
 	)
