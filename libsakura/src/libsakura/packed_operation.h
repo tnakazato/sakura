@@ -381,7 +381,7 @@ template<>
 class LIBSAKURA_SYMBOL(SimdConvert)<LIBSAKURA_SYMBOL(SimdArchSSE)> {
 public:
 	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType ByteToInt32(
-			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
+	LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
 		result.v_prior.v[0] = bytes;
 		result.raw_int32 = _mm_cvtepi8_epi32(result.raw_int32);
@@ -389,14 +389,14 @@ public:
 	}
 
 	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType ByteToFloat(
-			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
+	LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
 		result.raw_float = _mm_cvtpi8_ps(bytes.raw_int64);
 		return result;
 	}
 
 	static inline LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType FloatToDouble(
-			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType floats) {
+	LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType floats) {
 		LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType result;
 		result.raw_double = _mm_cvtps_pd(
 				(__m128 ) _mm_set_epi64(floats.raw_int64, floats.raw_int64));
@@ -444,6 +444,70 @@ public:
 };
 
 /*----------------------------------------------------*/
+
+template<>
+class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), int8_t> {
+	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
+	typedef int8_t Type;
+public:
+	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		result.raw_int32 = _mm_add_epi8(lhs.raw_int32, rhs.raw_int32);
+		return result;
+	}
+	static inline Arch::PacketType Sub(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_int32 = _mm_sub_epi8(lhs.raw_int32, rhs.raw_int32);
+		return result;
+	}
+	static inline Arch::PacketType Mul(Arch::PacketType const &lhs,
+			Arch::PacketType const &rhs) {
+		Arch::PacketType result;
+		int8_t const *bytes_lhs = reinterpret_cast<int8_t const*>(lhs.v_int32.v);
+		int8_t const *bytes_rhs = reinterpret_cast<int8_t const*>(rhs.v_int32.v);
+		int8_t *bytes_result = reinterpret_cast<int8_t *>(result.v_int32.v);
+		for (int i = 0; i < Arch::PacketType::kSize; ++i) {
+			bytes_result[i] = bytes_lhs[i] * bytes_rhs[i];
+		}
+		return result;
+	}
+	static inline Arch::PacketType Div(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		int8_t const *bytes_lhs = reinterpret_cast<int8_t const*>(lhs.v_int32.v);
+		int8_t const *bytes_rhs = reinterpret_cast<int8_t const*>(rhs.v_int32.v);
+		int8_t *bytes_result = reinterpret_cast<int8_t *>(result.v_int32.v);
+		for (int i = 0; i < Arch::PacketType::kSize; ++i) {
+			bytes_result[i] = bytes_lhs[i] / bytes_rhs[i];
+		}
+		return result;
+	}
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
+		Arch::PacketType all_one;
+		all_one.set1(~static_cast<int8_t>(0));
+		return Xor(operand, all_one);
+	}
+	static inline Arch::PacketType And(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_int32 = _mm_and_si128(lhs.raw_int32, rhs.raw_int32);
+		return result;
+	}
+	static inline Arch::PacketType Or(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_int32 = _mm_or_si128(lhs.raw_int32, rhs.raw_int32);
+		return result;
+	}
+	static inline Arch::PacketType Xor(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_int32 = _mm_xor_si128(lhs.raw_int32, rhs.raw_int32);
+		return result;
+	}
+};
 
 template<>
 class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), int32_t> {
@@ -670,7 +734,7 @@ template<>
 class LIBSAKURA_SYMBOL(SimdConvert)<LIBSAKURA_SYMBOL(SimdArchAVX)> {
 public:
 	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType ByteToInt32SignExtend(
-			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
+	LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
 #if defined(__AVX2__)
 		result.raw_int32 =
@@ -678,13 +742,13 @@ public:
 #else
 		result.v_prior.v[0].raw_int32 = _mm_cvtepi8_epi32(bytes.raw_int32);
 		result.v_prior.v[1].raw_int32 = _mm_cvtepi8_epi32(
-				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)) );
+		_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)));
 #endif
 		return result;
 	}
 
 	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType ByteToFloat(
-			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
+	LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType bytes) {
 		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
 #if defined(__AVX2__)
 		result.raw_float = _mm256_cvtepi32_ps(
@@ -693,14 +757,14 @@ public:
 #else
 		result.v_prior.v[0].raw_int32 = _mm_cvtepi8_epi32(bytes.raw_int32);
 		result.v_prior.v[1].raw_int32 = _mm_cvtepi8_epi32(
-				_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)) );
+		_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)));
 		result.raw_float = _mm256_cvtepi32_ps(result.raw_int32);
 #endif
 		return result;
 	}
 
 	static inline LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType FloatToDouble(
-			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType floats) {
+	LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType floats) {
 		LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType result;
 		result.raw_double = _mm256_cvtps_pd(floats.raw_float);
 		return result;
@@ -950,28 +1014,28 @@ public:
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
-				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_EQ_UQ);
+		_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_EQ_UQ);
 		return result;
 	}
 	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
-				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NEQ_UQ);
+		_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NEQ_UQ);
 		return result;
 	}
 	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
-				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NGE_UQ);
+		_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NGE_UQ);
 		return result;
 	}
 	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float =
-				_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NGT_UQ);
+		_mm256_cmp_ps(lhs.raw_float, rhs.raw_float, _CMP_NGT_UQ);
 		return result;
 	}
 };
@@ -987,28 +1051,28 @@ public:
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
-				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_EQ_UQ);
+		_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_EQ_UQ);
 		return result;
 	}
 	static inline Arch::PacketType NotEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
-				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NEQ_UQ);
+		_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NEQ_UQ);
 		return result;
 	}
 	static inline Arch::PacketType LessThan(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
-				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NGE_UQ);
+		_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NGE_UQ);
 		return result;
 	}
 	static inline Arch::PacketType LessOrEqual(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_double =
-				_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NGT_UQ);
+		_mm256_cmp_pd(lhs.raw_double, rhs.raw_double, _CMP_NGT_UQ);
 		return result;
 	}
 };
@@ -1063,9 +1127,10 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 		Context *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	size_t const kUnit =
-			LIBSAKURA_SYMBOL(SimdScalarType)<Arch, ScalarType>::kElementsInPacket;
+	LIBSAKURA_SYMBOL(SimdScalarType)<Arch, ScalarType>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
-	auto ptr = const_cast<typename Arch::PacketType *>(reinterpret_cast<typename Arch::PacketType const *>(data));
+	auto ptr =
+			const_cast<typename Arch::PacketType *>(reinterpret_cast<typename Arch::PacketType const *>(data));
 	PacketAction::prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
 		PacketAction::action(i, &ptr[i], context);
@@ -1132,10 +1197,12 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
 	size_t const kUnit =
-			LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
+	LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
-	auto ptr1 = const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
-	auto ptr2 = const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
+	auto ptr1 =
+			const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
+	auto ptr2 =
+			const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
 	PacketAction::prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
 		PacketAction::action(i, &ptr1[i], &ptr2[i], context);
@@ -1206,11 +1273,14 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data3));
 	size_t const kUnit =
-			LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
+	LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
-	auto ptr1 = const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
-	auto ptr2 = const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
-	auto ptr3 = const_cast<typename Arch3::PacketType *>(reinterpret_cast<typename Arch3::PacketType const *>(data3));
+	auto ptr1 =
+			const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
+	auto ptr2 =
+			const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
+	auto ptr3 =
+			const_cast<typename Arch3::PacketType *>(reinterpret_cast<typename Arch3::PacketType const *>(data3));
 	PacketAction::prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
 		PacketAction::action(i, &ptr1[i], &ptr2[i], &ptr3[i], context);
