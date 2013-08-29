@@ -136,7 +136,7 @@ class BitOperation8 : public BitOperation<uint8_t>
  */
 TEST_F(BitOperation8, And) {
 	SIMD_ALIGN uint8_t out[NUM_IN];
-	uint8_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
+	uint8_t answer[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
 	//uint8_t result[NUM_IN];
 	size_t const num_in(NUM_IN);
 
@@ -149,7 +149,7 @@ TEST_F(BitOperation8, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; ++i){
-		ASSERT_EQ(out[i], result[i]);
+		ASSERT_EQ(out[i], answer[i]);
 	}
 }
 
@@ -162,7 +162,7 @@ TEST_F(BitOperation8, AndLong) {
 	SIMD_ALIGN uint8_t out[NUM_IN_LONG];
 	SIMD_ALIGN uint8_t in[NUM_IN_LONG];
 	SIMD_ALIGN bool edit_mask[NUM_IN_LONG];
-	uint8_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
+	uint8_t answer[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
 	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
@@ -185,7 +185,7 @@ TEST_F(BitOperation8, AndLong) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_large ; ++i){
-		ASSERT_EQ(out[i], result[i % num_in]);
+		ASSERT_EQ(out[i], answer[i % num_in]);
 	}
 }
 
@@ -196,7 +196,7 @@ TEST_F(BitOperation8, AndLong) {
  */
 TEST_F(BitOperation32, And) {
 	SIMD_ALIGN uint32_t out[NUM_IN];
-	uint32_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
+	uint32_t answer[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
 	size_t const num_in(NUM_IN);
 
 	if (verbose) PrintInputs();
@@ -208,7 +208,7 @@ TEST_F(BitOperation32, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; ++i){
-		ASSERT_EQ(out[i], result[i]);
+		ASSERT_EQ(out[i], answer[i]);
 	}
 }
 
@@ -221,7 +221,7 @@ TEST_F(BitOperation32, AndLong) {
 	SIMD_ALIGN uint32_t out[NUM_IN_LONG];
 	SIMD_ALIGN uint32_t in[NUM_IN_LONG];
 	SIMD_ALIGN bool edit_mask[NUM_IN_LONG];
-	uint32_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
+	uint32_t answer[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
 	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
@@ -244,7 +244,7 @@ TEST_F(BitOperation32, AndLong) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_large ; ++i){
-		ASSERT_EQ(out[i], result[i % num_in]);
+		ASSERT_EQ(out[i], answer[i % num_in]);
 	}
 }
 
