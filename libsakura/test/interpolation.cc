@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 
+#include "aligned_memory.h"
+
 class Interpolate1dFloatTest: public ::testing::Test {
 protected:
 	virtual void SetUp() {
@@ -18,12 +20,23 @@ protected:
 TEST_F(Interpolate1dFloatTest, InvalidType) {
 	EXPECT_EQ(initialize_result_, sakura_Status_kOK);
 
-	const size_t num_base = 2;
-	const size_t num_interpolated = 5;
-	double x_base[num_base] = { 0.0, 1.0 };
-	float y_base[num_base] = { 1.0, -1.0 };
-	double x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1, 0.7, 1.5 };
+	size_t const num_base = 2;
+	size_t const num_interpolated = 5;
+	SIMD_ALIGN
+	double const x_base[num_base] = { 0.0, 1.0 };
+	SIMD_ALIGN
+	float const y_base[num_base] = { 1.0, -1.0 };
+	SIMD_ALIGN
+	double const x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1, 0.7, 1.5 };
+	SIMD_ALIGN
 	float y_interpolated[num_interpolated];
+
+	// check alignment
+	ASSERT_TRUE(sakura_IsAligned(x_base))<< "x_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_base))<< "y_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(x_interpolated))<< "x_interpolated is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_interpolated))<< "y_interpolated is not aligned";
+
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNumMethod, 0, num_base, x_base, y_base,
 			num_interpolated, x_interpolated, y_interpolated);
@@ -36,12 +49,24 @@ TEST_F(Interpolate1dFloatTest, InvalidType) {
 TEST_F(Interpolate1dFloatTest, Nearest) {
 	EXPECT_EQ(initialize_result_, sakura_Status_kOK);
 
-	const size_t num_base = 2;
-	const size_t num_interpolated = 6;
-	double x_base[num_base] = { 0.0, 1.0 };
-	float y_base[num_base] = { 1.0, -1.0 };
-	double x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1, 0.5, 0.7, 1.5 };
+	size_t const num_base = 2;
+	size_t const num_interpolated = 6;
+	SIMD_ALIGN
+	double const x_base[num_base] = { 0.0, 1.0 };
+	SIMD_ALIGN
+	float const y_base[num_base] = { 1.0, -1.0 };
+	SIMD_ALIGN
+	double const x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1, 0.5, 0.7,
+			1.5 };
+	SIMD_ALIGN
 	float y_interpolated[num_interpolated];
+
+	// check alignment
+	ASSERT_TRUE(sakura_IsAligned(x_base))<< "x_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_base))<< "y_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(x_interpolated))<< "x_interpolated is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_interpolated))<< "y_interpolated is not aligned";
+
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNearest, 0, num_base, x_base, y_base,
 			num_interpolated, x_interpolated, y_interpolated);
@@ -69,12 +94,23 @@ TEST_F(Interpolate1dFloatTest, Nearest) {
 TEST_F(Interpolate1dFloatTest, NearestSingleBase) {
 	EXPECT_EQ(initialize_result_, sakura_Status_kOK);
 
-	const size_t num_base = 1;
-	const size_t num_interpolated = 3;
-	double x_base[num_base] = { 0.0 };
-	float y_base[num_base] = { 1.0 };
-	double x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1 };
+	size_t const num_base = 1;
+	size_t const num_interpolated = 3;
+	SIMD_ALIGN
+	double const x_base[num_base] = { 0.0 };
+	SIMD_ALIGN
+	float const y_base[num_base] = { 1.0 };
+	SIMD_ALIGN
+	double const x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1 };
+	SIMD_ALIGN
 	float y_interpolated[num_interpolated];
+
+	// check alignment
+	ASSERT_TRUE(sakura_IsAligned(x_base))<< "x_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_base))<< "y_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(x_interpolated))<< "x_interpolated is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_interpolated))<< "y_interpolated is not aligned";
+
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNearest, 0, num_base, x_base, y_base,
 			num_interpolated, x_interpolated, y_interpolated);
@@ -97,15 +133,27 @@ TEST_F(Interpolate1dFloatTest, NearestSingleBase) {
 TEST_F(Interpolate1dFloatTest, Linear) {
 	EXPECT_EQ(initialize_result_, sakura_Status_kOK);
 
-	const size_t num_base = 2;
-	const size_t num_interpolated = 6;
+	size_t const num_base = 2;
+	size_t const num_interpolated = 6;
+	SIMD_ALIGN
 	double const x_base[num_base] = { 0.0, 1.0 };
+	SIMD_ALIGN
 	float const y_base[num_base] = { 1.0, -1.0 };
+	SIMD_ALIGN
 	double const x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1, 0.5, 0.7,
 			1.5 };
+	SIMD_ALIGN
 	float y_interpolated[num_interpolated];
+	SIMD_ALIGN
 	float const y_expected[num_interpolated] =
 			{ 1.0, 1.0, 0.8, 0.0, -0.4, -1.0 };
+
+	// check alignment
+	ASSERT_TRUE(sakura_IsAligned(x_base))<< "x_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_base))<< "y_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(x_interpolated))<< "x_interpolated is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_interpolated))<< "y_interpolated is not aligned";
+
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kLinear, 0, num_base, x_base, y_base,
 			num_interpolated, x_interpolated, y_interpolated);
@@ -127,12 +175,23 @@ TEST_F(Interpolate1dFloatTest, Linear) {
 TEST_F(Interpolate1dFloatTest, LinearSingleBase) {
 	EXPECT_EQ(initialize_result_, sakura_Status_kOK);
 
-	const size_t num_base = 1;
-	const size_t num_interpolated = 3;
+	size_t const num_base = 1;
+	size_t const num_interpolated = 3;
+	SIMD_ALIGN
 	double x_base[num_base] = { 0.0 };
+	SIMD_ALIGN
 	float y_base[num_base] = { 1.0 };
+	SIMD_ALIGN
 	double x_interpolated[num_interpolated] = { -1.0, 0.0, 0.1 };
+	SIMD_ALIGN
 	float y_interpolated[num_interpolated];
+
+	// check alignment
+	ASSERT_TRUE(sakura_IsAligned(x_base))<< "x_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_base))<< "y_base is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(x_interpolated))<< "x_interpolated is not aligned";
+	ASSERT_TRUE(sakura_IsAligned(y_interpolated))<< "y_interpolated is not aligned";
+
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kLinear, 0, num_base, x_base, y_base,
 			num_interpolated, x_interpolated, y_interpolated);
