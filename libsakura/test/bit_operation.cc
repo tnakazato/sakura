@@ -8,7 +8,7 @@
 
 /* the number of elements in input/output array to test */
 #define NUM_IN 8
-#define NUM_LARGE 262144 //2**18
+#define NUM_IN_LONG 262144 //2**18
 
 using namespace std;
 
@@ -158,15 +158,15 @@ TEST_F(BitOperation8, And) {
  * RESULT:
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010, .... repeated... ]
  */
-TEST_F(BitOperation8, AndLarge) {
-	SIMD_ALIGN uint8_t out[NUM_LARGE];
-	SIMD_ALIGN uint8_t in[NUM_LARGE];
-	SIMD_ALIGN bool edit_mask[NUM_LARGE];
+TEST_F(BitOperation8, AndLong) {
+	SIMD_ALIGN uint8_t out[NUM_IN_LONG];
+	SIMD_ALIGN uint8_t in[NUM_IN_LONG];
+	SIMD_ALIGN bool edit_mask[NUM_IN_LONG];
 	uint8_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
-	size_t const num_large(NUM_LARGE);
+	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
-	size_t const num_repeat = 2000;
+	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
 	for (size_t i = 0 ; i < num_large ; ++i){
@@ -217,15 +217,15 @@ TEST_F(BitOperation32, And) {
  * RESULT:
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010, .... repeated... ]
  */
-TEST_F(BitOperation32, AndLarge) {
-	SIMD_ALIGN uint32_t out[NUM_LARGE];
-	SIMD_ALIGN uint32_t in[NUM_LARGE];
-	SIMD_ALIGN bool edit_mask[NUM_LARGE];
+TEST_F(BitOperation32, AndLong) {
+	SIMD_ALIGN uint32_t out[NUM_IN_LONG];
+	SIMD_ALIGN uint32_t in[NUM_IN_LONG];
+	SIMD_ALIGN bool edit_mask[NUM_IN_LONG];
 	uint32_t result[NUM_IN] = {0, 1, 2, 3, 0, 0, 2, 2};
-	size_t const num_large(NUM_LARGE);
+	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
-	size_t const num_repeat = 2000;
+	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
 	for (size_t i = 0 ; i < num_large ; ++i){

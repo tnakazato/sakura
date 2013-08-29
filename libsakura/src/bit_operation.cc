@@ -45,6 +45,7 @@ inline void OperateBitsAndDefault(DataType bit_mask, size_t num_in, DataType con
 	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
 	// cast bool array to uint8_t array
 	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
 	assert(sizeof(edit_mask[0]) == sizeof(mask8[0]));
 	assert(true == 1);
 	assert(false == 0);
