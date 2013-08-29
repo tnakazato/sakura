@@ -16,9 +16,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusi
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lower_bounds));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
 
-//	auto bfc =
-//			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
-//	bfc->SetTrueInRangesInclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
+	bfc->SetTrueInRangesInclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
@@ -35,9 +35,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lower_bounds));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
 
-//	auto bfc =
-//			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplInt();
-//	bfc->SetTrueInRangesInclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplInt();
+	bfc->SetTrueInRangesInclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
