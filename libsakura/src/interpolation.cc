@@ -22,6 +22,8 @@ template<typename DataType>
 int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 		unsigned int left_index, int num_elements, double x_interpolated,
 		DataType &y_interpolated) {
+
+	// working pointers
 	double const *x_ptr = &x_base[left_index];
 	DataType const *y_ptr = &y_base[left_index];
 
@@ -176,7 +178,10 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
 				y_interpolated, num_interpolated);
 		y_interpolated_vector.setConstant(y_base[0]);
-		return;
+	} else if (polynomial_order == 0) {
+		// This is special case: 0-th polynomial interpolation acts like nearest interpolation
+		Interpolate1dNearest(num_base, x_base, y_base, num_interpolated,
+				x_interpolated, y_interpolated);
 	} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
 		// use full region for interpolation
 		// call polynomial interpolation
@@ -196,7 +201,7 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 			}
 		}
 	} else {
-		// use sub-region around the most nearest points
+		// use sub-region around the nearest points
 		int location = 0;
 		int end_position = static_cast<int>(num_base) - 1;
 		for (size_t index = 0; index < num_interpolated; ++index) {
@@ -207,7 +212,7 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 			} else if (location == static_cast<int>(num_base)) {
 				y_interpolated[index] = y_base[location - 1];
 			} else {
-				int j = static_cast<int>(index) - 1 - polynomial_order / 2;
+				int j = location - 1 - polynomial_order / 2;
 				unsigned int m = static_cast<unsigned int>(num_base) - 1
 						- static_cast<unsigned int>(polynomial_order);
 				unsigned int k = static_cast<unsigned int>((j > 0) ? j : 0);
