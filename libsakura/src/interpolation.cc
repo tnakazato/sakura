@@ -7,12 +7,12 @@
 #include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/localdef.h>
 
-#include <Eigen/Core>
-
-using ::Eigen::Map;
-using ::Eigen::Array;
-using ::Eigen::Dynamic;
-using ::Eigen::Aligned;
+//#include <Eigen/Core>
+//
+//using ::Eigen::Map;
+//using ::Eigen::Array;
+//using ::Eigen::Dynamic;
+//using ::Eigen::Aligned;
 
 namespace {
 
@@ -93,10 +93,12 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dNearest(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
 	if (num_base == 1) {
-		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-				y_interpolated, num_interpolated);
-		y_interpolated_vector.setConstant(y_base[0]);
-		return;
+//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
+//				y_interpolated, num_interpolated);
+//		y_interpolated_vector.setConstant(y_base[0]);
+		for (size_t index = 0; index < num_interpolated; ++index) {
+			y_interpolated[index] = y_base[0];
+		}
 	} else {
 		int location = 0;
 		int end_position = static_cast<int>(num_base) - 1;
@@ -136,10 +138,12 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dLinear(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
 	if (num_base == 1) {
-		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-				y_interpolated, num_interpolated);
-		y_interpolated_vector.setConstant(y_base[0]);
-		return;
+//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
+//				y_interpolated, num_interpolated);
+//		y_interpolated_vector.setConstant(y_base[0]);
+		for (size_t index = 0; index < num_interpolated; ++index) {
+			y_interpolated[index] = y_base[0];
+		}
 	} else {
 		int location = 0;
 		int end_position = static_cast<int>(num_base) - 1;
@@ -175,9 +179,12 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
 	if (num_base == 1) {
-		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-				y_interpolated, num_interpolated);
-		y_interpolated_vector.setConstant(y_base[0]);
+//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
+//				y_interpolated, num_interpolated);
+//		y_interpolated_vector.setConstant(y_base[0]);
+		for (size_t index = 0; index < num_interpolated; ++index) {
+			y_interpolated[index] = y_base[0];
+		}
 	} else if (polynomial_order == 0) {
 		// This is special case: 0-th polynomial interpolation acts like nearest interpolation
 		Interpolate1dNearest(num_base, x_base, y_base, num_interpolated,
