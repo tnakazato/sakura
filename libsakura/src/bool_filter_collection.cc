@@ -15,12 +15,22 @@ template<typename DataType>
 inline void SetTrueInRangesInclusiveScalar(size_t num_data, DataType const *data,
 		size_t num_condition, DataType const *lower_bounds,
 		DataType const *upper_bounds, bool *result) {
-
 	std::cout << "Invoking SetTrueInRangesInclusiveScalar()" << std::endl;
-//	for (size_t i=0; i < num_in ; ++i){
-//		out[i] = edit_mask[i] ? (in[i] & bit_mask) : in[i];
-//	}
-
+	// Initialize result with false
+	for (size_t i=0; i < num_data ; ++i){
+			result[i] = false;
+		}
+	DataType lower_value, upper_value;
+	for (size_t j=0; j < num_condition; ++j){
+		lower_value = lower_bounds[j];
+		upper_value = upper_bounds[j];
+		//std::cout << "Searching range [ " << lower_value << ", " << upper_value << " ]" << std::endl;
+		for (size_t i=0; i < num_data ; ++i){
+			//std::cout << "i = " << i << std::endl;
+			if ( result[i] ) continue;
+			result[i] = ( (data[i] - lower_value) * (upper_value - data[i]) >= 0 );
+		}
+	}
 }
 
 } /* anonymous namespace */
