@@ -20,6 +20,9 @@ void CreateConvolve1DContextSimd(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DK
         size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) {
 	std::cout << "This function is not implemented yet." << std::endl;
 }
+void DestroyConvolve1DContextSimd(LIBSAKURA_SYMBOL(Convole1DContext) **context) {
+	std::cout << "This function is not implemented yet." << std::endl;
+}
 
 } /* anonymous namespace */
 
@@ -52,9 +55,21 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 	  float value = (j - center)/kernel_width/fwhm2int;
 	  (*context)->fft_applied_kernel[j] = height * exp(-(value*value));
 	}
-	free(*context);
 
+	(*context)->complex_array = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * num_channel );
+	(*context)->plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_channel/2 + 1, (*context)->fft_applied_kernel, (*context)->complex_array,FFTW_MEASURE);
+	//(*context)->plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(num_channel, (*f)->complex_array,(*f)->fft_applied_kernel,FFTW_MEASURE);
+
+	fftwf_execute( (*context)-> plan_real_to_complex_float);
 }
+
+inline void DestroyConvolve1DContextEigen(LIBSAKURA_SYMBOL(Convole1DContext)** context) {
+	fftwf_destroy_plan( (*context)->plan_real_to_complex_float);
+	fftwf_destroy_plan( (*context)->plan_complex_to_real_float);
+	fftwf_free( (*context)->complex_array);
+	free(*context);
+}
+
 
 } /* anonymous namespace */
 
@@ -67,6 +82,14 @@ void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(size_t num_cha
 	CreateConvolve1DContextSimd(num_channel,kernel_type,kernel_width,use_fft,context);
 #else
 	CreateConvolve1DContextEigen(num_channel,kernel_type,kernel_width,use_fft,context);
+#endif
+}
+
+void ADDSUFFIX(Convolution, ARCH_SUFFIX)::DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convole1DContext) **context) const {
+#if defined( __AVX__) && (! FORCE_EIGEN)
+	DestroyConvolve1DContextSimd(context);
+#else
+	DestroyConvolve1DContextEigen(context);
 #endif
 }
 

@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include <libsakura/config.h>
+#include <fftw3.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -423,6 +424,9 @@ typedef enum {
  * @brief Context struct for Convolution
  */
 typedef struct {
+    fftwf_plan plan_real_to_complex_float;
+    fftwf_plan plan_complex_to_real_float;
+    fftwf_complex *complex_array;
 	float fft_applied_kernel[0];
 }LIBSAKURA_SYMBOL(Convole1DContext);
 /**
@@ -431,6 +435,10 @@ typedef struct {
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convole1DContext) **context);
+ /**
+  * @brief Destroying 1D Kernel with FFT or without FFT
+  */
+   LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvole1DContext)(LIBSAKURA_SYMBOL(Convole1DContext) **context);
 /**
  * @brief Logical operation AND between two boolean arrays.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,

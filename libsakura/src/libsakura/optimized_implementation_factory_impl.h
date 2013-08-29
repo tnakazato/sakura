@@ -87,14 +87,18 @@ public:
 
 class ConvolutionDefault: public Convolution {
 public:
+	virtual ~ConvolutionDefault(){}
 	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
             size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
+	virtual void DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
 };
 
 class ConvolutionAfterSandyBridge: public Convolution {
 public:
+	virtual ~ConvolutionAfterSandyBridge(){}
 	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
             size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
+	virtual void DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convole1DContext) **context) const;
 };
 
 class GriddingDefault: public Gridding {

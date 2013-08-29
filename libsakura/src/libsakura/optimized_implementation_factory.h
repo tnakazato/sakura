@@ -62,6 +62,7 @@ public:
 			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 			size_t kernel_width, bool use_fft,
 			LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+	virtual void DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
 };
 
 class Gridding {
