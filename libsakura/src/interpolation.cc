@@ -26,8 +26,15 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 	DataType const *y_ptr = &y_base[left_index];
 
 	// storage for C and D in Neville's algorithm
-	std::unique_ptr<DataType[]> c(new alignas(32) DataType[num_elements]);
-	std::unique_ptr<DataType[]> d(new alignas(32) DataType[num_elements]);
+	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+	DataType *storage_for_c = new DataType[num_elements + sakura_alignment - 1];
+	DataType *storage_for_d = new DataType[num_elements + sakura_alignment - 1];
+	DataType *c =
+			const_cast<DataType*>(reinterpret_cast<const DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
+					sizeof(DataType), storage_for_c, num_elements)));
+	DataType *d =
+			const_cast<DataType*>(reinterpret_cast<const DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
+					sizeof(DataType), storage_for_d, num_elements)));
 
 	for (int i = 0; i < num_elements; ++i) {
 		c[i] = y_ptr[i];
@@ -46,6 +53,8 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 			try {
 				cd /= static_cast<DataType>(dx);
 			} catch (...) {
+				delete[] storage_for_c;
+				delete[] storage_for_d;
 				std::cerr << "x_base has duplicate elements" << std::endl;
 				return 1;
 			}
@@ -58,6 +67,9 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 		// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
 		y_interpolated += c[0];
 	}
+
+	delete[] storage_for_c;
+	delete[] storage_for_d;
 
 	return 0;
 }
@@ -180,8 +192,7 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 			} else {
 				// call polynomial interpolation
 				int status = DoNevillePolynomial<DataType>(x_base, y_base, 0,
-						num_base, x_interpolated[index],
-						y_interpolated[index]);
+						num_base, x_interpolated[index], y_interpolated[index]);
 			}
 		}
 	} else {
