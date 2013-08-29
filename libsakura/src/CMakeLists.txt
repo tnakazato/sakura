@@ -35,13 +35,13 @@ set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default")
 #set(ADDITIONAL_CXXFLAGS_Default "-march=core2 -mtune=generic -DARCH_SUFFIX=Default")
 set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge")
 
-set(MULTI_SOURCE bit_operation.cc convolution.cc gridding.cc interpolation.cc
-	logical_operation.cc numeric_operation.cc baseline.cc
-	statistics.cc)
+set(MULTI_SOURCE bit_operation.cc  bool_filter_collection.cc convolution.cc
+	gridding.cc interpolation.cc logical_operation.cc numeric_operation.cc
+	baseline.cc statistics.cc)
 set(UNI_SOURCE gen_util.cc concurrent.cc optimized_implementation_factory.cc
-	gen_bit_operation.cc gen_convolution.cc gen_gridding.cc gen_interpolation.cc
-	gen_logical_operation.cc gen_numeric_operation.cc gen_baseline.cc
-	gen_statistics.cc)
+	gen_bit_operation.cc gen_bool_filter_collection.cc gen_convolution.cc
+	gen_gridding.cc gen_interpolation.cc gen_logical_operation.cc
+	gen_numeric_operation.cc gen_baseline.cc gen_statistics.cc)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"

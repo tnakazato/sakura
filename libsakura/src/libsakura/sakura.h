@@ -329,6 +329,44 @@ typedef struct {
 		uint32_t bit_mask, size_t num_in, uint32_t const in[/*num_in*/],
 		bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
 
+ /**
+  * @~
+  * @brief TBD
+  * @details TBD
+  *
+  * @param num_data TBD
+  * @param data TBD
+  * @param num_condition TBD
+  * @param lower_bounds TBD
+  * @param upper_bounds TBD
+  * @param result TBD
+  * @return @a sakura_Status
+  *@~
+  * MT-TBD
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(
+		  size_t num_data, float const data[/*num_data*/], size_t num_condition,
+		  float const lower_bounds[/*num_condition*/], float const upper_bounds[/*num_condition*/],
+		  bool result[/*num_data*/]);
+
+  /**
+   * @~
+   * @brief TBD
+   * @details TBD
+   *
+   * @param num_data TBD
+   * @param data TBD
+   * @param num_condition TBD
+   * @param lower_bounds TBD
+   * @param upper_bounds TBD
+   * @param result TBD
+   * @return @a sakura_Status
+   *@~
+   * MT-TBD
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive)(
+ 		  size_t num_data, int const data[/*num_data*/], size_t num_condition,
+ 		  int const lower_bounds[/*num_condition*/], int const upper_bounds[/*num_condition*/],
+ 		  bool result[/*num_data*/]);
+
 /**
  * @~japanese
  * @brief 補間方法を定義するための列挙型。

@@ -41,6 +41,19 @@ public:
 			DataType out[/*num_in*/]) const = 0;
 };
 
+template<typename DataType>
+class BoolFilterCollection {
+public:
+	virtual ~BoolFilterCollection() {
+	}
+
+	virtual void SetTrueInRangesInclusive(size_t num_data,
+			DataType const data[/*num_data*/], size_t num_condition,
+			DataType const lower_bounds[/*num_condition*/],
+			DataType const upper_bounds[/*num_condition*/],
+			bool result[/*num_data*/]) const = 0;
+};
+
 class Convolution {
 public:
 	virtual ~Convolution() {
@@ -181,6 +194,8 @@ public:
 	virtual Baseline const *GetBaselineImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
+	virtual BoolFilterCollection<float> const *GetBoolFilterCollectionImplFloat() const = 0;
+	virtual BoolFilterCollection<int> const *GetBoolFilterCollectionImplInt() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Interpolation<float> const *GetInterpolationImpl() const = 0;

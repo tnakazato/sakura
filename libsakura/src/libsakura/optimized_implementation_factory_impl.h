@@ -63,6 +63,28 @@ public:
 			DataType out[/*num_in*/]) const;
 };
 
+template<typename DataType>
+class BoolFilterCollectionDefault: public BoolFilterCollection<DataType> {
+public:
+	virtual ~BoolFilterCollectionDefault() {}
+	virtual void SetTrueInRangesInclusive(size_t num_data,
+			DataType const data[/*num_data*/], size_t num_condition,
+			DataType const lower_bounds[/*num_condition*/],
+			DataType const upper_bounds[/*num_condition*/],
+			bool result[/*num_data*/]) const;
+};
+
+template<typename DataType>
+class BoolFilterCollectionAfterSandyBridge: public BoolFilterCollection<DataType> {
+public:
+	virtual ~BoolFilterCollectionAfterSandyBridge() {}
+	virtual void SetTrueInRangesInclusive(size_t num_data,
+			DataType const data[/*num_data*/], size_t num_condition,
+			DataType const lower_bounds[/*num_condition*/],
+			DataType const upper_bounds[/*num_condition*/],
+			bool result[/*num_data*/]) const;
+};
+
 class ConvolutionDefault: public Convolution {
 public:
 	virtual void CreateConvolve1DContext(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
