@@ -16,7 +16,6 @@
 #include <stdint.h>
 
 #include <libsakura/config.h>
-#include <fftw3.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -330,43 +329,45 @@ typedef struct {
 		uint32_t bit_mask, size_t num_in, uint32_t const in[/*num_in*/],
 		bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
 
- /**
-  * @~
-  * @brief TBD
-  * @details TBD
-  *
-  * @param num_data TBD
-  * @param data TBD
-  * @param num_condition TBD
-  * @param lower_bounds TBD
-  * @param upper_bounds TBD
-  * @param result TBD
-  * @return @a sakura_Status
-  *@~
-  * MT-TBD
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(
-		  size_t num_data, float const data[/*num_data*/], size_t num_condition,
-		  float const lower_bounds[/*num_condition*/], float const upper_bounds[/*num_condition*/],
-		  bool result[/*num_data*/]);
+/**
+ * @~
+ * @brief TBD
+ * @details TBD
+ *
+ * @param num_data TBD
+ * @param data TBD
+ * @param num_condition TBD
+ * @param lower_bounds TBD
+ * @param upper_bounds TBD
+ * @param result TBD
+ * @return @a sakura_Status
+ *@~
+ * MT-TBD
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(
+		size_t num_data, float const data[/*num_data*/], size_t num_condition,
+		float const lower_bounds[/*num_condition*/],
+		float const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]);
 
-  /**
-   * @~
-   * @brief TBD
-   * @details TBD
-   *
-   * @param num_data TBD
-   * @param data TBD
-   * @param num_condition TBD
-   * @param lower_bounds TBD
-   * @param upper_bounds TBD
-   * @param result TBD
-   * @return @a sakura_Status
-   *@~
-   * MT-TBD
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive)(
- 		  size_t num_data, int const data[/*num_data*/], size_t num_condition,
- 		  int const lower_bounds[/*num_condition*/], int const upper_bounds[/*num_condition*/],
- 		  bool result[/*num_data*/]);
+/**
+ * @~
+ * @brief TBD
+ * @details TBD
+ *
+ * @param num_data TBD
+ * @param data TBD
+ * @param num_condition TBD
+ * @param lower_bounds TBD
+ * @param upper_bounds TBD
+ * @param result TBD
+ * @return @a sakura_Status
+ *@~
+ * MT-TBD
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive)(
+		size_t num_data, int const data[/*num_data*/], size_t num_condition,
+		int const lower_bounds[/*num_condition*/],
+		int const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]);
 
 /**
  * @~japanese
@@ -423,22 +424,19 @@ typedef enum {
 /**
  * @brief Context struct for Convolution
  */
-typedef struct {
-    fftwf_plan plan_real_to_complex_float;
-    fftwf_plan plan_complex_to_real_float;
-    fftwf_complex *complex_array;
-	float fft_applied_kernel[0];
-}LIBSAKURA_SYMBOL(Convole1DContext);
+struct LIBSAKURA_SYMBOL(Convole1DContext);
+
 /**
  * @brief Creating 1D Kernel with FFT or without FFT
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
-		LIBSAKURA_SYMBOL(Convole1DContext) **context);
- /**
-  * @brief Destroying 1D Kernel with FFT or without FFT
-  */
-   LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvole1DContext)(LIBSAKURA_SYMBOL(Convole1DContext) **context);
+		struct LIBSAKURA_SYMBOL(Convole1DContext) **context);
+/**
+ * @brief Destroying 1D Kernel with FFT or without FFT
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvole1DContext)(
+		struct LIBSAKURA_SYMBOL(Convole1DContext) **context);
 /**
  * @brief Logical operation AND between two boolean arrays.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
