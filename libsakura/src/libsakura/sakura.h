@@ -202,28 +202,28 @@ typedef struct {
  * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra <= INT32_MAX
  * @param start_spectrum 開始spectrumの添字
  * @param end_spectrum 終了spectrumの添字+1
- * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。
- * @param x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。
- * @param y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。
+ * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。<br/>must-be-aligned
+ * @param x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。<br/>must-be-aligned
+ * @param y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。<br/>must-be-aligned
  * @param support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= INT32_MAX
  * @param sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
  * @param num_polarizations 範囲は、0 < num_polarization <= INT32_MAX
- * @param polarization_map	要素数は、num_polarization。各要素の値は、[0,num_polarization_for_grid)でなければならない。
+ * @param polarization_map	要素数は、num_polarization。各要素の値は、[0,num_polarization_for_grid)でなければならない。<br/>must-be-aligned
  * @param num_channels 範囲は、0 < num_channels <= INT32_MAX
- * @param channel_map	要素数は、num_channels。各要素の値は、[0,num_channels_for_grid)でなければならない。
- * @param mask	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。
- * @param value	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。グリッディングする値。
- * @param weight 要素のレイアウトは、[num_spectra][num_channels]。重み。
+ * @param channel_map	要素数は、num_channels。各要素の値は、[0,num_channels_for_grid)でなければならない。<br/>must-be-aligned
+ * @param mask	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
+ * @param value	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。グリッディングする値。<br/>must-be-aligned
+ * @param weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
  * @param weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
  * @param num_convolution_table >= ceil(sqrt(2.)*(support+1)*sampling)
- * @param convolution_table	要素数は、num_convolution_table。畳み込みに使用する重みカーブ。要素0が中心を表す。
+ * @param convolution_table	要素数は、num_convolution_table。畳み込みに使用する重みカーブ。要素0が中心を表す。<br/>must-be-aligned
  * @param num_polarization_for_grid 範囲は、0 < num_polarization_for_grid <= INT32_MAX
  * @param num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
  * @param width 範囲は、0 < width <= INT32_MAX
  * @param height 範囲は、0 < height <= INT32_MAX
- * @param weight_sum	要素のレイアウトは、[num_polarization_for_grid][num_channels_for_grid]。重みの合計。
- * @param weight_of_grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッドの重み。
- * @param grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッディング結果。
+ * @param weight_sum	要素のレイアウトは、[num_polarization_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
+ * @param weight_of_grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
+ * @param grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
