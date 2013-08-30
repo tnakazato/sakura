@@ -9,7 +9,7 @@
 
 #define FORCE_EIGEN 0
 
-#if defined(__AVX__) && (! FORCE_EIGEN)
+#if defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
 #include <immintrin.h>
 #include <cstdint>
 
@@ -182,7 +182,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 
 } /* anonymous namespace */
 
-#else /* defined(__AVX__) */
+#else /* defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN) */
 
 #define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
 #include <Eigen/Core>
@@ -272,13 +272,13 @@ namespace {
 
 } /* anonymous namespace */
 
-#endif /* defined(__AVX__) */
+#endif /* defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN) */
 
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Statistics, ARCH_SUFFIX)::ComputeStatistics(float const data[],
 		bool const is_valid[], size_t elements,
 		LIBSAKURA_SYMBOL(StatisticsResult) *result) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
+#if defined( __AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
 	ComputeStatisticsSimd(data, is_valid, elements, result);
 #else
 	ComputeStatisticsEigen(data, is_valid, elements, result);

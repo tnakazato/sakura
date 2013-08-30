@@ -344,7 +344,7 @@ inline void InternalGrid(
 
 inline bool IsVectorOperationApplicable(integer num_channels,
 		uint32_t const channel_map[/*num_channels*/]) {
-#if !defined(__AVX__)
+#if !defined(__AVX__) || defined(ARCH_SCALAR)
 	return false;
 #endif
 	size_t elements_in_packet = LIBSAKURA_SYMBOL(GetAlignment)() / sizeof(float);
