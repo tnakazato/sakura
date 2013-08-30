@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.6)
 find_package(Threads)
 find_package(OpenMP)
 find_package(Eigen3 REQUIRED)
+find_package(FFTW3)
+
 if(OPENMP_FOUND)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -13,6 +15,9 @@ endif(OPENMP_FOUND)
 if(EIGEN3_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${EIGEN3_INCLUDE_DIR}")
 endif(EIGEN3_FOUND)
+if(FFTW3_FOUND)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${FFTW3_INCLUDE_DIR} -lfftw3f")
+endif(FFTW3_FOUND)
 
 
 project(libsakura)
@@ -67,6 +72,7 @@ if(BUILD_DOC)
 endif(BUILD_DOC)
 
 include_directories(${EIGEN3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
+include_directories(${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 
 foreach(_file ${MULTI_SOURCE})
 	get_filename_component(_base ${_file} NAME_WE)
