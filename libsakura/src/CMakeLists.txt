@@ -16,7 +16,7 @@ if(EIGEN3_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${EIGEN3_INCLUDE_DIR}")
 endif(EIGEN3_FOUND)
 if(FFTW3_FOUND)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${FFTW3_INCLUDE_DIR} -lfftw3f")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${FFTW3_INCLUDE_DIR}")
 endif(FFTW3_FOUND)
 
 
@@ -29,7 +29,7 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -m64")
+set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -lfftw3f")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 #set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorizer-verbose=2")
