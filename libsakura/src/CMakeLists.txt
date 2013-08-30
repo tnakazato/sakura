@@ -29,7 +29,7 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -lfftw3f")
+set(CMAKE_CXX_FLAGS "-std=c++11 -m64")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 #set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorizer-verbose=2")
@@ -71,8 +71,7 @@ if(BUILD_DOC)
 		COMMENT "Generating the API documentation with Doxygen")
 endif(BUILD_DOC)
 
-include_directories(${EIGEN3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
-include_directories(${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
+include_directories(${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 
 foreach(_file ${MULTI_SOURCE})
 	get_filename_component(_base ${_file} NAME_WE)
@@ -113,7 +112,7 @@ set_target_properties(sakura PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
-target_link_libraries(sakura ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(sakura fftw3f ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS sakura
 	LIBRARY DESTINATION lib
