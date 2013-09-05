@@ -133,7 +133,10 @@ double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
  * @~japanese
  * Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型。
  * 関数はリエントラントな実装でなければならない。
+ * sizeが0の場合も、(メモリーが確保できるなら)長さ0の領域のポインタを返すこと(NULLを返さないこと)。
  * @param size
+ * @~
+ * MT-safe
  */
 typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
 
@@ -141,7 +144,10 @@ typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
  * @~japanese
  * Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型。
  * 関数はリエントラントな実装でなければならない。
- * @param pointer
+ * @a pointer にNULLが渡された場合、何も行わないこと。
+ * @param pointer	@ref sakura_UserAllocator が返したアドレスまたはNULL。
+ * @~
+ * MT-safe
  */
 typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 
