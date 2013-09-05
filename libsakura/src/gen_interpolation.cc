@@ -48,7 +48,7 @@ int LocateData(int start_position, int end_position, size_t num_base,
 		DataType const x_base[], DataType x_located)
 {
 	assert(end_position < static_cast<int>(num_base));
-	assert(x_base == nullptr);
+	assert(x_base != nullptr);
 
 	// If length of the array is just 1, return 0
 	if (num_base == 1)
