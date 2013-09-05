@@ -430,19 +430,25 @@ typedef enum {
 /**
  * @brief Context struct for Convolution
  */
-struct LIBSAKURA_SYMBOL(Convole1DContext);
+struct LIBSAKURA_SYMBOL(Convolve1DContext);
 
 /**
- * @brief Creating 1D Kernel with FFT or without FFT
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvole1DContext)(
+ * @brief Creating Context which contains 1D Kernel with FFT or without FFT
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
-		struct LIBSAKURA_SYMBOL(Convole1DContext) **context);
+		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context);
+ /**
+  * @brief 1D Convolution with FFT for input spectrum
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
+		  struct LIBSAKURA_SYMBOL(Convolve1DContext) *context,
+		  size_t num_channel,float input_spectrum[/*num_in*/],bool const input_flag[/*num_in*/],
+		  float output_spectrum[/*num_in*/]);
 /**
- * @brief Destroying 1D Kernel with FFT or without FFT
+ * @brief Destroy 1D Kernel with FFT or without FFT
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvole1DContext)(
-		struct LIBSAKURA_SYMBOL(Convole1DContext) **context);
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
+		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
 /**
  * @brief Logical operation AND between two boolean arrays.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,

@@ -61,8 +61,11 @@ public:
 	virtual void CreateConvolve1DContext(size_t num_channel,
 			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 			size_t kernel_width, bool use_fft,
-			LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
-	virtual void DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convole1DContext) **context) const = 0;
+			LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
+	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
+			size_t num_channel,float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
+			float output_spectrum[/*num_channels*/]) const = 0;
+	virtual void DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
 };
 
 class Gridding {
