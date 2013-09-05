@@ -69,7 +69,7 @@ namespace {
 
 		(*context)=(LIBSAKURA_SYMBOL(Convolve1DContext) *)malloc(sizeof(struct LIBSAKURA_SYMBOL(Convolve1DContext)) + sizeof(float)*num_channel);
         if(*context == NULL){
-        	std::cout << " context wasn't created properly " << std::endl;
+        	std::cout << " context memory wasn't allocated properly " << std::endl;
         	exit(1);
         }
 
@@ -79,9 +79,15 @@ namespace {
 		}
 
 		(*context)->fft_applied_complex_kernel = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * num_channel );
+		if((*context)->fft_applied_complex_kernel == NULL){
+        	std::cout << " context->fft_applied_complex_kernel memory wasn't allocated properly " << std::endl;
+        	exit(1);
+		}
+
 		(*context)->plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_channel, (*context)->input_real_kernel, (*context)->fft_applied_complex_kernel,FFTW_ESTIMATE);
 
-		fftwf_execute( (*context)-> plan_real_to_complex_float);
+		if((*context)->plan_real_to_complex_float != NULL)
+			fftwf_execute( (*context)-> plan_real_to_complex_float);
 	}
 
 	inline void Convolve1DEigen(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
@@ -97,12 +103,13 @@ namespace {
 		output_complex_spectrum = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (num_channel/2 + 1) );
 
 		if(input_complex_spectrum == NULL ||  output_complex_spectrum == NULL){
-        	std::cout << " input/output _complex_spectrum weren't created properly " << std::endl;
+        	std::cout << " input/output _complex_spectrum memory weren't allocated properly " << std::endl;
         	exit(1);
 		}
 
-		plan_r2cf_input_spectrum = fftwf_plan_dft_r2c_1d(num_channel, input_spectrum, input_complex_spectrum,FFTW_ESTIMATE);
-		fftwf_execute(plan_r2cf_input_spectrum);
+        plan_r2cf_input_spectrum = fftwf_plan_dft_r2c_1d(num_channel, input_spectrum, input_complex_spectrum,FFTW_ESTIMATE);
+		if(plan_r2cf_input_spectrum != NULL)
+				fftwf_execute(plan_r2cf_input_spectrum);
 
 		for(uint i=0; i < num_channel/2 + 1; ++i){
 		      output_complex_spectrum[i][0] = context->fft_applied_complex_kernel[i][0] * input_complex_spectrum[i][0]
@@ -112,19 +119,45 @@ namespace {
 		}
 
 		plan_c2rf_output_spectrum = fftwf_plan_dft_c2r_1d(num_channel, output_complex_spectrum , output_spectrum, FFTW_ESTIMATE);
-		fftwf_execute(plan_c2rf_output_spectrum);
+		if(plan_c2rf_output_spectrum != NULL)
+			fftwf_execute(plan_c2rf_output_spectrum);
 
-		fftwf_destroy_plan(plan_r2cf_input_spectrum );
-		fftwf_destroy_plan(plan_c2rf_output_spectrum );
-		fftwf_free(input_complex_spectrum);
-	    fftwf_free(output_complex_spectrum);
+
+		if(plan_r2cf_input_spectrum  != NULL){
+			fftwf_destroy_plan(plan_r2cf_input_spectrum );
+			plan_r2cf_input_spectrum = NULL;
+		}
+		if(plan_c2rf_output_spectrum != NULL){
+			fftwf_destroy_plan(plan_c2rf_output_spectrum );
+			plan_c2rf_output_spectrum = NULL;
+		}
+		if(input_complex_spectrum != NULL){
+			fftwf_free(input_complex_spectrum);
+			input_complex_spectrum = NULL;
+		}
+		if(output_complex_spectrum != NULL){
+			fftwf_free(output_complex_spectrum);
+			output_complex_spectrum = NULL;
+		}
 	}
 
 	inline void DestroyConvolve1DContextEigen(LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
-		fftwf_destroy_plan( (context)->plan_real_to_complex_float);
-		fftwf_destroy_plan( (context)->plan_complex_to_real_float);
-		fftwf_free( (context)->fft_applied_complex_kernel);
-		free(context);
+		if(context->plan_real_to_complex_float != NULL){
+		    fftwf_destroy_plan( context->plan_real_to_complex_float);
+		    context->plan_real_to_complex_float = NULL;
+		}
+		if(context->plan_complex_to_real_float != NULL){
+		    fftwf_destroy_plan( context->plan_complex_to_real_float);
+			context->plan_complex_to_real_float = NULL;
+		}
+		if(context->fft_applied_complex_kernel != NULL){
+			fftwf_free( context->fft_applied_complex_kernel);
+			context->fft_applied_complex_kernel = NULL;
+		}
+		if(context != NULL){
+			free(context);
+			context = NULL;
+		}
 	}
 
 } /* anonymous namespace */
