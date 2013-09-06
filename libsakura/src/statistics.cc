@@ -57,7 +57,7 @@ inline int32_t AddHorizontally128(__m128i packed_values) {
 void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		size_t elements, LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
 	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
-	assert(sizeof(m256) == sizeof(__m256 ));
+	static_assert(sizeof(m256) == sizeof(__m256 ), "m256 and __m256 must have a same size.");
 	__m256 sum = _mm256_setzero_ps();
 	__m256 const zero = _mm256_setzero_ps();
 	__m256i const zeroi = _mm256_setzero_si256();
