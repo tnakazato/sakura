@@ -59,13 +59,15 @@ public:
 	virtual ~Convolution() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_channel,
-			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-			size_t kernel_width, bool use_fft,
-			LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+	bool use_fft,
+	LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
-			size_t num_channel,float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
+			size_t num_channel, float input_spectrum[/*num_channels*/],
+			bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const = 0;
-	virtual void DestroyConvolve1DContext(LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
+	virtual void DestroyConvolve1DContext(
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
 };
 
 class Gridding {
@@ -111,23 +113,23 @@ public:
 	virtual ~Interpolation() {
 	}
 	virtual void Interpolate1dNearest(size_t num_base,
-			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
-			size_t num_interpolated,
+			double const x_base[/*num_base*/],
+			DataType const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			DataType y_interpolated[/*num_interpolated*/]) const = 0;
 	virtual void Interpolate1dLinear(size_t num_base,
-			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
-			size_t num_interpolated,
+			double const x_base[/*num_base*/],
+			DataType const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			DataType y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dPolynomial(int polynomial_order,
-			size_t num_base, double const x_base[/*num_base*/],
+	virtual void Interpolate1dPolynomial(int polynomial_order, size_t num_base,
+			double const x_base[/*num_base*/],
 			DataType const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			DataType y_interpolated[/*num_interpolated*/]) const = 0;
 	virtual void Interpolate1dSpline(size_t num_base,
-			double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
-			size_t num_interpolated,
+			double const x_base[/*num_base*/],
+			DataType const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			DataType y_interpolated[/*num_interpolated*/]) const = 0;
 protected:
@@ -141,7 +143,7 @@ public:
 	}
 
 	virtual void OperateLogicalAnd(size_t num_in, bool const in1[/*num_in*/],
-			bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
+	bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
 };
 
 class NumericOperation {
@@ -153,7 +155,7 @@ public:
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const = 0;
 	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/], size_t num_model,
+	bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const = 0;
 	virtual void GetLeastSquareMatrix(size_t num_in,
@@ -191,7 +193,15 @@ public:
 	 * MT-unsafe
 	 */
 	static void CleanUpFactory();
+	/**
+	 * @~
+	 * MT-safe
+	 */
 	static OptimizedImplementationFactory const *GetFactory();
+	/**
+	 * @~
+	 * MT-unsafe
+	 */
 	virtual ~OptimizedImplementationFactory() {
 	}
 	virtual char const *GetName() const = 0;
