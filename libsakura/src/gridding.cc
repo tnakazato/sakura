@@ -7,13 +7,13 @@
 #include <cassert>
 
 #include "libsakura/optimized_implementation_factory_impl.h"
+#include "libsakura/localdef.h"
 
 using ::LIBSAKURA_PREFIX::Gridding;
 using ::std::cout;
 using ::std::endl;
 
 namespace {
-#include "libsakura/localdef.h"
 #include "libsakura/packed_operation.h"
 
 typedef Gridding::integer integer;
