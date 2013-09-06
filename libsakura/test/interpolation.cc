@@ -22,30 +22,20 @@ protected:
 		size_t num_arena_interpolated = num_interpolated + sakura_alignment_
 				- 1;
 		storage_for_x_base_.reset(new double[num_arena_base]);
-		x_base_ =
-				const_cast<double*>(sakura_AlignDouble(num_arena_base,
-						static_cast<double const*>(storage_for_x_base_.get()),
-						num_base));
+		x_base_ = sakura_AlignDouble(num_arena_base, storage_for_x_base_.get(),
+				num_base);
 		storage_for_x_interpolated_.reset(new double[num_arena_interpolated]);
-		x_interpolated_ = const_cast<double*>(sakura_AlignDouble(
-				num_arena_interpolated,
-				static_cast<double const*>(storage_for_x_interpolated_.get()),
-				num_interpolated));
+		x_interpolated_ = sakura_AlignDouble(num_arena_interpolated,
+				storage_for_x_interpolated_.get(), num_interpolated);
 		storage_for_y_base_.reset(new float[num_arena_base]);
-		y_base_ =
-				const_cast<float*>(sakura_AlignFloat(num_arena_base,
-						static_cast<float const*>(storage_for_y_base_.get()),
-						num_base));
+		y_base_ = sakura_AlignFloat(num_arena_base, storage_for_y_base_.get(),
+				num_base);
 		storage_for_y_interpolated_.reset(new float[num_arena_interpolated]);
-		y_interpolated_ = const_cast<float*>(sakura_AlignFloat(
-				num_arena_interpolated,
-				static_cast<float const*>(storage_for_y_interpolated_.get()),
-				num_interpolated));
+		y_interpolated_ = sakura_AlignFloat(num_arena_interpolated,
+				storage_for_y_interpolated_.get(), num_interpolated);
 		storage_for_y_expected_.reset(new float[num_arena_interpolated]);
-		y_expected_ = const_cast<float*>(sakura_AlignFloat(
-				num_arena_interpolated,
-				static_cast<float const*>(storage_for_y_expected_.get()),
-				num_interpolated));
+		y_expected_ = sakura_AlignFloat(num_arena_interpolated,
+				storage_for_y_expected_.get(), num_interpolated);
 
 		// check alignment
 		ASSERT_TRUE(x_base_ != nullptr)<< "x_base_ is null";

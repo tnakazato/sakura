@@ -33,16 +33,12 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 	size_t elements_in_arena = num_elements + sakura_alignment - 1;
 	std::unique_ptr<DataType[]> storage_for_c(new DataType[elements_in_arena]);
 	std::unique_ptr<DataType[]> storage_for_d(new DataType[elements_in_arena]);
-	DataType *c =
-			const_cast<DataType*>(reinterpret_cast<const DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
-					sizeof(DataType) * elements_in_arena,
-					static_cast<DataType const*>(storage_for_c.get()),
-					sizeof(DataType) * num_elements)));
-	DataType *d =
-			const_cast<DataType*>(reinterpret_cast<const DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
-					sizeof(DataType) * elements_in_arena,
-					static_cast<DataType const*>(storage_for_d.get()),
-					sizeof(DataType) * num_elements)));
+	DataType *c = reinterpret_cast<DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
+			sizeof(DataType) * elements_in_arena, storage_for_c.get(),
+			sizeof(DataType) * num_elements));
+	DataType *d = reinterpret_cast<DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
+			sizeof(DataType) * elements_in_arena, storage_for_d.get(),
+			sizeof(DataType) * num_elements));
 
 	for (int i = 0; i < num_elements; ++i) {
 		c[i] = y_ptr[i];

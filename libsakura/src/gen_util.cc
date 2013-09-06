@@ -54,30 +54,29 @@ extern "C" bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) {
 	return addr % ALIGNMENT == 0;
 }
 
-extern "C" void const *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena,
-		void const *vp, size_t size_required) {
-	assert(vp != NULL);
-	if (vp == NULL) {
-		return NULL;
+extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
+		size_t size_required) {
+	if (vp == nullptr) {
+		return nullptr;
 	}
 	uint64_t addr = (uint64_t) vp;
 	uint64_t new_addr = (addr + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1);
 	if (size_of_arena - (size_t) (new_addr - addr) < size_required) {
-		return NULL;
+		return nullptr;
 	}
-	return (void const *) new_addr;
+	return (void *) new_addr;
 }
 
-extern "C" float const *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
-		float const *fp, size_t elements_required) {
-	return static_cast<float const *>(LIBSAKURA_SYMBOL(AlignAny)(
+extern "C" float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
+		float *fp, size_t elements_required) {
+	return static_cast<float *>(LIBSAKURA_SYMBOL(AlignAny)(
 			elements_in_arena * sizeof(float), fp,
 			elements_required * sizeof(float)));
 }
 
-extern "C" double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
-		double const *dp, size_t elements_required) {
-	return static_cast<double const *>(LIBSAKURA_SYMBOL(AlignAny)(
+extern "C" double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
+		double *dp, size_t elements_required) {
+	return static_cast<double *>(LIBSAKURA_SYMBOL(AlignAny)(
 			elements_in_arena * sizeof(double), dp,
 			elements_required * sizeof(double)));
 }

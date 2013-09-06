@@ -122,12 +122,12 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
  * @~
  * MT-safe
  */
-void const *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void const *arena,
+void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
 		size_t size_required);
-float const *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
-		float const *arena, size_t elements_required);
-double const *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
-		double const *arena, size_t elements_required);
+float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
+		size_t elements_required);
+double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
+		size_t elements_required);
 
 /**
  * @~japanese
@@ -438,12 +438,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context);
- /**
-  * @brief 1D Convolution with FFT for input spectrum
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
-		  struct LIBSAKURA_SYMBOL(Convolve1DContext) *context,
-		  size_t num_channel,float input_spectrum[/*num_in*/],bool const input_flag[/*num_in*/],
-		  float output_spectrum[/*num_in*/]);
+/**
+ * @brief 1D Convolution with FFT for input spectrum
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
+		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_channel,
+		float input_spectrum[/*num_in*/], bool const input_flag[/*num_in*/],
+		float output_spectrum[/*num_in*/]);
 /**
  * @brief Destroy 1D Kernel with FFT or without FFT
  */
