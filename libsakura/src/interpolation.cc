@@ -177,15 +177,15 @@ public:
 	}
 	virtual void Interpolate(int location, XDataType x_interpolated,
 			YDataType &y_interpolated) {
-		XDataType dx_left = static_cast<XDataType>(fabs(
-				x_interpolated - this->x_base_[location - 1]));
+		XDataType dx = static_cast<XDataType>(fabs(
+				this->x_base_[location] - this->x_base_[location - 1]));
 		XDataType dx_right = static_cast<XDataType>(fabs(
 				x_interpolated - this->x_base_[location]));
-		if (dx_left <= dx_right) {
-			y_interpolated = this->y_base_[location - 1];
-		} else {
-			y_interpolated = this->y_base_[location];
-		}
+		// nearest condition
+		// if dx_right / dx > 0.5, index will be (location - 1) which means nearest
+		// is left side. Otherwise, index will be (location), right side.
+		y_interpolated = this->y_base_[location
+				- static_cast<int>((dx_right) / dx + 0.5)];
 	}
 };
 
@@ -389,20 +389,61 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// 3. set y_base[0] for elements locating left side of x_base[0]
 		// 4. set y_base[num_base-1] for elements locating right side of x_base[num_base-1]
 		// 5. do interpolation for elements between x_base[0] and x_base[num_base-1]
-		int location = 0;
-		int end_position = static_cast<int>(num_base) - 1;
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			location = this->Locate(location, end_position, num_base, x_base,
-					x_interpolated[index]);
-			if (location == 0) {
-				y_interpolated[index] = y_base[0];
-			} else if (location == static_cast<int>(num_base)) {
-				y_interpolated[index] = y_base[location - 1];
-			} else {
-				interpolator->Interpolate(location, x_interpolated[index],
-						y_interpolated[index]);
+		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+		size_t elements_in_arena = num_base + sakura_alignment - 1;
+		std::unique_ptr<int[]> storage_for_location_base(
+				new int[elements_in_arena]);
+		int *location_base = reinterpret_cast<int *>(LIBSAKURA_SYMBOL(AlignAny)(
+				sizeof(int) * elements_in_arena,
+				storage_for_location_base.get(), sizeof(int) * num_base));
+
+		// Locate each element in x_base against x_interpolated
+		int start_position = 0;
+		int end_position = static_cast<int>(num_interpolated) - 1;
+		for (size_t i = 0; i < num_base; ++i) {
+			location_base[i] = this->Locate(start_position, end_position,
+					num_interpolated, x_interpolated, x_base[i]);
+			start_position = location_base[i];
+		}
+
+		// Outside of x_base[0]
+		int left_index = 0;
+		int right_index = location_base[0];
+		for (int i = left_index; i < right_index; ++i) {
+			y_interpolated[i] = y_base[0];
+		}
+
+		// Between x_base[0] and x_base[num_base-1]
+		for (int i = 0; i < num_base - 1; ++i) {
+			left_index = location_base[i];
+			right_index = location_base[i + 1];
+			for (int j = left_index; j < right_index; ++j) {
+				interpolator->Interpolate(i + 1, x_interpolated[j],
+						y_interpolated[j]);
 			}
 		}
+
+		// Outside of x_base[num_base-1]
+		left_index = location_base[num_base - 1];
+		right_index = num_interpolated;
+		for (int i = left_index; i < right_index; ++i) {
+			y_interpolated[i] = y_base[num_base - 1];
+		}
+
+//		int location = 0;
+//		int end_position = static_cast<int>(num_base) - 1;
+//		for (size_t index = 0; index < num_interpolated; ++index) {
+//			location = this->Locate(location, end_position, num_base, x_base,
+//					x_interpolated[index]);
+//			if (location == 0) {
+//				y_interpolated[index] = y_base[0];
+//			} else if (location == static_cast<int>(num_base)) {
+//				y_interpolated[index] = y_base[location - 1];
+//			} else {
+//				interpolator->Interpolate(location, x_interpolated[index],
+//						y_interpolated[index]);
+//			}
+//		}
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
