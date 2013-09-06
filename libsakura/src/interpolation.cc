@@ -135,34 +135,181 @@ void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 				* y_base_2nd_derivative[k + 1];
 }
 
-float DoSplineInterpolation(int lower_index, int upper_index,
-		int lower_index_correct, int upper_index_correct, double x_interpolated,
-		double const x_base[], float const y_base[],
-		float const y_base_2nd_derivative[]) {
-	float dx = x_base[lower_index] - x_base[upper_index];
-	float a = (x_base[upper_index] - x_interpolated) / dx;
-	float b = (x_interpolated - x_base[lower_index]) / dx;
-	return a * y_base[lower_index] + b * y_base[upper_index]
+template<class XDataType, class YDataType>
+YDataType DoSplineInterpolation(int lower_index, int upper_index,
+		int lower_index_correct, int upper_index_correct,
+		XDataType x_interpolated, XDataType const x_base[],
+		YDataType const y_base[], float const y_base_2nd_derivative[]) {
+	XDataType dx = x_base[lower_index] - x_base[upper_index];
+	XDataType a = (x_base[upper_index] - x_interpolated) / dx;
+	XDataType b = (x_interpolated - x_base[lower_index]) / dx;
+	return static_cast<YDataType>(a * y_base[lower_index]
+			+ b * y_base[upper_index]
 			+ ((a * a * a - a) * y_base_2nd_derivative[lower_index_correct]
 					+ (b * b * b - b)
 							* y_base_2nd_derivative[upper_index_correct])
-					* (dx * dx) / 6.0;
+					* (dx * dx) / 6.0);
 }
 
-float PerformSplineInterpolation(int location, double x_interpolated,
-		size_t num_base, double const x_base[], float const y_base[],
-		float const y_base_2nd_derivative[]) {
-	return DoSplineInterpolation(location - 1, location, location - 1, location,
-			x_interpolated, x_base, y_base, y_base_2nd_derivative);
-}
+template<class XDataType, class YDataType>
+class InterpolationWorker {
+public:
+	InterpolationWorker(size_t num_base, XDataType const x_base[],
+			YDataType const y_base[], int polynomial_order = -1) :
+			num_base_(num_base), x_base_(x_base), y_base_(y_base), polynomial_order_(
+					polynomial_order) {
+	}
+	virtual ~InterpolationWorker() {
+	}
+	virtual void PrepareForInterpolation() {
+	}
+	virtual void Interpolate(int location, XDataType x_interpolated,
+			YDataType &y_interpolated) = 0;
+protected:
+	size_t num_base_;
+	XDataType const *x_base_;
+	YDataType const *y_base_;
+	int const polynomial_order_;
+};
 
-float PerformSplineInterpolationDescending(int location, double x_interpolated,
-		size_t num_base, double const x_base[], float const y_base[],
-		float const y_base_2nd_derivative[]) {
-	return DoSplineInterpolation(location, location - 1,
-			num_base - location - 1, num_base - location - 2, x_interpolated,
-			x_base, y_base, y_base_2nd_derivative);
-}
+template<class XDataType, class YDataType>
+class NearestInterpolationWorker: public InterpolationWorker<XDataType,
+		YDataType> {
+public:
+	NearestInterpolationWorker(size_t num_base, XDataType const x_base[],
+			YDataType const y_base[]) :
+			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base) {
+	}
+	virtual ~NearestInterpolationWorker() {
+	}
+	virtual void Interpolate(int location, XDataType x_interpolated,
+			YDataType &y_interpolated) {
+		XDataType dx_left = static_cast<XDataType>(fabs(
+				x_interpolated - this->x_base_[location - 1]));
+		XDataType dx_right = static_cast<XDataType>(fabs(
+				x_interpolated - this->x_base_[location]));
+		if (dx_left <= dx_right) {
+			y_interpolated = this->y_base_[location - 1];
+		} else {
+			y_interpolated = this->y_base_[location];
+		}
+	}
+};
+
+template<class XDataType, class YDataType>
+class LinearInterpolationWorker: public InterpolationWorker<XDataType, YDataType> {
+public:
+	LinearInterpolationWorker(size_t num_base, XDataType const x_base[],
+			YDataType const y_base[]) :
+			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base) {
+	}
+	virtual ~LinearInterpolationWorker() {
+	}
+	virtual void Interpolate(int location, XDataType x_interpolated,
+			YDataType &y_interpolated) {
+		y_interpolated =
+				this->y_base_[location - 1]
+						+ (this->y_base_[location] - this->y_base_[location - 1])
+								* (x_interpolated - this->x_base_[location - 1])
+								/ (this->x_base_[location]
+										- this->x_base_[location - 1]);
+	}
+};
+
+template<class XDataType, class YDataType>
+class PolynomialInterpolationWorker: public InterpolationWorker<XDataType,
+		YDataType> {
+public:
+	PolynomialInterpolationWorker(size_t num_base, XDataType const x_base[],
+			YDataType const y_base[], int polynomial_order) :
+			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base,
+					polynomial_order) {
+	}
+	virtual ~PolynomialInterpolationWorker() {
+	}
+	virtual void Interpolate(int location, XDataType x_interpolated,
+			YDataType &y_interpolated) {
+		int j = location - 1 - this->polynomial_order_ / 2;
+		unsigned int m = static_cast<unsigned int>(this->num_base_) - 1
+				- static_cast<unsigned int>(this->polynomial_order_);
+		unsigned int k = static_cast<unsigned int>((j > 0) ? j : 0);
+		// call polynomial interpolation
+		int status = DoNevillePolynomial<YDataType>(this->x_base_,
+				this->y_base_, k, this->polynomial_order_ + 1, x_interpolated,
+				y_interpolated);
+	}
+};
+
+template<class XDataType, class YDataType>
+class SplineInterpolationWorker: public InterpolationWorker<XDataType, YDataType> {
+public:
+	SplineInterpolationWorker(size_t num_base, XDataType const x_base[],
+			YDataType const y_base[]) :
+			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base), storage_for_y_(
+					nullptr), y_base_2nd_derivative_(nullptr) {
+	}
+	virtual ~SplineInterpolationWorker() {
+	}
+	virtual void PrepareForInterpolation() {
+		// Derive second derivative at x_base
+		const bool kIsDescending = (this->x_base_[0]
+				> this->x_base_[this->num_base_ - 1]);
+		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+		size_t elements_in_arena = this->num_base_ + sakura_alignment - 1;
+		storage_for_y_.reset(new YDataType[elements_in_arena]);
+		y_base_2nd_derivative_ =
+				const_cast<YDataType *>(reinterpret_cast<YDataType const *>(LIBSAKURA_SYMBOL(AlignAny)(
+						sizeof(YDataType) * elements_in_arena,
+						storage_for_y_.get(),
+						sizeof(YDataType) * this->num_base_)));
+		DeriveSplineCorrectionTerm(kIsDescending, this->num_base_,
+				this->x_base_, this->y_base_, y_base_2nd_derivative_);
+	}
+protected:
+	std::unique_ptr<YDataType[]> storage_for_y_;
+	YDataType *y_base_2nd_derivative_;
+};
+
+template<class XDataType, class YDataType>
+class SplineInterpolationWorkerDescending: public SplineInterpolationWorker<
+		XDataType, YDataType> {
+public:
+	SplineInterpolationWorkerDescending(size_t num_base,
+			XDataType const x_base[], YDataType const y_base[]) :
+			SplineInterpolationWorker<XDataType, YDataType>(num_base, x_base,
+					y_base) {
+	}
+	virtual ~SplineInterpolationWorkerDescending() {
+	}
+	virtual void Interpolate(int location, XDataType x_interpolated,
+			YDataType &y_interpolated) {
+		assert(this->y_base_2nd_derivative_ != nullptr);
+		y_interpolated = DoSplineInterpolation<XDataType, YDataType>(location,
+				location - 1, this->num_base_ - location - 1,
+				this->num_base_ - location - 2, x_interpolated, this->x_base_,
+				this->y_base_, this->y_base_2nd_derivative_);
+	}
+};
+
+template<class XDataType, class YDataType>
+class SplineInterpolationWorkerAscending: public SplineInterpolationWorker<
+		XDataType, YDataType> {
+public:
+	SplineInterpolationWorkerAscending(size_t num_base,
+			XDataType const x_base[], YDataType const y_base[]) :
+			SplineInterpolationWorker<XDataType, YDataType>(num_base, x_base,
+					y_base) {
+	}
+	virtual ~SplineInterpolationWorkerAscending() {
+	}
+	virtual void Interpolate(int location, XDataType x_interpolated,
+			YDataType &y_interpolated) {
+		assert(this->y_base_2nd_derivative_ != nullptr);
+		y_interpolated = DoSplineInterpolation<XDataType, YDataType>(
+				location - 1, location, location - 1, location, x_interpolated,
+				this->x_base_, this->y_base_, this->y_base_2nd_derivative_);
+	}
+};
 
 }
 
@@ -189,6 +336,9 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dNearest(
 			y_interpolated[index] = y_base[0];
 		}
 	} else {
+		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator(
+				new NearestInterpolationWorker<double, DataType>(num_base,
+						x_base, y_base));
 		// TODO: change the following code as follows:
 		// 1. locate x_base[0] against x_interpolated
 		// 2. locate x_base[num_base-1] against x_interpolated
@@ -205,15 +355,8 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dNearest(
 			} else if (location == static_cast<int>(num_base)) {
 				y_interpolated[index] = y_base[location - 1];
 			} else {
-				double dx_left = fabs(
-						x_interpolated[index] - x_base[location - 1]);
-				double dx_right = fabs(
-						x_interpolated[index] - x_base[location]);
-				if (dx_left <= dx_right) {
-					y_interpolated[index] = y_base[location - 1];
-				} else {
-					y_interpolated[index] = y_base[location];
-				}
+				interpolator->Interpolate(location, x_interpolated[index],
+						y_interpolated[index]);
 			}
 		}
 	}
@@ -240,6 +383,9 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dLinear(
 			y_interpolated[index] = y_base[0];
 		}
 	} else {
+		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator(
+				new LinearInterpolationWorker<double, DataType>(num_base,
+						x_base, y_base));
 		int location = 0;
 		int end_position = static_cast<int>(num_base) - 1;
 		for (size_t index = 0; index < num_interpolated; ++index) {
@@ -250,10 +396,8 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dLinear(
 			} else if (location == static_cast<int>(num_base)) {
 				y_interpolated[index] = y_base[location - 1];
 			} else {
-				y_interpolated[index] = y_base[location - 1]
-						+ (y_base[location] - y_base[location - 1])
-								* (x_interpolated[index] - x_base[location - 1])
-								/ (x_base[location] - x_base[location - 1]);
+				interpolator->Interpolate(location, x_interpolated[index],
+						y_interpolated[index]);
 			}
 		}
 	}
@@ -280,30 +424,24 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 		for (size_t index = 0; index < num_interpolated; ++index) {
 			y_interpolated[index] = y_base[0];
 		}
-	} else if (polynomial_order == 0) {
-		// This is special case: 0-th polynomial interpolation acts like nearest interpolation
-		Interpolate1dNearest(num_base, x_base, y_base, num_interpolated,
-				x_interpolated, y_interpolated);
-	} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
-		// use full region for interpolation
-		// call polynomial interpolation
-		int location = 0;
-		int end_position = static_cast<int>(num_base) - 1;
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			location = this->Locate(location, end_position, num_base, x_base,
-					x_interpolated[index]);
-			if (location == 0) {
-				y_interpolated[index] = y_base[0];
-			} else if (location == static_cast<int>(num_base)) {
-				y_interpolated[index] = y_base[location - 1];
-			} else {
-				// call polynomial interpolation
-				int status = DoNevillePolynomial<DataType>(x_base, y_base, 0,
-						num_base, x_interpolated[index], y_interpolated[index]);
-			}
-		}
 	} else {
-		// use sub-region around the nearest points
+		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator;
+		if (polynomial_order == 0) {
+			// This is special case: 0-th polynomial interpolation acts like nearest interpolation
+			interpolator.reset(
+					new NearestInterpolationWorker<double, DataType>(num_base,
+							x_base, y_base));
+		} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
+			// use full region for interpolation
+			interpolator.reset(
+					new PolynomialInterpolationWorker<double, DataType>(
+							num_base, x_base, y_base, num_base - 1));
+		} else {
+			// use sub-region around the nearest points
+			interpolator.reset(
+					new PolynomialInterpolationWorker<double, DataType>(
+							num_base, x_base, y_base, polynomial_order));
+		}
 		int location = 0;
 		int end_position = static_cast<int>(num_base) - 1;
 		for (size_t index = 0; index < num_interpolated; ++index) {
@@ -314,13 +452,7 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
 			} else if (location == static_cast<int>(num_base)) {
 				y_interpolated[index] = y_base[location - 1];
 			} else {
-				int j = location - 1 - polynomial_order / 2;
-				unsigned int m = static_cast<unsigned int>(num_base) - 1
-						- static_cast<unsigned int>(polynomial_order);
-				unsigned int k = static_cast<unsigned int>((j > 0) ? j : 0);
-				// call polynomial interpolation
-				int status = DoNevillePolynomial<DataType>(x_base, y_base, k,
-						polynomial_order + 1, x_interpolated[index],
+				interpolator->Interpolate(location, x_interpolated[index],
 						y_interpolated[index]);
 			}
 		}
@@ -348,18 +480,19 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dSpline(
 			y_interpolated[index] = y_base[0];
 		}
 	} else {
-// Derive second derivative at x_base
-		const bool kIsDescending = (x_base[0] > x_base[num_base - 1]);
-		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-		size_t elements_in_arena = num_base + sakura_alignment - 1;
-		std::unique_ptr<float[]> storage_for_y(new float[elements_in_arena]);
-		float *y_base_2nd_derivative =
-				const_cast<float *>(LIBSAKURA_SYMBOL(AlignFloat)(
-						elements_in_arena, storage_for_y.get(), num_base));
-		DeriveSplineCorrectionTerm(kIsDescending, num_base, x_base, y_base,
-				y_base_2nd_derivative);
+		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator;
+		if (x_base[0] < x_base[num_base - 1]) {
+			interpolator.reset(
+					new SplineInterpolationWorkerAscending<double, DataType>(
+							num_base, x_base, y_base));
+		} else {
+			interpolator.reset(
+					new SplineInterpolationWorkerDescending<double, DataType>(
+							num_base, x_base, y_base));
+		}
+		interpolator->PrepareForInterpolation();
 
-// spline interpolation with correction by y_base_2nd_derivative
+		// spline interpolation
 		int location = 0;
 		int end_position = static_cast<int>(num_base) - 1;
 		for (size_t index = 0; index < num_interpolated; ++index) {
@@ -370,17 +503,9 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dSpline(
 			} else if (location == static_cast<int>(num_base)) {
 				y_interpolated[index] = y_base[location - 1];
 			} else {
-				// call polynomial interpolation
-				if (kIsDescending) {
-					y_interpolated[index] =
-							PerformSplineInterpolationDescending(location,
-									x_interpolated[index], num_base, x_base,
-									y_base, y_base_2nd_derivative);
-				} else {
-					y_interpolated[index] = PerformSplineInterpolation(location,
-							x_interpolated[index], num_base, x_base, y_base,
-							y_base_2nd_derivative);
-				}
+				// call spline interpolation
+				interpolator->Interpolate(location, x_interpolated[index],
+						y_interpolated[index]);
 			}
 		}
 	}
