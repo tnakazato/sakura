@@ -96,15 +96,15 @@ public:
 	virtual ~ConvolutionDefault() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_channel,
-			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-			size_t kernel_width, bool use_fft,
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+			bool use_fft,
 			LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 			size_t num_channel, float input_spectrum[/*num_channels*/],
 			bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const;
 	virtual void DestroyConvolve1DContext(
-			LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
 };
 
 class ConvolutionAfterSandyBridge: public Convolution {
@@ -112,15 +112,15 @@ public:
 	virtual ~ConvolutionAfterSandyBridge() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_channel,
-			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-			size_t kernel_width, bool use_fft,
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+			bool use_fft,
 			LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 			size_t num_channel, float input_spectrum[/*num_channels*/],
 			bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const;
 	virtual void DestroyConvolve1DContext(
-			LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
 };
 
 class GriddingDefault: public Gridding {
@@ -173,8 +173,9 @@ public:
 	virtual ~InterpolationImpl() {
 	}
 protected:
-	virtual int Locate(int start_position, int end_position, size_t num_base,
-			double const x_base[/*num_base*/], double x_located) const;
+	virtual size_t Locate(size_t start_position, size_t end_position,
+			size_t num_base, double const x_base[/*num_base*/],
+			double x_located) const;
 };
 
 template<typename DataType>
@@ -183,7 +184,7 @@ public:
 	virtual ~InterpolationDefault() {
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
-			LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			double const x_base[/*num_base*/],
 			DataType const y_base[/*num_base*/], size_t num_interpolated,
@@ -197,7 +198,7 @@ public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
-			LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			double const x_base[/*num_base*/],
 			DataType const y_base[/*num_base*/], size_t num_interpolated,

@@ -25,7 +25,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 namespace {
 
 template<typename DataType>
-int LocateData(int start_position, int end_position, size_t num_base,
+size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		DataType const x_base[], DataType x_located) {
 	assert(end_position < static_cast<int>(num_base));
 	assert(x_base != nullptr);
@@ -36,8 +36,8 @@ int LocateData(int start_position, int end_position, size_t num_base,
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
 
-	int left_index = start_position;
-	int right_index = static_cast<int>(num_base);
+	size_t left_index = start_position;
+	size_t right_index = static_cast<int>(num_base);
 	if (x_base[0] < x_base[num_base - 1]) {
 		// ascending order
 		if (x_located <= x_base[0]) {
@@ -57,10 +57,10 @@ int LocateData(int start_position, int end_position, size_t num_base,
 					num_base, x_base, x_located);
 		} else {
 			// do bisection
-			int left_index = start_position;
-			int right_index = end_position;
+			size_t left_index = start_position;
+			size_t right_index = end_position;
 			while (right_index - left_index > 1) {
-				int middle_index = (right_index + left_index) / 2;
+				size_t middle_index = (right_index + left_index) / 2;
 				if (x_located > x_base[middle_index]) {
 					left_index = middle_index;
 				} else {
@@ -88,10 +88,10 @@ int LocateData(int start_position, int end_position, size_t num_base,
 					num_base, x_base, x_located);
 		} else {
 			// do bisection
-			int left_index = start_position;
-			int right_index = end_position;
+			size_t left_index = start_position;
+			size_t right_index = end_position;
 			while (right_index - left_index > 1) {
-				int middle_index = (right_index + left_index) / 2;
+				size_t middle_index = (right_index + left_index) / 2;
 				if (x_located < x_base[middle_index]) {
 					left_index = middle_index;
 				} else {
@@ -113,8 +113,8 @@ namespace LIBSAKURA_PREFIX {
 // either 0 or num_base depending on which side x_located locates w.r.t.
 // x_base array.
 template<typename DataType>
-int InterpolationImpl<DataType>::Locate(int start_position, int end_position,
-		size_t num_base, double const x_base[/*num_base*/],
+size_t InterpolationImpl<DataType>::Locate(size_t start_position,
+		size_t end_position, size_t num_base, double const x_base[/*num_base*/],
 		double x_located) const {
 	return ::LocateData<double>(start_position, end_position, num_base, x_base,
 			x_located);

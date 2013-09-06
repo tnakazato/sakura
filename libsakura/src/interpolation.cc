@@ -156,7 +156,7 @@ public:
 	}
 	virtual void PrepareForInterpolation() {
 	}
-	virtual void Interpolate(int location, XDataType x_interpolated,
+	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType &y_interpolated) = 0;
 protected:
 	size_t num_base_;
@@ -175,7 +175,7 @@ public:
 	}
 	virtual ~NearestInterpolationWorker() {
 	}
-	virtual void Interpolate(int location, XDataType x_interpolated,
+	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType &y_interpolated) {
 		XDataType dx = static_cast<XDataType>(fabs(
 				this->x_base_[location] - this->x_base_[location - 1]));
@@ -198,7 +198,7 @@ public:
 	}
 	virtual ~LinearInterpolationWorker() {
 	}
-	virtual void Interpolate(int location, XDataType x_interpolated,
+	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType &y_interpolated) {
 		y_interpolated =
 				this->y_base_[location - 1]
@@ -220,7 +220,7 @@ public:
 	}
 	virtual ~PolynomialInterpolationWorker() {
 	}
-	virtual void Interpolate(int location, XDataType x_interpolated,
+	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType &y_interpolated) {
 		int j = location - 1 - this->polynomial_order_ / 2;
 		unsigned int m = static_cast<unsigned int>(this->num_base_) - 1
@@ -274,7 +274,7 @@ public:
 	}
 	virtual ~SplineInterpolationWorkerDescending() {
 	}
-	virtual void Interpolate(int location, XDataType x_interpolated,
+	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType &y_interpolated) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
 		y_interpolated = DoSplineInterpolation<XDataType, YDataType>(location,
@@ -295,7 +295,7 @@ public:
 	}
 	virtual ~SplineInterpolationWorkerAscending() {
 	}
-	virtual void Interpolate(int location, XDataType x_interpolated,
+	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType &y_interpolated) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
 		y_interpolated = DoSplineInterpolation<XDataType, YDataType>(
@@ -391,11 +391,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// 5. do interpolation for elements between x_base[0] and x_base[num_base-1]
 		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 		size_t elements_in_arena = num_base + sakura_alignment - 1;
-		std::unique_ptr<int[]> storage_for_location_base(
-				new int[elements_in_arena]);
-		int *location_base = reinterpret_cast<int *>(LIBSAKURA_SYMBOL(AlignAny)(
-				sizeof(int) * elements_in_arena,
-				storage_for_location_base.get(), sizeof(int) * num_base));
+		std::unique_ptr<size_t[]> storage_for_location_base(
+				new size_t[elements_in_arena]);
+		size_t *location_base = reinterpret_cast<size_t *>(LIBSAKURA_SYMBOL(AlignAny)(
+				sizeof(size_t) * elements_in_arena,
+				storage_for_location_base.get(), sizeof(size_t) * num_base));
 
 		// Locate each element in x_base against x_interpolated
 		int start_position = 0;
@@ -407,17 +407,17 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 
 		// Outside of x_base[0]
-		int left_index = 0;
-		int right_index = location_base[0];
-		for (int i = left_index; i < right_index; ++i) {
+		size_t left_index = 0;
+		size_t right_index = location_base[0];
+		for (size_t i = left_index; i < right_index; ++i) {
 			y_interpolated[i] = y_base[0];
 		}
 
 		// Between x_base[0] and x_base[num_base-1]
-		for (int i = 0; i < num_base - 1; ++i) {
+		for (size_t i = 0; i < num_base - 1; ++i) {
 			left_index = location_base[i];
 			right_index = location_base[i + 1];
-			for (int j = left_index; j < right_index; ++j) {
+			for (size_t j = left_index; j < right_index; ++j) {
 				interpolator->Interpolate(i + 1, x_interpolated[j],
 						y_interpolated[j]);
 			}
@@ -426,7 +426,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// Outside of x_base[num_base-1]
 		left_index = location_base[num_base - 1];
 		right_index = num_interpolated;
-		for (int i = left_index; i < right_index; ++i) {
+		for (size_t i = left_index; i < right_index; ++i) {
 			y_interpolated[i] = y_base[num_base - 1];
 		}
 
