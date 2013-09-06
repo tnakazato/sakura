@@ -31,15 +31,17 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 	// storage for C and D in Neville's algorithm
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t elements_in_arena = num_elements + sakura_alignment - 1;
-	DataType *storage_for_c = new DataType[num_elements + sakura_alignment - 1];
-	DataType *storage_for_d = new DataType[num_elements + sakura_alignment - 1];
+	std::unique_ptr<DataType[]> storage_for_c(new DataType[elements_in_arena]);
+	std::unique_ptr<DataType[]> storage_for_d(new DataType[elements_in_arena]);
 	DataType *c =
 			const_cast<DataType*>(reinterpret_cast<const DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
-					sizeof(DataType) * elements_in_arena, storage_for_c,
+					sizeof(DataType) * elements_in_arena,
+					static_cast<DataType const*>(storage_for_c.get()),
 					sizeof(DataType) * num_elements)));
 	DataType *d =
 			const_cast<DataType*>(reinterpret_cast<const DataType*>(LIBSAKURA_SYMBOL(AlignAny)(
-					sizeof(DataType) * elements_in_arena, storage_for_d,
+					sizeof(DataType) * elements_in_arena,
+					static_cast<DataType const*>(storage_for_d.get()),
 					sizeof(DataType) * num_elements)));
 
 	for (int i = 0; i < num_elements; ++i) {
@@ -59,8 +61,6 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 			try {
 				cd /= static_cast<DataType>(dx);
 			} catch (...) {
-				delete[] storage_for_c;
-				delete[] storage_for_d;
 				std::cerr << "x_base has duplicate elements" << std::endl;
 				return 1;
 			}
@@ -73,9 +73,6 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 		// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
 		y_interpolated += c[0];
 	}
-
-	delete[] storage_for_c;
-	delete[] storage_for_d;
 
 	return 0;
 }
