@@ -133,7 +133,7 @@ YDataType DoSplineInterpolation(int lower_index, int upper_index,
 		int lower_index_correct, int upper_index_correct,
 		XDataType x_interpolated, XDataType const x_base[],
 		YDataType const y_base[], float const y_base_2nd_derivative[]) {
-	XDataType dx = x_base[lower_index] - x_base[upper_index];
+	XDataType dx = x_base[upper_index] - x_base[lower_index];
 	XDataType a = (x_base[upper_index] - x_interpolated) / dx;
 	XDataType b = (x_interpolated - x_base[lower_index]) / dx;
 	return static_cast<YDataType>(a * y_base[lower_index]
@@ -393,9 +393,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t elements_in_arena = num_base + sakura_alignment - 1;
 		std::unique_ptr<size_t[]> storage_for_location_base(
 				new size_t[elements_in_arena]);
-		size_t *location_base = reinterpret_cast<size_t *>(LIBSAKURA_SYMBOL(AlignAny)(
-				sizeof(size_t) * elements_in_arena,
-				storage_for_location_base.get(), sizeof(size_t) * num_base));
+		size_t *location_base =
+				reinterpret_cast<size_t *>(LIBSAKURA_SYMBOL(AlignAny)(
+						sizeof(size_t) * elements_in_arena,
+						storage_for_location_base.get(),
+						sizeof(size_t) * num_base));
 
 		// Locate each element in x_base against x_interpolated
 		int start_position = 0;

@@ -473,6 +473,53 @@ TEST_F(Interpolate1dFloatTest, PolynomialSingleBase) {
 	}
 }
 
+TEST_F(Interpolate1dFloatTest, Spline) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 3;
+	size_t const num_interpolated = 6;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[0] = 0.0;
+	x_base_[1] = 1.0;
+	x_base_[2] = 2.0;
+	y_base_[0] =  1.0;
+	y_base_[1] = -1.0;
+	y_base_[2] =  0.0;
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[1] = 0.0;
+	x_interpolated_[2] = 0.1;
+	x_interpolated_[3] = 0.5;
+	x_interpolated_[4] = 0.7;
+	x_interpolated_[5] = 1.5;
+	y_expected_[0] = 1.0;
+	y_expected_[1] = 1.0;
+	y_expected_[2] = 0.72575;
+	y_expected_[3] = -0.28125;
+	y_expected_[4] = -0.66775;
+	y_expected_[5] = -0.78125;
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+
+	// Value check
+	// 1-st order polynomial interpolation acts like LinearInterpolation
+	for (size_t index = 0; index < num_interpolated; ++index) {
+		std::cout << "Expected value at index " << index << ": "
+				<< y_expected_[index] << std::endl;
+		EXPECT_FLOAT_EQ(y_expected_[index], y_interpolated_[index])
+				<< "interpolated value differs from expected value at " << index
+				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
+	}
+}
+
 TEST_F(Interpolate1dFloatTest, SplineSingleBase) {
 	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
 
