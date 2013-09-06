@@ -112,29 +112,14 @@ class Interpolation {
 public:
 	virtual ~Interpolation() {
 	}
-	virtual void Interpolate1dNearest(size_t num_base,
+
+	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
+			LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+			int polynomial_order, size_t num_base,
 			double const x_base[/*num_base*/],
 			DataType const y_base[/*num_base*/], size_t num_interpolated,
 			double const x_interpolated[/*num_interpolated*/],
 			DataType y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dLinear(size_t num_base,
-			double const x_base[/*num_base*/],
-			DataType const y_base[/*num_base*/], size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			DataType y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dPolynomial(int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/],
-			DataType const y_base[/*num_base*/], size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			DataType y_interpolated[/*num_interpolated*/]) const = 0;
-	virtual void Interpolate1dSpline(size_t num_base,
-			double const x_base[/*num_base*/],
-			DataType const y_base[/*num_base*/], size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			DataType y_interpolated[/*num_interpolated*/]) const = 0;
-protected:
-	virtual int Locate(int start_position, int end_position, size_t num_base,
-			double const x_base[/*num_base*/], double x_located) const = 0;
 };
 
 class LogicalOperation {

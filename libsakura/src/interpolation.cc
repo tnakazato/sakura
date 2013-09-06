@@ -7,13 +7,6 @@
 #include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/localdef.h>
 
-//#include <Eigen/Core>
-//
-//using ::Eigen::Map;
-//using ::Eigen::Array;
-//using ::Eigen::Dynamic;
-//using ::Eigen::Aligned;
-
 namespace {
 
 using namespace LIBSAKURA_PREFIX;
@@ -311,13 +304,15 @@ public:
 	}
 };
 
-}
+} /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
 
 template<typename DataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dNearest(
-		size_t num_base, double const x_base[/* num_base */],
+LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1d(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		int polynomial_order, size_t num_base,
+		double const x_base[/* num_base */],
 		DataType const y_base[/* num_base */], size_t num_interpolated,
 		double const x_interpolated[/* num_interpolated */],
 		DataType y_interpolated[/*num_interpolated*/]) const {
@@ -329,16 +324,65 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dNearest(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
 	if (num_base == 1) {
-//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-//				y_interpolated, num_interpolated);
-//		y_interpolated_vector.setConstant(y_base[0]);
+		// No need to interpolate, just substitute y_base[0]
+		// to all elements in y_interpolated
 		for (size_t index = 0; index < num_interpolated; ++index) {
 			y_interpolated[index] = y_base[0];
 		}
+		return LIBSAKURA_SYMBOL(Status_kOK);
 	} else {
-		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator(
-				new NearestInterpolationWorker<double, DataType>(num_base,
-						x_base, y_base));
+		// Generate worker class
+		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator;
+		switch (interpolation_method) {
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
+			interpolator.reset(
+					new NearestInterpolationWorker<double, DataType>(num_base,
+							x_base, y_base));
+			break;
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
+			interpolator.reset(
+					new LinearInterpolationWorker<double, DataType>(num_base,
+							x_base, y_base));
+			break;
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
+			if (polynomial_order == 0) {
+				// This is special case: 0-th polynomial interpolation
+				// acts like nearest interpolation
+				interpolator.reset(
+						new NearestInterpolationWorker<double, DataType>(
+								num_base, x_base, y_base));
+			} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
+				// use full region for interpolation
+				interpolator.reset(
+						new PolynomialInterpolationWorker<double, DataType>(
+								num_base, x_base, y_base, num_base - 1));
+			} else {
+				// use sub-region around the nearest points
+				interpolator.reset(
+						new PolynomialInterpolationWorker<double, DataType>(
+								num_base, x_base, y_base, polynomial_order));
+			}
+			break;
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
+			if (x_base[0] < x_base[num_base - 1]) {
+				interpolator.reset(
+						new SplineInterpolationWorkerAscending<double, DataType>(
+								num_base, x_base, y_base));
+			} else {
+				interpolator.reset(
+						new SplineInterpolationWorkerDescending<double, DataType>(
+								num_base, x_base, y_base));
+			}
+			break;
+		default:
+			std::cerr << "ERROR: Invalid interpolation method type"
+					<< std::endl;
+			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		}
+
+		// Any preparation for interpolation should be done here
+		interpolator->PrepareForInterpolation();
+
 		// TODO: change the following code as follows:
 		// 1. locate x_base[0] against x_interpolated
 		// 2. locate x_base[num_base-1] against x_interpolated
@@ -360,155 +404,7 @@ void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dNearest(
 			}
 		}
 	}
-}
-
-template<typename DataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dLinear(
-		size_t num_base, double const x_base[/*num_base*/],
-		DataType const y_base[/*num_base*/], size_t num_interpolated,
-		double const x_interpolated[/*num_interpolated*/],
-		DataType y_interpolated[/*num_interpolated*/]) const {
-	assert(num_base > 0);
-	assert(num_interpolated > 0);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
-
-	if (num_base == 1) {
-//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-//				y_interpolated, num_interpolated);
-//		y_interpolated_vector.setConstant(y_base[0]);
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			y_interpolated[index] = y_base[0];
-		}
-	} else {
-		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator(
-				new LinearInterpolationWorker<double, DataType>(num_base,
-						x_base, y_base));
-		int location = 0;
-		int end_position = static_cast<int>(num_base) - 1;
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			location = this->Locate(location, end_position, num_base, x_base,
-					x_interpolated[index]);
-			if (location == 0) {
-				y_interpolated[index] = y_base[0];
-			} else if (location == static_cast<int>(num_base)) {
-				y_interpolated[index] = y_base[location - 1];
-			} else {
-				interpolator->Interpolate(location, x_interpolated[index],
-						y_interpolated[index]);
-			}
-		}
-	}
-}
-
-template<typename DataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dPolynomial(
-		int polynomial_order, size_t num_base,
-		double const x_base[/*num_base*/], DataType const y_base[/*num_base*/],
-		size_t num_interpolated,
-		double const x_interpolated[/*num_interpolated*/],
-		DataType y_interpolated[/*num_interpolated*/]) const {
-	assert(num_base > 0);
-	assert(num_interpolated > 0);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
-
-	if (num_base == 1) {
-//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-//				y_interpolated, num_interpolated);
-//		y_interpolated_vector.setConstant(y_base[0]);
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			y_interpolated[index] = y_base[0];
-		}
-	} else {
-		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator;
-		if (polynomial_order == 0) {
-			// This is special case: 0-th polynomial interpolation acts like nearest interpolation
-			interpolator.reset(
-					new NearestInterpolationWorker<double, DataType>(num_base,
-							x_base, y_base));
-		} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
-			// use full region for interpolation
-			interpolator.reset(
-					new PolynomialInterpolationWorker<double, DataType>(
-							num_base, x_base, y_base, num_base - 1));
-		} else {
-			// use sub-region around the nearest points
-			interpolator.reset(
-					new PolynomialInterpolationWorker<double, DataType>(
-							num_base, x_base, y_base, polynomial_order));
-		}
-		int location = 0;
-		int end_position = static_cast<int>(num_base) - 1;
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			location = this->Locate(location, end_position, num_base, x_base,
-					x_interpolated[index]);
-			if (location == 0) {
-				y_interpolated[index] = y_base[0];
-			} else if (location == static_cast<int>(num_base)) {
-				y_interpolated[index] = y_base[location - 1];
-			} else {
-				interpolator->Interpolate(location, x_interpolated[index],
-						y_interpolated[index]);
-			}
-		}
-	}
-}
-
-template<typename DataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<DataType>::Interpolate1dSpline(
-		size_t num_base, double const x_base[/*num_base*/],
-		DataType const y_base[/*num_base*/], size_t num_interpolated,
-		double const x_interpolated[/*num_interpolated*/],
-		DataType y_interpolated[/*num_interpolated*/]) const {
-	assert(num_base > 0);
-	assert(num_interpolated > 0);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
-
-	if (num_base == 1) {
-//		Map<Array<DataType, Dynamic, 1>, Aligned> y_interpolated_vector(
-//				y_interpolated, num_interpolated);
-//		y_interpolated_vector.setConstant(y_base[0]);
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			y_interpolated[index] = y_base[0];
-		}
-	} else {
-		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator;
-		if (x_base[0] < x_base[num_base - 1]) {
-			interpolator.reset(
-					new SplineInterpolationWorkerAscending<double, DataType>(
-							num_base, x_base, y_base));
-		} else {
-			interpolator.reset(
-					new SplineInterpolationWorkerDescending<double, DataType>(
-							num_base, x_base, y_base));
-		}
-		interpolator->PrepareForInterpolation();
-
-		// spline interpolation
-		int location = 0;
-		int end_position = static_cast<int>(num_base) - 1;
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			location = this->Locate(location, end_position, num_base, x_base,
-					x_interpolated[index]);
-			if (location == 0) {
-				y_interpolated[index] = y_base[0];
-			} else if (location == static_cast<int>(num_base)) {
-				y_interpolated[index] = y_base[location - 1];
-			} else {
-				// call spline interpolation
-				interpolator->Interpolate(location, x_interpolated[index],
-						y_interpolated[index]);
-			}
-		}
-	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 template class ADDSUFFIX(Interpolation, ARCH_SUFFIX)<float> ;
