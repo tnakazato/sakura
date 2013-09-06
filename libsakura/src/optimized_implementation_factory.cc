@@ -12,32 +12,14 @@
 
 namespace {
 using ::LIBSAKURA_PREFIX::Baseline;
-using ::LIBSAKURA_PREFIX::BaselineDefault;
-using ::LIBSAKURA_PREFIX::BaselineAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BitOperation;
-using ::LIBSAKURA_PREFIX::BitOperationDefault;
-using ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::BoolFilterCollection;
-using ::LIBSAKURA_PREFIX::BoolFilterCollectionDefault;
-using ::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::Convolution;
-using ::LIBSAKURA_PREFIX::ConvolutionDefault;
-using ::LIBSAKURA_PREFIX::ConvolutionAfterSandyBridge;
-using ::LIBSAKURA_PREFIX::Gridding;
-using ::LIBSAKURA_PREFIX::GriddingDefault;
-using ::LIBSAKURA_PREFIX::GriddingAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::Interpolation;
-using ::LIBSAKURA_PREFIX::InterpolationDefault;
-using ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::LogicalOperation;
-using ::LIBSAKURA_PREFIX::LogicalOperationDefault;
-using ::LIBSAKURA_PREFIX::LogicalOperationAfterSandyBridge;
 using ::LIBSAKURA_PREFIX::NumericOperation;
-using ::LIBSAKURA_PREFIX::NumericOperationDefault;
-using ::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge;
+using ::LIBSAKURA_PREFIX::Gridding;
 using ::LIBSAKURA_PREFIX::Statistics;
-using ::LIBSAKURA_PREFIX::StatisticsDefault;
-using ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge;
 
 struct CPURegister {
 	uint32_t eax, ebx, ecx, edx;
@@ -86,17 +68,17 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
-BaselineDefault const baseline_default;
-BitOperationDefault<uint8_t> const bit_operation_default_uint8;
-BitOperationDefault<uint32_t> const bit_operation_default_uint32;
-BoolFilterCollectionDefault<float> const bool_filter_collection_default_float;
-BoolFilterCollectionDefault<int> const bool_filter_collection_default_int;
-ConvolutionDefault const convolution_default;
-GriddingDefault const gridding_default;
-InterpolationDefault<float> const interpolation_default;
-LogicalOperationDefault const logical_operation_default;
-NumericOperationDefault const numeric_operation_default;
-StatisticsDefault const statistics_default;
+::LIBSAKURA_PREFIX::BaselineDefault const baseline_default;
+::LIBSAKURA_PREFIX::BitOperationDefault<uint8_t> const bit_operation_default_uint8;
+::LIBSAKURA_PREFIX::BitOperationDefault<uint32_t> const bit_operation_default_uint32;
+::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<float> const bool_filter_collection_default_float;
+::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<int> const bool_filter_collection_default_int;
+::LIBSAKURA_PREFIX::ConvolutionDefault const convolution_default;
+::LIBSAKURA_PREFIX::InterpolationDefault<float> const interpolation_default;
+::LIBSAKURA_PREFIX::LogicalOperationDefault const logical_operation_default;
+::LIBSAKURA_PREFIX::NumericOperationDefault const numeric_operation_default;
+::LIBSAKURA_PREFIX::GriddingDefault const gridding_default;
+::LIBSAKURA_PREFIX::StatisticsDefault const statistics_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -139,17 +121,17 @@ public:
 
 } default_factory;
 
-BaselineAfterSandyBridge const baseline_after_sandy_bridge;
-BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
-BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
-BoolFilterCollectionAfterSandyBridge<float> const bool_filter_collection_after_sandy_bridge_float;
-BoolFilterCollectionAfterSandyBridge<int> const bool_filter_collection_after_sandy_bridge_int;
-ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
-GriddingAfterSandyBridge const gridding_after_sandy_bridge;
-InterpolationAfterSandyBridge<float> const interpolation_after_sandy_bridge;
-LogicalOperationAfterSandyBridge const logical_operation_after_sandy_bridge;
-NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
-StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
+::LIBSAKURA_PREFIX::BaselineAfterSandyBridge const baseline_after_sandy_bridge;
+::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
+::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<float> const bool_filter_collection_after_sandy_bridge_float;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<int> const bool_filter_collection_after_sandy_bridge_int;
+::LIBSAKURA_PREFIX::ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
+::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge<float> const interpolation_after_sandy_bridge;
+::LIBSAKURA_PREFIX::LogicalOperationAfterSandyBridge const logical_operation_after_sandy_bridge;
+::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
+::LIBSAKURA_PREFIX::GriddingAfterSandyBridge const gridding_after_sandy_bridge;
+::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
