@@ -47,12 +47,8 @@ int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
 		for (int i = 0; i < num_elements - m; ++i) {
 			DataType cd = c[i + 1] - d[i];
 			double dx = x_ptr[i] - x_ptr[i + m];
-			try {
-				cd /= static_cast<DataType>(dx);
-			} catch (...) {
-				std::cerr << "x_base has duplicate elements" << std::endl;
-				return 1;
-			}
+			assert(dx != 0);
+			cd /= static_cast<DataType>(dx);
 			c[i] = (x_ptr[i] - x_interpolated) * cd;
 			d[i] = (x_ptr[i + m] - x_interpolated) * cd;
 		}
@@ -333,18 +329,80 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	} else {
+		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+
+		// make input arrays ascending order
+		size_t elements_in_arena = num_base + sakura_alignment - 1;
+		std::unique_ptr<double[]> storage_for_x_base_work;
+		std::unique_ptr<DataType[]> storage_for_y_base_work;
+		const double *x_base_work;
+		const DataType *y_base_work;
+		if (x_base[0] < x_base[num_base - 1]) {
+			x_base_work = const_cast<double *>(x_base);
+			y_base_work = const_cast<DataType *>(y_base);
+		} else {
+			storage_for_x_base_work.reset(new double[elements_in_arena]);
+			x_base_work = reinterpret_cast<double *>(LIBSAKURA_SYMBOL(AlignAny)(
+					sizeof(double) * elements_in_arena,
+					storage_for_x_base_work.get(), sizeof(double) * num_base));
+			storage_for_y_base_work.reset(new DataType[elements_in_arena]);
+			y_base_work =
+					reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
+							sizeof(DataType) * elements_in_arena,
+							storage_for_y_base_work.get(),
+							sizeof(DataType) * num_base));
+			double *x_base_work2 = const_cast<double *>(x_base_work);
+			DataType *y_base_work2 = const_cast<DataType *>(y_base_work);
+			for (size_t i = 0; i < num_base; ++i) {
+				x_base_work2[i] = x_base[num_base - 1 - i];
+				y_base_work2[i] = y_base[num_base - 1 - i];
+			}
+		}
+		elements_in_arena = num_interpolated + sakura_alignment - 1;
+		std::unique_ptr<double[]> storage_for_x_interpolated_work;
+		std::unique_ptr<DataType[]> storage_for_y_interpolated_work;
+		const double *x_interpolated_work;
+		DataType *y_interpolated_work;
+		bool interpolated_is_ascending = (x_interpolated[0]
+				< x_interpolated[num_interpolated - 1]);
+		if (interpolated_is_ascending) {
+			x_interpolated_work = const_cast<double *>(x_interpolated);
+			y_interpolated_work = y_interpolated;
+		} else {
+			storage_for_x_interpolated_work.reset(
+					new double[elements_in_arena]);
+			x_interpolated_work =
+					reinterpret_cast<double *>(LIBSAKURA_SYMBOL(AlignAny)(
+							sizeof(double) * elements_in_arena,
+							storage_for_x_interpolated_work.get(),
+							sizeof(double) * num_interpolated));
+			storage_for_y_interpolated_work.reset(
+					new DataType[elements_in_arena]);
+			y_interpolated_work =
+					reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
+							sizeof(DataType) * elements_in_arena,
+							storage_for_y_interpolated_work.get(),
+							sizeof(DataType) * num_interpolated));
+			double *x_interpolated_work2 =
+					const_cast<double *>(x_interpolated_work);
+			for (size_t i = 0; i < num_interpolated; ++i) {
+				x_interpolated_work2[i] = x_interpolated[num_interpolated - 1
+						- i];
+			}
+		}
+
 		// Generate worker class
 		std::unique_ptr<InterpolationWorker<double, DataType> > interpolator;
 		switch (interpolation_method) {
 		case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
 			interpolator.reset(
 					new NearestInterpolationWorker<double, DataType>(num_base,
-							x_base, y_base));
+							x_base_work, y_base_work));
 			break;
 		case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
 			interpolator.reset(
 					new LinearInterpolationWorker<double, DataType>(num_base,
-							x_base, y_base));
+							x_base_work, y_base_work));
 			break;
 		case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
 			if (polynomial_order == 0) {
@@ -352,29 +410,34 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				// acts like nearest interpolation
 				interpolator.reset(
 						new NearestInterpolationWorker<double, DataType>(
-								num_base, x_base, y_base));
+								num_base, x_base_work, y_base_work));
 			} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
 				// use full region for interpolation
 				interpolator.reset(
 						new PolynomialInterpolationWorker<double, DataType>(
-								num_base, x_base, y_base, num_base - 1));
+								num_base, x_base_work, y_base_work,
+								num_base - 1));
 			} else {
 				// use sub-region around the nearest points
 				interpolator.reset(
 						new PolynomialInterpolationWorker<double, DataType>(
-								num_base, x_base, y_base, polynomial_order));
+								num_base, x_base_work, y_base_work,
+								polynomial_order));
 			}
 			break;
 		case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
-			if (x_base[0] < x_base[num_base - 1]) {
-				interpolator.reset(
-						new SplineInterpolationWorkerAscending<double, DataType>(
-								num_base, x_base, y_base));
-			} else {
-				interpolator.reset(
-						new SplineInterpolationWorkerDescending<double, DataType>(
-								num_base, x_base, y_base));
-			}
+//			if (x_base[0] < x_base[num_base - 1]) {
+//				interpolator.reset(
+//						new SplineInterpolationWorkerAscending<double, DataType>(
+//								num_base, x_base_work, y_base_work));
+//			} else {
+//				interpolator.reset(
+//						new SplineInterpolationWorkerDescending<double, DataType>(
+//								num_base, x_base_work, y_base_work));
+//			}
+			interpolator.reset(
+					new SplineInterpolationWorkerAscending<double, DataType>(
+							num_base, x_base_work, y_base_work));
 			break;
 		default:
 			std::cerr << "ERROR: Invalid interpolation method type"
@@ -385,14 +448,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// Any preparation for interpolation should be done here
 		interpolator->PrepareForInterpolation();
 
-		// TODO: change the following code as follows:
-		// 1. locate x_base[0] against x_interpolated
-		// 2. locate x_base[num_base-1] against x_interpolated
-		// 3. set y_base[0] for elements locating left side of x_base[0]
-		// 4. set y_base[num_base-1] for elements locating right side of x_base[num_base-1]
-		// 5. do interpolation for elements between x_base[0] and x_base[num_base-1]
-		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-		size_t elements_in_arena = num_base + sakura_alignment - 1;
+		elements_in_arena = num_base + sakura_alignment - 1;
 		std::unique_ptr<size_t[]> storage_for_location_base(
 				new size_t[elements_in_arena]);
 		size_t *location_base =
@@ -406,7 +462,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int end_position = static_cast<int>(num_interpolated) - 1;
 		for (size_t i = 0; i < num_base; ++i) {
 			location_base[i] = this->Locate(start_position, end_position,
-					num_interpolated, x_interpolated, x_base[i]);
+					num_interpolated, x_interpolated_work, x_base_work[i]);
 			start_position = location_base[i];
 		}
 
@@ -414,7 +470,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t left_index = 0;
 		size_t right_index = location_base[0];
 		for (size_t i = left_index; i < right_index; ++i) {
-			y_interpolated[i] = y_base[0];
+			y_interpolated_work[i] = y_base_work[0];
 		}
 
 		// Between x_base[0] and x_base[num_base-1]
@@ -422,8 +478,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			left_index = location_base[i];
 			right_index = location_base[i + 1];
 			for (size_t j = left_index; j < right_index; ++j) {
-				interpolator->Interpolate(i + 1, x_interpolated[j],
-						&y_interpolated[j]);
+				interpolator->Interpolate(i + 1, x_interpolated_work[j],
+						&y_interpolated_work[j]);
 			}
 		}
 
@@ -431,23 +487,16 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		left_index = location_base[num_base - 1];
 		right_index = num_interpolated;
 		for (size_t i = left_index; i < right_index; ++i) {
-			y_interpolated[i] = y_base[num_base - 1];
+			y_interpolated_work[i] = y_base_work[num_base - 1];
 		}
 
-//		int location = 0;
-//		int end_position = static_cast<int>(num_base) - 1;
-//		for (size_t index = 0; index < num_interpolated; ++index) {
-//			location = this->Locate(location, end_position, num_base, x_base,
-//					x_interpolated[index]);
-//			if (location == 0) {
-//				y_interpolated[index] = y_base[0];
-//			} else if (location == static_cast<int>(num_base)) {
-//				y_interpolated[index] = y_base[location - 1];
-//			} else {
-//				interpolator->Interpolate(location, x_interpolated[index],
-//						y_interpolated[index]);
-//			}
-//		}
+		// copy work array to output array
+		if (!interpolated_is_ascending) {
+			for (size_t i = 0; i < num_interpolated; ++i) {
+				y_interpolated[i] =
+						y_interpolated_work[num_interpolated - 1 - i];
+			}
+		}
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
