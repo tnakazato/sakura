@@ -39,7 +39,7 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 	}
 
 	// Neville's algorithm
-	y_interpolated = c[0];
+	DataType y_interpolated_work = c[0];
 	for (int m = 1; m < num_elements; ++m) {
 		// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 		// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
@@ -60,8 +60,10 @@ int DoNevillePolynomial(double const x_base[], DataType const y_base[],
 		// In each step, c[0] holds Cm1 which is a correction between
 		// P12...m and P12...[m+1]. Thus, the following repeated update
 		// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
-		y_interpolated += c[0];
+		y_interpolated_work += c[0];
 	}
+
+	y_interpolated = y_interpolated_work;
 
 	return 0;
 }
