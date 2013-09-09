@@ -59,19 +59,15 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(grid));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(weight_of_grid));
 	CHECK_ARGS(
-			0 <= start_spectrum && start_spectrum <= end_spectrum
-					&& end_spectrum <= num_spectra && num_spectra <= INT32_MAX);
+			0 <= start_spectrum && start_spectrum <= end_spectrum && end_spectrum <= num_spectra && num_spectra <= INT32_MAX);
 	CHECK_ARGS(0 < support && support <= INT32_MAX);
 	CHECK_ARGS(0 < sampling && sampling <= INT32_MAX);
 	CHECK_ARGS(0 < num_polarization && num_polarization <= INT32_MAX);
 	CHECK_ARGS(0 < num_channels && num_channels <= INT32_MAX);
 	CHECK_ARGS(
-			static_cast<int>(ceil(sqrt(2.) * (support + 1) * sampling))
-					<= num_convolution_table
-					&& num_convolution_table <= INT32_MAX);
+			static_cast<int>(ceil(sqrt(2.) * (support + 1) * sampling)) <= num_convolution_table && num_convolution_table <= INT32_MAX);
 	CHECK_ARGS(
-			0 < num_polarization_for_grid
-					&& num_polarization_for_grid <= INT32_MAX);
+			0 < num_polarization_for_grid && num_polarization_for_grid <= INT32_MAX);
 	CHECK_ARGS(0 < num_channels_for_grid && num_channels_for_grid <= INT32_MAX);
 	CHECK_ARGS(0 < width && width <= INT32_MAX);
 	CHECK_ARGS(0 < height && height <= INT32_MAX);
@@ -85,13 +81,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 				0 <= channel_map[i] && channel_map[i] < num_channels_for_grid);
 	}
 
-	auto gridImpl =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetGriddingImpl();
-	gridImpl->GridConvolving(num_spectra, start_spectrum, end_spectrum,
-			spectrum_mask, x, y, support, sampling, num_polarization,
-			polarization_map, num_channels, channel_map, mask, value, weight,
-			do_weight, num_convolution_table, convolution_table,
-			num_polarization_for_grid, num_channels_for_grid, width, height,
-			weight_sum, weight_of_grid, grid);
+	try {
+		auto gridImpl =
+				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetGriddingImpl();
+		gridImpl->GridConvolving(num_spectra, start_spectrum, end_spectrum,
+				spectrum_mask, x, y, support, sampling, num_polarization,
+				polarization_map, num_channels, channel_map, mask, value,
+				weight, do_weight, num_convolution_table, convolution_table,
+				num_polarization_for_grid, num_channels_for_grid, width, height,
+				weight_sum, weight_of_grid, grid);
+	} catch (...) {
+		assert(false); // no exception should not be raised for the current implementation.
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

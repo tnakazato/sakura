@@ -21,9 +21,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
 	CHECK_ARGS(result != nullptr);
 
-	auto stat =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetStatisticsImpl();
-	stat->ComputeStatistics(data, is_valid, elements, result);
+	try {
+		auto stat =
+				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetStatisticsImpl();
+		stat->ComputeStatistics(data, is_valid, elements, result);
+	} catch (...) {
+		assert(false); // no exception should not be raised for the current implementation.
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -73,16 +78,21 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
 
-	size_t valid_count = 0;
-	for (size_t i = 0; i < elements; ++i) {
-		if (is_valid[i]) {
-			assert(!isnanf(data[i]));
-			data[valid_count] = data[i];
-			++valid_count;
+	try {
+		size_t valid_count = 0;
+		for (size_t i = 0; i < elements; ++i) {
+			if (is_valid[i]) {
+				assert(!isnanf(data[i]));
+				data[valid_count] = data[i];
+				++valid_count;
+			}
 		}
-	}
 
-	QuickSort<float, AscendingOrder<float> >(data, valid_count);
-	*new_elements = valid_count;
+		QuickSort<float, AscendingOrder<float> >(data, valid_count);
+		*new_elements = valid_count;
+	} catch (...) {
+		assert(false); // no exception should not be raised for the current implementation.
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
