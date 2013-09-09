@@ -15,7 +15,7 @@ using namespace LIBSAKURA_PREFIX;
 template<typename DataType>
 int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
 		unsigned int left_index, int num_elements, double x_interpolated,
-		DataType &y_interpolated) {
+		DataType *y_interpolated) {
 
 	// working pointers
 	double const *x_ptr = &x_base[left_index];
@@ -63,7 +63,7 @@ int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
 		y_interpolated_work += c[0];
 	}
 
-	y_interpolated = y_interpolated_work;
+	*y_interpolated = y_interpolated_work;
 
 	return 0;
 }
@@ -159,7 +159,7 @@ public:
 	virtual void PrepareForInterpolation() {
 	}
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType &y_interpolated) = 0;
+			YDataType *y_interpolated) = 0;
 protected:
 	size_t num_base_;
 	XDataType const *x_base_;
@@ -178,7 +178,7 @@ public:
 	virtual ~NearestInterpolationWorker() {
 	}
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType &y_interpolated) {
+			YDataType *y_interpolated) {
 		XDataType dx = static_cast<XDataType>(fabs(
 				this->x_base_[location] - this->x_base_[location - 1]));
 		XDataType dx_right = static_cast<XDataType>(fabs(
@@ -186,7 +186,7 @@ public:
 		// nearest condition
 		// if dx_right / dx > 0.5, index will be (location - 1) which means nearest
 		// is left side. Otherwise, index will be (location), right side.
-		y_interpolated = this->y_base_[location
+		*y_interpolated = this->y_base_[location
 				- static_cast<int>((dx_right) / dx + 0.5)];
 	}
 };
@@ -201,8 +201,8 @@ public:
 	virtual ~LinearInterpolationWorker() {
 	}
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType &y_interpolated) {
-		y_interpolated =
+			YDataType *y_interpolated) {
+		*y_interpolated =
 				this->y_base_[location - 1]
 						+ (this->y_base_[location] - this->y_base_[location - 1])
 								* (x_interpolated - this->x_base_[location - 1])
@@ -223,7 +223,7 @@ public:
 	virtual ~PolynomialInterpolationWorker() {
 	}
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType &y_interpolated) {
+			YDataType *y_interpolated) {
 		int j = location - 1 - this->polynomial_order_ / 2;
 		unsigned int m = static_cast<unsigned int>(this->num_base_) - 1
 				- static_cast<unsigned int>(this->polynomial_order_);
@@ -277,9 +277,9 @@ public:
 	virtual ~SplineInterpolationWorkerDescending() {
 	}
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType &y_interpolated) {
+			YDataType *y_interpolated) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
-		y_interpolated = DoSplineInterpolation<XDataType, YDataType>(location,
+		*y_interpolated = DoSplineInterpolation<XDataType, YDataType>(location,
 				location - 1, this->num_base_ - location - 1,
 				this->num_base_ - location - 2, x_interpolated, this->x_base_,
 				this->y_base_, this->y_base_2nd_derivative_);
@@ -298,9 +298,9 @@ public:
 	virtual ~SplineInterpolationWorkerAscending() {
 	}
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType &y_interpolated) {
+			YDataType *y_interpolated) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
-		y_interpolated = DoSplineInterpolation<XDataType, YDataType>(
+		*y_interpolated = DoSplineInterpolation<XDataType, YDataType>(
 				location - 1, location, location - 1, location, x_interpolated,
 				this->x_base_, this->y_base_, this->y_base_2nd_derivative_);
 	}
@@ -423,7 +423,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			right_index = location_base[i + 1];
 			for (size_t j = left_index; j < right_index; ++j) {
 				interpolator->Interpolate(i + 1, x_interpolated[j],
-						y_interpolated[j]);
+						&y_interpolated[j]);
 			}
 		}
 
