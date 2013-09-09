@@ -13,7 +13,7 @@ using namespace LIBSAKURA_PREFIX;
 
 // Polynomial interpolation using Neville's algorithm
 template<typename DataType>
-int DoNevillePolynomial(double const x_base[], DataType const y_base[],
+int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
 		unsigned int left_index, int num_elements, double x_interpolated,
 		DataType &y_interpolated) {
 
@@ -229,7 +229,7 @@ public:
 				- static_cast<unsigned int>(this->polynomial_order_);
 		unsigned int k = static_cast<unsigned int>((j > 0) ? j : 0);
 		// call polynomial interpolation
-		int status = DoNevillePolynomial<YDataType>(this->x_base_,
+		int status = PerformNevilleAlgorithm<YDataType>(this->x_base_,
 				this->y_base_, k, this->polynomial_order_ + 1, x_interpolated,
 				y_interpolated);
 	}
