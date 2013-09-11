@@ -458,8 +458,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 						sizeof(size_t) * num_base));
 
 		// Locate each element in x_base against x_interpolated
-		int start_position = 0;
-		int end_position = static_cast<int>(num_interpolated) - 1;
+		size_t start_position = 0;
+		size_t end_position = num_interpolated - 1;
 		for (size_t i = 0; i < num_base; ++i) {
 			location_base[i] = this->Locate(start_position, end_position,
 					num_interpolated, x_interpolated_work, x_base_work[i]);
