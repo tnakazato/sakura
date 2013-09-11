@@ -32,7 +32,7 @@ namespace {
 template<typename DataType>
 size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		DataType const x_base[], DataType x_located) {
-	assert(end_position < static_cast<int>(num_base));
+	assert(end_position < num_base);
 	assert(x_base != nullptr);
 
 // If length of the array is just 1, return 0
@@ -42,7 +42,7 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
 
 	size_t left_index = start_position;
-	size_t right_index = static_cast<int>(num_base);
+	size_t right_index = num_base;
 	if (x_base[0] < x_base[num_base - 1]) {
 		// ascending order
 		if (x_located <= x_base[0]) {
@@ -58,7 +58,7 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		} else if (x_located > x_base[end_position]) {
 			// x_located is not in the range (start_position, end_position)
 			// call this function to search other location
-			return LocateData(end_position, static_cast<int>(num_base - 1),
+			return LocateData(end_position, num_base - 1,
 					num_base, x_base, x_located);
 		} else {
 			// do bisection
@@ -89,7 +89,7 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		} else if (x_located < x_base[end_position]) {
 			// x_located is not in the range (start_position, end_position)
 			// call this function to search other location
-			return LocateData(end_position, static_cast<int>(num_base - 1),
+			return LocateData(end_position, num_base - 1,
 					num_base, x_base, x_located);
 		} else {
 			// do bisection
