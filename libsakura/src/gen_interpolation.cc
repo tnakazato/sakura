@@ -13,6 +13,24 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float const y_base[], size_t num_interpolated,
 		double const x_interpolated[], float y_interpolated[]) {
 
+	// num_base must be non-zero
+	if (num_base == 0) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	// no interpolation will be done
+	if (num_interpolated == 0) {
+		// Nothing to do
+		return LIBSAKURA_SYMBOL(Status_kOK);
+	}
+
+	// invalid polynomial order for polynomial interpolation
+	if (interpolation_method
+			== LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
+			&& polynomial_order < 0) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
 	// get object optimized to run-time environment
 	auto interpolator =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
@@ -60,8 +78,8 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		} else if (x_located > x_base[end_position]) {
 			// x_located is not in the range (start_position, end_position)
 			// call this function to search other location
-			return LocateData(end_position, num_base - 1,
-					num_base, x_base, x_located);
+			return LocateData(end_position, num_base - 1, num_base, x_base,
+					x_located);
 		} else {
 			// do bisection
 			size_t left_index = start_position;
@@ -91,8 +109,8 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		} else if (x_located < x_base[end_position]) {
 			// x_located is not in the range (start_position, end_position)
 			// call this function to search other location
-			return LocateData(end_position, num_base - 1,
-					num_base, x_base, x_located);
+			return LocateData(end_position, num_base - 1, num_base, x_base,
+					x_located);
 		} else {
 			// do bisection
 			size_t left_index = start_position;
@@ -121,10 +139,10 @@ namespace LIBSAKURA_PREFIX {
 // x_base array.
 template<class XDataType, class YDataType>
 size_t InterpolationImpl<XDataType, YDataType>::Locate(size_t start_position,
-		size_t end_position, size_t num_base, XDataType const x_base[/*num_base*/],
-		XDataType x_located) const {
-	return ::LocateData<XDataType>(start_position, end_position, num_base, x_base,
-			x_located);
+		size_t end_position, size_t num_base,
+		XDataType const x_base[/*num_base*/], XDataType x_located) const {
+	return ::LocateData<XDataType>(start_position, end_position, num_base,
+			x_base, x_located);
 }
 
 template class InterpolationImpl<double, float> ;
