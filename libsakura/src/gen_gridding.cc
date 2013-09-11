@@ -26,7 +26,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 		size_t num_channels, uint32_t const channel_map[/*num_channels*/],
 		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
-		float const weight/*[num_spectra]*/[/*num_channels*/], bool do_weight,
+		float const weight/*[num_spectra]*/[/*num_channels*/], bool weight_only,
 		size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
 		float const convolution_table[/*num_convolution_table*/],
 		size_t num_polarization_for_grid, size_t num_channels_for_grid,
@@ -59,27 +59,32 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(grid));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(weight_of_grid));
 	CHECK_ARGS(
-			0 <= start_spectrum && start_spectrum <= end_spectrum && end_spectrum <= num_spectra && num_spectra <= INT32_MAX);
-	CHECK_ARGS(0 < support && support <= INT32_MAX);
+			0 <= start_spectrum && start_spectrum <= end_spectrum
+					&& end_spectrum <= num_spectra);
+	CHECK_ARGS(0 < support && support <= (INT32_MAX - 1) / 2);
 	CHECK_ARGS(0 < sampling && sampling <= INT32_MAX);
+	CHECK_ARGS(static_cast<size_t>(support) * sampling <= INT32_MAX / 32);
 	CHECK_ARGS(0 < num_polarization && num_polarization <= INT32_MAX);
 	CHECK_ARGS(0 < num_channels && num_channels <= INT32_MAX);
 	CHECK_ARGS(
-			static_cast<int>(ceil(sqrt(2.) * (support + 1) * sampling)) <= num_convolution_table && num_convolution_table <= INT32_MAX);
+			static_cast<int>(ceil(sqrt(2.) * (support + 1) * sampling)) <= num_convolution_table && num_convolution_table <= INT32_MAX / 32);
 	CHECK_ARGS(
 			0 < num_polarization_for_grid && num_polarization_for_grid <= INT32_MAX);
 	CHECK_ARGS(0 < num_channels_for_grid && num_channels_for_grid <= INT32_MAX);
 	CHECK_ARGS(0 < width && width <= INT32_MAX);
 	CHECK_ARGS(0 < height && height <= INT32_MAX);
-	for (int i = 0; i < num_polarization; ++i) {
+	CHECK_ARGS(static_cast<size_t>(width) * height <= INT32_MAX);
+#if !defined(NDEBUG)
+	for (size_t i = 0; i < num_polarization; ++i) {
 		CHECK_ARGS(
 				0 <= polarization_map[i]
-						&& polarization_map[i] < num_polarization_for_grid);
+				&& polarization_map[i] < num_polarization_for_grid);
 	}
-	for (int i = 0; i < num_channels; ++i) {
+	for (size_t i = 0; i < num_channels; ++i) {
 		CHECK_ARGS(
 				0 <= channel_map[i] && channel_map[i] < num_channels_for_grid);
 	}
+#endif /* !defined(NDEBUG) */
 
 	try {
 		auto gridImpl =
@@ -87,7 +92,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 		gridImpl->GridConvolving(num_spectra, start_spectrum, end_spectrum,
 				spectrum_mask, x, y, support, sampling, num_polarization,
 				polarization_map, num_channels, channel_map, mask, value,
-				weight, do_weight, num_convolution_table, convolution_table,
+				weight, weight_only, num_convolution_table, convolution_table,
 				num_polarization_for_grid, num_channels_for_grid, width, height,
 				weight_sum, weight_of_grid, grid);
 	} catch (...) {

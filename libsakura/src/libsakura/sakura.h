@@ -205,13 +205,14 @@ typedef struct {
  * @~japanese
  * @brief 畳み込みしながらグリッドする。
  * 各浮動小数点の数値はNaN/+-Infであってはならない。
- * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra <= INT32_MAX
+ * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
  * @param start_spectrum 開始spectrumの添字
  * @param end_spectrum 終了spectrumの添字+1
  * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。<br/>must-be-aligned
  * @param x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。<br/>must-be-aligned
  * @param y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。<br/>must-be-aligned
- * @param support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= INT32_MAX
+ * @param support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= (INT32_MAX - 1) / 2<br/>
+ * ただし、@a support * @a sampling に比例するサイズの領域をスタック上に確保するので、@a support * @a sampling が大きな値となる場合、スタックオーバーフローを起こす。
  * @param sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
  * @param num_polarizations 範囲は、0 < num_polarization <= INT32_MAX
  * @param polarization_map	要素数は、num_polarization。各要素の値は、[0,num_polarization_for_grid)でなければならない。<br/>must-be-aligned
@@ -221,8 +222,8 @@ typedef struct {
  * @param value	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。グリッディングする値。<br/>must-be-aligned
  * @param weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
  * @param weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
- * @param num_convolution_table >= ceil(sqrt(2.)*(support+1)*sampling)
- * @param convolution_table	要素数は、num_convolution_table。畳み込みに使用する重みカーブ。要素0が中心を表す。<br/>must-be-aligned
+ * @param num_convolution_table @ convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= convolution_table <= INT32_MAX / 32
+ * @param convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。各要素の値は、NaN,Infであってはならない。要素0が中心を表す。<br/>must-be-aligned
  * @param num_polarization_for_grid 範囲は、0 < num_polarization_for_grid <= INT32_MAX
  * @param num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
  * @param width 範囲は、0 < width <= INT32_MAX

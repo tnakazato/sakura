@@ -33,13 +33,13 @@ inline float conj(float v) {
 	return v;
 }
 
-inline integer At2(integer B, integer a, integer b) {
+inline size_t At2(size_t B, integer a, integer b) {
 	return a * B + b;
 }
-inline integer At3(integer B, integer C, integer a, integer b, integer c) {
+inline size_t At3(size_t B, size_t C, integer a, integer b, integer c) {
 	return a * (B * C) + At2(C, b, c);
 }
-inline integer At4(integer B, integer C, integer D, integer a, integer b,
+inline size_t At4(size_t B, size_t C, size_t D, integer a, integer b,
 		integer c, integer d) {
 	return a * (B * C * D) + At3(C, D, b, c, d);
 }
@@ -222,7 +222,7 @@ template <typename Impl>
 inline void Grid(
 		integer locx, integer locy,
 		integer const doubled_support, integer const sampling,
-		integer const integral_radius[],
+		size_t const integral_radius[],
 		integer const num_polarization,
 		uint32_t const polarization_map[/*num_polarization*/],
 		integer const num_channels,
@@ -238,15 +238,14 @@ inline void Grid(
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) {
 
-	integer const pixels = width * height;
-	integer ir = 0;
+	size_t ir = 0;
 
 	for (integer iy = 0; iy < doubled_support; ++iy) {
 		integer ay = locy + iy;
 		for (integer ix = 0; ix < doubled_support; ++ix) {
 			integer ax = locx + ix;
 			float convolution_factor = convolution_table[integral_radius[ir]];
-			integer const point_idx = At2(width, ay, ax);
+			size_t const point_idx = At2(width, ay, ax);
 			float *grid_pos_local = &grid[At4(width, num_polarization_for_grid, num_channels_for_grid, ay, ax, 0, 0)];
 			float *weight_of_grid_pos_local = &weight_of_grid[At4(width, num_polarization_for_grid, num_channels_for_grid, ay, ax, 0, 0)];
 
@@ -273,8 +272,8 @@ inline void Grid(
 
 template<typename OptimizedImpl>
 inline void InternalGrid(
-		integer num_spectra,
-		integer start_spectrum, integer end_spectrum,
+		size_t num_spectra,
+		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
 		double const x[/*num_spectra*/],
 		double const y[/*num_spectra*/],
@@ -295,23 +294,23 @@ inline void InternalGrid(
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
 		) {
 	integer const doubled_support = 2 * support + 1;
-	for (int spectrum = start_spectrum; spectrum < end_spectrum; ++spectrum) {
+	for (size_t spectrum = start_spectrum; spectrum < end_spectrum; ++spectrum) {
 		if (spectrum_mask[spectrum]) {
 			double xy[2] = { x[spectrum], y[spectrum]};
 			integer point[2], offset[2];
 			GridPosition(xy, sampling, point, offset);
 			if (OnGrid(width, height, point, support)) {
-				integer integral_radius[Square(doubled_support)];
+				size_t integral_radius[Square(doubled_support)];
 				{
 					float initial_relative_location_x = -(support + 1) * sampling + offset[0];
 					float relative_location_y = -(support + 1) * sampling + offset[1];
-					integer ir = 0;
+					size_t ir = 0;
 					for (integer iy = 0; iy < doubled_support; ++iy) {
 						relative_location_y += sampling;
 						float relative_location_x = initial_relative_location_x;
 						for (integer ix = 0; ix < doubled_support; ++ix) {
 							relative_location_x += sampling;
-							integral_radius[ir] = static_cast<integer>(sqrt(
+							integral_radius[ir] = static_cast<size_t>(sqrt(
 									Square(relative_location_x) + Square(relative_location_y)));
 							assert(integral_radius[ir] < num_convolution_table);
 							++ir;
@@ -360,8 +359,8 @@ inline bool IsVectorOperationApplicable(integer num_channels,
 	return true;
 }
 
-void GridConvolvingCasted(integer num_spectra,
-		integer start_spectrum, integer end_spectrum,
+void GridConvolvingCasted(size_t num_spectra,
+		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
 		double const x[/*num_spectra*/],
 		double const y[/*num_spectra*/],
@@ -373,7 +372,7 @@ void GridConvolvingCasted(integer num_spectra,
 		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const weight/*[num_spectra]*/[/*num_channels*/],
-		bool do_weight,
+		bool weight_only,
 		integer num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
 		float const convolution_table[/*num_convolution_table*/],
 		integer num_polarization_for_grid, integer num_channels_for_grid,
@@ -382,7 +381,7 @@ void GridConvolvingCasted(integer num_spectra,
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
 		) {
-	if (do_weight) {
+	if (weight_only) {
 		if (IsVectorOperationApplicable(num_channels, channel_map)) {
 			InternalGrid<VectorizedImpl<VWeightOnly> >(num_spectra,
 					start_spectrum, end_spectrum,
@@ -485,7 +484,7 @@ void ADDSUFFIX(Gridding, ARCH_SUFFIX)::GridConvolving(size_t num_spectra,
 		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
 		float const weight/*[num_spectra]*/[/*num_channels*/],
-		bool do_weight,
+		bool weight_only,
 		size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
 		float const convolution_table[/*num_convolution_table*/],
 		size_t num_polarization_for_grid, size_t num_channels_for_grid,
@@ -494,8 +493,8 @@ void ADDSUFFIX(Gridding, ARCH_SUFFIX)::GridConvolving(size_t num_spectra,
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]
 		) const {
-	GridConvolvingCasted((integer)num_spectra,
-			(integer)start_spectrum, (integer)end_spectrum,
+	GridConvolvingCasted(num_spectra,
+			start_spectrum, end_spectrum,
 			spectrum_mask,
 			x, y,
 			(integer)support, (integer)sampling,
@@ -506,7 +505,7 @@ void ADDSUFFIX(Gridding, ARCH_SUFFIX)::GridConvolving(size_t num_spectra,
 			mask,
 			value,
 			weight,
-			do_weight,
+			weight_only,
 			(integer)num_convolution_table,
 			convolution_table,
 			(integer)num_polarization_for_grid, (integer)num_channels_for_grid,
