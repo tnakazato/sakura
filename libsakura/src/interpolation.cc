@@ -125,8 +125,8 @@ void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 }
 
 template<class XDataType, class YDataType>
-YDataType DoSplineInterpolation(int lower_index, int upper_index,
-		int lower_index_correct, int upper_index_correct,
+YDataType DoSplineInterpolation(size_t lower_index, size_t upper_index,
+		size_t lower_index_correct, size_t upper_index_correct,
 		XDataType x_interpolated, XDataType const x_base[],
 		YDataType const y_base[], float const y_base_2nd_derivative[]) {
 	XDataType dx = x_base[upper_index] - x_base[lower_index];
