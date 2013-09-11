@@ -167,43 +167,43 @@ public:
 			float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) const;
 };
 
-template<typename DataType>
-class InterpolationImpl: public Interpolation<DataType> {
+template<class XDataType, class YDataType>
+class InterpolationImpl: public Interpolation<XDataType, YDataType> {
 public:
 	virtual ~InterpolationImpl() {
 	}
 protected:
 	virtual size_t Locate(size_t start_position, size_t end_position,
-			size_t num_base, double const x_base[/*num_base*/],
-			double x_located) const;
+			size_t num_base, XDataType const x_base[/*num_base*/],
+			XDataType x_located) const;
 };
 
-template<typename DataType>
-class InterpolationDefault: public InterpolationImpl<DataType> {
+template<class XDataType, class YDataType>
+class InterpolationDefault: public InterpolationImpl<XDataType, YDataType> {
 public:
 	virtual ~InterpolationDefault() {
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/],
-			DataType const y_base[/*num_base*/], size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			DataType y_interpolated[/*num_interpolated*/]) const;
+			XDataType const x_base[/*num_base*/],
+			YDataType const y_base[/*num_base*/], size_t num_interpolated,
+			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated*/]) const;
 };
 
-template<typename DataType>
-class InterpolationAfterSandyBridge: public InterpolationImpl<DataType> {
+template<class XDataType, class YDataType>
+class InterpolationAfterSandyBridge: public InterpolationImpl<XDataType, YDataType> {
 public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/],
-			DataType const y_base[/*num_base*/], size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			DataType y_interpolated[/*num_interpolated*/]) const;
+			XDataType const x_base[/*num_base*/],
+			YDataType const y_base[/*num_base*/], size_t num_interpolated,
+			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated*/]) const;
 };
 
 class LogicalOperationDefault: public LogicalOperation {

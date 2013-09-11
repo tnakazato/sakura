@@ -117,13 +117,13 @@ namespace LIBSAKURA_PREFIX {
 // Locate returns i+1. If x_located is out of range, Locate returns
 // either 0 or num_base depending on which side x_located locates w.r.t.
 // x_base array.
-template<typename DataType>
-size_t InterpolationImpl<DataType>::Locate(size_t start_position,
-		size_t end_position, size_t num_base, double const x_base[/*num_base*/],
-		double x_located) const {
-	return ::LocateData<double>(start_position, end_position, num_base, x_base,
+template<class XDataType, class YDataType>
+size_t InterpolationImpl<XDataType, YDataType>::Locate(size_t start_position,
+		size_t end_position, size_t num_base, XDataType const x_base[/*num_base*/],
+		XDataType x_located) const {
+	return ::LocateData<XDataType>(start_position, end_position, num_base, x_base,
 			x_located);
 }
 
-template class InterpolationImpl<float> ;
+template class InterpolationImpl<double, float> ;
 } /* LIBSAKURA_PREFIX */

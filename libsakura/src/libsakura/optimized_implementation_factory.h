@@ -107,7 +107,7 @@ public:
 #endif
 };
 
-template<typename DataType>
+template<class XDataType, class YDataType>
 class Interpolation {
 public:
 	virtual ~Interpolation() {
@@ -116,10 +116,10 @@ public:
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
 			LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
-			double const x_base[/*num_base*/],
-			DataType const y_base[/*num_base*/], size_t num_interpolated,
-			double const x_interpolated[/*num_interpolated*/],
-			DataType y_interpolated[/*num_interpolated*/]) const = 0;
+			XDataType const x_base[/*num_base*/],
+			YDataType const y_base[/*num_base*/], size_t num_interpolated,
+			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated*/]) const = 0;
 };
 
 class LogicalOperation {
@@ -197,7 +197,7 @@ public:
 	virtual BoolFilterCollection<int> const *GetBoolFilterCollectionImplInt() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
-	virtual Interpolation<float> const *GetInterpolationImpl() const = 0;
+	virtual Interpolation<double, float> const *GetInterpolationImpl() const = 0;
 	virtual LogicalOperation const *GetLogicalOperationImpl() const = 0;
 	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
