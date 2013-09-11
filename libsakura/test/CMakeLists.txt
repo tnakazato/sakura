@@ -21,7 +21,7 @@ enable_testing()
 
 set(CMAKE_BUILD_TYPE Debug)
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG   "-g -Ofast")

@@ -27,10 +27,8 @@
 using namespace std;
 
 namespace {
-double currenttime() {
-	struct timeval tv;
-	int result = gettimeofday(&tv, NULL);
-	return tv.tv_sec + ((double) tv.tv_usec) / 1000000.;
+inline double CurrentTime() {
+	return LIBSAKURA_SYMBOL(GetCurrentTime)();
 }
 
 template<typename T>
@@ -273,25 +271,25 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 		float (*wgrid2)[NY][NX][NPOL][NCHAN]) {
 	{
 		cout << "Zeroing values... " << flush;
-		double start = currenttime();
+		double start = CurrentTime();
 		clearTabs(grid2, wgrid2, &sumwt2);
-		double end = currenttime();
+		double end = CurrentTime();
 		cout << "done. " << end - start << " sec\n";
 	}
 
 	{
 		cout << "Gridding by C++(Speed) ... " << flush;
-		double start = currenttime();
+		double start = CurrentTime();
 		for (size_t i = 0; i < ROW_FACTOR; ++i) {
 			LIBSAKURA_SYMBOL(Status) result = sakura_GridConvolving(NROW, 0,
-					NROW, rflag_, *x, *y, SUPPORT, SAMPLING, NVISPOL,
+			NROW, rflag_, *x, *y, SUPPORT, SAMPLING, NVISPOL,
 					(uint32_t*) polmap, NVISCHAN, (uint32_t*) chanmap,
 					flag_[0][0], (*values_)[0][0], weight[0], dowt,
 					elementsof(convTab), convTab, NPOL, NCHAN, NX, NY,
 					sumwt2[0], (*wgrid2)[0][0][0], (*grid2)[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 		}
-		double end = currenttime();
+		double end = CurrentTime();
 		double new_time = end - start;
 		cout << "done. " << new_time << " sec\n";
 		cout << "ratio: " << (new_time / fortran_time) << ", "
@@ -309,8 +307,8 @@ TEST(Gridding, Basic) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 	result = sakura_GridConvolving(NROW, 0, NROW, 0, 0, 0, SUPPORT, SAMPLING,
-			NVISPOL, (uint32_t*) polmap, NVISCHAN, (uint32_t*) chanmap,
-			flag_[0][0], 0, weight[0], false, elementsof(convTab), convTab,
+	NVISPOL, (uint32_t*) polmap, NVISCHAN, (uint32_t*) chanmap, flag_[0][0], 0,
+			weight[0], false, elementsof(convTab), convTab,
 			NPOL, NCHAN, NX, NY, 0, 0, 0);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
@@ -328,12 +326,12 @@ TEST(Gridding, Basic) {
 	double (*y_)[NROW] = y->memory<double[NROW]>();
 	cout << "Initializing xy... " << flush;
 	{
-		double start = currenttime();
+		double start = CurrentTime();
 		for (size_t i = 0; i < elementsof(*xy_); i++) {
 			(*xy_)[i][0] = (*x_)[i] = NX * drand48();
 			(*xy_)[i][1] = (*y_)[i] = NY * drand48();
 		}
-		double end = currenttime();
+		double end = CurrentTime();
 		double new_time = end - start;
 		cout << "done. " << new_time << " sec\n";
 	}
@@ -350,7 +348,7 @@ TEST(Gridding, Basic) {
 	cout << sizeof(*values) << endl;
 	cout << "Initializing values... " << flush;
 	{
-		double start = currenttime();
+		double start = CurrentTime();
 		for (size_t i = 0; i < elementsof(*values); i++) {
 			for (size_t j = 0; j < elementsof((*values)[0]); j++) {
 				for (size_t k = 0; k < elementsof((*values)[0][0]); k++) {
@@ -358,7 +356,7 @@ TEST(Gridding, Basic) {
 				}
 			}
 		}
-		double end = currenttime();
+		double end = CurrentTime();
 		cout << "done. " << end - start << " sec\n";
 	}
 
@@ -375,9 +373,9 @@ TEST(Gridding, Basic) {
 			<< endl;
 	{
 		cout << "Zeroing values... " << flush;
-		double start = currenttime();
+		double start = CurrentTime();
 		clearTabs(grid, wgrid, &sumwt);
-		double end = currenttime();
+		double end = CurrentTime();
 		cout << "done. " << end - start << " sec\n";
 	}
 
@@ -385,7 +383,7 @@ TEST(Gridding, Basic) {
 	bool dowt = true;
 	{
 		cout << "Gridding by Fortran ... " << flush;
-		double start = currenttime();
+		double start = CurrentTime();
 		integer dowt_ = integer(dowt);
 		integer nvispol = NVISPOL;
 		integer nvischan = NVISCHAN;
@@ -403,7 +401,7 @@ TEST(Gridding, Basic) {
 					(int*) polmap, sumwt[0]);
 #endif
 		}
-		double end = currenttime();
+		double end = CurrentTime();
 		fortran_time = end - start;
 		cout << "done. " << fortran_time << " sec\n";
 	}
