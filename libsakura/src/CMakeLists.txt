@@ -30,7 +30,7 @@ option(SCALAR "Disable auto-vectorization by compiler for AfterSandyBridge" OFF)
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -m64")
+set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 #set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorizer-verbose=2")

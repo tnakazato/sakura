@@ -15,6 +15,7 @@
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(
 		size_t elements, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResult) *result) {
+	CHECK_ARGS(elements <= INT32_MAX);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));

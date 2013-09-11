@@ -60,7 +60,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 
 	static SimdFeature const simd_all_false = { };
 	simd_feature = simd_all_false;
-	for (int i = 0; i < ELEMENTSOF(simd_flags); ++i) {
+	for (size_t i = 0; i < ELEMENTSOF(simd_flags); ++i) {
 		if ((reg.ecx & simd_flags[i].ecx) == simd_flags[i].ecx
 				&& (reg.edx & simd_flags[i].edx) == simd_flags[i].edx) {
 			simd_feature.*simd_flags[i].flag = true;

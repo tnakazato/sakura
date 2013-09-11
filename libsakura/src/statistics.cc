@@ -60,10 +60,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	static_assert(sizeof(m256) == sizeof(__m256 ), "m256 and __m256 must have a same size.");
 	__m256 sum = _mm256_setzero_ps();
 	__m256 const zero = _mm256_setzero_ps();
-	__m256i const zeroi = _mm256_setzero_si256();
 	__m128i const zero128i = _mm_setzero_si128();
-	__m256i const onei = _mm256_set1_epi32(1);
-	__m128i const one128i = _mm_set1_epi32(1);
 	__m256 const nan = _mm256_set1_ps(NAN);
 	__m128i count = _mm_setzero_si128();
 	__m256 min = nan;
@@ -73,7 +70,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	__m256 square_sum = zero;
 	float const *mask_ = reinterpret_cast<float const *>(is_valid);
 	__m256    const *data_ = reinterpret_cast<__m256    const *>(data);
-	for (int i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
+	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
 		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
 		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
 		mask0 = _mm_cvtepu8_epi32(mask0);
@@ -123,7 +120,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 
 		float r = tmp.floatv[0];
 		int result_index = tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
-		for (int i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
+		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 			if (isnanf(r) || (!isnanf(tmp.floatv[i]) && tmp.floatv[i] < r)) {
 				r = tmp.floatv[i];
 				result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
@@ -142,7 +139,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 
 		float r = tmp.floatv[0];
 		int result_index = tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
-		for (int i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
+		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 			if (isnanf(r) || (!isnanf(tmp.floatv[i]) && tmp.floatv[i] > r)) {
 				r = tmp.floatv[i];
 				result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
@@ -155,7 +152,8 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	float total = AddHorizontally(square_sum);
 	int start = (elements / (sizeof(__m256 ) / sizeof(float)))
 			* (sizeof(__m256 ) / sizeof(float));
-	for (int i = start; i < elements; ++i) {
+	assert(elements <= INT32_MAX );
+	for (int32_t i = start; i < static_cast<int32_t>(elements); ++i) {
 		if (is_valid[i]) {
 			++result.count;
 			result.sum += data[i];
