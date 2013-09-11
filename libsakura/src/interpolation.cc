@@ -277,15 +277,18 @@ public:
 		XDataType dx = this->x_base_[location] - this->x_base_[location - 1];
 		for (size_t i = left_index; i < right_index; ++i) {
 			XDataType a = (this->x_base_[location] - x_interpolated[i]) / dx;
-			XDataType b = (x_interpolated[i] - this->x_base_[location - 1]) / dx;
-			y_interpolated[i] = static_cast<YDataType>(a * this->y_base_[location - 1]
-					+ b * this->y_base_[location]
-					+ ((a * a * a - a)
-							* this->y_base_2nd_derivative_[this->num_base_ - location
-									- 2]
-							+ (b * b * b - b)
+			XDataType b = (x_interpolated[i] - this->x_base_[location - 1])
+					/ dx;
+			y_interpolated[i] =
+					static_cast<YDataType>(a * this->y_base_[location - 1]
+							+ b * this->y_base_[location]
+							+ ((a * a * a - a)
 									* this->y_base_2nd_derivative_[this->num_base_
-											- location - 1]) * (dx * dx) / 6.0);
+											- location - 2]
+									+ (b * b * b - b)
+											* this->y_base_2nd_derivative_[this->num_base_
+													- location - 1]) * (dx * dx)
+									/ 6.0);
 
 		}
 	}
@@ -309,11 +312,14 @@ public:
 		XDataType dx = this->x_base_[location] - this->x_base_[location - 1];
 		for (size_t i = left_index; i < right_index; ++i) {
 			XDataType a = (this->x_base_[location] - x_interpolated[i]) / dx;
-			XDataType b = (x_interpolated[i] - this->x_base_[location - 1]) / dx;
-			y_interpolated[i] = static_cast<YDataType>(a * this->y_base_[location - 1]
-					+ b * this->y_base_[location]
-					+ ((a * a * a - a) * this->y_base_2nd_derivative_[location - 1]
-							+ (b * b * b - b) * this->y_base_2nd_derivative_[location])
+			XDataType b = (x_interpolated[i] - this->x_base_[location - 1])
+					/ dx;
+			y_interpolated[i] = static_cast<YDataType>(a
+					* this->y_base_[location - 1] + b * this->y_base_[location]
+					+ ((a * a * a - a)
+							* this->y_base_2nd_derivative_[location - 1]
+							+ (b * b * b - b)
+									* this->y_base_2nd_derivative_[location])
 							* (dx * dx) / 6.0);
 
 		}
@@ -349,6 +355,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 		return new LinearInterpolationWorker<XDataType, YDataType>(num_base,
 				x_base, y_base);
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
+		assert(polynomial_order >= 0);
 		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
@@ -441,24 +448,19 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 
 		// Outside of x_base[0]
-		size_t left_index = 0;
-		size_t right_index = location_base[0];
-		for (size_t i = left_index; i < right_index; ++i) {
+		for (size_t i = 0; i < location_base[0]; ++i) {
 			y_interpolated[i] = y_base_work[0];
 		}
 
 		// Between x_base[0] and x_base[num_base-1]
 		for (size_t i = 0; i < num_base - 1; ++i) {
-			left_index = location_base[i];
-			right_index = location_base[i + 1];
-			interpolator->Interpolate(left_index, right_index, i + 1,
-					x_interpolated_work, y_interpolated);
+			interpolator->Interpolate(location_base[i], location_base[i + 1],
+					i + 1, x_interpolated_work, y_interpolated);
 		}
 
 		// Outside of x_base[num_base-1]
-		left_index = location_base[num_base - 1];
-		right_index = num_interpolated;
-		for (size_t i = left_index; i < right_index; ++i) {
+		for (size_t i = location_base[num_base - 1]; i < num_interpolated;
+				++i) {
 			y_interpolated[i] = y_base_work[num_base - 1];
 		}
 
