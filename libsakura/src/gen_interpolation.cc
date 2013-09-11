@@ -17,9 +17,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	auto interpolator =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
-	return interpolator->Interpolate1d(interpolation_method, polynomial_order,
-			num_base, x_base, y_base, num_interpolated, x_interpolated,
-			y_interpolated);
+	try {
+		return interpolator->Interpolate1d(interpolation_method,
+				polynomial_order, num_base, x_base, y_base, num_interpolated,
+				x_interpolated, y_interpolated);
+	} catch (...) {
+		// any exception is thrown during interpolation
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	}
 }
 
 namespace {
@@ -30,7 +35,7 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 	assert(end_position < static_cast<int>(num_base));
 	assert(x_base != nullptr);
 
-	// If length of the array is just 1, return 0
+// If length of the array is just 1, return 0
 	if (num_base == 1)
 		return 0;
 
