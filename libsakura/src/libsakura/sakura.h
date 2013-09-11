@@ -507,7 +507,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 /**
  * @brief 1D Convolution with FFT for input spectrum
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_channel,
+		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 		float input_spectrum[/*num_in*/], bool const input_flag[/*num_in*/],
 		float output_spectrum[/*num_in*/]);
 /**

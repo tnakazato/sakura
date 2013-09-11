@@ -18,14 +18,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
-		             LIBSAKURA_SYMBOL(Convolve1DContext) *context,
-				     size_t num_channel,float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
+		             LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+				     float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
 				     float output_spectrum[/*num_channels*/]){
 
 
 	auto createconv =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
-	createconv->Convolve1D(context,num_channel,input_spectrum,input_flag,output_spectrum);
+	createconv->Convolve1D(context,input_spectrum,input_flag,output_spectrum);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
