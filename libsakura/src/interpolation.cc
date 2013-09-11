@@ -13,8 +13,8 @@ using namespace LIBSAKURA_PREFIX;
 
 // Polynomial interpolation using Neville's algorithm
 template<typename DataType>
-int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
-		unsigned int left_index, int num_elements, double x_interpolated,
+void PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
+		size_t left_index, size_t num_elements, double x_interpolated,
 		DataType *y_interpolated) {
 
 	// working pointers
@@ -33,22 +33,22 @@ int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
 			sizeof(DataType) * elements_in_arena, storage_for_d.get(),
 			sizeof(DataType) * num_elements));
 
-	for (int i = 0; i < num_elements; ++i) {
+	for (size_t i = 0; i < num_elements; ++i) {
 		c[i] = y_ptr[i];
 		d[i] = y_ptr[i];
 	}
 
 	// Neville's algorithm
 	DataType y_interpolated_work = c[0];
-	for (int m = 1; m < num_elements; ++m) {
+	for (size_t m = 1; m < num_elements; ++m) {
 		// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 		// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 		// d[n-m-1].
-		for (int i = 0; i < num_elements - m; ++i) {
-			DataType cd = c[i + 1] - d[i];
+		for (size_t i = 0; i < num_elements - m; ++i) {
+			double cd = static_cast<double>(c[i + 1] - d[i]);
 			double dx = x_ptr[i] - x_ptr[i + m];
 			assert(dx != 0);
-			cd /= static_cast<DataType>(dx);
+			cd /= dx;
 			c[i] = (x_ptr[i] - x_interpolated) * cd;
 			d[i] = (x_ptr[i + m] - x_interpolated) * cd;
 		}
@@ -60,8 +60,6 @@ int PerformNevilleAlgorithm(double const x_base[], DataType const y_base[],
 	}
 
 	*y_interpolated = y_interpolated_work;
-
-	return 0;
 }
 
 void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
@@ -219,13 +217,14 @@ public:
 	virtual void Interpolate(size_t location, XDataType x_interpolated,
 			YDataType *y_interpolated) {
 		int j = location - 1 - this->polynomial_order_ / 2;
-		unsigned int m = static_cast<unsigned int>(this->num_base_) - 1
-				- static_cast<unsigned int>(this->polynomial_order_);
-		unsigned int k = static_cast<unsigned int>((j > 0) ? j : 0);
+		size_t m = this->num_base_ - 1
+				- static_cast<size_t>(this->polynomial_order_);
+		size_t k = static_cast<size_t>((j > 0) ? j : 0);
+		k = (k > m) ? m : k;
+		size_t num_elements = static_cast<size_t>(this->polynomial_order_ + 1);
 		// call polynomial interpolation
-		int status = PerformNevilleAlgorithm<YDataType>(this->x_base_,
-				this->y_base_, k, this->polynomial_order_ + 1, x_interpolated,
-				y_interpolated);
+		PerformNevilleAlgorithm<YDataType>(this->x_base_, this->y_base_, k,
+				num_elements, x_interpolated, y_interpolated);
 	}
 };
 
