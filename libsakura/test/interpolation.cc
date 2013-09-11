@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <cmath>
 
 #include <libsakura/sakura.h>
 
@@ -70,7 +71,7 @@ TEST_F(Interpolate1dFloatTest, InvalidType) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -81,7 +82,8 @@ TEST_F(Interpolate1dFloatTest, InvalidType) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNumMethod, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Should return InvalidArgument status
 	EXPECT_EQ(sakura_Status_kInvalidArgument, result)
@@ -98,7 +100,7 @@ TEST_F(Interpolate1dFloatTest, Nearest) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -116,7 +118,8 @@ TEST_F(Interpolate1dFloatTest, Nearest) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -124,8 +127,8 @@ TEST_F(Interpolate1dFloatTest, Nearest) {
 
 	// Value check
 	for (size_t index = 0; index < num_interpolated; ++index) {
-		std::cout << "Expected value at index " << index << ": " << y_expected_[index]
-				<< std::endl;
+		std::cout << "Expected value at index " << index << ": "
+				<< y_expected_[index] << std::endl;
 		EXPECT_EQ(y_expected_[index], y_interpolated_[index])
 				<< "interpolated value differs from expected value at " << index
 				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
@@ -142,7 +145,7 @@ TEST_F(Interpolate1dFloatTest, NearestDescending) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[1] = 0.0;
 	x_base_[0] = 1.0;
-	y_base_[1] =  1.0;
+	y_base_[1] = 1.0;
 	y_base_[0] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -160,7 +163,8 @@ TEST_F(Interpolate1dFloatTest, NearestDescending) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -168,8 +172,8 @@ TEST_F(Interpolate1dFloatTest, NearestDescending) {
 
 	// Value check
 	for (size_t index = 0; index < num_interpolated; ++index) {
-		std::cout << "Expected value at index " << index << ": " << y_expected_[index]
-				<< std::endl;
+		std::cout << "Expected value at index " << index << ": "
+				<< y_expected_[index] << std::endl;
 		EXPECT_EQ(y_expected_[index], y_interpolated_[index])
 				<< "interpolated value differs from expected value at " << index
 				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
@@ -186,7 +190,7 @@ TEST_F(Interpolate1dFloatTest, NearestOpposite) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[1] = 0.0;
 	x_base_[0] = 1.0;
-	y_base_[1] =  1.0;
+	y_base_[1] = 1.0;
 	y_base_[0] = -1.0;
 	x_interpolated_[5] = -1.0;
 	x_interpolated_[4] = 0.0;
@@ -204,7 +208,8 @@ TEST_F(Interpolate1dFloatTest, NearestOpposite) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -212,15 +217,16 @@ TEST_F(Interpolate1dFloatTest, NearestOpposite) {
 
 	// Value check
 	for (size_t index = 0; index < num_interpolated; ++index) {
-		std::cout << "Expected value at index " << index << ": " << y_expected_[index]
-				<< std::endl;
+		std::cout << "Expected value at index " << index << ": "
+				<< y_expected_[index] << std::endl;
 		EXPECT_EQ(y_expected_[index], y_interpolated_[index])
 				<< "interpolated value differs from expected value at " << index
 				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
 	}
 }
 
-TEST_F(Interpolate1dFloatTest, NearestSingleBase) {
+//TEST_F(Interpolate1dFloatTest, NearestSingleBase) {
+TEST_F(Interpolate1dFloatTest, SingleBase) {
 	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
 
 	size_t const num_base = 1;
@@ -231,13 +237,14 @@ TEST_F(Interpolate1dFloatTest, NearestSingleBase) {
 	x_base_[0] = 0.0;
 	y_base_[0] = 1.0;
 	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] =  0.0;
-	x_interpolated_[2] =  0.1;
+	x_interpolated_[1] = 0.0;
+	x_interpolated_[2] = 0.1;
 
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -264,7 +271,7 @@ TEST_F(Interpolate1dFloatTest, Linear) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -272,17 +279,18 @@ TEST_F(Interpolate1dFloatTest, Linear) {
 	x_interpolated_[3] = 0.5;
 	x_interpolated_[4] = 0.7;
 	x_interpolated_[5] = 1.5;
-	y_expected_[0] =  1.0;
-	y_expected_[1] =  1.0;
-	y_expected_[2] =  0.8;
-	y_expected_[3] =  0.0;
+	y_expected_[0] = 1.0;
+	y_expected_[1] = 1.0;
+	y_expected_[2] = 0.8;
+	y_expected_[3] = 0.0;
 	y_expected_[4] = -0.4;
 	y_expected_[5] = -1.0;
 
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -308,7 +316,7 @@ TEST_F(Interpolate1dFloatTest, LinearDescending) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[1] = 0.0;
 	x_base_[0] = 1.0;
-	y_base_[1] =  1.0;
+	y_base_[1] = 1.0;
 	y_base_[0] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -316,17 +324,18 @@ TEST_F(Interpolate1dFloatTest, LinearDescending) {
 	x_interpolated_[3] = 0.5;
 	x_interpolated_[4] = 0.7;
 	x_interpolated_[5] = 1.5;
-	y_expected_[0] =  1.0;
-	y_expected_[1] =  1.0;
-	y_expected_[2] =  0.8;
-	y_expected_[3] =  0.0;
+	y_expected_[0] = 1.0;
+	y_expected_[1] = 1.0;
+	y_expected_[2] = 0.8;
+	y_expected_[3] = 0.0;
 	y_expected_[4] = -0.4;
 	y_expected_[5] = -1.0;
 
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -352,7 +361,7 @@ TEST_F(Interpolate1dFloatTest, LinearOpposite) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[1] = 0.0;
 	x_base_[0] = 1.0;
-	y_base_[1] =  1.0;
+	y_base_[1] = 1.0;
 	y_base_[0] = -1.0;
 	x_interpolated_[5] = -1.0;
 	x_interpolated_[4] = 0.0;
@@ -360,17 +369,18 @@ TEST_F(Interpolate1dFloatTest, LinearOpposite) {
 	x_interpolated_[2] = 0.5;
 	x_interpolated_[1] = 0.7;
 	x_interpolated_[0] = 1.5;
-	y_expected_[5] =  1.0;
-	y_expected_[4] =  1.0;
-	y_expected_[3] =  0.8;
-	y_expected_[2] =  0.0;
+	y_expected_[5] = 1.0;
+	y_expected_[4] = 1.0;
+	y_expected_[3] = 0.8;
+	y_expected_[2] = 0.0;
 	y_expected_[1] = -0.4;
 	y_expected_[0] = -1.0;
 
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -386,39 +396,40 @@ TEST_F(Interpolate1dFloatTest, LinearOpposite) {
 	}
 }
 
-TEST_F(Interpolate1dFloatTest, LinearSingleBase) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	size_t const num_base = 1;
-	size_t const num_interpolated = 3;
-
-	// initial setup
-	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	y_base_[0] = 1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] =  0.0;
-	x_interpolated_[2] =  0.1;
-
-	// execute interpolation
-	sakura_Status result = sakura_Interpolate1dFloat(
-			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
-
-	// Basic check whether function is completed or not
-	EXPECT_EQ(sakura_Status_kOK, result)
-			<< "Interpolate1dFloat had any problems during execution.";
-
-	// Value check
-	for (size_t index = 0; index < num_interpolated; ++index) {
-		float reference = y_base_[0];
-		std::cout << "Expected value at index " << index << ": " << reference
-				<< std::endl;
-		EXPECT_EQ(reference, y_interpolated_[index])
-				<< "interpolated value differs from expected value at " << index
-				<< ": " << reference << ", " << y_interpolated_[index];
-	}
-}
+//TEST_F(Interpolate1dFloatTest, LinearSingleBase) {
+//	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+//
+//	size_t const num_base = 1;
+//	size_t const num_interpolated = 3;
+//
+//	// initial setup
+//	AllocateMemory(num_base, num_interpolated);
+//	x_base_[0] = 0.0;
+//	y_base_[0] = 1.0;
+//	x_interpolated_[0] = -1.0;
+//	x_interpolated_[1] = 0.0;
+//	x_interpolated_[2] = 0.1;
+//
+//	// execute interpolation
+//	sakura_Status result = sakura_Interpolate1dFloat(
+//			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
+//			x_base_, y_base_, num_interpolated, x_interpolated_,
+//			y_interpolated_);
+//
+//	// Basic check whether function is completed or not
+//	EXPECT_EQ(sakura_Status_kOK, result)
+//			<< "Interpolate1dFloat had any problems during execution.";
+//
+//	// Value check
+//	for (size_t index = 0; index < num_interpolated; ++index) {
+//		float reference = y_base_[0];
+//		std::cout << "Expected value at index " << index << ": " << reference
+//				<< std::endl;
+//		EXPECT_EQ(reference, y_interpolated_[index])
+//				<< "interpolated value differs from expected value at " << index
+//				<< ": " << reference << ", " << y_interpolated_[index];
+//	}
+//}
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder0) {
 	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
@@ -432,7 +443,7 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder0) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -444,7 +455,8 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder0) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -479,7 +491,7 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1) {
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
@@ -497,7 +509,8 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -527,9 +540,9 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2Full) {
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[2] = 2.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[2] =  0.0;
+	y_base_[2] = 0.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
 	x_interpolated_[2] = 0.1;
@@ -547,7 +560,8 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2Full) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -577,9 +591,9 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullDescending) {
 	x_base_[2] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[0] = 2.0;
-	y_base_[2] =  1.0;
+	y_base_[2] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[0] =  0.0;
+	y_base_[0] = 0.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
 	x_interpolated_[2] = 0.1;
@@ -597,7 +611,8 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullDescending) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -627,9 +642,9 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOpposite) {
 	x_base_[2] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[0] = 2.0;
-	y_base_[2] =  1.0;
+	y_base_[2] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[0] =  0.0;
+	y_base_[0] = 0.0;
 	x_interpolated_[5] = -1.0;
 	x_interpolated_[4] = 0.0;
 	x_interpolated_[3] = 0.1;
@@ -647,7 +662,8 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOpposite) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -677,9 +693,9 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1Sub) {
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[2] = 2.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[2] =  0.0;
+	y_base_[2] = 0.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
 	x_interpolated_[2] = 0.1;
@@ -696,7 +712,8 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1Sub) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -713,41 +730,42 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1Sub) {
 	}
 }
 
-TEST_F(Interpolate1dFloatTest, PolynomialSingleBase) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 1;
-
-	size_t const num_base = 1;
-	size_t const num_interpolated = 3;
-
-	// initial setup
-	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	y_base_[0] = 1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] =  0.0;
-	x_interpolated_[2] =  0.1;
-
-	// execute interpolation
-	sakura_Status result = sakura_Interpolate1dFloat(
-			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
-
-	// Basic check whether function is completed or not
-	EXPECT_EQ(sakura_Status_kOK, result)
-			<< "Interpolate1dFloat had any problems during execution.";
-
-	// Value check
-	for (size_t index = 0; index < num_interpolated; ++index) {
-		float reference = y_base_[0];
-		std::cout << "Expected value at index " << index << ": " << reference
-				<< std::endl;
-		EXPECT_EQ(reference, y_interpolated_[index])
-				<< "interpolated value differs from expected value at " << index
-				<< ": " << reference << ", " << y_interpolated_[index];
-	}
-}
+//TEST_F(Interpolate1dFloatTest, PolynomialSingleBase) {
+//	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+//
+//	polynomial_order_ = 1;
+//
+//	size_t const num_base = 1;
+//	size_t const num_interpolated = 3;
+//
+//	// initial setup
+//	AllocateMemory(num_base, num_interpolated);
+//	x_base_[0] = 0.0;
+//	y_base_[0] = 1.0;
+//	x_interpolated_[0] = -1.0;
+//	x_interpolated_[1] = 0.0;
+//	x_interpolated_[2] = 0.1;
+//
+//	// execute interpolation
+//	sakura_Status result = sakura_Interpolate1dFloat(
+//			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
+//			x_base_, y_base_, num_interpolated, x_interpolated_,
+//			y_interpolated_);
+//
+//	// Basic check whether function is completed or not
+//	EXPECT_EQ(sakura_Status_kOK, result)
+//			<< "Interpolate1dFloat had any problems during execution.";
+//
+//	// Value check
+//	for (size_t index = 0; index < num_interpolated; ++index) {
+//		float reference = y_base_[0];
+//		std::cout << "Expected value at index " << index << ": " << reference
+//				<< std::endl;
+//		EXPECT_EQ(reference, y_interpolated_[index])
+//				<< "interpolated value differs from expected value at " << index
+//				<< ": " << reference << ", " << y_interpolated_[index];
+//	}
+//}
 
 TEST_F(Interpolate1dFloatTest, Spline) {
 	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
@@ -760,9 +778,9 @@ TEST_F(Interpolate1dFloatTest, Spline) {
 	x_base_[0] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[2] = 2.0;
-	y_base_[0] =  1.0;
+	y_base_[0] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[2] =  0.0;
+	y_base_[2] = 0.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
 	x_interpolated_[2] = 0.1;
@@ -779,7 +797,8 @@ TEST_F(Interpolate1dFloatTest, Spline) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -807,9 +826,9 @@ TEST_F(Interpolate1dFloatTest, SplineDescending) {
 	x_base_[2] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[0] = 2.0;
-	y_base_[2] =  1.0;
+	y_base_[2] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[0] =  0.0;
+	y_base_[0] = 0.0;
 	x_interpolated_[0] = -1.0;
 	x_interpolated_[1] = 0.0;
 	x_interpolated_[2] = 0.1;
@@ -826,7 +845,8 @@ TEST_F(Interpolate1dFloatTest, SplineDescending) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -854,9 +874,9 @@ TEST_F(Interpolate1dFloatTest, SplineOpposite) {
 	x_base_[2] = 0.0;
 	x_base_[1] = 1.0;
 	x_base_[0] = 2.0;
-	y_base_[2] =  1.0;
+	y_base_[2] = 1.0;
 	y_base_[1] = -1.0;
-	y_base_[0] =  0.0;
+	y_base_[0] = 0.0;
 	x_interpolated_[5] = -1.0;
 	x_interpolated_[4] = 0.0;
 	x_interpolated_[3] = 0.1;
@@ -873,7 +893,8 @@ TEST_F(Interpolate1dFloatTest, SplineOpposite) {
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
 			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
@@ -890,36 +911,307 @@ TEST_F(Interpolate1dFloatTest, SplineOpposite) {
 	}
 }
 
-TEST_F(Interpolate1dFloatTest, SplineSingleBase) {
+//TEST_F(Interpolate1dFloatTest, SplineSingleBase) {
+//	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+//
+//	size_t const num_base = 1;
+//	size_t const num_interpolated = 3;
+//
+//	// initial setup
+//	AllocateMemory(num_base, num_interpolated);
+//	x_base_[0] = 0.0;
+//	y_base_[0] = 1.0;
+//	x_interpolated_[0] = -1.0;
+//	x_interpolated_[1] = 0.0;
+//	x_interpolated_[2] = 0.1;
+//
+//	// execute interpolation
+//	sakura_Status result = sakura_Interpolate1dFloat(
+//			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
+//			x_base_, y_base_, num_interpolated, x_interpolated_,
+//			y_interpolated_);
+//
+//	// Basic check whether function is completed or not
+//	EXPECT_EQ(sakura_Status_kOK, result)
+//			<< "Interpolate1dFloat had any problems during execution.";
+//
+//	// Value check
+//	for (size_t index = 0; index < num_interpolated; ++index) {
+//		float reference = y_base_[0];
+//		std::cout << "Expected value at index " << index << ": " << reference
+//				<< std::endl;
+//		EXPECT_EQ(reference, y_interpolated_[index])
+//				<< "interpolated value differs from expected value at " << index
+//				<< ": " << reference << ", " << y_interpolated_[index];
+//	}
+//}
+
+TEST_F(Interpolate1dFloatTest, SingleBasePerformance) {
 	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
 
 	size_t const num_base = 1;
-	size_t const num_interpolated = 3;
+	size_t const num_interpolated = 200000000;
 
 	// initial setup
 	AllocateMemory(num_base, num_interpolated);
 	x_base_[0] = 0.0;
 	y_base_[0] = 1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] =  0.0;
-	x_interpolated_[2] =  0.1;
+	double dx = 1.0 / static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = -0.5 + dx * static_cast<double>(i);
+	}
 
 	// execute interpolation
 	sakura_Status result = sakura_Interpolate1dFloat(
-			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
-			x_base_, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
 
 	// Basic check whether function is completed or not
 	EXPECT_EQ(sakura_Status_kOK, result)
 			<< "Interpolate1dFloat had any problems during execution.";
+}
 
-	// Value check
-	for (size_t index = 0; index < num_interpolated; ++index) {
-		float reference = y_base_[0];
-		std::cout << "Expected value at index " << index << ": " << reference
-				<< std::endl;
-		EXPECT_EQ(reference, y_interpolated_[index])
-				<< "interpolated value differs from expected value at " << index
-				<< ": " << reference << ", " << y_interpolated_[index];
+TEST_F(Interpolate1dFloatTest, NearestPerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 2;
+	size_t const num_interpolated = 200000000;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[0] = 0.0;
+	x_base_[1] = 100.0;
+	y_base_[0] = 1.0;
+	y_base_[1] = 0.0;
+	double dx = fabs(x_base_[1] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
 	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, NearestOppositePerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 2;
+	size_t const num_interpolated = 200000000;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[1] = 0.0;
+	x_base_[0] = 100.0;
+	y_base_[1] = 1.0;
+	y_base_[0] = 0.0;
+	double dx = fabs(x_base_[1] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] - dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kNearest, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, LinearPerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 2;
+	size_t const num_interpolated = 200000000;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[0] = 0.0;
+	x_base_[1] = 100.0;
+	y_base_[0] = 1.0;
+	y_base_[1] = 0.0;
+	double dx = fabs(x_base_[1] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, LinearOppositePerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 2;
+	size_t const num_interpolated = 200000000;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[1] = 0.0;
+	x_base_[0] = 100.0;
+	y_base_[1] = 1.0;
+	y_base_[0] = 0.0;
+	double dx = fabs(x_base_[1] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] - dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kLinear, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullPerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	polynomial_order_ = 2;
+
+	size_t const num_base = 3;
+	size_t const num_interpolated = 20000000; // 1/10 of Nearest and Linear
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[0] = 0.0;
+	x_base_[1] = 100.0;
+	x_base_[2] = 200.0;
+	y_base_[0] = 1.0;
+	y_base_[1] = -1.0;
+	y_base_[2] = 0.0;
+	double dx = fabs(x_base_[2] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOppositePerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	polynomial_order_ = 2;
+
+	size_t const num_base = 3;
+	size_t const num_interpolated = 20000000; // 1/10 of Nearest and Linear
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[2] = 0.0;
+	x_base_[1] = 100.0;
+	x_base_[0] = 200.0;
+	y_base_[2] = 1.0;
+	y_base_[1] = -1.0;
+	y_base_[0] = 0.0;
+	double dx = fabs(x_base_[2] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] - dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kPolynomial, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, SplinePerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 3;
+	size_t const num_interpolated = 200000000;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[0] = 0.0;
+	x_base_[1] = 100.0;
+	x_base_[2] = 200.0;
+	y_base_[0] = 1.0;
+	y_base_[1] = -1.0;
+	y_base_[2] = 0.0;
+	double dx = fabs(x_base_[2] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
+}
+
+TEST_F(Interpolate1dFloatTest, SplineOppositePerformance) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	size_t const num_base = 3;
+	size_t const num_interpolated = 200000000;
+
+	// initial setup
+	AllocateMemory(num_base, num_interpolated);
+	x_base_[2] = 0.0;
+	x_base_[1] = 100.0;
+	x_base_[0] = 200.0;
+	y_base_[2] = 1.0;
+	y_base_[1] = -1.0;
+	y_base_[0] = 0.0;
+	double dx = fabs(x_base_[2] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] - dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kSpline, polynomial_order_, num_base,
+			x_base_, y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Basic check whether function is completed or not
+	EXPECT_EQ(sakura_Status_kOK, result)
+			<< "Interpolate1dFloat had any problems during execution.";
 }
