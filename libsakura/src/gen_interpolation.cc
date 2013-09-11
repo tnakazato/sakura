@@ -61,8 +61,6 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
 
-	size_t left_index = start_position;
-	size_t right_index = num_base;
 	if (x_base[0] < x_base[num_base - 1]) {
 		// ascending order
 		if (x_located <= x_base[0]) {
