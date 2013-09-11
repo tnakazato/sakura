@@ -303,6 +303,22 @@ public:
 };
 
 template<class XDataType, class YDataType>
+YDataType const *GetAscendingArray(size_t num_array, XDataType const x_base[],
+		YDataType const base_array[], std::unique_ptr<YDataType[]> *storage) {
+	if (x_base[0] < x_base[num_array - 1]) {
+		return base_array;
+	} else {
+		YDataType const *output_array = GetAlignedArray<YDataType>(num_array,
+				storage);
+		YDataType *work_array = const_cast<YDataType *>(output_array);
+		for (size_t i = 0; i < num_array; ++i) {
+			work_array[i] = base_array[num_array - 1 - i];
+		}
+		return output_array;
+	}
+}
+
+template<class XDataType, class YDataType>
 InterpolationWorker<XDataType, YDataType> *CreateInterpolationWorker(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 		XDataType const x_base[], YDataType const y_base[],
@@ -371,51 +387,27 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	} else {
-		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-
 		// make input arrays ascending order
-		size_t elements_in_arena = num_base + sakura_alignment - 1;
 		std::unique_ptr<XDataType[]> storage_for_x_base_work;
 		std::unique_ptr<YDataType[]> storage_for_y_base_work;
-		const XDataType *x_base_work;
-		const YDataType *y_base_work;
-		if (x_base[0] < x_base[num_base - 1]) {
-			x_base_work = const_cast<XDataType *>(x_base);
-			y_base_work = const_cast<YDataType *>(y_base);
-		} else {
-			x_base_work = GetAlignedArray<XDataType>(num_base,
-					&storage_for_x_base_work);
-			y_base_work = GetAlignedArray<YDataType>(num_base,
-					&storage_for_y_base_work);
-			XDataType *x_base_work2 = const_cast<XDataType *>(x_base_work);
-			YDataType *y_base_work2 = const_cast<YDataType *>(y_base_work);
-			for (size_t i = 0; i < num_base; ++i) {
-				x_base_work2[i] = x_base[num_base - 1 - i];
-				y_base_work2[i] = y_base[num_base - 1 - i];
-			}
-		}
-		elements_in_arena = num_interpolated + sakura_alignment - 1;
 		std::unique_ptr<XDataType[]> storage_for_x_interpolated_work;
 		std::unique_ptr<YDataType[]> storage_for_y_interpolated_work;
-		const XDataType *x_interpolated_work;
+		XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
+				num_base, x_base, x_base, &storage_for_x_base_work);
+		YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
+				num_base, x_base, y_base, &storage_for_y_base_work);
+		const XDataType *x_interpolated_work = GetAscendingArray<XDataType,
+				XDataType>(num_interpolated, x_interpolated, x_interpolated,
+				&storage_for_x_interpolated_work);
 		YDataType *y_interpolated_work;
 		bool interpolated_is_ascending = (x_interpolated[0]
 				< x_interpolated[num_interpolated - 1]);
 		if (interpolated_is_ascending) {
-			x_interpolated_work = const_cast<XDataType *>(x_interpolated);
 			y_interpolated_work = y_interpolated;
 		} else {
-			x_interpolated_work = GetAlignedArray<XDataType>(num_interpolated,
-					&storage_for_x_interpolated_work);
 			y_interpolated_work = const_cast<YDataType *>(GetAlignedArray<
 					YDataType>(num_interpolated,
 					&storage_for_y_interpolated_work));
-			XDataType *x_interpolated_work2 =
-					const_cast<XDataType *>(x_interpolated_work);
-			for (size_t i = 0; i < num_interpolated; ++i) {
-				x_interpolated_work2[i] = x_interpolated[num_interpolated - 1
-						- i];
-			}
 		}
 
 		// Generate worker class
@@ -434,16 +426,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// Any preparation for interpolation should be done here
 		interpolator->PrepareForInterpolation();
 
-		elements_in_arena = num_base + sakura_alignment - 1;
-		std::unique_ptr<size_t[]> storage_for_location_base(
-				new size_t[elements_in_arena]);
-		size_t *location_base =
-				reinterpret_cast<size_t *>(LIBSAKURA_SYMBOL(AlignAny)(
-						sizeof(size_t) * elements_in_arena,
-						storage_for_location_base.get(),
-						sizeof(size_t) * num_base));
-
 		// Locate each element in x_base against x_interpolated
+		std::unique_ptr<size_t[]> storage_for_location_base;
+		size_t *location_base = const_cast<size_t *>(GetAlignedArray<size_t>(
+				num_base, &storage_for_location_base));
 		size_t start_position = 0;
 		size_t end_position = num_interpolated - 1;
 		for (size_t i = 0; i < num_base; ++i) {
