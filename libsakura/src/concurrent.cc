@@ -90,6 +90,7 @@ Semaphore::Semaphore(unsigned initial) throw (int) {
 
 Semaphore::~Semaphore() {
 	int result = pthread_mutex_destroy(&mutex_);
+	(void) (0 && result);
 	result = pthread_cond_destroy(&condition_);
 }
 
