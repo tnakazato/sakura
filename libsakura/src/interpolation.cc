@@ -11,6 +11,18 @@ namespace {
 
 using namespace LIBSAKURA_PREFIX;
 
+// get aligned array
+template<class DataType>
+DataType const *GetAlignedArray(size_t num_array,
+		std::unique_ptr<DataType[]> *storage) {
+	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+	size_t elements_in_arena = num_array + sakura_alignment - 1;
+	(*storage).reset(new DataType[elements_in_arena]);
+	return reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
+			sizeof(DataType) * elements_in_arena, (*storage).get(),
+			sizeof(DataType) * num_array));
+}
+
 // Polynomial interpolation using Neville's algorithm
 template<class XDataType, class YDataType>
 void PerformNevilleAlgorithm(XDataType const x_base[], YDataType const y_base[],
@@ -22,16 +34,12 @@ void PerformNevilleAlgorithm(XDataType const x_base[], YDataType const y_base[],
 	YDataType const *y_ptr = &y_base[left_index];
 
 	// storage for C and D in Neville's algorithm
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t elements_in_arena = num_elements + sakura_alignment - 1;
-	std::unique_ptr<YDataType[]> storage_for_c(new YDataType[elements_in_arena]);
-	std::unique_ptr<YDataType[]> storage_for_d(new YDataType[elements_in_arena]);
-	YDataType *c = reinterpret_cast<YDataType*>(LIBSAKURA_SYMBOL(AlignAny)(
-			sizeof(YDataType) * elements_in_arena, storage_for_c.get(),
-			sizeof(YDataType) * num_elements));
-	YDataType *d = reinterpret_cast<YDataType*>(LIBSAKURA_SYMBOL(AlignAny)(
-			sizeof(YDataType) * elements_in_arena, storage_for_d.get(),
-			sizeof(YDataType) * num_elements));
+	std::unique_ptr<YDataType[]> storage_for_c;
+	std::unique_ptr<YDataType[]> storage_for_d;
+	YDataType *c = const_cast<YDataType *>(GetAlignedArray<YDataType>(
+			num_elements, &storage_for_c));
+	YDataType *d = const_cast<YDataType *>(GetAlignedArray<YDataType>(
+			num_elements, &storage_for_d));
 
 	for (size_t i = 0; i < num_elements; ++i) {
 		c[i] = y_ptr[i];
@@ -66,13 +74,9 @@ template<class XDataType, class YDataType>
 void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 		XDataType const x_base[], YDataType const y_base[],
 		YDataType y_base_2nd_derivative[]) {
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t elements_in_arena = num_base + sakura_alignment - 2;
-	std::unique_ptr<YDataType[]> storage_for_u(
-			new YDataType[elements_in_arena]);
-	YDataType *upper_triangular =
-			const_cast<YDataType *>(LIBSAKURA_SYMBOL(AlignFloat)(
-					elements_in_arena, storage_for_u.get(), num_base - 1));
+	std::unique_ptr<YDataType[]> storage_for_u;
+	YDataType *upper_triangular = const_cast<YDataType *>(GetAlignedArray<
+			YDataType>(num_base, &storage_for_u));
 
 	// This is a condition of natural cubic spline
 	y_base_2nd_derivative[0] = 0.0;
@@ -227,8 +231,8 @@ public:
 		k = (k > m) ? m : k;
 		size_t num_elements = static_cast<size_t>(this->polynomial_order_ + 1);
 		// call polynomial interpolation
-		PerformNevilleAlgorithm<XDataType, YDataType>(this->x_base_, this->y_base_, k,
-				num_elements, x_interpolated, y_interpolated);
+		PerformNevilleAlgorithm<XDataType, YDataType>(this->x_base_,
+				this->y_base_, k, num_elements, x_interpolated, y_interpolated);
 	}
 };
 
@@ -246,14 +250,8 @@ public:
 		// Derive second derivative at x_base
 		const bool kIsDescending = (this->x_base_[0]
 				> this->x_base_[this->num_base_ - 1]);
-		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-		size_t elements_in_arena = this->num_base_ + sakura_alignment - 1;
-		storage_for_y_.reset(new YDataType[elements_in_arena]);
-		y_base_2nd_derivative_ =
-				const_cast<YDataType *>(reinterpret_cast<YDataType const *>(LIBSAKURA_SYMBOL(AlignAny)(
-						sizeof(YDataType) * elements_in_arena,
-						storage_for_y_.get(),
-						sizeof(YDataType) * this->num_base_)));
+		y_base_2nd_derivative_ = const_cast<YDataType *>(GetAlignedArray<
+				YDataType>(this->num_base_, &storage_for_y_));
 		DeriveSplineCorrectionTerm<XDataType, YDataType>(kIsDescending,
 				this->num_base_, this->x_base_, this->y_base_,
 				y_base_2nd_derivative_);
@@ -350,7 +348,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 namespace LIBSAKURA_PREFIX {
 
 template<class XDataType, class YDataType>
-LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::Interpolate1d(
+LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType,
+		YDataType>::Interpolate1d(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, size_t num_base,
 		XDataType const x_base[/* num_base */],
@@ -384,16 +383,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			x_base_work = const_cast<XDataType *>(x_base);
 			y_base_work = const_cast<YDataType *>(y_base);
 		} else {
-			storage_for_x_base_work.reset(new XDataType[elements_in_arena]);
-			x_base_work = reinterpret_cast<XDataType *>(LIBSAKURA_SYMBOL(AlignAny)(
-					sizeof(XDataType) * elements_in_arena,
-					storage_for_x_base_work.get(), sizeof(XDataType) * num_base));
-			storage_for_y_base_work.reset(new YDataType[elements_in_arena]);
-			y_base_work =
-					reinterpret_cast<YDataType *>(LIBSAKURA_SYMBOL(AlignAny)(
-							sizeof(YDataType) * elements_in_arena,
-							storage_for_y_base_work.get(),
-							sizeof(YDataType) * num_base));
+			x_base_work = GetAlignedArray<XDataType>(num_base,
+					&storage_for_x_base_work);
+			y_base_work = GetAlignedArray<YDataType>(num_base,
+					&storage_for_y_base_work);
 			XDataType *x_base_work2 = const_cast<XDataType *>(x_base_work);
 			YDataType *y_base_work2 = const_cast<YDataType *>(y_base_work);
 			for (size_t i = 0; i < num_base; ++i) {
@@ -412,20 +405,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			x_interpolated_work = const_cast<XDataType *>(x_interpolated);
 			y_interpolated_work = y_interpolated;
 		} else {
-			storage_for_x_interpolated_work.reset(
-					new XDataType[elements_in_arena]);
-			x_interpolated_work =
-					reinterpret_cast<XDataType *>(LIBSAKURA_SYMBOL(AlignAny)(
-							sizeof(XDataType) * elements_in_arena,
-							storage_for_x_interpolated_work.get(),
-							sizeof(XDataType) * num_interpolated));
-			storage_for_y_interpolated_work.reset(
-					new YDataType[elements_in_arena]);
-			y_interpolated_work =
-					reinterpret_cast<YDataType *>(LIBSAKURA_SYMBOL(AlignAny)(
-							sizeof(YDataType) * elements_in_arena,
-							storage_for_y_interpolated_work.get(),
-							sizeof(YDataType) * num_interpolated));
+			x_interpolated_work = GetAlignedArray<XDataType>(num_interpolated,
+					&storage_for_x_interpolated_work);
+			y_interpolated_work = const_cast<YDataType *>(GetAlignedArray<
+					YDataType>(num_interpolated,
+					&storage_for_y_interpolated_work));
 			XDataType *x_interpolated_work2 =
 					const_cast<XDataType *>(x_interpolated_work);
 			for (size_t i = 0; i < num_interpolated; ++i) {
