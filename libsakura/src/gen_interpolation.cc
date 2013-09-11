@@ -32,6 +32,8 @@ namespace {
 template<typename DataType>
 size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		DataType const x_base[], DataType x_located) {
+	assert(num_base > 0);
+	assert(start_position <= end_position);
 	assert(end_position < num_base);
 	assert(x_base != nullptr);
 
