@@ -18,7 +18,7 @@ DataType const *GetAlignedArray(size_t num_array,
 		std::unique_ptr<DataType[]> *storage) {
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t elements_in_arena = num_array + sakura_alignment - 1;
-	(*storage).reset(new DataType[elements_in_arena]);
+	storage->reset(new DataType[elements_in_arena]);
 	return reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
 			sizeof(DataType) * elements_in_arena, (*storage).get(),
 			sizeof(DataType) * num_array));
@@ -132,22 +132,6 @@ void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 }
 
 template<class XDataType, class YDataType>
-YDataType DoSplineInterpolation(size_t lower_index, size_t upper_index,
-		size_t lower_index_correct, size_t upper_index_correct,
-		XDataType x_interpolated, XDataType const x_base[],
-		YDataType const y_base[], float const y_base_2nd_derivative[]) {
-	XDataType dx = x_base[upper_index] - x_base[lower_index];
-	XDataType a = (x_base[upper_index] - x_interpolated) / dx;
-	XDataType b = (x_interpolated - x_base[lower_index]) / dx;
-	return static_cast<YDataType>(a * y_base[lower_index]
-			+ b * y_base[upper_index]
-			+ ((a * a * a - a) * y_base_2nd_derivative[lower_index_correct]
-					+ (b * b * b - b)
-							* y_base_2nd_derivative[upper_index_correct])
-					* (dx * dx) / 6.0);
-}
-
-template<class XDataType, class YDataType>
 class InterpolationWorker {
 public:
 	InterpolationWorker(size_t num_base, XDataType const x_base[],
@@ -159,8 +143,9 @@ public:
 	}
 	virtual void PrepareForInterpolation() {
 	}
-	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType *y_interpolated) = 0;
+	virtual void Interpolate(size_t left_index, size_t right_index,
+			size_t location, XDataType const x_interpolated[],
+			YDataType y_interpolated[]) = 0;
 protected:
 	size_t num_base_;
 	XDataType const *x_base_;
@@ -178,17 +163,21 @@ public:
 	}
 	virtual ~NearestInterpolationWorker() {
 	}
-	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType *y_interpolated) {
-		XDataType dx = static_cast<XDataType>(fabs(
-				this->x_base_[location] - this->x_base_[location - 1]));
-		XDataType dx_right = static_cast<XDataType>(fabs(
-				x_interpolated - this->x_base_[location]));
-		// nearest condition
-		// if dx_right / dx > 0.5, index will be (location - 1) which means nearest
-		// is left side. Otherwise, index will be (location), right side.
-		*y_interpolated = this->y_base_[location
-				- static_cast<int>((dx_right) / dx + 0.5)];
+	virtual void Interpolate(size_t left_index, size_t right_index,
+			size_t location, XDataType const x_interpolated[],
+			YDataType y_interpolated[]) {
+		XDataType dx = fabs(
+				this->x_base_[location] - this->x_base_[location - 1]);
+		for (size_t i = left_index; i < right_index; ++i) {
+			XDataType dx_right = fabs(
+					x_interpolated[i] - this->x_base_[location]);
+			// nearest condition
+			// if dx_right / dx > 0.5, index will be (location - 1) which means nearest
+			// is left side. Otherwise, index will be (location), right side.
+			y_interpolated[i] = this->y_base_[location
+					- static_cast<size_t>((dx_right) / dx + 0.5)];
+
+		}
 	}
 };
 
@@ -201,14 +190,19 @@ public:
 	}
 	virtual ~LinearInterpolationWorker() {
 	}
-	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType *y_interpolated) {
-		*y_interpolated =
-				this->y_base_[location - 1]
-						+ (this->y_base_[location] - this->y_base_[location - 1])
-								* (x_interpolated - this->x_base_[location - 1])
-								/ (this->x_base_[location]
-										- this->x_base_[location - 1]);
+	virtual void Interpolate(size_t left_index, size_t right_index,
+			size_t location, XDataType const x_interpolated[],
+			YDataType y_interpolated[]) {
+		XDataType dydx = static_cast<XDataType>(this->y_base_[location]
+				- this->y_base_[location - 1])
+				/ (this->x_base_[location] - this->x_base_[location - 1]);
+		for (size_t i = left_index; i < right_index; ++i) {
+			y_interpolated[i] =
+					this->y_base_[location - 1]
+							+ static_cast<XDataType>(dydx
+									* (x_interpolated[i]
+											- this->x_base_[location - 1]));
+		}
 	}
 };
 
@@ -223,17 +217,20 @@ public:
 	}
 	virtual ~PolynomialInterpolationWorker() {
 	}
-	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType *y_interpolated) {
+	virtual void Interpolate(size_t left_index, size_t right_index,
+			size_t location, XDataType const x_interpolated[],
+			YDataType y_interpolated[]) {
 		int j = location - 1 - this->polynomial_order_ / 2;
 		size_t m = this->num_base_ - 1
 				- static_cast<size_t>(this->polynomial_order_);
 		size_t k = static_cast<size_t>((j > 0) ? j : 0);
 		k = (k > m) ? m : k;
 		size_t num_elements = static_cast<size_t>(this->polynomial_order_ + 1);
-		// call polynomial interpolation
-		PerformNevilleAlgorithm<XDataType, YDataType>(this->x_base_,
-				this->y_base_, k, num_elements, x_interpolated, y_interpolated);
+		for (size_t i = left_index; i < right_index; ++i) {
+			PerformNevilleAlgorithm<XDataType, YDataType>(this->x_base_,
+					this->y_base_, k, num_elements, x_interpolated[i],
+					&y_interpolated[i]);
+		}
 	}
 };
 
@@ -273,13 +270,24 @@ public:
 	}
 	virtual ~SplineInterpolationWorkerDescending() {
 	}
-	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType *y_interpolated) {
+	virtual void Interpolate(size_t left_index, size_t right_index,
+			size_t location, XDataType const x_interpolated[],
+			YDataType y_interpolated[]) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
-		*y_interpolated = DoSplineInterpolation<XDataType, YDataType>(location,
-				location - 1, this->num_base_ - location - 1,
-				this->num_base_ - location - 2, x_interpolated, this->x_base_,
-				this->y_base_, this->y_base_2nd_derivative_);
+		XDataType dx = this->x_base_[location] - this->x_base_[location - 1];
+		for (size_t i = left_index; i < right_index; ++i) {
+			XDataType a = (this->x_base_[location] - x_interpolated[i]) / dx;
+			XDataType b = (x_interpolated[i] - this->x_base_[location - 1]) / dx;
+			y_interpolated[i] = static_cast<YDataType>(a * this->y_base_[location - 1]
+					+ b * this->y_base_[location]
+					+ ((a * a * a - a)
+							* this->y_base_2nd_derivative_[this->num_base_ - location
+									- 2]
+							+ (b * b * b - b)
+									* this->y_base_2nd_derivative_[this->num_base_
+											- location - 1]) * (dx * dx) / 6.0);
+
+		}
 	}
 };
 
@@ -294,12 +302,21 @@ public:
 	}
 	virtual ~SplineInterpolationWorkerAscending() {
 	}
-	virtual void Interpolate(size_t location, XDataType x_interpolated,
-			YDataType *y_interpolated) {
+	virtual void Interpolate(size_t left_index, size_t right_index,
+			size_t location, XDataType const x_interpolated[],
+			YDataType y_interpolated[]) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
-		*y_interpolated = DoSplineInterpolation<XDataType, YDataType>(
-				location - 1, location, location - 1, location, x_interpolated,
-				this->x_base_, this->y_base_, this->y_base_2nd_derivative_);
+		XDataType dx = this->x_base_[location] - this->x_base_[location - 1];
+		for (size_t i = left_index; i < right_index; ++i) {
+			XDataType a = (this->x_base_[location] - x_interpolated[i]) / dx;
+			XDataType b = (x_interpolated[i] - this->x_base_[location - 1]) / dx;
+			y_interpolated[i] = static_cast<YDataType>(a * this->y_base_[location - 1]
+					+ b * this->y_base_[location]
+					+ ((a * a * a - a) * this->y_base_2nd_derivative_[location - 1]
+							+ (b * b * b - b) * this->y_base_2nd_derivative_[location])
+							* (dx * dx) / 6.0);
+
+		}
 	}
 };
 
@@ -434,10 +451,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		for (size_t i = 0; i < num_base - 1; ++i) {
 			left_index = location_base[i];
 			right_index = location_base[i + 1];
-			for (size_t j = left_index; j < right_index; ++j) {
-				interpolator->Interpolate(i + 1, x_interpolated_work[j],
-						&y_interpolated[j]);
-			}
+			interpolator->Interpolate(left_index, right_index, i + 1,
+					x_interpolated_work, y_interpolated);
 		}
 
 		// Outside of x_base[num_base-1]
