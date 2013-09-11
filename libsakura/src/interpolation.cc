@@ -86,10 +86,9 @@ void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 	if (is_descending) {
 		// x_base is descending order
 		double a1 = x_base[num_base - 2] - x_base[num_base - 1];
-		double a2, b1;
 		for (size_t i = 1; i < num_base - 1; ++i) {
-			a2 = x_base[num_base - i - 2] - x_base[num_base - i - 1];
-			b1 = 1.0 / (x_base[num_base - i - 2] - x_base[num_base - i]);
+			double a2 = x_base[num_base - i - 2] - x_base[num_base - i - 1];
+			double b1 = 1.0 / (x_base[num_base - i - 2] - x_base[num_base - i]);
 			y_base_2nd_derivative[i] = 3.0 * b1
 					* ((y_base[num_base - i - 2] - y_base[num_base - i - 1])
 							/ a2
@@ -104,10 +103,9 @@ void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 	} else {
 		// x_base is ascending order
 		double a1 = x_base[1] - x_base[0];
-		double a2, b1;
 		for (size_t i = 1; i < num_base - 1; ++i) {
-			a2 = x_base[i + 1] - x_base[i];
-			b1 = 1.0 / (x_base[i + 1] - x_base[i - 1]);
+			double a2 = x_base[i + 1] - x_base[i];
+			double b1 = 1.0 / (x_base[i + 1] - x_base[i - 1]);
 			y_base_2nd_derivative[i] = 3.0 * b1
 					* ((y_base[i + 1] - y_base[i]) / a2
 							- (y_base[i] - y_base[i - 1]) / a1
