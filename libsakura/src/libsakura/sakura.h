@@ -429,6 +429,8 @@ typedef enum {
  *
  * @par 多項式補間の動作について:
  * @par
+ * @a polynomial_orderは0または正の整数でなければならない。
+ * @par
  * @a polynomial_orderはあくまで最大次数を規定するものであり、その次数で必ず
  * 補間が行われるとは限らない。たとえば、@a polynomial_orderが2（二次多項式による補間）
  * で@a num_baseが2の場合、実際には2点を通る一次多項式が一意に決まるため、二次多項式に
@@ -439,6 +441,7 @@ typedef enum {
  * @par
  * @param[in] interpolation_method 補間方法
  * @param[in] polynomial_order 多項式補間法の場合の最大次数。
+ * @a polynomial_orderは0または正の整数でなければならない。
  * 実際の次数は、@a num_baseとの兼ね合いで決まる。
  * @param[in] num_base 補間のためのデータ点の数。
  * @param[in] x_base 補間のためのデータ点のx座標。
