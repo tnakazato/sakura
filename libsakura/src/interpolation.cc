@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <cstdalign>
+#include <utility>
 
 #include <libsakura/sakura.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
@@ -327,11 +328,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
 		return new NearestInterpolationWorker<XDataType, YDataType>(num_base,
 				x_base, y_base);
-		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
 		return new LinearInterpolationWorker<XDataType, YDataType>(num_base,
 				x_base, y_base);
-		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
 		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
@@ -347,15 +346,12 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 			return new PolynomialInterpolationWorker<XDataType, YDataType>(
 					num_base, x_base, y_base, polynomial_order);
 		}
-		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
 		return new SplineInterpolationWorkerAscending<XDataType, YDataType>(
 				num_base, x_base, y_base);
-		break;
 	default:
 		// invalid interpolation method type
 		return nullptr;
-		break;
 	}
 }
 
@@ -391,24 +387,13 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		std::unique_ptr<XDataType[]> storage_for_x_base_work;
 		std::unique_ptr<YDataType[]> storage_for_y_base_work;
 		std::unique_ptr<XDataType[]> storage_for_x_interpolated_work;
-		std::unique_ptr<YDataType[]> storage_for_y_interpolated_work;
 		XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
 				num_base, x_base, x_base, &storage_for_x_base_work);
 		YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
 				num_base, x_base, y_base, &storage_for_y_base_work);
-		const XDataType *x_interpolated_work = GetAscendingArray<XDataType,
+		XDataType const *x_interpolated_work = GetAscendingArray<XDataType,
 				XDataType>(num_interpolated, x_interpolated, x_interpolated,
 				&storage_for_x_interpolated_work);
-		YDataType *y_interpolated_work;
-		bool interpolated_is_ascending = (x_interpolated[0]
-				< x_interpolated[num_interpolated - 1]);
-		if (interpolated_is_ascending) {
-			y_interpolated_work = y_interpolated;
-		} else {
-			y_interpolated_work = const_cast<YDataType *>(GetAlignedArray<
-					YDataType>(num_interpolated,
-					&storage_for_y_interpolated_work));
-		}
 
 		// Generate worker class
 		std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
@@ -442,7 +427,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t left_index = 0;
 		size_t right_index = location_base[0];
 		for (size_t i = left_index; i < right_index; ++i) {
-			y_interpolated_work[i] = y_base_work[0];
+			y_interpolated[i] = y_base_work[0];
 		}
 
 		// Between x_base[0] and x_base[num_base-1]
@@ -451,7 +436,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			right_index = location_base[i + 1];
 			for (size_t j = left_index; j < right_index; ++j) {
 				interpolator->Interpolate(i + 1, x_interpolated_work[j],
-						&y_interpolated_work[j]);
+						&y_interpolated[j]);
 			}
 		}
 
@@ -459,14 +444,15 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		left_index = location_base[num_base - 1];
 		right_index = num_interpolated;
 		for (size_t i = left_index; i < right_index; ++i) {
-			y_interpolated_work[i] = y_base_work[num_base - 1];
+			y_interpolated[i] = y_base_work[num_base - 1];
 		}
 
-		// copy work array to output array
-		if (!interpolated_is_ascending) {
-			for (size_t i = 0; i < num_interpolated; ++i) {
-				y_interpolated[i] =
-						y_interpolated_work[num_interpolated - 1 - i];
+		// swap output array
+		if (x_interpolated[0] >= x_interpolated[num_interpolated - 1]) {
+			size_t num_interpolated_half = num_interpolated / 2;
+			for (size_t i = 0; i < num_interpolated_half; ++i) {
+				std::swap<YDataType>(y_interpolated[i],
+						y_interpolated[num_interpolated - 1 - i]);
 			}
 		}
 	}
