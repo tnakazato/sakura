@@ -304,6 +304,47 @@ public:
 	}
 };
 
+template<class XDataType, class YDataType>
+InterpolationWorker<XDataType, YDataType> *CreateInterpolationWorker(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
+		XDataType const x_base[], YDataType const y_base[],
+		int polynomial_order) {
+	switch (interpolation_method) {
+	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
+		return new NearestInterpolationWorker<XDataType, YDataType>(num_base,
+				x_base, y_base);
+		break;
+	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
+		return new LinearInterpolationWorker<XDataType, YDataType>(num_base,
+				x_base, y_base);
+		break;
+	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
+		if (polynomial_order == 0) {
+			// This is special case: 0-th polynomial interpolation
+			// acts like nearest interpolation
+			return new NearestInterpolationWorker<XDataType, YDataType>(
+					num_base, x_base, y_base);
+		} else if (static_cast<size_t>(polynomial_order + 1) >= num_base) {
+			// use full region for interpolation
+			return new PolynomialInterpolationWorker<XDataType, YDataType>(
+					num_base, x_base, y_base, num_base - 1);
+		} else {
+			// use sub-region around the nearest points
+			return new PolynomialInterpolationWorker<XDataType, YDataType>(
+					num_base, x_base, y_base, polynomial_order);
+		}
+		break;
+	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
+		return new SplineInterpolationWorkerAscending<XDataType, YDataType>(
+				num_base, x_base, y_base);
+		break;
+	default:
+		// invalid interpolation method type
+		return nullptr;
+		break;
+	}
+}
+
 } /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
@@ -394,54 +435,13 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 
 		// Generate worker class
-		std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator;
-		switch (interpolation_method) {
-		case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
-			interpolator.reset(
-					new NearestInterpolationWorker<XDataType, YDataType>(num_base,
-							x_base_work, y_base_work));
-			break;
-		case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
-			interpolator.reset(
-					new LinearInterpolationWorker<XDataType, YDataType>(num_base,
-							x_base_work, y_base_work));
-			break;
-		case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
-			if (polynomial_order == 0) {
-				// This is special case: 0-th polynomial interpolation
-				// acts like nearest interpolation
-				interpolator.reset(
-						new NearestInterpolationWorker<XDataType, YDataType>(
-								num_base, x_base_work, y_base_work));
-			} else if (polynomial_order + 1 >= static_cast<int>(num_base)) {
-				// use full region for interpolation
-				interpolator.reset(
-						new PolynomialInterpolationWorker<XDataType, YDataType>(
-								num_base, x_base_work, y_base_work,
-								num_base - 1));
-			} else {
-				// use sub-region around the nearest points
-				interpolator.reset(
-						new PolynomialInterpolationWorker<XDataType, YDataType>(
-								num_base, x_base_work, y_base_work,
-								polynomial_order));
-			}
-			break;
-		case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
-//			if (x_base[0] < x_base[num_base - 1]) {
-//				interpolator.reset(
-//						new SplineInterpolationWorkerAscending<XDataType, YDataType>(
-//								num_base, x_base_work, y_base_work));
-//			} else {
-//				interpolator.reset(
-//						new SplineInterpolationWorkerDescending<XDataType, YDataType>(
-//								num_base, x_base_work, y_base_work));
-//			}
-			interpolator.reset(
-					new SplineInterpolationWorkerAscending<XDataType, YDataType>(
-							num_base, x_base_work, y_base_work));
-			break;
-		default:
+		std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
+				CreateInterpolationWorker<XDataType, YDataType>(
+						interpolation_method, num_base, x_base_work,
+						y_base_work, polynomial_order));
+		if (interpolator.get() == nullptr) {
+			// failed to create interpolation worker object
+			// probably due to the invalid method type
 			std::cerr << "ERROR: Invalid interpolation method type"
 					<< std::endl;
 			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
