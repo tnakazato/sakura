@@ -375,6 +375,46 @@ typedef struct {
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
+ /**
+  * @~
+  * @brief TBD
+  * @details TBD
+  *
+  * @param num_in TBD
+  * @param in TBD
+  * @return @a sakura_Status
+  *@~
+  * MT-TBD
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
+ 		size_t num_in, uint8_t const in[/*num_in*/], bool out[/*num_in*/]);
+
+
+  /**
+    * @~
+    * @brief TBD
+    * @details TBD
+    *
+    * @param num_in TBD
+    * @param in TBD
+    * @return @a sakura_Status
+    *@~
+    * MT-TBD
+    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
+   		size_t num_in, uint32_t const in[/*num_in*/], bool out[/*num_in*/]);
+
+    /**
+      * @~
+      * @brief TBD
+      * @details TBD
+      *
+      * @param num_in TBD
+      * @param in TBD
+      * @return @a sakura_Status
+      *@~
+      * MT-TBD
+      */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
+     		size_t num_in, bool const in[/*num_in*/], bool out[/*num_in*/]);
+
 
 /**
  * @~japanese
