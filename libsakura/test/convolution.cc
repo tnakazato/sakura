@@ -108,15 +108,15 @@ protected:
  * gaussian kernel is symmetric
  */
 TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
-        LIBSAKURA_SYMBOL(Convolve1DContext) *context;
-	    float out_left_[NUM_IN]={};
-        float out_right_[NUM_IN]={};
-        float center_[NUM_IN]={};
-	    size_t num_channel=128;
-        size_t kernel_width=3;
-        bool fftuse = true;
-        size_t kernel_center;
-        kernel_center = num_channel/2;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+	float out_left_[NUM_IN]={};
+	float out_right_[NUM_IN]={};
+	float center_[NUM_IN]={};
+	size_t num_channel=128;
+	size_t kernel_width=3;
+	bool fftuse = true;
+	size_t kernel_center;
+	kernel_center = num_channel/2;
 
 	if (verbose) PrintInputs();
 
@@ -145,12 +145,12 @@ TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
  * real part is plus and minus value
  */
 TEST_F(CreateConvolve1DContext , FFTappliedKernelValue) {
-        LIBSAKURA_SYMBOL(Convolve1DContext) *context;
-	    float out1_[NUM_IN]={};
-	    float out2_[NUM_IN]={};
-	    size_t num_channel=128;
-        size_t kernel_width=3;
-        bool fftuse = true;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+	float out1_[NUM_IN]={};
+	float out2_[NUM_IN]={};
+	size_t num_channel=128;
+	size_t kernel_width=3;
+	bool fftuse = true;
 
 	if (verbose) PrintInputs();
 
@@ -164,6 +164,37 @@ TEST_F(CreateConvolve1DContext , FFTappliedKernelValue) {
 	}
 	out2_[0]=context->fft_applied_complex_kernel[0][1];
 	EXPECT_EQ(0,out2_[0]);
+
+	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+}
+
+/*
+ * Test result of FFTWf for gaussian kernel by sakura_CreateConvolve1DContext
+ * RESULT:
+ * smoothing is done
+ */
+TEST_F(CreateConvolve1DContext , FFTWfResult) {
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+
+	float outspec_[NUM_CHANNEL]={};
+	float inspec_[NUM_CHANNEL]={};
+	bool input_flag_[NUM_CHANNEL]={};
+
+	float out1_[NUM_IN]={};
+	float out2_[NUM_IN]={};
+	size_t num_channel=128;
+	size_t kernel_width=3;
+	bool fftuse = true;
+
+	if (verbose) PrintInputs();
+
+	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),kernel_width,fftuse, &context);
+
+	for ( size_t i = 0 ; i < NUM_CHANNEL; ++i){
+		inspec_[i]=context->input_real_array[i];
+		input_flag_[i]=0;
+	}
+	LIBSAKURA_SYMBOL(Convolve1D)(&context,inspec_,input_flag_,outspec_);
 
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
