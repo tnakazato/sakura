@@ -13,14 +13,15 @@ namespace {
 using namespace LIBSAKURA_PREFIX;
 
 // get aligned array
+// allocated memory is managed by unique_ptr that is given as an argument
 template<class DataType>
 DataType const *GetAlignedArray(size_t num_array,
 		std::unique_ptr<DataType[]> *storage) {
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t elements_in_arena = num_array + sakura_alignment - 1;
 	storage->reset(new DataType[elements_in_arena]);
-	return reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
-			sizeof(DataType) * elements_in_arena, (*storage).get(),
+	return reinterpret_cast<DataType const *>(LIBSAKURA_SYMBOL(AlignAny)(
+			sizeof(DataType) * elements_in_arena, storage->get(),
 			sizeof(DataType) * num_array));
 }
 
@@ -355,8 +356,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 		return new LinearInterpolationWorker<XDataType, YDataType>(num_base,
 				x_base, y_base);
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
-		assert(polynomial_order >= 0);
-		if (polynomial_order == 0) {
+		if (polynomial_order < 0) {
+			// invalid polynomial order
+			return nullptr;
+		} else if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
 			return new NearestInterpolationWorker<XDataType, YDataType>(
@@ -406,71 +409,72 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			y_interpolated[index] = y_base[0];
 		}
 		return LIBSAKURA_SYMBOL(Status_kOK);
-	} else {
-		// make input arrays ascending order
-		std::unique_ptr<XDataType[]> storage_for_x_base_work;
-		std::unique_ptr<YDataType[]> storage_for_y_base_work;
-		std::unique_ptr<XDataType[]> storage_for_x_interpolated_work;
-		XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
-				num_base, x_base, x_base, &storage_for_x_base_work);
-		YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
-				num_base, x_base, y_base, &storage_for_y_base_work);
-		XDataType const *x_interpolated_work = GetAscendingArray<XDataType,
-				XDataType>(num_interpolated, x_interpolated, x_interpolated,
-				&storage_for_x_interpolated_work);
+	}
 
-		// Generate worker class
-		std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
-				CreateInterpolationWorker<XDataType, YDataType>(
-						interpolation_method, num_base, x_base_work,
-						y_base_work, polynomial_order));
-		if (interpolator.get() == nullptr) {
-			// failed to create interpolation worker object
-			// probably due to the invalid method type
-			std::cerr << "ERROR: Invalid interpolation method type"
-					<< std::endl;
-			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-		}
+	// Perform 1-dimensional interpolation
 
-		// Any preparation for interpolation should be done here
-		interpolator->PrepareForInterpolation();
+	// make input arrays ascending order
+	std::unique_ptr<XDataType[]> storage_for_x_base_work;
+	std::unique_ptr<YDataType[]> storage_for_y_base_work;
+	std::unique_ptr<XDataType[]> storage_for_x_interpolated_work;
+	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
+			num_base, x_base, x_base, &storage_for_x_base_work);
+	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
+			num_base, x_base, y_base, &storage_for_y_base_work);
+	XDataType const *x_interpolated_work = GetAscendingArray<XDataType,
+			XDataType>(num_interpolated, x_interpolated, x_interpolated,
+			&storage_for_x_interpolated_work);
 
-		// Locate each element in x_base against x_interpolated
-		std::unique_ptr<size_t[]> storage_for_location_base;
-		size_t *location_base = const_cast<size_t *>(GetAlignedArray<size_t>(
-				num_base, &storage_for_location_base));
-		size_t start_position = 0;
-		size_t end_position = num_interpolated - 1;
-		for (size_t i = 0; i < num_base; ++i) {
-			location_base[i] = this->Locate(start_position, end_position,
-					num_interpolated, x_interpolated_work, x_base_work[i]);
-			start_position = location_base[i];
-		}
+	// Generate worker class
+	std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
+			CreateInterpolationWorker<XDataType, YDataType>(
+					interpolation_method, num_base, x_base_work, y_base_work,
+					polynomial_order));
+	if (interpolator.get() == nullptr) {
+		// failed to create interpolation worker object
+		std::cerr
+				<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
+				<< std::endl;
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 
-		// Outside of x_base[0]
-		for (size_t i = 0; i < location_base[0]; ++i) {
-			y_interpolated[i] = y_base_work[0];
-		}
+	// Any preparation for interpolation should be done here
+	interpolator->PrepareForInterpolation();
 
-		// Between x_base[0] and x_base[num_base-1]
-		for (size_t i = 0; i < num_base - 1; ++i) {
-			interpolator->Interpolate(location_base[i], location_base[i + 1],
-					i + 1, x_interpolated_work, y_interpolated);
-		}
+	// Locate each element in x_base against x_interpolated
+	std::unique_ptr<size_t[]> storage_for_location_base;
+	size_t *location_base = const_cast<size_t *>(GetAlignedArray<size_t>(
+			num_base, &storage_for_location_base));
+	size_t start_position = 0;
+	size_t end_position = num_interpolated - 1;
+	for (size_t i = 0; i < num_base; ++i) {
+		location_base[i] = this->Locate(start_position, end_position,
+				num_interpolated, x_interpolated_work, x_base_work[i]);
+		start_position = location_base[i];
+	}
 
-		// Outside of x_base[num_base-1]
-		for (size_t i = location_base[num_base - 1]; i < num_interpolated;
-				++i) {
-			y_interpolated[i] = y_base_work[num_base - 1];
-		}
+	// Outside of x_base[0]
+	for (size_t i = 0; i < location_base[0]; ++i) {
+		y_interpolated[i] = y_base_work[0];
+	}
 
-		// swap output array
-		if (x_interpolated[0] >= x_interpolated[num_interpolated - 1]) {
-			size_t num_interpolated_half = num_interpolated / 2;
-			for (size_t i = 0; i < num_interpolated_half; ++i) {
-				std::swap<YDataType>(y_interpolated[i],
-						y_interpolated[num_interpolated - 1 - i]);
-			}
+	// Between x_base[0] and x_base[num_base-1]
+	for (size_t i = 0; i < num_base - 1; ++i) {
+		interpolator->Interpolate(location_base[i], location_base[i + 1], i + 1,
+				x_interpolated_work, y_interpolated);
+	}
+
+	// Outside of x_base[num_base-1]
+	for (size_t i = location_base[num_base - 1]; i < num_interpolated; ++i) {
+		y_interpolated[i] = y_base_work[num_base - 1];
+	}
+
+	// swap output array
+	if (x_interpolated[0] >= x_interpolated[num_interpolated - 1]) {
+		size_t num_interpolated_half = num_interpolated / 2;
+		for (size_t i = 0; i < num_interpolated_half; ++i) {
+			std::swap<YDataType>(y_interpolated[i],
+					y_interpolated[num_interpolated - 1 - i]);
 		}
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
