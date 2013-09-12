@@ -182,8 +182,8 @@ public:
 //		return &interpolation_default;
 	}
 	virtual LogicalOperation const *GetLogicalOperationImpl() const {
-		return &logical_operation_after_sandy_bridge;
-//		return &logical_operation_default;
+		// return &logical_operation_after_sandy_bridge;
+		return &logical_operation_default;
 	}
 	virtual NumericOperation const *GetNumericOperationImpl() const {
 		// return &numeric_operation_after_sandy_bridge;
