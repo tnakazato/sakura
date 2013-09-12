@@ -90,6 +90,7 @@ namespace {
         	exit(1);
 		}
 
+		(*context)->plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_channel, (*context)->input_real_array, (*context)->fft_applied_complex_kernel,FFTW_ESTIMATE);
 		if((*context)->plan_real_to_complex_float != NULL)
 			fftwf_execute( (*context)-> plan_real_to_complex_float);
 
