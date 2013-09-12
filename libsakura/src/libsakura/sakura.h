@@ -492,6 +492,7 @@ typedef enum {
  * 長さ@a num_interpolated の配列@a y_interpolated に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
  * @a y_interpolated にセットされる）。
+ * 戻り値は終了ステータスである。
  *
  * @par
  * @pre @a x_base および@a x_interpolated は昇順または降順にソートされていなければ
@@ -514,37 +515,41 @@ typedef enum {
  * @a polynomial_order に0を指定した場合、最近接補間が行われる。
  *
  * @par
- * @param in interpolation_method 補間方法
- * @param in polynomial_order 多項式補間法の場合の最大次数。
+ * @param[in] interpolation_method 補間方法
+ * @param[in] polynomial_order 多項式補間法の場合の最大次数。
  * @a polynomial_order は0または正の整数でなければならない。
  * 実際の次数は、@a num_base との兼ね合いで決まる。
- * @param in num_base 補間のためのデータ点の数。
- * @param in x_base 補間のためのデータ点のx座標。
+ * @param[in] num_base 補間のためのデータ点の数。
+ * @param[in] x_base 補間のためのデータ点のx座標。
  * 要素数は@a num_base でなければならない。
  * @a x_base は昇順または降順にソートされていなければならない。
- * @param in y_base 補間のためのデータ点のy座標。
+ * @param[in] y_base 補間のためのデータ点のy座標。
  * 要素数は@a num_base でなければならない。
- * @param in num_interpolated 補間したいデータ点の数。
- * @param in x_interpolated 補間したいデータ点のx座標。
+ * @param[in] num_interpolated 補間したいデータ点の数。
+ * @param[in] x_interpolated 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
  * @a x_interpolated は昇順または降順にソートされていなければならない。
- * @param out y_interpolated 補間結果。
+ * @param[out] y_interpolated 補間結果。
  * 要素数は@a num_base でなければならない。
  * @return 終了ステータス。
  * @~english
  * @brief Perform one-dimensional interpolation
  * @details
- * @param in interpolation_method interpolation method.
- * @param in polynomial_order maximum polynomial order for polynomial interpolation.
+ * @param[in] interpolation_method interpolation method.
+ * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
  * It must be 0 or positive integer. Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
- * @param in num_base
- * @param in x_base
- * @param in y_base
- * @param in num_interpolated
- * @param in x_interpolated
- * @param out y_interpolated
- * @return status
+ * @param[in] num_base number of elements for data points.
+ * @param[in] x_base x-coordinate of data points. Its length must be @a num_base.
+ * It must be sorted either ascending or descending.
+ * @param[in] y_base y-coordinate of data points. Its length must be @a num_base.
+ * @param[in] num_interpolated number of elements for points that wants to get
+ * interpolated value.
+ * @param[in] x_interpolated x-coordinate of points that wants to get interpolated
+ * value. Its length must be @a num_interpolated.
+ * @param[out] y_interpolated storage for interpolation result. Its length must be
+ * @a num_interpolated.
+ * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interoplation_method, int polynomial_order,
