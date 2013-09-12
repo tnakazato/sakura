@@ -23,7 +23,7 @@ extern "C" {
 
 /**
  * @~japanese
- * @brief 関数の呼び出し結果を表す。
+ * @brief 関数の呼び出し結果を表す
  *
  */
 typedef enum {
@@ -35,13 +35,13 @@ typedef enum {
 	 * @brief 失敗または異常
 	 */LIBSAKURA_SYMBOL(Status_kNG) = 1, /**
 	 * @~japanese
-	 * @brief 引数が不正だった。
+	 * @brief 引数が不正だった
 	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2, /**
 	 * @~japanese
-	 * @brief メモリーが足りない。
+	 * @brief メモリーが足りない
 	 */LIBSAKURA_SYMBOL(Status_kNoMemory) = 3, /**
 	 * @~japanese
-	 * @brief 原因不明のエラー。
+	 * @brief 原因不明のエラー
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
 }LIBSAKURA_SYMBOL(Status);
 /**
@@ -49,7 +49,7 @@ typedef enum {
  * @brief Initializes Sakura Library
  * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
  * @~japanese
- * @brief Sakuraライブラリを初期化する。
+ * @brief Sakuraライブラリを初期化する
  *
  * 他の全てのSakuraライブラリAPIの呼び出しに先立って、呼び出すこと。
  * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
@@ -62,7 +62,7 @@ typedef enum {
  * @~english
  * @brief Cleans up Sakura Library
  * @~japanese
- * @brief Sakuraライブラリをクリーンアップする。
+ * @brief Sakuraライブラリをクリーンアップする
  *
  * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
  * また、この関数を呼び出す時点で、他のSakuraライブラリの呼び出しは全て完了しており、以後の呼び出しも発生しないこと。
@@ -75,9 +75,10 @@ void LIBSAKURA_SYMBOL(CleanUp)();
  * @~english
  * @brief Returns the current time.
  * @~japanese
- * @brief 現在時刻(単位は秒)を返す。
+ * @brief 現在時刻(単位は秒)を返す
  *
  * 精度はgettimeofday(2)依存。
+ * @return 現在時刻(単位は秒)
  * @~
  * MT-safe
  */
@@ -90,7 +91,7 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
  * @~japanese
  * @brief Sakuraライブラリが想定するアライメントに、@a ptr が合っているか調べる
  *
- * @param ptr アラインされているか調べたいアドレス。NULL も受け付ける。
+ * @param[in] ptr アラインされているか調べたいアドレス。NULL も受け付ける。
  * @return アラインされているなら true , そうでないなら false
  * @~
  * MT-safe
@@ -111,30 +112,62 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
 /**
  * @~japanese
  * @brief @a arena がアラインされていないならば、
- * アドレスを必要最小限増加させ、アラインされたアドレスを返す。
+ * アドレスを必要最小限増加させ、アラインされたアドレスを返す
+ *
  * @a arena がアラインされていれば@a arena を返す。
  *
- * @param arena 確保されている領域の先頭アドレス
- * @param size_of_arena 確保されている領域のサイズ
- * @param size_required アライン後も利用可能でなければならないサイズ
+ * @param[in] arena 確保されている領域の先頭アドレス
+ * @param[in] size_of_arena 確保されている領域のサイズ
+ * @param[in] size_required アライン後も利用可能でなければならないサイズ
  * @return アラインされたアドレス。もし、 @a size_required を格納するのに
- * 十分な大きさの@a size_of_arena が無いならば、 nullptr を返す。
+ * 十分な大きさの@a size_of_arena が無いならば、 NULL を返す。
  * @~
  * MT-safe
  */
 void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
 		size_t size_required);
+/**
+ * @~japanese
+ * @brief @a arena がアラインされていないならば、
+ * アドレスを必要最小限増加させ、アラインされたアドレスを返す
+ *
+ * @a arena がアラインされていれば@a arena を返す。
+ *
+ * @param[in] arena 確保されている領域の先頭アドレス
+ * @param[in] elements_in_arena 確保されている要素数
+ * @param[in] elements_required アライン後も利用可能でなければならない要素数
+ * @return アラインされたアドレス。もし、 @a elements_required を格納するのに
+ * 十分な大きさの@a elements_in_arena が無いならば、 NULL を返す。
+ * @~
+ * MT-safe
+ */
 float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
 		size_t elements_required);
+/**
+ * @~japanese
+ * @brief @a arena がアラインされていないならば、
+ * アドレスを必要最小限増加させ、アラインされたアドレスを返す
+ *
+ * @a arena がアラインされていれば@a arena を返す。
+ *
+ * @param[in] arena 確保されている領域の先頭アドレス
+ * @param[in] elements_in_arena 確保されている要素数
+ * @param[in] elements_required アライン後も利用可能でなければならない要素数
+ * @return アラインされたアドレス。もし、 @a elements_required を格納するのに
+ * 十分な大きさの@a elements_in_arena が無いならば、 NULL を返す。
+ * @~
+ * MT-safe
+ */
 double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 		size_t elements_required);
 
 /**
  * @~japanese
- * Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型。
+ * @brief Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型
+ *
  * 関数はリエントラントな実装でなければならない。
  * sizeが0の場合も、(メモリーが確保できるなら)長さ0の領域のポインタを返すこと(NULLを返さないこと)。
- * @param size
+ * @param[in] size	確保するサイズ(バイト)
  * @~
  * MT-safe
  */
@@ -142,10 +175,11 @@ typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
 
 /**
  * @~japanese
- * Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型。
+ * @brief Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型
+ *
  * 関数はリエントラントな実装でなければならない。
  * @a pointer にNULLが渡された場合、何も行わないこと。
- * @param pointer	@ref sakura_UserAllocator が返したアドレスまたはNULL。
+ * @param[in] pointer	@ref sakura_UserAllocator が返したアドレスまたはNULL。
  * @~
  * MT-safe
  */
@@ -153,7 +187,7 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 
 /**
  * @~japanese
- * @ref sakura_ComputeStatistics の結果を格納する構造体。
+ * @brief @ref sakura_ComputeStatistics の結果を格納する構造体
  */
 typedef struct {
 	size_t count; /**< 個数 */
@@ -169,15 +203,15 @@ typedef struct {
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
- * @ref sakura_StatisticsResult を参照。
+ * @ref sakura_StatisticsResult を参照
  *
- * @param num_data @a data 及び@a is_valid の要素の数
- * @param data 対象となるデータ。対応する@a is_valid がtrueの場合、Inf/NaNであってはならない。
+ * @param[in] num_data @a data 及び@a is_valid の要素の数
+ * @param[in] data 対象となるデータ。対応する@a is_valid がtrueの場合、Inf/NaNであってはならない。
  * <br/>must-be-aligned
- * @param is_valid データのマスク。この値が false だと、
+ * @param[in] is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される。
  * <br/>must-be-aligned
- * @param result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
+ * @param[out] result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
  * 同じ値が複数あった場合、どの値のインデックスが@a index_of_min, @a index_of_maxに格納されるかは不定である。
  * @return 終了ステータス
  * @~
@@ -187,14 +221,14 @@ typedef struct {
 		LIBSAKURA_SYMBOL(StatisticsResult) *result);
 /**
  * @~japanese
- * @brief validな値のみを先頭に詰めて昇順にソートする。
+ * @brief validな値のみを先頭に詰めて昇順にソートする
  *
- * @param is_valid データのマスク。この値が false だと、
+ * @param[in] is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
- * @param num_data @a data 及び@a is_valid の要素の数
- * @param data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
+ * @param[in] num_data @a data 及び@a is_valid の要素の数
+ * @param[in,out] data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
  * 対応する@a is_valid がtrueの場合、NaNであってはならない。
- * @param new_num_data (validでないデータを除いた)ソートされた要素数( <= @a num_data) の格納先
+ * @param[out] new_num_data (validでないデータを除いた)ソートされた要素数( <= @a num_data ) の格納先
  * @return 終了ステータス
  * @~
  * MT-safe
@@ -203,34 +237,35 @@ typedef struct {
 		size_t *new_num_data);
 /**
  * @~japanese
- * @brief 畳み込みしながらグリッドする。
+ * @brief 畳み込みしながらグリッドする
+ *
  * 各浮動小数点の数値はNaN/+-Infであってはならない。
- * @param num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
- * @param start_spectrum 開始spectrumの添字
- * @param end_spectrum 終了spectrumの添字+1
- * @param spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。<br/>must-be-aligned
- * @param x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。<br/>must-be-aligned
- * @param y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。<br/>must-be-aligned
- * @param support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= (INT32_MAX - 1) / 2<br/>
+ * @param[in] num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
+ * @param[in] start_spectrum 開始spectrumの添字
+ * @param[in] end_spectrum 終了spectrumの添字+1
+ * @param[in] spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。<br/>must-be-aligned
+ * @param[in] x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。<br/>must-be-aligned
+ * @param[in] y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。<br/>must-be-aligned
+ * @param[in] support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= (INT32_MAX - 1) / 2<br/>
  * ただし、@a support * @a sampling に比例するサイズの領域をスタック上に確保するので、@a support * @a sampling が大きな値となる場合、スタックオーバーフローを起こす。
- * @param sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
- * @param num_polarizations 範囲は、0 < num_polarization <= INT32_MAX
- * @param polarization_map	要素数は、num_polarization。各要素の値は、[0,num_polarization_for_grid)でなければならない。<br/>must-be-aligned
- * @param num_channels 範囲は、0 < num_channels <= INT32_MAX
- * @param channel_map	要素数は、num_channels。各要素の値は、[0,num_channels_for_grid)でなければならない。<br/>must-be-aligned
- * @param mask	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
- * @param value	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。グリッディングする値。<br/>must-be-aligned
- * @param weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
- * @param weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
- * @param num_convolution_table @ convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= convolution_table <= INT32_MAX / 32
- * @param convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。各要素の値は、NaN,Infであってはならない。要素0が中心を表す。<br/>must-be-aligned
- * @param num_polarization_for_grid 範囲は、0 < num_polarization_for_grid <= INT32_MAX
- * @param num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
- * @param width 範囲は、0 < width <= INT32_MAX
- * @param height 範囲は、0 < height <= INT32_MAX
- * @param weight_sum	要素のレイアウトは、[num_polarization_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
- * @param weight_of_grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
- * @param grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
+ * @param[in] sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
+ * @param[in] num_polarizations 範囲は、0 < num_polarization <= INT32_MAX
+ * @param[in] polarization_map	要素数は、num_polarization。各要素の値は、[0,num_polarization_for_grid)でなければならない。<br/>must-be-aligned
+ * @param[in] num_channels 範囲は、0 < num_channels <= INT32_MAX
+ * @param[in] channel_map	要素数は、num_channels。各要素の値は、[0,num_channels_for_grid)でなければならない。<br/>must-be-aligned
+ * @param[in] mask	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
+ * @param[in] value	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。グリッディングする値。<br/>must-be-aligned
+ * @param[in] weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
+ * @param[in] weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
+ * @param[in] num_convolution_table @a convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= convolution_table <= INT32_MAX / 32
+ * @param[in] convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。各要素の値は、NaN,Infであってはならない。要素0が中心を表す。<br/>must-be-aligned
+ * @param[in] num_polarization_for_grid 範囲は、0 < num_polarization_for_grid <= INT32_MAX
+ * @param[in] num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
+ * @param[in] width 範囲は、0 < width <= INT32_MAX
+ * @param[in] height 範囲は、0 < height <= INT32_MAX
+ * @param[out] weight_sum	要素のレイアウトは、[num_polarization_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
+ * @param[out] weight_of_grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
+ * @param[out] grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
@@ -375,46 +410,44 @@ typedef struct {
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
- /**
-  * @~
-  * @brief TBD
-  * @details TBD
-  *
-  * @param num_in TBD
-  * @param in TBD
-  * @return @a sakura_Status
-  *@~
-  * MT-TBD
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
- 		size_t num_in, uint8_t const in[/*num_in*/], bool out[/*num_in*/]);
+/**
+ * @~
+ * @brief TBD
+ * @details TBD
+ *
+ * @param num_in TBD
+ * @param in TBD
+ * @return @a sakura_Status
+ *@~
+ * MT-TBD
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_in,
+		uint8_t const in[/*num_in*/], bool out[/*num_in*/]);
 
+/**
+ * @~
+ * @brief TBD
+ * @details TBD
+ *
+ * @param num_in TBD
+ * @param in TBD
+ * @return @a sakura_Status
+ *@~
+ * MT-TBD
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_in,
+		uint32_t const in[/*num_in*/], bool out[/*num_in*/]);
 
-  /**
-    * @~
-    * @brief TBD
-    * @details TBD
-    *
-    * @param num_in TBD
-    * @param in TBD
-    * @return @a sakura_Status
-    *@~
-    * MT-TBD
-    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
-   		size_t num_in, uint32_t const in[/*num_in*/], bool out[/*num_in*/]);
-
-    /**
-      * @~
-      * @brief TBD
-      * @details TBD
-      *
-      * @param num_in TBD
-      * @param in TBD
-      * @return @a sakura_Status
-      *@~
-      * MT-TBD
-      */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
-     		size_t num_in, bool const in[/*num_in*/], bool out[/*num_in*/]);
-
+/**
+ * @~
+ * @brief TBD
+ * @details TBD
+ *
+ * @param num_in TBD
+ * @param in TBD
+ * @return @a sakura_Status
+ *@~
+ * MT-TBD
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_in,
+bool const in[/*num_in*/], bool out[/*num_in*/]);
 
 /**
  * @~japanese
