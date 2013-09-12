@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "aligned_memory.h"
+//#include "CubicSplineInterpolator1D.h"
 
 class Interpolate1dFloatTest: public ::testing::Test {
 protected:
@@ -1297,3 +1298,53 @@ TEST_F(Interpolate1dFloatTest, SplineOppositePerformance) {
 	EXPECT_EQ(sakura_Status_kOK, result)
 			<< "Interpolate1dFloat had any problems during execution.";
 }
+
+//
+// AasapSplinePerformance
+// Test performance of asap spline interpolator.
+// To enable this test, you have to follow the procedure below:
+//
+// 1. Uncomment the line at the top of this file that includes
+//    "CubicSplineInterpolator1D.h".
+//
+// 2. Copy the following files to test directory from asap/src:
+//        - Interpolator1D.h, Interpolator1D.tcc
+//        - CubicSplineInterpolator1D.h, CubicSplineInterpolator1D.tcc
+//        - Locator.h, Locator.tcc
+//        - BisectionLocator.h, BisectionLocator.tcc
+//    These files should be located at test directory.
+//
+// 3. Comment out all casa related lines from these files.
+//
+// 4. Change Interpolator1D::createLocator() so that it always uses
+//    BisectionLocator.
+//
+//TEST_F(Interpolate1dFloatTest, AsapSplinePerformance) {
+//	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+//
+//	size_t const num_base = 3;
+//	size_t const num_interpolated = 200000000;
+//
+//	// initial setup
+//	AllocateMemory(num_base, num_interpolated);
+//	x_base_[0] = 0.0;
+//	x_base_[1] = 100.0;
+//	x_base_[2] = 200.0;
+//	y_base_[0] = 1.0;
+//	y_base_[1] = -1.0;
+//	y_base_[2] = 0.0;
+//	double dx = fabs(x_base_[2] - x_base_[0])
+//			/ static_cast<double>(num_interpolated - 1);
+//	for (size_t i = 0; i < num_interpolated; ++i) {
+//		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+//	}
+//
+//	// execute interpolation
+//	std::unique_ptr<asap::CubicSplineInterpolator1D<double, float> > interpolator(
+//			new asap::CubicSplineInterpolator1D<double, float>());
+//	interpolator->setX(x_base_, num_base);
+//	interpolator->setY(y_base_, num_base);
+//	for (size_t i = 0; i < num_interpolated; ++i) {
+//		y_interpolated_[i] = interpolator->interpolate(x_interpolated_[i]);
+//	}
+//}
