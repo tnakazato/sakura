@@ -74,13 +74,21 @@ inline void SetTrueInRangesInclusiveDefault(size_t num_data, DataType const *dat
 	}
 	DataType lower_value, upper_value;
 
-	for (size_t i=0; i < num_data ; ++i){
-		for (size_t j=0; j < num_condition; ++j){
-			lower_value = lower_bounds[j];
-			upper_value = upper_bounds[j];
+
+	for (size_t j=0; j < num_condition; ++j){
+		lower_value = lower_bounds[j];
+		upper_value = upper_bounds[j];
+		for (size_t i=0; i < num_data ; ++i){
 			result[i] = result[i] || ( (data[i] - lower_value) * (upper_value - data[i]) >= 0 );
 		}
 	}
+//	for (size_t i=0; i < num_data ; ++i){
+//		for (size_t j=0; j < num_condition; ++j){
+//			lower_value = lower_bounds[j];
+//			upper_value = upper_bounds[j];
+//			result[i] = result[i] || ( (data[i] - lower_value) * (upper_value - data[i]) >= 0 );
+//		}
+//	}
 //	// cast bool array to uint8_t array
 //	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
 //	assert(sizeof(edit_mask[0]) == sizeof(mask8[0]));
