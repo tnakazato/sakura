@@ -21,16 +21,32 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data, DataType const *data
 			result[i] = false;
 		}
 	DataType lower_value, upper_value;
-	for (size_t j=0; j < num_condition; ++j){
-		lower_value = lower_bounds[j];
-		upper_value = upper_bounds[j];
-		//std::cout << "Searching range [ " << lower_value << ", " << upper_value << " ]" << std::endl;
-		for (size_t i=0; i < num_data ; ++i){
-			//std::cout << "i = " << i << std::endl;
+	for (size_t i=0; i < num_data ; ++i){
+		//std::cout << "i = " << i << std::endl;
+		for (size_t j=0; j < num_condition; ++j){
+			lower_value = lower_bounds[j];
+			upper_value = upper_bounds[j];
+			//std::cout << "Searching range [ " << lower_value << ", " << upper_value << " ]" << std::endl;
 			if ( result[i] ) continue;
 			result[i] = ( (data[i] - lower_value) * (upper_value - data[i]) >= 0 );
 		}
 	}
+}
+
+template<typename DataType>
+inline void ToBoolScalar(size_t num_data, DataType const *in, bool *out) {
+	std::cout << "Invoking ToBoolScalar()" << std::endl;
+	DataType const zero(static_cast<DataType>(0));
+	for (size_t i=0; i < num_data ; ++i){
+			out[i] = (in[i] != zero);
+		}
+}
+
+inline void InvertBoolScalar(size_t num_data, bool const *in, bool *out) {
+	std::cout << "Invoking InvertBoolScalar()" << std::endl;
+	for (size_t i=0; i < num_data ; ++i){
+			out[i] = !in[i];
+		}
 }
 
 } /* anonymous namespace */
@@ -66,6 +82,15 @@ inline void SetTrueInRangesInclusiveDefault(size_t num_data, DataType const *dat
 
 }
 
+template<typename DataType>
+inline void ToBoolDefault(size_t num_data, DataType const *in, bool *out) {
+	std::cout << "Invoking ToBoolScalar()" << std::endl;
+}
+
+inline void InvertBoolDefault(size_t num_data, bool const *in, bool *out) {
+	std::cout << "Invoking InvertBoolScalar()" << std::endl;
+}
+
 } /* anonymous namespace */
 
 #endif /* FORCE_SCALAR */
@@ -86,6 +111,28 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 #endif
 }
 
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::ToBool(size_t num_in,
+		DataType const in[/*num_in*/], bool out[/*num_in*/]) const {
+#if FORCE_SCALAR
+	ToBoolScalar(num_in, in, out);
+#else
+	ToBoolDefault(num_in, in, out);
+#endif
+}
+
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::InvertBool(size_t num_in,
+		bool const in[/*num_in*/], bool out[/*num_in*/]) const {
+#if FORCE_SCALAR
+	InvertBoolScalar(num_in, in, out);
+#else
+	InvertBoolDefault(num_in, in, out);
+#endif
+}
+
+template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<uint8_t>;
+template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<uint32_t>;
 template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<float>;
 template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<int>;
 }

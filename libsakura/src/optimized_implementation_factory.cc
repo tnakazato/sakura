@@ -73,6 +73,8 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 ::LIBSAKURA_PREFIX::BitOperationDefault<uint32_t> const bit_operation_default_uint32;
 ::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<float> const bool_filter_collection_default_float;
 ::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<int> const bool_filter_collection_default_int;
+::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<uint8_t> const bool_filter_collection_default_uint8;
+::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<uint32_t> const bool_filter_collection_default_uint32;
 ::LIBSAKURA_PREFIX::ConvolutionDefault const convolution_default;
 ::LIBSAKURA_PREFIX::InterpolationDefault<double, float> const interpolation_default;
 ::LIBSAKURA_PREFIX::LogicalOperationDefault const logical_operation_default;
@@ -96,6 +98,12 @@ public:
 	}
 	virtual BoolFilterCollection<int> const *GetBoolFilterCollectionImplInt() const {
 		return &bool_filter_collection_default_int;
+	}
+	virtual BoolFilterCollection<uint8_t> const *GetBoolFilterCollectionImplUint8() const {
+		return &bool_filter_collection_default_uint8;
+	}
+	virtual BoolFilterCollection<uint32_t> const *GetBoolFilterCollectionImplUint32() const {
+		return &bool_filter_collection_default_uint32;
 	}
 	virtual Baseline const *GetBaselineImpl() const {
 		return &baseline_default;
@@ -126,6 +134,8 @@ public:
 ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
 ::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<float> const bool_filter_collection_after_sandy_bridge_float;
 ::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<int> const bool_filter_collection_after_sandy_bridge_int;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<uint8_t> const bool_filter_collection_after_sandy_bridge_uint8;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<uint32_t> const bool_filter_collection_after_sandy_bridge_uint32;
 ::LIBSAKURA_PREFIX::ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge<double, float> const interpolation_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::LogicalOperationAfterSandyBridge const logical_operation_after_sandy_bridge;
@@ -153,6 +163,12 @@ public:
 	}
 	virtual BoolFilterCollection<int> const *GetBoolFilterCollectionImplInt() const {
 		return &bool_filter_collection_after_sandy_bridge_int;
+	}
+	virtual BoolFilterCollection<uint8_t> const *GetBoolFilterCollectionImplUint8() const {
+		return &bool_filter_collection_after_sandy_bridge_uint8;
+	}
+	virtual BoolFilterCollection<uint32_t> const *GetBoolFilterCollectionImplUint32() const {
+		return &bool_filter_collection_after_sandy_bridge_uint32;
 	}
 	virtual Convolution const *GetConvolutionImpl() const {
 		// return &convolution_after_sandy_bridge;

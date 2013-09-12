@@ -77,6 +77,10 @@ public:
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const;
+	virtual void ToBool(size_t num_in, DataType const in[/*num_in*/],
+			bool out[/*num_in*/]) const;
+	virtual void InvertBool(size_t num_in, bool const in[/*num_in*/],
+			bool out[/*num_in*/]) const;
 };
 
 template<typename DataType>
@@ -89,6 +93,10 @@ public:
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const;
+	virtual void ToBool(size_t num_in, DataType const in[/*num_in*/],
+			bool out[/*num_in*/]) const;
+	virtual void InvertBool(size_t num_in, bool const in[/*num_in*/],
+			bool out[/*num_in*/]) const;
 };
 
 class ConvolutionDefault: public Convolution {

@@ -41,3 +41,45 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
+		size_t num_in, uint8_t const in[], bool out[]) {
+	assert(in != nullptr);
+	assert(out != nullptr);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint8();
+	bfc->ToBool(num_in, in, out);
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
+		size_t num_in, uint32_t const in[], bool out[]) {
+	assert(in != nullptr);
+	assert(out != nullptr);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint32();
+	bfc->ToBool(num_in, in, out);
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
+		size_t num_in, bool const in[], bool out[]) {
+	assert(in != nullptr);
+	assert(out != nullptr);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint8();
+	bfc->InvertBool(num_in, in, out);
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}

@@ -52,6 +52,10 @@ public:
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const = 0;
+	virtual void ToBool(size_t num_in, DataType const in[/*num_in*/],
+			bool out[/*num_in*/]) const = 0;
+	virtual void InvertBool(size_t num_in, bool const in[/*num_in*/],
+			bool out[/*num_in*/]) const = 0;
 };
 
 class Convolution {
@@ -193,6 +197,8 @@ public:
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;
 	virtual BoolFilterCollection<float> const *GetBoolFilterCollectionImplFloat() const = 0;
 	virtual BoolFilterCollection<int> const *GetBoolFilterCollectionImplInt() const = 0;
+	virtual BoolFilterCollection<uint8_t> const *GetBoolFilterCollectionImplUint8() const = 0;
+	virtual BoolFilterCollection<uint32_t> const *GetBoolFilterCollectionImplUint32() const = 0;
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Interpolation<double, float> const *GetInterpolationImpl() const = 0;
