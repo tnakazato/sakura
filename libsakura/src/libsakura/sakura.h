@@ -457,6 +457,8 @@ typedef enum {
  * もとにして1次元の補間を行う。補間したい点のx座標のリストを長さ
  * @a num_interpolatedの配列@a x_interpolatedに渡すと、補間結果が
  * 長さ@a num_interpolatedの配列@a y_interpolatedに格納される。
+ * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
+ * @a y_interpolatedにセットされる）。
  *
  * @par
  * @pre @a x_baseおよび@a x_interpolatedは昇順または降順にソートされていなければ
