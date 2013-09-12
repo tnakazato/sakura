@@ -197,10 +197,11 @@ public:
 		XDataType dydx = static_cast<XDataType>(this->y_base_[location]
 				- this->y_base_[location - 1])
 				/ (this->x_base_[location] - this->x_base_[location - 1]);
+		YDataType base_term = this->y_base_[location - 1];
 		for (size_t i = left_index; i < right_index; ++i) {
 			y_interpolated[i] =
-					this->y_base_[location - 1]
-							+ static_cast<XDataType>(dydx
+					base_term
+							+ static_cast<YDataType>(dydx
 									* (x_interpolated[i]
 											- this->x_base_[location - 1]));
 		}
