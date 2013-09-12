@@ -106,7 +106,7 @@ namespace {
 				     float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
 				     float output_spectrum[/*num_channels*/]) {
 
-		int i=0;
+		unsigned int i=0;
 		for(i = 0; i < (*context)->num_channel; ++i){
 		    (*context)->input_real_array[i] = input_spectrum[i];
 		}
@@ -142,6 +142,14 @@ namespace {
 		if(context->fft_applied_complex_kernel != NULL){
 			fftwf_free( context->fft_applied_complex_kernel);
 			context->fft_applied_complex_kernel = NULL;
+		}
+		if(context->input_complex_spectrum != NULL){
+			fftwf_free( context->input_complex_spectrum);
+			context->input_complex_spectrum = NULL;
+		}
+		if(context->output_complex_spectrum != NULL){
+			fftwf_free( context->output_complex_spectrum);
+			context->output_complex_spectrum = NULL;
 		}
 		if(context != NULL){
 			free(context);
