@@ -355,8 +355,8 @@ typedef struct {
  * @a out [i] = ( @a edit_mask[i] ? (@a bit_maks & @a in [i]) : @a in [i] )
  *
  * @param bit_mask ビットマスク（uint32_t型）
- * @param num_in @a in, @a edit_mask 及び@a out の要素の数。
- * @param in 入力配列（uint32_t型）。要素数は@a num_in でなければならない。
+ * @param num_in 一次元配列@a in, @a edit_mask 及び@a out の要素の数。
+ * @param in 入力一次元配列（uint32_t型）。要素数は@a num_in でなければならない。
  * <br/>must-be-aligned
  * @param edit_mask データのマスク。要素数は@a num_in でなければならない。
  * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
@@ -372,19 +372,48 @@ typedef struct {
 		bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
 
 /**
- * @~
- * @brief TBD
- * @details TBD
+ * @~english
+ * @brief Returns if the values in input array are in any of specified range (inclusive).
+ * @details Returns true if the corresponding element in the input array
+ * is in range of upper and lower boundary pairs, <br/>
+ * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * The function takes more than one upper and lower boundary pairs as arrays,
+ * @a lower_bounds and @a upper_bounds.
  *
- * @param num_data TBD
- * @param data TBD
- * @param num_condition TBD
- * @param lower_bounds TBD
- * @param upper_bounds TBD
- * @param result TBD
+ * @param num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param data An input array of size, @a num_data.
+ * <br/>must-be-aligned
+ * @param num_condition The number of elements in the arrays, @a lower_bounds
+ * and @a upper_bounds.
+ * @param lower_bounds The input array of size, @a num_condition.
+ * <br/>must-be-aligned
+ * @param upper_bounds The input array of size, @a num_condition.
+ * <br/>must-be-aligned
+ * @param result The output array of size, @a num_data.
+ * <br/>must-be-aligned
+ * @return @a sakura_Status
+ * @~japanese
+ * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
+ * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
+ * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。すなわち、<br/>
+ * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * を検定する。
+ *
+ * @param num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * <br/>must-be-aligned
+ * @param num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
+ * 下限値と上限値の組の数を表す。
+ * @param lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
+ * <br/>must-be-aligned
+ * @param upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
+ * <br/>must-be-aligned
+ * @param result 結果の格納先。要素数は@a num_data でなければならない。
+ * <br/>must-be-aligned
  * @return @a sakura_Status
  *@~
- * MT-TBD
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
@@ -392,60 +421,129 @@ typedef struct {
 		bool result[/*num_data*/]);
 
 /**
- * @~
- * @brief TBD
- * @details TBD
+ * @~english
+ * @brief Returns if the values in input array are in any of specified range (inclusive).
+ * @details Returns true if the corresponding element in the input array
+ * is in range of upper and lower boundary pairs, <br/>
+ * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * The function takes more than one upper and lower boundary pairs as arrays,
+ * @a lower_bounds and @a upper_bounds.
  *
- * @param num_data TBD
- * @param data TBD
- * @param num_condition TBD
- * @param lower_bounds TBD
- * @param upper_bounds TBD
- * @param result TBD
+ * @param num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param data An input array of size, @a num_data.
+ * <br/>must-be-aligned
+ * @param num_condition The number of elements in the arrays, @a lower_bounds
+ * and @a upper_bounds.
+ * @param lower_bounds The input array of size, @a num_condition.
+ * <br/>must-be-aligned
+ * @param upper_bounds The input array of size, @a num_condition.
+ * <br/>must-be-aligned
+ * @param result The output array of size, @a num_data.
+ * <br/>must-be-aligned
+ * @return @a sakura_Status
+ * @~japanese
+ * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
+ * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
+ * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。すなわち、<br/>
+ * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * を検定する。
+ *
+ * @param num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * <br/>must-be-aligned
+ * @param num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
+ * 下限値と上限値の組の数を表す。
+ * @param lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
+ * <br/>must-be-aligned
+ * @param upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
+ * <br/>must-be-aligned
+ * @param result 結果の格納先。要素数は@a num_data でなければならない。
+ * <br/>must-be-aligned
  * @return @a sakura_Status
  *@~
- * MT-TBD
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive)(
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
 /**
- * @~
- * @brief TBD
- * @details TBD
+ * @~english
+ * @brief Convert an input array to a boolean array.
+ * @details Returns true if the corresponding element in input array != 0.
  *
- * @param num_in TBD
- * @param in TBD
+ * @param num_in The number of elements in the arrays, @a in
+ * and @a out
+ * @param in The input array of of size, @a num_in.
+ * <br/>must-be-aligned
+ * @param out The output array of of size, @a num_in.
+ * <br/>must-be-aligned
+ * @return @a sakura_Status
+ * @~japanese
+ * @brief 入力配列を論理値の配列に変換する。
+ * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
+ *
+ * @param num_in @a in 及び@a out の要素の数。
+ * @param in 入力配列。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
  * @return @a sakura_Status
  *@~
- * MT-TBD
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_in,
 		uint8_t const in[/*num_in*/], bool out[/*num_in*/]);
 
 /**
- * @~
- * @brief TBD
- * @details TBD
+ * @~english
+ * @brief Convert an input array to a boolean array.
+ * @details Returns true if the corresponding element in input array != 0.
  *
- * @param num_in TBD
- * @param in TBD
+ * @param num_in The number of elements in the arrays, @a in
+ * and @a out
+ * @param in The input array of of size, @a num_in.
+ * <br/>must-be-aligned
+ * @param out The output array of of size, @a num_in.
+ * <br/>must-be-aligned
+ * @return @a sakura_Status
+ * @~japanese
+ * @brief 入力配列を論理値の配列に変換する。
+ * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
+ *
+ * @param num_in @a in 及び@a out の要素の数。
+ * @param in 入力配列。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
  * @return @a sakura_Status
  *@~
- * MT-TBD
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_in,
 		uint32_t const in[/*num_in*/], bool out[/*num_in*/]);
 
 /**
- * @~
- * @brief TBD
- * @details TBD
+ * @~english
+ * @brief Inverse a boolean array
  *
- * @param num_in TBD
- * @param in TBD
+ * @param num_in The number of elements in the arrays, @a in
+ * and @a out
+ * @param in The input array of of size, @a num_in.
+ * <br/>must-be-aligned
+ * @param out The output array of of size, @a num_in.
+ * <br/>must-be-aligned
+ * @return @a sakura_Status
+ * @~japanese
+ * @brief 入力配列を論理反転する。
+ *
+ * @param num_in @a in 及び@a out の要素の数。
+ * @param in 入力配列。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * <br/>must-be-aligned
  * @return @a sakura_Status
  *@~
- * MT-TBD
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_in,
 bool const in[/*num_in*/], bool out[/*num_in*/]);
 

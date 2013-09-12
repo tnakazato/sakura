@@ -91,8 +91,8 @@ inline void ToBoolDefault(size_t num_data, DataType const *in, bool *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i=0; i < num_data ; ++i){
-			out[i] = (in[i] != zero);
-		}
+		out[i] = (in[i] != zero);
+	}
 }
 
 inline void InvertBoolDefault(size_t num_data, bool const *in, bool *out) {
