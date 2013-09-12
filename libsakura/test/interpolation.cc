@@ -1177,7 +1177,7 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullPerformance) {
 	polynomial_order_ = 2;
 
 	size_t const num_base = 3;
-	size_t const num_interpolated = 20000000; // 1/10 of Nearest and Linear
+	size_t const num_interpolated = 100000000; // 1/2 of Nearest and Linear
 
 	// initial setup
 	AllocateMemory(num_base, num_interpolated);
@@ -1210,7 +1210,7 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOppositePerformance) {
 	polynomial_order_ = 2;
 
 	size_t const num_base = 3;
-	size_t const num_interpolated = 20000000; // 1/10 of Nearest and Linear
+	size_t const num_interpolated = 100000000; // 1/2 of Nearest and Linear
 
 	// initial setup
 	AllocateMemory(num_base, num_interpolated);

@@ -25,53 +25,6 @@ DataType const *GetAlignedArray(size_t num_array,
 			sizeof(DataType) * num_array));
 }
 
-// Polynomial interpolation using Neville's algorithm
-template<class XDataType, class YDataType>
-void PerformNevilleAlgorithm(XDataType const x_base[], YDataType const y_base[],
-		size_t left_index, size_t num_elements, XDataType x_interpolated,
-		YDataType *y_interpolated) {
-
-	// working pointers
-	XDataType const *x_ptr = &x_base[left_index];
-	YDataType const *y_ptr = &y_base[left_index];
-
-	// storage for C and D in Neville's algorithm
-	std::unique_ptr<YDataType[]> storage_for_c;
-	std::unique_ptr<YDataType[]> storage_for_d;
-	YDataType *c = const_cast<YDataType *>(GetAlignedArray<YDataType>(
-			num_elements, &storage_for_c));
-	YDataType *d = const_cast<YDataType *>(GetAlignedArray<YDataType>(
-			num_elements, &storage_for_d));
-
-	for (size_t i = 0; i < num_elements; ++i) {
-		c[i] = y_ptr[i];
-		d[i] = y_ptr[i];
-	}
-
-	// Neville's algorithm
-	YDataType y_interpolated_work = c[0];
-	for (size_t m = 1; m < num_elements; ++m) {
-		// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
-		// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
-		// d[n-m-1].
-		for (size_t i = 0; i < num_elements - m; ++i) {
-			XDataType cd = static_cast<XDataType>(c[i + 1] - d[i]);
-			XDataType dx = x_ptr[i] - x_ptr[i + m];
-			assert(dx != 0);
-			cd /= dx;
-			c[i] = (x_ptr[i] - x_interpolated) * cd;
-			d[i] = (x_ptr[i + m] - x_interpolated) * cd;
-		}
-
-		// In each step, c[0] holds Cm1 which is a correction between
-		// P12...m and P12...[m+1]. Thus, the following repeated update
-		// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
-		y_interpolated_work += c[0];
-	}
-
-	*y_interpolated = y_interpolated_work;
-}
-
 template<class XDataType, class YDataType>
 void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 		XDataType const x_base[], YDataType const y_base[],
@@ -215,9 +168,17 @@ public:
 	PolynomialInterpolationWorker(size_t num_base, XDataType const x_base[],
 			YDataType const y_base[], int polynomial_order) :
 			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base,
-					polynomial_order) {
+					polynomial_order), kNumElements_(
+					this->polynomial_order_ + 1), storage_for_c_(), storage_for_d_(), c_(
+					nullptr), d_(nullptr) {
 	}
 	virtual ~PolynomialInterpolationWorker() {
+	}
+	virtual void PrepareForInterpolation() {
+		c_ = const_cast<XDataType *>(GetAlignedArray<XDataType>(kNumElements_,
+				&storage_for_c_));
+		d_ = const_cast<XDataType *>(GetAlignedArray<XDataType>(kNumElements_,
+				&storage_for_d_));
 	}
 	virtual void Interpolate(size_t left_index, size_t right_index,
 			size_t location, XDataType const x_interpolated[],
@@ -227,13 +188,52 @@ public:
 				- static_cast<size_t>(this->polynomial_order_);
 		size_t k = static_cast<size_t>((j > 0) ? j : 0);
 		k = (k > m) ? m : k;
-		size_t num_elements = static_cast<size_t>(this->polynomial_order_ + 1);
 		for (size_t i = left_index; i < right_index; ++i) {
-			PerformNevilleAlgorithm<XDataType, YDataType>(this->x_base_,
-					this->y_base_, k, num_elements, x_interpolated[i],
-					&y_interpolated[i]);
+			PerformNevilleAlgorithm(k, x_interpolated[i], &y_interpolated[i]);
 		}
 	}
+private:
+	void PerformNevilleAlgorithm(size_t left_index, XDataType x_interpolated,
+			YDataType *y_interpolated) {
+
+		// working pointers
+		XDataType const *x_ptr = &(this->x_base_[left_index]);
+		YDataType const *y_ptr = &(this->y_base_[left_index]);
+
+		for (size_t i = 0; i < kNumElements_; ++i) {
+			c_[i] = static_cast<XDataType>(y_ptr[i]);
+			d_[i] = c_[i];
+		}
+
+		// Neville's algorithm
+		XDataType y_interpolated_work = c_[0];
+		for (size_t m = 1; m < kNumElements_; ++m) {
+			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
+			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
+			// d[n-m-1].
+			for (size_t i = 0; i < kNumElements_ - m; ++i) {
+				XDataType cd = c_[i + 1] - d_[i];
+				XDataType dx = x_ptr[i] - x_ptr[i + m];
+				assert(dx != 0);
+				cd /= dx;
+				c_[i] = (x_ptr[i] - x_interpolated) * cd;
+				d_[i] = (x_ptr[i + m] - x_interpolated) * cd;
+			}
+
+			// In each step, c[0] holds Cm1 which is a correction between
+			// P12...m and P12...[m+1]. Thus, the following repeated update
+			// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
+			y_interpolated_work += c_[0];
+		}
+
+		*y_interpolated = static_cast<YDataType>(y_interpolated_work);
+	}
+
+	size_t const kNumElements_;
+	std::unique_ptr<XDataType[]> storage_for_c_;
+	std::unique_ptr<XDataType[]> storage_for_d_;
+	XDataType *c_;
+	XDataType *d_;
 };
 
 template<class XDataType, class YDataType>
