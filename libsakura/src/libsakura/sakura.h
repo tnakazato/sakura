@@ -486,57 +486,65 @@ typedef enum {
 /**
  * @~japanese
  * @brief 一次元の補間を行う。
- * @details 長さ@a num_baseの配列@a x_baseと@a y_baseで定義されるデータ点を
+ * @details 長さ@a num_base の配列@a x_base と@a y_base で定義されるデータ点を
  * もとにして1次元の補間を行う。補間したい点のx座標のリストを長さ
- * @a num_interpolatedの配列@a x_interpolatedに渡すと、補間結果が
- * 長さ@a num_interpolatedの配列@a y_interpolatedに格納される。
+ * @a num_interpolated の配列@a x_interpolated に渡すと、補間結果が
+ * 長さ@a num_interpolated の配列@a y_interpolated に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
- * @a y_interpolatedにセットされる）。
+ * @a y_interpolated にセットされる）。
  *
  * @par
- * @pre @a x_baseおよび@a x_interpolatedは昇順または降順にソートされていなければ
- * ならない。また、@a x_baseの要素には重複があってはならない。
+ * @pre @a x_base および@a x_interpolated は昇順または降順にソートされていなければ
+ * ならない。また、@a x_base の要素には重複があってはならない。
  *
  * @par 昇順の場合と降順の場合の速度の違いについて:
- * @a x_baseまたは @a x_interpolatedが降順にソートされている場合、
+ * @a x_base または @a x_interpolated が降順にソートされている場合、
  * 内部では配列要素をコピーして昇順に並べ替えた上で補間を行う。そのため、降順の場合は
  * 昇順よりも処理が遅くなる。
  *
  * @par 多項式補間の動作について:
  * @par
- * @a polynomial_orderは0または正の整数でなければならない。
+ * @a polynomial_order は0または正の整数でなければならない。
  * @par
- * @a polynomial_orderはあくまで最大次数を規定するものであり、その次数で必ず
- * 補間が行われるとは限らない。たとえば、@a polynomial_orderが2（二次多項式による補間）
- * で@a num_baseが2の場合、実際には2点を通る一次多項式が一意に決まるため、二次多項式に
+ * @a polynomial_order はあくまで最大次数を規定するものであり、その次数で必ず
+ * 補間が行われるとは限らない。たとえば、@a polynomial_order が2（二次多項式による補間）
+ * で@a num_base が2の場合、実際には2点を通る一次多項式が一意に決まるため、二次多項式に
  * よる補間ではなく一次多項式による補間（線形補間）が行われる。
  * @par
- * @a polynomial_orderに0を指定した場合、最近接補間が行われる。
+ * @a polynomial_order に0を指定した場合、最近接補間が行われる。
  *
  * @par
- * @param[in] interpolation_method 補間方法
- * @param[in] polynomial_order 多項式補間法の場合の最大次数。
- * @a polynomial_orderは0または正の整数でなければならない。
- * 実際の次数は、@a num_baseとの兼ね合いで決まる。
- * @param[in] num_base 補間のためのデータ点の数。
- * @param[in] x_base 補間のためのデータ点のx座標。
- * @a x_baseは昇順または降順にソートされていなければならない。
- * @param[in] y_base 補間のためのデータ点のy座標。
- * @param[in] num_interpolated 補間したいデータ点の数。
- * @param[in] x_interpolated 補間したいデータ点のx座標。
- * @a x_interpolatedは昇順または降順にソートされていなければならない。
- * @param[out] y_interpolated 補間結果。
+ * @param in interpolation_method 補間方法
+ * @param in polynomial_order 多項式補間法の場合の最大次数。
+ * @a polynomial_order は0または正の整数でなければならない。
+ * 実際の次数は、@a num_base との兼ね合いで決まる。
+ * @param in num_base 補間のためのデータ点の数。
+ * @param in x_base 補間のためのデータ点のx座標。
+ * 要素数は@a num_base でなければならない。
+ * @a x_base は昇順または降順にソートされていなければならない。
+ * @param in y_base 補間のためのデータ点のy座標。
+ * 要素数は@a num_base でなければならない。
+ * @param in num_interpolated 補間したいデータ点の数。
+ * @param in x_interpolated 補間したいデータ点のx座標。
+ * 要素数は@a num_interpolated でなければならない。
+ * @a x_interpolated は昇順または降順にソートされていなければならない。
+ * @param out y_interpolated 補間結果。
+ * 要素数は@a num_base でなければならない。
+ * @return 終了ステータス。
  * @~english
  * @brief Perform one-dimensional interpolation
  * @details
- * @param[in] interpolation_method
- * @param[in] polynomial_order
- * @param[in] num_base
- * @param[in] x_base
- * @param[in] y_base
- * @param[in] num_interpolated
- * @param[in] x_interpolated
- * @param[out] y_interpolated
+ * @param in interpolation_method interpolation method.
+ * @param in polynomial_order maximum polynomial order for polynomial interpolation.
+ * It must be 0 or positive integer. Actual order will be determined by a balance
+ * between @a polynomial_order and @a num_base.
+ * @param in num_base
+ * @param in x_base
+ * @param in y_base
+ * @param in num_interpolated
+ * @param in x_interpolated
+ * @param out y_interpolated
+ * @return status
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interoplation_method, int polynomial_order,
