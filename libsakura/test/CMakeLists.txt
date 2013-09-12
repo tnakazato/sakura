@@ -6,6 +6,7 @@ set(CMAKE_Fortran_COMPILER gfortran)
 enable_language(Fortran)
 find_package(Threads)
 find_package(OpenMP)
+find_package(FFTW3)
 find_library(pthread pthread)
 
 message("GTEST_INCLUDE_DIRS was set to ${GTEST_INCLUDE_DIRS}")
@@ -42,6 +43,7 @@ add_executable(testInit             init.cc)
 add_executable(testInterpolation    interpolation.cc)
 add_executable(testLogicalOperation logical_operation.cc)
 add_executable(testStatistics statistics.cc)
+add_executable(testConvolution convolution.cc)
 
 target_link_libraries (testInit             ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testStatistics ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
@@ -51,6 +53,7 @@ target_link_libraries (testBitOperation     ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBR
 target_link_libraries (testBoolFilterCollection ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testInterpolation    ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testLogicalOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+target_link_libraries (testConvolution ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 
 add_custom_target(testInitRun             COMMAND ./testInit             DEPENDS testInit)
 add_custom_target(testStatisticsRun COMMAND ./testStatistics DEPENDS testStatistics)
@@ -60,6 +63,7 @@ add_custom_target(testBitOperationRun     COMMAND ./testBitOperation     DEPENDS
 add_custom_target(testBoolFilterCollectionRun COMMAND ./testBoolFilterCollection DEPENDS testBoolFilterCollection)
 add_custom_target(testInterpolationRun    COMMAND ./testInterpolation    DEPENDS testInterpolation)
 add_custom_target(testLogicalOperationRun COMMAND ./testLogicalOperation DEPENDS testLogicalOperation)
+add_custom_target(testConvolutionRun COMMAND ./testConvolution DEPENDS testConvolution)
 
 add_custom_target(test
 	COMMAND ./testInit
@@ -68,6 +72,7 @@ add_custom_target(test
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
 	COMMAND ./testGridding
+	COMMAND ./testConvolution
 	COMMAND ./testNumericOperation
 	COMMAND ./testLogicalOperation
 	)
