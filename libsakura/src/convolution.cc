@@ -65,7 +65,7 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 	float const sqrt_ln2_mul8_over_2pi = .939437278699651333772340328410;
 	float const sqrt_ln16 = 1.66510922231539551270632928979040;
 	float const height = sqrt_ln2_mul8_over_2pi/kernel_width;
-	float center = (num_channel-1) / 2.f;
+	float center = num_channel/ 2.f;
 
 	switch(kernel_type){
 		case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
