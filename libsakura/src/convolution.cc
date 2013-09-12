@@ -9,8 +9,6 @@
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
-#define FORCE_EIGEN 1
-
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	fftwf_plan plan_real_to_complex_float;
@@ -23,44 +21,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 };
 }
 
-#if defined(__AVX__) && (! FORCE_EIGEN)
-#include <immintrin.h>
-#include <cstdint>
-
 namespace {
 
-void CreateConvolve1DContextSimd(size_t num_channel,
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
-		bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
-	std::cout << "This function implementation is in progress." << std::endl;
-}
-void Convolve1DSimd(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-		float const input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
-		float output_spectrum[/*num_channels*/]) {
-	std::cout << "This function implementation is in progress." << std::endl;
-}
-void DestroyConvolve1DContextSimd(
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
-	std::cout << "This function implementation is in progress." << std::endl;
-}
-
-} /* anonymous namespace */
-
-#else /* defined(__AVX__) */
-
-#define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
-#include <Eigen/Core>
-
-using ::Eigen::Map;
-using ::Eigen::Array;
-using ::Eigen::Dynamic;
-using ::Eigen::Aligned;
-
-namespace {
-
-inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+inline void CreateConvolve1DContextDefault(size_t num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width,bool use_fft,LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	std::cout << " CreateConvolve1DContextEigen function is called" << std::endl;
+
+	//assert(LIBSAKURA_SYMBOL(IsAligned)());
 
 	float const sqrt_ln2_mul8_over_2pi = .939437278699651333772340328410;
 	float const sqrt_ln16 = 1.66510922231539551270632928979040;
@@ -72,7 +39,7 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 			std::cout << "Kernel : Gaussian" << std::endl;
 
 			(*context)=(LIBSAKURA_SYMBOL(Convolve1DContext) *)malloc(sizeof(struct LIBSAKURA_SYMBOL(Convolve1DContext)) + sizeof(float)*num_channel);
-
+			assert(LIBSAKURA_SYMBOL(IsAligned)(*context));
 			if(*context == NULL){
 				std::cout << " context memory wasn't allocated properly " << std::endl;
 				exit(1);
@@ -84,6 +51,8 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 				float value = (j - center)*sqrt_ln16/kernel_width;
 				(*context)->input_real_array[j] = height * exp(-(value*value));
 			}
+			assert(LIBSAKURA_SYMBOL(IsAligned)((*context)->input_real_array));
+
 			if(use_fft){
 				(*context)->fft_applied_complex_kernel = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (num_channel/2 + 1));
 				(*context)->input_complex_spectrum     = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * (num_channel/2 + 1));
@@ -94,6 +63,9 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 			        std::cout << " context->fft_applied_complex_kernel or (*context)->input_complex_spectrum memory wasn't allocated properly " << std::endl;
 			        exit(1);
 				}
+				assert(LIBSAKURA_SYMBOL(IsAligned)((*context)->fft_applied_complex_kernel));
+				assert(LIBSAKURA_SYMBOL(IsAligned)((*context)->input_complex_spectrum));
+				assert(LIBSAKURA_SYMBOL(IsAligned)((*context)->output_complex_spectrum));
 
 				(*context)->plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_channel, (*context)->input_real_array,
 						(*context)->fft_applied_complex_kernel,FFTW_ESTIMATE);
@@ -127,12 +99,16 @@ inline void CreateConvolve1DContextEigen(size_t num_channel,LIBSAKURA_SYMBOL(Con
 	}
 }
 
-inline void Convolve1DEigen(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+inline void Convolve1DDefault(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 			float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) {
 	std::cout << " Convolve1DEigen function is called" << std::endl;
-	unsigned int i=0;
-	for(i = 0; i < (*context)->num_channel; ++i){
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(input_spectrum));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(output_spectrum));
+
+	uint i;
+	for( i = 0; i < (*context)->num_channel; ++i){
 		(*context)->input_real_array[i] = input_spectrum[i];
 	}
 
@@ -155,7 +131,7 @@ inline void Convolve1DEigen(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 	}
 }
 
-inline void DestroyConvolve1DContextEigen(LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
+inline void DestroyConvolve1DContextDefault(LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 	std::cout << " DestroyConvolve1DContextEigen function is called" << std::endl;
 	if(context->plan_real_to_complex_float != NULL){
 		fftwf_destroy_plan( context->plan_real_to_complex_float);
@@ -185,39 +161,27 @@ inline void DestroyConvolve1DContextEigen(LIBSAKURA_SYMBOL(Convolve1DContext)* c
 
 } /* anonymous namespace */
 
-#endif /* defined(__AVX__) */
-
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	CreateConvolve1DContextSimd(num_channel, kernel_type, kernel_width, use_fft,
-			context);
-#else
-	CreateConvolve1DContextEigen(num_channel,kernel_type,kernel_width,use_fft,context);
-#endif
+	CreateConvolve1DContextDefault(num_channel,kernel_type,kernel_width,use_fft,context);
 }
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::Convolve1D(
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 		float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
 		float output_spectrum[/*num_channels*/]) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	Convolve1DSimd(context,input_spectrum,input_flag,output_spectrum);
-#else
-	Convolve1DEigen(context,input_spectrum,input_flag,output_spectrum);
-#endif
+
+	Convolve1DDefault(context,input_spectrum,input_flag,output_spectrum);
+
 }
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::DestroyConvolve1DContext(
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	DestroyConvolve1DContextSimd(context);
-#else
-	DestroyConvolve1DContextEigen(context);
-#endif
+	DestroyConvolve1DContextDefault(context);
+
 }
 
 }
