@@ -69,7 +69,7 @@ public:
 			float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const = 0;
 	virtual void DestroyConvolve1DContext(
-	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
+			LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
 };
 
 class Gridding {
