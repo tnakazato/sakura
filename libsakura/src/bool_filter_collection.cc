@@ -5,7 +5,7 @@
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
-#define FORCE_SCALAR 1
+#define FORCE_SCALAR 0
 
 #if FORCE_SCALAR
 // Scalar implementation
@@ -35,7 +35,7 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data, DataType const *data
 
 template<typename DataType>
 inline void ToBoolScalar(size_t num_data, DataType const *in, bool *out) {
-	std::cout << "Invoking ToBoolScalar()" << std::endl;
+//	std::cout << "Invoking ToBoolScalar()" << std::endl;
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i=0; i < num_data ; ++i){
 			out[i] = (in[i] != zero);
@@ -43,7 +43,7 @@ inline void ToBoolScalar(size_t num_data, DataType const *in, bool *out) {
 }
 
 inline void InvertBoolScalar(size_t num_data, bool const *in, bool *out) {
-	std::cout << "Invoking InvertBoolScalar()" << std::endl;
+//	std::cout << "Invoking InvertBoolScalar()" << std::endl;
 	for (size_t i=0; i < num_data ; ++i){
 			out[i] = !in[i];
 		}
@@ -62,15 +62,28 @@ inline void SetTrueInRangesInclusiveDefault(size_t num_data, DataType const *dat
 		DataType const *upper_bounds, bool *result) {
 
 	std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lower_bounds));
+	assert(true == 1);
+	assert(false == 0);
+	// Initialize result with false
+	for (size_t i=0; i < num_data ; ++i){
+		result[i] = false;
+	}
+	DataType lower_value, upper_value;
+
+	for (size_t i=0; i < num_data ; ++i){
+		for (size_t j=0; j < num_condition; ++j){
+			lower_value = lower_bounds[j];
+			upper_value = upper_bounds[j];
+			result[i] = result[i] || ( (data[i] - lower_value) * (upper_value - data[i]) >= 0 );
+		}
+	}
 //	// cast bool array to uint8_t array
 //	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
 //	assert(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-//	assert(true == 1);
-//	assert(false == 0);
 //
 //	/* edit_mask = true: (mask8 - 1) = 00...0
 //	 *                   -> (bit_mask | 00...0) = bit_mask,
@@ -84,11 +97,24 @@ inline void SetTrueInRangesInclusiveDefault(size_t num_data, DataType const *dat
 
 template<typename DataType>
 inline void ToBoolDefault(size_t num_data, DataType const *in, bool *out) {
-	std::cout << "Invoking ToBoolScalar()" << std::endl;
+//	std::cout << "Invoking ToBoolDefault()" << std::endl;
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	DataType const zero(static_cast<DataType>(0));
+	for (size_t i=0; i < num_data ; ++i){
+			out[i] = (in[i] != zero);
+		}
 }
 
 inline void InvertBoolDefault(size_t num_data, bool const *in, bool *out) {
-	std::cout << "Invoking InvertBoolScalar()" << std::endl;
+//	std::cout << "Invoking InvertBoolDefault()" << std::endl;
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(true == 1);
+	assert(false == 0);
+	for (size_t i=0; i < num_data ; ++i){
+			out[i] = (in[i] ^ true);
+		}
 }
 
 } /* anonymous namespace */
