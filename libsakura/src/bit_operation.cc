@@ -8,29 +8,6 @@
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
-#define FORCE_SCALAR 0
-
-#if FORCE_SCALAR
-// Scalar implementation
-namespace {
-
-template<typename DataType>
-inline void OperateBitsAndScalar(DataType bit_mask, size_t num_in, DataType const *in,
-		bool const *edit_mask, DataType *out) {
-
-	//std::cout << "Invoking OperateBitsAndScalar()" << std::endl;
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	for (size_t i=0; i < num_in ; ++i){
-		out[i] = edit_mask[i] ? (in[i] & bit_mask) : in[i];
-	}
-
-}
-
-} /* anonymous namespace */
-
-#else /* FORCE_SCALAR */
 
 // Vectorization by Compiler
 namespace {
@@ -62,18 +39,12 @@ inline void OperateBitsAndDefault(DataType bit_mask, size_t num_in, DataType con
 
 } /* anonymous namespace */
 
-#endif /* FORCE_SCALAR */
-
 namespace LIBSAKURA_PREFIX {
 template<typename DataType>
 void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsAnd(DataType bit_mask, size_t num_in,
 		DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
 		DataType out[/*num_in*/]) const {
-#if FORCE_SCALAR
-	OperateBitsAndScalar(bit_mask, num_in, in, edit_mask, out);
-#else
 	OperateBitsAndDefault(bit_mask, num_in, in, edit_mask, out);
-#endif
 }
 
 template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint8_t>;
