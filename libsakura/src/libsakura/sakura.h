@@ -590,7 +590,6 @@ typedef enum {
  * 長さ@a num_interpolated の配列@a y_interpolated に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
  * @a y_interpolated にセットされる）。
- * 戻り値は終了ステータスである。
  *
  * @par
  * @pre @a x_base および@a x_interpolated は昇順または降順にソートされていなければ
@@ -629,7 +628,18 @@ typedef enum {
  * @a x_interpolated は昇順または降順にソートされていなければならない。
  * @param[out] y_interpolated 補間結果。
  * 要素数は@a num_base でなければならない。
- * @return 終了ステータス。
+ * @return @link sakura::sakura_Status sakura_Status @endlink
+ *
+ * 正常終了の場合、 sakura_Status::sakura_Status_kOK
+ * を返す。
+ * 引数に不正がある場合には sakura_Status::sakura_Status_kInvalidArgument
+ * を返す。 sakura_Status::sakura_Status_kInvalidArgument が返された場合、
+ * 考えられる原因は以下の三つである。
+ *     - @a interpolatin_method が正しくない
+ *     - 多項式補間で次数が負である
+ *     - 引数に渡した配列がアラインされていない
+ *
+ * また、原因不明のエラーでは sakura_Status::sakura_Status_kUnknownError を返す。
  * @~english
  * @brief Perform one-dimensional interpolation
  * @details
