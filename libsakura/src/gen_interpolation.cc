@@ -41,7 +41,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				x_interpolated, y_interpolated);
 	} catch (...) {
 		// any exception is thrown during interpolation
-		return LIBSAKURA_SYMBOL(Status_kNG);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 }
 
