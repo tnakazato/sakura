@@ -678,28 +678,107 @@ typedef enum {
 	 * @brief Hamming
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
 }LIBSAKURA_SYMBOL(Convolve1DKernelType);
-
 /**
  * @brief Context struct for Convolution
  */
 struct LIBSAKURA_SYMBOL(Convolve1DContext);
-
 /**
- * @brief Creating Context which contains 1D Kernel with FFT or without FFT
+ * @~japanese
+ * @brief コンテキストを作成する。
+ * @details
+ * @param[in] num_channel チャネル数
+ * @param[in] kernel_type カーネルタイプ
+ * Gaussian,BoxCar,Hanning,Hammingを選択可能。
+ * @param[in] kernel_width カーネル幅
+ * カーネルのシグマ＝カーネル幅／√(８ln2) により計算する。
+ * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
+ * @param[in,out] context コンテキスト
+ * FFT済みカーネル、作成済み実数複素数FFTプラン、複素数実数FFTプラン、チャネル数、実数配列
+ * を持つ。
+ * @return 終了ステータス。
+ * @~english
+ * @brief Create context
+ * @details
+ * @param[in] num_channel number of channel of input spectrum. @num_channel must
+ * be positive.
+ * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming)
+ * @kernel_type is defined as enum.
+ * @param[in] kernel_width kernel width which proposion to sigma
+ * @param[in] use_fft if use fft then true, if not, faulse.
+ * @param[in,out] context context to store number of channel,fftwf_plan,
+ * fftwf_complex and flexible real array.
+ * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context);
-/**
- * @brief 1D Convolution with FFT for input spectrum
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
+ /**
+  * @~japanese
+  * @brief コンボリューションを行う。
+  * @details 入力スペクトルに対するコンボリューションによるスムージング処理を行う。
+  * FFTを使用する場合：
+  * 入力スペクトルに対しFFTを行った複素数配列と、事前に作った複素数のFFT済みカーネルとを
+  * 掛け合せ一つの複素数配列を得る。それをIFFTし、実数配列である出力スペクトルを得る。
+  * FFTを使用しない場合：
+  * FFTを使用せず、実数配列のまま入力スペクトルとカーネルとでコンボリューションを行う。
+  * @param[in,out] context コンテキスト
+  * FFT済みカーネル、作成済み実数複素数FFTプラン、複素数実数FFTプラン、チャネル数、実数配列
+  * を持つ。
+  * @param[in] input_spectrum 入力スペクトル
+  * 配列の長さは @a num_channel と同じ。
+  * @param[in] input_flag 入力フラグ
+  * 配列の長さは @a num_channel と同じ。
+  * @param[out] output_spectrum 出力スペクトル
+  * 配列の長さは @a num_channel と同じ。
+  * @return 終了ステータス。
+  * @~english
+  * @brief Do Convolution
+  * @details It can do smoothing input spectrum by doing convolution
+  * with using fft or not. If using fft, fft applied kernl which is
+  * already included context by CreateConvolve1DContext will be multiplied
+  * with input spectrum by complex-complex multiplication and then
+  * the multiplied complex array will be created. Finally IFFT will be
+  * applied against it and then real output spectrum will be created.
+  * @param[in,out] context context which contain @a fftwf_plan, @a fftw_complex
+  * and @a num_channel, @a input_real_array
+  * @param[in] input_spectrum input spectrum
+  * Its length equals to number of channel
+  * @param[in] input_flag
+  * Its length equals to number of channel
+  * @param[out] output_spectrum
+  * Its length equals to number of channel
+  * @return status code.
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 		float input_spectrum[/*num_in*/], bool const input_flag[/*num_in*/],
 		float output_spectrum[/*num_in*/]);
-/**
- * @brief Destroy 1D Kernel with FFT or without FFT
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
+  /**
+   * @~japanese
+   * @brief コンテキストを作成する。
+   * @details
+   * @param[in] num_channel チャネル数
+   * @param[in] kernel_type カーネルタイプ
+   * Gaussian,BoxCar,Hanning,Hammingを選択可能。
+   * @param[in] kernel_width カーネル幅
+   * カーネルのシグマ＝カーネル幅／√(８ln2) により計算する。
+   * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
+   * @param[in,out] context コンテキスト
+   * FFT済みカーネル、作成済み実数複素数FFTプラン、複素数実数FFTプラン、チャネル数、実数配列
+   * を持つ。
+   * @return 終了ステータス。
+   * @~english
+   * @brief Create context
+   * @details
+   * @param[in] num_channel number of channel of input spectrum. @num_channel must
+   * be positive.
+   * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming)
+   * @kernel_type is defined as enum.
+   * @param[in] kernel_width kernel width which proposion to sigma
+   * @param[in] use_fft if use fft then true, if not, faulse.
+   * @param[in,out] context context to store number of channel,fftwf_plan,
+   * fftwf_complex and flexible real array.
+   * @return status code.
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
 /**
  * @brief Logical operation AND between two boolean arrays.
