@@ -113,28 +113,40 @@ class NearestInterpolationWorker: public InterpolationWorker<XDataType,
 public:
 	NearestInterpolationWorker(size_t num_base, XDataType const x_base[],
 			YDataType const y_base[]) :
-			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base) {
+			InterpolationWorker<XDataType, YDataType>(num_base, x_base, y_base), is_ascending_(
+					this->x_base_[0] < this->x_base_[this->num_base_ - 1]) {
 	}
 	virtual ~NearestInterpolationWorker() {
 	}
 	virtual void Interpolate(size_t left_index, size_t right_index,
 			size_t location, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
-		XDataType half_width = 0.5
-				* fabs(this->x_base_[location] - this->x_base_[location - 1]);
+		XDataType middle_point = 0.5
+				* (this->x_base_[location] + this->x_base_[location - 1]);
+		YDataType y_left = this->y_base_[location-1];
+		YDataType y_right = this->y_base_[location];
 		for (size_t i = left_index; i < right_index; ++i) {
-			XDataType dx_right = fabs(
-					x_interpolated[i] - this->x_base_[location]);
 			// nearest condition
-			// if dx_right / dx > 0.5, index will be (location - 1) which means nearest
-			// is left side. Otherwise, index will be (location), right side.
-			if (dx_right >= half_width) {
-				y_interpolated[i] = this->y_base_[location - 1];
+			// - x_interpolated[i] == middle_point
+			//     ---> nearest is y_left (left side)
+			// - x_interpolated[i] < middle_point and ascending order
+			//     ---> nearest is y_left (left side)
+			// - x_interpolated[i] > middle_point and ascending order
+			//     ---> nearest is y_right (right side)
+			// - x_interpolated[i] < middle_point and descending order
+			//     ---> nearest is y_right (right side)
+			// - x_interpolated[i] > middle_point and descending order
+			//     ---> nearest is y_left (left side)
+			if ((x_interpolated[i] != middle_point)
+					& ((x_interpolated[i] > middle_point) & is_ascending_)) {
+				y_interpolated[i] = y_right;
 			} else {
-				y_interpolated[i] = this->y_base_[location];
+				y_interpolated[i] = y_left;
 			}
 		}
 	}
+private:
+	bool const is_ascending_;
 };
 
 template<class XDataType, class YDataType>
