@@ -13,7 +13,7 @@
 namespace {
 
 template<typename DataType>
-inline void OperateBitsAndDefault(DataType bit_mask, size_t num_in, DataType const *in,
+inline void OperateBitsAnd(DataType bit_mask, size_t num_in, DataType const *in,
 		bool const *edit_mask, DataType *out) {
 
 	//std::cout << "Invoking OperateBitsAndDefault()" << std::endl;
@@ -44,7 +44,7 @@ template<typename DataType>
 void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsAnd(DataType bit_mask, size_t num_in,
 		DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
 		DataType out[/*num_in*/]) const {
-	OperateBitsAndDefault(bit_mask, num_in, in, edit_mask, out);
+	::OperateBitsAnd(bit_mask, num_in, in, edit_mask, out);
 }
 
 template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint8_t>;

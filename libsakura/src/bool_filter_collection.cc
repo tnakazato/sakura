@@ -11,7 +11,7 @@
 namespace {
 
 template<typename DataType>
-inline void SetTrueInRangesInclusiveDefault(size_t num_data, DataType const *data,
+inline void SetTrueInRangesInclusive(size_t num_data, DataType const *data,
 		size_t num_condition, DataType const *lower_bounds,
 		DataType const *upper_bounds, bool *result) {
 
@@ -39,7 +39,7 @@ inline void SetTrueInRangesInclusiveDefault(size_t num_data, DataType const *dat
 }
 
 template<typename DataType>
-inline void ToBoolDefault(size_t num_data, DataType const *in, bool *out) {
+inline void ToBool(size_t num_data, DataType const *in, bool *out) {
 //	std::cout << "Invoking ToBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -49,7 +49,7 @@ inline void ToBoolDefault(size_t num_data, DataType const *in, bool *out) {
 	}
 }
 
-inline void InvertBoolDefault(size_t num_data, bool const *in, bool *out) {
+inline void InvertBool(size_t num_data, bool const *in, bool *out) {
 //	std::cout << "Invoking InvertBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -70,20 +70,20 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 		DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) const {
-	SetTrueInRangesInclusiveDefault(num_data, data, num_condition,
+	::SetTrueInRangesInclusive(num_data, data, num_condition,
 			lower_bounds, upper_bounds, result);
 }
 
 template<typename DataType>
 void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::ToBool(size_t num_in,
 		DataType const in[/*num_in*/], bool out[/*num_in*/]) const {
-	ToBoolDefault(num_in, in, out);
+	::ToBool(num_in, in, out);
 }
 
 template<typename DataType>
 void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::InvertBool(size_t num_in,
 		bool const in[/*num_in*/], bool out[/*num_in*/]) const {
-	InvertBoolDefault(num_in, in, out);
+	::InvertBool(num_in, in, out);
 }
 
 template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<uint8_t>;
