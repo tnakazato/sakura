@@ -127,6 +127,7 @@ TEST_F(Interpolate1dFloatTest, NegativePolynomialOrder) {
 	EXPECT_EQ(sakura_Status_kInvalidArgument, result)
 			<< "Interpolate1dFloat should fail!";
 }
+
 TEST_F(Interpolate1dFloatTest, NegativePolynomialOrderButNearest) {
 	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
 
@@ -171,6 +172,25 @@ TEST_F(Interpolate1dFloatTest, NegativePolynomialOrderButNearest) {
 				<< "interpolated value differs from expected value at " << index
 				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
 	}
+}
+
+TEST_F(Interpolate1dFloatTest, InputArrayNotAligned) {
+	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 5;
+
+	// execute interpolation
+	AllocateMemory(num_base, num_interpolated);
+	sakura_Status result = sakura_Interpolate1dFloat(
+			sakura_InterpolationMethod_kPolynomial, polynomial_order_, 1,
+			&(x_base_[1]), y_base_, num_interpolated, x_interpolated_,
+			y_interpolated_);
+
+	// Should return InvalidArgument status
+	EXPECT_EQ(sakura_Status_kInvalidArgument, result)
+			<< "Interpolate1dFloat should fail!";
 }
 
 TEST_F(Interpolate1dFloatTest, Nearest) {

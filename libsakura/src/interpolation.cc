@@ -403,6 +403,15 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
+	// input arrays are not aligned
+	if (!LIBSAKURA_SYMBOL(IsAligned)(x_base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(y_base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(x_interpolated)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(y_interpolated)) {
+		std::cerr << "ERROR: input arrays are not aligned" << std::endl;
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
 	if (num_base == 1) {
 		// No need to interpolate, just substitute y_base[0]
 		// to all elements in y_interpolated
