@@ -79,8 +79,8 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  * 他の全てのSakuraライブラリAPIの呼び出しに先立って、呼び出すこと。
  * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
  * @ref sakura_CleanUp() の呼び出しを挟まず、複数回この関数を呼び出してはならない。
- * @pram[in]	allocator	Sakuraライブラリ内で、メモリーを確保するときに呼び出されるアロケーター。NULLの場合はmalloc(3)が使用される。 @ref sakura_UserAllocator
- * @pram[in]	deallocator	Sakuraライブラリ内で、メモリーを開放するときに呼び出されるデアロケーター。NULLの場合はfree(3)が使用される。 @ref sakura_UserDeallocator
+ * @param[in]	allocator	Sakuraライブラリ内で、メモリーを確保するときに呼び出されるアロケーター。NULLの場合はmalloc(3)が使用される。 @ref sakura_UserAllocator
+ * @param[in]	deallocator	Sakuraライブラリ内で、メモリーを開放するときに呼び出されるデアロケーター。NULLの場合はfree(3)が使用される。 @ref sakura_UserDeallocator
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
