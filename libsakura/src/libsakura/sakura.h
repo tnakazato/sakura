@@ -630,16 +630,21 @@ typedef enum {
  * 要素数は@a num_base でなければならない。
  * @return @link sakura::sakura_Status sakura_Status @endlink
  *
- * 正常終了の場合、 sakura_Status::sakura_Status_kOK
+ * 正常終了の場合、@link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
  * を返す。
- * 引数に不正がある場合には sakura_Status::sakura_Status_kInvalidArgument
- * を返す。 sakura_Status::sakura_Status_kInvalidArgument が返された場合、
+ * 引数に不正がある場合には
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * を返す。
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * が返された場合、
  * 考えられる原因は以下の三つである。
  *     - @a interpolatin_method が正しくない
  *     - 多項式補間で次数が負である
  *     - 引数に渡した配列がアラインされていない
  *
- * また、原因不明のエラーでは sakura_Status::sakura_Status_kUnknownError を返す。
+ * また、原因不明のエラーでは
+ * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * を返す。
  * @~english
  * @brief Perform one-dimensional interpolation
  * @details
