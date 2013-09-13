@@ -11,11 +11,11 @@
 namespace {
 
 template<typename DataType>
-inline void SetTrueInRangesInclusive(size_t num_data, DataType const *data,
+inline void SetTrueInRangesInclusiveScalar(size_t num_data, DataType const *data,
 		size_t num_condition, DataType const *lower_bounds,
 		DataType const *upper_bounds, bool *result) {
-
-	std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;
+	// So far, only unit8_t version is vectorized
+	//std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
@@ -49,15 +49,17 @@ inline void ToBool(size_t num_data, DataType const *in, bool *out) {
 	}
 }
 
-inline void InvertBool(size_t num_data, bool const *in, bool *out) {
+inline void InvertBoolScalar(size_t num_data, bool const *in, bool *out) {
 //	std::cout << "Invoking InvertBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	assert(true == 1);
 	assert(false == 0);
+	uint8_t true8(static_cast<uint8_t>(true));
+	assert(sizeof(in[0]) == sizeof(true8));
 	for (size_t i=0; i < num_data ; ++i){
-			out[i] = (in[i] ^ true);
-		}
+		out[i] = (in[i] ^ true8);
+	}
 }
 
 } /* anonymous namespace */
@@ -70,7 +72,7 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 		DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) const {
-	::SetTrueInRangesInclusive(num_data, data, num_condition,
+	::SetTrueInRangesInclusiveScalar(num_data, data, num_condition,
 			lower_bounds, upper_bounds, result);
 }
 
@@ -83,7 +85,7 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::ToBool(size_t num_i
 template<typename DataType>
 void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::InvertBool(size_t num_in,
 		bool const in[/*num_in*/], bool out[/*num_in*/]) const {
-	::InvertBool(num_in, in, out);
+	::InvertBoolScalar(num_in, in, out);
 }
 
 template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<uint8_t>;
