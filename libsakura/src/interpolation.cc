@@ -120,17 +120,19 @@ public:
 	virtual void Interpolate(size_t left_index, size_t right_index,
 			size_t location, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
-		XDataType dx = fabs(
-				this->x_base_[location] - this->x_base_[location - 1]);
+		XDataType half_width = 0.5
+				* fabs(this->x_base_[location] - this->x_base_[location - 1]);
 		for (size_t i = left_index; i < right_index; ++i) {
 			XDataType dx_right = fabs(
 					x_interpolated[i] - this->x_base_[location]);
 			// nearest condition
 			// if dx_right / dx > 0.5, index will be (location - 1) which means nearest
 			// is left side. Otherwise, index will be (location), right side.
-			y_interpolated[i] = this->y_base_[location
-					- static_cast<size_t>((dx_right) / dx + 0.5)];
-
+			if (dx_right >= half_width) {
+				y_interpolated[i] = this->y_base_[location - 1];
+			} else {
+				y_interpolated[i] = this->y_base_[location];
+			}
 		}
 	}
 };
