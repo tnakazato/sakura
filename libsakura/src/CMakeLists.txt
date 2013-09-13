@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 2.6)
 find_package(Threads)
 find_package(OpenMP)
 find_package(Eigen3 REQUIRED)
+find_package(Log4Cxx)
 find_package(FFTW3)
 
 if(OPENMP_FOUND)
@@ -77,7 +78,7 @@ if(BUILD_DOC)
 		COMMENT "Generating the API documentation with Doxygen")
 endif(BUILD_DOC)
 
-include_directories(${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
+include_directories(${LOG4CXX_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 
 foreach(_file ${MULTI_SOURCE})
 	get_filename_component(_base ${_file} NAME_WE)
@@ -118,7 +119,7 @@ set_target_properties(sakura PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
-target_link_libraries(sakura fftw3f ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(sakura log4cxx fftw3f ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS sakura
 	LIBRARY DESTINATION lib

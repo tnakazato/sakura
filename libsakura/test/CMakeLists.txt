@@ -35,6 +35,11 @@ message("PROJECT_BINARY_DIR is ${PROJECT_BINARY_DIR}")
 
 include_directories(${PROJECT_SOURCE_DIR}/../src ${PROJECT_BINARY_DIR}/../bin "${GTEST_INCLUDE_DIRS}" ${PROJECT_SOURCE_DIR})
 
+add_custom_target(logConfig
+	COMMAND cp -f "${PROJECT_SOURCE_DIR}/libsakura.log4j" "${PROJECT_BINARY_DIR}"
+	DEPENDS "${PROJECT_SOURCE_DIR}/libsakura.log4j"
+)
+
 add_executable(testNumericOperation numeric_operation.cc)
 add_executable(testBitOperation     bit_operation.cc)
 add_executable(testBoolFilterCollection bool_filter_collection.cc)
@@ -54,6 +59,8 @@ target_link_libraries (testBoolFilterCollection ${GTEST_MAIN_LIBRARIES} ${GTEST_
 target_link_libraries (testInterpolation    ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testLogicalOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testConvolution ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+
+add_dependencies(testInit logConfig)
 
 add_custom_target(testInitRun             COMMAND ./testInit             DEPENDS testInit)
 add_custom_target(testStatisticsRun COMMAND ./testStatistics DEPENDS testStatistics)

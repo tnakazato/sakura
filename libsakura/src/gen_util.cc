@@ -14,18 +14,60 @@
 #include <stdio.h>
 
 #include "libsakura/sakura.h"
+#include <log4cxx/propertyconfigurator.h>
+#include "libsakura/logger.h"
+#include "libsakura/memory_manager.h"
 #include "libsakura/optimized_implementation_factory.h"
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)() {
-	std::string env_val_name(LIBSAKURA_PREFIX_STRING "_SIMD");
-	std::transform(env_val_name.begin(), env_val_name.end(),
-			env_val_name.begin(), ::toupper);
-	char const *simd_spec = getenv(env_val_name.c_str());
-	if (simd_spec == nullptr) {
-		simd_spec = "adaptive";
+namespace LIBSAKURA_PREFIX {
+
+::log4cxx::LoggerPtr Logger::GetLogger(char const *suffix) {
+	std::string logger = LIBSAKURA_PREFIX_STRING;
+	if (*suffix != '\0') {
+		logger.append(".");
+		logger.append(suffix);
 	}
-	LIBSAKURA_PREFIX::OptimizedImplementationFactory::InitializeFactory(
-			simd_spec);
+	return log4cxx::Logger::getLogger(logger);
+}
+
+LIBSAKURA_SYMBOL(UserAllocator) Memory::allocator_;
+LIBSAKURA_SYMBOL(UserDeallocator) Memory::deallocator_;
+
+} /* namespace LIBSAKURA_PREFIX */
+
+namespace {
+
+void *DefaultAllocator(size_t size) {
+	return malloc(std::max(static_cast<size_t>(1), size));
+}
+
+void DefaultFree(void *ptr) {
+	free(ptr);
+}
+
+} /* namespace */
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
+LIBSAKURA_SYMBOL(UserAllocator) allocator,
+LIBSAKURA_SYMBOL(UserDeallocator) deallocator) {
+	::log4cxx::PropertyConfigurator::configure("libsakura.log4j");
+
+	LIBSAKURA_PREFIX::Memory::allocator_ =
+			allocator == nullptr ? DefaultAllocator : allocator;
+	LIBSAKURA_PREFIX::Memory::deallocator_ =
+			deallocator == nullptr ? DefaultFree : deallocator;
+
+	{
+		std::string env_val_name(LIBSAKURA_PREFIX_STRING "_SIMD");
+		std::transform(env_val_name.begin(), env_val_name.end(),
+				env_val_name.begin(), ::toupper);
+		char const *simd_spec = getenv(env_val_name.c_str());
+		if (simd_spec == nullptr) {
+			simd_spec = "adaptive";
+		}
+		LIBSAKURA_PREFIX::OptimizedImplementationFactory::InitializeFactory(
+				simd_spec);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

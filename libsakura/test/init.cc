@@ -9,12 +9,12 @@
 #include "gtest/gtest.h"
 
 TEST(Global, Init) {
-	sakura_Status result = sakura_Initialize();
+	sakura_Status result = sakura_Initialize(nullptr, nullptr);
 	EXPECT_EQ(result, sakura_Status_kOK);
 
 	sakura_CleanUp();
 
-	result = sakura_Initialize();
+	result = sakura_Initialize(nullptr, nullptr);
 	EXPECT_EQ(result, sakura_Status_kOK);
 
 	sakura_CleanUp();

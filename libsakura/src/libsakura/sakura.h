@@ -44,6 +44,31 @@ typedef enum {
 	 * @brief 原因不明のエラー
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
 }LIBSAKURA_SYMBOL(Status);
+
+/**
+ * @~japanese
+ * @brief Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型
+ *
+ * 関数はリエントラントな実装でなければならない。
+ * sizeが0の場合も、(メモリーが確保できるなら)長さ0の領域のポインタを返すこと(NULLを返さないこと)。
+ * @param[in] size	確保するサイズ(バイト)
+ * @~
+ * MT-safe
+ */
+typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
+
+/**
+ * @~japanese
+ * @brief Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型
+ *
+ * 関数はリエントラントな実装でなければならない。
+ * @a pointer にNULLが渡された場合、何も行わないこと。
+ * @param[in] pointer	@ref sakura_UserAllocator が返したアドレスまたはNULL。
+ * @~
+ * MT-safe
+ */
+typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
+
 /**
  * @~english
  * @brief Initializes Sakura Library
@@ -54,9 +79,13 @@ typedef enum {
  * 他の全てのSakuraライブラリAPIの呼び出しに先立って、呼び出すこと。
  * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
  * @ref sakura_CleanUp() の呼び出しを挟まず、複数回この関数を呼び出してはならない。
+ * @pram[in]	allocator	Sakuraライブラリ内で、メモリーを確保するときに呼び出されるアロケーター。NULLの場合はmalloc(3)が使用される。 @ref sakura_UserAllocator
+ * @pram[in]	deallocator	Sakuraライブラリ内で、メモリーを開放するときに呼び出されるデアロケーター。NULLの場合はfree(3)が使用される。 @ref sakura_UserDeallocator
  * @~
  * MT-unsafe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)();
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
+LIBSAKURA_SYMBOL(UserAllocator) allocator,
+		LIBSAKURA_SYMBOL(UserDeallocator) deallocator);
 
 /**
  * @~english
@@ -160,30 +189,6 @@ float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
  */
 double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 		size_t elements_required);
-
-/**
- * @~japanese
- * @brief Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型
- *
- * 関数はリエントラントな実装でなければならない。
- * sizeが0の場合も、(メモリーが確保できるなら)長さ0の領域のポインタを返すこと(NULLを返さないこと)。
- * @param[in] size	確保するサイズ(バイト)
- * @~
- * MT-safe
- */
-typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
-
-/**
- * @~japanese
- * @brief Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型
- *
- * 関数はリエントラントな実装でなければならない。
- * @a pointer にNULLが渡された場合、何も行わないこと。
- * @param[in] pointer	@ref sakura_UserAllocator が返したアドレスまたはNULL。
- * @~
- * MT-safe
- */
-typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 
 /**
  * @~japanese

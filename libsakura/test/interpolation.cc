@@ -12,7 +12,7 @@
 class Interpolate1dFloatTest: public ::testing::Test {
 protected:
 	virtual void SetUp() {
-		initialize_result_ = sakura_Initialize();
+		initialize_result_ = sakura_Initialize(nullptr, nullptr);
 		polynomial_order_ = 0;
 		sakura_alignment_ = sakura_GetAlignment();
 	}

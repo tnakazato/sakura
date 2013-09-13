@@ -9,7 +9,6 @@
 /* the number of elements in input/output array to test */
 #define NUM_IN 8
 #define NUM_IN_LONG 262144 //2**18
-
 using namespace std;
 
 /*
@@ -20,32 +19,29 @@ using namespace std;
  * - edit_mask = [F, F, F, F, T, T, T, T]
  */
 template<typename DataType>
-class BitOperation : public ::testing::Test
-{
+class BitOperation: public ::testing::Test {
 protected:
 
-	BitOperation()
-	: verbose(false)
-	{
-		bit_size = sizeof(DataType)*8;
+	BitOperation() :
+			verbose(false) {
+		bit_size = sizeof(DataType) * 8;
 	}
 
-	virtual void SetUp()
-	{
+	virtual void SetUp() {
 		size_t const ntype(4);
-		for (size_t i = 0; i < NUM_IN; ++i){
+		for (size_t i = 0; i < NUM_IN; ++i) {
 			in_[i] = i % ntype; /* repeat bit pattern of *00, *01, *10, *11,... */
 			bit_mask_ = 2; /* bit pattern of 0...010 */
-			edit_mask_[i] = (i/ntype % 2 == 1); /*{F, F, F, F, T, T, T, T, (repeated)};*/
+			edit_mask_[i] = (i / ntype % 2 == 1); /*{F, F, F, F, T, T, T, T, (repeated)};*/
 		}
 
 		// Initialize sakura
-		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)();
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+				nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 
-	virtual void TearDown()
-	{
+	virtual void TearDown() {
 		// Clean-up sakura
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
@@ -53,13 +49,13 @@ protected:
 	/* Converts an input value to a bit pattern.*/
 //	char* BToS(DataType in_value) {
 	string BToS(DataType in_value) {
-		char buff[bit_size+1];
+		char buff[bit_size + 1];
 		buff[bit_size] = '\0';
-		for (size_t i = 0; i < bit_size ; ++i){
-			if((in_value>>i) % 2 == 0)
-				buff[bit_size-1-i] = '0';
+		for (size_t i = 0; i < bit_size; ++i) {
+			if ((in_value >> i) % 2 == 0)
+				buff[bit_size - 1 - i] = '0';
 			else
-				buff[bit_size-1-i] = '1';
+				buff[bit_size - 1 - i] = '1';
 		}
 		return string(buff);
 	}
@@ -85,24 +81,22 @@ protected:
 		return result;
 	}
 
-	void PrintInputs(){
-		cout << "bit_mask = " << BToS(bit_mask_) ;
+	void PrintInputs() {
+		cout << "bit_mask = " << BToS(bit_mask_);
 		cout << endl;
 		PrintArray("in", NUM_IN, in_);
 	}
 
-	void PrintArray(char const *name, size_t num_in, DataType *in){
+	void PrintArray(char const *name, size_t num_in, DataType *in) {
 		cout << name << " = [";
-		for (size_t i = 0; i < num_in-1; ++i)
-			cout << BToS(in[i]) << ", " ;
-		cout << BToS(in[num_in-1]) ;
+		for (size_t i = 0; i < num_in - 1; ++i)
+			cout << BToS(in[i]) << ", ";
+		cout << BToS(in[num_in - 1]);
 		cout << " ]" << endl;
 	}
 
 	SIMD_ALIGN DataType in_[NUM_IN];
-	DataType bit_mask_;
-	SIMD_ALIGN bool edit_mask_[NUM_IN];
-	bool verbose;
+	DataType bit_mask_;SIMD_ALIGN bool edit_mask_[NUM_IN];bool verbose;
 	size_t bit_size;
 	//size_t const bit_size = sizeof(DataType)*8;
 
@@ -115,8 +109,8 @@ protected:
  * - in = [ 0...000, 0...001, 0...010, 0...011, 0...000, 0...001, 0...010, 0...011 ]
  * - edit_mask = [F, F, F, F, T, T, T, T]
  */
-class BitOperation32 : public BitOperation<uint32_t>
-{};
+class BitOperation32: public BitOperation<uint32_t> {
+};
 
 /*
  * Tests various bit operation of an uint8_t value and array
@@ -125,9 +119,8 @@ class BitOperation32 : public BitOperation<uint32_t>
  * - in = [ 00000000, 00000001, 00000010, 00000011, 00000000, 00000001, 00000010, 00000011 ]
  * - edit_mask = [F, F, F, F, T, T, T, T]
  */
-class BitOperation8 : public BitOperation<uint8_t>
-{};
-
+class BitOperation8: public BitOperation<uint8_t> {
+};
 
 /*
  * Test bit operation AND by sakura_OperateBitsUint8And
@@ -135,20 +128,24 @@ class BitOperation8 : public BitOperation<uint8_t>
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010 ]
  */
 TEST_F(BitOperation8, And) {
-	SIMD_ALIGN uint8_t out[NUM_IN];
-	uint8_t answer[8] = {0, 1, 2, 3, 0, 0, 2, 2};
+	SIMD_ALIGN
+	uint8_t out[NUM_IN];
+	uint8_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	//uint8_t result[NUM_IN];
 	size_t const num_in(NUM_IN);
 
-	if (verbose) PrintInputs();
+	if (verbose)
+		PrintInputs();
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_, num_in, in_, edit_mask_, out);
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_in, in_, edit_mask_, out);
 
-	if (verbose) PrintArray("out", num_in, out);
+	if (verbose)
+		PrintArray("out", num_in, out);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_in ; ++i){
+	for (size_t i = 0; i < num_in; ++i) {
 		ASSERT_EQ(out[i], answer[i % 8]);
 	}
 }
@@ -159,32 +156,38 @@ TEST_F(BitOperation8, And) {
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010, .... repeated... ]
  */
 TEST_F(BitOperation8, AndLong) {
-	SIMD_ALIGN uint8_t out[NUM_IN_LONG];
-	SIMD_ALIGN uint8_t in[NUM_IN_LONG];
-	SIMD_ALIGN bool edit_mask[NUM_IN_LONG];
-	uint8_t answer[8] = {0, 1, 2, 3, 0, 0, 2, 2};
+	SIMD_ALIGN
+	uint8_t out[NUM_IN_LONG];
+	SIMD_ALIGN
+	uint8_t in[NUM_IN_LONG];
+	SIMD_ALIGN
+	bool edit_mask[NUM_IN_LONG];
+	uint8_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
 	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
-	for (size_t i = 0 ; i < num_large ; ++i){
+	for (size_t i = 0; i < num_large; ++i) {
 		in[i] = in_[i % num_in];
 		edit_mask[i] = edit_mask_[i % num_in];
 	}
 
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is " << num_large << endl;
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
 	start = currenttime();
-	for (size_t i = 0 ; i < num_repeat ; ++i){
-		status = sakura_OperateBitsUint8And(bit_mask_, num_large, in, edit_mask, out);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint8And(bit_mask_, num_large, in, edit_mask,
+				out);
 	}
 	end = currenttime();
-	cout << "Elapse time of actual operation: " << end - start << " sec" << endl;
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_large ; ++i){
+	for (size_t i = 0; i < num_large; ++i) {
 		ASSERT_EQ(out[i], answer[i % 8]);
 	}
 }
@@ -195,19 +198,23 @@ TEST_F(BitOperation8, AndLong) {
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010 ]
  */
 TEST_F(BitOperation32, And) {
-	SIMD_ALIGN uint32_t out[NUM_IN];
-	uint32_t answer[8] = {0, 1, 2, 3, 0, 0, 2, 2};
+	SIMD_ALIGN
+	uint32_t out[NUM_IN];
+	uint32_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	size_t const num_in(NUM_IN);
 
-	if (verbose) PrintInputs();
+	if (verbose)
+		PrintInputs();
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_, num_in, in_, edit_mask_, out);
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_in, in_, edit_mask_, out);
 
-	if (verbose) PrintArray("out", num_in, out);
+	if (verbose)
+		PrintArray("out", num_in, out);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_in ; ++i){
+	for (size_t i = 0; i < num_in; ++i) {
 		ASSERT_EQ(out[i], answer[i % 8]);
 	}
 }
@@ -218,32 +225,38 @@ TEST_F(BitOperation32, And) {
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010, .... repeated... ]
  */
 TEST_F(BitOperation32, AndLong) {
-	SIMD_ALIGN uint32_t out[NUM_IN_LONG];
-	SIMD_ALIGN uint32_t in[NUM_IN_LONG];
-	SIMD_ALIGN bool edit_mask[NUM_IN_LONG];
-	uint32_t answer[8] = {0, 1, 2, 3, 0, 0, 2, 2};
+	SIMD_ALIGN
+	uint32_t out[NUM_IN_LONG];
+	SIMD_ALIGN
+	uint32_t in[NUM_IN_LONG];
+	SIMD_ALIGN
+	bool edit_mask[NUM_IN_LONG];
+	uint32_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
 	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
-	for (size_t i = 0 ; i < num_large ; ++i){
+	for (size_t i = 0; i < num_large; ++i) {
 		in[i] = in_[i % num_in];
 		edit_mask[i] = edit_mask_[i % num_in];
 	}
 
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is " << num_large << endl;
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
 	start = currenttime();
-	for (size_t i = 0 ; i < num_repeat ; ++i){
-		status = sakura_OperateBitsUint32And(bit_mask_, num_large, in, edit_mask, out);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint32And(bit_mask_, num_large, in,
+				edit_mask, out);
 	}
 	end = currenttime();
-	cout << "Elapse time of actual operation: " << end - start << " sec" << endl;
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_large ; ++i){
+	for (size_t i = 0; i < num_large; ++i) {
 		ASSERT_EQ(out[i], answer[i % 8]);
 	}
 }

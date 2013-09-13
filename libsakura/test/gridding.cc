@@ -303,7 +303,8 @@ void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
 }
 
 TEST(Gridding, Basic) {
-	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)();
+	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+			nullptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 	result = sakura_GridConvolving(NROW, 0, NROW, 0, 0, 0, SUPPORT, SAMPLING,

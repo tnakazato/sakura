@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "libsakura/optimized_implementation_factory_impl.h"
+#include "libsakura/logger.h"
 #include "libsakura/localdef.h"
 
 namespace {
@@ -20,6 +21,10 @@ using ::LIBSAKURA_PREFIX::LogicalOperation;
 using ::LIBSAKURA_PREFIX::NumericOperation;
 using ::LIBSAKURA_PREFIX::Gridding;
 using ::LIBSAKURA_PREFIX::Statistics;
+
+// a logger for this module
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger(
+		"optimized_implementation_factory");
 
 struct CPURegister {
 	uint32_t eax, ebx, ecx, edx;
@@ -217,9 +222,11 @@ void OptimizedImplementationFactory::InitializeFactory(char const *simd_spec) {
 	} else {
 		factory_ = &default_factory;
 	}
-#ifndef NDEBUG
-	fprintf(stderr, "SIMD implementation: %s\n", factory_->GetName());
-#endif
+	if (::LIBSAKURA_PREFIX::Logger::IsDebugEnabled(logger)) {
+		std::ostringstream os;
+		os << "SIMD implementation: " << factory_->GetName() << std::endl;
+		Logger::Debug(logger, os.str().c_str());
+	}
 }
 
 void OptimizedImplementationFactory::CleanUpFactory() {

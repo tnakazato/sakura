@@ -38,25 +38,24 @@ using namespace std;
  *         -0.908632 ,0.882368,-0.853519 ,0.82239 ,-0.789304 ,0.754592 ,-0.71859 ]
  *
  */
-class CreateConvolve1DContext : public ::testing::Test
-{
+class CreateConvolve1DContext: public ::testing::Test {
 protected:
 
-	CreateConvolve1DContext () : verbose(true)
-	{}
+	CreateConvolve1DContext() :
+			verbose(true) {
+	}
 
-	virtual void SetUp()
-	{
-		in1_[0]  = 0.000141569;
-		in1_[1]  = 0.00226511;
-		in1_[2]  = 0.0195716;
-		in1_[3]  = 0.0913234;
-		in1_[4]  = 0.230121;
-		in1_[5]  = 0.313146; // center
-		in1_[6]  = 0.230121;
-		in1_[7]  = 0.0913234;
-		in1_[8]  = 0.0195716;
-		in1_[9]  = 0.00226511;
+	virtual void SetUp() {
+		in1_[0] = 0.000141569;
+		in1_[1] = 0.00226511;
+		in1_[2] = 0.0195716;
+		in1_[3] = 0.0913234;
+		in1_[4] = 0.230121;
+		in1_[5] = 0.313146; // center
+		in1_[6] = 0.230121;
+		in1_[7] = 0.0913234;
+		in1_[8] = 0.0195716;
+		in1_[9] = 0.00226511;
 		in1_[10] = 0.000141569;
 
 		in2_[0] = 1;
@@ -71,34 +70,32 @@ protected:
 		in2_[9] = -0.853519;
 		in2_[10] = 0.82239;
 
-
 		// Initialize sakura
-		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)();
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+				nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 
-	virtual void TearDown()
-	{
+	virtual void TearDown() {
 		// Clean-up sakura
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	void PrintInputs(){
+	void PrintInputs() {
 		PrintArray("in1", NUM_IN, in1_);
 		PrintArray("in2", NUM_IN, in2_);
 	}
 
-	void PrintArray(char const *name, size_t num_in, float *in){
+	void PrintArray(char const *name, size_t num_in, float *in) {
 		cout << name << " = [";
-		for (size_t i = 0; i < num_in-1; i++)
-			cout << in[i] << ", " ;
-		cout << in[num_in-1];
+		for (size_t i = 0; i < num_in - 1; i++)
+			cout << in[i] << ", ";
+		cout << in[num_in - 1];
 		cout << " ]" << endl;
 	}
 
 	float in1_[NUM_IN];
-	float in2_[NUM_IN];
-	bool verbose;
+	float in2_[NUM_IN];bool verbose;
 
 };
 
@@ -109,30 +106,33 @@ protected:
  */
 TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
-	float out_left_[NUM_IN]={};
-	float out_right_[NUM_IN]={};
-	float center_[NUM_IN]={};
-	size_t num_channel=128;
-	size_t kernel_width=3;
+	float out_left_[NUM_IN] = { };
+	float out_right_[NUM_IN] = { };
+	float center_[NUM_IN] = { };
+	size_t num_channel = 128;
+	size_t kernel_width = 3;
 	bool fftuse = true;
 	size_t kernel_center;
-	kernel_center = num_channel/2;
+	kernel_center = num_channel / 2;
 
-	if (verbose) PrintInputs();
+	if (verbose)
+		PrintInputs();
 
-	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),kernel_width,fftuse, &context);
+	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,
+			LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), kernel_width,
+			fftuse, &context);
 	std::cout << "center = " << kernel_center << std::endl;
 
 	center_[0] = context->input_real_array[kernel_center];
 
 	// Verification
 	//EXPECT_EQ(in1_[5],center_[0]) << "center verification" ;
-	for ( size_t i = 0 ; i < 5 ; ++i){
-	       out_left_[i]  = context->input_real_array[kernel_center -1 -i];
-           out_right_[i] = context->input_real_array[kernel_center +1 +i];
-           //ASSERT_EQ(out_left_[i],out_right_[i]);
-           EXPECT_EQ(out_left_[i],out_right_[i]);
-   		   //std::cout << "left[" << i << "]=" << out_left_[i] << "   right[" << i << "]=" << out_right_[i] << std::endl;
+	for (size_t i = 0; i < 5; ++i) {
+		out_left_[i] = context->input_real_array[kernel_center - 1 - i];
+		out_right_[i] = context->input_real_array[kernel_center + 1 + i];
+		//ASSERT_EQ(out_left_[i],out_right_[i]);
+		EXPECT_EQ(out_left_[i], out_right_[i]);
+		//std::cout << "left[" << i << "]=" << out_left_[i] << "   right[" << i << "]=" << out_right_[i] << std::endl;
 	}
 
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -146,24 +146,27 @@ TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
  */
 TEST_F(CreateConvolve1DContext , FFTappliedKernelValue) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
-	float out1_[NUM_IN]={};
-	float out2_[NUM_IN]={};
-	size_t num_channel=128;
-	size_t kernel_width=3;
+	float out1_[NUM_IN] = { };
+	float out2_[NUM_IN] = { };
+	size_t num_channel = 128;
+	size_t kernel_width = 3;
 	bool fftuse = true;
 
-	if (verbose) PrintInputs();
+	if (verbose)
+		PrintInputs();
 
-	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),kernel_width,fftuse, &context);
+	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,
+			LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), kernel_width,
+			fftuse, &context);
 
 	// Verification
-	for ( size_t i = 0 ; i < 11 ; ++i){
-	       out1_[i]  = context->fft_applied_complex_kernel[i][0];
-           //EXPECT_EQ(in2_[i],out1_[i]);
-   		  // std::cout << "in2_[" << i << "]=" << in2_[i] << "   fft_applied[" << i << "]=" << out1_[i] << std::endl;
+	for (size_t i = 0; i < 11; ++i) {
+		out1_[i] = context->fft_applied_complex_kernel[i][0];
+		//EXPECT_EQ(in2_[i],out1_[i]);
+		// std::cout << "in2_[" << i << "]=" << in2_[i] << "   fft_applied[" << i << "]=" << out1_[i] << std::endl;
 	}
-	out2_[0]=context->fft_applied_complex_kernel[0][1];
-	EXPECT_EQ(0,out2_[0]);
+	out2_[0] = context->fft_applied_complex_kernel[0][1];
+	EXPECT_EQ(0, out2_[0]);
 
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
@@ -176,25 +179,28 @@ TEST_F(CreateConvolve1DContext , FFTappliedKernelValue) {
 TEST_F(CreateConvolve1DContext , FFTWfResult) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 
-	float outspec_[NUM_CHANNEL]={};
-	float inspec_[NUM_CHANNEL]={};
-	bool input_flag_[NUM_CHANNEL]={};
+	float outspec_[NUM_CHANNEL] = { };
+	float inspec_[NUM_CHANNEL] = { };
+	bool input_flag_[NUM_CHANNEL] = { };
 
-	float out1_[NUM_IN]={};
-	float out2_[NUM_IN]={};
-	size_t num_channel=128;
-	size_t kernel_width=3;
+	float out1_[NUM_IN] = { };
+	float out2_[NUM_IN] = { };
+	size_t num_channel = 128;
+	size_t kernel_width = 3;
 	bool fftuse = true;
 
-	if (verbose) PrintInputs();
+	if (verbose)
+		PrintInputs();
 
-	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),kernel_width,fftuse, &context);
+	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_channel,
+			LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), kernel_width,
+			fftuse, &context);
 
-	for ( size_t i = 0 ; i < NUM_CHANNEL; ++i){
-		inspec_[i]=context->input_real_array[i];
-		input_flag_[i]=0;
+	for (size_t i = 0; i < NUM_CHANNEL; ++i) {
+		inspec_[i] = context->input_real_array[i];
+		input_flag_[i] = 0;
 	}
-	LIBSAKURA_SYMBOL(Convolve1D)(&context,inspec_,input_flag_,outspec_);
+	LIBSAKURA_SYMBOL(Convolve1D)(&context, inspec_, input_flag_, outspec_);
 
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
