@@ -19,12 +19,10 @@ public:
 	static inline void Free(void *ptr) throw () {
 		deallocator_(ptr);
 	}
-#if 0
 private:
-	friend ::LIBSAKURA_SYMBOL(Status) ::LIBSAKURA_SYMBOL(Initialize)(
+	friend ::LIBSAKURA_SYMBOL(Status) (::LIBSAKURA_SYMBOL(Initialize))(
 			::LIBSAKURA_SYMBOL(UserAllocator) allocator,
 			::LIBSAKURA_SYMBOL(UserDeallocator) deallocator);
-#endif
 	Memory() = delete;
 	static ::LIBSAKURA_SYMBOL(UserAllocator) allocator_;
 	static ::LIBSAKURA_SYMBOL(UserDeallocator) deallocator_;
