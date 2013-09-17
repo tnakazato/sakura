@@ -45,6 +45,43 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 }
 
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolatePseudo2dFloat)(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		int polynomial_order, double x_interpolated, size_t num_base,
+		double const x_base[], size_t num_interpolated, float const y_base[],
+		float y_interpolated[]) {
+	// num_base must be non-zero
+	if (num_base == 0) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	// no interpolation will be done
+	if (num_interpolated == 0) {
+		// Nothing to do
+		return LIBSAKURA_SYMBOL(Status_kOK);
+	}
+
+	// invalid polynomial order for polynomial interpolation
+	if (interpolation_method
+			== LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
+			&& polynomial_order < 0) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	// get object optimized to run-time environment
+	auto interpolator =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
+
+	try {
+		return interpolator->InterpolatePseudo2d(interpolation_method,
+				polynomial_order, x_interpolated, num_base, x_base,
+				num_interpolated, y_base, y_interpolated);
+	} catch (...) {
+		// any exception is thrown during interpolation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+}
+
 namespace {
 
 template<typename DataType>

@@ -194,6 +194,14 @@ public:
 			YDataType const y_base[/*num_base*/], size_t num_interpolated,
 			XDataType const x_interpolated[/*num_interpolated*/],
 			YDataType y_interpolated[/*num_interpolated*/]) const;
+
+	virtual LIBSAKURA_SYMBOL(Status) InterpolatePseudo2d(
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+			int polynomial_order, double x_interpolated, size_t num_base,
+			XDataType const x_base[/*num_base*/],
+			size_t num_interpolated,
+			YDataType const y_base[/*num_base*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated*/]) const;
 };
 
 template<class XDataType, class YDataType>
@@ -207,6 +215,14 @@ public:
 			XDataType const x_base[/*num_base*/],
 			YDataType const y_base[/*num_base*/], size_t num_interpolated,
 			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated*/]) const;
+
+	virtual LIBSAKURA_SYMBOL(Status) InterpolatePseudo2d(
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+			int polynomial_order, double x_interpolated, size_t num_base,
+			XDataType const x_base[/*num_base*/],
+			size_t num_interpolated,
+			YDataType const y_base[/*num_base*num_interpolated*/],
 			YDataType y_interpolated[/*num_interpolated*/]) const;
 };
 

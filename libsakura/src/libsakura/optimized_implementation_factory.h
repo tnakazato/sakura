@@ -53,9 +53,9 @@ public:
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const = 0;
 	virtual void ToBool(size_t num_in, DataType const in[/*num_in*/],
-			bool out[/*num_in*/]) const = 0;
+	bool out[/*num_in*/]) const = 0;
 	virtual void InvertBool(size_t num_in, bool const in[/*num_in*/],
-			bool out[/*num_in*/]) const = 0;
+	bool out[/*num_in*/]) const = 0;
 };
 
 class Convolution {
@@ -63,13 +63,14 @@ public:
 	virtual ~Convolution() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_channel,
-			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
-			bool use_fft,LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-			float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
+			float input_spectrum[/*num_channels*/],
+			bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const = 0;
 	virtual void DestroyConvolve1DContext(
-			LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
 };
 
 class Gridding {
@@ -116,11 +117,19 @@ public:
 	}
 
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
-			LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/],
 			YDataType const y_base[/*num_base*/], size_t num_interpolated,
 			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated*/]) const = 0;
+
+	virtual LIBSAKURA_SYMBOL(Status) InterpolatePseudo2d(
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+			int polynomial_order, double x_interpolated, size_t num_base,
+			XDataType const x_base[/*num_base*/],
+			size_t num_interpolated,
+			YDataType const y_base[/*num_base*num_interpolated*/],
 			YDataType y_interpolated[/*num_interpolated*/]) const = 0;
 };
 
