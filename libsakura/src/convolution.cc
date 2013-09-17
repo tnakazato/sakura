@@ -24,8 +24,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 namespace {
 
 inline void CreateConvolve1DContextDefault(size_t num_channel,
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
-		bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
+LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	std::cout << " CreateConvolve1DContextEigen function is called"
 			<< std::endl;
 
@@ -33,6 +33,7 @@ inline void CreateConvolve1DContextDefault(size_t num_channel,
 	float const sqrt_ln16 = 1.66510922231539551270632928979040;
 	float const height = sqrt_ln2_mul8_over_2pi / kernel_width;
 	float center = num_channel / 2.f;
+	float value = 0.0;
 
 	switch (kernel_type) {
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
@@ -47,11 +48,14 @@ inline void CreateConvolve1DContextDefault(size_t num_channel,
 					<< std::endl;
 			exit(1);
 		}
-
 		(*context)->num_channel = num_channel;
 
 		for (size_t j = 0; j < num_channel; ++j) {
-			float value = (j - center) * sqrt_ln16 / kernel_width;
+			if (j < num_channel / 2)
+				value = j * sqrt_ln16 / kernel_width;
+			else {
+				value = (j - 2.0 * center) * sqrt_ln16 / kernel_width;
+			}
 			(*context)->input_real_array[j] = height * exp(-(value * value));
 		}
 		assert(LIBSAKURA_SYMBOL(IsAligned)((*context)->input_real_array));
@@ -158,7 +162,7 @@ inline void Convolve1DDefault(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 }
 
 inline void DestroyConvolve1DContextDefault(
-		LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
+LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 	std::cout << " DestroyConvolve1DContextEigen function is called"
 			<< std::endl;
 	if (context->plan_real_to_complex_float != NULL) {
