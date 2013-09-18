@@ -8,10 +8,18 @@
 #include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/localdef.h>
 #include <libsakura/logger.h>
+#include <libsakura/memory_manager.h>
 
 namespace {
 
 using namespace LIBSAKURA_PREFIX;
+
+// deleter for interpolation
+struct InterpolationDeleter {
+	void operator()(void *pointer) const {
+		Memory::Free(pointer);
+	}
+};
 
 // a logger for this module
 auto logger = Logger::GetLogger("interpolation");
@@ -20,10 +28,13 @@ auto logger = Logger::GetLogger("interpolation");
 // allocated memory is managed by unique_ptr that is given as an argument
 template<class DataType>
 DataType const *GetAlignedArray(size_t num_array,
-		std::unique_ptr<DataType[]> *storage) {
+		std::unique_ptr<DataType[], InterpolationDeleter> *storage) {
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t elements_in_arena = num_array + sakura_alignment - 1;
-	storage->reset(new DataType[elements_in_arena]);
+	//storage->reset(new DataType[elements_in_arena]);
+	storage->reset(
+			reinterpret_cast<DataType *>(Memory::Allocate(
+					sizeof(DataType) * elements_in_arena)));
 	return reinterpret_cast<DataType const *>(LIBSAKURA_SYMBOL(AlignAny)(
 			sizeof(DataType) * elements_in_arena, storage->get(),
 			sizeof(DataType) * num_array));
@@ -33,7 +44,7 @@ template<class XDataType, class YDataType>
 void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 		XDataType const x_base[], YDataType const y_base[],
 		YDataType y_base_2nd_derivative[]) {
-	std::unique_ptr<YDataType[]> storage_for_u;
+	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_u;
 	YDataType *upper_triangular = const_cast<YDataType *>(GetAlignedArray<
 			YDataType>(num_base, &storage_for_u));
 
@@ -291,8 +302,8 @@ private:
 	}
 
 	size_t const kNumElements_;
-	std::unique_ptr<XDataType[]> storage_for_c_;
-	std::unique_ptr<XDataType[]> storage_for_d_;
+	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_c_;
+	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_d_;
 	XDataType *c_;
 	XDataType *d_;
 };
@@ -327,7 +338,7 @@ public:
 		}
 	}
 protected:
-	std::unique_ptr<YDataType[]> storage_for_y_;
+	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_;
 	YDataType *y_base_2nd_derivative_;
 };
 
@@ -443,7 +454,8 @@ public:
 
 template<class XDataType, class YDataType>
 YDataType const *GetAscendingArray(size_t num_array, XDataType const x_base[],
-		YDataType const base_array[], std::unique_ptr<YDataType[]> *storage) {
+		YDataType const base_array[],
+		std::unique_ptr<YDataType[], InterpolationDeleter> *storage) {
 	if (x_base[0] < x_base[num_array - 1]) {
 		return base_array;
 	} else {
@@ -539,9 +551,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// Perform 1-dimensional interpolation
 
 	// make input arrays ascending order
-	std::unique_ptr<XDataType[]> storage_for_x_base_work;
-	std::unique_ptr<YDataType[]> storage_for_y_base_work;
-	std::unique_ptr<XDataType[]> storage_for_x_interpolated_work;
+	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_base_work;
+	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_base_work;
+	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_interpolated_work;
 	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
 			num_base, x_base, x_base, &storage_for_x_base_work);
 	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
@@ -558,7 +570,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
 		std::ostringstream oss;
-		oss << "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation" << std::endl;
+		oss
+				<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
+				<< std::endl;
 		Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -567,7 +581,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	interpolator->PrepareForInterpolation();
 
 	// Locate each element in x_base against x_interpolated
-	std::unique_ptr<size_t[]> storage_for_location_base;
+	std::unique_ptr<size_t[], InterpolationDeleter> storage_for_location_base;
 	size_t *location_base = const_cast<size_t *>(GetAlignedArray<size_t>(
 			num_base, &storage_for_location_base));
 	size_t start_position = 0;
@@ -661,7 +675,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
 		std::ostringstream oss;
-		oss << "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation" << std::endl;
+		oss
+				<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
+				<< std::endl;
 		Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
