@@ -597,6 +597,23 @@ typedef enum {
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
  * @a y_interpolated にセットされる）。
  *
+ * 戻り値は終了ステータスである。正常終了の場合、
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
+ * を返す。
+ * 引数に不正がある場合には
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * を返す。
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * が返された場合、
+ * 考えられる原因は以下の三つである。
+ *     - @a interpolatin_method が正しくない
+ *     - 多項式補間で次数が負である
+ *     - 引数に渡した配列がアラインされていない
+ *
+ * また、原因不明のエラーでは
+ * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * を返す。
+ *
  * @par
  * @pre @a x_base および@a x_interpolated は昇順または降順にソートされていなければ
  * ならない。また、@a x_base の要素には重複があってはならない。
@@ -607,9 +624,8 @@ typedef enum {
  * 昇順よりも処理が遅くなる。
  *
  * @par 多項式補間の動作について:
- * @par
  * @a polynomial_order は0または正の整数でなければならない。
- * @par
+ * @oar
  * @a polynomial_order はあくまで最大次数を規定するものであり、その次数で必ず
  * 補間が行われるとは限らない。たとえば、@a polynomial_order が2（二次多項式による補間）
  * で@a num_base が2の場合、実際には2点を通る一次多項式が一意に決まるため、二次多項式に
@@ -634,23 +650,8 @@ typedef enum {
  * @a x_interpolated は昇順または降順にソートされていなければならない。
  * @param[out] y_interpolated 補間結果。
  * 要素数は@a num_base でなければならない。
- * @return @link sakura::sakura_Status sakura_Status @endlink
+ * @return 終了ステータス。
  *
- * 正常終了の場合、@link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
- * を返す。
- * 引数に不正がある場合には
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * を返す。
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * が返された場合、
- * 考えられる原因は以下の三つである。
- *     - @a interpolatin_method が正しくない
- *     - 多項式補間で次数が負である
- *     - 引数に渡した配列がアラインされていない
- *
- * また、原因不明のエラーでは
- * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
- * を返す。
  * @~english
  * @brief Perform one-dimensional interpolation
  * @details
