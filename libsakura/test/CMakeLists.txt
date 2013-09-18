@@ -45,7 +45,7 @@ add_executable(testBitOperation     bit_operation.cc)
 add_executable(testBoolFilterCollection bool_filter_collection.cc)
 add_executable(testGridding         gridding.cc fgridsd.f)
 add_executable(testInit             init.cc)
-add_executable(testInterpolation    interpolation.cc)
+add_executable(testInterpolation1d    interpolation1d.cc)
 add_executable(testLogicalOperation logical_operation.cc)
 add_executable(testStatistics statistics.cc)
 add_executable(testConvolution convolution.cc)
@@ -56,7 +56,7 @@ target_link_libraries (testGridding         ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBR
 target_link_libraries (testNumericOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBitOperation     ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBoolFilterCollection ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
-target_link_libraries (testInterpolation    ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+target_link_libraries (testInterpolation1d    ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testLogicalOperation ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testConvolution ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 
@@ -68,14 +68,14 @@ add_custom_target(testGriddingRun         COMMAND ./testGridding         DEPENDS
 add_custom_target(testNumericOperationRun COMMAND ./testNumericOperation DEPENDS testNumericOperation)
 add_custom_target(testBitOperationRun     COMMAND ./testBitOperation     DEPENDS testBitOperation)
 add_custom_target(testBoolFilterCollectionRun COMMAND ./testBoolFilterCollection DEPENDS testBoolFilterCollection)
-add_custom_target(testInterpolationRun    COMMAND ./testInterpolation    DEPENDS testInterpolation)
+add_custom_target(testInterpolation1dRun    COMMAND ./testInterpolation1d    DEPENDS testInterpolation1d)
 add_custom_target(testLogicalOperationRun COMMAND ./testLogicalOperation DEPENDS testLogicalOperation)
 add_custom_target(testConvolutionRun COMMAND ./testConvolution DEPENDS testConvolution)
 
 add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testStatistics
-	COMMAND ./testInterpolation
+	COMMAND ./testInterpolation1d
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
 	COMMAND ./testGridding
