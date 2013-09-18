@@ -625,7 +625,7 @@ typedef enum {
  *
  * @par 多項式補間の動作について:
  * @a polynomial_order は0または正の整数でなければならない。
- * @oar
+ * @par
  * @a polynomial_order はあくまで最大次数を規定するものであり、その次数で必ず
  * 補間が行われるとは限らない。たとえば、@a polynomial_order が2（二次多項式による補間）
  * で@a num_base が2の場合、実際には2点を通る一次多項式が一意に決まるため、二次多項式に
