@@ -1,4 +1,4 @@
-#include <iostream>
+#include <sstream>
 #include <cassert>
 #include <cstdlib>
 #include <climits>
@@ -6,6 +6,13 @@
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
 #include "libsakura/optimized_implementation_factory_impl.h"
+#include "libsakura/logger.h"
+
+namespace {
+// a logger for this module
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
+
+}
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
@@ -15,12 +22,18 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 	// num_base must be non-zero
 	if (num_base == 0) {
+		std::ostringstream oss;
+		oss << "ERROR: num_base must be > 0" << std::endl;
+		LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// no interpolation will be done
 	if (num_interpolated == 0) {
 		// Nothing to do
+		std::ostringstream oss;
+		oss << "Nothing has been done since num_interpolated is 0" << std::endl;
+		LIBSAKURA_PREFIX::Logger::Info(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	}
 
@@ -28,6 +41,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (interpolation_method
 			== LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
 			&& polynomial_order < 0) {
+		std::ostringstream oss;
+		oss << "ERROR: Negative polynomial order for polynomial interpolation"
+				<< std::endl;
+		LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -41,6 +58,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				x_interpolated, y_interpolated);
 	} catch (...) {
 		// any exception is thrown during interpolation
+		std::ostringstream oss;
+		oss << "ERROR: Aborted due to nknown error"
+				<< std::endl;
+		LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 }
@@ -52,12 +73,18 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float y_interpolated[]) {
 	// num_base must be non-zero
 	if (num_base == 0) {
+		std::ostringstream oss;
+		oss << "ERROR: num_base must be > 0" << std::endl;
+		LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// no interpolation will be done
 	if (num_interpolated == 0) {
 		// Nothing to do
+		std::ostringstream oss;
+		oss << "Nothing has been done since num_interpolated is 0" << std::endl;
+		LIBSAKURA_PREFIX::Logger::Info(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	}
 
@@ -65,6 +92,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (interpolation_method
 			== LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
 			&& polynomial_order < 0) {
+		std::ostringstream oss;
+		oss << "ERROR: Negative polynomial order for polynomial interpolation"
+				<< std::endl;
+		LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 

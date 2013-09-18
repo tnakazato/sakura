@@ -1,5 +1,5 @@
 #include <cassert>
-#include <iostream>
+#include <sstream>
 #include <memory>
 #include <cstdalign>
 #include <utility>
@@ -7,10 +7,14 @@
 #include <libsakura/sakura.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/localdef.h>
+#include <libsakura/logger.h>
 
 namespace {
 
 using namespace LIBSAKURA_PREFIX;
+
+// a logger for this module
+auto logger = Logger::GetLogger("interpolation");
 
 // get aligned array
 // allocated memory is managed by unique_ptr that is given as an argument
@@ -517,7 +521,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(x_interpolated)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_interpolated)) {
-		std::cerr << "ERROR: input arrays are not aligned" << std::endl;
+		std::ostringstream oss;
+		oss << "ERROR: input arrays are not aligned" << std::endl;
+		Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -551,9 +557,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 					polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
-		std::cerr
-				<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
-				<< std::endl;
+		std::ostringstream oss;
+		oss << "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation" << std::endl;
+		Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -631,7 +637,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (!LIBSAKURA_SYMBOL(IsAligned)(x_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_interpolated)) {
-		std::cerr << "ERROR: input arrays are not aligned" << std::endl;
+		std::ostringstream oss;
+		oss << "ERROR: input arrays are not aligned" << std::endl;
+		Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -652,9 +660,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 					y_base, polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
-		std::cerr
-				<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
-				<< std::endl;
+		std::ostringstream oss;
+		oss << "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation" << std::endl;
+		Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
