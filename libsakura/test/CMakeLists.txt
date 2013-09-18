@@ -64,16 +64,16 @@ target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST
 
 add_dependencies(testInit logConfig)
 
-add_custom_target(testBitOperationRun          COMMAND ./testBitOperation         DEPENDS testBitOperation)
-add_custom_target(testBoolFilterCollectionRun  COMMAND ./testBoolFilterCollection DEPENDS testBoolFilterCollection)
-add_custom_target(testConvolutionRun           COMMAND ./testConvolution          DEPENDS testConvolution)
-add_custom_target(testGriddingRun              COMMAND ./testGridding             DEPENDS testGridding)
-add_custom_target(testInitRun                  COMMAND ./testInit                 DEPENDS testInit)
-add_custom_target(testInterpolation1dRun       COMMAND ./testInterpolation1d      DEPENDS testInterpolation1d)
-add_custom_target(testInterpolationPseudo2dRun COMMAND ./testInterpolationPseudo2d    DEPENDS testInterpolationPseudo2d)
-add_custom_target(testLogicalOperationRun      COMMAND ./testLogicalOperation     DEPENDS testLogicalOperation)
-add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation     DEPENDS testNumericOperation)
-add_custom_target(testStatisticsRun            COMMAND ./testStatistics           DEPENDS testStatistics)
+add_custom_target(testBitOperationRun          COMMAND ./testBitOperation          DEPENDS testBitOperation)
+add_custom_target(testBoolFilterCollectionRun  COMMAND ./testBoolFilterCollection  DEPENDS testBoolFilterCollection)
+add_custom_target(testConvolutionRun           COMMAND ./testConvolution           DEPENDS testConvolution)
+add_custom_target(testGriddingRun              COMMAND ./testGridding              DEPENDS testGridding)
+add_custom_target(testInitRun                  COMMAND ./testInit                  DEPENDS testInit)
+add_custom_target(testInterpolation1dRun       COMMAND ./testInterpolation1d       DEPENDS testInterpolation1d)
+add_custom_target(testInterpolationPseudo2dRun COMMAND ./testInterpolationPseudo2d DEPENDS testInterpolationPseudo2d)
+add_custom_target(testLogicalOperationRun      COMMAND ./testLogicalOperation      DEPENDS testLogicalOperation)
+add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
+add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 
 add_custom_target(test
 	COMMAND ./testBitOperation
@@ -82,6 +82,7 @@ add_custom_target(test
 	COMMAND ./testGridding
 	COMMAND ./testInit
 	COMMAND ./testInterpolation1d
+	COMMAND ./testInterpolationPseudo2d
 	COMMAND ./testLogicalOperation
 	COMMAND ./testNumericOperation
 	COMMAND ./testStatistics
