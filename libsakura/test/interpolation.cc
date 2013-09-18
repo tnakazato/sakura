@@ -2,6 +2,7 @@
 #include <memory>
 #include <cmath>
 #include <string>
+#include <stdarg.h>
 
 #include <libsakura/sakura.h>
 
@@ -9,6 +10,22 @@
 
 #include "aligned_memory.h"
 //#include "CubicSplineInterpolator1D.h"
+
+void InitializeDoubleArray(size_t num_array, double array[], ...) {
+	va_list arguments_list;
+	va_start(arguments_list, array);
+	for (size_t i = 0; i < num_array; ++i) {
+		array[i] = va_arg(arguments_list, double);
+	}
+}
+
+void InitializeFloatArray(size_t num_array, float array[], ...) {
+	va_list arguments_list;
+	va_start(arguments_list, array);
+	for (size_t i = 0; i < num_array; ++i) {
+		array[i] = static_cast<float>(va_arg(arguments_list, double));
+	}
+}
 
 class Interpolate1dFloatTest: public ::testing::Test {
 protected:
@@ -51,6 +68,10 @@ protected:
 	virtual void RunInterpolate1d(sakura_InterpolationMethod interpolation_method,
 			size_t num_base, size_t num_interpolated, sakura_Status expected_status,
 			bool check_result) {
+		// sakura must be properly initialized
+		ASSERT_EQ(sakura_Status_kOK, initialize_result_)
+				<< "sakura must be properly initialized!";
+
 		// execute interpolation
 		sakura_Status result = sakura_Interpolate1dFloat(
 				interpolation_method, polynomial_order_, num_base,
@@ -92,31 +113,22 @@ protected:
 };
 
 TEST_F(Interpolate1dFloatTest, InvalidType) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.7;
-	x_interpolated_[4] = 1.5;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.7, 0.5);
 
-	// execute interpolation
-	// Should return InvalidArgument status
+// execute interpolation
+// Should return InvalidArgument status
 	RunInterpolate1d(sakura_InterpolationMethod_kNumMethod, num_base,
 			num_interpolated, sakura_Status_kInvalidArgument, false);
 }
 
 TEST_F(Interpolate1dFloatTest, ZeroLengthBaseArray) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 0;
 	size_t const num_interpolated = 5;
@@ -128,8 +140,6 @@ TEST_F(Interpolate1dFloatTest, ZeroLengthBaseArray) {
 }
 
 TEST_F(Interpolate1dFloatTest, NegativePolynomialOrder) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -142,29 +152,17 @@ TEST_F(Interpolate1dFloatTest, NegativePolynomialOrder) {
 }
 
 TEST_F(Interpolate1dFloatTest, NegativePolynomialOrderButNearest) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	polynomial_order_ = -1;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 1.0;
-	y_expected_[3] = 1.0;
-	y_expected_[4] = -1.0;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
+			-1.0, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
@@ -172,8 +170,6 @@ TEST_F(Interpolate1dFloatTest, NegativePolynomialOrderButNearest) {
 }
 
 TEST_F(Interpolate1dFloatTest, InputArrayNotAligned) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -186,29 +182,16 @@ TEST_F(Interpolate1dFloatTest, InputArrayNotAligned) {
 }
 
 TEST_F(Interpolate1dFloatTest, Nearest) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
+	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
-
-	// initial setup
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 1.0;
-	y_expected_[3] = 1.0;
-	y_expected_[4] = -1.0;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
+			-1.0, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
@@ -216,28 +199,16 @@ TEST_F(Interpolate1dFloatTest, Nearest) {
 }
 
 TEST_F(Interpolate1dFloatTest, NearestDescending) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[1] = 0.0;
-	x_base_[0] = 1.0;
-	y_base_[1] = 1.0;
-	y_base_[0] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 1.0;
-	y_expected_[3] = 1.0;
-	y_expected_[4] = -1.0;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
+			-1.0, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
@@ -245,50 +216,31 @@ TEST_F(Interpolate1dFloatTest, NearestDescending) {
 }
 
 TEST_F(Interpolate1dFloatTest, NearestOpposite) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[1] = 0.0;
-	x_base_[0] = 1.0;
-	y_base_[1] = 1.0;
-	y_base_[0] = -1.0;
-	x_interpolated_[5] = -1.0;
-	x_interpolated_[4] = 0.0;
-	x_interpolated_[3] = 0.1;
-	x_interpolated_[2] = 0.5;
-	x_interpolated_[1] = 0.7;
-	x_interpolated_[0] = 1.5;
-	y_expected_[5] = 1.0;
-	y_expected_[4] = 1.0;
-	y_expected_[3] = 1.0;
-	y_expected_[2] = 1.0;
-	y_expected_[1] = -1.0;
-	y_expected_[0] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
+			0.0, -1.0);
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, -1.0, 1.0, 1.0,
+			1.0, 1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, sakura_Status_kOK, true);
 }
 
-//TEST_F(Interpolate1dFloatTest, NearestSingleBase) {
 TEST_F(Interpolate1dFloatTest, SingleBase) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 3;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	y_base_[0] = 1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	InitializeFloatArray(num_base, y_base_, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
@@ -296,28 +248,16 @@ TEST_F(Interpolate1dFloatTest, SingleBase) {
 }
 
 TEST_F(Interpolate1dFloatTest, Linear) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 0.8;
-	y_expected_[3] = 0.0;
-	y_expected_[4] = -0.4;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.8, 0.0,
+			-0.4, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
@@ -325,28 +265,16 @@ TEST_F(Interpolate1dFloatTest, Linear) {
 }
 
 TEST_F(Interpolate1dFloatTest, LinearDescending) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[1] = 0.0;
-	x_base_[0] = 1.0;
-	y_base_[1] = 1.0;
-	y_base_[0] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 0.8;
-	y_expected_[3] = 0.0;
-	y_expected_[4] = -0.4;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.8, 0.0,
+			-0.4, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
@@ -354,28 +282,16 @@ TEST_F(Interpolate1dFloatTest, LinearDescending) {
 }
 
 TEST_F(Interpolate1dFloatTest, LinearOpposite) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[1] = 0.0;
-	x_base_[0] = 1.0;
-	y_base_[1] = 1.0;
-	y_base_[0] = -1.0;
-	x_interpolated_[5] = -1.0;
-	x_interpolated_[4] = 0.0;
-	x_interpolated_[3] = 0.1;
-	x_interpolated_[2] = 0.5;
-	x_interpolated_[1] = 0.7;
-	x_interpolated_[0] = 1.5;
-	y_expected_[5] = 1.0;
-	y_expected_[4] = 1.0;
-	y_expected_[3] = 0.8;
-	y_expected_[2] = 0.0;
-	y_expected_[1] = -0.4;
-	y_expected_[0] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
+			0.0, -1.0);
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, -0.4, 0.0, 0.8,
+			1.0, 1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
@@ -383,30 +299,17 @@ TEST_F(Interpolate1dFloatTest, LinearOpposite) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder0) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 0;
-
 	// initial setup
+	polynomial_order_ = 0;
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 1.0;
-	y_expected_[3] = 1.0;
-	y_expected_[4] = -1.0;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
+			-1.0, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
@@ -414,30 +317,17 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder0) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder1) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 1;
-
 	// initial setup
+	polynomial_order_ = 1;
 	size_t const num_base = 2;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 0.8;
-	y_expected_[3] = 0.0;
-	y_expected_[4] = -0.4;
-	y_expected_[5] = -1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.8, 0.0,
+			-0.4, -1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
@@ -445,26 +335,15 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder2Full) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 2;
-
 	// initial setup
+	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[2] = 2.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[2] = 0.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
 
 	// expected value can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
 	y_expected_[0] = 1.0; // out of range
@@ -479,26 +358,15 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2Full) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullDescending) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 2;
-
 	// initial setup
+	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[2] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[0] = 2.0;
-	y_base_[2] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[0] = 0.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
+	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
 
 	// expected value can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
 	y_expected_[0] = 1.0; // out of range
@@ -513,26 +381,15 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullDescending) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOpposite) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 2;
-
 	// initial setup
+	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[2] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[0] = 2.0;
-	y_base_[2] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[0] = 0.0;
-	x_interpolated_[5] = -1.0;
-	x_interpolated_[4] = 0.0;
-	x_interpolated_[3] = 0.1;
-	x_interpolated_[2] = 0.5;
-	x_interpolated_[1] = 0.7;
-	x_interpolated_[0] = 1.5;
+	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
+			0.0, -1.0);
 
 	// expected value can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
 	y_expected_[5] = 1.0; // out of range
@@ -547,32 +404,17 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOpposite) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder1Sub) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
-	polynomial_order_ = 1;
-
 	// initial setup
+	polynomial_order_ = 1;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[2] = 2.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[2] = 0.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 0.8;
-	y_expected_[3] = 0.0;
-	y_expected_[4] = -0.4;
-	y_expected_[5] = -0.5;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.8, 0.0,
+			-0.4, -0.5);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
@@ -580,30 +422,16 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder1Sub) {
 }
 
 TEST_F(Interpolate1dFloatTest, Spline) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[2] = 2.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[2] = 0.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 0.72575;
-	y_expected_[3] = -0.28125;
-	y_expected_[4] = -0.66775;
-	y_expected_[5] = -0.78125;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.72575,
+			-0.28125, -0.66775, -0.78125);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
@@ -611,30 +439,16 @@ TEST_F(Interpolate1dFloatTest, Spline) {
 }
 
 TEST_F(Interpolate1dFloatTest, SplineDescending) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[2] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[0] = 2.0;
-	y_base_[2] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[0] = 0.0;
-	x_interpolated_[0] = -1.0;
-	x_interpolated_[1] = 0.0;
-	x_interpolated_[2] = 0.1;
-	x_interpolated_[3] = 0.5;
-	x_interpolated_[4] = 0.7;
-	x_interpolated_[5] = 1.5;
-	y_expected_[0] = 1.0;
-	y_expected_[1] = 1.0;
-	y_expected_[2] = 0.72575;
-	y_expected_[3] = -0.28125;
-	y_expected_[4] = -0.66775;
-	y_expected_[5] = -0.78125;
+	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.72575,
+			-0.28125, -0.66775, -0.78125);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
@@ -642,30 +456,16 @@ TEST_F(Interpolate1dFloatTest, SplineDescending) {
 }
 
 TEST_F(Interpolate1dFloatTest, SplineOpposite) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 6;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[2] = 0.0;
-	x_base_[1] = 1.0;
-	x_base_[0] = 2.0;
-	y_base_[2] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[0] = 0.0;
-	x_interpolated_[5] = -1.0;
-	x_interpolated_[4] = 0.0;
-	x_interpolated_[3] = 0.1;
-	x_interpolated_[2] = 0.5;
-	x_interpolated_[1] = 0.7;
-	x_interpolated_[0] = 1.5;
-	y_expected_[5] = 1.0;
-	y_expected_[4] = 1.0;
-	y_expected_[3] = 0.72575;
-	y_expected_[2] = -0.28125;
-	y_expected_[1] = -0.66775;
-	y_expected_[0] = -0.78125;
+	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
+			0.0, -1.0);
+	InitializeFloatArray(num_interpolated, y_expected_, -0.78125, -0.66775,
+			-0.28125, 0.72575, 1.0, 1.0);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
@@ -673,14 +473,12 @@ TEST_F(Interpolate1dFloatTest, SplineOpposite) {
 }
 
 TEST_F(Interpolate1dFloatTest, SingleBasePerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	y_base_[0] = 1.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	InitializeFloatArray(num_base, y_base_, 1.0);
 	double dx = 1.0 / static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
 		x_interpolated_[i] = -0.5 + dx * static_cast<double>(i);
@@ -692,16 +490,12 @@ TEST_F(Interpolate1dFloatTest, SingleBasePerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, NearestPerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 100.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, 0.0);
 	double dx = fabs(x_base_[1] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -714,16 +508,12 @@ TEST_F(Interpolate1dFloatTest, NearestPerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, NearestOppositePerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[1] = 0.0;
-	x_base_[0] = 100.0;
-	y_base_[1] = 1.0;
-	y_base_[0] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 100.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, 1.0);
 	double dx = fabs(x_base_[1] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -736,16 +526,12 @@ TEST_F(Interpolate1dFloatTest, NearestOppositePerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, LinearPerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 100.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, 0.0);
 	double dx = fabs(x_base_[1] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -758,16 +544,12 @@ TEST_F(Interpolate1dFloatTest, LinearPerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, LinearOppositePerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[1] = 0.0;
-	x_base_[0] = 100.0;
-	y_base_[1] = 1.0;
-	y_base_[0] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 100.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, 1.0);
 	double dx = fabs(x_base_[1] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -780,19 +562,13 @@ TEST_F(Interpolate1dFloatTest, LinearOppositePerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullPerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 100000000; // 1/2 of Nearest and Linear
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 100.0;
-	x_base_[2] = 200.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[2] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0, 200.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
 	double dx = fabs(x_base_[2] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -805,19 +581,13 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullPerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOppositePerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 100000000; // 1/2 of Nearest and Linear
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[2] = 0.0;
-	x_base_[1] = 100.0;
-	x_base_[0] = 200.0;
-	y_base_[2] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[0] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 200.0, 100.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
 	double dx = fabs(x_base_[2] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -830,18 +600,12 @@ TEST_F(Interpolate1dFloatTest, PolynomialOrder2FullOppositePerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, SplinePerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[0] = 0.0;
-	x_base_[1] = 100.0;
-	x_base_[2] = 200.0;
-	y_base_[0] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[2] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0, 200.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
 	double dx = fabs(x_base_[2] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -854,18 +618,12 @@ TEST_F(Interpolate1dFloatTest, SplinePerformance) {
 }
 
 TEST_F(Interpolate1dFloatTest, SplineOppositePerformance) {
-	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 200000000;
 	AllocateMemory(num_base, num_interpolated);
-	x_base_[2] = 0.0;
-	x_base_[1] = 100.0;
-	x_base_[0] = 200.0;
-	y_base_[2] = 1.0;
-	y_base_[1] = -1.0;
-	y_base_[0] = 0.0;
+	InitializeDoubleArray(num_base, x_base_, 200.0, 100.0, 0.0);
+	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
 	double dx = fabs(x_base_[2] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
