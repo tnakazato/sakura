@@ -1,23 +1,18 @@
-# - Find FFTW3
-# Find the native FFTW3 includes and library
-#
-# FFTW3_INCLUDES - where to find fftw3.h
-# FFTW3_LIBRARIES - List of libraries when using FFTW3.
-# FFTW3_FOUND - True if FFTW3 found.
+# cf. http://www.cmake.org/cmake/help
+#This module will be called when find_package was called in CMakeLists.txt
+#FFTW3_FOUND this will be set to TRUE when it was found
+#FFTW3_INCLUDE_DIRS where is include file
+#FFTW3_LIBRARIES where is library
+#FFTW3_DEFINITIONS other options
 
-if (FFTW3_INCLUDES)
-  # Already in cache, be silent
-  set (FFTW3_FIND_QUIETLY TRUE)
-endif (FFTW3_INCLUDES)
+#to find header file and library of fftw3
+find_path(FFTW3_INCLUDE_DIR fftw3.h)
+find_library(FFTW3_LIBRARIES NAMES fftw3)
 
-find_path (FFTW3_INCLUDES fftw3.h)
+#to use FindPackageHandleStandardArgs function 
+include(FindPackageHandleStandardArgs)
+# if it was succeeded, FFTW3_FOUND will be set to TRUE.
+find_package_handle_standard_args(FFTW3 DEFAULT_MSG FFTW3_LIBRARIES FFTW3_INCLUDE_DIR)
 
-find_library (FFTW3_LIBRARIES NAMES fftw3)
-
-# handle the QUIETLY and REQUIRED arguments and set FFTW_FOUND to TRUE if
-# all listed variables are TRUE
-include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (FFTW3 DEFAULT_MSG FFTW3_LIBRARIES FFTW3_INCLUDES)
-
-mark_as_advanced (FFTW3_LIBRARIES FFTW3_INCLUDES)
-
+#to store cache
+mark_as_advanced(FFTW3_INCLUDE_DIR FFTW3_LIBRARIES)
