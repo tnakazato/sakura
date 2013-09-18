@@ -680,7 +680,7 @@ LIBSAKURA_SYMBOL(
 /**
  * @brief Perform pseudo two-dimensional interpolation
  */
-LIBSAKURA_SYMBOL(Status) InterpolatePseudo2dFloat(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolatePseudo2dFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, double x_interpolated, size_t num_base,
 		double const x_base[/*num_base*/], size_t num_interpolated,
