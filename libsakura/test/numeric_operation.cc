@@ -2,6 +2,7 @@
 #include <string>
 
 #include <libsakura/sakura.h>
+#include "aligned_memory.h"
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
@@ -35,10 +36,17 @@ protected:
 		in2_[2] = -1.0;
 		in2_[3] = 2.0;
 		in2_[4] = -3.0;
+
+		// Initialize sakura
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+				nullptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 
 	virtual void TearDown()
-	{}
+	{
+		LIBSAKURA_SYMBOL(CleanUp)();
+	}
 
 	void PrintInputs(){
 		PrintArray("in1", NUM_IN, in1_);
@@ -53,8 +61,8 @@ protected:
 		cout << " ]" << endl;
 	}
 
-	float in1_[NUM_IN];
-	float in2_[NUM_IN];
+	SIMD_ALIGN float in1_[NUM_IN];
+	SIMD_ALIGN float in2_[NUM_IN];
 	bool verbose;
 
 };
@@ -65,17 +73,19 @@ protected:
  * out = [ -5.0, -3.0, 3.0, -5.0, -1.0 ]
  */
 TEST_F(NumericOperation, Subtraction) {
-	float out[NUM_IN];
+	SIMD_ALIGN float out[NUM_IN];
 	float result[NUM_IN] = {-5.0, -3.0, 3.0, -5.0, -1.0};
 	size_t const num_in(NUM_IN);
 
 	if (verbose) PrintInputs();
 
-	sakura_OperateFloatSubtraction(num_in, in1_, in2_, out);
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateFloatSubtraction(num_in, in1_, in2_, out);
 
 	if (verbose) PrintArray("out", num_in, out);
 
 	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; i++){
 		ASSERT_EQ(out[i], result[i]);
 	}
