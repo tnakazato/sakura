@@ -248,7 +248,8 @@ public:
 		size_t k = static_cast<size_t>((j > 0) ? j : 0);
 		k = (k > m) ? m : k;
 		for (size_t i = left_index; i < right_index; ++i) {
-			PerformNevilleAlgorithm(k, x_interpolated[i], &y_interpolated[i]);
+			PerformNevilleAlgorithm(k, 0, x_interpolated[i],
+					&y_interpolated[i]);
 		}
 	}
 	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
@@ -259,18 +260,19 @@ public:
 		size_t k = static_cast<size_t>((j > 0) ? j : 0);
 		k = (k > m) ? m : k;
 		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t start_position = k + i * this->num_array_;
-			PerformNevilleAlgorithm(start_position, x_interpolated,
-					&y_interpolated[i]);
+			//size_t start_position = k + i * this->num_array_;
+			PerformNevilleAlgorithm(k, i, x_interpolated, &y_interpolated[i]);
 		}
 	}
 private:
-	void PerformNevilleAlgorithm(size_t left_index, XDataType x_interpolated,
-			YDataType *y_interpolated) {
+	void PerformNevilleAlgorithm(size_t left_index, size_t array_index,
+			XDataType x_interpolated, YDataType *y_interpolated) {
 
 		// working pointers
 		XDataType const *x_ptr = &(this->x_base_[left_index]);
-		YDataType const *y_ptr = &(this->y_base_[left_index]);
+		//YDataType const *y_ptr = &(this->y_base_[left_index]);
+		YDataType const *y_ptr = &(this->y_base_[this->num_base_ * array_index
+				+ left_index]);
 
 		for (size_t i = 0; i < kNumElements_; ++i) {
 			c_[i] = static_cast<XDataType>(y_ptr[i]);
