@@ -3,6 +3,7 @@
 #include <sys/time.h>
 
 #include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
@@ -24,7 +25,6 @@ protected:
 
 	BitOperation() :
 			verbose(false) {
-		bit_size = sizeof(DataType) * 8;
 	}
 
 	virtual void SetUp() {
@@ -89,11 +89,12 @@ protected:
 	}
 
 	SIMD_ALIGN DataType in_[NUM_IN];
+
 	SIMD_ALIGN bool edit_mask_[NUM_IN];
 
-	DataType bit_mask_;bool verbose;
-	size_t bit_size;
-	//size_t const bit_size = sizeof(DataType)*8;
+	bool verbose;
+	DataType bit_mask_;
+	static size_t const bit_size = sizeof(DataType) * 8;
 
 };
 
@@ -125,8 +126,8 @@ class BitOperation8: public BitOperation<uint8_t> {
 TEST_F(BitOperation8, And) {
 	SIMD_ALIGN
 	uint8_t out[NUM_IN];
-	uint8_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	//uint8_t result[NUM_IN];
+	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN);
 
 	if (verbose)
@@ -141,7 +142,7 @@ TEST_F(BitOperation8, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % 8]);
+		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
 	}
 }
 
@@ -157,7 +158,8 @@ TEST_F(BitOperation8, AndLong) {
 	uint8_t in[NUM_IN_LONG];
 	SIMD_ALIGN
 	bool edit_mask[NUM_IN_LONG];
-	uint8_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
@@ -183,7 +185,7 @@ TEST_F(BitOperation8, AndLong) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_large; ++i) {
-		ASSERT_EQ(out[i], answer[i % 8]);
+		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
 	}
 }
 
@@ -195,7 +197,8 @@ TEST_F(BitOperation8, AndLong) {
 TEST_F(BitOperation32, And) {
 	SIMD_ALIGN
 	uint32_t out[NUM_IN];
-	uint32_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN);
 
 	if (verbose)
@@ -210,7 +213,7 @@ TEST_F(BitOperation32, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % 8]);
+		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
 	}
 }
 
@@ -226,7 +229,8 @@ TEST_F(BitOperation32, AndLong) {
 	uint32_t in[NUM_IN_LONG];
 	SIMD_ALIGN
 	bool edit_mask[NUM_IN_LONG];
-	uint32_t answer[8] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 	size_t const num_large(NUM_IN_LONG);
 	size_t const num_in(NUM_IN);
 	double start, end;
@@ -252,7 +256,7 @@ TEST_F(BitOperation32, AndLong) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_large; ++i) {
-		ASSERT_EQ(out[i], answer[i % 8]);
+		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
 	}
 }
 

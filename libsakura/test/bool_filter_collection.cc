@@ -3,12 +3,14 @@
 #include <sys/time.h>
 
 #include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_IN 8
 #define NUM_RANGE 2 // DO NOT MODIFY THIS!
+#define NUM_BASE_INPUT 8
 #define NUM_IN_LONG (1 << 18) //2**18
 using namespace std;
 
@@ -53,7 +55,11 @@ protected:
 		cout << " ]" << endl;
 	}
 
-	SIMD_ALIGN DataType data_[NUM_IN];SIMD_ALIGN DataType upper_[NUM_RANGE];SIMD_ALIGN DataType lower_[NUM_RANGE];bool verbose;
+	SIMD_ALIGN DataType data_[NUM_IN];
+	SIMD_ALIGN DataType upper_[NUM_RANGE];
+	SIMD_ALIGN DataType lower_[NUM_RANGE];
+
+	bool verbose;
 };
 
 /*
@@ -66,14 +72,15 @@ protected:
 class BoolFilterFloat: public BoolFilter<float> {
 protected:
 	virtual void PrepareInputs() {
-		float const base_input[8] = { 0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
+		float const base_input[] = { 0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
+		ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(base_input));
 		ASSERT_EQ(NUM_RANGE, 2);
 		lower_[0] = -0.75;
 		lower_[1] = 0.25;
 		upper_[0] = -0.25;
 		upper_[1] = 0.75;
 		for (size_t i = 0; i < NUM_IN; ++i) {
-			data_[i] = base_input[i % 8];
+			data_[i] = base_input[i % ELEMENTSOF(base_input)];
 		}
 		if (verbose) {
 			PrintArray("data", NUM_IN, data_);
@@ -93,14 +100,15 @@ protected:
 class BoolFilterInt: public BoolFilter<int> {
 protected:
 	virtual void PrepareInputs() {
-		int const base_input[8] = { 0, -5, -10, -5, 0, 5, 10, 5 };
+		int const base_input[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
+		ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(base_input));
 		ASSERT_EQ(NUM_RANGE, 2);
 		lower_[0] = -7;
 		lower_[1] = 3;
 		upper_[0] = -3;
 		upper_[1] = 7;
 		for (size_t i = 0; i < NUM_IN; ++i) {
-			data_[i] = base_input[i % 8];
+			data_[i] = base_input[i % ELEMENTSOF(base_input)];
 		}
 		if (verbose) {
 			PrintArray("data", NUM_IN, data_);
@@ -131,7 +139,8 @@ protected:
 TEST_F(BoolFilterFloat, RangesInclusive) {
 	SIMD_ALIGN
 	bool out[NUM_IN];
-	bool answer[8] = { false, true, false, true, false, true, false, true };
+	bool answer[] = { false, true, false, true, false, true, false, true };
+	ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN), num_range(NUM_RANGE);
 
 	PrepareInputs();
@@ -145,7 +154,7 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % 8]);
+		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
 	}
 }
 
@@ -157,7 +166,8 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 TEST_F(BoolFilterInt, RangesInclusive) {
 	SIMD_ALIGN
 	bool out[NUM_IN];
-	bool answer[8] = { false, true, false, true, false, true, false, true };
+	bool answer[] = { false, true, false, true, false, true, false, true };
+	ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN), num_range(NUM_RANGE);
 
 	PrepareInputs();
@@ -171,7 +181,7 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % 8]);
+		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
 	}
 }
 
@@ -185,10 +195,12 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 TEST_F(BoolFilterOther, InvertBool) {
 	size_t const num_in(4);
 	SIMD_ALIGN
-	bool const in[num_in] = { true, false, false, true };
+	bool const in[] = { true, false, false, true };
+	ASSERT_EQ(num_in, ELEMENTSOF(in));
 	SIMD_ALIGN
 	bool out[num_in];
-	bool answer[num_in] = { false, true, true, false };
+	bool answer[] = { false, true, true, false };
+	ASSERT_EQ(num_in, ELEMENTSOF(answer));
 
 	if (verbose)
 		PrintArray("in", num_in, in);
@@ -215,10 +227,12 @@ TEST_F(BoolFilterOther, InvertBool) {
 TEST_F(BoolFilterOther, Uint8ToBool) {
 	size_t const num_in(8);
 	SIMD_ALIGN
-	uint8_t const in[num_in] = { 0, 1, 2, 4, 8, 16, 32, 64 };
+	uint8_t const in[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
+	ASSERT_EQ(num_in, ELEMENTSOF(in));
 	SIMD_ALIGN
 	bool out[num_in];
-	bool answer[num_in] = { false, true, true, true, true, true, true, true };
+	bool answer[] = { false, true, true, true, true, true, true, true };
+	ASSERT_EQ(num_in, ELEMENTSOF(answer));
 
 	//if (verbose) PrintArray("in", num_in, inint);
 
