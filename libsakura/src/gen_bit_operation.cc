@@ -22,6 +22,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	/* need to include CHECK_ARGS defined in gen_gridding.cc
 	 CHECK_ARGS(in != nullptr);
 	 CHECK_ARGS(out != nullptr);
