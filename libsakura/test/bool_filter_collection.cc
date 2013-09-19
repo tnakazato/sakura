@@ -9,7 +9,7 @@
 /* the number of elements in input/output array to test */
 #define NUM_IN 8
 #define NUM_RANGE 2 // DO NOT MODIFY THIS!
-#define NUM_IN_LONG 262144 //2**18
+#define NUM_IN_LONG (1 << 18) //2**18
 using namespace std;
 
 /*
