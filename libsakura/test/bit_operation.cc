@@ -142,7 +142,7 @@ TEST_F(BitOperation8, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
 	}
 }
 
@@ -185,7 +185,7 @@ TEST_F(BitOperation8, AndLong) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_large; ++i) {
-		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
 	}
 }
 
@@ -213,7 +213,7 @@ TEST_F(BitOperation32, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
 	}
 }
 
@@ -256,7 +256,7 @@ TEST_F(BitOperation32, AndLong) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_large; ++i) {
-		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
 	}
 }
 

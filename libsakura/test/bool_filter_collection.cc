@@ -74,7 +74,7 @@ protected:
 	virtual void PrepareInputs() {
 		float const base_input[] = { 0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
 		ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(base_input));
-		ASSERT_EQ(NUM_RANGE, 2);
+		ASSERT_EQ(2, NUM_RANGE);
 		lower_[0] = -0.75;
 		lower_[1] = 0.25;
 		upper_[0] = -0.25;
@@ -102,7 +102,7 @@ protected:
 	virtual void PrepareInputs() {
 		int const base_input[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
 		ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(base_input));
-		ASSERT_EQ(NUM_RANGE, 2);
+		ASSERT_EQ(2, NUM_RANGE);
 		lower_[0] = -7;
 		lower_[1] = 3;
 		upper_[0] = -3;
@@ -154,7 +154,7 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
 	}
 }
 
@@ -181,7 +181,7 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i % ELEMENTSOF(answer)]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
 	}
 }
 
@@ -213,7 +213,7 @@ TEST_F(BoolFilterOther, InvertBool) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i]);
+		ASSERT_EQ(answer[i], out[i]);
 	}
 }
 
@@ -244,7 +244,7 @@ TEST_F(BoolFilterOther, Uint8ToBool) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(out[i], answer[i]);
+		ASSERT_EQ(answer[i], out[i]);
 	}
 }
 
