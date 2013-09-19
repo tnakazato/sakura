@@ -307,7 +307,7 @@ typedef struct {
  * @param out The output array of size, @a num_in. It stores the result
  * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
  * and the value in array, @a in, is adopted for the elements where corresponding
- * elements in @a edit_mask is false.
+ * elements in @a edit_mask is false. In-place operation is allowed (&@a out == &@a in ).
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
@@ -323,7 +323,7 @@ typedef struct {
  * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a in の要素がそのまま出力となる。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。インプレースな変換を許す(&@a out == &@a in )。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
@@ -351,7 +351,7 @@ typedef struct {
  * @param out The output array of size, @a num_in. It stores the result
  * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
  * and the value in array, @a in, is adopted for the elements where corresponding
- * elements in @a edit_mask is false.
+ * elements in @a edit_mask is false. In-place operation is allowed (&@a out == &@a in ).
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
@@ -367,7 +367,7 @@ typedef struct {
  * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a in の要素がそのまま出力となる。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * @param out 結果の格納先。要素数は@a num_in でなければならない。インプレースな変換を許す(&@a out == &@a in )。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~

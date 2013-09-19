@@ -167,6 +167,37 @@ TEST_F(BitOperation8, And) {
 }
 
 /*
+ * Test bit operation AND by sakura_OperateBitsUint8And in-place operation (&out == &in)
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010 ]
+ */
+TEST_F(BitOperation8, AndInPlace) {
+	size_t const num_in(12);
+	SIMD_ALIGN
+	uint8_t in[num_in];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(in)];
+	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+
+	ReshapeInputData(num_in, in, edit_mask);
+	if (verbose)
+		PrintArray("in (before)", num_in, in);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_in, in, edit_mask, in);
+
+	if (verbose)
+		PrintArray("in (after)", num_in, in);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_in; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], in[i]);
+	}
+}
+
+/*
  * Test bit operation AND by sakura_OperateBitsUint8And with an array of length 11
  * RESULT:
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010,
@@ -231,6 +262,37 @@ TEST_F(BitOperation32, And) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
 		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
+	}
+}
+
+/*
+ * Test bit operation AND by sakura_OperateBitsUint32And in-place operation (&out == &in)
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010 ]
+ */
+TEST_F(BitOperation32, AndInPlace) {
+	size_t const num_in(10);
+	SIMD_ALIGN
+	uint32_t in[num_in];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(in)];
+	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+
+	ReshapeInputData(num_in, in, edit_mask);
+	if (verbose)
+		PrintArray("in (before)", num_in, in);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_in, in, edit_mask, in);
+
+	if (verbose)
+		PrintArray("in (after)", num_in, in);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_in; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], in[i]);
 	}
 }
 
