@@ -56,7 +56,9 @@ protected:
 	}
 
 	SIMD_ALIGN DataType data_[NUM_IN];
+
 	SIMD_ALIGN DataType upper_[NUM_RANGE];
+
 	SIMD_ALIGN DataType lower_[NUM_RANGE];
 
 	bool verbose;
@@ -138,7 +140,8 @@ protected:
  */
 TEST_F(BoolFilterFloat, RangesInclusive) {
 	SIMD_ALIGN
-	bool out[NUM_IN];
+	bool out[ELEMENTSOF(data_)];
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(out));
 	bool answer[] = { false, true, false, true, false, true, false, true };
 	ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN), num_range(NUM_RANGE);
@@ -165,7 +168,8 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
  */
 TEST_F(BoolFilterInt, RangesInclusive) {
 	SIMD_ALIGN
-	bool out[NUM_IN];
+	bool out[ELEMENTSOF(data_)];
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(out));
 	bool answer[] = { false, true, false, true, false, true, false, true };
 	ASSERT_EQ(NUM_BASE_INPUT, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN), num_range(NUM_RANGE);

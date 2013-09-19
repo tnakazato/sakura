@@ -125,7 +125,8 @@ class BitOperation8: public BitOperation<uint8_t> {
  */
 TEST_F(BitOperation8, And) {
 	SIMD_ALIGN
-	uint8_t out[NUM_IN];
+	uint8_t out[ELEMENTSOF(in_)];
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(out));
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN);
@@ -196,7 +197,8 @@ TEST_F(BitOperation8, AndLong) {
  */
 TEST_F(BitOperation32, And) {
 	SIMD_ALIGN
-	uint32_t out[NUM_IN];
+	uint32_t out[ELEMENTSOF(in_)];
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(out));
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 	size_t const num_in(NUM_IN);
