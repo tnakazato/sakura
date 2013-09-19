@@ -29,9 +29,9 @@ protected:
 
 	virtual void SetUp() {
 		size_t const ntype(4);
+		bit_mask_ = 2; /* bit pattern of 0...010 */
 		for (size_t i = 0; i < NUM_IN; ++i) {
 			in_[i] = i % ntype; /* repeat bit pattern of *00, *01, *10, *11,... */
-			bit_mask_ = 2; /* bit pattern of 0...010 */
 			edit_mask_[i] = (i / ntype % 2 == 1); /*{F, F, F, F, T, T, T, T, (repeated)};*/
 		}
 
@@ -96,7 +96,9 @@ protected:
 	}
 
 	SIMD_ALIGN DataType in_[NUM_IN];
-	DataType bit_mask_;SIMD_ALIGN bool edit_mask_[NUM_IN];bool verbose;
+	SIMD_ALIGN bool edit_mask_[NUM_IN];
+
+	DataType bit_mask_;bool verbose;
 	size_t bit_size;
 	//size_t const bit_size = sizeof(DataType)*8;
 
