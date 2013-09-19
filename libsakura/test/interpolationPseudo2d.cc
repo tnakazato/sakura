@@ -304,16 +304,14 @@ TEST_F(InterpolatePseudo2dFloatTest, Linear) {
 	x_interpolated = 10.0;
 	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.5);
 	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+			num_base, num_interpolated, sakura_Status_kOK, true);
 
 	// Case 3. out of range, right side
 	std::cout << "Case 3. out of range, right side" << std::endl;
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.0);
 	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+			num_base, num_interpolated, sakura_Status_kOK, true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, LinearDescending) {
@@ -351,16 +349,14 @@ TEST_F(InterpolatePseudo2dFloatTest, LinearDescending) {
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.0);
 	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+			num_base, num_interpolated, sakura_Status_kOK, true);
 
 	// Case 3. out of range, right side
 	std::cout << "Case 3. out of range, right side" << std::endl;
 	x_interpolated = 10.0;
 	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.5);
 	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+			num_base, num_interpolated, sakura_Status_kOK, true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder0) {
@@ -377,36 +373,41 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder0) {
 	std::cout << "Case 1. within the range, left side" << std::endl;
 	double x_interpolated = 0.1;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base, num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 2. Within x_base_, right side
 	std::cout << "Case 2. within the range, right side" << std::endl;
 	x_interpolated = 0.9;
 	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.2);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base, num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 3. Middle point
 	std::cout << "Case 3. middle point" << std::endl;
 	x_interpolated = 0.5;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base, num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 4. Out of range, left side
 	std::cout << "Case 4. out of range, left side" << std::endl;
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base, num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 5. Out of range, right side
 	std::cout << "Case 5. out of range, right side" << std::endl;
 	x_interpolated = 1.2;
 	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.2);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base, num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder1) {
@@ -444,17 +445,17 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder1) {
 	std::cout << "Case 2. out of range, left side" << std::endl;
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.0);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 3. out of range, right side
 	std::cout << "Case 3. out of range, right side" << std::endl;
 	x_interpolated = 10.0;
 	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2Full) {
@@ -476,8 +477,7 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2Full) {
 	for (size_t i = 0; i < num_segments + 1; ++i) {
 		x_interpolated = x_base_[0] + i * increment;
 		// expected value for first array can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
-		y_expected_[0] = (1.5 * x_interpolated - 3.5) * x_interpolated
-					+ 1.0;
+		y_expected_[0] = (1.5 * x_interpolated - 3.5) * x_interpolated + 1.0;
 		// expected value for second array can be calculated by y = 1.25 x^2 - 0.25 x + 5.0
 		y_expected_[1] = (1.25 * x_interpolated - 0.25) * x_interpolated + 5.0;
 		RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
@@ -489,17 +489,17 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2Full) {
 	std::cout << "Case 2. out of range, left side" << std::endl;
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 5.0);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 3. out of range, right side
 	std::cout << "Case 3. out of range, right side" << std::endl;
 	x_interpolated = 10.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 0.0, 9.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2FullDescending) {
@@ -521,8 +521,7 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2FullDescending) {
 	for (size_t i = 0; i < num_segments + 1; ++i) {
 		x_interpolated = x_base_[0] + i * increment;
 		// expected value for first array can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
-		y_expected_[0] = (1.5 * x_interpolated - 3.5) * x_interpolated
-					+ 1.0;
+		y_expected_[0] = (1.5 * x_interpolated - 3.5) * x_interpolated + 1.0;
 		// expected value for second array can be calculated by y = 1.25 x^2 - 0.25 x + 5.0
 		y_expected_[1] = (1.25 * x_interpolated - 0.25) * x_interpolated + 5.0;
 		RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
@@ -534,17 +533,17 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2FullDescending) {
 	std::cout << "Case 2. out of range, left side" << std::endl;
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 5.0);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 3. out of range, right side
 	std::cout << "Case 3. out of range, right side" << std::endl;
 	x_interpolated = 10.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 0.0, 9.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder1Sub) {
@@ -568,7 +567,8 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder1Sub) {
 		// polynomial interpolation is a linear interpolation in the sub-region
 		// x_base_[offset] ~ x_base_[offset+1]
 		size_t offset = (x_interpolated < x_base_[1]) ? 0 : 1;
-		double fraction = (x_interpolated - x_base_[offset]) / (x_base_[offset+1] - x_base_[offset]);
+		double fraction = (x_interpolated - x_base_[offset])
+				/ (x_base_[offset + 1] - x_base_[offset]);
 		for (size_t j = 0; j < num_interpolated; ++j) {
 			size_t start_position = j * num_base + offset;
 			size_t end_position = start_position + 1;
@@ -585,36 +585,65 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder1Sub) {
 	std::cout << "Case 2. out of range, left side" << std::endl;
 	x_interpolated = -1.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 5.0);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 
 	// Case 3. out of range, right side
 	std::cout << "Case 3. out of range, right side" << std::endl;
 	x_interpolated = 10.0;
 	InitializeFloatArray(num_interpolated, y_expected_, 0.0, 9.5);
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, x_interpolated,
-			num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
 }
 
-//TEST_F(InterpolatePseudo2dFloatTest, Spline) {
-//	// initial setup
-//	size_t const num_base = 3;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
-//	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-//			0.5, 0.7, 1.5);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.72575,
-//			-0.28125, -0.66775, -0.78125);
-//
-//	// execute interpolation
-//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
+TEST_F(InterpolatePseudo2dFloatTest, Spline) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 2;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, 1.0, -1.0, 0.0,
+			5.0, 6.0, 9.5);
+
+	// Case 1. Within the range
+	std::cout << "Case 1. within the range" << std::endl;
+	double x_interpolated = x_base_[0];
+	size_t num_segments = 10;
+	double dx = x_base_[num_base - 1] - x_base_[0];
+	double increment = dx / static_cast<double>(num_segments);
+	float y_expected_array0[] = { 1.0, 0.456, -0.052, -0.488,
+			-0.816, -1.0, -1.016, -0.888, -0.652, -0.344, 0.0 };
+	float y_expected_array1[] = { 5.0, 5.08, 5.19, 5.36, 5.62,
+			6.0, 6.52, 7.16, 7.89, 8.68, 9.5 };
+	for (size_t i = 0; i < num_segments + 1; ++i) {
+		x_interpolated = x_base_[0] + i * increment;
+		// use pre-calculated results
+		y_expected_[0] = y_expected_array0[i];
+		y_expected_[1] = y_expected_array1[i];
+		RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline,
+				x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+				true);
+	}
+
+	// Case 2. out of range, left side
+	std::cout << "Case 2. out of range, left side" << std::endl;
+	x_interpolated = -1.0;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 5.0);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
+
+	// Case 3. out of range, right side
+	std::cout << "Case 3. out of range, right side" << std::endl;
+	x_interpolated = 10.0;
+	InitializeFloatArray(num_interpolated, y_expected_, 0.0, 9.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline,
+			x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+			true);
+}
+
 //TEST_F(InterpolatePseudo2dFloatTest, SplineDescending) {
 //	// initial setup
 //	size_t const num_base = 3;
@@ -793,5 +822,54 @@ TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder1Sub) {
 //	// execute interpolation
 //	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
+//}
+//
+// AasapSplinePerformance
+// Test performance of asap spline interpolator.
+// To enable this test, you have to follow the procedure below:
+//
+// 1. Uncomment the line at the top of this file that includes
+//    "CubicSplineInterpolator1D.h".
+//
+// 2. Copy the following files to test directory from asap/src:
+//        - Interpolator1D.h, Interpolator1D.tcc
+//        - CubicSplineInterpolator1D.h, CubicSplineInterpolator1D.tcc
+//        - Locator.h, Locator.tcc
+//        - BisectionLocator.h, BisectionLocator.tcc
+//    These files should be located at test directory.
+//
+// 3. Comment out all casa related lines from these files.
+//
+// 4. Change Interpolator1D::createLocator() so that it always uses
+//    BisectionLocator.
+//
+//TEST_F(Interpolate1dFloatTest, AsapSplinePerformance) {
+//	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
+//
+//	size_t const num_base = 3;
+//	size_t const num_interpolated = 200000000;
+//
+//	// initial setup
+//	AllocateMemory(num_base, num_interpolated);
+//	x_base_[0] = 0.0;
+//	x_base_[1] = 100.0;
+//	x_base_[2] = 200.0;
+//	y_base_[0] = 1.0;
+//	y_base_[1] = -1.0;
+//	y_base_[2] = 0.0;
+//	double dx = fabs(x_base_[2] - x_base_[0])
+//			/ static_cast<double>(num_interpolated - 1);
+//	for (size_t i = 0; i < num_interpolated; ++i) {
+//		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+//	}
+//
+//	// execute interpolation
+//	std::unique_ptr<asap::CubicSplineInterpolator1D<double, float> > interpolator(
+//			new asap::CubicSplineInterpolator1D<double, float>());
+//	interpolator->setX(x_base_, num_base);
+//	interpolator->setY(y_base_, num_base);
+//	for (size_t i = 0; i < num_interpolated; ++i) {
+//		y_interpolated_[i] = interpolator->interpolate(x_interpolated_[i]);
+//	}
 //}
 

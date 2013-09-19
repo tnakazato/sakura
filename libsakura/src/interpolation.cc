@@ -329,13 +329,12 @@ public:
 				const_cast<YDataType *>(GetAlignedArray<YDataType>(
 						this->num_base_ * this->num_array_, &storage_for_y_));
 		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t start_position = i * this->num_array_;
-			XDataType const *x_base = &(this->x_base_[start_position]);
+			size_t start_position = i * this->num_base_;
 			YDataType const *y_base = &(this->y_base_[start_position]);
 			YDataType *y_base_2nd_derivative_local =
 					&(y_base_2nd_derivative_[start_position]);
 			DeriveSplineCorrectionTerm<XDataType, YDataType>(kIsDescending,
-					this->num_base_, x_base, y_base,
+					this->num_base_, this->x_base_, y_base,
 					y_base_2nd_derivative_local);
 		}
 	}
@@ -385,7 +384,7 @@ public:
 		XDataType a = (this->x_base_[location] - x_interpolated) / dx;
 		XDataType b = (x_interpolated - this->x_base_[location - 1]) / dx;
 		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t left_index = i * this->num_array_ + location - 1;
+			size_t left_index = i * this->num_base_ + location - 1;
 			y_interpolated[i] = static_cast<YDataType>(a
 					* this->y_base_[left_index]
 					+ b * this->y_base_[left_index + 1]
@@ -439,7 +438,7 @@ public:
 		XDataType a = (this->x_base_[location] - x_interpolated) / dx;
 		XDataType b = (x_interpolated - this->x_base_[location - 1]) / dx;
 		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t left_index = i * this->num_array_ + location - 1;
+			size_t left_index = i * this->num_base_ + location - 1;
 			y_interpolated[i] = static_cast<YDataType>(a
 					* this->y_base_[left_index]
 					+ b * this->y_base_[left_index + 1]

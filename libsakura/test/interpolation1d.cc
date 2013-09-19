@@ -54,7 +54,7 @@ protected:
 			bool check_result) {
 		// sakura must be properly initialized
 		ASSERT_EQ(sakura_Status_kOK, initialize_result_)
-				<< "sakura must be properly initialized!";
+		<< "sakura must be properly initialized!";
 
 		// execute interpolation
 		sakura_Status result = sakura_Interpolate1dFloat(
@@ -416,6 +416,31 @@ TEST_F(Interpolate1dFloatTest, Spline) {
 			0.5, 0.7, 1.5);
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.72575,
 			-0.28125, -0.66775, -0.78125);
+
+	// execute interpolation
+	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, sakura_Status_kOK, true);
+}
+
+TEST_F(Interpolate1dFloatTest, SplineReferenceForPseudo2d) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 11;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base, y_base_, 1.0, -1.0, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 0.0, 0.2, 0.4, 0.6,
+			0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.456, -0.052,
+			-0.488, -0.816, -1.0, -1.016, -0.888, -0.652, -0.344, 0.0);
+
+	// execute interpolation
+	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, sakura_Status_kOK, true);
+
+	InitializeFloatArray(num_base, y_base_, 5.0, 6.0, 9.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 5.0, 5.08, 5.19, 5.36,
+			5.62, 6.0, 6.52, 7.16, 7.89, 8.68, 9.5);
 
 	// execute interpolation
 	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
