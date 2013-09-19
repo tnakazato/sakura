@@ -309,7 +309,7 @@ typedef struct {
  * and the value in array, @a in, is adopted for the elements where corresponding
  * elements in @a edit_mask is false.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief ビットマスク（uint8_t型）と一次元配列（uint8_t型）のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a out を返す: @n
@@ -325,7 +325,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out 結果の格納先。要素数は@a num_in でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  *
@@ -353,7 +353,7 @@ typedef struct {
  * and the value in array, @a in, is adopted for the elements where corresponding
  * elements in @a edit_mask is false.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief ビットマスク（uint32_t型）と一次元配列（uint32_t型）のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a out を返す: @n
@@ -369,7 +369,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out 結果の格納先。要素数は@a num_in でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
@@ -397,7 +397,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param result The output array of size, @a num_data.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
@@ -416,7 +416,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(
@@ -446,7 +446,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param result The output array of size, @a num_data.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
@@ -465,7 +465,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive)(
@@ -484,7 +484,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out The output array of of size, @a num_in.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
@@ -494,7 +494,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out 結果の格納先。要素数は@a num_in でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_in,
@@ -511,7 +511,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out The output array of of size, @a num_in.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
@@ -521,7 +521,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out 結果の格納先。要素数は@a num_in でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_in,
@@ -537,7 +537,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out The output array of of size, @a num_in.
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return exit status
  * @~japanese
  * @brief 入力配列を論理反転する。
  *
@@ -546,7 +546,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param out 結果の格納先。要素数は@a num_in でなければならない。
  * <br/>must-be-aligned
- * @return @a sakura_Status
+ * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_in,
