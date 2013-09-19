@@ -91,12 +91,12 @@ inline void GetLeastSquareMatrixEigen(size_t num_in, float const *in_data,
 	Map<Array<double, Dynamic, 1>, Aligned> out_vector_(const_cast<double *>(out_vector),
 			num_in);
 
-	for (size_t i = 0; i < num_model; i++) {
-		for (size_t j = 0; j < num_model; j++) {
+	for (size_t i = 0; i < num_model; ++i) {
+		for (size_t j = 0; j < num_model; ++j) {
 			size_t idx = num_model * i + j;
 			out_[idx] = 0.0;
 
-			for (size_t k = 0; k < num_in ; k++){
+			for (size_t k = 0; k < num_in ; ++k){
 				if (!in_mask_[k]) continue;
 
 				size_t idx_i = num_in * i + k;
@@ -106,7 +106,7 @@ inline void GetLeastSquareMatrixEigen(size_t num_in, float const *in_data,
 		}
 
 		out_vector[i] = 0.0;
-		for (size_t k = 0; k < num_in; k++) {
+		for (size_t k = 0; k < num_in; ++k) {
 			if (!in_mask_[k]) continue;
 
 			size_t idx = num_in * i + k;
@@ -131,16 +131,15 @@ inline void SolveSimultaneousEquationsByLUEigen(size_t num_eqn,
 
 	::Eigen::MatrixXd lsq_matrix(num_eqn, num_eqn);
 	::Eigen::VectorXd lsq_vector(num_eqn);
-	for (size_t i = 0; i < num_eqn; i++) {
-		for (size_t j = 0; j < num_eqn; j++) {
+	for (size_t i = 0; i < num_eqn; ++i) {
+		for (size_t j = 0; j < num_eqn; ++j) {
 			lsq_matrix(i, j) = lsq_matrix0_[num_eqn*i+j];
 		}
 		lsq_vector(i) = lsq_vector0_[i];
 	}
 
-	::Eigen::FullPivLU< ::Eigen::MatrixXd > lu(lsq_matrix);
-	::Eigen::VectorXd lu_result = lu.solve(lsq_vector);
-	for (size_t i = 0; i < num_eqn; i++) {
+	::Eigen::VectorXd lu_result = lsq_matrix.fullPivLu().solve(lsq_vector);
+	for (size_t i = 0; i < num_eqn; ++i) {
 		out_[i] = lu_result(i);
 	}
 }
@@ -159,9 +158,9 @@ inline void DoGetBestFitModelEigen(size_t num_chan, size_t num_eqn,
 	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
 			num_chan);
 
-	for (size_t i = 0; i < num_chan; i++) {
+	for (size_t i = 0; i < num_chan; ++i) {
 		out_[i] = 0.0f;
-		for (size_t j = 0; j < num_eqn; j++) {
+		for (size_t j = 0; j < num_eqn; ++j) {
 			out_[i] += coeff_[j] * model_[num_chan * j + i];
 		}
 	}

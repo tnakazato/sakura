@@ -38,8 +38,8 @@ protected:
 		in2_[4] = -3.0;
 
 		// Initialize sakura
-		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
-				nullptr);
+		LIBSAKURA_SYMBOL(Status) status =
+				LIBSAKURA_SYMBOL(Initialize)(nullptr, nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 
