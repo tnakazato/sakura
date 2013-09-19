@@ -467,7 +467,8 @@ YDataType const *GetAscendingArray(size_t num_base,
 			size_t start_position = num_base * i;
 			size_t end_position = start_position + num_base;
 			for (size_t j = start_position; j < end_position; ++j) {
-				work_array[j] = unordered_array[end_position - (j - start_position) - 1];
+				work_array[j] = unordered_array[end_position
+						- (j - start_position) - 1];
 			}
 		}
 		return output_array;
@@ -685,8 +686,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// Generate worker class
 	std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
 			CreateInterpolationWorker<XDataType, YDataType>(
-					interpolation_method, num_base, x_base_work, num_interpolated,
-					y_base_work, polynomial_order));
+					interpolation_method, num_base, x_base_work,
+					num_interpolated, y_base_work, polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
 		std::ostringstream oss;
@@ -704,8 +705,21 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	size_t location = this->Locate(0, num_base - 1, num_base, x_base,
 			x_interpolated);
 
-	// interpolation
-	interpolator->InterpolatePseudo2d(location, x_interpolated, y_interpolated);
+	if (location == 0) {
+		// out of range, left side
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			y_interpolated[i] = y_base[i * num_base];
+		}
+	} else if (location == num_base) {
+		// out of range, right side
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			y_interpolated[i] = y_base[(i + 1) * num_base - 1];
+		}
+	} else {
+		// within the range, do interpolation
+		interpolator->InterpolatePseudo2d(location, x_interpolated,
+				y_interpolated);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

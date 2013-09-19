@@ -146,8 +146,8 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrderButNearest) {
 	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
 
 	// execute interpolation
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated, num_base,
-			num_interpolated, sakura_Status_kOK, true);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, InputArrayNotAligned) {
@@ -183,14 +183,43 @@ TEST_F(InterpolatePseudo2dFloatTest, Nearest) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 2;
-	double x_interpolated = 0.1;
 	AllocateMemory(num_base, num_interpolated);
 	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
 	InitializeFloatArray(num_base * num_interpolated, y_base_, 1.0, -1.0, -0.5,
 			0.2);
-	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
 
-	// execute interpolation
+	// Case 1. Within x_base_, left side
+	std::cout << "Case 1. within the range, left side" << std::endl;
+	double x_interpolated = 0.1;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 2. Within x_base_, right side
+	std::cout << "Case 2. within the range, right side" << std::endl;
+	x_interpolated = 0.9;
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.2);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 3. Middle point
+	std::cout << "Case 3. middle point" << std::endl;
+	x_interpolated = 0.5;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 4. Out of range, left side
+	std::cout << "Case 4. out of range, left side" << std::endl;
+	x_interpolated = -1.0;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 5. Out of range, right side
+	std::cout << "Case 5. out of range, right side" << std::endl;
+	x_interpolated = 1.2;
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.2);
 	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
 			num_base, num_interpolated, sakura_Status_kOK, true);
 }
@@ -199,51 +228,141 @@ TEST_F(InterpolatePseudo2dFloatTest, NearestDescending) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 2;
-	double x_interpolated = 0.1;
 	AllocateMemory(num_base, num_interpolated);
 	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-	InitializeFloatArray(num_base * num_interpolated, y_base_, -1.0, 1.0, 0.2, -0.5);
-	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, -1.0, 1.0, 0.2,
+			-0.5);
 
-	// execute interpolation
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated, num_base,
+	// Case 1. Within x_base_, left side
+	std::cout << "Case 1. within the range, left side" << std::endl;
+	double x_interpolated = 0.9;
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.2);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 2. Within x_base_, right side
+	std::cout << "Case 2. within the range, right side" << std::endl;
+	x_interpolated = 0.1;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 3. Middle point
+	std::cout << "Case 3. middle point" << std::endl;
+	x_interpolated = 0.5;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 4. Out of range, left side
+	std::cout << "Case 4. out of range, left side" << std::endl;
+	x_interpolated = 1.2;
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.2);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+
+	// Case 5. Out of range, right side
+	std::cout << "Case 5. out of range, right side" << std::endl;
+	x_interpolated = -1.0;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolatePseudo2dFloatTest, Linear) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, 1.0, -1.0, 0.0,
+			0.5);
+
+	// Case 1. Within the range
+	std::cout << "Case 1. within the range" << std::endl;
+	double x_interpolated = x_base_[0];
+	size_t num_segments = 11;
+	double dx = x_base_[num_base - 1] - x_base_[0];
+	double increment = dx / static_cast<double>(num_segments - 1);
+	for (size_t i = 0; i < num_segments; ++i) {
+		x_interpolated = x_base_[0] + i * increment;
+		double fraction = (x_interpolated - x_base_[0]) / dx;
+		for (size_t j = 0; j < num_interpolated; ++j) {
+			size_t start_position = j * num_base;
+			size_t end_position = start_position + num_base - 1;
+			y_expected_[j] = y_base_[start_position]
+					+ fraction
+							* (y_base_[end_position] - y_base_[start_position]);
+		}
+		RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear,
+				x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+				true);
+	}
+
+	// Case 2. out of range, left side
+	std::cout << "Case 2. out of range, left side" << std::endl;
+	x_interpolated = 10.0;
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
+			num_base,
+			num_interpolated, sakura_Status_kOK, true);
+
+	// Case 3. out of range, right side
+	std::cout << "Case 3. out of range, right side" << std::endl;
+	x_interpolated = -1.0;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.0);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
+			num_base,
 			num_interpolated, sakura_Status_kOK, true);
 }
 
-//TEST_F(InterpolatePseudo2dFloatTest, Linear) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
-//	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-//			0.5, 0.7, 1.5);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.8, 0.0,
-//			-0.4, -1.0);
-//
-//	// execute interpolation
-//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, LinearDescending) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-//	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-//			0.5, 0.7, 1.5);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 0.8, 0.0,
-//			-0.4, -1.0);
-//
-//	// execute interpolation
-//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
+TEST_F(InterpolatePseudo2dFloatTest, LinearDescending) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, -1.0, 1.0, 0.5,
+			0.0);
+
+	// Case 1. Within the range
+	std::cout << "Case 1. within the range" << std::endl;
+	double x_interpolated = x_base_[0];
+	size_t num_segments = 11;
+	double dx = x_base_[num_base - 1] - x_base_[0];
+	double increment = dx / static_cast<double>(num_segments - 1);
+	for (size_t i = 0; i < num_segments; ++i) {
+		x_interpolated = x_base_[0] + i * increment;
+		double fraction = (x_interpolated - x_base_[0]) / dx;
+		for (size_t j = 0; j < num_interpolated; ++j) {
+			size_t start_position = j * num_base;
+			size_t end_position = start_position + num_base - 1;
+			y_expected_[j] = y_base_[start_position]
+					+ fraction
+							* (y_base_[end_position] - y_base_[start_position]);
+		}
+		RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear,
+				x_interpolated, num_base, num_interpolated, sakura_Status_kOK,
+				true);
+	}
+
+	// Case 2. out of range, left side
+	std::cout << "Case 2. out of range, left side" << std::endl;
+	x_interpolated = -1.0;
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.0);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
+			num_base,
+			num_interpolated, sakura_Status_kOK, true);
+
+	// Case 3. out of range, right side
+	std::cout << "Case 3. out of range, right side" << std::endl;
+	x_interpolated = 10.0;
+	InitializeFloatArray(num_interpolated, y_expected_, -1.0, 0.5);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, x_interpolated,
+			num_base,
+			num_interpolated, sakura_Status_kOK, true);
+}
+
 //TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder0) {
 //	// initial setup
 //	polynomial_order_ = 0;
