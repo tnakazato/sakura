@@ -95,25 +95,28 @@ TEST_F(InterpolatePseudo2dFloatTest, InvalidType) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
+	double x_interpolated = 0.0;
 	AllocateMemory(num_base, num_interpolated);
 	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
 	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNumMethod, 0.0, num_base,
-			num_interpolated, sakura_Status_kInvalidArgument, false);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNumMethod,
+			x_interpolated, num_base, num_interpolated,
+			sakura_Status_kInvalidArgument, false);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, ZeroLengthBaseArray) {
 	// initial setup
 	size_t const num_base = 0;
 	size_t const num_interpolated = 5;
+	double x_interpolated = 0.0;
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, 0.0, num_base,
-			num_interpolated, sakura_Status_kInvalidArgument, false);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kInvalidArgument, false);
 }
 
 TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
@@ -121,109 +124,92 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
 	polynomial_order_ = -1;
+	double x_interpolated = 0.0;
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, 0.0, num_base,
-			num_interpolated, sakura_Status_kInvalidArgument, false);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, num_base, num_interpolated,
+			sakura_Status_kInvalidArgument, false);
 }
 
-//TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrderButNearest) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	polynomial_order_ = -1;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
-//	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-//			0.5, 0.7, 1.5);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
-//			-1.0, -1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, InputArrayNotAligned) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 5;
-//	AllocateMemory(num_base, num_interpolated);
-//
-//	// execute interpolation
-//	x_base_ = &(x_base_[1]);
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, 1,
-//			num_interpolated, sakura_Status_kInvalidArgument, false);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, Nearest) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
-//	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-//			0.5, 0.7, 1.5);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
-//			-1.0, -1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, NearestDescending) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-//	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-//			0.5, 0.7, 1.5);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
-//			-1.0, -1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, NearestOpposite) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-//	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
-//			0.0, -1.0);
-//	InitializeFloatArray(num_interpolated, y_expected_, -1.0, -1.0, 1.0, 1.0,
-//			1.0, 1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, SingleBase) {
-//	// initial setup
-//	size_t const num_base = 1;
-//	size_t const num_interpolated = 3;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 0.0);
-//	InitializeFloatArray(num_base, y_base_, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1);
-//	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
+TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrderButNearest) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	polynomial_order_ = -1;
+	double x_interpolated = 0.1;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, 1.0, -1.0, -0.5,
+			0.2);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+
+	// execute interpolation
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated, num_base,
+			num_interpolated, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolatePseudo2dFloatTest, InputArrayNotAligned) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 5;
+	double x_interpolated = 0.0;
+	AllocateMemory(num_base, num_interpolated);
+
+	// execute interpolation
+	x_base_ = &(x_base_[1]);
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial,
+			x_interpolated, 1, num_interpolated, sakura_Status_kInvalidArgument,
+			false);
+}
+
+TEST_F(InterpolatePseudo2dFloatTest, SingleBase) {
+	// initial setup
+	size_t const num_base = 1;
+	size_t const num_interpolated = 2;
+	double x_interpolated = 5.0;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, 1.0, 0.0);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 0.0);
+
+	// execute interpolation
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolatePseudo2dFloatTest, Nearest) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	double x_interpolated = 0.1;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, 1.0, -1.0, -0.5,
+			0.2);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+
+	// execute interpolation
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolatePseudo2dFloatTest, NearestDescending) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	double x_interpolated = 0.1;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
+	InitializeFloatArray(num_base * num_interpolated, y_base_, -1.0, 1.0, 0.2, -0.5);
+	InitializeFloatArray(num_interpolated, y_expected_, 1.0, -0.5);
+
+	// execute interpolation
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated, num_base,
+			num_interpolated, sakura_Status_kOK, true);
+}
+
 //TEST_F(InterpolatePseudo2dFloatTest, Linear) {
 //	// initial setup
 //	size_t const num_base = 2;
@@ -237,7 +223,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-0.4, -1.0);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -254,24 +240,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-0.4, -1.0);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, LinearOpposite) {
-//	// initial setup
-//	size_t const num_base = 2;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-//	InitializeFloatArray(num_base, y_base_, -1.0, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
-//			0.0, -1.0);
-//	InitializeFloatArray(num_interpolated, y_expected_, -1.0, -0.4, 0.0, 0.8,
-//			1.0, 1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -289,7 +258,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-1.0, -1.0);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -307,7 +276,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-0.4, -1.0);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -330,7 +299,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -353,30 +322,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2FullOpposite) {
-//	// initial setup
-//	polynomial_order_ = 2;
-//	size_t const num_base = 3;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
-//	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
-//			0.0, -1.0);
-//
-//	// expected value can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
-//	y_expected_[5] = 1.0; // out of range
-//	for (size_t i = 0; i < num_interpolated - 1; ++i) {
-//		y_expected_[i] = (1.5 * x_interpolated_[i] - 3.5) * x_interpolated_[i]
-//				+ 1.0;
-//	}
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -394,7 +340,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-0.4, -0.5);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -411,7 +357,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-0.28125, -0.66775, -0.78125);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -428,24 +374,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //			-0.28125, -0.66775, -0.78125);
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
-//			num_interpolated, sakura_Status_kOK, true);
-//}
-//
-//TEST_F(InterpolatePseudo2dFloatTest, SplineOpposite) {
-//	// initial setup
-//	size_t const num_base = 3;
-//	size_t const num_interpolated = 6;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
-//	InitializeFloatArray(num_base, y_base_, 0.0, -1.0, 1.0);
-//	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.5, 0.7, 0.5, 0.1,
-//			0.0, -1.0);
-//	InitializeFloatArray(num_interpolated, y_expected_, -0.78125, -0.66775,
-//			-0.28125, 0.72575, 1.0, 1.0);
-//
-//	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline, num_base,
 //			num_interpolated, sakura_Status_kOK, true);
 //}
 //
@@ -462,7 +391,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
@@ -480,11 +409,11 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
-//TEST_F(InterpolatePseudo2dFloatTest, NearestOppositePerformance) {
+//TEST_F(InterpolatePseudo2dFloatTest, NearestDescendingPerformance) {
 //	// initial setup
 //	size_t const num_base = 2;
 //	size_t const num_interpolated = 200000000;
@@ -498,7 +427,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
@@ -516,11 +445,11 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
-//TEST_F(InterpolatePseudo2dFloatTest, LinearOppositePerformance) {
+//TEST_F(InterpolatePseudo2dFloatTest, LinearDescendingPerformance) {
 //	// initial setup
 //	size_t const num_base = 2;
 //	size_t const num_interpolated = 200000000;
@@ -534,7 +463,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kLinear, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kLinear, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
@@ -553,11 +482,11 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
-//TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2FullOppositePerformance) {
+//TEST_F(InterpolatePseudo2dFloatTest, PolynomialOrder2FullDescendingPerformance) {
 //	// initial setup
 //	polynomial_order_ = 2;
 //	size_t const num_base = 3;
@@ -572,7 +501,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kPolynomial, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kPolynomial, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
@@ -590,11 +519,11 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 //
-//TEST_F(InterpolatePseudo2dFloatTest, SplineOppositePerformance) {
+//TEST_F(InterpolatePseudo2dFloatTest, SplineDescendingPerformance) {
 //	// initial setup
 //	size_t const num_base = 3;
 //	size_t const num_interpolated = 200000000;
@@ -608,7 +537,7 @@ TEST_F(InterpolatePseudo2dFloatTest, NegativePolynomialOrder) {
 //	}
 //
 //	// execute interpolation
-//	RunInterpolate1d(sakura_InterpolationMethod_kSpline, num_base,
+//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kSpline, num_base,
 //			num_interpolated, sakura_Status_kOK, false);
 //}
 

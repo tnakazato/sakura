@@ -173,7 +173,7 @@ public:
 				& ((x_interpolated > middle_point) & is_ascending_));
 		size_t nearest_index = is_right_side ? 1 : 0;
 		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t index = i * this->num_array_ + location - 1 + nearest_index;
+			size_t index = i * this->num_base_ + location - 1 + nearest_index;
 			y_interpolated[i] = this->y_base_[index];
 		}
 	}
@@ -453,17 +453,22 @@ public:
 };
 
 template<class XDataType, class YDataType>
-YDataType const *GetAscendingArray(size_t num_array, XDataType const x_base[],
-		YDataType const base_array[],
+YDataType const *GetAscendingArray(size_t num_base,
+		XDataType const base_array[/*num_base*/], size_t num_array,
+		YDataType const unordered_array[/*num_base*num_array*/],
 		std::unique_ptr<YDataType[], InterpolationDeleter> *storage) {
-	if (x_base[0] < x_base[num_array - 1]) {
-		return base_array;
+	if (base_array[0] < base_array[num_base - 1]) {
+		return unordered_array;
 	} else {
-		YDataType const *output_array = GetAlignedArray<YDataType>(num_array,
-				storage);
+		YDataType const *output_array = GetAlignedArray<YDataType>(
+				num_base * num_array, storage);
 		YDataType *work_array = const_cast<YDataType *>(output_array);
 		for (size_t i = 0; i < num_array; ++i) {
-			work_array[i] = base_array[num_array - 1 - i];
+			size_t start_position = num_base * i;
+			size_t end_position = start_position + num_base;
+			for (size_t j = start_position; j < end_position; ++j) {
+				work_array[j] = unordered_array[end_position - (j - start_position) - 1];
+			}
 		}
 		return output_array;
 	}
@@ -555,11 +560,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_base_work;
 	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_interpolated_work;
 	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
-			num_base, x_base, x_base, &storage_for_x_base_work);
+			num_base, x_base, 1, x_base, &storage_for_x_base_work);
 	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
-			num_base, x_base, y_base, &storage_for_y_base_work);
+			num_base, x_base, 1, y_base, &storage_for_y_base_work);
 	XDataType const *x_interpolated_work = GetAscendingArray<XDataType,
-			XDataType>(num_interpolated, x_interpolated, x_interpolated,
+			XDataType>(num_interpolated, x_interpolated, 1, x_interpolated,
 			&storage_for_x_interpolated_work);
 
 	// Generate worker class
@@ -634,18 +639,19 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
-	// y_interpolated[num_base][num_interpolated] is column major.
-	// layout on the memory is as follows:
-	// y_interpolated[0][0]
-	// y_interpolated[1][0]
-	// y_interpolated[2][0]
-	// ..
-	// y_interpolated[num_base-1][0]
-	// y_interpolated[0][1]
-	// ..
-	// y_interpolated[num_base-1][1]
-	// ..
-	// y_interpolated[num_base-1][num_interpolated-1]
+	// y_interpolated[n*m] (where n=num_base, m=num_interpolated) is a serial array
+	// that stores two dimensional array Y[n][m] in column major order.
+	// Memory layout is as follows:
+	//     y_interpolated[0]     = Y[0][0]
+	//     y_interpolated[1]     = Y[1][0]
+	//     y_interpolated[2]     = Y[2][0]
+	//     ..
+	//     y_interpolated[n-1]   = Y[n-1][0]
+	//     y_interpolated[n]     = Y[0][1]
+	//     ..
+	//     y_interpolated[2*n-1] = Y[n-1][1]
+	//     ..
+	//     y_interpolated[n*m-1] = Y[n-1][m-1]
 
 	// input arrays are not aligned
 	if (!LIBSAKURA_SYMBOL(IsAligned)(x_base)
@@ -667,11 +673,20 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 
 	// Perform pseudo 2-dimensional interpolation
+	// make input arrays ascending order
+	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_base_work;
+	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_base_work;
+	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
+			num_base, x_base, 1, x_base, &storage_for_x_base_work);
+	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
+			num_base, x_base, num_interpolated, y_base,
+			&storage_for_y_base_work);
+
 	// Generate worker class
 	std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
 			CreateInterpolationWorker<XDataType, YDataType>(
-					interpolation_method, num_base, x_base, num_interpolated,
-					y_base, polynomial_order));
+					interpolation_method, num_base, x_base_work, num_interpolated,
+					y_base_work, polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
 		std::ostringstream oss;
