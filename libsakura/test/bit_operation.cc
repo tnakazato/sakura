@@ -60,13 +60,6 @@ protected:
 		return string(buff);
 	}
 
-	/* Get time of the day in unit of second */
-	double currenttime() {
-		struct timeval tv;
-		int result = gettimeofday(&tv, NULL);
-		return tv.tv_sec + ((double) tv.tv_usec) * 1.e-6;
-	}
-
 	/* Converts an bit pattern (char) to a value of DataType.*/
 	DataType SToB(char* in_bit) {
 		DataType result(0);
@@ -178,12 +171,12 @@ TEST_F(BitOperation8, AndLong) {
 
 	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
 			<< num_large << endl;
-	start = currenttime();
+	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		status = sakura_OperateBitsUint8And(bit_mask_, num_large, in, edit_mask,
 				out);
 	}
-	end = currenttime();
+	end = sakura_GetCurrentTime();
 	cout << "Elapse time of actual operation: " << end - start << " sec"
 			<< endl;
 
@@ -247,12 +240,12 @@ TEST_F(BitOperation32, AndLong) {
 
 	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
 			<< num_large << endl;
-	start = currenttime();
+	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		status = sakura_OperateBitsUint32And(bit_mask_, num_large, in,
 				edit_mask, out);
 	}
-	end = currenttime();
+	end = sakura_GetCurrentTime();
 	cout << "Elapse time of actual operation: " << end - start << " sec"
 			<< endl;
 
