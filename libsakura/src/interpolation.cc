@@ -530,10 +530,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		YDataType y_interpolated[/*num_interpolated*/]) const {
 	assert(num_base > 0);
 	assert(num_interpolated > 0);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
 	// input arrays are not aligned
 	if (!LIBSAKURA_SYMBOL(IsAligned)(x_base)
@@ -636,10 +636,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		YDataType y_interpolated[/*num_interpolated*/]) const {
 	assert(num_base > 0);
 	assert(num_interpolated > 0);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
 
 	// y_interpolated[n*m] (where n=num_base, m=num_interpolated) is a serial array
 	// that stores two dimensional array Y[n][m] in column major order.
