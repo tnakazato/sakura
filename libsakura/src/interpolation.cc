@@ -24,29 +24,24 @@ struct InterpolationDeleter {
 // a logger for this module
 auto logger = Logger::GetLogger("interpolation");
 
-// get aligned array
-// allocated memory is managed by unique_ptr that is given as an argument
 template<class DataType>
-DataType const *GetAlignedArray(size_t num_array,
-		std::unique_ptr<DataType[], InterpolationDeleter> *storage) {
+void *AllocateAndAlign(size_t num_array, DataType **array) {
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t elements_in_arena = num_array + sakura_alignment - 1;
-	//storage->reset(new DataType[elements_in_arena]);
-	storage->reset(
-			reinterpret_cast<DataType *>(Memory::Allocate(
-					sizeof(DataType) * elements_in_arena)));
-	return reinterpret_cast<DataType const *>(LIBSAKURA_SYMBOL(AlignAny)(
-			sizeof(DataType) * elements_in_arena, storage->get(),
+	void *storage = Memory::Allocate(sizeof(DataType) * elements_in_arena);
+	*array = reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
+			sizeof(DataType) * elements_in_arena, storage,
 			sizeof(DataType) * num_array));
+	return storage;
 }
 
 template<class XDataType, class YDataType>
 void DeriveSplineCorrectionTerm(bool is_descending, size_t num_base,
 		XDataType const x_base[], YDataType const y_base[],
 		YDataType y_base_2nd_derivative[]) {
-	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_u;
-	YDataType *upper_triangular = const_cast<YDataType *>(GetAlignedArray<
-			YDataType>(num_base, &storage_for_u));
+	YDataType *upper_triangular = nullptr;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_u(
+			AllocateAndAlign<YDataType>(num_base, &upper_triangular));
 
 	// This is a condition of natural cubic spline
 	y_base_2nd_derivative[0] = 0.0;
@@ -234,10 +229,8 @@ public:
 	virtual ~PolynomialInterpolationWorker() {
 	}
 	virtual void PrepareForInterpolation() {
-		c_ = const_cast<XDataType *>(GetAlignedArray<XDataType>(kNumElements_,
-				&storage_for_c_));
-		d_ = const_cast<XDataType *>(GetAlignedArray<XDataType>(kNumElements_,
-				&storage_for_d_));
+		storage_for_c_.reset(AllocateAndAlign<XDataType>(kNumElements_, &c_));
+		storage_for_d_.reset(AllocateAndAlign<XDataType>(kNumElements_, &d_));
 	}
 	virtual void Interpolate1d(size_t left_index, size_t right_index,
 			size_t location, XDataType const x_interpolated[],
@@ -304,8 +297,8 @@ private:
 	}
 
 	size_t const kNumElements_;
-	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_c_;
-	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_d_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_c_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_d_;
 	XDataType *c_;
 	XDataType *d_;
 };
@@ -325,9 +318,9 @@ public:
 		// Derive second derivative at x_base
 		const bool kIsDescending = (this->x_base_[0]
 				> this->x_base_[this->num_base_ - 1]);
-		y_base_2nd_derivative_ =
-				const_cast<YDataType *>(GetAlignedArray<YDataType>(
-						this->num_base_ * this->num_array_, &storage_for_y_));
+		storage_for_y_.reset(
+				AllocateAndAlign(this->num_base_ * this->num_array_,
+						&y_base_2nd_derivative_));
 		for (size_t i = 0; i < this->num_array_; ++i) {
 			size_t start_position = i * this->num_base_;
 			YDataType const *y_base = &(this->y_base_[start_position]);
@@ -339,7 +332,7 @@ public:
 		}
 	}
 protected:
-	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_y_;
 	YDataType *y_base_2nd_derivative_;
 };
 
@@ -457,12 +450,14 @@ template<class XDataType, class YDataType>
 YDataType const *GetAscendingArray(size_t num_base,
 		XDataType const base_array[/*num_base*/], size_t num_array,
 		YDataType const unordered_array[/*num_base*num_array*/],
-		std::unique_ptr<YDataType[], InterpolationDeleter> *storage) {
+		std::unique_ptr<void, InterpolationDeleter> *storage) {
 	if (base_array[0] < base_array[num_base - 1]) {
 		return unordered_array;
 	} else {
-		YDataType const *output_array = GetAlignedArray<YDataType>(
-				num_base * num_array, storage);
+		YDataType *output_array = nullptr;
+		storage->reset(
+				AllocateAndAlign<YDataType>(num_base * num_array,
+						&output_array));
 		YDataType *work_array = const_cast<YDataType *>(output_array);
 		for (size_t i = 0; i < num_array; ++i) {
 			size_t start_position = num_base * i;
@@ -472,7 +467,7 @@ YDataType const *GetAscendingArray(size_t num_base,
 						- (j - start_position) - 1];
 			}
 		}
-		return output_array;
+		return static_cast<YDataType *>(output_array);
 	}
 }
 
@@ -558,9 +553,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// Perform 1-dimensional interpolation
 
 	// make input arrays ascending order
-	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_base_work;
-	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_base_work;
-	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_interpolated_work;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_x_base_work;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_y_base_work;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_x_interpolated_work;
 	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
 			num_base, x_base, 1, x_base, &storage_for_x_base_work);
 	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
@@ -588,9 +583,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	interpolator->PrepareForInterpolation();
 
 	// Locate each element in x_base against x_interpolated
-	std::unique_ptr<size_t[], InterpolationDeleter> storage_for_location_base;
-	size_t *location_base = const_cast<size_t *>(GetAlignedArray<size_t>(
-			num_base, &storage_for_location_base));
+	size_t *location_base = nullptr;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_location_base(
+			AllocateAndAlign<size_t>(num_base, &location_base));
 	size_t start_position = 0;
 	size_t end_position = num_interpolated - 1;
 	for (size_t i = 0; i < num_base; ++i) {
@@ -675,8 +670,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 	// Perform pseudo 2-dimensional interpolation
 	// make input arrays ascending order
-	std::unique_ptr<XDataType[], InterpolationDeleter> storage_for_x_base_work;
-	std::unique_ptr<YDataType[], InterpolationDeleter> storage_for_y_base_work;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_x_base_work;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_y_base_work;
 	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
 			num_base, x_base, 1, x_base, &storage_for_x_base_work);
 	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
