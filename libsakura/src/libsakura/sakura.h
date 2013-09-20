@@ -312,7 +312,7 @@ typedef struct {
  * and the value in array, @a data, is adopted for the elements where corresponding
  * elements in @a edit_mask is false. In-place operation is allowed (&@a result == &@a data ).
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief ビットマスクと一次元配列のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す: @n
@@ -360,7 +360,7 @@ typedef struct {
  * and the value in array, @a data, is adopted for the elements where corresponding
  * elements in @a edit_mask is false. In-place operation is allowed (&@a result == &@a data ).
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief ビットマスクと一次元配列のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す: @n
@@ -413,7 +413,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
@@ -476,7 +476,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
@@ -523,7 +523,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
@@ -554,7 +554,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
@@ -583,7 +583,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
  * <br/>must-be-aligned
- * @return exit status
+ * @return retrun code
  * @~japanese
  * @brief 入力配列を論理反転する。
  *
