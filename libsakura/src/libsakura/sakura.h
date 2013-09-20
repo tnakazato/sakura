@@ -671,14 +671,18 @@ typedef enum {
  * @param[in] x_base 補間のためのデータ点のx座標。
  * 要素数は@a num_base でなければならない。
  * @a x_base は昇順または降順にソートされていなければならない。
+ * must-be-aligned
  * @param[in] y_base 補間のためのデータ点のy座標。
  * 要素数は@a num_base でなければならない。
+ * must-be-aligned
  * @param[in] num_interpolated 補間したいデータ点の数。
  * @param[in] x_interpolated 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
  * @a x_interpolated は昇順または降順にソートされていなければならない。
+ * must-be-aligned
  * @param[out] y_interpolated 補間結果。
  * 要素数は@a num_base でなければならない。
+ * must-be-aligned
  * @return 終了ステータス。
  *
  * @~english
