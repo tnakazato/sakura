@@ -423,7 +423,7 @@ typedef struct {
  *
  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
- * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての値がfalseとなる。
+ * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての要素がfalseとなる。
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
@@ -486,7 +486,7 @@ typedef struct {
  *
  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
- * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての値がfalseとなる。
+ * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての要素がfalseとなる。
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
@@ -515,6 +515,8 @@ typedef struct {
  * @brief Convert an input array to a boolean array.
  * @details Returns true if the corresponding element in input array != 0.
  *
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data The input array of of size, @a num_data.
@@ -525,6 +527,8 @@ typedef struct {
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
+ *
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
  * @param[in] num_data @a data 及び@a result の要素の数。
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
@@ -542,6 +546,8 @@ typedef struct {
  * @brief Convert an input array to a boolean array.
  * @details Returns true if the corresponding element in input array != 0.
  *
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data The input array of of size, @a num_data.
@@ -552,6 +558,8 @@ typedef struct {
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
+ *
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
  * @param[in] num_data @a data 及び@a result の要素の数。
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
@@ -567,6 +575,7 @@ typedef struct {
 /**
  * @~english
  * @brief Invert a boolean array
+ * @details No operation is done when the data array is zero length, i.e., @a num_data = 0.
  *
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
@@ -577,6 +586,8 @@ typedef struct {
  * @return exit status
  * @~japanese
  * @brief 入力配列を論理反転する。
+ *
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
  * @param[in] num_data @a data 及び@a result の要素の数。
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
