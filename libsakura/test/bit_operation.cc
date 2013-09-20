@@ -47,7 +47,7 @@ protected:
 	}
 
 	// Create arbitrary length of input data and edit mask by repeating in_[] and edit_mask_[]
-	void ReshapeInputData(size_t num_data, DataType *data, bool *mask) {
+	void GetInputDataInLength(size_t num_data, DataType *data, bool *mask) {
 		size_t const num_in(NUM_IN);
 		for (size_t i = 0; i < num_data; ++i) {
 			data[i] = in_[i % num_in];
@@ -105,10 +105,7 @@ protected:
 		cout << " ]" << endl;
 	}
 
-	SIMD_ALIGN
 	DataType in_[NUM_IN];
-
-	SIMD_ALIGN
 	bool edit_mask_[NUM_IN];
 
 	bool verbose;
@@ -142,30 +139,37 @@ class BitOperation8: public BitOperation<uint8_t> {
  * RESULT:
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010 ]
  */
-//TEST_F(BitOperation8, And) {
-//	SIMD_ALIGN
-//	uint8_t out[ELEMENTSOF(in_)];
-//	ASSERT_EQ(NUM_IN, ELEMENTSOF(out));
-//	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-//	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
-//	size_t const num_in(NUM_IN);
-//
-//	if (verbose)
-//		PrintInputs();
-//
-//	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
-//			num_in, in_, edit_mask_, out);
-//
-//	if (verbose)
-//		PrintArray("out", num_in, out);
-//
-//	// Verification
-//	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-//	for (size_t i = 0; i < num_in; ++i) {
-//		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
-//	}
-//}
-//
+TEST_F(BitOperation8, And) {
+	size_t const num_in(NUM_IN);
+	SIMD_ALIGN
+	uint8_t in_data[num_in];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	uint8_t out[ELEMENTSOF(in_data)];
+
+	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+
+	GetInputDataInLength(num_in, in_data, edit_mask);
+	if (verbose){
+		PrintArray("in (before)", num_in, in_data);
+		PrintArray("mask", num_in, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_in, in_data, edit_mask, out);
+
+	if (verbose)
+		PrintArray("out", num_in, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_in; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
+	}
+}
+
 /*
  * Test bit operation AND by sakura_OperateBitsUint8And in-place operation (&out == &in)
  * RESULT:
@@ -174,26 +178,28 @@ class BitOperation8: public BitOperation<uint8_t> {
 TEST_F(BitOperation8, AndInPlace) {
 	size_t const num_in(12);
 	SIMD_ALIGN
-	uint8_t in[num_in];
+	uint8_t in_data[num_in];
 	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(in)];
+	bool edit_mask[ELEMENTSOF(in_data)];
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 
-	ReshapeInputData(num_in, in, edit_mask);
-	if (verbose)
-		PrintArray("in (before)", num_in, in);
+	GetInputDataInLength(num_in, in_data, edit_mask);
+	if (verbose){
+		PrintArray("in (before)", num_in, in_data);
+		PrintArray("mask", num_in, edit_mask);
+	}
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
-			num_in, in, edit_mask, in);
+			num_in, in_data, edit_mask, in_data);
 
 	if (verbose)
-		PrintArray("in (after)", num_in, in);
+		PrintArray("in (after)", num_in, in_data);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_in; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], in[i]);
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], in_data[i]);
 	}
 }
 
@@ -215,8 +221,8 @@ TEST_F(BitOperation8, AndLengthEleven) {
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 
-	// Create long input data by repeating in_ and edit_mask_
-	ReshapeInputData(num_in, in, edit_mask);
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_in, in, edit_mask);
 
 	if (verbose){
 		PrintArray("in", num_in, in);
@@ -241,29 +247,36 @@ TEST_F(BitOperation8, AndLengthEleven) {
  * RESULT:
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010 ]
  */
-//TEST_F(BitOperation32, And) {
-//	SIMD_ALIGN
-//	uint32_t out[ELEMENTSOF(in_)];
-//	ASSERT_EQ(NUM_IN, ELEMENTSOF(out));
-//	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-//	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
-//	size_t const num_in(NUM_IN);
-//
-//	if (verbose)
-//		PrintInputs();
-//
-//	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
-//			num_in, in_, edit_mask_, out);
-//
-//	if (verbose)
-//		PrintArray("out", num_in, out);
-//
-//	// Verification
-//	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-//	for (size_t i = 0; i < num_in; ++i) {
-//		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
-//	}
-//}
+TEST_F(BitOperation32, And) {
+	size_t const num_in(NUM_IN);
+	SIMD_ALIGN
+	uint32_t in_data[num_in];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	uint32_t out[ELEMENTSOF(in_data)];
+
+	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+
+	GetInputDataInLength(num_in, in_data, edit_mask);
+	if (verbose){
+		PrintArray("in (before)", num_in, in_data);
+		PrintArray("mask", num_in, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_in, in_data, edit_mask, out);
+
+	if (verbose)
+		PrintArray("out", num_in, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_in; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out[i]);
+	}
+}
 
 /*
  * Test bit operation AND by sakura_OperateBitsUint32And in-place operation (&out == &in)
@@ -279,7 +292,7 @@ TEST_F(BitOperation32, AndInPlace) {
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 
-	ReshapeInputData(num_in, in, edit_mask);
+	GetInputDataInLength(num_in, in, edit_mask);
 	if (verbose)
 		PrintArray("in (before)", num_in, in);
 
@@ -314,8 +327,8 @@ TEST_F(BitOperation32, AndLengthEleven) {
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
 
-	// Create long input data by repeating in_ and edit_mask_
-	ReshapeInputData(num_in, in, edit_mask);
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_in, in, edit_mask);
 
 	if (verbose){
 		PrintArray("in", num_in, in);
@@ -357,8 +370,8 @@ TEST_F(BitOperation8, AndLong) {
 	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
-	// Create long input data by repeating in_ and edit_mask_
-	ReshapeInputData(num_large, in_long, edit_mask_long);
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, in_long, edit_mask_long);
 
 	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
 			<< num_large << endl;
@@ -399,8 +412,8 @@ TEST_F(BitOperation32, AndLong) {
 	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
-	// Create long input data by repeating in_ and edit_mask_
-	ReshapeInputData(num_large, in_long, edit_mask_long);
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, in_long, edit_mask_long);
 
 	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
 			<< num_large << endl;
