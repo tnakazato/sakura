@@ -74,8 +74,7 @@ protected:
 
 	DataType data_[NUM_IN];
 	DataType upper_[NUM_RANGE];
-	DataType lower_[NUM_RANGE];
-	bool verbose;
+	DataType lower_[NUM_RANGE];bool verbose;
 };
 
 /*
@@ -537,12 +536,72 @@ TEST_F(BoolFilterOther, Uint32ToBoolLenghZero) {
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
+/* lower_bound > upper_bound */
+TEST_F(BoolFilterFloat, RangesInclusiveFailExchangeBounds) {
+	size_t const num_in(NUM_IN);
+	SIMD_ALIGN
+	float in_data[num_in];
+	SIMD_ALIGN
+	bool out[ELEMENTSOF(data_)];
+	SIMD_ALIGN
+	float lower[NUM_RANGE];
+	SIMD_ALIGN
+	float upper[ELEMENTSOF(lower)];
+	size_t const num_range(ELEMENTSOF(lower));
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_in, in_data);
+	// Copy bounds to aligned arrays
+	GetBounds(lower, upper);
+
+	if (verbose) {
+		PrintArray("in", num_in, in_data);
+		// Exchange upper and lower bounds
+		PrintArray("lower_bound", NUM_RANGE, upper);
+		PrintArray("upper_bound", NUM_RANGE, lower);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+			num_in, in_data, num_range, upper, lower, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
 
 /*
  * Test failure cases of sakura_SetTrueIntInRangesInclusive
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
+/* lower_bound > upper_bound */
+TEST_F(BoolFilterInt, RangesInclusiveFailExchangeBounds) {
+	size_t const num_in(NUM_IN);
+	SIMD_ALIGN
+	int in_data[num_in];
+	SIMD_ALIGN
+	bool out[ELEMENTSOF(data_)];
+	SIMD_ALIGN
+	int lower[NUM_RANGE];
+	SIMD_ALIGN
+	int upper[ELEMENTSOF(lower)];
+	size_t const num_range(ELEMENTSOF(lower));
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_in, in_data);
+	// Copy bounds to aligned arrays
+	GetBounds(lower, upper);
+
+	if (verbose) {
+		PrintArray("in", num_in, in_data);
+		// Exchange upper and lower bounds
+		PrintArray("lower_bound", NUM_RANGE, upper);
+		PrintArray("upper_bound", NUM_RANGE, lower);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(num_in,
+			in_data, num_range, upper, lower, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
 
 /*
  * Test failure cases of sakura_InvertBool
