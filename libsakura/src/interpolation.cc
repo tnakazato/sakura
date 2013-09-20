@@ -703,18 +703,18 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	interpolator->PrepareForInterpolation();
 
 	// locate x_interpolated against x_base
-	size_t location = this->Locate(0, num_base - 1, num_base, x_base,
+	size_t location = this->Locate(0, num_base - 1, num_base, x_base_work,
 			x_interpolated);
 
 	if (location == 0) {
 		// out of range, left side
 		for (size_t i = 0; i < num_interpolated; ++i) {
-			y_interpolated[i] = y_base[i * num_base];
+			y_interpolated[i] = y_base_work[i * num_base];
 		}
 	} else if (location == num_base) {
 		// out of range, right side
 		for (size_t i = 0; i < num_interpolated; ++i) {
-			y_interpolated[i] = y_base[(i + 1) * num_base - 1];
+			y_interpolated[i] = y_base_work[(i + 1) * num_base - 1];
 		}
 	} else {
 		// within the range, do interpolation
