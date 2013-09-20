@@ -10,8 +10,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
-	if (num_data == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+//	if (num_data == 0)
+//		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (result == nullptr)
@@ -44,8 +44,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
-	if (num_data == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+//	if (num_data == 0)
+//		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (result == nullptr)

@@ -295,6 +295,8 @@ typedef struct {
  * @details Invokes the following bit operation to @a i- th element of @a result : @n
  * @a result [i] = ( @a edit_mask [i] ? (@a bit_maks & @a data [i]) : @a data [i] )
  *
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
  * between this value and the array, @a data.
  * @param[in] num_data The number of elements in the arrays, @a data,
@@ -315,6 +317,8 @@ typedef struct {
  * @brief ビットマスクと一次元配列のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す: @n
  * @a result [i] = ( @a edit_mask[i] ? (@a bit_maks & @a data [i]) : @a data [i] )
+ *
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
  * @param[in] bit_mask ビットマスク
  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
@@ -339,6 +343,8 @@ typedef struct {
  * @details Invokes the following bit operation to @a i- th element of @a result : @n
  * @a result [i] = ( @a edit_mask [i] ? (@a bit_maks & @a data [i]) : @a data [i] )
  *
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
  * between this value and the array, @a data.
  * @param[in] num_data The number of elements in the arrays, @a data,
@@ -359,6 +365,8 @@ typedef struct {
  * @brief ビットマスクと一次元配列のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す: @n
  * @a result [i] = ( @a edit_mask[i] ? (@a bit_maks & @a data [i]) : @a data [i] )
+ *
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
  * @param[in] bit_mask ビットマスク
  * @param[in] num_data 一次元配列@a data, @a edit_mask 及び@a result の要素の数。

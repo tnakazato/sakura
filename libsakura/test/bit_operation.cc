@@ -243,6 +243,73 @@ TEST_F(BitOperation8, AndLengthEleven) {
 }
 
 /*
+ * Test bit operation AND by sakura_OperateBitsUint8And
+ * with an array of length zero
+ *
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kOK)
+ */
+TEST_F(BitOperation8, AndLengthZero) {
+	SIMD_ALIGN
+	uint8_t in[0];
+	SIMD_ALIGN
+	uint8_t out[ELEMENTSOF(in)];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(in)];
+	size_t const num_in(ELEMENTSOF(in));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_in, in, edit_mask, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/*
+ * Long test of bit operation AND by sakura_OperateBitsUint8And with a large array
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010, .... repeated... ]
+ */
+TEST_F(BitOperation8, AndLong) {
+	SIMD_ALIGN
+	uint8_t in_long[NUM_IN_LONG];
+	SIMD_ALIGN
+	bool edit_mask_long[ELEMENTSOF(in_long)];
+	SIMD_ALIGN
+	uint8_t out_long[ELEMENTSOF(in_long)];
+
+	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
+	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+
+	size_t const num_large(ELEMENTSOF(in_long));
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, in_long, edit_mask_long);
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint8And(bit_mask_, num_large, in_long,
+				edit_mask_long, out_long);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_large; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out_long[i]);
+	}
+}
+
+
+
+/*
  * Test bit operation AND by sakura_OperateBitsUint32And
  * RESULT:
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010 ]
@@ -349,49 +416,6 @@ TEST_F(BitOperation32, AndLengthEleven) {
 }
 
 /*
- * Long test of bit operation AND by sakura_OperateBitsUint8And with a large array
- * RESULT:
- * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000000, 00000010, 00000010, .... repeated... ]
- */
-TEST_F(BitOperation8, AndLong) {
-	SIMD_ALIGN
-	uint8_t in_long[NUM_IN_LONG];
-	SIMD_ALIGN
-	bool edit_mask_long[ELEMENTSOF(in_long)];
-	SIMD_ALIGN
-	uint8_t out_long[ELEMENTSOF(in_long)];
-
-	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
-
-	size_t const num_large(ELEMENTSOF(in_long));
-
-	double start, end;
-	size_t const num_repeat = 20000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	// Create long input data by repeating in_data and edit_mask_
-	GetInputDataInLength(num_large, in_long, edit_mask_long);
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_large << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_OperateBitsUint8And(bit_mask_, num_large, in_long,
-				edit_mask_long, out_long);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_large; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], out_long[i]);
-	}
-}
-
-/*
  * Long test of bit operation AND by sakura_OperateBitsUint32And with a large array
  * RESULT:
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...000, 0...010, 0...010, .... repeated... ]
@@ -434,32 +458,12 @@ TEST_F(BitOperation32, AndLong) {
 }
 
 /*
- * Test failure cases of sakura_OperateBitsUint8And
+ * Test  bit operation AND by sakura_OperateBitsUint32And
+ * with an array of length zero
+ *
  * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ *   LIBSAKURA_SYMBOL(Status_kOK)
  */
-/* Input array is zero length */
-TEST_F(BitOperation8, AndLengthZero) {
-	SIMD_ALIGN
-	uint8_t in[0];
-	SIMD_ALIGN
-	uint8_t out[ELEMENTSOF(in)];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(in)];
-	size_t const num_in(ELEMENTSOF(in));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
-			num_in, in, edit_mask, out);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_OperateBitsUint32And
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Input array is zero length */
 TEST_F(BitOperation32, AndLengthZero) {
 	SIMD_ALIGN
 	uint32_t in[0];
@@ -472,6 +476,6 @@ TEST_F(BitOperation32, AndLengthZero) {
 	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
 			num_in, in, edit_mask, out);
 	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
