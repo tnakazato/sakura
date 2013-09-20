@@ -263,6 +263,39 @@ TEST_F(BoolFilterFloat, RangesInclusiveLengthLenghZero) {
 }
 
 /*
+ * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * without bounderies (num_condition=0)
+ * RESULT:
+ * out = [F, F, F, F, F, F, F, F]
+ */
+TEST_F(BoolFilterFloat, RangesInclusiveZeroCondition) {
+	size_t const num_in(NUM_IN), num_range(0);
+	SIMD_ALIGN
+	float in_data[num_in];
+	SIMD_ALIGN
+	bool out[ELEMENTSOF(data_)];
+	SIMD_ALIGN
+	float lower[num_range];
+	SIMD_ALIGN
+	float upper[num_range];
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_in, in_data);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+			num_in, in_data, num_range, lower, upper, out);
+
+	if (verbose)
+		PrintArray("out", num_in, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_in; ++i) {
+		ASSERT_EQ(false, out[i]);
+	}
+}
+
+/*
  * Test bool filter generation sakura_SetTrueIntInRangesInclusive
  * RESULT:
  * out = [F, T, F, T, F, T, F, T]
@@ -375,6 +408,39 @@ TEST_F(BoolFilterInt, RangesInclusiveLenghZero) {
 			in_data, num_range, lower, upper, out);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+ * without bounderies (num_condition=0)
+ * RESULT:
+ * out = [F, F, F, F, F, F, F, F]
+ */
+TEST_F(BoolFilterInt, RangesInclusiveZeroCondition) {
+	size_t const num_in(NUM_IN), num_range(0);
+	SIMD_ALIGN
+	int in_data[num_in];
+	SIMD_ALIGN
+	bool out[ELEMENTSOF(data_)];
+	SIMD_ALIGN
+	int lower[num_range];
+	SIMD_ALIGN
+	int upper[num_range];
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_in, in_data);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+			num_in, in_data, num_range, lower, upper, out);
+
+	if (verbose)
+		PrintArray("out", num_in, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_in; ++i) {
+		ASSERT_EQ(false, out[i]);
+	}
 }
 
 /*
