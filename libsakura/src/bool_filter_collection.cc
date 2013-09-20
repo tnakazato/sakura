@@ -21,8 +21,8 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lower_bounds));
-	static_assert(true == 1, "Assertation failure: true==1");
-	static_assert(false == 0, "Assertation failure: at false==0");
+	static_assert(true == 1, "true==1");
+	static_assert(false == 0, "false==0");
 	// Initialize result with false
 	for (size_t i = 0; i < num_data; ++i) {
 		result[i] = false;
@@ -55,9 +55,9 @@ inline void InvertBoolScalar(size_t num_data, bool const *in, bool *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	uint8_t true8(static_cast<uint8_t>(true));
-	static_assert(sizeof(in[0]) == sizeof(true8), "Assertation failure: sizeof(bool)==sizeof(uint8_t)");
-	static_assert(true == 1, "Assertation failure: true==1");
-	static_assert(false == 0, "Assertation failure: at false==0");
+	static_assert(sizeof(in[0]) == sizeof(true8), "sizeof(bool)==sizeof(uint8_t)");
+	static_assert(true == 1, "true==1");
+	static_assert(false == 0, "false==0");
 	for (size_t i = 0; i < num_data; ++i) {
 		out[i] = (in[i] ^ true8);
 	}
