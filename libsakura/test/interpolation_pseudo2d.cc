@@ -690,23 +690,22 @@ TEST_F(InterpolatePseudo2dFloatTest, SplineDescending) {
 			true);
 }
 
-//TEST_F(InterpolatePseudo2dFloatTest, SingleBasePerformance) {
-//	// initial setup
-//	size_t const num_base = 1;
-//	size_t const num_interpolated = 200000000;
-//	AllocateMemory(num_base, num_interpolated);
-//	InitializeDoubleArray(num_base, x_base_, 0.0);
-//	InitializeFloatArray(num_base, y_base_, 1.0);
-//	double dx = 1.0 / static_cast<double>(num_interpolated - 1);
-//	for (size_t i = 0; i < num_interpolated; ++i) {
-//		x_interpolated_[i] = -0.5 + dx * static_cast<double>(i);
-//	}
-//
-//	// execute interpolation
-//	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, num_base,
-//			num_interpolated, sakura_Status_kOK, false);
-//}
-//
+TEST_F(InterpolatePseudo2dFloatTest, SingleBasePerformance) {
+	// initial setup
+	size_t const num_base = 1;
+	size_t const num_interpolated = 200000000;
+	AllocateMemory(num_base, num_interpolated);
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	for (size_t i = 0; i < num_base * num_interpolated; ++i) {
+		y_base_[i] = static_cast<float>(i);
+	}
+	double x_interpolated = 1.0;
+
+	// execute interpolation
+	RunInterpolatePseudo2d(sakura_InterpolationMethod_kNearest, x_interpolated,
+			num_base, num_interpolated, sakura_Status_kOK, false);
+}
+
 //TEST_F(InterpolatePseudo2dFloatTest, NearestPerformance) {
 //	// initial setup
 //	size_t const num_base = 2;
