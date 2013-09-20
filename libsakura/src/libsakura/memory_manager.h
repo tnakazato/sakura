@@ -13,10 +13,10 @@
 namespace LIBSAKURA_PREFIX {
 class Memory {
 public:
-	static inline void * Allocate(size_t size) throw () {
+	static inline void * Allocate(size_t size) noexcept {
 		return allocator_(size);
 	}
-	static inline void Free(void *ptr) throw () {
+	static inline void Free(void *ptr) noexcept {
 		deallocator_(ptr);
 	}
 private:

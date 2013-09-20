@@ -29,7 +29,7 @@
 namespace {
 
 class ScopeGuard {
-	typedef std::function<void(void) throw ()> Func;
+	typedef std::function<void(void) noexcept> Func;
 public:
 	ScopeGuard() = delete;
 	explicit ScopeGuard(Func clean_up, bool engaged = true) :
