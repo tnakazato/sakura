@@ -7,6 +7,7 @@
 
 /* the number of elements in input/output array to test */
 #define NUM_IN 5
+#define NUM_MODEL 3
 
 using namespace std;
 
@@ -86,7 +87,7 @@ TEST_F(NumericOperation, Subtraction) {
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_in ; i++){
+	for (size_t i = 0 ; i < num_in; ++i){
 		ASSERT_EQ(out[i], result[i]);
 	}
 }
@@ -97,7 +98,22 @@ TEST_F(NumericOperation, Subtraction) {
  * out = []
  */
 TEST_F(NumericOperation, GetBestFitModel) {
-	// yet to be implemented
+	size_t const num_in(NUM_IN);
+	SIMD_ALIGN float in_data[NUM_IN] = {1.0, 3.0, 7.0, 130.0, 21.0};
+	SIMD_ALIGN bool in_mask[NUM_IN] = {true, true, true, false, true};
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN double model[NUM_MODEL*NUM_IN] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	SIMD_ALIGN float out[NUM_IN];
+	float result[NUM_IN] = {1.0, 3.0, 7.0, 13.0, 21.0};
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0 ; i < num_model; ++i){
+		ASSERT_EQ(out[i], result[i]);
+	}
 }
 
 /*
@@ -106,7 +122,27 @@ TEST_F(NumericOperation, GetBestFitModel) {
  * out = []
  */
 TEST_F(NumericOperation, GetLeastSquareMatrix) {
-	// yet to be implemented
+	size_t const num_in(NUM_IN);
+	SIMD_ALIGN float in_data[NUM_IN] = {1.0, 3.0, 7.0, 130.0, 21.0};
+	SIMD_ALIGN bool in_mask[NUM_IN] = {true, true, true, false, true};
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN double model[NUM_MODEL*NUM_IN] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	SIMD_ALIGN double out[NUM_MODEL*NUM_MODEL];
+	SIMD_ALIGN double out_vector[NUM_MODEL];
+	float result_matrix[NUM_MODEL*NUM_MODEL] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+	float result_vector[NUM_MODEL] = {32.0, 101.0, 367.0};
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_GetLeastSquareMatrix(num_in, in_data, in_mask, num_model, model, out, out_vector);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0 ; i < num_model*num_model; ++i){
+		ASSERT_EQ(out[i], result_matrix[i]);
+	}
+	for (size_t i = 0 ; i < num_model; ++i){
+		ASSERT_EQ(out_vector[i], result_vector[i]);
+	}
 }
 
 /*
@@ -115,7 +151,20 @@ TEST_F(NumericOperation, GetLeastSquareMatrix) {
  * out = []
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
-	// yet to be implemented
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN double lsq_matrix[NUM_MODEL*NUM_MODEL] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+	SIMD_ALIGN double lsq_vector[NUM_MODEL] = {32.0, 101.0, 367.0};
+	SIMD_ALIGN double out[NUM_MODEL];
+	float result[NUM_MODEL] = {1.0, 1.0, 1.0};
+
+	LIBSAKURA_SYMBOL(Status) status =
+				sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix, lsq_vector, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0 ; i < num_model; ++i){
+		ASSERT_EQ((float)out[i], result[i]);
+	}
 }
 
 /*
@@ -124,5 +173,19 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
  * out = []
  */
 TEST_F(NumericOperation, DoGetBestFitModel) {
-	// yet to be implemented
+	size_t const num_chan(NUM_IN);
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN double model[NUM_MODEL*NUM_IN] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	SIMD_ALIGN double coeff[NUM_MODEL] = {1.0, 1.0, 1.0};
+	SIMD_ALIGN float out[NUM_IN];
+	float result[NUM_IN] = {1.0, 3.0, 7.0, 13.0, 21.0};
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_DoGetBestFitModel(num_chan, num_model, model, coeff, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0 ; i < NUM_IN; ++i){
+		ASSERT_EQ((float)out[i], result[i]);
+	}
 }
