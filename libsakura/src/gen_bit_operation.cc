@@ -7,20 +7,20 @@
 #include "libsakura/localdef.h"
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
-		uint8_t bit_mask, size_t num_in, uint8_t const in[],
-		bool const edit_mask[], uint8_t out[]) {
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
-	if (num_in == 0)
+	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in == nullptr)
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
+	if (result == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (edit_mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -35,26 +35,26 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 
 	auto bitop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint8();
-	bitop->OperateBitsAnd(bit_mask, num_in, in, edit_mask, out);
+	bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
-		uint32_t bit_mask, size_t num_in, uint32_t const in[],
-		bool const edit_mask[], uint32_t out[]) {
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
-	if (num_in == 0)
+	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in == nullptr)
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
+	if (result == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (edit_mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -69,7 +69,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 
 	auto bitop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint32();
-	bitop->OperateBitsAnd(bit_mask, num_in, in, edit_mask, out);
+	bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

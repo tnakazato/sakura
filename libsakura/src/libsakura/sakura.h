@@ -292,136 +292,136 @@ typedef struct {
 /**
  * @~english
  * @brief Invoke bit operation AND between a a bit mask and an array.
- * @details Invokes the following bit operation to @a i- th element of @a out : @n
- * @a out [i] = ( @a edit_mask [i] ? (@a bit_maks & @a in [i]) : @a in [i] )
+ * @details Invokes the following bit operation to @a i- th element of @a result : @n
+ * @a result [i] = ( @a edit_mask [i] ? (@a bit_maks & @a data [i]) : @a data [i] )
  *
- * @param bit_mask A bit mask. The bit operation is invoked
- * between this value and the array, @a in.
- * @param num_in The number of elements in the arrays, @a in,
- * @a edit_mask, and @a out.
- * @param in An input array of size, @a num_in. The bit operation
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
  * is invoked between this array and @a bit_mask.
  * <br/>must-be-aligned
- * @param edit_mask A boolean mask array of size, @a num_in. The bit operation
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
  * is skipped for the elements with the value, false.
  * <br/>must-be-aligned
- * @param out The output array of size, @a num_in. It stores the result
- * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
- * and the value in array, @a in, is adopted for the elements where corresponding
- * elements in @a edit_mask is false. In-place operation is allowed (&@a out == &@a in ).
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. In-place operation is allowed (&@a result == &@a data ).
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief ビットマスクと一次元配列のビット積を取る。
- * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a out を返す: @n
- * @a out [i] = ( @a edit_mask[i] ? (@a bit_maks & @a in [i]) : @a in [i] )
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す: @n
+ * @a result [i] = ( @a edit_mask[i] ? (@a bit_maks & @a data [i]) : @a data [i] )
  *
- * @param bit_mask ビットマスク
- * @param num_in @a in, @a edit_mask 及び@a out の要素の数。
- * @param in 入力配列。要素数は@a num_in でなければならない。
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @param edit_mask データのマスク。要素数は@a num_in でなければならない。
- * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
- * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a in の要素がそのまま出力となる。
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。インプレースな変換を許す(&@a out == &@a in )。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(&@a result == &@a data )。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
-		uint8_t bit_mask, size_t num_in, uint8_t const in[/*num_in*/],
-		bool const edit_mask[/*num_in*/], uint8_t out[/*num_in*/]);
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
  * @~english
  * @brief Invoke bit operation AND between a bit mask and an array.
- * @details Invokes the following bit operation to @a i- th element of @a out : @n
- * @a out [i] = ( @a edit_mask [i] ? (@a bit_maks & @a in [i]) : @a in [i] )
+ * @details Invokes the following bit operation to @a i- th element of @a result : @n
+ * @a result [i] = ( @a edit_mask [i] ? (@a bit_maks & @a data [i]) : @a data [i] )
  *
- * @param bit_mask A bit mask. The bit operation is invoked
- * between this value and the array, @a in.
- * @param num_in The number of elements in the arrays, @a in,
- * @a edit_mask, and @a out.
- * @param in An input array of size, @a num_in. The bit operation
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
  * is invoked between this array and @a bit_mask.
  * <br/>must-be-aligned
- * @param edit_mask A boolean mask array of size, @a num_in. The bit operation
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
  * is skipped for the elements with the value, false.
  * <br/>must-be-aligned
- * @param out The output array of size, @a num_in. It stores the result
- * of the bit operation between @a bit_mask and @a in. The bit operation is skipped
- * and the value in array, @a in, is adopted for the elements where corresponding
- * elements in @a edit_mask is false. In-place operation is allowed (&@a out == &@a in ).
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. In-place operation is allowed (&@a result == &@a data ).
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief ビットマスクと一次元配列のビット積を取る。
- * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a out を返す: @n
- * @a out [i] = ( @a edit_mask[i] ? (@a bit_maks & @a in [i]) : @a in [i] )
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す: @n
+ * @a result [i] = ( @a edit_mask[i] ? (@a bit_maks & @a data [i]) : @a data [i] )
  *
- * @param bit_mask ビットマスク
- * @param num_in 一次元配列@a in, @a edit_mask 及び@a out の要素の数。
- * @param in 入力一次元配列。要素数は@a num_in でなければならない。
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data 一次元配列@a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @param edit_mask データのマスク。要素数は@a num_in でなければならない。
- * この値が true だと、対応する入力配列@a in とビットマスク@a bit_maks のビット積を計算する。
- * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a in の要素がそのまま出力となる。
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。インプレースな変換を許す(&@a out == &@a in )。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(&@a result == &@a data )。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
-		uint32_t bit_mask, size_t num_in, uint32_t const in[/*num_in*/],
-		bool const edit_mask[/*num_in*/], uint32_t out[/*num_in*/]);
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
 /**
  * @~english
  * @brief Returns if the values in input array are in any of specified range (inclusive).
  * @details Returns true if the corresponding element in the input array
  * is in range of upper and lower boundary pairs, <br/>
- * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * @a lower_bound[k] <= @a data[i] <= @a upper_bound[k]. <br/>
  * The function takes more than one upper and lower boundary pairs as arrays,
  * @a lower_bounds and @a upper_bounds.
  *
- * @param num_data The number of elements in the arrays, @a data
+ * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
- * @param data An input array of size, @a num_data.
+ * @param[in] data An input array of size, @a num_data.
  * Array elements should not contain Inf nor Nan.
  * <br/>must-be-aligned
- * @param num_condition The number of elements in the arrays, @a lower_bounds
+ * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
  * and @a upper_bounds.
- * @param lower_bounds The input array of size, @a num_condition.
+ * @param[in] lower_bounds The input array of size, @a num_condition.
  * Array elements should not contain Inf nor Nan.
  * <br/>must-be-aligned
- * @param upper_bounds The input array of size, @a num_condition.
+ * @param[in] upper_bounds The input array of size, @a num_condition.
  * Array elements should not contain Inf nor Nan.
  * <br/>must-be-aligned
- * @param result The output array of size, @a num_data.
+ * @param[out] result The output array of size, @a num_data.
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
  * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。すなわち、<br/>
- * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * @a lower_bound[k] <= @a data[i] <= @a upper_bound[k]. <br/>
  * を検定する。
  *
- * @param num_data 一次元配列@a data 及び@a result の要素の数。
- * @param data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * <br/>must-be-aligned
- * @param num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
+ * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
  * 下限値と上限値の組の数を表す。
- * @param lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
+ * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * <br/>must-be-aligned
- * @param upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
+ * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * <br/>must-be-aligned
- * @param result 結果の格納先。要素数は@a num_data でなければならない。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
@@ -437,46 +437,46 @@ typedef struct {
  * @brief Returns if the values in input array are in any of specified range (inclusive).
  * @details Returns true if the corresponding element in the input array
  * is in range of upper and lower boundary pairs, <br/>
- * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * @a lower_bound[k] <= @a data[i] <= @a upper_bound[k]. <br/>
  * The function takes more than one upper and lower boundary pairs as arrays,
  * @a lower_bounds and @a upper_bounds.
  *
- * @param num_data The number of elements in the arrays, @a data
+ * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
- * @param data An input array of size, @a num_data.
+ * @param[in] data An input array of size, @a num_data.
  * Array elements should not contain Inf nor Nan.
  * <br/>must-be-aligned
- * @param num_condition The number of elements in the arrays, @a lower_bounds
+ * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
  * and @a upper_bounds.
- * @param lower_bounds The input array of size, @a num_condition.
+ * @param[in] lower_bounds The input array of size, @a num_condition.
  * Array elements should not contain Inf nor Nan.
  * <br/>must-be-aligned
- * @param upper_bounds The input array of size, @a num_condition.
+ * @param[in] upper_bounds The input array of size, @a num_condition.
  * Array elements should not contain Inf nor Nan.
  * <br/>must-be-aligned
- * @param result The output array of size, @a num_data.
+ * @param[out] result The output array of size, @a num_data.
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
  * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。すなわち、<br/>
- * @a lower_bound[k] <= @a in[i] <= @a upper_bound[k]. <br/>
+ * @a lower_bound[k] <= @a data[i] <= @a upper_bound[k]. <br/>
  * を検定する。
  *
- * @param num_data 一次元配列@a data 及び@a result の要素の数。
- * @param data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * <br/>must-be-aligned
- * @param num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
+ * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * 下限値と上限値の組の数を表す。
- * @param lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
+ * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * <br/>must-be-aligned
- * @param upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
+ * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
  * <br/>must-be-aligned
- * @param result 結果の格納先。要素数は@a num_data でなければならない。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
@@ -491,79 +491,79 @@ typedef struct {
  * @brief Convert an input array to a boolean array.
  * @details Returns true if the corresponding element in input array != 0.
  *
- * @param num_in The number of elements in the arrays, @a in
- * and @a out
- * @param in The input array of of size, @a num_in.
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data The input array of of size, @a num_data.
  * <br/>must-be-aligned
- * @param out The output array of of size, @a num_in.
+ * @param[out] result The output array of of size, @a num_data.
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
  *
- * @param num_in @a in 及び@a out の要素の数。
- * @param in 入力配列。要素数は@a num_in でなければならない。
+ * @param[in] num_data @a data 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_in,
-		uint8_t const in[/*num_in*/], bool out[/*num_in*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_data,
+		uint8_t const data[/*num_data*/], bool result[/*num_data*/]);
 
 /**
  * @~english
  * @brief Convert an input array to a boolean array.
  * @details Returns true if the corresponding element in input array != 0.
  *
- * @param num_in The number of elements in the arrays, @a in
- * and @a out
- * @param in The input array of of size, @a num_in.
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data The input array of of size, @a num_data.
  * <br/>must-be-aligned
- * @param out The output array of of size, @a num_in.
+ * @param[out] result The output array of of size, @a num_data.
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
  * @details 入力配列の対応する要素に、値が1のビットがひとつでもあれば、trueを返す。
  *
- * @param num_in @a in 及び@a out の要素の数。
- * @param in 入力配列。要素数は@a num_in でなければならない。
+ * @param[in] num_data @a data 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_in,
-		uint32_t const in[/*num_in*/], bool out[/*num_in*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_data,
+		uint32_t const data[/*num_data*/], bool result[/*num_data*/]);
 
 /**
  * @~english
  * @brief Invert a boolean array
  *
- * @param num_in The number of elements in the arrays, @a in
- * and @a out
- * @param in The input array of of size, @a num_in.
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data The input array of of size, @a num_data.
  * <br/>must-be-aligned
- * @param out The output array of of size, @a num_in.
+ * @param[out] result The output array of of size, @a num_data.
  * <br/>must-be-aligned
  * @return exit status
  * @~japanese
  * @brief 入力配列を論理反転する。
  *
- * @param num_in @a in 及び@a out の要素の数。
- * @param in 入力配列。要素数は@a num_in でなければならない。
+ * @param[in] num_data @a data 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
- * @param out 結果の格納先。要素数は@a num_in でなければならない。
+ * @param[in] result 結果の格納先。要素数は@a num_data でなければならない。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_in,
-bool const in[/*num_in*/], bool out[/*num_in*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_data,
+bool const data[/*num_data*/], bool result[/*num_data*/]);
 
 /**
  * @~japanese

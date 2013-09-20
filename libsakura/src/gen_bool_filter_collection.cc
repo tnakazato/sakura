@@ -68,68 +68,68 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_in,
-		uint8_t const in[], bool out[]) {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_data,
+		uint8_t const data[], bool result[]) {
 	// Check parameter arguments.
-	if (num_in == 0)
+	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in == nullptr)
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
+	if (result == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint8();
-	bfc->ToBool(num_in, in, out);
+	bfc->ToBool(num_data, data, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
-		size_t num_in, uint32_t const in[], bool out[]) {
+		size_t num_data, uint32_t const data[], bool result[]) {
 	// Check parameter arguments.
-	if (num_in == 0)
+	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in == nullptr)
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
+	if (result == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint32();
-	bfc->ToBool(num_in, in, out);
+	bfc->ToBool(num_data, data, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_in,
-		bool const in[], bool out[]) {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_data,
+		bool const data[], bool result[]) {
 	// Check parameter arguments.
-	if (num_in == 0)
+	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in == nullptr)
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
+	if (result == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint8();
-	bfc->InvertBool(num_in, in, out);
+	bfc->InvertBool(num_data, data, result);
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

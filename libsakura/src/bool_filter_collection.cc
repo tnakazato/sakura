@@ -40,26 +40,26 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 }
 
 template<typename DataType>
-inline void ToBool(size_t num_data, DataType const *in, bool *out) {
+inline void ToBool(size_t num_data, DataType const *data, bool *result) {
 //	std::cout << "Invoking ToBoolDefault()" << std::endl;
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
-		out[i] = (in[i] != zero);
+		result[i] = (data[i] != zero);
 	}
 }
 
-inline void InvertBoolScalar(size_t num_data, bool const *in, bool *out) {
+inline void InvertBoolScalar(size_t num_data, bool const *data, bool *result) {
 //	std::cout << "Invoking InvertBoolDefault()" << std::endl;
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	uint8_t true8(static_cast<uint8_t>(true));
-	static_assert(sizeof(in[0]) == sizeof(true8), "sizeof(bool)==sizeof(uint8_t)");
+	static_assert(sizeof(data[0]) == sizeof(true8), "sizeof(bool)==sizeof(uint8_t)");
 	static_assert(true == 1, "true==1");
 	static_assert(false == 0, "false==0");
 	for (size_t i = 0; i < num_data; ++i) {
-		out[i] = (in[i] ^ true8);
+		result[i] = (data[i] ^ true8);
 	}
 }
 
@@ -78,16 +78,16 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 
 template<typename DataType>
 void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::ToBool(
-		size_t num_in, DataType const in[/*num_in*/],
-		bool out[/*num_in*/]) const {
-	::ToBool(num_in, in, out);
+		size_t num_data, DataType const data[/*num_data*/],
+		bool result[/*num_data*/]) const {
+	::ToBool(num_data, data, result);
 }
 
 template<typename DataType>
 void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::InvertBool(
-		size_t num_in,
-		bool const in[/*num_in*/], bool out[/*num_in*/]) const {
-	::InvertBoolScalar(num_in, in, out);
+		size_t num_data,
+		bool const data[/*num_data*/], bool result[/*num_data*/]) const {
+	::InvertBoolScalar(num_data, data, result);
 }
 
 template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<uint8_t> ;
