@@ -21,6 +21,9 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lower_bounds));
+	for (size_t j = 0; j < num_condition; ++j) {
+		assert(lower_bounds[j] <= upper_bounds[j]);
+	}
 	static_assert(true == 1, "true==1");
 	static_assert(false == 0, "false==0");
 	// Initialize result with false
@@ -54,6 +57,10 @@ inline void InvertBoolScalar(size_t num_data, bool const *data, bool *result) {
 //	std::cout << "Invoking InvertBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
+	// No operation is done when num_data==0.
+	if (num_data==0)
+		return;
+
 	uint8_t true8(static_cast<uint8_t>(true));
 	static_assert(sizeof(data[0]) == sizeof(true8), "sizeof(bool)==sizeof(uint8_t)");
 	static_assert(true == 1, "true==1");

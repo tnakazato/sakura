@@ -36,9 +36,9 @@ public:
 	virtual ~BitOperation() {
 	}
 
-	virtual void OperateBitsAnd(DataType bit_mask, size_t num_in,
-			DataType const in[/*num_in*/], bool const edit_mask[/*num_in*/],
-			DataType out[/*num_in*/]) const = 0;
+	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
+			DataType const data[/*num_data*/], bool const edit_mask[/*num_data*/],
+			DataType result[/*num_data*/]) const = 0;
 };
 
 template<typename DataType>
@@ -52,10 +52,10 @@ public:
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const = 0;
-	virtual void ToBool(size_t num_in, DataType const in[/*num_in*/],
-	bool out[/*num_in*/]) const = 0;
-	virtual void InvertBool(size_t num_in, bool const in[/*num_in*/],
-	bool out[/*num_in*/]) const = 0;
+	virtual void ToBool(size_t num_data, DataType const data[/*num_data*/],
+	bool result[/*num_data*/]) const = 0;
+	virtual void InvertBool(size_t num_data, bool const data[/*num_data*/],
+	bool result[/*num_data*/]) const = 0;
 };
 
 class Convolution {
