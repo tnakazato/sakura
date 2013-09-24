@@ -245,6 +245,10 @@ typedef struct {
  * @~japanese
  * @brief 畳み込みしながらグリッドする
  *
+ * @a start_spectrum から @a end_spectrum までの、@a x , @a y 座標上の @a value の値を
+ * @a convolution_table で表される広がりを持った点として、@a grid 上にプロットする。
+ * @a grid にプロットする際は、@a polarization_map , @a channel_map によって偏波とチャネルのマッピングが行われる。
+ *
  * 各浮動小数点の数値はNaN/+-Infであってはならない。
  * @param[in] num_spectra 次の関係でなければならない。 0 <= start_spectrum <= end_spectrum <= num_spectra
  * @param[in] start_spectrum 開始spectrumの添字
