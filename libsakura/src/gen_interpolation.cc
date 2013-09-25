@@ -55,11 +55,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 	try {
 		return interpolator->Interpolate1d(interpolation_method,
-				polynomial_order, num_base, x_base, y_base, num_interpolated,
+				polynomial_order, num_base, x_base, 1, y_base, num_interpolated,
 				x_interpolated, y_interpolated);
-//		return interpolator->Interpolate1dArray(interpolation_method,
-//				polynomial_order, num_base, x_base, 1, y_base, num_interpolated,
-//				x_interpolated, y_interpolated);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		std::ostringstream oss;
@@ -112,7 +109,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		std::unique_ptr<double[]> storage(new double[size_in_arena]);
 		double *x_interpolated_work = LIBSAKURA_SYMBOL(AlignDouble)(size_in_arena, storage.get(), 1);
 		x_interpolated_work[0] = x_interpolated;
-		return interpolator->Interpolate1dArray(interpolation_method,
+		return interpolator->Interpolate1d(interpolation_method,
 				polynomial_order, num_base, x_base, num_interpolated, y_base,
 				1, x_interpolated_work, y_interpolated);
 	} catch (...) {

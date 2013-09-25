@@ -190,14 +190,6 @@ public:
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
-			XDataType const x_base[/*num_base*/],
-			YDataType const y_base[/*num_base*/], size_t num_interpolated,
-			XDataType const x_interpolated[/*num_interpolated*/],
-			YDataType y_interpolated[/*num_interpolated*/]) const;
-
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1dArray(
-	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			int polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_base_array,
 			YDataType const y_base[/*num_base * num_base_array*/],
 			size_t num_interpolated,
@@ -211,14 +203,6 @@ public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
-	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			int polynomial_order, size_t num_base,
-			XDataType const x_base[/*num_base*/],
-			YDataType const y_base[/*num_base*/], size_t num_interpolated,
-			XDataType const x_interpolated[/*num_interpolated*/],
-			YDataType y_interpolated[/*num_interpolated*/]) const;
-
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1dArray(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_base_array,
