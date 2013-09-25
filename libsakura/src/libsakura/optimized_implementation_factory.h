@@ -124,13 +124,14 @@ public:
 			XDataType const x_interpolated[/*num_interpolated*/],
 			YDataType y_interpolated[/*num_interpolated*/]) const = 0;
 
-	virtual LIBSAKURA_SYMBOL(Status) InterpolatePseudo2d(
+	virtual LIBSAKURA_SYMBOL(Status) Interpolate1dArray(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			int polynomial_order, double x_interpolated, size_t num_base,
-			XDataType const x_base[/*num_base*/],
+			int polynomial_order, size_t num_base,
+			XDataType const x_base[/*num_base*/], size_t num_base_array,
+			YDataType const y_base[/*num_base * num_base_array*/],
 			size_t num_interpolated,
-			YDataType const y_base[/*num_base*num_interpolated*/],
-			YDataType y_interpolated[/*num_interpolated*/]) const = 0;
+			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const = 0;
 };
 
 class LogicalOperation {

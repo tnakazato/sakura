@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <climits>
+#include <memory>
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -56,11 +57,13 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		return interpolator->Interpolate1d(interpolation_method,
 				polynomial_order, num_base, x_base, y_base, num_interpolated,
 				x_interpolated, y_interpolated);
+//		return interpolator->Interpolate1dArray(interpolation_method,
+//				polynomial_order, num_base, x_base, 1, y_base, num_interpolated,
+//				x_interpolated, y_interpolated);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		std::ostringstream oss;
-		oss << "ERROR: Aborted due to nknown error"
-				<< std::endl;
+		oss << "ERROR: Aborted due to nknown error" << std::endl;
 		LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -104,9 +107,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
 	try {
-		return interpolator->InterpolatePseudo2d(interpolation_method,
-				polynomial_order, x_interpolated, num_base, x_base,
-				num_interpolated, y_base, y_interpolated);
+		size_t alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+		size_t size_in_arena = alignment;
+		std::unique_ptr<double[]> storage(new double[size_in_arena]);
+		double *x_interpolated_work = LIBSAKURA_SYMBOL(AlignDouble)(size_in_arena, storage.get(), 1);
+		x_interpolated_work[0] = x_interpolated;
+		return interpolator->Interpolate1dArray(interpolation_method,
+				polynomial_order, num_base, x_base, num_interpolated, y_base,
+				1, x_interpolated_work, y_interpolated);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -123,7 +131,7 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 	assert(end_position < num_base);
 	assert(x_base != nullptr);
 
-// If length of the array is just 1, return 0
+	// If length of the array is just 1, return 0
 	if (num_base == 1)
 		return 0;
 

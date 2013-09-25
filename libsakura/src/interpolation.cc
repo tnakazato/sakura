@@ -111,7 +111,8 @@ public:
 	virtual void Interpolate1d(size_t left_index, size_t right_index,
 			size_t location, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) = 0;
-	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
+	virtual void Interpolate1dArray(size_t left_index, size_t right_index,
+			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) = 0;
 protected:
 	size_t const num_base_;
@@ -160,16 +161,32 @@ public:
 			}
 		}
 	}
-	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
+	virtual void Interpolate1dArray(size_t left_index, size_t right_index,
+			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		XDataType middle_point = 0.5
 				* (this->x_base_[location] + this->x_base_[location - 1]);
-		bool is_right_side = ((x_interpolated != middle_point)
-				& ((x_interpolated > middle_point) & is_ascending_));
-		size_t nearest_index = is_right_side ? 1 : 0;
-		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t index = i * this->num_base_ + location - 1 + nearest_index;
-			y_interpolated[i] = this->y_base_[index];
+		YDataType y_left =
+				this->y_base_[offset * this->num_base_ + location - 1];
+		YDataType y_right = this->y_base_[offset * this->num_base_ + location];
+		for (size_t i = left_index; i < right_index; ++i) {
+			// nearest condition
+			// - x_interpolated[i] == middle_point
+			//     ---> nearest is y_left (left side)
+			// - x_interpolated[i] < middle_point and ascending order
+			//     ---> nearest is y_left (left side)
+			// - x_interpolated[i] > middle_point and ascending order
+			//     ---> nearest is y_right (right side)
+			// - x_interpolated[i] < middle_point and descending order
+			//     ---> nearest is y_right (right side)
+			// - x_interpolated[i] > middle_point and descending order
+			//     ---> nearest is y_left (left side)
+			if ((x_interpolated[i] != middle_point)
+					& ((x_interpolated[i] > middle_point) & is_ascending_)) {
+				y_interpolated[i] = y_right;
+			} else {
+				y_interpolated[i] = y_left;
+			}
 		}
 	}
 private:
@@ -201,16 +218,20 @@ public:
 											- this->x_base_[location - 1]));
 		}
 	}
-	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
+	virtual void Interpolate1dArray(size_t left_index, size_t right_index,
+			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
-		YDataType term = static_cast<YDataType>((x_interpolated
-				- this->x_base_[location - 1])
-				/ (this->x_base_[location] - this->x_base_[location - 1]));
-		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t index = i * this->num_array_ + location - 1;
-			YDataType base_term = this->y_base_[index];
-			YDataType next_term = this->y_base_[index + 1];
-			y_interpolated[i] = base_term + term * (next_term - base_term);
+		size_t offset_index_left = offset * this->num_base_ + location - 1;
+		XDataType dydx = static_cast<XDataType>(this->y_base_[offset_index_left
+				+ 1] - this->y_base_[offset_index_left])
+				/ (this->x_base_[location] - this->x_base_[location - 1]);
+		YDataType base_term = this->y_base_[offset_index_left];
+		for (size_t i = left_index; i < right_index; ++i) {
+			y_interpolated[i] =
+					base_term
+							+ static_cast<YDataType>(dydx
+									* (x_interpolated[i]
+											- this->x_base_[location - 1]));
 		}
 	}
 };
@@ -245,16 +266,17 @@ public:
 					&y_interpolated[i]);
 		}
 	}
-	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
+	virtual void Interpolate1dArray(size_t left_index, size_t right_index,
+			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		int j = location - 1 - this->polynomial_order_ / 2;
 		size_t m = this->num_base_ - 1
 				- static_cast<size_t>(this->polynomial_order_);
 		size_t k = static_cast<size_t>((j > 0) ? j : 0);
 		k = (k > m) ? m : k;
-		for (size_t i = 0; i < this->num_array_; ++i) {
-			//size_t start_position = k + i * this->num_array_;
-			PerformNevilleAlgorithm(k, i, x_interpolated, &y_interpolated[i]);
+		for (size_t i = left_index; i < right_index; ++i) {
+			PerformNevilleAlgorithm(k, offset, x_interpolated[i],
+					&y_interpolated[i]);
 		}
 	}
 private:
@@ -370,24 +392,28 @@ public:
 
 		}
 	}
-	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
+	virtual void Interpolate1dArray(size_t left_index, size_t right_index,
+			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
+		size_t offset_index_left = offset * this->num_base_ + location - 1;
 		XDataType dx = this->x_base_[location] - this->x_base_[location - 1];
-		XDataType a = (this->x_base_[location] - x_interpolated) / dx;
-		XDataType b = (x_interpolated - this->x_base_[location - 1]) / dx;
-		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t left_index = i * this->num_base_ + location - 1;
-			y_interpolated[i] = static_cast<YDataType>(a
-					* this->y_base_[left_index]
-					+ b * this->y_base_[left_index + 1]
-					+ ((a * a * a - a)
-							* this->y_base_2nd_derivative_[i * this->num_base_
-									+ this->num_base_ - location - 2]
-							+ (b * b * b - b)
-									* this->y_base_2nd_derivative_[i
-											* this->num_base_ - this->num_base_
-											- location - 1]) * (dx * dx) / 6.0);
+		for (size_t i = left_index; i < right_index; ++i) {
+			XDataType a = (this->x_base_[location] - x_interpolated[i]) / dx;
+			XDataType b = (x_interpolated[i] - this->x_base_[location - 1])
+					/ dx;
+			y_interpolated[i] =
+					static_cast<YDataType>(a * this->y_base_[offset_index_left]
+							+ b * this->y_base_[offset_index_left + 1]
+							+ ((a * a * a - a)
+									* this->y_base_2nd_derivative_[offset_index_left
+											+ this->num_base_
+											- 2 * (location + 1)]
+									+ (b * b * b - b)
+											* this->y_base_2nd_derivative_[offset_index_left
+													+ this->num_base_
+													- 2 * location - 1])
+									* (dx * dx) / 6.0);
 
 		}
 	}
@@ -424,25 +450,26 @@ public:
 
 		}
 	}
-	virtual void InterpolatePseudo2d(size_t location, XDataType x_interpolated,
+	virtual void Interpolate1dArray(size_t left_index, size_t right_index,
+			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
+		size_t offset_index_left = offset * this->num_base_ + location - 1;
 		XDataType dx = this->x_base_[location] - this->x_base_[location - 1];
-		XDataType a = (this->x_base_[location] - x_interpolated) / dx;
-		XDataType b = (x_interpolated - this->x_base_[location - 1]) / dx;
-		for (size_t i = 0; i < this->num_array_; ++i) {
-			size_t left_index = i * this->num_base_ + location - 1;
-			y_interpolated[i] = static_cast<YDataType>(a
-					* this->y_base_[left_index]
-					+ b * this->y_base_[left_index + 1]
-					+ ((a * a * a - a)
-							* this->y_base_2nd_derivative_[left_index]
-							+ (b * b * b - b)
-									* this->y_base_2nd_derivative_[left_index
-											+ 1]) * (dx * dx) / 6.0);
+		for (size_t i = left_index; i < right_index; ++i) {
+			XDataType a = (this->x_base_[location] - x_interpolated[i]) / dx;
+			XDataType b = (x_interpolated[i] - this->x_base_[location - 1])
+					/ dx;
+			y_interpolated[i] =
+					static_cast<YDataType>(a * this->y_base_[offset_index_left]
+							+ b * this->y_base_[offset_index_left + 1]
+							+ ((a * a * a - a)
+									* this->y_base_2nd_derivative_[offset_index_left]
+									+ (b * b * b - b)
+											* this->y_base_2nd_derivative_[offset_index_left
+													+ 1]) * (dx * dx) / 6.0);
 
 		}
-
 	}
 };
 
@@ -623,35 +650,25 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 template<class XDataType, class YDataType>
 LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType,
-		YDataType>::InterpolatePseudo2d(
+		YDataType>::Interpolate1dArray(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, double x_interpolated, size_t num_base,
-		XDataType const x_base[/*num_base*/], size_t num_interpolated,
-		YDataType const y_base[/*num_base*num_interpolated*/],
-		YDataType y_interpolated[/*num_interpolated*/]) const {
+		int polynomial_order, size_t num_base,
+		XDataType const x_base[/* num_base */], size_t num_base_array,
+		YDataType const y_base[/* num_base * num_base_array*/],
+		size_t num_interpolated,
+		XDataType const x_interpolated[/* num_interpolated */],
+		YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const {
 	assert(num_base > 0);
 	assert(num_interpolated > 0);
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(y_base));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(x_interpolated));
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(y_interpolated));
-
-	// y_interpolated[n*m] (where n=num_base, m=num_interpolated) is a serial array
-	// that stores two dimensional array Y[n][m] in column major order.
-	// Memory layout is as follows:
-	//     y_interpolated[0]     = Y[0][0]
-	//     y_interpolated[1]     = Y[1][0]
-	//     y_interpolated[2]     = Y[2][0]
-	//     ..
-	//     y_interpolated[n-1]   = Y[n-1][0]
-	//     y_interpolated[n]     = Y[0][1]
-	//     ..
-	//     y_interpolated[2*n-1] = Y[n-1][1]
-	//     ..
-	//     y_interpolated[n*m-1] = Y[n-1][m-1]
 
 	// input arrays are not aligned
 	if (!LIBSAKURA_SYMBOL(IsAligned)(x_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(x_interpolated)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_interpolated)) {
 		std::ostringstream oss;
 		oss << "ERROR: input arrays are not aligned" << std::endl;
@@ -662,27 +679,36 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (num_base == 1) {
 		// No need to interpolate, just substitute y_base[0]
 		// to all elements in y_interpolated
-		for (size_t index = 0; index < num_interpolated; ++index) {
-			y_interpolated[index] = y_base[index];
+		for (size_t i = 0; i < num_base_array; ++i) {
+			YDataType *y_interpolated_work = &y_interpolated[i
+					* num_interpolated];
+			YDataType const y_base_work = y_base[i * num_interpolated];
+			for (size_t index = 0; index < num_interpolated; ++index) {
+				y_interpolated_work[index] = y_base_work;
+			}
 		}
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	}
 
-	// Perform pseudo 2-dimensional interpolation
+	// Perform 1-dimensional interpolation
+
 	// make input arrays ascending order
 	std::unique_ptr<void, InterpolationDeleter> storage_for_x_base_work;
 	std::unique_ptr<void, InterpolationDeleter> storage_for_y_base_work;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_x_interpolated_work;
 	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
 			num_base, x_base, 1, x_base, &storage_for_x_base_work);
 	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
-			num_base, x_base, num_interpolated, y_base,
-			&storage_for_y_base_work);
+			num_base, x_base, num_base_array, y_base, &storage_for_y_base_work);
+	XDataType const *x_interpolated_work = GetAscendingArray<XDataType,
+			XDataType>(num_interpolated, x_interpolated, 1, x_interpolated,
+			&storage_for_x_interpolated_work);
 
 	// Generate worker class
 	std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
 			CreateInterpolationWorker<XDataType, YDataType>(
-					interpolation_method, num_base, x_base_work,
-					num_interpolated, y_base_work, polynomial_order));
+					interpolation_method, num_base, x_base_work, num_base_array,
+					y_base_work, polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
 		std::ostringstream oss;
@@ -696,26 +722,64 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// Any preparation for interpolation should be done here
 	interpolator->PrepareForInterpolation();
 
-	// locate x_interpolated against x_base
-	size_t location = this->Locate(0, num_base - 1, num_base, x_base_work,
-			x_interpolated);
-
-	if (location == 0) {
-		// out of range, left side
-		for (size_t i = 0; i < num_interpolated; ++i) {
-			y_interpolated[i] = y_base_work[i * num_base];
-		}
-	} else if (location == num_base) {
-		// out of range, right side
-		for (size_t i = 0; i < num_interpolated; ++i) {
-			y_interpolated[i] = y_base_work[(i + 1) * num_base - 1];
+	// Locate each element in x_base against x_interpolated
+	size_t *location_base = nullptr;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_location_base(
+			AllocateAndAlign<size_t>(num_base, &location_base));
+//	LocateArrayAscending(num_interpolated, x_interpolated_work, num_base,
+//			x_base_work, location_base);
+	size_t start_position = 0;
+	size_t end_position = num_interpolated - 1;
+	if (num_interpolated == 1) {
+		for (size_t i = 0; i < num_base; ++i) {
+			location_base[i] =
+					(x_base_work[i] <= x_interpolated_work[0]) ? 0 : 1;
 		}
 	} else {
-		// within the range, do interpolation
-		interpolator->InterpolatePseudo2d(location, x_interpolated,
-				y_interpolated);
+		for (size_t i = 0; i < num_base; ++i) {
+			location_base[i] = this->Locate(start_position, end_position,
+					num_interpolated, x_interpolated_work, x_base_work[i]);
+			start_position = location_base[i];
+		}
 	}
 
+	// Outside of x_base[0]
+	for (size_t j = 0; j < num_base_array; ++j) {
+		YDataType *y_interpolated_work = &y_interpolated[j * num_interpolated];
+		YDataType const y_base_tmp = y_base_work[j * num_base];
+		for (size_t i = 0; i < location_base[0]; ++i) {
+			y_interpolated_work[i] = y_base_tmp;
+		}
+
+		// Between x_base[0] and x_base[num_base-1]
+		for (size_t i = 0; i < num_base - 1; ++i) {
+			if (location_base[i] != location_base[i + 1]) {
+				interpolator->Interpolate1dArray(location_base[i],
+						location_base[i + 1], i + 1, j, x_interpolated_work,
+						y_interpolated_work);
+			}
+		}
+
+		// Outside of x_base[num_base-1]
+		YDataType const y_base_tmp2 = y_base_work[(j + 1) * num_base - 1];
+		for (size_t i = location_base[num_base - 1]; i < num_interpolated;
+				++i) {
+			y_interpolated_work[i] = y_base_tmp2;
+		}
+	}
+
+	// swap output array
+	if (x_interpolated[0] >= x_interpolated[num_interpolated - 1]) {
+		size_t num_interpolated_half = num_interpolated / 2;
+		for (size_t j = 0; j < num_base_array; ++j) {
+			YDataType *y_interpolated_work = &y_interpolated[j
+					* num_interpolated];
+			for (size_t i = 0; i < num_interpolated_half; ++i) {
+				std::swap<YDataType>(y_interpolated_work[i],
+						y_interpolated_work[num_interpolated - 1 - i]);
+			}
+		}
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
