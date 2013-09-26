@@ -24,8 +24,8 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 	for (size_t j = 0; j < num_condition; ++j) {
 		assert(lower_bounds[j] <= upper_bounds[j]);
 	}
-	static_assert(true == 1, "true==1");
-	static_assert(false == 0, "false==0");
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
 	// Initialize result with false
 	for (size_t i = 0; i < num_data; ++i) {
 		result[i] = false;
@@ -62,9 +62,9 @@ inline void InvertBoolScalar(size_t num_data, bool const *data, bool *result) {
 		return;
 
 	uint8_t true8(static_cast<uint8_t>(true));
-	static_assert(sizeof(data[0]) == sizeof(true8), "sizeof(bool)==sizeof(uint8_t)");
-	static_assert(true == 1, "true==1");
-	static_assert(false == 0, "false==0");
+	STATIC_ASSERT(sizeof(data[0]) == sizeof(true8));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
 	for (size_t i = 0; i < num_data; ++i) {
 		result[i] = (data[i] ^ true8);
 	}

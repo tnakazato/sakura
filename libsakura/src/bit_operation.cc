@@ -22,9 +22,9 @@ bool const *edit_mask, DataType *result) {
 	// cast bool array to uint8_t array
 	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	static_assert(sizeof(edit_mask[0]) == sizeof(mask8[0]), "sizeof(bool)==sizeof(uint8_t)");
-	static_assert(true == 1, "true==1");
-	static_assert(false == 0, "false==0");
+	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
 
 	/* edit_mask = true: (mask8 - 1) = 00...0
 	 *                   -> (bit_mask | 00...0) = bit_mask,
