@@ -19,6 +19,7 @@
 #define ADDSUFFIX(A, B) CONCAT_SYM(A, B)
 
 #define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
+#define STATIC_ASSERT(x) static_assert((x), # x)
 
 #if defined(__cplusplus)
 
