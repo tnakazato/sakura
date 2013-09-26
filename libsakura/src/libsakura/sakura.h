@@ -315,7 +315,7 @@ typedef struct {
  * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
  * and the value in array, @a data, is adopted for the elements where corresponding
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
- * that of @a in (@a out == @a in), indicating in-place operation.
+ * that of @a in (@a result == @a data), indicating in-place operation.
  * <br/>must-be-aligned
  * @return retrun code
  * @~japanese
@@ -333,7 +333,7 @@ typedef struct {
  * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * <br/>must-be-aligned
- * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a out == @a in)。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
@@ -364,7 +364,7 @@ typedef struct {
  * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
  * and the value in array, @a data, is adopted for the elements where corresponding
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
- * that of @a in (@a out == @a in), indicating in-place operation.
+ * that of @a in (@a result == @a data), indicating in-place operation.
  * <br/>must-be-aligned
  * @return retrun code
  * @~japanese
@@ -382,7 +382,7 @@ typedef struct {
  * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * <br/>must-be-aligned
- * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a out == @a in)。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
  * <br/>must-be-aligned
  * @return 終了ステータス
  *@~
