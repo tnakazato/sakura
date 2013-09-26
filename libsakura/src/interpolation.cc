@@ -447,11 +447,11 @@ LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType,
 		YDataType>::Interpolate1d(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, size_t num_base,
-		XDataType const x_base[/* num_base */], size_t num_base_array,
-		YDataType const y_base[/* num_base * num_base_array*/],
+		XDataType const x_base[/* num_base */], size_t num_array,
+		YDataType const y_base[/* num_base * num_array*/],
 		size_t num_interpolated,
 		XDataType const x_interpolated[/* num_interpolated */],
-		YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const {
+		YDataType y_interpolated[/*num_interpolated * num_array*/]) const {
 	assert(num_base > 0);
 	assert(num_interpolated > 0);
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(x_base));
@@ -473,10 +473,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (num_base == 1) {
 		// No need to interpolate, just substitute y_base[0]
 		// to all elements in y_interpolated
-		for (size_t i = 0; i < num_base_array; ++i) {
+		for (size_t i = 0; i < num_array; ++i) {
 			YDataType *y_interpolated_work = &y_interpolated[i
 					* num_interpolated];
-			YDataType const y_base_work = y_base[i * num_interpolated];
+			YDataType const y_base_work = y_base[i * num_base];
 			for (size_t index = 0; index < num_interpolated; ++index) {
 				y_interpolated_work[index] = y_base_work;
 			}
@@ -493,7 +493,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	XDataType const *x_base_work = GetAscendingArray<XDataType, XDataType>(
 			num_base, x_base, 1, x_base, &storage_for_x_base_work);
 	YDataType const *y_base_work = GetAscendingArray<XDataType, YDataType>(
-			num_base, x_base, num_base_array, y_base, &storage_for_y_base_work);
+			num_base, x_base, num_array, y_base, &storage_for_y_base_work);
 	XDataType const *x_interpolated_work = GetAscendingArray<XDataType,
 			XDataType>(num_interpolated, x_interpolated, 1, x_interpolated,
 			&storage_for_x_interpolated_work);
@@ -501,7 +501,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// Generate worker class
 	std::unique_ptr<InterpolationWorker<XDataType, YDataType> > interpolator(
 			CreateInterpolationWorker<XDataType, YDataType>(
-					interpolation_method, num_base, x_base_work, num_base_array,
+					interpolation_method, num_base, x_base_work, num_array,
 					y_base_work, polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
@@ -522,14 +522,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			AllocateAndAlign<size_t>(num_base, &location_base));
 //	LocateArrayAscending(num_interpolated, x_interpolated_work, num_base,
 //			x_base_work, location_base);
-	size_t start_position = 0;
-	size_t end_position = num_interpolated - 1;
 	if (num_interpolated == 1) {
 		for (size_t i = 0; i < num_base; ++i) {
 			location_base[i] =
 					(x_base_work[i] <= x_interpolated_work[0]) ? 0 : 1;
 		}
 	} else {
+		size_t start_position = 0;
+		size_t end_position = num_interpolated - 1;
 		for (size_t i = 0; i < num_base; ++i) {
 			location_base[i] = this->Locate(start_position, end_position,
 					num_interpolated, x_interpolated_work, x_base_work[i]);
@@ -538,7 +538,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 
 	// Outside of x_base[0]
-	for (size_t j = 0; j < num_base_array; ++j) {
+	for (size_t j = 0; j < num_array; ++j) {
 		YDataType *y_interpolated_work = &y_interpolated[j * num_interpolated];
 		YDataType const y_base_tmp = y_base_work[j * num_base];
 		for (size_t i = 0; i < location_base[0]; ++i) {
@@ -565,7 +565,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// swap output array
 	if (x_interpolated[0] >= x_interpolated[num_interpolated - 1]) {
 		size_t num_interpolated_half = num_interpolated / 2;
-		for (size_t j = 0; j < num_base_array; ++j) {
+		for (size_t j = 0; j < num_array; ++j) {
 			YDataType *y_interpolated_work = &y_interpolated[j
 					* num_interpolated];
 			for (size_t i = 0; i < num_interpolated_half; ++i) {

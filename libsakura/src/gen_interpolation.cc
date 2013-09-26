@@ -66,11 +66,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolatePseudo2dFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1dFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, double x_interpolated, size_t num_base,
-		double const x_base[], size_t num_interpolated, float const y_base[],
-		float y_interpolated[]) {
+		int polynomial_order, size_t num_base, double const x_base[],
+		size_t num_array, float const y_base[], size_t num_interpolated,
+		double const x_interpolated[], float y_interpolated[]) {
 	// num_base must be non-zero
 	if (num_base == 0) {
 		std::ostringstream oss;
@@ -104,14 +104,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
 	try {
-		size_t alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-		size_t size_in_arena = alignment;
-		std::unique_ptr<double[]> storage(new double[size_in_arena]);
-		double *x_interpolated_work = LIBSAKURA_SYMBOL(AlignDouble)(size_in_arena, storage.get(), 1);
-		x_interpolated_work[0] = x_interpolated;
 		return interpolator->Interpolate1d(interpolation_method,
-				polynomial_order, num_base, x_base, num_interpolated, y_base,
-				1, x_interpolated_work, y_interpolated);
+				polynomial_order, num_base, x_base, num_array, y_base, num_interpolated,
+				x_interpolated, y_interpolated);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);

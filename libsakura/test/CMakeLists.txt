@@ -46,7 +46,7 @@ add_executable(testConvolution           convolution.cc)
 add_executable(testGridding              gridding.cc fgridsd.f)
 add_executable(testInit                  init.cc)
 add_executable(testInterpolation1d       interpolation_1d.cc)
-add_executable(testInterpolationPseudo2d interpolation_pseudo2d.cc)
+add_executable(testInterpolationArray1d interpolation_array1d.cc)
 add_executable(testLogicalOperation      logical_operation.cc)
 add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
@@ -57,7 +57,7 @@ target_link_libraries (testConvolution           ${GTEST_MAIN_LIBRARIES} ${GTEST
 target_link_libraries (testGridding              ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread -lgfortran)
 target_link_libraries (testInit                  ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testInterpolation1d       ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
-target_link_libraries (testInterpolationPseudo2d ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+target_link_libraries (testInterpolationArray1d ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testLogicalOperation      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testNumericOperation      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
@@ -70,7 +70,7 @@ add_custom_target(testConvolutionRun           COMMAND ./testConvolution        
 add_custom_target(testGriddingRun              COMMAND ./testGridding              DEPENDS testGridding)
 add_custom_target(testInitRun                  COMMAND ./testInit                  DEPENDS testInit)
 add_custom_target(testInterpolation1dRun       COMMAND ./testInterpolation1d       DEPENDS testInterpolation1d)
-add_custom_target(testInterpolationPseudo2dRun COMMAND ./testInterpolationPseudo2d DEPENDS testInterpolationPseudo2d)
+add_custom_target(testInterpolationArray1dRun COMMAND ./testInterpolationArray1d DEPENDS testInterpolationArray1d)
 add_custom_target(testLogicalOperationRun      COMMAND ./testLogicalOperation      DEPENDS testLogicalOperation)
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
@@ -82,7 +82,7 @@ add_custom_target(test
 	COMMAND ./testGridding
 	COMMAND ./testInit
 	COMMAND ./testInterpolation1d
-	COMMAND ./testInterpolationPseudo2d
+	COMMAND ./testInterpolationArray1d
 	COMMAND ./testLogicalOperation
 	COMMAND ./testNumericOperation
 	COMMAND ./testStatistics

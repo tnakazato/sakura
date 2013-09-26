@@ -735,14 +735,16 @@ LIBSAKURA_SYMBOL(
 		float y_interpolated[/*num_interpolated*/]);
 
 /**
- * @brief Perform pseudo two-dimensional interpolation
+ * @brief Perform one-dimensional interpolation along interpolation axis
+ * of two-dimensional array.
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolatePseudo2dFloat)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1dFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, double x_interpolated, size_t num_base,
-		double const x_base[/*num_base*/], size_t num_interpolated,
-		float const y_base[/*num_base*num_interpolated*/],
-		float y_interpolated[/*num_interpolated*/]);
+		int polynomial_order, size_t num_base,
+		double const x_base[/*num_base*/], size_t num_array,
+		float const y_base[/*num_array*num_base*/], size_t num_interpolated,
+		double const x_interpolated[/*num_interpolated*/],
+		float y_interpolated[/*num_array*num_interpolated*/]);
 
 /**
  * @~japanese
@@ -909,7 +911,7 @@ bool out[/*num_in*/]);
  * @param[in] lsq_vector0 the right side value of simultaneous equations.
  * @param[out] out the solution.
  * @return status code.
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
 		size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
 		double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
 /**
