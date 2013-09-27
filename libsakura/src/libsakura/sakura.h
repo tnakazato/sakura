@@ -374,17 +374,17 @@ typedef struct {
  * and @a result
  * @param[in] data An input array of size, @a num_data.
  * Array elements should not contain Inf nor Nan.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
  * and @a upper_bounds.
  * @param[in] lower_bounds The input array of size, @a num_condition.
  * Array elements should not contain Inf nor Nan.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[in] upper_bounds The input array of size, @a num_condition.
  * Array elements should not contain Inf nor Nan.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[out] result The output array of size, @a num_data.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @return status code
  * @~japanese
  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(inclusive).
@@ -403,17 +403,17 @@ typedef struct {
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
  * 下限値と上限値の組の数を表す。
  * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
@@ -440,9 +440,9 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data The input array of of size, @a num_data.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @return status code
  * @~japanese
  * @brief 入力配列を論理値の配列に変換する。
@@ -451,9 +451,9 @@ typedef struct {
  *
  * @param[in] num_data @a data 及び@a result の要素の数。
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
@@ -474,9 +474,9 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data The input array of of size, @a num_data.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @return status code
  * @~japanese
  * @brief 入力配列を論理反転する。
@@ -484,9 +484,9 @@ typedef struct {
  *
  * @param[in] num_data @a data 及び@a result の要素の数。
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
- * <br/>must-be-aligned
+ * @n must-be-aligned
  * @return 終了ステータス
  *@~
  * MT-safe
