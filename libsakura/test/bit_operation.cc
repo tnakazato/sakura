@@ -479,3 +479,51 @@ TEST_F(BitOperation32, AndLengthZero) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
+/*
+ * Test failure cases of sakura_OperateBitsUint8And
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BitOperation8, AndFailNullData) {
+	size_t const num_data(NUM_IN);
+	uint8_t dummy[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(dummy)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(dummy)];
+
+	uint8_t *data_null = nullptr;
+	assert(data_null == nullptr);
+
+	GetInputDataInLength(num_data, dummy, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_data, data_null, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BitOperation8, AndFailNotAlignedData) {
+	size_t offset(1);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data+offset);
+	SIMD_ALIGN
+	uint8_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	uint8_t *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_data, data_shift, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
