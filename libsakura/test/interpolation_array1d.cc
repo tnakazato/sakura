@@ -9,7 +9,7 @@
 #include "gtest/gtest.h"
 #include "interpolation.h"
 
-//#include "CubicSplineInterpolator1D.h"
+#include "asap/CubicSplineInterpolator1D.h"
 
 class InterpolateArray1dFloatTest: public InterpolateFloatTestBase {
 protected:
@@ -864,7 +864,7 @@ TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
 // 1. Uncomment the line at the top of this file that includes
 //    "CubicSplineInterpolator1D.h".
 //
-// 2. Copy the following files to test directory from asap/src:
+// 2. Copy the following files to test/asap directory from asap/src:
 //        - Interpolator1D.h, Interpolator1D.tcc
 //        - CubicSplineInterpolator1D.h, CubicSplineInterpolator1D.tcc
 //        - Locator.h, Locator.tcc
