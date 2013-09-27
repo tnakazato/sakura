@@ -149,7 +149,7 @@ TEST_F(BitOperation8, And) {
 	uint8_t out[ELEMENTSOF(in_data)];
 
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	GetInputDataInLength(num_in, in_data, edit_mask);
 	if (verbose){
@@ -182,7 +182,7 @@ TEST_F(BitOperation8, AndInPlace) {
 	SIMD_ALIGN
 	bool edit_mask[ELEMENTSOF(in_data)];
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	GetInputDataInLength(num_in, in_data, edit_mask);
 	if (verbose){
@@ -219,7 +219,7 @@ TEST_F(BitOperation8, AndLengthEleven) {
 	uint8_t out[ELEMENTSOF(in)];
 
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating in_data and edit_mask_
 	GetInputDataInLength(num_in, in, edit_mask);
@@ -278,7 +278,7 @@ TEST_F(BitOperation8, AndLong) {
 	uint8_t out_long[ELEMENTSOF(in_long)];
 
 	uint8_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	size_t const num_large(ELEMENTSOF(in_long));
 
@@ -324,7 +324,7 @@ TEST_F(BitOperation32, And) {
 	uint32_t out[ELEMENTSOF(in_data)];
 
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	GetInputDataInLength(num_in, in_data, edit_mask);
 	if (verbose){
@@ -357,7 +357,7 @@ TEST_F(BitOperation32, AndInPlace) {
 	SIMD_ALIGN
 	bool edit_mask[ELEMENTSOF(in)];
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	GetInputDataInLength(num_in, in, edit_mask);
 	if (verbose)
@@ -392,7 +392,7 @@ TEST_F(BitOperation32, AndLengthEleven) {
 	uint32_t out[ELEMENTSOF(in)];
 
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating in_data and edit_mask_
 	GetInputDataInLength(num_in, in, edit_mask);
@@ -429,7 +429,7 @@ TEST_F(BitOperation32, AndLong) {
 	bool edit_mask_long[ELEMENTSOF(in_long)];
 
 	uint32_t answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	size_t const num_large(NUM_IN_LONG);
 	double start, end;

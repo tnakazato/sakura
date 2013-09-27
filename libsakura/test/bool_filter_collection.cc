@@ -88,8 +88,8 @@ class BoolFilterFloat: public BoolFilter<float> {
 protected:
 	virtual void PrepareInputs() {
 		float const base_input[] = { 0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
-		ASSERT_EQ(NUM_IN, ELEMENTSOF(base_input));
-		ASSERT_EQ(2, NUM_RANGE);
+		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
+		STATIC_ASSERT(NUM_RANGE == 2);
 		lower_[0] = -0.75;
 		lower_[1] = 0.25;
 		upper_[0] = -0.25;
@@ -116,8 +116,8 @@ class BoolFilterInt: public BoolFilter<int> {
 protected:
 	virtual void PrepareInputs() {
 		int const base_input[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
-		ASSERT_EQ(NUM_IN, ELEMENTSOF(base_input));
-		ASSERT_EQ(2, NUM_RANGE);
+		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
+		STATIC_ASSERT(NUM_RANGE == 2);
 		lower_[0] = -7;
 		lower_[1] = 3;
 		upper_[0] = -3;
@@ -163,7 +163,7 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 	size_t const num_range(ELEMENTSOF(lower));
 
 	bool answer[] = { false, true, false, true, false, true, false, true };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
 	GetDataInLength(num_in, in_data);
@@ -209,7 +209,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveLengthEleven) {
 	size_t const num_range(ELEMENTSOF(lower));
 
 	bool answer[] = { false, true, false, true, false, true, false, true };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
 	GetDataInLength(num_in, in_data);
@@ -313,7 +313,7 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 	size_t const num_range(ELEMENTSOF(lower));
 
 	bool answer[] = { false, true, false, true, false, true, false, true };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
 	GetDataInLength(num_in, in_data);
@@ -358,7 +358,7 @@ TEST_F(BoolFilterInt, RangesInclusiveLengthEleven) {
 	size_t const num_range(ELEMENTSOF(lower));
 
 	bool answer[] = { false, true, false, true, false, true, false, true };
-	ASSERT_EQ(NUM_IN, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
 	GetDataInLength(num_in, in_data);
@@ -454,11 +454,11 @@ TEST_F(BoolFilterOther, InvertBool) {
 	size_t const num_in(4);
 	SIMD_ALIGN
 	bool const in[] = { true, false, false, true };
-	ASSERT_EQ(num_in, ELEMENTSOF(in));
+	STATIC_ASSERT(ELEMENTSOF(in) == num_in);
 	SIMD_ALIGN
 	bool out[num_in];
 	bool answer[] = { false, true, true, false };
-	ASSERT_EQ(num_in, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == num_in);
 
 	if (verbose)
 		PrintArray("in", num_in, in);
@@ -505,11 +505,11 @@ TEST_F(BoolFilterOther, Uint8ToBool) {
 	size_t const num_in(8);
 	SIMD_ALIGN
 	uint8_t const in[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
-	ASSERT_EQ(num_in, ELEMENTSOF(in));
+	STATIC_ASSERT(ELEMENTSOF(in) == num_in);
 	SIMD_ALIGN
 	bool out[num_in];
 	bool answer[] = { false, true, true, true, true, true, true, true };
-	ASSERT_EQ(num_in, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == num_in);
 
 //	if (verbose) PrintArray("in", num_in, in);
 
@@ -556,11 +556,11 @@ TEST_F(BoolFilterOther, Uint32ToBool) {
 	size_t const num_in(5);
 	SIMD_ALIGN
 	uint32_t const in[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
-	ASSERT_EQ(num_in, ELEMENTSOF(in));
+	STATIC_ASSERT(ELEMENTSOF(in) == num_in);
 	SIMD_ALIGN
 	bool out[ELEMENTSOF(in)];
 	bool answer[] = { false, true, true, true, true };
-	ASSERT_EQ(num_in, ELEMENTSOF(answer));
+	STATIC_ASSERT(ELEMENTSOF(answer) == num_in);
 
 //	if (verbose) PrintArray("in", num_in, in);
 
