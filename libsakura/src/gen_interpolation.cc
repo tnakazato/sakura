@@ -69,7 +69,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// any exception is thrown during interpolation
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Aborted due to nknown error" << std::endl;
+			oss << "ERROR: Aborted due to unknown error" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -129,7 +129,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// any exception is thrown during interpolation
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Aborted due to nknown error" << std::endl;
+			oss << "ERROR: Aborted due to unknown error" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
