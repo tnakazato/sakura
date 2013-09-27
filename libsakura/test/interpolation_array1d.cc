@@ -654,7 +654,7 @@ TEST_F(InterpolateArray1dFloatTest, SplineOpposite) {
 TEST_F(InterpolateArray1dFloatTest, SingleBasePerformance) {
 	// initial setup
 	size_t const num_base = 1;
-	size_t const num_interpolated =4096;
+	size_t const num_interpolated = 4096;
 	size_t const num_array = 300000;
 	AllocateMemory(num_base, num_interpolated, num_array);
 	InitializeDoubleArray(num_base, x_base_, 0.0);
@@ -662,8 +662,9 @@ TEST_F(InterpolateArray1dFloatTest, SingleBasePerformance) {
 		y_base_[i] = static_cast<float>(i);
 	}
 	for (size_t i = 0; i < num_interpolated; ++i) {
-		x_interpolated_[i] = -1.0 + static_cast<double>(i) * 2.0
-				/ static_cast<double>(num_interpolated);
+		x_interpolated_[i] = -1.0
+				+ static_cast<double>(i) * 2.0
+						/ static_cast<double>(num_interpolated);
 	}
 
 	// execute interpolation
@@ -865,7 +866,6 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullOppositePerformance) {
 
 TEST_F(InterpolateArray1dFloatTest, SplinePerformance) {
 	// initial setup
-	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 4096;
 	size_t const num_array = 300000;
@@ -887,7 +887,6 @@ TEST_F(InterpolateArray1dFloatTest, SplinePerformance) {
 
 TEST_F(InterpolateArray1dFloatTest, SplineDescendingPerformance) {
 	// initial setup
-	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 4096;
 	size_t const num_array = 300000;
@@ -909,7 +908,6 @@ TEST_F(InterpolateArray1dFloatTest, SplineDescendingPerformance) {
 
 TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
 	// initial setup
-	polynomial_order_ = 2;
 	size_t const num_base = 3;
 	size_t const num_interpolated = 4096;
 	size_t const num_array = 300000;
@@ -948,20 +946,16 @@ TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
 // 4. Change Interpolator1D::createLocator() so that it always uses
 //    BisectionLocator.
 //
-//TEST_F(Interpolate1dFloatTest, AsapSplinePerformance) {
-//	EXPECT_EQ(sakura_Status_kOK, initialize_result_);
-//
-//	size_t const num_base = 3;
-//	size_t const num_interpolated = 200000000;
-//
+//TEST_F(InterpolateArray1dFloatTest, AsapSplinePerformance) {
 //	// initial setup
-//	AllocateMemory(num_base, num_interpolated);
-//	x_base_[0] = 0.0;
-//	x_base_[1] = 100.0;
-//	x_base_[2] = 200.0;
-//	y_base_[0] = 1.0;
-//	y_base_[1] = -1.0;
-//	y_base_[2] = 0.0;
+//	size_t const num_base = 3;
+//	size_t const num_interpolated = 4096;
+//	size_t const num_array = 300000;
+//	AllocateMemory(num_base, num_interpolated, num_array);
+//	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0, 200.0);
+//	for (size_t i = 0; i < num_base * num_array; ++i) {
+//		y_base_[i] = static_cast<float>(i);
+//	}
 //	double dx = fabs(x_base_[2] - x_base_[0])
 //			/ static_cast<double>(num_interpolated - 1);
 //	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -972,9 +966,13 @@ TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
 //	std::unique_ptr<asap::CubicSplineInterpolator1D<double, float> > interpolator(
 //			new asap::CubicSplineInterpolator1D<double, float>());
 //	interpolator->setX(x_base_, num_base);
-//	interpolator->setY(y_base_, num_base);
-//	for (size_t i = 0; i < num_interpolated; ++i) {
-//		y_interpolated_[i] = interpolator->interpolate(x_interpolated_[i]);
+//	for (size_t j = 0; j < num_array; ++j) {
+//		float *y_base_work = &(y_base_[j*num_base]);
+//		float *y_interpolated_work = &(y_interpolated_[j*num_interpolated]);
+//		interpolator->setY(y_base_work, num_base);
+//		for (size_t i = 0; i < num_interpolated; ++i) {
+//			y_interpolated_work[i] = interpolator->interpolate(x_interpolated_[i]);
+//		}
 //	}
 //}
 
