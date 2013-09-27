@@ -30,11 +30,10 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 	for (size_t i = 0; i < num_data; ++i) {
 		result[i] = false;
 	}
-	DataType lower_value, upper_value;
 
 	for (size_t j = 0; j < num_condition; ++j) {
-		lower_value = lower_bounds[j];
-		upper_value = upper_bounds[j];
+		DataType lower_value = lower_bounds[j];
+		DataType upper_value = upper_bounds[j];
 		for (size_t i = 0; i < num_data; ++i) {
 			result[i] = result[i]
 					|| ((data[i] - lower_value) * (upper_value - data[i]) >= 0);
