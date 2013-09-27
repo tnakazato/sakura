@@ -10,6 +10,7 @@
 /* the number of elements in input/output array to test */
 #define NUM_IN 8 // length of base data. DO NOT MODIFY!
 #define NUM_IN_LONG (1 << 18) //2**18
+#define UNALIGN_OFFSET 1 // should be != ALIGNMENT
 using namespace std;
 
 /*
@@ -542,7 +543,7 @@ TEST_F(BitOperation8, AndFailNullResult) {
 
 /* Unaligned arrays */
 TEST_F(BitOperation8, AndFailNotAlignedData) {
-	size_t offset(1);
+	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data+offset);
 	SIMD_ALIGN
@@ -554,6 +555,7 @@ TEST_F(BitOperation8, AndFailNotAlignedData) {
 
 	GetInputDataInLength(num_elements, data, edit_mask);
 
+	// Define unaligned array
 	uint8_t *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
 
@@ -564,7 +566,7 @@ TEST_F(BitOperation8, AndFailNotAlignedData) {
 }
 
 TEST_F(BitOperation8, AndFailNotAlignedMask) {
-	size_t offset(1);
+	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data+offset);
 	SIMD_ALIGN
@@ -576,6 +578,7 @@ TEST_F(BitOperation8, AndFailNotAlignedMask) {
 
 	GetInputDataInLength(num_elements, data, edit_mask);
 
+	// Define unaligned array
 	bool *mask_shift = &edit_mask[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift) );
 
@@ -586,7 +589,7 @@ TEST_F(BitOperation8, AndFailNotAlignedMask) {
 }
 
 TEST_F(BitOperation8, AndFailNotAlignedResult) {
-	size_t offset(1);
+	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data+offset);
 	SIMD_ALIGN
@@ -598,6 +601,7 @@ TEST_F(BitOperation8, AndFailNotAlignedResult) {
 
 	GetInputDataInLength(num_elements, data, edit_mask);
 
+	// Define unaligned array
 	uint8_t *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
 
@@ -669,7 +673,7 @@ TEST_F(BitOperation32, AndFailNullResult) {
 
 /* Unaligned arrays */
 TEST_F(BitOperation32, AndFailNotAlignedData) {
-	size_t offset(1);
+	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data+offset);
 	SIMD_ALIGN
@@ -681,6 +685,7 @@ TEST_F(BitOperation32, AndFailNotAlignedData) {
 
 	GetInputDataInLength(num_elements, data, edit_mask);
 
+	// Define unaligned array
 	uint32_t *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
 
@@ -691,7 +696,7 @@ TEST_F(BitOperation32, AndFailNotAlignedData) {
 }
 
 TEST_F(BitOperation32, AndFailNotAlignedMask) {
-	size_t offset(1);
+	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data+offset);
 	SIMD_ALIGN
@@ -703,6 +708,7 @@ TEST_F(BitOperation32, AndFailNotAlignedMask) {
 
 	GetInputDataInLength(num_elements, data, edit_mask);
 
+	// Define unaligned array
 	bool *mask_shift = &edit_mask[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift) );
 
@@ -713,7 +719,7 @@ TEST_F(BitOperation32, AndFailNotAlignedMask) {
 }
 
 TEST_F(BitOperation32, AndFailNotAlignedResult) {
-	size_t offset(1);
+	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data+offset);
 	SIMD_ALIGN
@@ -725,6 +731,7 @@ TEST_F(BitOperation32, AndFailNotAlignedResult) {
 
 	GetInputDataInLength(num_elements, data, edit_mask);
 
+	// Define unaligned array
 	uint32_t *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
 
