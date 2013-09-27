@@ -604,7 +604,6 @@ TEST_F(BoolFilterOther, Uint32ToBoolLenghZero) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
-/*********************************************************************/
 /*
  * Test failure cases of sakura_SetTrueFloatInRangesInclusive
  * RESULT:
@@ -741,12 +740,11 @@ TEST_F(BoolFilterFloat, RangesInclusiveFailNullResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
 /* Unaligned arrays */
 TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	float data[num_elements];
 	SIMD_ALIGN
@@ -764,11 +762,10 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedData) {
 
 	// Define unaligned array
 	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
 			num_data, data_shift, num_range, lower, upper, result);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -777,7 +774,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedData) {
 TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	float data[num_data];
 	SIMD_ALIGN
@@ -795,11 +792,10 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedResult) {
 
 	// Define unaligned array
 	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
 			num_data, data, num_range, lower, upper, result_shift);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -813,7 +809,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedLower) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(data)];
 	SIMD_ALIGN
-	float lower[NUM_RANGE+offset];
+	float lower[NUM_RANGE + offset];
 	SIMD_ALIGN
 	float upper[NUM_RANGE];
 	size_t const num_range(ELEMENTSOF(upper));
@@ -826,16 +822,14 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedLower) {
 	GetBounds(dummy, upper);
 	// Initialize lower
 	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		lower[i+offset] = dummy[i];
+		lower[i + offset] = dummy[i];
 	}
 	// Define unaligned array
 	float *lower_shift = &lower[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift) );
-
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
 			num_data, data, num_range, lower_shift, upper, result);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -852,7 +846,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedUpper) {
 	float lower[NUM_RANGE];
 	size_t const num_range(ELEMENTSOF(lower));
 	SIMD_ALIGN
-	float upper[NUM_RANGE+offset];
+	float upper[NUM_RANGE + offset];
 
 	float dummy[ELEMENTSOF(lower)];
 
@@ -862,24 +856,19 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedUpper) {
 	GetBounds(lower, dummy);
 	// Initialize upper
 	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		upper[i+offset] = dummy[i];
+		upper[i + offset] = dummy[i];
 	}
 	// Define unaligned array
 	float *upper_shift = &upper[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift) );
-
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
 			num_data, data, num_range, lower, upper_shift, result);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
-
-/*********************************************************************/
 /*
  * Test failure cases of sakura_SetTrueIntInRangesInclusive
  * RESULT:
@@ -915,7 +904,6 @@ TEST_F(BoolFilterInt, RangesInclusiveFailExchangeBounds) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
-
 
 /* Null pointer arrays */
 TEST_F(BoolFilterInt, RangesInclusiveFailNullData) {
@@ -1018,12 +1006,11 @@ TEST_F(BoolFilterInt, RangesInclusiveFailNullResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
 /* Unaligned arrays */
 TEST_F(BoolFilterInt, RangesInclusiveNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	int data[num_elements];
 	SIMD_ALIGN
@@ -1041,11 +1028,10 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedData) {
 
 	// Define unaligned array
 	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
 			num_data, data_shift, num_range, lower, upper, result);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1054,7 +1040,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedData) {
 TEST_F(BoolFilterInt, RangesInclusiveNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	int data[num_data];
 	SIMD_ALIGN
@@ -1072,11 +1058,10 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedResult) {
 
 	// Define unaligned array
 	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
 			num_data, data, num_range, lower, upper, result_shift);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1090,7 +1075,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedLower) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(data)];
 	SIMD_ALIGN
-	int lower[NUM_RANGE+offset];
+	int lower[NUM_RANGE + offset];
 	SIMD_ALIGN
 	int upper[NUM_RANGE];
 	size_t const num_range(ELEMENTSOF(upper));
@@ -1103,16 +1088,14 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedLower) {
 	GetBounds(dummy, upper);
 	// Initialize lower
 	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		lower[i+offset] = dummy[i];
+		lower[i + offset] = dummy[i];
 	}
 	// Define unaligned array
 	int *lower_shift = &lower[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift) );
-
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
 			num_data, data, num_range, lower_shift, upper, result);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1129,7 +1112,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedUpper) {
 	int lower[NUM_RANGE];
 	size_t const num_range(ELEMENTSOF(lower));
 	SIMD_ALIGN
-	int upper[NUM_RANGE+offset];
+	int upper[NUM_RANGE + offset];
 
 	int dummy[ELEMENTSOF(lower)];
 
@@ -1139,24 +1122,19 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedUpper) {
 	GetBounds(lower, dummy);
 	// Initialize upper
 	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		upper[i+offset] = dummy[i];
+		upper[i + offset] = dummy[i];
 	}
 	// Define unaligned array
 	int *upper_shift = &upper[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift) );
-
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
 			num_data, data, num_range, lower, upper_shift, result);
-
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
-
-/*********************************************************************/
 /*
  * Test failure cases of sakura_InvertBool
  * RESULT:
@@ -1170,7 +1148,8 @@ TEST_F(BoolFilterOther, InvertBoolFailNullData) {
 
 	bool *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data_null, result);
+	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data_null,
+			result);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1187,7 +1166,8 @@ TEST_F(BoolFilterOther, InvertBoolFailNullResult) {
 
 	bool *result_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, result_null);
+	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data,
+			result_null);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1197,7 +1177,7 @@ TEST_F(BoolFilterOther, InvertBoolFailNullResult) {
 TEST_F(BoolFilterOther, InvertBoolNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	bool data[num_elements];
 	SIMD_ALIGN
@@ -1209,9 +1189,10 @@ TEST_F(BoolFilterOther, InvertBoolNotAlignedData) {
 
 	// Define unaligned array
 	bool *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data_shift, result);
+	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data_shift,
+			result);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1220,7 +1201,7 @@ TEST_F(BoolFilterOther, InvertBoolNotAlignedData) {
 TEST_F(BoolFilterOther, InvertBoolNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	bool data[num_data];
 	SIMD_ALIGN
@@ -1232,17 +1213,15 @@ TEST_F(BoolFilterOther, InvertBoolNotAlignedResult) {
 
 	// Define unaligned array
 	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, result_shift);
+	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data,
+			result_shift);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
-
-/*********************************************************************/
 /*
  * Test failure cases of sakura_Uint8ToBool
  * RESULT:
@@ -1281,12 +1260,11 @@ TEST_F(BoolFilterOther, Uint8ToBoolFailNullResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
 /* Unaligned arrays */
 TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(8);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	uint8_t data[num_elements];
 	SIMD_ALIGN
@@ -1298,7 +1276,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedData) {
 
 	// Define unaligned array
 	uint8_t *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data_shift,
 			result);
@@ -1310,7 +1288,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedData) {
 TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	uint8_t data[num_data];
 	SIMD_ALIGN
@@ -1322,7 +1300,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedResult) {
 
 	// Define unaligned array
 	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data,
 			result_shift);
@@ -1331,9 +1309,6 @@ TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
-
-/*********************************************************************/
 /*
  * Test failure cases of sakura_Uint32ToBool
  * RESULT:
@@ -1376,7 +1351,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolFailNullResult) {
 TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	uint32_t data[num_elements];
 	SIMD_ALIGN
@@ -1388,7 +1363,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedData) {
 
 	// Define unaligned array
 	uint32_t *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data_shift,
 			result);
@@ -1400,7 +1375,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedData) {
 TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data+offset);
+	size_t const num_elements(num_data + offset);
 	SIMD_ALIGN
 	uint32_t data[num_data];
 	SIMD_ALIGN
@@ -1412,7 +1387,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 
 	// Define unaligned array
 	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data,
 			result_shift);
