@@ -563,6 +563,50 @@ TEST_F(BitOperation8, AndFailNotAlignedData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
+TEST_F(BitOperation8, AndFailNotAlignedMask) {
+	size_t offset(1);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data+offset);
+	SIMD_ALIGN
+	uint8_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	bool *mask_shift = &edit_mask[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift) );
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_data, data, mask_shift, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, AndFailNotAlignedResult) {
+	size_t offset(1);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data+offset);
+	SIMD_ALIGN
+	uint8_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	uint8_t *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_data, data, edit_mask, result_shift);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
 /*
  * Test failure cases of sakura_OperateBitsUint32And
  * RESULT:
@@ -619,6 +663,73 @@ TEST_F(BitOperation32, AndFailNullResult) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
 			num_data, data, edit_mask, result_null);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BitOperation32, AndFailNotAlignedData) {
+	size_t offset(1);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data+offset);
+	SIMD_ALIGN
+	uint32_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	uint32_t *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift) );
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_data, data_shift, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, AndFailNotAlignedMask) {
+	size_t offset(1);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data+offset);
+	SIMD_ALIGN
+	uint32_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	bool *mask_shift = &edit_mask[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift) );
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_data, data, mask_shift, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, AndFailNotAlignedResult) {
+	size_t offset(1);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data+offset);
+	SIMD_ALIGN
+	uint32_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	uint32_t *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift) );
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_data, data, edit_mask, result_shift);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
