@@ -11,42 +11,10 @@
 
 //#include "CubicSplineInterpolator1D.h"
 
-class Interpolate1dFloatTest: public ::testing::Test {
+class Interpolate1dFloatTest: public InterpolateFloatTestBase {
 protected:
-	virtual void SetUp() {
-		initialize_result_ = sakura_Initialize(nullptr, nullptr);
-		polynomial_order_ = 0;
-		sakura_alignment_ = sakura_GetAlignment();
-	}
-	virtual void TearDown() {
-		sakura_CleanUp();
-	}
 	virtual void AllocateMemory(size_t num_base, size_t num_interpolated) {
-		size_t num_arena_base = num_base + sakura_alignment_ - 1;
-		size_t num_arena_interpolated = num_interpolated + sakura_alignment_
-				- 1;
-		storage_for_x_base_.reset(new double[num_arena_base]);
-		x_base_ = sakura_AlignDouble(num_arena_base, storage_for_x_base_.get(),
-				num_base);
-		storage_for_x_interpolated_.reset(new double[num_arena_interpolated]);
-		x_interpolated_ = sakura_AlignDouble(num_arena_interpolated,
-				storage_for_x_interpolated_.get(), num_interpolated);
-		storage_for_y_base_.reset(new float[num_arena_base]);
-		y_base_ = sakura_AlignFloat(num_arena_base, storage_for_y_base_.get(),
-				num_base);
-		storage_for_y_interpolated_.reset(new float[num_arena_interpolated]);
-		y_interpolated_ = sakura_AlignFloat(num_arena_interpolated,
-				storage_for_y_interpolated_.get(), num_interpolated);
-		storage_for_y_expected_.reset(new float[num_arena_interpolated]);
-		y_expected_ = sakura_AlignFloat(num_arena_interpolated,
-				storage_for_y_expected_.get(), num_interpolated);
-
-		// check alignment
-		ASSERT_TRUE(x_base_ != nullptr)<< "x_base_ is null";
-		ASSERT_TRUE(sakura_IsAligned(x_base_))<< "x_base_ is not aligned";
-		ASSERT_TRUE(sakura_IsAligned(y_base_))<< "y_base_ is not aligned";
-		ASSERT_TRUE(sakura_IsAligned(x_interpolated_))<< "x_interpolated_ is not aligned";
-		ASSERT_TRUE(sakura_IsAligned(y_interpolated_))<< "y_interpolated_ is not aligned";
+		InterpolateFloatTestBase::AllocateMemory(num_base, num_interpolated, 1);
 	}
 
 	virtual void RunInterpolate1d(sakura_InterpolationMethod interpolation_method,
@@ -62,38 +30,8 @@ protected:
 				x_base_, y_base_, num_interpolated, x_interpolated_,
 				y_interpolated_);
 
-		// Should return InvalidArgument status
-		std::string message = (expected_status == sakura_Status_kOK) ?
-		"Interpolate1dFloat had any problems during execution." :
-		"Interpolate1dFloat should fail!";
-		EXPECT_EQ(expected_status, result) << message;
-
-		if (check_result && (expected_status == result)) {
-			// Value check
-			for (size_t index = 0; index < num_interpolated; ++index) {
-				std::cout << "Expected value at index " << index << ": "
-				<< y_expected_[index] << std::endl;
-				EXPECT_FLOAT_EQ(y_expected_[index], y_interpolated_[index])
-				<< "interpolated value differs from expected value at " << index
-				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
-			}
-		}
+		InspectResult(expected_status, result, num_interpolated, 1, check_result);
 	}
-
-	sakura_Status initialize_result_;
-	size_t sakura_alignment_;
-	int polynomial_order_;
-
-	std::unique_ptr<double[]> storage_for_x_base_;
-	std::unique_ptr<float[]> storage_for_y_base_;
-	std::unique_ptr<double[]> storage_for_x_interpolated_;
-	std::unique_ptr<float[]> storage_for_y_interpolated_;
-	std::unique_ptr<float[]> storage_for_y_expected_;
-	double *x_base_;
-	double *x_interpolated_;
-	float *y_base_;
-	float *y_interpolated_;
-	float *y_expected_;
 };
 
 TEST_F(Interpolate1dFloatTest, InvalidType) {
