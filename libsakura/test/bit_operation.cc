@@ -494,12 +494,48 @@ TEST_F(BitOperation8, AndFailNullData) {
 	uint8_t result[ELEMENTSOF(dummy)];
 
 	uint8_t *data_null = nullptr;
-	assert(data_null == nullptr);
+	// assert(data_null == nullptr);
 
 	GetInputDataInLength(num_data, dummy, edit_mask);
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
 			num_data, data_null, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, AndFailNullMask) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+
+	bool dummy[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t out[ELEMENTSOF(data)];
+
+	bool *mask_null = nullptr;
+
+	GetInputDataInLength(num_data, data, dummy);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_data, data, mask_null, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, AndFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+
+	uint8_t *result_null = nullptr;
+
+	GetInputDataInLength(num_data, data, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
+			num_data, data, edit_mask, result_null);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
@@ -523,6 +559,66 @@ TEST_F(BitOperation8, AndFailNotAlignedData) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(bit_mask_,
 			num_data, data_shift, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test failure cases of sakura_OperateBitsUint32And
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BitOperation32, AndFailNullData) {
+	size_t const num_data(NUM_IN);
+	uint32_t dummy[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(dummy)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(dummy)];
+
+	uint32_t *data_null = nullptr;
+
+	GetInputDataInLength(num_data, dummy, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_data, data_null, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, AndFailNullMask) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+
+	bool dummy[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t out[ELEMENTSOF(data)];
+
+	bool *mask_null = nullptr;
+
+	GetInputDataInLength(num_data, data, dummy);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_data, data, mask_null, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, AndFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+
+	uint32_t *result_null = nullptr;
+
+	GetInputDataInLength(num_data, data, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(bit_mask_,
+			num_data, data, edit_mask, result_null);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
