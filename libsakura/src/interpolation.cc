@@ -464,9 +464,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(x_interpolated)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(y_interpolated)) {
-		std::ostringstream oss;
-		oss << "ERROR: input arrays are not aligned" << std::endl;
-		Logger::Error(logger, oss.str().c_str());
+		if (Logger::IsErrorEnabled(logger)) {
+			std::ostringstream oss;
+			oss << "ERROR: input arrays are not aligned" << std::endl;
+			Logger::Error(logger, oss.str().c_str());
+		}
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -505,11 +507,13 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 					y_base_work, polynomial_order));
 	if (interpolator.get() == nullptr) {
 		// failed to create interpolation worker object
-		std::ostringstream oss;
-		oss
-				<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
-				<< std::endl;
-		Logger::Error(logger, oss.str().c_str());
+		if (Logger::IsErrorEnabled(logger)) {
+			std::ostringstream oss;
+			oss
+					<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
+					<< std::endl;
+			Logger::Error(logger, oss.str().c_str());
+		}
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
