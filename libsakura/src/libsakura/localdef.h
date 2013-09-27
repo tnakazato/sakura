@@ -5,6 +5,15 @@
  *      Author: kohji
  */
 
+/**
+ * @file
+ * Contains utility stuffs for internal use.
+ *
+ * This file is an internal header file for libsakura.
+ * This is not a part of libsakura API.
+ *
+ */
+
 #ifndef LIBSAKURA_LIBSAKURA_LOCALDEF_H_
 #define LIBSAKURA_LIBSAKURA_LOCALDEF_H_
 
@@ -34,7 +43,7 @@ class ScopeGuard {
 public:
 	ScopeGuard() = delete;
 	explicit ScopeGuard(Func clean_up, bool engaged = true) :
-			clean_up_(clean_up), engaged_(engaged), called_(false) {
+	clean_up_(clean_up), engaged_(engaged), called_(false) {
 	}
 	ScopeGuard(ScopeGuard const &other) = delete;
 	ScopeGuard &operator =(ScopeGuard const &other) = delete;
