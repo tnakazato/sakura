@@ -33,9 +33,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusi
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
-	bfc->SetTrueInRangesInclusive(num_data, data, num_condition, lower_bounds,
-			upper_bounds, result);
-
+	try {
+		bfc->SetTrueInRangesInclusive(num_data, data, num_condition,
+				lower_bounds, upper_bounds, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -68,9 +72,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplInt();
-	bfc->SetTrueInRangesInclusive(num_data, data, num_condition, lower_bounds,
-			upper_bounds, result);
-
+	try {
+		bfc->SetTrueInRangesInclusive(num_data, data, num_condition,
+				lower_bounds, upper_bounds, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -89,8 +97,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint8();
-	bfc->ToBool(num_data, data, result);
-
+	try {
+		bfc->ToBool(num_data, data, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -109,8 +121,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint32();
-	bfc->ToBool(num_data, data, result);
-
+	try {
+		bfc->ToBool(num_data, data, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -130,7 +146,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
 	// Now actual operation
 	auto bfc =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplUint8();
-	bfc->InvertBool(num_data, data, result);
-
+	try {
+		bfc->InvertBool(num_data, data, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

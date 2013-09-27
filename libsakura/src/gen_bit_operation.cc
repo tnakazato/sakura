@@ -26,8 +26,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 	// Now actual operation
 	auto bitop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint8();
-	bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
-
+	try {
+		bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -51,8 +55,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 	// Now actual operation
 	auto bitop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint32();
-	bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
-
+	try {
+		bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
