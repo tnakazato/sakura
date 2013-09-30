@@ -115,7 +115,7 @@ class Interpolation {
 public:
 	virtual ~Interpolation() {
 	}
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
+	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_array,

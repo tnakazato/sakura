@@ -72,8 +72,8 @@ protected:
 			size_t num_interpolated, size_t num_array, bool check_result) {
 		// Should return InvalidArgument status
 		std::string message = (expected_status == sakura_Status_kOK) ?
-		"InterpolateArray1dFloat had any problems during execution." :
-		"InterpolateArray1dFloat should fail!";
+		"InterpolateArray1DFloat had any problems during execution." :
+		"InterpolateArray1DFloat should fail!";
 		EXPECT_EQ(expected_status, result_status) << message;
 
 		if (check_result && (expected_status == result_status)) {

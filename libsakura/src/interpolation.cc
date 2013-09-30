@@ -108,7 +108,7 @@ public:
 	}
 	virtual void PrepareForInterpolation() {
 	}
-	virtual void Interpolate1d(size_t left_index, size_t right_index,
+	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) = 0;
 protected:
@@ -131,7 +131,7 @@ public:
 	}
 	virtual ~NearestInterpolationWorker() {
 	}
-	virtual void Interpolate1d(size_t left_index, size_t right_index,
+	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		XDataType middle_point = 0.5
@@ -173,7 +173,7 @@ public:
 	}
 	virtual ~LinearInterpolationWorker() {
 	}
-	virtual void Interpolate1d(size_t left_index, size_t right_index,
+	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		size_t offset_index_left = offset * this->num_base_ + location - 1;
@@ -208,7 +208,7 @@ public:
 		storage_for_c_.reset(AllocateAndAlign<XDataType>(kNumElements_, &c_));
 		storage_for_d_.reset(AllocateAndAlign<XDataType>(kNumElements_, &d_));
 	}
-	virtual void Interpolate1d(size_t left_index, size_t right_index,
+	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		int j = location - 1 - this->polynomial_order_ / 2;
@@ -312,7 +312,7 @@ public:
 	}
 	virtual ~SplineInterpolationWorkerDescending() {
 	}
-	virtual void Interpolate1d(size_t left_index, size_t right_index,
+	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
@@ -351,7 +351,7 @@ public:
 	}
 	virtual ~SplineInterpolationWorkerAscending() {
 	}
-	virtual void Interpolate1d(size_t left_index, size_t right_index,
+	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
 		assert(this->y_base_2nd_derivative_ != nullptr);
@@ -444,7 +444,7 @@ namespace LIBSAKURA_PREFIX {
 
 template<class XDataType, class YDataType>
 LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType,
-		YDataType>::Interpolate1d(
+		YDataType>::Interpolate1D(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, size_t num_base,
 		XDataType const x_base[/* num_base */], size_t num_array,
@@ -552,7 +552,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// Between x_base[0] and x_base[num_base-1]
 		for (size_t i = 0; i < num_base - 1; ++i) {
 			if (location_base[i] != location_base[i + 1]) {
-				interpolator->Interpolate1d(location_base[i],
+				interpolator->Interpolate1D(location_base[i],
 						location_base[i + 1], i + 1, j, x_interpolated_work,
 						y_interpolated_work);
 			}

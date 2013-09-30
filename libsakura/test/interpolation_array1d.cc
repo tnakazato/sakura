@@ -11,9 +11,9 @@
 
 //#include "asap/CubicSplineInterpolator1D.h"
 
-class InterpolateArray1dFloatTest: public InterpolateFloatTestBase {
+class InterpolateArray1DFloatTest: public InterpolateFloatTestBase {
 protected:
-	virtual void RunInterpolateArray1d(
+	virtual void RunInterpolateArray1D(
 			sakura_InterpolationMethod interpolation_method, size_t num_base,
 			size_t num_interpolated, size_t num_array,
 			sakura_Status expected_status, bool check_result) {
@@ -21,7 +21,7 @@ protected:
 		ASSERT_EQ(sakura_Status_kOK, initialize_result_)<< "sakura must be properly initialized!";
 
 		// execute interpolation
-		sakura_Status result = sakura_InterpolateArray1dFloat(
+		sakura_Status result = sakura_InterpolateArray1DFloat(
 				interpolation_method, polynomial_order_, num_base,
 				x_base_, num_array, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
 
@@ -29,7 +29,7 @@ protected:
 	}
 };
 
-TEST_F(InterpolateArray1dFloatTest, InvalidType) {
+TEST_F(InterpolateArray1DFloatTest, InvalidType) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -41,11 +41,11 @@ TEST_F(InterpolateArray1dFloatTest, InvalidType) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNumMethod, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNumMethod, num_base,
 			num_interpolated, num_array, sakura_Status_kInvalidArgument, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, ZeroLengthBaseArray) {
+TEST_F(InterpolateArray1DFloatTest, ZeroLengthBaseArray) {
 	// initial setup
 	size_t const num_base = 0;
 	size_t const num_interpolated = 1;
@@ -53,11 +53,11 @@ TEST_F(InterpolateArray1dFloatTest, ZeroLengthBaseArray) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kInvalidArgument, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, ZeroLengthInterpolatedArray) {
+TEST_F(InterpolateArray1DFloatTest, ZeroLengthInterpolatedArray) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 0;
@@ -65,11 +65,11 @@ TEST_F(InterpolateArray1dFloatTest, ZeroLengthInterpolatedArray) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NegativePolynomialOrder) {
+TEST_F(InterpolateArray1DFloatTest, NegativePolynomialOrder) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -78,11 +78,11 @@ TEST_F(InterpolateArray1dFloatTest, NegativePolynomialOrder) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kInvalidArgument, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NegativePolynomialOrderButNearest) {
+TEST_F(InterpolateArray1DFloatTest, NegativePolynomialOrderButNearest) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -95,11 +95,11 @@ TEST_F(InterpolateArray1dFloatTest, NegativePolynomialOrderButNearest) {
 	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, -0.5);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, InputArrayNotAligned) {
+TEST_F(InterpolateArray1DFloatTest, InputArrayNotAligned) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -108,12 +108,12 @@ TEST_F(InterpolateArray1dFloatTest, InputArrayNotAligned) {
 
 	// execute interpolation
 	x_base_ = &(x_base_[1]);
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, 1,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, 1,
 			num_interpolated, num_array, sakura_Status_kInvalidArgument,
 			false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SingleBase) {
+TEST_F(InterpolateArray1DFloatTest, SingleBase) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 1;
@@ -125,11 +125,11 @@ TEST_F(InterpolateArray1dFloatTest, SingleBase) {
 	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 0.0);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, Nearest) {
+TEST_F(InterpolateArray1DFloatTest, Nearest) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -143,11 +143,11 @@ TEST_F(InterpolateArray1dFloatTest, Nearest) {
 			1.0, -1.0, -1.0, -0.5, -0.5, -0.5, 0.2, 0.2);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NearestDescending) {
+TEST_F(InterpolateArray1DFloatTest, NearestDescending) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -161,11 +161,11 @@ TEST_F(InterpolateArray1dFloatTest, NearestDescending) {
 			1.0, -1.0, -1.0, -0.5, -0.5, -0.5, 0.2, 0.2);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NearestOpposite) {
+TEST_F(InterpolateArray1DFloatTest, NearestOpposite) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -179,11 +179,11 @@ TEST_F(InterpolateArray1dFloatTest, NearestOpposite) {
 			1.0, 1.0, 1.0, 0.2, 0.2, -0.5, -0.5, -0.5);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, Linear) {
+TEST_F(InterpolateArray1DFloatTest, Linear) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 13;
@@ -216,11 +216,11 @@ TEST_F(InterpolateArray1dFloatTest, Linear) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kLinear, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, LinearDescending) {
+TEST_F(InterpolateArray1DFloatTest, LinearDescending) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 13;
@@ -255,11 +255,11 @@ TEST_F(InterpolateArray1dFloatTest, LinearDescending) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kLinear, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, LinearOpposite) {
+TEST_F(InterpolateArray1DFloatTest, LinearOpposite) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 13;
@@ -294,11 +294,11 @@ TEST_F(InterpolateArray1dFloatTest, LinearOpposite) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kLinear, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder0) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder0) {
 	// initial setup
 	polynomial_order_ = 0;
 	size_t const num_base = 2;
@@ -313,11 +313,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder0) {
 			1.0, -1.0, -1.0, -0.5, -0.5, -0.5, 0.2, 0.2);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder1) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
 	// initial setup
 	polynomial_order_ = 1;
 	size_t const num_base = 2;
@@ -352,11 +352,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder1) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2Full) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2Full) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -389,11 +389,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2Full) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullDescending) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullDescending) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -426,11 +426,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullDescending) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullOpposite) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullOpposite) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -464,11 +464,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullOpposite) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder1Sub) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Sub) {
 	// initial setup
 	polynomial_order_ = 1;
 	size_t const num_base = 3;
@@ -508,11 +508,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder1Sub) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, Spline) {
+TEST_F(InterpolateArray1DFloatTest, Spline) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -535,11 +535,11 @@ TEST_F(InterpolateArray1dFloatTest, Spline) {
 			8.68, 9.5, 9.5);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kSpline, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SplineDescending) {
+TEST_F(InterpolateArray1DFloatTest, SplineDescending) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -562,11 +562,11 @@ TEST_F(InterpolateArray1dFloatTest, SplineDescending) {
 			8.68, 9.5, 9.5);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kSpline, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SplineOpposite) {
+TEST_F(InterpolateArray1DFloatTest, SplineOpposite) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -589,11 +589,11 @@ TEST_F(InterpolateArray1dFloatTest, SplineOpposite) {
 			5.08, 5.0, 5.0);
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kSpline, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SingleBasePerformance) {
+TEST_F(InterpolateArray1DFloatTest, SingleBasePerformance) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 4096;
@@ -610,11 +610,11 @@ TEST_F(InterpolateArray1dFloatTest, SingleBasePerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NearestPerformance) {
+TEST_F(InterpolateArray1DFloatTest, NearestPerformance) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 4096;
@@ -631,11 +631,11 @@ TEST_F(InterpolateArray1dFloatTest, NearestPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NearestDescendingPerformance) {
+TEST_F(InterpolateArray1DFloatTest, NearestDescendingPerformance) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 4096;
@@ -652,11 +652,11 @@ TEST_F(InterpolateArray1dFloatTest, NearestDescendingPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, NearestOppositePerformance) {
+TEST_F(InterpolateArray1DFloatTest, NearestOppositePerformance) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 4096;
@@ -673,11 +673,11 @@ TEST_F(InterpolateArray1dFloatTest, NearestOppositePerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kNearest, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, LinearPerformance) {
+TEST_F(InterpolateArray1DFloatTest, LinearPerformance) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 4096;
@@ -694,11 +694,11 @@ TEST_F(InterpolateArray1dFloatTest, LinearPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kLinear, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, LinearDescendingPerformance) {
+TEST_F(InterpolateArray1DFloatTest, LinearDescendingPerformance) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 4096;
@@ -715,11 +715,11 @@ TEST_F(InterpolateArray1dFloatTest, LinearDescendingPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kLinear, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, LinearOppositePerformance) {
+TEST_F(InterpolateArray1DFloatTest, LinearOppositePerformance) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 4096;
@@ -736,11 +736,11 @@ TEST_F(InterpolateArray1dFloatTest, LinearOppositePerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kLinear, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullPerformance) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullPerformance) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -758,11 +758,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullDescendingPerformance) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullDescendingPerformance) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -780,11 +780,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullDescendingPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullOppositePerformance) {
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullOppositePerformance) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -802,11 +802,11 @@ TEST_F(InterpolateArray1dFloatTest, PolynomialOrder2FullOppositePerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kPolynomial, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SplinePerformance) {
+TEST_F(InterpolateArray1DFloatTest, SplinePerformance) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 4096;
@@ -823,11 +823,11 @@ TEST_F(InterpolateArray1dFloatTest, SplinePerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kSpline, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SplineDescendingPerformance) {
+TEST_F(InterpolateArray1DFloatTest, SplineDescendingPerformance) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 4096;
@@ -844,11 +844,11 @@ TEST_F(InterpolateArray1dFloatTest, SplineDescendingPerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kSpline, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
+TEST_F(InterpolateArray1DFloatTest, SplineOppositePerformance) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 4096;
@@ -865,7 +865,7 @@ TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
 	}
 
 	// execute interpolation
-	RunInterpolateArray1d(sakura_InterpolationMethod_kSpline, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
@@ -888,7 +888,7 @@ TEST_F(InterpolateArray1dFloatTest, SplineOppositePerformance) {
 // 4. Change Interpolator1D::createLocator() so that it always uses
 //    BisectionLocator.
 //
-//TEST_F(InterpolateArray1dFloatTest, AsapSplinePerformance) {
+//TEST_F(InterpolateArray1DFloatTest, AsapSplinePerformance) {
 //	// initial setup
 //	size_t const num_base = 3;
 //	size_t const num_interpolated = 4096;

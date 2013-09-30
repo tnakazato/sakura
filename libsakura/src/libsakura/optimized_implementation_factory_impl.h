@@ -187,7 +187,7 @@ class InterpolationDefault: public InterpolationImpl<XDataType, YDataType> {
 public:
 	virtual ~InterpolationDefault() {
 	}
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
+	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_array,
@@ -202,7 +202,7 @@ class InterpolationAfterSandyBridge: public InterpolationImpl<XDataType, YDataTy
 public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1d(
+	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			int polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_array,

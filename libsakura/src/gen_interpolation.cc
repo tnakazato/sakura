@@ -15,7 +15,7 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, size_t num_base, double const x_base[],
 		float const y_base[], size_t num_interpolated,
@@ -62,7 +62,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
 	try {
-		return interpolator->Interpolate1d(interpolation_method,
+		return interpolator->Interpolate1D(interpolation_method,
 				polynomial_order, num_base, x_base, 1, y_base, num_interpolated,
 				x_interpolated, y_interpolated);
 	} catch (...) {
@@ -76,7 +76,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1dFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1DFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, size_t num_base, double const x_base[],
 		size_t num_array, float const y_base[], size_t num_interpolated,
@@ -122,7 +122,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
 	try {
-		return interpolator->Interpolate1d(interpolation_method,
+		return interpolator->Interpolate1D(interpolation_method,
 				polynomial_order, num_base, x_base, num_array, y_base,
 				num_interpolated, x_interpolated, y_interpolated);
 	} catch (...) {

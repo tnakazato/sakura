@@ -615,7 +615,7 @@ typedef enum {
  * @param[out] y_interpolated storage for interpolation result. Its length must be
  * @a num_interpolated.
  * @return status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1dFloat)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DFloat)(
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interoplation_method, int polynomial_order,
 		size_t num_base, double const x_base[/*num_base*/],
@@ -627,7 +627,7 @@ LIBSAKURA_SYMBOL(
  * @brief Perform one-dimensional interpolation along interpolation axis
  * of two-dimensional array.
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1dFloat)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1DFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		int polynomial_order, size_t num_base,
 		double const x_base[/*num_base*/], size_t num_array,
