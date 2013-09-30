@@ -9,7 +9,7 @@
 #include "gtest/gtest.h"
 #include "interpolation.h"
 
-#include "asap/CubicSplineInterpolator1D.h"
+//#include "asap/CubicSplineInterpolator1D.h"
 
 class InterpolateArray1dFloatTest: public InterpolateFloatTestBase {
 protected:
