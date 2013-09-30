@@ -61,6 +61,17 @@ TEST_F(Interpolate1dFloatTest, ZeroLengthBaseArray) {
 			num_interpolated, sakura_Status_kInvalidArgument, false);
 }
 
+TEST_F(Interpolate1dFloatTest, ZeroLengthInterpolatedArray) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 0;
+
+	// execute interpolation
+	// Should return InvalidArgument status
+	RunInterpolate1d(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, sakura_Status_kOK, false);
+}
+
 TEST_F(Interpolate1dFloatTest, NegativePolynomialOrder) {
 	// initial setup
 	size_t const num_base = 2;
