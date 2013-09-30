@@ -280,7 +280,7 @@ public:
 	}
 	virtual void PrepareForInterpolation() {
 		// Derive second derivative at x_base
-		const bool kIsDescending = (this->x_base_[0]
+		bool const kIsDescending = (this->x_base_[0]
 				> this->x_base_[this->num_base_ - 1]);
 		storage_for_y_.reset(
 				AllocateAndAlign(this->num_base_ * this->num_array_,
