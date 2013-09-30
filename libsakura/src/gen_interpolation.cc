@@ -17,7 +17,7 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, size_t num_base, double const x_base[],
+		uint8_t polynomial_order, size_t num_base, double const x_base[],
 		float const y_base[], size_t num_interpolated,
 		double const x_interpolated[], float y_interpolated[]) {
 
@@ -43,20 +43,6 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	}
 
-	// invalid polynomial order for polynomial interpolation
-	if (interpolation_method
-			== LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
-			&& polynomial_order < 0) {
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss
-					<< "ERROR: Negative polynomial order for polynomial interpolation"
-					<< std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
 	// get object optimized to run-time environment
 	auto interpolator =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
@@ -78,7 +64,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1DFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, size_t num_base, double const x_base[],
+		uint8_t polynomial_order, size_t num_base, double const x_base[],
 		size_t num_array, float const y_base[], size_t num_interpolated,
 		double const x_interpolated[], float y_interpolated[]) {
 	// num_base must be non-zero
@@ -101,20 +87,6 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			LIBSAKURA_PREFIX::Logger::Info(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kOK);
-	}
-
-	// invalid polynomial order for polynomial interpolation
-	if (interpolation_method
-			== LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
-			&& polynomial_order < 0) {
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss
-					<< "ERROR: Negative polynomial order for polynomial interpolation"
-					<< std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// get object optimized to run-time environment

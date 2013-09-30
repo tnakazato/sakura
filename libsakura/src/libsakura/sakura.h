@@ -548,7 +548,6 @@ typedef enum {
  * が返された場合、
  * 考えられる原因は以下の三つである。
  *     - @a interpolatin_method が正しくない
- *     - 多項式補間で次数が負である
  *     - 引数に渡した配列がアラインされていない
  *
  * また、原因不明のエラーでは
@@ -565,8 +564,6 @@ typedef enum {
  * 昇順よりも処理が遅くなる。
  *
  * @par 多項式補間の動作について:
- * @a polynomial_order は0または正の整数でなければならない。
- * @par
  * @a polynomial_order はあくまで最大次数を規定するものであり、その次数で必ず
  * 補間が行われるとは限らない。たとえば、@a polynomial_order が2（二次多項式による補間）
  * で@a num_base が2の場合、実際には2点を通る一次多項式が一意に決まるため、二次多項式に
@@ -577,7 +574,6 @@ typedef enum {
  * @par
  * @param[in] interpolation_method 補間方法
  * @param[in] polynomial_order 多項式補間法の場合の最大次数。
- * @a polynomial_order は0または正の整数でなければならない。
  * 実際の次数は、@a num_base との兼ね合いで決まる。
  * @param[in] num_base 補間のためのデータ点の数。
  * @param[in] x_base 補間のためのデータ点のx座標。
@@ -602,7 +598,7 @@ typedef enum {
  * @details
  * @param[in] interpolation_method interpolation method.
  * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
- * It must be 0 or positive integer. Actual order will be determined by a balance
+ * Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
  * @param[in] num_base number of elements for data points.
  * @param[in] x_base x-coordinate of data points. Its length must be @a num_base.
@@ -617,7 +613,7 @@ typedef enum {
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DFloat)(
 LIBSAKURA_SYMBOL(
-		InterpolationMethod) interoplation_method, int polynomial_order,
+		InterpolationMethod) interoplation_method, uint8_t polynomial_order,
 		size_t num_base, double const x_base[/*num_base*/],
 		float const y_base[/*num_base*/], size_t num_interpolated,
 		double const x_interpolated[/*num_interpolated*/],
@@ -629,7 +625,7 @@ LIBSAKURA_SYMBOL(
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1DFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, size_t num_base,
+		uint8_t polynomial_order, size_t num_base,
 		double const x_base[/*num_base*/], size_t num_array,
 		float const y_base[/*num_array*num_base*/], size_t num_interpolated,
 		double const x_interpolated[/*num_interpolated*/],

@@ -99,8 +99,8 @@ template<class XDataType, class YDataType>
 class InterpolationWorker {
 public:
 	InterpolationWorker(size_t num_base, XDataType const x_base[],
-			size_t num_array, YDataType const y_base[], int polynomial_order =
-					-1) :
+			size_t num_array, YDataType const y_base[],
+			uint8_t polynomial_order = 0) :
 			num_base_(num_base), num_array_(num_array), x_base_(x_base), y_base_(
 					y_base), polynomial_order_(polynomial_order) {
 	}
@@ -196,10 +196,11 @@ class PolynomialInterpolationWorker: public InterpolationWorker<XDataType,
 		YDataType> {
 public:
 	PolynomialInterpolationWorker(size_t num_base, XDataType const x_base[],
-			size_t num_array, YDataType const y_base[], int polynomial_order) :
+			size_t num_array, YDataType const y_base[],
+			uint8_t polynomial_order) :
 			InterpolationWorker<XDataType, YDataType>(num_base, x_base,
 					num_array, y_base, polynomial_order), kNumElements_(
-					this->polynomial_order_ + 1), storage_for_c_(), storage_for_d_(), c_(
+					static_cast<size_t>(this->polynomial_order_) + 1), storage_for_c_(), storage_for_d_(), c_(
 					nullptr), d_(nullptr) {
 	}
 	virtual ~PolynomialInterpolationWorker() {
@@ -211,7 +212,7 @@ public:
 	virtual void Interpolate1D(size_t left_index, size_t right_index,
 			size_t location, size_t offset, XDataType const x_interpolated[],
 			YDataType y_interpolated[]) {
-		int j = location - 1 - this->polynomial_order_ / 2;
+		int j = location - 1 - static_cast<int>(this->polynomial_order_) / 2;
 		size_t m = this->num_base_ - 1
 				- static_cast<size_t>(this->polynomial_order_);
 		size_t k = static_cast<size_t>((j > 0) ? j : 0);
@@ -403,7 +404,7 @@ template<class XDataType, class YDataType>
 InterpolationWorker<XDataType, YDataType> *CreateInterpolationWorker(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 		XDataType const x_base[], size_t num_array, YDataType const y_base[],
-		int polynomial_order) {
+		uint8_t polynomial_order) {
 	switch (interpolation_method) {
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
 		return new NearestInterpolationWorker<XDataType, YDataType>(num_base,
@@ -412,10 +413,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method, size_t num_base,
 		return new LinearInterpolationWorker<XDataType, YDataType>(num_base,
 				x_base, num_array, y_base);
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
-		if (polynomial_order < 0) {
-			// invalid polynomial order
-			return nullptr;
-		} else if (polynomial_order == 0) {
+		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
 			return new NearestInterpolationWorker<XDataType, YDataType>(
@@ -446,7 +444,7 @@ template<class XDataType, class YDataType>
 LIBSAKURA_SYMBOL(Status) ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType,
 		YDataType>::Interpolate1D(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		int polynomial_order, size_t num_base,
+		uint8_t polynomial_order, size_t num_base,
 		XDataType const x_base[/* num_base */], size_t num_array,
 		YDataType const y_base[/* num_base * num_array*/],
 		size_t num_interpolated,
@@ -510,7 +508,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		if (Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
 			oss
-					<< "ERROR: Invalid interpolation method type or Negative polynomial order for polynomial interpolation"
+					<< "ERROR: Invalid interpolation method type"
 					<< std::endl;
 			Logger::Error(logger, oss.str().c_str());
 		}

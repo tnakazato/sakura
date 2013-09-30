@@ -189,7 +189,7 @@ public:
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			int polynomial_order, size_t num_base,
+			uint8_t polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_array,
 			YDataType const y_base[/*num_base * num_base_array*/],
 			size_t num_interpolated,
@@ -204,7 +204,7 @@ public:
 	}
 	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			int polynomial_order, size_t num_base,
+			uint8_t polynomial_order, size_t num_base,
 			XDataType const x_base[/*num_base*/], size_t num_array,
 			YDataType const y_base[/*num_base * num_base_array*/],
 			size_t num_interpolated,

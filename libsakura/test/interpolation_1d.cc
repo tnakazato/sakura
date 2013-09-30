@@ -72,36 +72,6 @@ TEST_F(Interpolate1DFloatTest, ZeroLengthInterpolatedArray) {
 			num_interpolated, sakura_Status_kOK, false);
 }
 
-TEST_F(Interpolate1DFloatTest, NegativePolynomialOrder) {
-	// initial setup
-	size_t const num_base = 2;
-	size_t const num_interpolated = 5;
-	polynomial_order_ = -1;
-
-	// execute interpolation
-	// Should return InvalidArgument status
-	RunInterpolate1D(sakura_InterpolationMethod_kPolynomial, num_base,
-			num_interpolated, sakura_Status_kInvalidArgument, false);
-}
-
-TEST_F(Interpolate1DFloatTest, NegativePolynomialOrderButNearest) {
-	// initial setup
-	size_t const num_base = 2;
-	size_t const num_interpolated = 6;
-	polynomial_order_ = -1;
-	AllocateMemory(num_base, num_interpolated);
-	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
-	InitializeFloatArray(num_base, y_base_, 1.0, -1.0);
-	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
-			0.5, 0.7, 1.5);
-	InitializeFloatArray(num_interpolated, y_expected_, 1.0, 1.0, 1.0, 1.0,
-			-1.0, -1.0);
-
-	// execute interpolation
-	RunInterpolate1D(sakura_InterpolationMethod_kNearest, num_base,
-			num_interpolated, sakura_Status_kOK, true);
-}
-
 TEST_F(Interpolate1DFloatTest, InputArrayNotAligned) {
 	// initial setup
 	size_t const num_base = 2;

@@ -91,7 +91,7 @@ protected:
 
 	sakura_Status initialize_result_;
 	size_t sakura_alignment_;
-	int polynomial_order_;
+	uint8_t polynomial_order_;
 
 	std::unique_ptr<double[]> storage_for_x_base_;
 	std::unique_ptr<float[]> storage_for_y_base_;
