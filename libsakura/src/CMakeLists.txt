@@ -51,6 +51,7 @@ set(MULTI_SOURCE bit_operation.cc  bool_filter_collection.cc convolution.cc
 	gridding.cc interpolation.cc logical_operation.cc numeric_operation.cc
 	baseline.cc statistics.cc)
 set(UNI_SOURCE gen_util.cc concurrent.cc optimized_implementation_factory.cc
+    gen_apply_calibration.cc
 	gen_bit_operation.cc gen_bool_filter_collection.cc gen_convolution.cc
 	gen_gridding.cc gen_interpolation.cc gen_logical_operation.cc
 	gen_numeric_operation.cc gen_baseline.cc gen_statistics.cc)

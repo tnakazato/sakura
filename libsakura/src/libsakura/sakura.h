@@ -632,6 +632,15 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float y_interpolated[/*num_array*num_interpolated*/]);
 
 /**
+ * @brief Apply position switch calibration.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
+		size_t num_scaling_factor,
+		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+		float const target[/*num_data*/], float const reference[/*num_data*/],
+		float result[/*num_data*/]);
+
+/**
  * @~japanese
  * @brief スムージングに使うカーネルタイプを列挙
  * @~english
