@@ -49,7 +49,7 @@ endif(SCALAR)
 
 set(MULTI_SOURCE bit_operation.cc  bool_filter_collection.cc convolution.cc
 	gridding.cc interpolation.cc logical_operation.cc numeric_operation.cc
-	baseline.cc statistics.cc)
+	baseline.cc statistics.cc apply_calibration.cc)
 set(UNI_SOURCE gen_util.cc concurrent.cc optimized_implementation_factory.cc
     gen_apply_calibration.cc
 	gen_bit_operation.cc gen_bool_filter_collection.cc gen_convolution.cc

@@ -12,6 +12,7 @@
 #include "libsakura/localdef.h"
 
 namespace {
+using ::LIBSAKURA_PREFIX::ApplyCalibration;
 using ::LIBSAKURA_PREFIX::Baseline;
 using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BoolFilterCollection;
@@ -73,6 +74,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
+::LIBSAKURA_PREFIX::ApplyCalibrationDefault const apply_calibration_default;
 ::LIBSAKURA_PREFIX::BaselineDefault const baseline_default;
 ::LIBSAKURA_PREFIX::BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 ::LIBSAKURA_PREFIX::BitOperationDefault<uint32_t> const bit_operation_default_uint32;
@@ -91,6 +93,9 @@ class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::Optimize
 public:
 	virtual char const *GetName() const {
 		return "Default";
+	}
+	virtual ApplyCalibration const *GetApplyCalibrationImpl() const {
+		return &apply_calibration_default;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_default_uint8;
@@ -134,6 +139,7 @@ public:
 
 } default_factory;
 
+::LIBSAKURA_PREFIX::ApplyCalibrationAfterSandyBridge const apply_calibration_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::BaselineAfterSandyBridge const baseline_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
@@ -152,6 +158,9 @@ class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX:
 public:
 	virtual char const *GetName() const {
 		return "AfterSandyBridge";
+	}
+	virtual ApplyCalibration const *GetApplyCalibrationImpl() const {
+		return &apply_calibration_after_sandy_bridge;
 	}
 	virtual Baseline const *GetBaselineImpl() const {
 		// return &baseline_after_sandy_bridge;

@@ -40,6 +40,7 @@ add_custom_target(logConfig
 	DEPENDS "${PROJECT_SOURCE_DIR}/libsakura.log4j"
 )
 
+add_executable(testApplyCalibration      apply_calibration.cc)
 add_executable(testBitOperation          bit_operation.cc)
 add_executable(testBoolFilterCollection  bool_filter_collection.cc)
 add_executable(testConvolution           convolution.cc)
@@ -51,6 +52,7 @@ add_executable(testLogicalOperation      logical_operation.cc)
 add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
 
+target_link_libraries (testApplyCalibration      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBitOperation          ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBoolFilterCollection  ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testConvolution           ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
@@ -64,6 +66,7 @@ target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST
 
 add_dependencies(testInit logConfig)
 
+add_custom_target(testApplyCalibrationRun      COMMAND ./testApplyCalibration      DEPENDS testApplyCalibration)
 add_custom_target(testBitOperationRun          COMMAND ./testBitOperation          DEPENDS testBitOperation)
 add_custom_target(testBoolFilterCollectionRun  COMMAND ./testBoolFilterCollection  DEPENDS testBoolFilterCollection)
 add_custom_target(testConvolutionRun           COMMAND ./testConvolution           DEPENDS testConvolution)
@@ -76,6 +79,7 @@ add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation   
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 
 add_custom_target(test
+    COMMAND ./testApplyCalibration
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
 	COMMAND ./testConvolution

@@ -8,6 +8,26 @@
 #include <libsakura/optimized_implementation_factory.h>
 
 namespace LIBSAKURA_PREFIX {
+class ApplyCalibrationDefault: public ApplyCalibration {
+public:
+	virtual ~ApplyCalibrationDefault() {
+	}
+	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
+			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+			float const target[/*num_data*/],
+			float const reference[/*num_data*/],
+			float result[/*num_data*/]) const;
+};
+
+class ApplyCalibrationAfterSandyBridge: public ApplyCalibration {
+public:
+	virtual ~ApplyCalibrationAfterSandyBridge() {
+	}
+	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
+			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+			float const target[/*num_data*/], float const reference[/*num_data*/],
+			float result[/*num_data*/]) const;
+};
 
 class BaselineDefault: public Baseline {
 public:
@@ -53,7 +73,8 @@ public:
 	virtual ~BitOperationDefault() {
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
-			DataType const data[/*num_data*/], bool const edit_mask[/*num_data*/],
+			DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 };
 
@@ -63,7 +84,8 @@ public:
 	virtual ~BitOperationAfterSandyBridge() {
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
-			DataType const data[/*num_data*/], bool const edit_mask[/*num_data*/],
+			DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 };
 
@@ -78,9 +100,9 @@ public:
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const;
 	virtual void ToBool(size_t num_data, DataType const data[/*num_data*/],
-			bool result[/*num_data*/]) const;
+	bool result[/*num_data*/]) const;
 	virtual void InvertBool(size_t num_data, bool const data[/*num_data*/],
-			bool result[/*num_data*/]) const;
+	bool result[/*num_data*/]) const;
 };
 
 template<typename DataType>
@@ -94,9 +116,9 @@ public:
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const;
 	virtual void ToBool(size_t num_data, DataType const data[/*num_data*/],
-			bool result[/*num_data*/]) const;
+	bool result[/*num_data*/]) const;
 	virtual void InvertBool(size_t num_data, bool const data[/*num_data*/],
-			bool result[/*num_data*/]) const;
+	bool result[/*num_data*/]) const;
 };
 
 class ConvolutionDefault: public Convolution {
@@ -104,13 +126,14 @@ public:
 	virtual ~ConvolutionDefault() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_channel,
-			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
-			bool use_fft,LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-			float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
+			float input_spectrum[/*num_channels*/],
+			bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const;
 	virtual void DestroyConvolve1DContext(
-			LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
 };
 
 class ConvolutionAfterSandyBridge: public Convolution {
@@ -118,13 +141,14 @@ public:
 	virtual ~ConvolutionAfterSandyBridge() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_channel,
-			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
-			bool use_fft,LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-			float input_spectrum[/*num_channels*/],bool const input_flag[/*num_channels*/],
+			float input_spectrum[/*num_channels*/],
+			bool const input_flag[/*num_channels*/],
 			float output_spectrum[/*num_channels*/]) const;
 	virtual void DestroyConvolve1DContext(
-			LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
 };
 
 class GriddingDefault: public Gridding {
@@ -198,7 +222,8 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class InterpolationAfterSandyBridge: public InterpolationImpl<XDataType, YDataType> {
+class InterpolationAfterSandyBridge: public InterpolationImpl<XDataType,
+		YDataType> {
 public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
