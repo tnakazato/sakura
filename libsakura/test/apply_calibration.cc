@@ -209,3 +209,49 @@ TEST_F(ApplyCalibrationTest, ShareInputOutputStorage) {
 	}
 }
 
+TEST_F(ApplyCalibrationTest, SingleScalingFactor) {
+	size_t const num_scaling_factor = 1;
+	size_t const num_data = 2;
+	SIMD_ALIGN
+	float scaling_factor[num_scaling_factor];
+	InitializeFloatArray(num_scaling_factor, scaling_factor, 0.5);
+	SIMD_ALIGN
+	float target[num_data];
+	InitializeFloatArray(num_data, target, 1.0, 1.0);
+	SIMD_ALIGN
+	float reference[num_data];
+	InitializeFloatArray(num_data, reference, 1.0, 0.5);
+	SIMD_ALIGN
+	float result[num_data];
+	SIMD_ALIGN
+	float expected[num_data];
+	InitializeFloatArray(num_data, expected, 0.0, 0.5);
+
+	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
+			scaling_factor, num_data, target, reference, result, expected,
+			true);
+}
+
+TEST_F(ApplyCalibrationTest, TooManyScalingFactor) {
+	size_t const num_scaling_factor = 3;
+	size_t const num_data = 2;
+	SIMD_ALIGN
+	float scaling_factor[num_scaling_factor];
+	InitializeFloatArray(num_scaling_factor, scaling_factor, 0.5, 1.0, -5.0);
+	SIMD_ALIGN
+	float target[num_data];
+	InitializeFloatArray(num_data, target, 1.0, 1.0);
+	SIMD_ALIGN
+	float reference[num_data];
+	InitializeFloatArray(num_data, reference, 1.0, 0.5);
+	SIMD_ALIGN
+	float result[num_data];
+	SIMD_ALIGN
+	float expected[num_data];
+	InitializeFloatArray(num_data, expected, 0.0, 1.0);
+
+	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
+			scaling_factor, num_data, target, reference, result, expected,
+			true);
+}
+
