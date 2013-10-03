@@ -148,6 +148,7 @@ protected:
 	}
 };
 
+
 /*
  * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
  * RESULT:
@@ -192,6 +193,7 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 	}
 }
 
+
 /*
  * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
  * with an array of 11 elements (num_data=11).
@@ -230,6 +232,55 @@ TEST_F(BoolFilterFloat, RangesInclusiveLengthEleven) {
 
 	if (verbose)
 		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * with a long array
+ * RESULT:
+ * result = [F, T, F, T, F, T, F, T, ...]
+ */
+TEST_F(BoolFilterFloat, RangesInclusiveLong) {
+	size_t const num_data(NUM_IN_LONG);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float lower[NUM_RANGE];
+	SIMD_ALIGN
+	float upper[ELEMENTSOF(lower)];
+	size_t const num_range(ELEMENTSOF(lower));
+
+	bool answer[] = { false, true, false, true, false, true, false, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+	// Copy bounds to aligned arrays
+	GetBounds(lower, upper);
+
+
+	double start, end;
+	size_t const num_repeat = 2000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_data << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_SetTrueFloatInRangesInclusive(
+				num_data, in_data, num_range, lower, upper, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -389,6 +440,55 @@ TEST_F(BoolFilterInt, RangesInclusiveLengthEleven) {
 
 /*
  * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+ * with a long array
+ * RESULT:
+ * result = [F, T, F, T, F, T, F, T, ...]
+ */
+TEST_F(BoolFilterInt, RangesInclusiveLong) {
+	size_t const num_data(NUM_IN_LONG);
+	SIMD_ALIGN
+	int in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	int lower[NUM_RANGE];
+	SIMD_ALIGN
+	int upper[ELEMENTSOF(lower)];
+	size_t const num_range(ELEMENTSOF(lower));
+
+	bool answer[] = { false, true, false, true, false, true, false, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+	// Copy bounds to aligned arrays
+	GetBounds(lower, upper);
+
+
+	double start, end;
+	size_t const num_repeat = 2000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_data << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_SetTrueIntInRangesInclusive(
+				num_data, in_data, num_range, lower, upper, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueIntInRangesInclusive
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -530,6 +630,50 @@ TEST_F(BoolFilterOther, Uint8ToBool) {
 }
 
 /*
+ * Test bool filter generation sakura_Uint8ToBool  (Long Test)
+ * INPUT:
+ * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ...repeated...]
+ * RESULT:
+ * result = [F, T, T, T, T, T, T, T, ... repeated...]
+ */
+TEST_F(BoolFilterOther, Uint8ToBoolLong) {
+	size_t const num_base(NUM_IN);
+	size_t const num_long(NUM_IN_LONG);
+	uint8_t const data_base[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
+	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
+	bool answer[] = { false, true, true, true, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data_base));
+	SIMD_ALIGN
+	uint8_t data_long[num_long];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(data_long)];
+
+	for (size_t i = 0; i < num_long; ++i) {
+		data_long[i] = data_base[i % num_base];
+	}
+
+	double start, end;
+	size_t const num_repeat = 100000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_long << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_Uint8ToBool(num_long, data_long, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_long; ++i) {
+		ASSERT_EQ(answer[i % num_base], result[i]);
+	}
+}
+
+/*
  * Test bool filter generation sakura_Uint8ToBool
  * with an array of zero elements (num_data=0).
  *
@@ -551,7 +695,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolLenghZero) {
 }
 
 /*
- * Test bool filter generation sakura_Uint32ToBool with
+ * Test bool filter generation sakura_Uint32ToBool
  * INPUT:
  * in = [0...000, 0...001, 0...010, 0...01000, 0...0100000000]
  * RESULT:
@@ -579,6 +723,50 @@ TEST_F(BoolFilterOther, Uint32ToBool) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_Uint8ToBool  (Long Test)
+ * INPUT:
+ * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ...repeated...]
+ * RESULT:
+ * result = [F, T, T, T, T, T, T, T, ... repeated...]
+ */
+TEST_F(BoolFilterOther, Uint32ToBoolLong) {
+	size_t const num_base(5);
+	size_t const num_long(NUM_IN_LONG);
+	uint32_t const data_base[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
+	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
+	bool answer[] = { false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data_base));
+	SIMD_ALIGN
+	uint32_t data_long[num_long];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(data_long)];
+
+	for (size_t i = 0; i < num_long; ++i) {
+		data_long[i] = data_base[i % num_base];
+	}
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_long << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_Uint32ToBool(num_long, data_long, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_long; ++i) {
+		ASSERT_EQ(answer[i % num_base], result[i]);
 	}
 }
 
@@ -1396,3 +1584,129 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
+
+//////////////// TEMPORARY ADDED FOR TEST ////////////////////////
+//class BoolFilterUint8: public BoolFilter<uint8_t> {
+//protected:
+//	virtual void PrepareInputs() {
+//		uint8_t const base_input[] = { 10, 5, 0, 5, 10, 15, 20, 15 };
+//		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
+//		STATIC_ASSERT(ELEMENTSOF(lower_) == 2);
+//		STATIC_ASSERT(ELEMENTSOF(upper_) == 2);
+//		lower_[0] = 3;
+//		lower_[1] = 13;
+//		upper_[0] = 7;
+//		upper_[1] = 17;
+//		for (size_t i = 0; i < NUM_IN; ++i) {
+//			data_[i] = base_input[i];
+//		}
+//	}
+//};
+//
+//TEST_F(BoolFilterUint8, RangesInclusiveLong) {
+//	size_t const num_data(NUM_IN_LONG);
+//	SIMD_ALIGN
+//	uint8_t in_data[num_data];
+//	SIMD_ALIGN
+//	bool result[ELEMENTSOF(in_data)];
+//	SIMD_ALIGN
+//	uint8_t lower[NUM_RANGE];
+//	SIMD_ALIGN
+//	uint8_t upper[ELEMENTSOF(lower)];
+//	size_t const num_range(ELEMENTSOF(lower));
+//
+//	bool answer[] = { false, true, false, true, false, true, false, true };
+//	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+//
+//	// Create long input data by repeating data_
+//	GetDataInLength(num_data, in_data);
+//	// bounds
+//	lower[0] = lower_[0];
+//	lower[1] = lower_[1];
+//	upper[0] = upper_[0];
+//	upper[1] = upper_[1];
+//
+//	double start, end;
+//	size_t const num_repeat = 2000;
+//	LIBSAKURA_SYMBOL(Status) status;
+//
+//	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+//			<< num_data << endl;
+//	start = sakura_GetCurrentTime();
+//	for (size_t i = 0; i < num_repeat; ++i) {
+//		status = sakura_SetTrueUint8InRangesInclusive(
+//				num_data, in_data, num_range, lower, upper, result);
+//	}
+//	end = sakura_GetCurrentTime();
+//	cout << "Elapse time of actual operation: " << end - start << " sec"
+//			<< endl;
+//
+//	// Verification
+//	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+//	}
+//}
+//
+//class BoolFilterUint32: public BoolFilter<uint32_t> {
+//protected:
+//	virtual void PrepareInputs() {
+//		uint32_t const base_input[] = { 10, 5, 0, 5, 10, 15, 20, 15 };
+//		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
+//		STATIC_ASSERT(ELEMENTSOF(lower_) == 2);
+//		STATIC_ASSERT(ELEMENTSOF(upper_) == 2);
+//		lower_[0] = 3;
+//		lower_[1] = 13;
+//		upper_[0] = 7;
+//		upper_[1] = 17;
+//		for (size_t i = 0; i < NUM_IN; ++i) {
+//			data_[i] = base_input[i];
+//		}
+//	}
+//};
+//
+//TEST_F(BoolFilterUint32, RangesInclusiveLong) {
+//	size_t const num_data(NUM_IN_LONG);
+//	SIMD_ALIGN
+//	uint32_t in_data[num_data];
+//	SIMD_ALIGN
+//	bool result[ELEMENTSOF(in_data)];
+//	SIMD_ALIGN
+//	uint32_t lower[NUM_RANGE];
+//	SIMD_ALIGN
+//	uint32_t upper[ELEMENTSOF(lower)];
+//	size_t const num_range(ELEMENTSOF(lower));
+//
+//	bool answer[] = { false, true, false, true, false, true, false, true };
+//	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+//
+//	// Create long input data by repeating data_
+//	GetDataInLength(num_data, in_data);
+//	// bounds
+//	lower[0] = lower_[0];
+//	lower[1] = lower_[1];
+//	upper[0] = upper_[0];
+//	upper[1] = upper_[1];
+//
+//	double start, end;
+//	size_t const num_repeat = 2000;
+//	LIBSAKURA_SYMBOL(Status) status;
+//
+//	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+//			<< num_data << endl;
+//	start = sakura_GetCurrentTime();
+//	for (size_t i = 0; i < num_repeat; ++i) {
+//		status = sakura_SetTrueUint32InRangesInclusive(
+//				num_data, in_data, num_range, lower, upper, result);
+//	}
+//	end = sakura_GetCurrentTime();
+//	cout << "Elapse time of actual operation: " << end - start << " sec"
+//			<< endl;
+//
+//	// Verification
+//	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+//	}
+//}
+//////////////// END TEMPORARY ADDED FOR ////////////////////////
