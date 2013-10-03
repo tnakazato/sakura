@@ -611,6 +611,9 @@ typedef enum {
  * @param[out] y_interpolated storage for interpolation result. Its length must be
  * @a num_interpolated.
  * @return status code.
+ *
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DFloat)(
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interoplation_method, uint8_t polynomial_order,
