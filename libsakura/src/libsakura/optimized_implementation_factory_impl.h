@@ -8,25 +8,28 @@
 #include <libsakura/optimized_implementation_factory.h>
 
 namespace LIBSAKURA_PREFIX {
-class ApplyCalibrationDefault: public ApplyCalibration {
+
+template<class DataType>
+class ApplyCalibrationDefault: public ApplyCalibration<DataType> {
 public:
 	virtual ~ApplyCalibrationDefault() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-			float const target[/*num_data*/],
-			float const reference[/*num_data*/],
-			float result[/*num_data*/]) const;
+			DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+			DataType const target[/*num_data*/],
+			DataType const reference[/*num_data*/],
+			DataType result[/*num_data*/]) const;
 };
 
-class ApplyCalibrationAfterSandyBridge: public ApplyCalibration {
+template<class DataType>
+class ApplyCalibrationAfterSandyBridge: public ApplyCalibration<DataType> {
 public:
 	virtual ~ApplyCalibrationAfterSandyBridge() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-			float const target[/*num_data*/], float const reference[/*num_data*/],
-			float result[/*num_data*/]) const;
+			DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+			DataType const target[/*num_data*/], DataType const reference[/*num_data*/],
+			DataType result[/*num_data*/]) const;
 };
 
 class BaselineDefault: public Baseline {

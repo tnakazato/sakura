@@ -12,15 +12,16 @@
 
 namespace LIBSAKURA_PREFIX {
 
+template<class DataType>
 class ApplyCalibration {
 public:
 	virtual ~ApplyCalibration() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-			float const target[/*num_data*/],
-			float const reference[/*num_data*/],
-			float result[/*num_data*/]) const = 0;
+			DataType const scaling_factor[/*num_scaling_factor*/],
+			size_t num_data, DataType const target[/*num_data*/],
+			DataType const reference[/*num_data*/],
+			DataType result[/*num_data*/]) const = 0;
 };
 
 class Baseline {
@@ -205,7 +206,7 @@ public:
 	virtual ~OptimizedImplementationFactory() {
 	}
 	virtual char const *GetName() const = 0;
-	virtual ApplyCalibration const *GetApplyCalibrationImpl() const = 0;
+	virtual ApplyCalibration<float> const *GetApplyCalibrationImpl() const = 0;
 	virtual Baseline const *GetBaselineImpl() const = 0;
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const = 0;
 	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const = 0;

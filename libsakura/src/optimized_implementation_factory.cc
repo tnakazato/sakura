@@ -74,7 +74,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	}
 }
 
-::LIBSAKURA_PREFIX::ApplyCalibrationDefault const apply_calibration_default;
+::LIBSAKURA_PREFIX::ApplyCalibrationDefault<float> const apply_calibration_default;
 ::LIBSAKURA_PREFIX::BaselineDefault const baseline_default;
 ::LIBSAKURA_PREFIX::BitOperationDefault<uint8_t> const bit_operation_default_uint8;
 ::LIBSAKURA_PREFIX::BitOperationDefault<uint32_t> const bit_operation_default_uint32;
@@ -94,7 +94,7 @@ public:
 	virtual char const *GetName() const {
 		return "Default";
 	}
-	virtual ApplyCalibration const *GetApplyCalibrationImpl() const {
+	virtual ApplyCalibration<float> const *GetApplyCalibrationImpl() const {
 		return &apply_calibration_default;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
@@ -139,7 +139,7 @@ public:
 
 } default_factory;
 
-::LIBSAKURA_PREFIX::ApplyCalibrationAfterSandyBridge const apply_calibration_after_sandy_bridge;
+::LIBSAKURA_PREFIX::ApplyCalibrationAfterSandyBridge<float> const apply_calibration_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::BaselineAfterSandyBridge const baseline_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint8_t> const bit_operation_after_sandy_bridge_uint8;
 ::LIBSAKURA_PREFIX::BitOperationAfterSandyBridge<uint32_t> const bit_operation_after_sandy_bridge_uint32;
@@ -159,7 +159,7 @@ public:
 	virtual char const *GetName() const {
 		return "AfterSandyBridge";
 	}
-	virtual ApplyCalibration const *GetApplyCalibrationImpl() const {
+	virtual ApplyCalibration<float> const *GetApplyCalibrationImpl() const {
 		return &apply_calibration_after_sandy_bridge;
 	}
 	virtual Baseline const *GetBaselineImpl() const {
