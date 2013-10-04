@@ -129,16 +129,16 @@ TEST_F(ApplyCalibrationTest, InvaidNumberOfScalingFactor) {
 
 TEST_F(ApplyCalibrationTest, ZeroDivision) {
 	size_t const num_scaling_factor = 1;
-	size_t const num_data = 1;
+	size_t const num_data = 2;
 	SIMD_ALIGN
 	float scaling_factor[num_scaling_factor];
 	InitializeFloatArray(num_scaling_factor, scaling_factor, 1.0);
 	SIMD_ALIGN
 	float target[num_data];
-	InitializeFloatArray(num_data, target, 1.0);
+	InitializeFloatArray(num_data, target, 1.0, -1.0);
 	SIMD_ALIGN
 	float reference[num_data];
-	InitializeFloatArray(num_data, reference, 0.0);
+	InitializeFloatArray(num_data, reference, 0.0, 0.0);
 	SIMD_ALIGN
 	float result[num_data];
 
@@ -150,6 +150,8 @@ TEST_F(ApplyCalibrationTest, ZeroDivision) {
 	// Since isinf sometimes didn't work, additional constraint is added.
 	EXPECT_TRUE(isinf(result[0]) || result[0] > FLT_MAX)
 			<< "result must be inf! (" << result[0] << ")";
+	EXPECT_TRUE(isinf(result[1]) || result[1] < -FLT_MAX)
+			<< "result must be -inf! (" << result[1] << ")";
 }
 
 TEST_F(ApplyCalibrationTest, BasicTest) {
