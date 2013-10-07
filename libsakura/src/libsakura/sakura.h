@@ -635,7 +635,68 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float y_interpolated[/*num_array*num_interpolated*/]);
 
 /**
+ * @japanese
+ * @brief position switch calibrationを実行する。
+ * @details
+ * position switch calibrationを実行する。
+ * 具体的には、
+ * @f[
+ *  {\rm result} = {\rm scaling\_factor} \times \frac{{\rm target} - {\rm reference}}
+ *               {\rm reference}
+ * @f]
+ * を実行する。これは、position switch観測の温度較正
+ * @f[
+ *  \rm{calibrated} = T_{\rm sys} \times \frac{{\rm ON} - {\rm OFF}}{\rm OFF}
+ * @f]
+ * に相当する処理である。ただし、@f$ T_{\rm{sys}}@f$ はシステム雑音温度、ONおよびOFFはそれぞれ
+ * on sourceおよびoff sourceの生データである。
+ * @n
+ * @n
+ * 戻り値は終了ステータスである。正常終了の場合、
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
+ * を返す。
+ * 引数に不正がある場合には
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * を返す。
+ * @n
+ * @n
+ * インプレースな処理がを許す。すなわち、@a result は@a target もしくは@a reference と同じ配列を渡してよい。
+ * その場合、@a target もしくは@a reference は上書きされる。
+ * @pre
+ * @a num_scaling_factor は1もしくは@a num_data と等しくなければならない。1は周波数に依存しない、または周波数方向に
+ * 平均されたシステム雑音温度のみが与えられた場合、@a num_data はシステム雑音温度が周波数に依存する場合に相当する。
+ *
+ * @param[in] num_scaling_factor @a scaling_factor の要素数。
+ * 1または@a num_data のいずれかでなければならない。
+ * @param[in] scaling_factor スケーリング因子。システム雑音温度に相当する。
+ * 要素数は @a num_scaling_factor でなければならない。
+ * must-be-aligned
+ * @param[in] num_data データの要素数。
+ * @param[in] target ターゲットデータ。on sourceデータに相当する。
+ * 要素数は@a num_data でなければならない。
+ * must-be-aligned
+ * @param[in] reference 参照データ。off sourceデータに相当する。
+ * 要素数は@a num_data でなければならない。
+ * must-be-aligned
+ * @param[out] result 計算結果。較正済みデータに相当する。
+ * @a target または@a reference と同じ配列を渡してもよい。
+ * 要素数は@a num_data でなければならない。
+ * must-be-aligned
+ *
+ * @return 終了ステータス。
+ * @english
  * @brief Apply position switch calibration.
+ * @param[in] num_scaling_factor
+ * @param[in] scaling_factor
+ * @param[in] num_data
+ * @param[in] target
+ * @param[in] reference
+ * @param[out] result
+ *
+ * @return status code.
+ *
+ * @~
+ * MT-safe
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
 		size_t num_scaling_factor,
