@@ -73,18 +73,24 @@ inline void ToBool(size_t num_data, DataType const *data, bool *result) {
 	}
 }
 
-inline void InvertBoolScalar(size_t num_data, bool const *data, bool *result) {
+inline void InvertBool(size_t num_data, bool const *data, bool *result) {
 //	std::cout << "Invoking InvertBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 
+	uint8_t const *data8 = reinterpret_cast<uint8_t const *>(data);
+	uint8_t *result8 = reinterpret_cast<uint8_t *>(result);
 	uint8_t true8(static_cast<uint8_t>(true));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data8));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result8));
+	STATIC_ASSERT(sizeof(data8[0]) == sizeof(data[0]));
+	STATIC_ASSERT(sizeof(result8[0]) == sizeof(result[0]));
 	STATIC_ASSERT(sizeof(data[0]) == sizeof(true8));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 	// No operation is done when num_data==0.
 	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] ^ true8);
+		result8[i] = (data8[i] ^ true8);
 	}
 }
 
@@ -156,7 +162,7 @@ template<typename DataType>
 void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::InvertBool(
 		size_t num_data,
 		bool const data[/*num_data*/], bool result[/*num_data*/]) const {
-	::InvertBoolScalar(num_data, data, result);
+	::InvertBool(num_data, data, result);
 }
 
 template class ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<uint8_t> ;

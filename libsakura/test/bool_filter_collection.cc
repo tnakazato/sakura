@@ -580,6 +580,52 @@ TEST_F(BoolFilterOther, InvertBool) {
 
 /*
  * Test bool filter generation sakura_InvertBool
+ * with a long array
+ * INPUT:
+ * in = [T, F, F, T]
+ * RESULT:
+ * result = [F, T, T, F]
+ */
+TEST_F(BoolFilterOther, InvertBoolLong) {
+	size_t const num_base(4);
+	size_t const num_long(NUM_IN_LONG);
+	SIMD_ALIGN
+	bool const data_base[] = { true, false, false, true };
+	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
+	bool answer[] = { false, true, true, false };
+	STATIC_ASSERT(ELEMENTSOF(answer) == num_base);
+	SIMD_ALIGN
+	bool data_long[num_long];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(data_long)];
+
+	for (size_t i = 0; i < num_long; ++i) {
+		data_long[i] = data_base[i % num_base];
+	}
+
+	double start, end;
+	size_t const num_repeat = 100000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_long << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_InvertBool(num_long, data_long, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_long; ++i) {
+		ASSERT_EQ(answer[i % num_base], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_InvertBool
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
