@@ -77,14 +77,12 @@ inline void InvertBoolScalar(size_t num_data, bool const *data, bool *result) {
 //	std::cout << "Invoking InvertBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	// No operation is done when num_data==0.
-	if (num_data == 0)
-		return;
 
 	uint8_t true8(static_cast<uint8_t>(true));
 	STATIC_ASSERT(sizeof(data[0]) == sizeof(true8));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
+	// No operation is done when num_data==0.
 	for (size_t i = 0; i < num_data; ++i) {
 		result[i] = (data[i] ^ true8);
 	}
