@@ -79,6 +79,10 @@ public:
 			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
+	virtual void OperateBitsOr(DataType bit_mask, size_t num_data,
+			DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
+			DataType result[/*num_data*/]) const;
 };
 
 template<typename DataType>
@@ -87,6 +91,10 @@ public:
 	virtual ~BitOperationAfterSandyBridge() {
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
+			DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
+			DataType result[/*num_data*/]) const;
+	virtual void OperateBitsOr(DataType bit_mask, size_t num_data,
 			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;

@@ -293,7 +293,8 @@ typedef struct {
 		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]);
-/**
+
+ /**
  * @~english
  * @brief Invoke bit operation AND between a a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
@@ -352,6 +353,68 @@ typedef struct {
  * @copybrief sakura_OperateBitsUint8And
  * @copydetails sakura_OperateBitsUint8And
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+
+ /**
+ * @~english
+ * @brief Invoke bit operation OR between a a bit mask and an array.
+ * @details Invokes the following bit operation to @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? (bit_maks | data[i]) : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked between this array and @a bit_mask.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief ビットマスクと一次元配列のビット和を取る。
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? (bit_maks | data[i]) : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット和を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8Or
+ * @copydetails sakura_OperateBitsUint8Or
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
@@ -431,7 +494,8 @@ typedef struct {
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
-/**
+
+ /**
  * @~english
  * @brief Convert an input array to a boolean array.
  * @details Returns true if the corresponding element in input array != 0.
