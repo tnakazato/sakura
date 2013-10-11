@@ -299,11 +299,19 @@ typedef struct {
  * @brief Invoke bit operation AND between a a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (bit_maks & data[i]) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
  * @endcode
  *
  * @note
  * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @note
+ * The function can also be used to invoke material nonimplication of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke material nonimplecation.
+ * In that case, the function returns the result of following operation,
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] & ~bit_maks) : data[i]
+ * @endcode
  *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
  * between this value and the array, @a data.
@@ -324,13 +332,22 @@ typedef struct {
  * @return status code
  * @~japanese
  * @brief ビットマスクと一次元配列のビット積を取る。
- * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
+ * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (bit_maks & data[i]) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
  * @endcode
  *
  * @note
  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の非含意のビット演算にも使用できる。
+ * 非含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。
+ * これにより、次のような演算の結果が得られることになる。
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] & ~bit_maks) : data[i]
+ * @endcode
  *
  * @param[in] bit_mask ビットマスク
  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
@@ -361,7 +378,7 @@ typedef struct {
  * @brief Invoke bit operation OR between a a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (bit_maks | data[i]) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
  * @endcode
  *
  * @note
@@ -388,7 +405,7 @@ typedef struct {
  * @brief ビットマスクと一次元配列のビット和を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (bit_maks | data[i]) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
  * @endcode
  *
  * @note
