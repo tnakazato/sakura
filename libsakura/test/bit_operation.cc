@@ -738,12 +738,13 @@ TEST_F(BitOperation32, AndFailNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
+
 /*
- * Test bit operation by sakura_OperateBitsUint8Nonimplication
+ * Test Material Nonimplication bit operation using sakura_OperateBitsUint8And
  * RESULT:
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000001, 00000000, 00000001 ]
  */
-TEST_F(BitOperation8, Nonimplication) {
+TEST_F(BitOperation8, NonImplication) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	uint8_t data[num_data];
@@ -761,7 +762,7 @@ TEST_F(BitOperation8, Nonimplication) {
 		PrintArray("mask", num_data, edit_mask);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8And(~bit_mask_,
 			num_data, data, edit_mask, result);
 
 	if (verbose)
@@ -775,105 +776,12 @@ TEST_F(BitOperation8, Nonimplication) {
 }
 
 /*
- * Test bit operation by sakura_OperateBitsUint8Nonimplication in-place operation (&out == &in)
- * RESULT:
- * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000001, 00000000, 00000001 ]
- */
-TEST_F(BitOperation8, NonimplicationInPlace) {
-	size_t const num_data(12);
-	SIMD_ALIGN
-	uint8_t data[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	uint8_t answer[] = { 0, 1, 2, 3, 0, 1, 0, 1 };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	GetInputDataInLength(num_data, data, edit_mask);
-	if (verbose) {
-		PrintArray("in (before)", num_data, data);
-		PrintArray("mask", num_data, edit_mask);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data, edit_mask, data);
-
-	if (verbose)
-		PrintArray("in (after)", num_data, data);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], data[i]);
-	}
-}
-
-/*
- * Test bit operation by sakura_OperateBitsUint8Nonimplication with an array of length 11
- * RESULT:
- * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000001, 00000000, 00000001,
- *        00000000, 00000001, 00000010 ]
- */
-TEST_F(BitOperation8, NonimplicationLengthEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	uint8_t data[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(data)];
-
-	uint8_t answer[] = { 0, 1, 2, 3, 0, 1, 0, 1 };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating in_data and edit_mask_
-	GetInputDataInLength(num_data, data, edit_mask);
-
-	if (verbose) {
-		PrintArray("data", num_data, data);
-//		PrintArray("edit_mask", num_in, edit_mask);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bit operation by sakura_OperateBitsUint8Nonimplication
- * with an array of length zero
- *
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kOK)
- */
-TEST_F(BitOperation8, NonimplicationLengthZero) {
-	SIMD_ALIGN
-	uint8_t data[0];
-	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	size_t const num_in(ELEMENTSOF(data));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_in, data, edit_mask, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/*
- * Long test of bit operation by sakura_OperateBitsUint8Nonimplication with a large array
+ * Long test of Material Nonimplication bit operation of a large array
+ * using sakura_OperateBitsUint8And
  * RESULT:
  * out = [00000000, 00000001, 00000010, 00000011, 00000000, 00000001, 00000000, 00000001, .... repeated... ]
  */
-TEST_F(BitOperation8, NonimplicationLong) {
+TEST_F(BitOperation8, NonImplicationLong) {
 	SIMD_ALIGN
 	uint8_t data_long[NUM_IN_LONG];
 	SIMD_ALIGN
@@ -897,7 +805,7 @@ TEST_F(BitOperation8, NonimplicationLong) {
 			<< num_large << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_OperateBitsUint8Nonimplication(bit_mask_, num_large, data_long,
+		status = sakura_OperateBitsUint8And(~bit_mask_, num_large, data_long,
 				edit_mask_long, result_long);
 	}
 	end = sakura_GetCurrentTime();
@@ -912,11 +820,11 @@ TEST_F(BitOperation8, NonimplicationLong) {
 }
 
 /*
- * Test bit operation by sakura_OperateBitsUint32Nonimplication
+ * Test Material Nonimplication bit operation using sakura_OperateBitsUint32And
  * RESULT:
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...001, 0...000, 0...001 ]
  */
-TEST_F(BitOperation32, Nonimplication) {
+TEST_F(BitOperation32, NonImplication) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	uint32_t data[num_data];
@@ -934,7 +842,7 @@ TEST_F(BitOperation32, Nonimplication) {
 		PrintArray("mask", num_data, edit_mask);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32And(~bit_mask_,
 			num_data, data, edit_mask, result);
 
 	if (verbose)
@@ -948,81 +856,12 @@ TEST_F(BitOperation32, Nonimplication) {
 }
 
 /*
- * Test bit operation by sakura_OperateBitsUint32Nonimplication in-place operation (&out == &in)
- * RESULT:
- * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...001, 0...000, 0...001 ]
- */
-TEST_F(BitOperation32, NonimplicationInPlace) {
-	size_t const num_data(10);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	uint32_t answer[] = { 0, 1, 2, 3, 0, 1, 0, 1 };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	GetInputDataInLength(num_data, data, edit_mask);
-	if (verbose)
-		PrintArray("data (before)", num_data, data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, edit_mask, data);
-
-	if (verbose)
-		PrintArray("data (after)", num_data, data);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], data[i]);
-	}
-}
-
-/*
- * Test bit operation by sakura_OperateBitsUint32Nonimplication with an array of length 11
- * RESULT:
- * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...001, 0...000, 0...001,
- *        0...000, 0...001, 0...010 ]
- */
-TEST_F(BitOperation32, NonimplicationLengthEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(data)];
-
-	uint32_t answer[] = { 0, 1, 2, 3, 0, 1, 0, 1 };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating in_data and edit_mask_
-	GetInputDataInLength(num_data, data, edit_mask);
-
-	if (verbose) {
-		PrintArray("data", num_data, data);
-//		PrintArray("edit_mask", num_in, edit_mask);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Long test of bit operation by sakura_OperateBitsUint32Nonimplication with a large array
+ * Long test of Material Nonimplication bit operation of a large array
+ * using sakura_OperateBitsUint32And
  * RESULT:
  * out = [0...000, 0...001, 0...010, 0...011, 0...000, 0...001, 0...000, 0...001, .... repeated... ]
  */
-TEST_F(BitOperation32, NonimplicationLong) {
+TEST_F(BitOperation32, NonImplicationLong) {
 	SIMD_ALIGN
 	uint32_t data_long[NUM_IN_LONG];
 	SIMD_ALIGN
@@ -1045,7 +884,7 @@ TEST_F(BitOperation32, NonimplicationLong) {
 			<< num_large << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_OperateBitsUint32Nonimplication(bit_mask_, num_large, data_long,
+		status = sakura_OperateBitsUint32And(~bit_mask_, num_large, data_long,
 				edit_mask_long, result_long);
 	}
 	end = sakura_GetCurrentTime();
@@ -1059,288 +898,6 @@ TEST_F(BitOperation32, NonimplicationLong) {
 	}
 }
 
-/*
- * Test  bit operation by sakura_OperateBitsUint32Nonimplication
- * with an array of length zero
- *
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kOK)
- */
-TEST_F(BitOperation32, NonimplicationLengthZero) {
-	SIMD_ALIGN
-	uint32_t data[0];
-	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	size_t const num_data(ELEMENTSOF(data));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/*
- * Test failure cases of sakura_OperateBitsUint8Nonimplication
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BitOperation8, NonimplicationFailNullData) {
-	size_t const num_data(NUM_IN);
-	uint8_t dummy[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(dummy)];
-	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(dummy)];
-
-	uint8_t *data_null = nullptr;
-	// assert(data_null == nullptr);
-
-	GetInputDataInLength(num_data, dummy, edit_mask);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data_null, edit_mask, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation8, NonimplicationFailNullMask) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	uint8_t data[num_data];
-
-	bool dummy[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint8_t out[ELEMENTSOF(data)];
-
-	bool *mask_null = nullptr;
-
-	GetInputDataInLength(num_data, data, dummy);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data, mask_null, out);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation8, NonimplicationFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	uint8_t data[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-
-	uint8_t *result_null = nullptr;
-
-	GetInputDataInLength(num_data, data, edit_mask);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result_null);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BitOperation8, NonimplicationFailNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint8_t data[num_elements];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(data)];
-
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-	// Define unaligned array
-	uint8_t *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data_shift, edit_mask, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation8, NonimplicationFailNotAlignedMask) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint8_t data[num_elements];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(data)];
-
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-	// Define unaligned array
-	bool *mask_shift = &edit_mask[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data, mask_shift, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation8, NonimplicationFailNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint8_t data[num_elements];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(data)];
-
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-	// Define unaligned array
-	uint8_t *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result_shift);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_OperateBitsUint32Nonimplication
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BitOperation32, NonimplicationFailNullData) {
-	size_t const num_data(NUM_IN);
-	uint32_t dummy[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(dummy)];
-	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(dummy)];
-
-	uint32_t *data_null = nullptr;
-
-	GetInputDataInLength(num_data, dummy, edit_mask);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data_null, edit_mask, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation32, NonimplicationFailNullMask) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-
-	bool dummy[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint32_t out[ELEMENTSOF(data)];
-
-	bool *mask_null = nullptr;
-
-	GetInputDataInLength(num_data, data, dummy);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, mask_null, out);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation32, NonimplicationFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-
-	uint32_t *result_null = nullptr;
-
-	GetInputDataInLength(num_data, data, edit_mask);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result_null);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BitOperation32, NonimplicationFailNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint32_t data[num_elements];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(data)];
-
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-	// Define unaligned array
-	uint32_t *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data_shift, edit_mask, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation32, NonimplicationFailNotAlignedMask) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint32_t data[num_elements];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(data)];
-
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-	// Define unaligned array
-	bool *mask_shift = &edit_mask[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, mask_shift, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BitOperation32, NonimplicationFailNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint32_t data[num_elements];
-	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(data)];
-
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-	// Define unaligned array
-	uint32_t *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Nonimplication(bit_mask_,
-			num_data, data, edit_mask, result_shift);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
 
 /*
  * Test bit operation OR by sakura_OperateBitsUint8Or
