@@ -39,6 +39,7 @@ message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -fopt-info-vec-optimized")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
+#set(ADDITIONAL_CXXFLAGS_Default "-mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
 #set(ADDITIONAL_CXXFLAGS_Default "-march=core2 -mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
 set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
 if(SCALAR)
