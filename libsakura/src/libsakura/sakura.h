@@ -457,6 +457,65 @@ typedef struct {
 
 /**
  * @~english
+ * @brief Invoke bitwise NOT operation of an array.
+ * @details Invokes the following bit operation to @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? ~data[i] : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked to this array.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation to @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 一次元配列をビット反転する。
+ * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? ~data[i] : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data に対するビット反転が実行される。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(size_t num_data,
+		uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8Not
+ * @copydetails sakura_OperateBitsUint8Not
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
+		size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+
+/**
+ * @~english
  * @brief Invoke bit operation OR between a a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
