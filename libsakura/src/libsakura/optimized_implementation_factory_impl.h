@@ -15,8 +15,8 @@ public:
 	virtual ~ApplyCalibrationDefault() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-			DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-			DataType const target[/*num_data*/],
+			DataType const scaling_factor[/*num_scaling_factor*/],
+			size_t num_data, DataType const target[/*num_data*/],
 			DataType const reference[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 };
@@ -27,8 +27,9 @@ public:
 	virtual ~ApplyCalibrationAfterSandyBridge() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-			DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-			DataType const target[/*num_data*/], DataType const reference[/*num_data*/],
+			DataType const scaling_factor[/*num_scaling_factor*/],
+			size_t num_data, DataType const target[/*num_data*/],
+			DataType const reference[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 };
 
@@ -79,6 +80,10 @@ public:
 			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
+	virtual void OperateBitsConverseNonImplication(DataType bit_mask,
+			size_t num_data, DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
+			DataType result[/*num_data*/]) const;
 	virtual void OperateBitsOr(DataType bit_mask, size_t num_data,
 			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
@@ -92,6 +97,10 @@ public:
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
 			DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
+			DataType result[/*num_data*/]) const;
+	virtual void OperateBitsConverseNonImplication(DataType bit_mask,
+			size_t num_data, DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 	virtual void OperateBitsOr(DataType bit_mask, size_t num_data,

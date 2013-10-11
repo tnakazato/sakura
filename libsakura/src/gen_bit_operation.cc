@@ -65,6 +65,67 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+// Bit operation, Converse Nonimplication
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bitop =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint8();
+	try {
+		bitop->OperateBitsConverseNonImplication(bit_mask, num_data, data,
+				edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bitop =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint32();
+	try {
+		bitop->OperateBitsConverseNonImplication(bit_mask, num_data, data,
+				edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
 // Bit operation OR
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],

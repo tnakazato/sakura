@@ -738,7 +738,6 @@ TEST_F(BitOperation32, AndFailNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
 /*
  * Test Material Nonimplication bit operation using sakura_OperateBitsUint8And
  * RESULT:
@@ -898,6 +897,637 @@ TEST_F(BitOperation32, NonImplicationLong) {
 	}
 }
 
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint8ConverseNonImplication
+ * RESULT:
+ * out = [ 00000000, 00000001, 00000010, 00000011, 00000010, 00000010, 00000000, 00000000 ]
+ */
+TEST_F(BitOperation8, ConverseNonImplication) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	uint8_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose) {
+		PrintArray("in (before)", num_data, data);
+		PrintArray("mask", num_data, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint8ConverseNonImplication in-place operation (&out == &in)
+ * RESULT:
+ * out = [ 00000000, 00000001, 00000010, 00000011, 00000010, 00000010, 00000000, 00000000 ]
+ */
+TEST_F(BitOperation8, ConverseNonImplicationInPlace) {
+	size_t const num_data(12);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	uint8_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose) {
+		PrintArray("in (before)", num_data, data);
+		PrintArray("mask", num_data, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, data);
+
+	if (verbose)
+		PrintArray("in (after)", num_data, data);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], data[i]);
+	}
+}
+
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint8ConverseNonImplication with an array of length 11
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 00000010, 00000010, 00000000, 00000000,
+ *        00000000, 00000001, 00000010 ]
+ */
+TEST_F(BitOperation8, ConverseNonImplicationLengthEleven) {
+	size_t const num_data(11);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	uint8_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_data, data, edit_mask);
+
+	if (verbose) {
+		PrintArray("data", num_data, data);
+//		PrintArray("edit_mask", num_in, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint8ConverseNonImplication with an array of length zero
+ *
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kOK)
+ */
+TEST_F(BitOperation8, ConverseNonImplicationLengthZero) {
+	SIMD_ALIGN
+	uint8_t data[0];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	size_t const num_in(ELEMENTSOF(data));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_in,
+					data, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/*
+ * Long test of bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint8ConverseNonImplication with a large array
+ * RESULT:
+ * out = [ 00000000, 00000001, 00000010, 00000011, 00000010, 00000010, 00000000, 00000000, .... repeated... ]
+ */
+TEST_F(BitOperation8, ConverseNonImplicationLong) {
+	SIMD_ALIGN
+	uint8_t data_long[NUM_IN_LONG];
+	SIMD_ALIGN
+	bool edit_mask_long[ELEMENTSOF(data_long)];
+	SIMD_ALIGN
+	uint8_t result_long[ELEMENTSOF(data_long)];
+
+	uint8_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	size_t const num_large(ELEMENTSOF(data_long));
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, data_long, edit_mask_long);
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint8ConverseNonImplication(bit_mask_,
+				num_large, data_long, edit_mask_long, result_long);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_large; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result_long[i]);
+	}
+}
+
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint32ConverseNonImplication
+ * RESULT:
+ * out = [ 0...000, 0...001, 0...010, 0...011, 0...010, 0...010, 0...000, 0...000 ]
+ */
+TEST_F(BitOperation32, ConverseNonImplication) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	uint32_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose) {
+		PrintArray("data", num_data, data);
+		PrintArray("mask", num_data, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint32ConverseNonImplication in-place operation (&out == &in)
+ * RESULT:
+ * out = [ 0...000, 0...001, 0...010, 0...011, 0...010, 0...010, 0...000, 0...000 ]
+ */
+TEST_F(BitOperation32, ConverseNonImplicationInPlace) {
+	size_t const num_data(10);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	uint32_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose)
+		PrintArray("data (before)", num_data, data);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, data);
+
+	if (verbose)
+		PrintArray("data (after)", num_data, data);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], data[i]);
+	}
+}
+
+/*
+ * Test bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint32ConverseNonImplication with an array of length 11
+ * RESULT:
+ * out = [ 0...000, 0...001, 0...010, 0...011, 0...010, 0...010, 0...000, 0...000,
+ *        0...000, 0...001, 0...010 ]
+ */
+TEST_F(BitOperation32, ConverseNonImplicationLengthEleven) {
+	size_t const num_data(11);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	uint32_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_data, data, edit_mask);
+
+	if (verbose) {
+		PrintArray("data", num_data, data);
+//		PrintArray("edit_mask", num_in, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Long test of bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint32ConverseNonImplication with a large array
+ * RESULT:
+ * out = [ 0...000, 0...001, 0...010, 0...011, 0...010, 0...010, 0...000, 0...000, .... repeated... ]
+ */
+TEST_F(BitOperation32, ConverseNonImplicationLong) {
+	SIMD_ALIGN
+	uint32_t data_long[NUM_IN_LONG];
+	SIMD_ALIGN
+	uint32_t result_long[ELEMENTSOF(data_long)];
+	SIMD_ALIGN
+	bool edit_mask_long[ELEMENTSOF(data_long)];
+
+	uint32_t answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	size_t const num_large(NUM_IN_LONG);
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, data_long, edit_mask_long);
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint32ConverseNonImplication(bit_mask_,
+				num_large, data_long, edit_mask_long, result_long);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_large; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result_long[i]);
+	}
+}
+
+/*
+ * Test  bit operation, Converse Nonimplication,
+ * by sakura_OperateBitsUint32ConverseNonImplication with an array of length zero
+ *
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kOK)
+ */
+TEST_F(BitOperation32, ConverseNonImplicationLengthZero) {
+	SIMD_ALIGN
+	uint32_t data[0];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	size_t const num_data(ELEMENTSOF(data));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/*
+ * Test failure cases of sakura_OperateBitsUint8ConverseNonImplication
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BitOperation8, ConverseNonImplicationFailNullData) {
+	size_t const num_data(NUM_IN);
+	uint8_t dummy[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(dummy)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(dummy)];
+
+	uint8_t *data_null = nullptr;
+	// assert(data_null == nullptr);
+
+	GetInputDataInLength(num_data, dummy, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data_null, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, ConverseNonImplicationFailNullMask) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+
+	bool dummy[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t out[ELEMENTSOF(data)];
+
+	bool *mask_null = nullptr;
+
+	GetInputDataInLength(num_data, data, dummy);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, mask_null, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, ConverseNonImplicationFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+
+	uint8_t *result_null = nullptr;
+
+	GetInputDataInLength(num_data, data, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result_null);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BitOperation8, ConverseNonImplicationFailNotAlignedData) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	uint8_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	// Define unaligned array
+	uint8_t *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data_shift, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, ConverseNonImplicationFailNotAlignedMask) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	uint8_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	// Define unaligned array
+	bool *mask_shift = &edit_mask[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, mask_shift, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation8, ConverseNonImplicationFailNotAlignedResult) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	uint8_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	// Define unaligned array
+	uint8_t *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint8ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result_shift);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test failure cases of sakura_OperateBitsUint32ConverseNonImplication
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BitOperation32, ConverseNonImplicationFailNullData) {
+	size_t const num_data(NUM_IN);
+	uint32_t dummy[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(dummy)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(dummy)];
+
+	uint32_t *data_null = nullptr;
+
+	GetInputDataInLength(num_data, dummy, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data_null, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, ConverseNonImplicationFailNullMask) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+
+	bool dummy[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t out[ELEMENTSOF(data)];
+
+	bool *mask_null = nullptr;
+
+	GetInputDataInLength(num_data, data, dummy);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, mask_null, out);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, ConverseNonImplicationFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+
+	uint32_t *result_null = nullptr;
+
+	GetInputDataInLength(num_data, data, edit_mask);
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result_null);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BitOperation32, ConverseNonImplicationFailNotAlignedData) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	uint32_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	// Define unaligned array
+	uint32_t *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data_shift, edit_mask, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, ConverseNonImplicationFailNotAlignedMask) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	uint32_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	// Define unaligned array
+	bool *mask_shift = &edit_mask[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, mask_shift, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BitOperation32, ConverseNonImplicationFailNotAlignedResult) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	uint32_t data[num_elements];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	GetInputDataInLength(num_elements, data, edit_mask);
+
+	// Define unaligned array
+	uint32_t *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_OperateBitsUint32ConverseNonImplication(bit_mask_, num_data,
+					data, edit_mask, result_shift);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
 
 /*
  * Test bit operation OR by sakura_OperateBitsUint8Or
