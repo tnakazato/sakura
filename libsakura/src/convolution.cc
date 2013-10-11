@@ -8,6 +8,8 @@
 #include "libsakura/sakura.h"
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
+#include <libsakura/logger.h>
+#include <libsakura/memory_manager.h>
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
@@ -23,14 +25,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 
 namespace {
 
-inline void CreateConvolve1DContext(size_t num_channel,
+inline void CreateConvolve1DContextDefault(size_t num_channel,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	std::cout << " CreateConvolve1DContextEigen function is called"
 			<< std::endl;
 
 	float const sqrt_ln16 = 1.66510922231539551270632928979040;
-	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*ln2/2/pi) / kernel_width
+	float const height = .939437278699651333772340328410 / kernel_width; // sqrt((8*ln2)/(2*pi)) / kernel_width
 	float center = num_channel / 2.f;
 	float value = 0.0;
 
@@ -119,7 +121,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	}
 }
 
-inline void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+inline void Convolve1DDefault(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 		float input_spectrum[/*num_channels*/],
 		bool const input_flag[/*num_channels*/],
 		float output_spectrum[/*num_channels*/]) {
@@ -160,7 +162,7 @@ inline void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 	}
 }
 
-inline void DestroyConvolve1DContext(
+inline void DestroyConvolve1DContextDefault(
 LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 	std::cout << " DestroyConvolve1DContextEigen function is called"
 			<< std::endl;
@@ -197,8 +199,8 @@ void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
 		size_t num_channel, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) const {
-	CreateConvolve1DContext(num_channel, kernel_type, kernel_width,
-			use_fft, context);
+	CreateConvolve1DContextDefault(num_channel, kernel_type, kernel_width, use_fft,
+			context);
 }
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::Convolve1D(
@@ -206,15 +208,13 @@ LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 		float input_spectrum[/*num_channels*/],
 		bool const input_flag[/*num_channels*/],
 		float output_spectrum[/*num_channels*/]) const {
-
-	Convolve1D(context, input_spectrum, input_flag, output_spectrum);
+	Convolve1DDefault(context, input_spectrum, input_flag, output_spectrum);
 
 }
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::DestroyConvolve1DContext(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context) const {
-	DestroyConvolve1DContext(context);
-
+	DestroyConvolve1DContextDefault(context);
 }
 
 }
