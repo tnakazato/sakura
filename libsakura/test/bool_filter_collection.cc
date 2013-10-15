@@ -345,7 +345,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveZeroCondition) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(false, result[i]);
+		ASSERT_FALSE(result[i]);
 	}
 }
 
@@ -542,7 +542,7 @@ TEST_F(BoolFilterInt, RangesInclusiveZeroCondition) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(false, result[i]);
+		ASSERT_FALSE(result[i]);
 	}
 }
 
