@@ -81,8 +81,6 @@ inline void InvertBool(size_t num_data, bool const *data, bool *result) {
 	uint8_t const *data8 = reinterpret_cast<uint8_t const *>(data);
 	uint8_t *result8 = reinterpret_cast<uint8_t *>(result);
 	uint8_t true8(static_cast<uint8_t>(true));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data8));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result8));
 	STATIC_ASSERT(sizeof(data8[0]) == sizeof(data[0]));
 	STATIC_ASSERT(sizeof(result8[0]) == sizeof(result[0]));
 	STATIC_ASSERT(sizeof(data[0]) == sizeof(true8));
