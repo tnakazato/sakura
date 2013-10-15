@@ -140,32 +140,22 @@ class Interpolation {
 public:
 	virtual ~Interpolation() {
 	}
-//	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
-//	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-//			uint8_t polynomial_order, size_t num_base,
-//			XDataType const x_base[/*num_base*/], size_t num_array,
-//			YDataType const y_base[/*num_base * num_base_array*/],
-//			size_t num_interpolated,
-//			XDataType const x_interpolated[/*num_interpolated*/],
-//			YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const = 0;
-	virtual void Interpolate1DAlongColumn(
+	virtual void Interpolate1DX(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			uint8_t polynomial_order, size_t num_interpolation_axis,
-			XDataType const x_base[/*num_interpolation_axis*/],
-			size_t num_array,
-			YDataType const y_base[/*num_interpolation_axis*num_array*/],
-			size_t num_interpolated,
-			XDataType const x_interpolated[/*num_interpolated*/],
-			YDataType y_interpolated[/*num_interpolated*num_array*/]) const = 0;
-	virtual void Interpolate1DAlongRow(
+			uint8_t polynomial_order, size_t num_x_base,
+			XDataType const x_base[/*num_x_base*/], size_t num_y,
+			YDataType const data_base[/*num_x_base*num_y*/],
+			size_t num_x_interpolated,
+			XDataType const x_interpolated[/*num_x_interpolated*/],
+			YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const = 0;
+	virtual void Interpolate1DY(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			uint8_t polynomial_order, size_t num_interpolation_axis,
-			XDataType const x_base[/*num_interpolation_axis*/],
-			size_t num_array,
-			YDataType const y_base[/*num_array*num_interpolation_axis*/],
-			size_t num_interpolated,
-			XDataType const x_interpolated[/*num_interpolated*/],
-			YDataType y_interpolated[/*num_array*num_interpolated*/]) const = 0;
+			uint8_t polynomial_order, size_t num_y_base,
+			XDataType const y_base[/*num_y_base*/], size_t num_x,
+			YDataType const data_base[/*num_y_base*num_x*/],
+			size_t num_y_interpolated,
+			XDataType const y_interpolated[/*num_y_interpolated*/],
+			YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const = 0;
 };
 
 class LogicalOperation {

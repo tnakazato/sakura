@@ -16,9 +16,9 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 // basic check of arguments
 bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_interpolation_axis,
-		double const x_base[], size_t num_array, float const y_base[],
-		size_t num_interpolated, double const x_interpolated[],
-		float const y_interpolated[], LIBSAKURA_SYMBOL(Status) *status) {
+		double const base[], size_t num_array, float const data_base[],
+		size_t num_interpolated, double const interpolated[],
+		float const data_interpolated[], LIBSAKURA_SYMBOL(Status) *status) {
 
 	bool process_data = true;
 
@@ -64,10 +64,10 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 
 	// input arrays are not aligned
-	if (!LIBSAKURA_SYMBOL(IsAligned)(x_base)
-			|| !LIBSAKURA_SYMBOL(IsAligned)(y_base)
-			|| !LIBSAKURA_SYMBOL(IsAligned)(x_interpolated)
-			|| !LIBSAKURA_SYMBOL(IsAligned)(y_interpolated)) {
+	if (!LIBSAKURA_SYMBOL(IsAligned)(base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(data_base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(interpolated)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
 			oss << "ERROR: input arrays are not aligned" << std::endl;
@@ -78,8 +78,8 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 
 	// input arrays are null
-	if (x_base == nullptr || y_base == nullptr || x_interpolated == nullptr
-			|| y_interpolated == nullptr) {
+	if (base == nullptr || data_base == nullptr || interpolated == nullptr
+			|| data_interpolated == nullptr) {
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
 			oss << "ERROR: input arrays are null" << std::endl;
@@ -114,7 +114,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
 	try {
-		interpolator->Interpolate1DAlongColumn(interpolation_method,
+		interpolator->Interpolate1DX(interpolation_method,
 				polynomial_order, num_x_base, x_base, num_y, data_base,
 				num_x_interpolated, x_interpolated, data_interpolated);
 	} catch (...) {
@@ -126,7 +126,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return status;
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DYFloat)(
@@ -150,7 +150,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetInterpolationImpl();
 
 	try {
-		interpolator->Interpolate1DAlongRow(interpolation_method,
+		interpolator->Interpolate1DY(interpolation_method,
 				polynomial_order, num_y_base, y_base, num_x, data_base,
 				num_y_interpolated, y_interpolated, data_interpolated);
 	} catch (...) {
@@ -162,7 +162,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return status;
 }
 
 namespace {

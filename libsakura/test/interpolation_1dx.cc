@@ -438,7 +438,6 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullOpposite) {
 	double increment = dx / static_cast<double>(num_segments);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-		std::cout << x_interpolated_[i] << std::endl;
 	}
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		// expected value for first array can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
