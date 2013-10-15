@@ -768,13 +768,15 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	} else {
 		size_t start_position = 0;
 		size_t end_position = num_x_interpolated - 1;
+		size_t previous_location = num_x_interpolated + 1;
 		for (size_t i = 0; i < num_x_base; ++i) {
 			size_t location = this->Locate(start_position, end_position,
 					num_x_interpolated, x_interpolated_work, x_base_work[i]);
-			if (location > start_position) {
+			if (location != previous_location) {
 				location_base[num_location_base] = location;
 				num_location_base += 1;
 				start_position = location;
+				previous_location = location;
 			}
 		}
 	}
@@ -914,13 +916,15 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	} else {
 		size_t start_position = 0;
 		size_t end_position = num_y_interpolated - 1;
+		size_t previous_location = num_y_interpolated + 1;
 		for (size_t i = 0; i < num_y_base; ++i) {
 			size_t location = this->Locate(start_position, end_position,
 					num_y_interpolated, x_interpolated_work, x_base_work[i]);
-			if (location > start_position) {
+			if (location != previous_location) {
 				location_base[num_location_base] = location;
 				num_location_base += 1;
 				start_position = location;
+				previous_location = location;
 			}
 		}
 	}
