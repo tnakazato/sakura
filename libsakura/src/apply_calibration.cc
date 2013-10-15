@@ -31,11 +31,13 @@ inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 		DataType const constant_scaling_factor = scaling_factor[0];
 		for (size_t i = 0; i < num_data; ++i) {
 			result[i] = constant_scaling_factor * (target[i] - reference[i]) / reference[i];
+//			result[i] = constant_scaling_factor * (target[i] / reference[i] - 1.0);
 		}
 	}
 	else {
 		for (size_t i = 0; i < num_data; ++i) {
 			result[i] = scaling_factor[i] * (target[i] - reference[i]) / reference[i];
+//			result[i] = scaling_factor[i] * (target[i] / reference[i] - 1.0);
 		}
 	}
 }

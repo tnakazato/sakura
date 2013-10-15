@@ -239,14 +239,32 @@ class InterpolationDefault: public InterpolationImpl<XDataType, YDataType> {
 public:
 	virtual ~InterpolationDefault() {
 	}
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
+//	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
+//	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+//			uint8_t polynomial_order, size_t num_base,
+//			XDataType const x_base[/*num_base*/], size_t num_array,
+//			YDataType const y_base[/*num_base * num_base_array*/],
+//			size_t num_interpolated,
+//			XDataType const x_interpolated[/*num_interpolated*/],
+//			YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const;
+	virtual void Interpolate1DAlongColumn(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			uint8_t polynomial_order, size_t num_base,
-			XDataType const x_base[/*num_base*/], size_t num_array,
-			YDataType const y_base[/*num_base * num_base_array*/],
+			uint8_t polynomial_order, size_t num_interpolation_axis,
+			XDataType const x_base[/*num_interpolation_axis*/],
+			size_t num_array_axis,
+			YDataType const y_base[/*num_interpolation_axis*num_array_axis*/],
 			size_t num_interpolated,
 			XDataType const x_interpolated[/*num_interpolated*/],
-			YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const;
+			YDataType y_interpolated[/*num_interpolated*num_array_axis*/]) const;
+	virtual void Interpolate1DAlongRow(
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+			uint8_t polynomial_order, size_t num_interpolation_axis,
+			XDataType const x_base[/*num_interpolation_axis*/],
+			size_t num_array_axis,
+			YDataType const y_base[/*num_array_axis*num_interpolation_axis*/],
+			size_t num_interpolated,
+			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_array_axis*num_interpolated*/]) const;
 };
 
 template<class XDataType, class YDataType>
@@ -255,14 +273,32 @@ class InterpolationAfterSandyBridge: public InterpolationImpl<XDataType,
 public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
-	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
+//	virtual LIBSAKURA_SYMBOL(Status) Interpolate1D(
+//	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+//			uint8_t polynomial_order, size_t num_base,
+//			XDataType const x_base[/*num_base*/], size_t num_array,
+//			YDataType const y_base[/*num_base * num_base_array*/],
+//			size_t num_interpolated,
+//			XDataType const x_interpolated[/*num_interpolated*/],
+//			YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const;
+	virtual void Interpolate1DAlongColumn(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-			uint8_t polynomial_order, size_t num_base,
-			XDataType const x_base[/*num_base*/], size_t num_array,
-			YDataType const y_base[/*num_base * num_base_array*/],
+			uint8_t polynomial_order, size_t num_interpolation_axis,
+			XDataType const x_base[/*num_interpolation_axis*/],
+			size_t num_array_axis,
+			YDataType const y_base[/*num_interpolation_axis*num_array_axis*/],
 			size_t num_interpolated,
 			XDataType const x_interpolated[/*num_interpolated*/],
-			YDataType y_interpolated[/*num_interpolated * num_base_array*/]) const;
+			YDataType y_interpolated[/*num_interpolated*num_array_axis*/]) const;
+	virtual void Interpolate1DAlongRow(
+	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+			uint8_t polynomial_order, size_t num_interpolation_axis,
+			XDataType const x_base[/*num_interpolation_axis*/],
+			size_t num_array_axis,
+			YDataType const y_base[/*num_array_axis*num_interpolation_axis*/],
+			size_t num_interpolated,
+			XDataType const x_interpolated[/*num_interpolated*/],
+			YDataType y_interpolated[/*num_array_axis*num_interpolated*/]) const;
 };
 
 class LogicalOperationDefault: public LogicalOperation {

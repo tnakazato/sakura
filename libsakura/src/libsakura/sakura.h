@@ -812,8 +812,9 @@ typedef enum {
  * 要素数は@a num_base でなければならない。
  * @a x_base は昇順または降順にソートされていなければならない。
  * must-be-aligned
+ * @param[in] num_array
  * @param[in] y_base 補間のためのデータ点のy座標。
- * 要素数は@a num_base でなければならない。
+ * 要素数は@a num_base * @a num_array でなければならない。
  * must-be-aligned
  * @param[in] num_interpolated 補間したいデータ点の数。
  * @param[in] x_interpolated 補間したいデータ点のx座標。
@@ -821,7 +822,7 @@ typedef enum {
  * @a x_interpolated は昇順または降順にソートされていなければならない。
  * must-be-aligned
  * @param[out] y_interpolated 補間結果。
- * 要素数は@a num_base でなければならない。
+ * 要素数は@a num_interpolated * @a num_array でなければならない。
  * must-be-aligned
  * @return 終了ステータス。
  *
@@ -835,6 +836,7 @@ typedef enum {
  * @param[in] num_base number of elements for data points.
  * @param[in] x_base x-coordinate of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
+ * @param[in] num_array
  * @param[in] y_base y-coordinate of data points. Its length must be @a num_base.
  * @param[in] num_interpolated number of elements for points that wants to get
  * interpolated value.
@@ -846,25 +848,24 @@ typedef enum {
  *
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DFloat)(
-LIBSAKURA_SYMBOL(
-		InterpolationMethod) interoplation_method, uint8_t polynomial_order,
-		size_t num_base, double const x_base[/*num_base*/],
-		float const y_base[/*num_base*/], size_t num_interpolated,
-		double const x_interpolated[/*num_interpolated*/],
-		float y_interpolated[/*num_interpolated*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DXFloat)(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		uint8_t polynomial_order, size_t num_x_base,
+		double const x_base[/*num_x_base*/], size_t num_y,
+		float const data_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
+		double const x_interpolated[/*num_x_interpolated*/],
+		float data_interpolated[/*num_x_interpolated*num_y*/]);
 
 /**
  * @brief Perform one-dimensional interpolation along interpolation axis
  * of two-dimensional array.
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateArray1DFloat)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Interpolate1DYFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		uint8_t polynomial_order, size_t num_base,
-		double const x_base[/*num_base*/], size_t num_array,
-		float const y_base[/*num_array*num_base*/], size_t num_interpolated,
-		double const x_interpolated[/*num_interpolated*/],
-		float y_interpolated[/*num_array*num_interpolated*/]);
+		uint8_t polynomial_order, size_t num_y_base,
+		double const y_base[/*num_y_base*/], size_t num_x,
+		float const data_base[/*num_x*num_y_base*/], size_t num_y_interpolated,
+		double const y_interpolated[/*num_y_interpolated*/],
+		float data_interpolated[/*num_x*num_y_interpolated*/]);
 
 /**
  * @japanese

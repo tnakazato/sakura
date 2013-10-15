@@ -25,9 +25,9 @@ protected:
 		<< "sakura must be properly initialized!";
 
 		// execute interpolation
-		sakura_Status result = sakura_Interpolate1DFloat(
+		sakura_Status result = sakura_Interpolate1DXFloat(
 				interpolation_method, polynomial_order_, num_base,
-				x_base_, y_base_, num_interpolated, x_interpolated_,
+				x_base_, 1, y_base_, num_interpolated, x_interpolated_,
 				y_interpolated_);
 
 		InspectResult(expected_status, result, num_interpolated, 1, check_result);
