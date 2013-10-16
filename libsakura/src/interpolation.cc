@@ -118,21 +118,6 @@ public:
 		is_ascending_ = interpolated_position_[0]
 				<= interpolated_position_[num_interpolated_ - 1];
 
-		// make input arrays ascending order
-		std::unique_ptr<void, InterpolationDeleter> storage_for_base_position;
-		std::unique_ptr<void, InterpolationDeleter> storage_for_base_data;
-		std::unique_ptr<void, InterpolationDeleter> storage_for_interpolated_position;
-		base_position_work_ = GetAscendingArray<XDataType, XDataType>(num_base_,
-				base_position_, 1, base_position_, &storage_for_base_position,
-				x_interpolation_);
-		base_data_work_ = GetAscendingArray<XDataType, YDataType>(num_base_,
-				base_position_, num_array_, base_data_, &storage_for_base_data,
-				x_interpolation_);
-		interpolated_position_work_ = GetAscendingArray<XDataType, XDataType>(
-				num_interpolated_, interpolated_position_, 1,
-				interpolated_position_, &storage_for_interpolated_position,
-				x_interpolation_);
-
 		// Any preparation for interpolation should be done here
 		PrepareForInterpolation();
 
@@ -140,6 +125,50 @@ public:
 		size_t *location_base = nullptr;
 		std::unique_ptr<void, InterpolationDeleter> storage_for_location_base(
 				AllocateAndAlign<size_t>(num_base_, &location_base));
+		size_t num_location_base = Locate(location_base);
+
+		// Outside of x_base[0]
+		SubstituteLeftMostData(location_base[0]);
+
+		// Between x_base[0] and x_base[num_x_base-1]
+		ExecuteInterpolation(location_base, num_location_base);
+
+		// Outside of x_base[num_x_base-1]
+		SubstituteRightMostData(location_base[num_location_base - 1]);
+
+		// swap output array
+		if (!is_ascending_) {
+			SwapResult();
+		}
+	}
+protected:
+	virtual void PrepareForInterpolation() {
+		// make input arrays ascending order
+		base_position_work_ = GetAscendingArray<XDataType, XDataType>(num_base_,
+				base_position_, 1, base_position_, &storage_for_base_position_,
+				x_interpolation_);
+		base_data_work_ = GetAscendingArray<XDataType, YDataType>(num_base_,
+				base_position_, num_array_, base_data_, &storage_for_base_data_,
+				x_interpolation_);
+		interpolated_position_work_ = GetAscendingArray<XDataType, XDataType>(
+				num_interpolated_, interpolated_position_, 1,
+				interpolated_position_, &storage_for_interpolated_position_,
+				x_interpolation_);
+	}
+	virtual void SubstituteSingleBaseData() = 0;
+	virtual void SubstituteLeftMostData(size_t location) = 0;
+	virtual void SubstituteRightMostData(size_t location) = 0;
+	virtual void ExecuteInterpolation(size_t const location[],
+			size_t num_location) {
+		for (size_t i = 0; i < num_location - 1; ++i) {
+			Interpolate1D(location[i], location[i + 1], i + 1);
+		}
+	}
+	virtual void Interpolate1D(size_t location_left, size_t location_right,
+			size_t right_index) = 0;
+	virtual void SwapResult() = 0;
+
+	size_t Locate(size_t location_base[]) {
 		size_t num_location_base = 0;
 		if (num_interpolated_ == 1) {
 			if (base_position_work_[num_base_ - 1]
@@ -171,37 +200,10 @@ public:
 				}
 			}
 		}
-
-		// Outside of x_base[0]
-		SubstituteLeftMostData(location_base[0]);
-
-		// Between x_base[0] and x_base[num_x_base-1]
-		ExecuteInterpolation(location_base, num_location_base);
-
-		// Outside of x_base[num_x_base-1]
-		SubstituteRightMostData(location_base[num_location_base - 1]);
-
-		// swap output array
-		if (!is_ascending_) {
-			SwapResult();
-		}
+		return num_location_base;
 	}
+
 protected:
-	virtual void PrepareForInterpolation() {
-	}
-	virtual void SubstituteSingleBaseData() = 0;
-	virtual void SubstituteLeftMostData(size_t location) = 0;
-	virtual void SubstituteRightMostData(size_t location) = 0;
-	virtual void ExecuteInterpolation(size_t const location[],
-			size_t num_location) {
-		for (size_t i = 0; i < num_location - 1; ++i) {
-			Interpolate1D(location[i], location[i + 1], i + 1);
-		}
-	}
-	virtual void Interpolate1D(size_t location_left, size_t location_right,
-			size_t right_index) = 0;
-	virtual void SwapResult() = 0;
-
 	size_t LocateData(size_t start_position, size_t end_position,
 			size_t num_base, XDataType const base_position[],
 			XDataType located_position) {
@@ -216,70 +218,36 @@ protected:
 
 		assert(LIBSAKURA_SYMBOL(IsAligned)(base_position));
 
-		if (base_position[0] < base_position[num_base - 1]) {
-			// ascending order
-			if (located_position <= base_position[0]) {
-				// out of range
-				return 0;
-			} else if (located_position > base_position[num_base - 1]) {
-				// out of range
-				return num_base;
-			} else if (located_position < base_position[start_position]) {
-				// x_located is not in the range (start_position, end_position)
-				// call this function to search other location
-				return LocateData(0, start_position, num_base, base_position,
-						located_position);
-			} else if (located_position > base_position[end_position]) {
-				// located_position is not in the range (start_position, end_position)
-				// call this function to search other location
-				return LocateData(end_position, num_base - 1, num_base,
-						base_position, located_position);
-			} else {
-				// do bisection
-				size_t left_index = start_position;
-				size_t right_index = end_position;
-				while (right_index > left_index + 1) {
-					size_t middle_index = (right_index + left_index) / 2;
-					if (located_position > base_position[middle_index]) {
-						left_index = middle_index;
-					} else {
-						right_index = middle_index;
-					}
-				}
-				return right_index;
-			}
+		// base_position must be sorted in ascending order
+		if (located_position <= base_position[0]) {
+			// out of range
+			return 0;
+		} else if (located_position > base_position[num_base - 1]) {
+			// out of range
+			return num_base;
+		} else if (located_position < base_position[start_position]) {
+			// x_located is not in the range (start_position, end_position)
+			// call this function to search other location
+			return LocateData(0, start_position, num_base, base_position,
+					located_position);
+		} else if (located_position > base_position[end_position]) {
+			// located_position is not in the range (start_position, end_position)
+			// call this function to search other location
+			return LocateData(end_position, num_base - 1, num_base,
+					base_position, located_position);
 		} else {
-			// descending order
-			if (located_position >= base_position[0]) {
-				// out of range
-				return 0;
-			} else if (located_position < base_position[num_base - 1]) {
-				// out of range
-				return num_base;
-			} else if (located_position > base_position[start_position]) {
-				// x_located is not in the range (start_position, end_position)
-				// call this function to search other location
-				return LocateData(0, start_position, num_base, base_position,
-						located_position);
-			} else if (located_position < base_position[end_position]) {
-				// located_position is not in the range (start_position, end_position)
-				// call this function to search other location
-				return LocateData(end_position, num_base - 1, num_base,
-						base_position, located_position);
-			} else {
-				// do bisection
-				size_t left_index = start_position;
-				size_t right_index = end_position;
-				while (right_index > left_index + 1) {
-					size_t middle_index = (right_index + left_index) / 2;
-					if (located_position < base_position[middle_index]) {
-						left_index = middle_index;
-					} else {
-						right_index = middle_index;
-					}
+			// do bisection
+			size_t left_index = start_position;
+			size_t right_index = end_position;
+			while (right_index > left_index + 1) {
+				size_t middle_index = (right_index + left_index) / 2;
+				if (located_position > base_position[middle_index]) {
+					left_index = middle_index;
+				} else {
+					right_index = middle_index;
 				}
-				return right_index;
 			}
+			return right_index;
 		}
 	}
 
@@ -294,6 +262,9 @@ protected:
 	YDataType const *base_data_work_;
 	XDataType const *interpolated_position_work_;
 	YDataType *interpolated_data_;bool x_interpolation_;bool is_ascending_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_base_position_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_base_data_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_interpolated_position_;
 };
 
 template<class XDataType, class YDataType>
@@ -347,12 +318,12 @@ protected:
 	}
 	virtual void SwapResult() {
 		size_t middle_point = this->num_interpolated_ / 2;
+		size_t right_edge = this->num_interpolated_ - 1;
 		for (size_t j = 0; j < this->num_array_; ++j) {
 			YDataType *work = &this->interpolated_data_[j
 					* this->num_interpolated_];
 			for (size_t i = 0; i < middle_point; ++i) {
-				std::swap<YDataType>(work[i],
-						work[this->num_interpolated_ - 1 - i]);
+				std::swap<YDataType>(work[i], work[right_edge - i]);
 			}
 		}
 	}
@@ -401,7 +372,6 @@ protected:
 				//     ---> nearest is y_left (left side)
 				if ((this->interpolated_position_work_[i] != middle_point)
 						& ((this->interpolated_position_work_[i] > middle_point))) {
-//								& this->is_ascending_)) {
 					work[i] = right_value;
 				} else {
 					work[i] = left_value;
@@ -470,6 +440,7 @@ public:
 	virtual ~XPolynomialInterpolationWorker() {
 	}
 	virtual void PrepareForInterpolation() {
+		InterpolationWorkerTemplate<XDataType, YDataType>::PrepareForInterpolation();
 		storage_for_c_.reset(AllocateAndAlign<XDataType>(num_elements_, &c_));
 		storage_for_d_.reset(AllocateAndAlign<XDataType>(num_elements_, &d_));
 	}
@@ -555,6 +526,7 @@ public:
 	virtual ~XSplineInterpolationWorker() {
 	}
 	virtual void PrepareForInterpolation() {
+		InterpolationWorkerTemplate<XDataType, YDataType>::PrepareForInterpolation();
 		// Derive second derivative at x_base
 		storage_for_d2ydx2_.reset(
 				AllocateAndAlign(this->num_base_ * this->num_array_, &d2ydx2_));
@@ -732,7 +704,6 @@ protected:
 			size_t offset_index = 0;
 			if ((this->interpolated_position_work_[i] != middle_point)
 					& ((this->interpolated_position_work_[i] > middle_point))) {
-//							& this->is_ascending_)) {
 				offset_index = 1;
 			}
 			YDataType *work = &this->interpolated_data_[this->num_array_ * i];
@@ -802,6 +773,7 @@ public:
 	virtual ~YPolynomialInterpolationWorker() {
 	}
 	virtual void PrepareForInterpolation() {
+		InterpolationWorkerTemplate<XDataType, YDataType>::PrepareForInterpolation();
 		storage_for_c_.reset(
 				AllocateAndAlign<XDataType>(num_elements_ * this->num_array_,
 						&c_));
@@ -897,6 +869,7 @@ public:
 	virtual ~YSplineInterpolationWorker() {
 	}
 	virtual void PrepareForInterpolation() {
+		InterpolationWorkerTemplate<XDataType, YDataType>::PrepareForInterpolation();
 		// Derive second derivative at x_base
 		storage_for_d2ydx2_.reset(
 				AllocateAndAlign(this->num_base_ * this->num_array_, &d2ydx2_));
@@ -1083,7 +1056,6 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		}
 	}
 }
-
 } /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
@@ -1111,7 +1083,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t num_x_interpolated,
 		XDataType const x_interpolated[/*num_x_interpolated*/],
 		YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const {
-// Generate worker class
+	// Generate worker class
 	std::unique_ptr<InterpolationWorkerTemplate<XDataType, YDataType> > interpolator(
 			CreateInterpolationWorker<XDataType, YDataType>(
 					interpolation_method, polynomial_order, num_x_base, x_base,
@@ -1145,7 +1117,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t num_y_interpolated,
 		XDataType const x_interpolated[/*num_y_interpolated*/],
 		YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const {
-// Generate worker class
+	// Generate worker class
 	std::unique_ptr<InterpolationWorkerTemplate<XDataType, YDataType> > interpolator(
 			CreateInterpolationWorker<XDataType, YDataType>(
 					interpolation_method, polynomial_order, num_y_base, y_base,
