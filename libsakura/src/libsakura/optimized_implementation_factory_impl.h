@@ -224,18 +224,7 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class InterpolationImpl: public Interpolation<XDataType, YDataType> {
-public:
-	virtual ~InterpolationImpl() {
-	}
-protected:
-	virtual size_t Locate(size_t start_position, size_t end_position,
-			size_t num_base, XDataType const x_base[/*num_base*/],
-			XDataType x_located) const;
-};
-
-template<class XDataType, class YDataType>
-class InterpolationDefault: public InterpolationImpl<XDataType, YDataType> {
+class InterpolationDefault: public Interpolation<XDataType, YDataType> {
 public:
 	virtual ~InterpolationDefault() {
 	}
@@ -258,7 +247,7 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class InterpolationAfterSandyBridge: public InterpolationImpl<XDataType,
+class InterpolationAfterSandyBridge: public Interpolation<XDataType,
 		YDataType> {
 public:
 	virtual ~InterpolationAfterSandyBridge() {
