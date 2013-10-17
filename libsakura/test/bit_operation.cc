@@ -1543,7 +1543,7 @@ TEST_F(BitOperation8, Nor) {
 	SIMD_ALIGN
 	uint8_t result[ELEMENTSOF(data)];
 
-	uint8_t base_pattern = (~static_cast<uint8_t>(0) << 2); // 11111100
+	uint8_t const base_pattern = (~static_cast<uint8_t>(0) << 2); // 11111100
 	uint8_t answer[] = { 0, 1, 2, 3,
 			static_cast<uint8_t>(base_pattern + 1), base_pattern,
 			static_cast<uint8_t>(base_pattern + 1), base_pattern };
@@ -1583,7 +1583,7 @@ TEST_F(BitOperation8, NorLong) {
 	SIMD_ALIGN
 	uint8_t result_long[ELEMENTSOF(data_long)];
 
-	uint8_t base_pattern = (~static_cast<uint8_t>(0) << 2); // 11111100
+	uint8_t const base_pattern = (~static_cast<uint8_t>(0) << 2); // 11111100
 	uint8_t answer[] = { 0, 1, 2, 3,
 			static_cast<uint8_t>(base_pattern + 1), base_pattern,
 			static_cast<uint8_t>(base_pattern + 1), base_pattern };
