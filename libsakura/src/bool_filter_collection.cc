@@ -63,6 +63,15 @@ inline void SetTrueInRangesInclusiveGeneric(size_t num_data,
 }
 
 template<typename DataType>
+inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
+		DataType threshold, bool *result) {
+	DataType const zero(static_cast<DataType>(0));
+	for (size_t i = 0; i < num_data; ++i) {
+		result[i] = (data[i] - threshold) > zero;
+	}
+}
+
+template<typename DataType>
 inline void ToBool(size_t num_data, DataType const *data, bool *result) {
 //	std::cout << "Invoking ToBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -147,6 +156,13 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 		SetTrueInRangesInclusiveGeneric(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	}
+}
+
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueGreaterThan(
+		size_t num_data, DataType const data[/*num_data*/], DataType threshold,
+		bool result[/*num_data*/]) const {
+	::SetTrueGreaterThan(num_data, data, threshold, result);
 }
 
 template<typename DataType>

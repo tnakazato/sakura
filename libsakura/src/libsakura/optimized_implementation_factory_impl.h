@@ -127,6 +127,9 @@ public:
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const;
+	virtual void SetTrueGreaterThan(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
+			bool result[/*num_data*/]) const;
 	virtual void ToBool(size_t num_data, DataType const data[/*num_data*/],
 	bool result[/*num_data*/]) const;
 	virtual void InvertBool(size_t num_data, bool const data[/*num_data*/],
@@ -142,6 +145,9 @@ public:
 			DataType const data[/*num_data*/], size_t num_condition,
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
+			bool result[/*num_data*/]) const;
+	virtual void SetTrueGreaterThan(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
 			bool result[/*num_data*/]) const;
 	virtual void ToBool(size_t num_data, DataType const data[/*num_data*/],
 	bool result[/*num_data*/]) const;
@@ -247,8 +253,7 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class InterpolationAfterSandyBridge: public Interpolation<XDataType,
-		YDataType> {
+class InterpolationAfterSandyBridge: public Interpolation<XDataType, YDataType> {
 public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
