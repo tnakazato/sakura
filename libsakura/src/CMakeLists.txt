@@ -30,13 +30,13 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 option(SCALAR "Disable auto-vectorization by compiler for AfterSandyBridge" OFF)
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
+set(CMAKE_BUILD_TYPE Release)
+set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
-#set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -ftree-vectorizer-verbose=2")
-#set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -fopt-info-vec-missed")
-set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG -fopt-info-vec-optimized")
+set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -DNDEBUG ${VECT_VERB}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
 #set(ADDITIONAL_CXXFLAGS_Default "-mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
@@ -92,7 +92,7 @@ foreach(_file ${MULTI_SOURCE})
 		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}Default${_ext}"
 	)
 	set_property(SOURCE ${_base}Default${_ext} PROPERTY
-		COMPILE_FLAGS ${ADDITIONAL_CXXFLAGS_Default}
+		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_Default} \${VECT_VERB}"
 	)
 	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}Default${_ext})
 
@@ -102,7 +102,7 @@ foreach(_file ${MULTI_SOURCE})
 		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}AfterSandyBridge${_ext}"
 	)
 	set_property(SOURCE ${_base}AfterSandyBridge${_ext} PROPERTY
-		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterSandyBridge}"
+		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterSandyBridge} \${VECT_VERB}"
 	)
 	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}AfterSandyBridge${_ext})
 endforeach()

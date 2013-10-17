@@ -81,17 +81,22 @@ add_custom_target(testLogicalOperationRun      COMMAND ./testLogicalOperation   
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 
+# テストの順序
+# 1 より低レベルのもの(他のテストの前提となる、初期化とかログとかメモリー管理とか)
+# 2 ステーブル(デバッグ済み)なもの(テストに失敗しないこと)
+# 3 短時間で済むもの
+# 4 先にステーブルな状態になったもの(早い者勝ち)
 add_custom_target(test
-    COMMAND ./testApplyCalibration
+	COMMAND ./testInit
+	COMMAND ./testStatistics
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
-	COMMAND ./testConvolution
+	COMMAND ./testLogicalOperation
 	COMMAND ./testGridding
-	COMMAND ./testInit
 	COMMAND ./testInterpolation1D
 	COMMAND ./testInterpolation1DX
 	COMMAND ./testInterpolation1DY
-	COMMAND ./testLogicalOperation
+	COMMAND ./testApplyCalibration
 	COMMAND ./testNumericOperation
-	COMMAND ./testStatistics
+	COMMAND ./testConvolution
 	)
