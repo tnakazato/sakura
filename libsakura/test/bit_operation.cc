@@ -1630,7 +1630,7 @@ TEST_F(BitOperation32, Nor) {
 	SIMD_ALIGN
 	uint32_t result[ELEMENTSOF(data)];
 
-	uint32_t base_pattern = (~static_cast<uint32_t>(0) << 2); // 11...100
+	uint32_t const base_pattern = (~static_cast<uint32_t>(0) << 2); // 11...100
 	uint32_t answer[] = { 0, 1, 2, 3,
 			static_cast<uint32_t>(base_pattern + 1), base_pattern,
 			static_cast<uint32_t>(base_pattern + 1), base_pattern };
@@ -1670,7 +1670,7 @@ TEST_F(BitOperation32, NorLong) {
 	SIMD_ALIGN
 	bool edit_mask_long[ELEMENTSOF(data_long)];
 
-	uint32_t base_pattern = (~static_cast<uint32_t>(0) << 2); // 11...100
+	uint32_t const base_pattern = (~static_cast<uint32_t>(0) << 2); // 11...100
 	uint32_t answer[] = { 0, 1, 2, 3,
 			static_cast<uint32_t>(base_pattern + 1), base_pattern,
 			static_cast<uint32_t>(base_pattern + 1), base_pattern };
