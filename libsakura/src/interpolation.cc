@@ -11,24 +11,21 @@
 #include <libsakura/memory_manager.h>
 
 namespace {
-
-using namespace LIBSAKURA_PREFIX;
-
 // deleter for interpolation
 struct InterpolationDeleter {
 	void operator()(void *pointer) const {
-		Memory::Free(pointer);
+		LIBSAKURA_PREFIX::Memory::Free(pointer);
 	}
 };
 
 // a logger for this module
-auto logger = Logger::GetLogger("interpolation");
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 template<class DataType>
 void *AllocateAndAlign(size_t num_array, DataType **array) {
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t elements_in_arena = num_array + sakura_alignment - 1;
-	void *storage = Memory::Allocate(sizeof(DataType) * elements_in_arena);
+	void *storage = LIBSAKURA_PREFIX::Memory::Allocate(sizeof(DataType) * elements_in_arena);
 	*array = reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
 			sizeof(DataType) * elements_in_arena, storage,
 			sizeof(DataType) * num_array));
@@ -255,7 +252,6 @@ private:
 
 		// working pointers
 		XDataType const *x_ptr = &(this->base_position_[left_index]);
-		//YDataType const *y_ptr = &(this->y_base_[left_index]);
 		YDataType const *y_ptr = &(this->base_data_[this->num_base_
 				* array_index + left_index]);
 
@@ -526,7 +522,7 @@ public:
 	}
 private:
 	void PerformNevilleAlgorithm(size_t left_index,
-			XDataType interpolated_position, YDataType *interpolated_data) {
+			XDataType interpolated_position, YDataType interpolated_data[]) {
 		// working pointers
 		XDataType const *x_ptr = &(this->base_position_[left_index]);
 
@@ -717,16 +713,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 					YDataType>(polynomial_order, num_base, base_position,
 					num_array, base_data, num_interpolated,
 					interpolated_position, interpolated_data);
-		} else if (static_cast<size_t>(polynomial_order + 1) >= num_base) {
-			// use full region for interpolation
-			return new PolynomialInterpolationWorker<x_interpolation, XDataType,
-					YDataType>(num_base - 1, num_base, base_position, num_array,
-					base_data, num_interpolated, interpolated_position,
-					interpolated_data);
 		} else {
+			uint8_t effective_order =
+					(static_cast<size_t>(polynomial_order + 1) >= num_base) ?
+							static_cast<uint8_t>(num_base - 1) :
+							polynomial_order;
 			// use sub-region around the nearest points
 			return new PolynomialInterpolationWorker<x_interpolation, XDataType,
-					YDataType>(polynomial_order, num_base, base_position,
+					YDataType>(effective_order, num_base, base_position,
 					num_array, base_data, num_interpolated,
 					interpolated_position, interpolated_data);
 		}
