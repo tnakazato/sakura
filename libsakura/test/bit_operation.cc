@@ -1544,8 +1544,9 @@ TEST_F(BitOperation8, Nor) {
 	uint8_t result[ELEMENTSOF(data)];
 
 	uint8_t base_pattern = (~static_cast<uint8_t>(0) << 2); // 11111100
-	uint8_t answer[] = { 0, 1, 2, 3, (base_pattern +1), base_pattern,
-			(base_pattern + 1), base_pattern };
+	uint8_t answer[] = { 0, 1, 2, 3,
+			static_cast<uint8_t>(base_pattern + 1), base_pattern,
+			static_cast<uint8_t>(base_pattern + 1), base_pattern };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	GetInputDataInLength(num_data, data, edit_mask);
@@ -1583,8 +1584,9 @@ TEST_F(BitOperation8, NorLong) {
 	uint8_t result_long[ELEMENTSOF(data_long)];
 
 	uint8_t base_pattern = (~static_cast<uint8_t>(0) << 2); // 11111100
-	uint8_t answer[] = { 0, 1, 2, 3, base_pattern + (uint8_t) 1, base_pattern,
-			base_pattern + (uint8_t) 1, base_pattern };
+	uint8_t answer[] = { 0, 1, 2, 3,
+			static_cast<uint8_t>(base_pattern + 1), base_pattern,
+			static_cast<uint8_t>(base_pattern + 1), base_pattern };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	size_t const num_large(ELEMENTSOF(data_long));
@@ -1629,8 +1631,9 @@ TEST_F(BitOperation32, Nor) {
 	uint32_t result[ELEMENTSOF(data)];
 
 	uint32_t base_pattern = (~static_cast<uint32_t>(0) << 2); // 11...100
-	uint32_t answer[] = { 0, 1, 2, 3, base_pattern + (uint32_t) 1, base_pattern,
-			base_pattern + (uint32_t)1, base_pattern };
+	uint32_t answer[] = { 0, 1, 2, 3,
+			static_cast<uint32_t>(base_pattern + 1), base_pattern,
+			static_cast<uint32_t>(base_pattern + 1), base_pattern };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	GetInputDataInLength(num_data, data, edit_mask);
@@ -1668,8 +1671,9 @@ TEST_F(BitOperation32, NorLong) {
 	bool edit_mask_long[ELEMENTSOF(data_long)];
 
 	uint32_t base_pattern = (~static_cast<uint32_t>(0) << 2); // 11...100
-	uint32_t answer[] = { 0, 1, 2, 3, base_pattern + (uint32_t) 1, base_pattern,
-			base_pattern + (uint32_t) 1, base_pattern };
+	uint32_t answer[] = { 0, 1, 2, 3,
+			static_cast<uint32_t>(base_pattern + 1), base_pattern,
+			static_cast<uint32_t>(base_pattern + 1), base_pattern };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	size_t const num_large(NUM_IN_LONG);
@@ -2300,5 +2304,42 @@ TEST_F(BitOperation32, OrFailNotAlignedResult) {
 			num_data, data, edit_mask, result_shift);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test bit operation OR by sakura_OperateBitsUint8Not
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 11111111, 11111110, 11111101, 11111100 ]
+ */
+TEST_F(BitOperation8, Not) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	uint8_t answer[] = { 0, 1, 2, 3, 2, 3, 2, 3 };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	verbose = true;
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose) {
+		PrintArray("in (before)", num_data, data);
+		PrintArray("mask", num_data, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Not(num_data, data,
+			edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+//	}
 }
 
