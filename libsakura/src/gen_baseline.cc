@@ -33,7 +33,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
 		size_t num_chan, float const in_data[], bool const in_mask[],
-		size_t num_model, double model_data[], float clipping_threshold_sigma,
+		size_t num_model, double const model_data[], float clipping_threshold_sigma,
 		unsigned int num_fitting_max, bool get_residual, float out[]) {
 
 	auto baselineop =

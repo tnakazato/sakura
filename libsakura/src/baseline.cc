@@ -33,7 +33,7 @@ inline void GetBaselineModel(
 
 inline void DoSubtractBaseline(
 		size_t num_chan, float const *in_data, bool const *in_mask, size_t num_model,
-		double *model_data, float clipping_threshold_sigma, unsigned int num_fitting_max,
+		double const *model_data, float clipping_threshold_sigma, unsigned int num_fitting_max,
 		bool get_residual, float *out) {
 	//std::cout << "DoSubtractBaselineEigen function is called" << std::endl;
 
@@ -131,7 +131,7 @@ void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModel(
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(
 		size_t num_chan, float const in_data[/*num_chan*/],
 		bool const in_mask[/*num_chan*/], size_t num_model,
-		double model_data[/*num_model * num_chan*/],
+		double const model_data[/*num_model * num_chan*/],
 		float clipping_threshold_sigma, unsigned int num_fitting_max,
 		bool get_residual, float out[/*num_chan*/]) const {
 	DoSubtractBaseline(num_chan, in_data, in_mask, num_model, model_data,
