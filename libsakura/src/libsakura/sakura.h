@@ -307,11 +307,9 @@ typedef struct {
  *
  * @note
  * The function can also be used to invoke material nonimplication of @a data and @a bit_mask .
- * Input the complement of @a bit_mask (~@a bit_mask ) to invoke material nonimplecation.
- * In that case, the function returns the result of following operation,
- * @code
- * result [i] = edit_mask[i] ? (data[i] & ~bit_maks) : data[i]
- * @endcode
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke material nonimplication.
+ * For details of mateial nonimplication, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
  *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
  * between this value and the array, @a data.
@@ -343,11 +341,8 @@ typedef struct {
  * @note
  * この関数は、@a data と@a bit_mask の間の非含意のビット演算にも使用できる。
  * 非含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
- * ( ~@a bit_mask )を関数の入力として与える。
- * これにより、次のような演算の結果が得られることになる。
- * @code
- * result [i] = edit_mask[i] ? (data[i] & ~bit_maks) : data[i]
- * @endcode
+ * ( ~@a bit_mask )を関数の入力として与える。非含意のビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
  *
  * @param[in] bit_mask ビットマスク
  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
@@ -374,7 +369,7 @@ typedef struct {
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
 /**
- * @~
+ * @~english
  * @brief Invoke bit operation, Converse Nonimplication, between a bit mask and an array.
  * @details Invokes the following bit operation to the @a i- th element of @a result :
  * @code
@@ -387,11 +382,8 @@ typedef struct {
  * @note
  * The function can also be used to invoke bitwise NOR operation of @a data and @a bit_mask .
  * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise NOR operation.
- * In that case, the function returns the result of following operation,
- * @code
- * result [i] = edit_mask[i] ? (~data[i] & ~bit_maks) : data[i]
- * where (~data[i] & ~bit_maks) = ~(data[i] | bit_maks)  [de Morgan's laws]
- * @endcode
+ * For details of bitwise NOR operation, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
  *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
  * between this value and the array, @a data.
@@ -424,11 +416,8 @@ typedef struct {
  * この関数は、@a data と@a bit_mask の間の否定論理和ビット演算(NOR)にも使用できる。
  * 否定論理和のビット演算を実行するときは、@a bit_mask をビット反転させたもの
  * ( ~@a bit_mask )を関数の入力として与える。
- * これにより、次のような演算の結果が得られることになる。
- * @code
- * result [i] = edit_mask[i] ? (~data[i] & ~bit_maks) : data[i]
- * ここで、(~data[i] & ~bit_maks) = ~(data[i] | bit_maks)    （ド・モルガンの法則）
- * @endcode
+ * 否定論理和ビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
  *
  *
  * @param[in] bit_mask ビットマスク
@@ -450,7 +439,7 @@ typedef struct {
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
  * @copybrief sakura_OperateBitsUint8ConverseNonImplication
- * @copydetails sakura_OperateBitsUintConverseNonImplication
+ * @copydetails sakura_OperateBitsUint8ConverseNonImplication
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
