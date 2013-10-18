@@ -21,13 +21,6 @@ void OperateFloatSubtractionSimd(size_t num_in, float const in1[],
 		float const in2[], float out[]) {
 	std::cout << "OperateFloatSubtractionSimd function is called. This function is not implemented yet." << std::endl;
 }
-/*
-void GetLeastSquareMatrixSimd(size_t num_in, float const in_data[],
-		bool const in_mask[], size_t num_model, double const model[],
-		double out[], double out_vector[]) {
-	std::cout << "GetLeastSquareMatrixSimd function is called. This function is not implemented yet." << std::endl;
-}
-*/
 void SolveSimultaneousEquationsByLUSimd(size_t num_eqn,
 		double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
 	std::cout << "SolveSimultaneousEquationsByLUSimd function is called. This function is not implemented yet." << std::endl;
