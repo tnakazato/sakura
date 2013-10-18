@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "libsakura/sakura.h"
+#include "libsakura/memory_manager.h"
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
@@ -15,15 +16,6 @@
 #include <cstdint>
 
 namespace {
-
-void SubtractBaselinePolynomialSimd(size_t num_chan, float const in_data[], bool const in_mask[], int order,
-		float clipping_threshold_sigma, int clipping_max_iteration,
-		bool get_residual, float out[]) {
-	std::cout << "SubtractBaselinePolynomialSimd function is called. This function is not implemented yet." << std::endl;
-}
-void GetBaselineModelSimd(size_t num_chan, int order, double out[]) {
-	std::cout << "GetBaselineModelSimd function is called. This function is not implemented yet." << std::endl;
-}
 void DoSubtractBaselineSimd(size_t num_chan, float const in_data[], bool const in_mask[], size_t num_model,
 		double model_data[], float clipping_threshold_sigma, int clipping_max_iteration, bool get_residual, float out[]) {
 	std::cout << "DoSubtractBaselineSimd function is called. This function is not implemented yet." << std::endl;
@@ -42,22 +34,14 @@ using ::Eigen::Aligned;
 
 namespace {
 
-inline void GetBaselineModelEigen(
+inline void GetBaselineModel(
 		size_t num_chan, int order, double *out) {
-	//std::cout << "GetBaselineModelEigen function is called" << std::endl;
-
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<double, Dynamic, 1>, Aligned> out_(const_cast<double *>(out),
-			(order + 1) * num_chan);
-
 	size_t num_model = order + 1;
+
 	for (size_t i = 0; i < num_model; i++) {
 		for (size_t j = 0; j < num_chan; j++) {
-			double val = 1.0;
-			for (size_t k = 0; k < i; k++) {
-				val *= static_cast<double>(j);
-			}
-			out[num_chan*i+j] = val;
+			out[num_chan*i+j] = pow(static_cast<double>(j), static_cast<double>(i));
 		}
 	}
 }
@@ -91,7 +75,7 @@ inline void DoSubtractBaselineEigen(
 	bool composite_mask[num_chan];
 	float best_fit_model[num_chan];
 	float residual_data[num_chan];
-	bool new_clip_mask[num_chan];
+	//bool new_clip_mask[num_chan];
 
 	int num_clipping = 0;
 	bool end_condition = false;
@@ -136,29 +120,19 @@ inline void DoSubtractBaselineEigen(
 	}
 }
 
-inline void SubtractBaselinePolynomialEigen(
+inline void SubtractBaselinePolynomial(
 		size_t num_chan, float const *in_data, bool const *in_mask,
 		int order, float clipping_threshold_sigma,
 		int clipping_max_iteration, bool get_residual,
 		float *out) {
-	//std::cout << "SubtractBaselinePolynomialEigen function is called" << std::endl;
-
-	/*
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<float, Dynamic, 1>, Aligned> in_data_(const_cast<float *>(in_data),
-			num_chan);
-	Map<Array<bool, Dynamic, 1>, Aligned> in_mask_(const_cast<bool *>(in_mask),
-			num_chan);
-	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
-			num_chan);*/
-	double *model_data;
-	GetBaselineModelEigen(num_chan, order, model_data);
-
 	size_t num_model = order + 1;
+	double *model_data = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_chan*num_model));
+
+	GetBaselineModel(num_chan, order, model_data);
 	DoSubtractBaselineEigen(num_chan, in_data, in_mask, num_model, model_data,
 			clipping_threshold_sigma, clipping_max_iteration, get_residual, out);
+
+	LIBSAKURA_PREFIX::Memory::Free(model_data);
 }
 
 } /* anonymous namespace */
@@ -171,22 +145,13 @@ void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
 		bool const in_mask[/*num_chan*/], int order,
 		float clipping_threshold_sigma, int clipping_max_iteration,
 		bool get_residual, float out[/*num_chan*/]) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	SubtractBaselinePolynomialSimd(num_chan, in_data, in_mask, order,
+	SubtractBaselinePolynomial(num_chan, in_data, in_mask, order,
 			clipping_threshold_sigma, clipping_max_iteration, get_residual, out);
-#else
-	SubtractBaselinePolynomialEigen(num_chan, in_data, in_mask, order,
-			clipping_threshold_sigma, clipping_max_iteration, get_residual, out);
-#endif
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModel(
 		size_t num_chan, int order, double out[/*(order+1)*num_chan*/]) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	GetBaselineModelSimd(num_chan, order, out);
-#else
-	GetBaselineModelEigen(num_chan, order, out);
-#endif
+	GetBaselineModel(num_chan, order, out);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(
