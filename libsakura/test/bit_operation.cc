@@ -134,6 +134,8 @@ class BitOperation32: public BitOperation<uint32_t> {
 class BitOperation8: public BitOperation<uint8_t> {
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
+
 /*
  * Test bit operation AND by sakura_OperateBitsUint8And
  * RESULT:
@@ -738,6 +740,8 @@ TEST_F(BitOperation32, AndFailNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+
 /*
  * Test Material Nonimplication bit operation using sakura_OperateBitsUint8And
  * RESULT:
@@ -896,6 +900,8 @@ TEST_F(BitOperation32, NonImplicationLong) {
 		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result_long[i]);
 	}
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 /*
  * Test bit operation, Converse Nonimplication,
@@ -1529,6 +1535,8 @@ TEST_F(BitOperation32, ConverseNonImplicationFailNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+
 /*
  * Test bit operation NOR using sakura_OperateBitsUint8ConverseNonImplication
  * RESULT:
@@ -1699,6 +1707,8 @@ TEST_F(BitOperation32, NorLong) {
 		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result_long[i]);
 	}
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 /*
  * Test bit operation OR by sakura_OperateBitsUint8Or
@@ -2303,6 +2313,177 @@ TEST_F(BitOperation32, OrFailNotAlignedResult) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Test Converse Implication bit operation using sakura_OperateBitsUint8Or
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 11111101, 11111101, 11111111, 11111111 ]
+ */
+TEST_F(BitOperation8, ConverseImplication) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint8_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint8_t result[ELEMENTSOF(data)];
+
+	uint8_t const base_pattern = (~static_cast<uint8_t>(0)); // 11111111
+	uint8_t answer[] = { 0, 1, 2, 3, static_cast<uint8_t>(base_pattern - 2),
+			static_cast<uint8_t>(base_pattern - 2), base_pattern, base_pattern };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose) {
+		PrintArray("in (before)", num_data, data);
+		PrintArray("mask", num_data, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint8Or(~bit_mask_,
+			num_data, data, edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Long test of Converse Implication bit operation of a large array
+ * using sakura_OperateBitsUint8Or
+ * RESULT:
+ * out = [00000000, 00000001, 00000010, 00000011, 11111101, 11111101, 11111111, 11111111, .... repeated... ]
+ */
+TEST_F(BitOperation8, ConverseImplicationLong) {
+	SIMD_ALIGN
+	uint8_t data_long[NUM_IN_LONG];
+	SIMD_ALIGN
+	bool edit_mask_long[ELEMENTSOF(data_long)];
+	SIMD_ALIGN
+	uint8_t result_long[ELEMENTSOF(data_long)];
+
+	uint8_t const base_pattern = (~static_cast<uint8_t>(0)); // 11111111
+	uint8_t answer[] = { 0, 1, 2, 3, static_cast<uint8_t>(base_pattern - 2),
+			static_cast<uint8_t>(base_pattern - 2), base_pattern, base_pattern };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	size_t const num_large(ELEMENTSOF(data_long));
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, data_long, edit_mask_long);
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint8Or(~bit_mask_, num_large, data_long,
+				edit_mask_long, result_long);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_large; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result_long[i]);
+	}
+}
+
+/*
+ * Test Converse Implication bit operation using sakura_OperateBitsUint32Or
+ * RESULT:
+ * out = [0...000, 0...001, 0...010, 0...011, 1...101, 1...101, 1...111, 1...111 ]
+ */
+TEST_F(BitOperation32, ConverseImplication) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	uint32_t data[num_data];
+	SIMD_ALIGN
+	bool edit_mask[ELEMENTSOF(data)];
+	SIMD_ALIGN
+	uint32_t result[ELEMENTSOF(data)];
+
+	uint32_t const base_pattern = (~static_cast<uint32_t>(0)); // 1...111
+	uint32_t answer[] = { 0, 1, 2, 3, static_cast<uint32_t>(base_pattern - 2),
+			static_cast<uint32_t>(base_pattern - 2), base_pattern, base_pattern };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	GetInputDataInLength(num_data, data, edit_mask);
+	if (verbose) {
+		PrintArray("data", num_data, data);
+		PrintArray("mask", num_data, edit_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateBitsUint32Or(~bit_mask_,
+			num_data, data, edit_mask, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Long test of Converse Implication bit operation of a large array
+ * using sakura_OperateBitsUint32Or
+ * RESULT:
+ * out = [0...000, 0...001, 0...010, 0...011, 1...101, 1...101, 1...111, 1...111, .... repeated... ]
+ */
+TEST_F(BitOperation32, ConverseImplicationLong) {
+	SIMD_ALIGN
+	uint32_t data_long[NUM_IN_LONG];
+	SIMD_ALIGN
+	uint32_t result_long[ELEMENTSOF(data_long)];
+	SIMD_ALIGN
+	bool edit_mask_long[ELEMENTSOF(data_long)];
+
+	uint32_t const base_pattern = (~static_cast<uint32_t>(0)); // 1...111
+	uint32_t answer[] = { 0, 1, 2, 3, static_cast<uint32_t>(base_pattern - 2),
+			static_cast<uint32_t>(base_pattern - 2), base_pattern, base_pattern };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	size_t const num_large(NUM_IN_LONG);
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	// Create long input data by repeating in_data and edit_mask_
+	GetInputDataInLength(num_large, data_long, edit_mask_long);
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_large << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_OperateBitsUint32Or(~bit_mask_, num_large, data_long,
+				edit_mask_long, result_long);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_large; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result_long[i]);
+	}
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 /*
  * Test bit operation NOT by sakura_OperateBitsUint8Not
