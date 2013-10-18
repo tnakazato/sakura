@@ -514,6 +514,12 @@ typedef struct {
  * @note
  * No operation is done when the data array is zero length, i.e., @a num_data = 0.
  *
+ * @note
+ * The function can also be used to invoke converse implication of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke converse implication.
+ * For details of converse implication, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
+ *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
  * between this value and the array, @a data.
  * @param[in] num_data The number of elements in the arrays, @a data,
@@ -540,6 +546,12 @@ typedef struct {
  *
  * @note
  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の逆含意のビット演算にも使用できる。
+ * 逆含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。逆含意のビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
  *
  * @param[in] bit_mask ビットマスク
  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
