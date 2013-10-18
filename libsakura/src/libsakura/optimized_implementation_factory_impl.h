@@ -40,7 +40,7 @@ public:
 	virtual void SubtractBaselinePolynomial(size_t num_chan,
 			float const in_data[/*num_chan*/],
 			bool const in_mask[/*num_chan*/], int order,
-			float clipping_threshold_sigma, int clipping_max_iteration,
+			float clipping_threshold_sigma, unsigned int clipping_max_iteration,
 			bool get_residual, float out[/*num_chan*/]) const;
 	virtual void GetBaselineModel(size_t num_chan, int order,
 			double out[/*(order+1)*num_chan*/]) const;
@@ -48,7 +48,7 @@ public:
 			float const in_data[/*num_chan*/],
 			bool const in_mask[/*num_chan*/], size_t num_model,
 			double model_data[/*num_model * num_chan*/],
-			float clipping_threshold_sigma, int clipping_max_iteration,
+			float clipping_threshold_sigma, unsigned int clipping_max_iteration,
 			bool get_residual, float out[/*num_chan*/]) const;
 };
 
@@ -59,7 +59,7 @@ public:
 	virtual void SubtractBaselinePolynomial(size_t num_chan,
 			float const in_data[/*num_chan*/],
 			bool const in_mask[/*num_chan*/], int order,
-			float clipping_threshold_sigma, int clipping_max_iteration,
+			float clipping_threshold_sigma, unsigned int clipping_max_iteration,
 			bool get_residual, float out[/*num_chan*/]) const;
 	virtual void GetBaselineModel(size_t num_chan, int order,
 			double out[/*(order+1)*num_chan*/]) const;
@@ -67,7 +67,7 @@ public:
 			float const in_data[/*num_chan*/],
 			bool const in_mask[/*num_chan*/], size_t num_model,
 			double model_data[/*num_model * num_chan*/],
-			float clipping_threshold_sigma, int clipping_max_iteration,
+			float clipping_threshold_sigma, unsigned int clipping_max_iteration,
 			bool get_residual, float out[/*num_chan*/]) const;
 };
 

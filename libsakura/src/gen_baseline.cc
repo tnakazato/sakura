@@ -9,7 +9,7 @@
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_chan, float const in_data[], bool const in_mask[], int order,
-		float clipping_threshold_sigma, int clipping_max_iteration,
+		float clipping_threshold_sigma, unsigned int clipping_max_iteration,
 		bool get_residual, float out_data[]) {
 
 	auto baselineop =
@@ -34,7 +34,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
 		size_t num_chan, float const in_data[], bool const in_mask[],
 		size_t num_model, double model_data[], float clipping_threshold_sigma,
-		int clipping_max_iteration, bool get_residual, float out[]) {
+		unsigned int clipping_max_iteration, bool get_residual, float out[]) {
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
