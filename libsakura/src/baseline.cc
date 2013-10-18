@@ -61,20 +61,20 @@ inline void DoSubtractBaseline(
 		//LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(); //new_clip_mask generated based on rms and residual_data
 
 		/*
-		bool no_mask_change_after_clipping = true;
+		bool mask_changed_after_clipping = false;
 		for (size_t j = 0; j < num_chan; ++j) {
 			if (new_clip_mask[j] != clip_mask[j]) {
-				no_mask_change_after_clipping = false;
+				mask_changed_after_clipping = true;
 				break;
 			}
 		}
 
-		if (no_mask_change_after_clipping) {
-			break;
-		} else {
+		if (mask_changed_after_clipping) {
 			for (size_t j = 0; j < num_chan; ++j) {
 				clip_mask[j] = new_clip_mask[j];
 			}
+		} else {
+			break;
 		}
 		*/
 	}
