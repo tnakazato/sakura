@@ -1183,14 +1183,14 @@ bool out[/*num_in*/]);
  * @param[in] in_mask channel mask for the input data.
  * @param[in] order order of polynomial model.
  * @param[in] clipping_threshold_sigma the threshold of clipping.
- * @param[in] clipping_max_iteration the maximum number of iterative clipping.
+ * @param[in] num_clipping_max the maximum number of iterative clipping.
  * @param[in] get_residual set the output to be (input - best-fit) if true, or the best-fit value if false.
  * @param[out] out the output data.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_chan, float const in_data[/*num_chan*/],
 		bool const in_mask[/*num_chan*/], int order,
-		float clipping_threshold_sigma, unsigned int clipping_max_iteration,
+		float clipping_threshold_sigma, unsigned int num_clipping_max,
 		bool get_residual, float out[/*num_chan*/]);
 /**
  * @brief Compute a set of model spectra.
@@ -1210,13 +1210,13 @@ bool out[/*num_in*/]);
  * @param[in] num_model number of model functions.
  * @param[in] model_data the model data.
  * @param[in] clipping_threshold_sigma the threshold of clipping.
- * @param[in] clipping_max_iteration the maximum number of iterative clipping.
+ * @param[in] num_clipping_max the maximum number of iterative clipping.
  * @param[in] get_residual set the output to be (input - best-fit) if true, or the best-fit value if false.
  * @param[out] out the output data.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_chan,
 		float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
 		size_t num_model, double model_data[/*num_model * num_chan*/],
-		float clipping_threshold_sigma, unsigned int clipping_max_iteration,
+		float clipping_threshold_sigma, unsigned int num_clipping_max,
 		bool get_residual, float out[/*num_chan*/]);
 
 #ifdef __cplusplus
