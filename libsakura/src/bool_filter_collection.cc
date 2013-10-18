@@ -14,12 +14,13 @@ inline void SetTrueInRangesInclusiveVector(size_t num_data,
 		DataType const *upper_bounds,
 		bool *result) {
 	uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+	DataType const zero(static_cast<DataType>(0));
 
 	for (size_t i = 0; i < num_data; ++i) {
 		uint8_t is_in_range = 0;
 		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
 			is_in_range |= static_cast<uint8_t>((data[i] - lower_bounds[j])
-					* (upper_bounds[j] - data[i]) >= 0);
+					* (upper_bounds[j] - data[i]) >= zero);
 		}
 		result_alias[i] = is_in_range;
 	}
@@ -30,11 +31,13 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
+	DataType const zero(static_cast<DataType>(0));
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
-			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i]) >= 0)) {
+			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
+					>= zero)) {
 				is_in_range = true;
 				break;
 			}
@@ -48,12 +51,13 @@ inline void SetTrueInRangesInclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
+	DataType const zero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
 			DataType lower_value = lower_bounds[j];
 			DataType upper_value = upper_bounds[j];
-			if (((data[i] - lower_value) * (upper_value - data[i]) >= 0)) {
+			if (((data[i] - lower_value) * (upper_value - data[i]) >= zero)) {
 				is_in_range = true;
 				break;
 			}
@@ -114,25 +118,25 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 			DataType const *data, DataType const *lower_bounds,
 			DataType const *upper_bounds,
 			bool *result);
-	// TODO Vector版とScalar版のどちらが速いか、要調整
+	// Use Scalar version for now
 	static SetTrueInRangesInclusiveFunc const funcs[] = {
 			SetTrueInRangesInclusiveScalar<DataType, 0>,
 			SetTrueInRangesInclusiveScalar<DataType, 1>,
-			SetTrueInRangesInclusiveVector<DataType, 2>,
+			SetTrueInRangesInclusiveScalar<DataType, 2>,
 			SetTrueInRangesInclusiveScalar<DataType, 3>,
-			SetTrueInRangesInclusiveVector<DataType, 4>,
+			SetTrueInRangesInclusiveScalar<DataType, 4>,
 			SetTrueInRangesInclusiveScalar<DataType, 5>,
-			SetTrueInRangesInclusiveVector<DataType, 6>,
+			SetTrueInRangesInclusiveScalar<DataType, 6>,
 			SetTrueInRangesInclusiveScalar<DataType, 7>,
-			SetTrueInRangesInclusiveVector<DataType, 8>,
+			SetTrueInRangesInclusiveScalar<DataType, 8>,
 			SetTrueInRangesInclusiveScalar<DataType, 9>,
-			SetTrueInRangesInclusiveVector<DataType, 10>,
+			SetTrueInRangesInclusiveScalar<DataType, 10>,
 			SetTrueInRangesInclusiveScalar<DataType, 11>,
-			SetTrueInRangesInclusiveVector<DataType, 12>,
+			SetTrueInRangesInclusiveScalar<DataType, 12>,
 			SetTrueInRangesInclusiveScalar<DataType, 13>,
-			SetTrueInRangesInclusiveVector<DataType, 14>,
+			SetTrueInRangesInclusiveScalar<DataType, 14>,
 			SetTrueInRangesInclusiveScalar<DataType, 15>,
-			SetTrueInRangesInclusiveVector<DataType, 16> };
+			SetTrueInRangesInclusiveScalar<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;

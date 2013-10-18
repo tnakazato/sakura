@@ -652,17 +652,7 @@ typedef struct {
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
-// //// TEMPORARY ADDED////
-// LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueUint8InRangesInclusive)(
-// 		size_t num_data, uint8_t const data[/*num_data*/], size_t num_condition,
-// 		uint8_t const lower_bounds[/*num_condition*/],
-// 		uint8_t const upper_bounds[/*num_condition*/],
-// 		bool result[/*num_data*/]);
-// LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueUint32InRangesInclusive)(
-// 		size_t num_data, uint32_t const data[/*num_data*/], size_t num_condition,
-// 		uint32_t const lower_bounds[/*num_condition*/],
-// 		uint32_t const upper_bounds[/*num_condition*/],
-// 		bool result[/*num_data*/]);
+
 /**
  * @~english
  * @brief Convert an input array to a boolean array.
