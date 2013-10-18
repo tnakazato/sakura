@@ -52,7 +52,7 @@ inline void DoSubtractBaseline(
 	float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_chan));
 	//bool *new_clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_chan));
 
-	for (size_t i = 0; i <= num_fitting_max; ++i) {
+	for (size_t i = 0; i < num_fitting_max; ++i) {
 		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_chan, in_mask, clip_mask, composite_mask);
 		LIBSAKURA_SYMBOL(GetBestFitModel)(num_chan, in_data, composite_mask, num_model, model_data, best_fit_model);
 		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_chan, in_data, best_fit_model, residual_data);
