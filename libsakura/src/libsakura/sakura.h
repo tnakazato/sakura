@@ -583,15 +583,15 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor Nan.
+ * Array elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
  * and @a upper_bounds.
  * @param[in] lower_bounds The input array of size, @a num_condition.
- * Array elements should not contain Inf nor Nan.
+ * Array elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[in] upper_bounds The input array of size, @a num_condition.
- * Array elements should not contain Inf nor Nan.
+ * Array elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
@@ -640,6 +640,59 @@ typedef struct {
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]);
+
+/**
+ * @~english
+ * @brief Returns if the values in input array are greater than a threshold.
+ * @details Returns true if the corresponding element in the input array
+ * is greater than a @a threshold,
+ * @par
+ * @a data[i] >  @a threshold .
+ *
+ * @note
+ * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data An input array of size, @a num_data.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[out] result The output array of size, @a num_data.
+ * @n must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 入力配列の値が、与えられたしきい値より大きいかどうかを検定する。
+ * @details 入力配列の要素の値がしきい値( @a threshold )より大きければ真を返す。@n
+ * すなわち、
+ * @par
+ * @a data[i] >  @a threshold .
+ *
+ * を検定する。@n
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+ *
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThan)(
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]);
+
+/**
+ * @copybrief sakura_SetTrueFloatGreaterThan
+ * @copydetails sakura_SetTrueFloatGreaterThan
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThan)(
+		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
 /**
