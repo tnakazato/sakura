@@ -747,24 +747,6 @@ private:
 };
 
 template<class XDataType, class YDataType>
-class XAxisInterpolator {
-public:
-	typedef NearestXAxisInterpolator<XDataType, YDataType> NearestInterpolator;
-	typedef LinearXAxisInterpolator<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialXAxisInterpolator<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineXAxisInterpolator<XDataType, YDataType> SplineInterpolator;
-};
-
-template<class XDataType, class YDataType>
-class YAxisInterpolator {
-public:
-	typedef NearestYAxisInterpolator<XDataType, YDataType> NearestInterpolator;
-	typedef LinearYAxisInterpolator<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialYAxisInterpolator<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineYAxisInterpolator<XDataType, YDataType> SplineInterpolator;
-};
-
-template<class XDataType, class YDataType>
 class XAxisUtility {
 public:
 	typedef XAxisReordererImpl<XDataType> XDataReorderer;
@@ -865,6 +847,26 @@ public:
 	}
 };
 
+template<class XDataType, class YDataType>
+class XAxisInterpolator {
+public:
+	typedef XAxisUtility<XDataType, YDataType> Utility;
+	typedef NearestXAxisInterpolator<XDataType, YDataType> NearestInterpolator;
+	typedef LinearXAxisInterpolator<XDataType, YDataType> LinearInterpolator;
+	typedef PolynomialXAxisInterpolator<XDataType, YDataType> PolynomialInterpolator;
+	typedef SplineXAxisInterpolator<XDataType, YDataType> SplineInterpolator;
+};
+
+template<class XDataType, class YDataType>
+class YAxisInterpolator {
+public:
+	typedef YAxisUtility<XDataType, YDataType> Utility;
+	typedef NearestYAxisInterpolator<XDataType, YDataType> NearestInterpolator;
+	typedef LinearYAxisInterpolator<XDataType, YDataType> LinearInterpolator;
+	typedef PolynomialYAxisInterpolator<XDataType, YDataType> PolynomialInterpolator;
+	typedef SplineYAxisInterpolator<XDataType, YDataType> SplineInterpolator;
+};
+
 template<class Interpolator, class Utility, class XDataType, class YDataType>
 void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		XDataType const base_position[/*num_x_base*/], size_t num_array,
@@ -942,7 +944,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	}
 }
 
-template<class Interpolator, class Utility, class XDataType, class YDataType>
+template<class Interpolator, class XDataType, class YDataType>
 void ExecuteInterpolate1D(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
@@ -952,37 +954,39 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		YDataType interpolated_data[]) {
 	switch (interpolation_method) {
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
-		Interpolate1D<typename Interpolator::NearestInterpolator, Utility,
-				XDataType, YDataType>(polynomial_order, num_base, base_position,
-				num_array, base_data, num_interpolated, interpolated_position,
-				interpolated_data);
+		Interpolate1D<typename Interpolator::NearestInterpolator,
+				typename Interpolator::Utility, XDataType, YDataType>(
+				polynomial_order, num_base, base_position, num_array, base_data,
+				num_interpolated, interpolated_position, interpolated_data);
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
-		Interpolate1D<typename Interpolator::LinearInterpolator, Utility,
-				XDataType, YDataType>(polynomial_order, num_base, base_position,
-				num_array, base_data, num_interpolated, interpolated_position,
-				interpolated_data);
+		Interpolate1D<typename Interpolator::LinearInterpolator,
+				typename Interpolator::Utility, XDataType, YDataType>(
+				polynomial_order, num_base, base_position, num_array, base_data,
+				num_interpolated, interpolated_position, interpolated_data);
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
 		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
-			Interpolate1D<typename Interpolator::NearestInterpolator, Utility,
-					XDataType, YDataType>(polynomial_order, num_base,
-					base_position, num_array, base_data, num_interpolated,
-					interpolated_position, interpolated_data);
+			Interpolate1D<typename Interpolator::NearestInterpolator,
+					typename Interpolator::Utility, XDataType, YDataType>(
+					polynomial_order, num_base, base_position, num_array,
+					base_data, num_interpolated, interpolated_position,
+					interpolated_data);
 		} else {
 			Interpolate1D<typename Interpolator::PolynomialInterpolator,
-					Utility, XDataType, YDataType>(polynomial_order, num_base,
-					base_position, num_array, base_data, num_interpolated,
-					interpolated_position, interpolated_data);
+					typename Interpolator::Utility, XDataType, YDataType>(
+					polynomial_order, num_base, base_position, num_array,
+					base_data, num_interpolated, interpolated_position,
+					interpolated_data);
 		}
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
-		Interpolate1D<typename Interpolator::SplineInterpolator, Utility,
-				XDataType, YDataType>(polynomial_order, num_base, base_position,
-				num_array, base_data, num_interpolated, interpolated_position,
-				interpolated_data);
+		Interpolate1D<typename Interpolator::SplineInterpolator,
+				typename Interpolator::Utility, XDataType, YDataType>(
+				polynomial_order, num_base, base_position, num_array, base_data,
+				num_interpolated, interpolated_position, interpolated_data);
 		break;
 	default:
 		// invalid interpolation method type
@@ -1017,10 +1021,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t num_x_interpolated,
 		XDataType const x_interpolated[/*num_x_interpolated*/],
 		YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const {
-	ExecuteInterpolate1D<XAxisInterpolator<XDataType, YDataType>,
-			XAxisUtility<XDataType, YDataType>, XDataType, YDataType>(
-			interpolation_method, polynomial_order, num_x_base, x_base, num_y,
-			data_base, num_x_interpolated, x_interpolated, data_interpolated);
+	ExecuteInterpolate1D<XAxisInterpolator<XDataType, YDataType>, XDataType,
+			YDataType>(interpolation_method, polynomial_order, num_x_base,
+			x_base, num_y, data_base, num_x_interpolated, x_interpolated,
+			data_interpolated);
 }
 
 /**
@@ -1046,10 +1050,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t num_y_interpolated,
 		XDataType const y_interpolated[/*num_y_interpolated*/],
 		YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const {
-	ExecuteInterpolate1D<YAxisInterpolator<XDataType, YDataType>,
-			YAxisUtility<XDataType, YDataType>, XDataType, YDataType>(
-			interpolation_method, polynomial_order, num_y_base, y_base, num_x,
-			data_base, num_y_interpolated, y_interpolated, data_interpolated);
+	ExecuteInterpolate1D<YAxisInterpolator<XDataType, YDataType>, XDataType,
+			YDataType>(interpolation_method, polynomial_order, num_y_base,
+			y_base, num_x, data_base, num_y_interpolated, y_interpolated,
+			data_interpolated);
 }
 
 template class ADDSUFFIX(Interpolation, ARCH_SUFFIX)<double, float> ;
