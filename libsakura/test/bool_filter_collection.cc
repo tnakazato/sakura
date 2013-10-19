@@ -644,7 +644,7 @@ TEST_F(BoolFilterFloat, GreaterThanLong) {
 	GetDataInLength(num_data, in_data);
 
 	double start, end;
-	size_t const num_repeat = 2000;
+	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
 	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
@@ -779,7 +779,7 @@ TEST_F(BoolFilterInt, GreaterThanLong) {
 	GetDataInLength(num_data, in_data);
 
 	double start, end;
-	size_t const num_repeat = 2000;
+	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
 
 	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
