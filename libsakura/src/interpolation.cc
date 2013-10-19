@@ -884,45 +884,40 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		YDataType const base_data[], size_t num_interpolated,
 		XDataType const interpolated_position[],
 		YDataType interpolated_data[]) {
+	typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
+			size_t, YDataType const *, size_t, XDataType const *, YDataType *);
+	Interpolate1DFunc func = nullptr;
 	switch (interpolation_method) {
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
-		Interpolate1D<typename Interpolator::NearestInterpolator,
-				typename Interpolator::Utility, XDataType, YDataType>(
-				polynomial_order, num_base, base_position, num_array, base_data,
-				num_interpolated, interpolated_position, interpolated_data);
+		func = Interpolate1D<typename Interpolator::NearestInterpolator,
+				typename Interpolator::Utility, XDataType, YDataType>;
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
-		Interpolate1D<typename Interpolator::LinearInterpolator,
-				typename Interpolator::Utility, XDataType, YDataType>(
-				polynomial_order, num_base, base_position, num_array, base_data,
-				num_interpolated, interpolated_position, interpolated_data);
+		func = Interpolate1D<typename Interpolator::LinearInterpolator,
+				typename Interpolator::Utility, XDataType, YDataType>;
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
 		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
-			Interpolate1D<typename Interpolator::NearestInterpolator,
-					typename Interpolator::Utility, XDataType, YDataType>(
-					polynomial_order, num_base, base_position, num_array,
-					base_data, num_interpolated, interpolated_position,
-					interpolated_data);
+			func = Interpolate1D<typename Interpolator::NearestInterpolator,
+					typename Interpolator::Utility, XDataType, YDataType>;
 		} else {
-			Interpolate1D<typename Interpolator::PolynomialInterpolator,
-					typename Interpolator::Utility, XDataType, YDataType>(
-					polynomial_order, num_base, base_position, num_array,
-					base_data, num_interpolated, interpolated_position,
-					interpolated_data);
+			func = Interpolate1D<typename Interpolator::PolynomialInterpolator,
+					typename Interpolator::Utility, XDataType, YDataType>;
 		}
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
-		Interpolate1D<typename Interpolator::SplineInterpolator,
-				typename Interpolator::Utility, XDataType, YDataType>(
-				polynomial_order, num_base, base_position, num_array, base_data,
-				num_interpolated, interpolated_position, interpolated_data);
+		func = Interpolate1D<typename Interpolator::SplineInterpolator,
+				typename Interpolator::Utility, XDataType, YDataType>;
 		break;
 	default:
 		// invalid interpolation method type
 		break;
+	}
+	if (func != nullptr) {
+		(*func)(polynomial_order, num_base, base_position, num_array, base_data,
+				num_interpolated, interpolated_position, interpolated_data);
 	}
 }
 
