@@ -1195,7 +1195,7 @@ bool out[/*num_in*/]);
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_chan, float const in_data[/*num_chan*/],
-		bool const in_mask[/*num_chan*/], int order,
+		bool const in_mask[/*num_chan*/], unsigned int order,
 		float clipping_threshold_sigma, unsigned int num_fitting_max,
 		bool get_residual, float out[/*num_chan*/]);
 /**
@@ -1206,7 +1206,7 @@ bool out[/*num_in*/]);
  * @param[out] out the set of baseline model data.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(size_t num_chan,
-		int order, double out[/*(order+1)*num_chan*/]);
+		unsigned int order, double out[/*(order+1)*num_chan*/]);
 /**
  * @brief Actually fit a baseline and subtract it from input spectrum.
  * @details
@@ -1221,7 +1221,7 @@ bool out[/*num_in*/]);
  * @param[out] out the output data.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_chan,
 		float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
-		size_t num_model, double const model_data[/*num_model * num_chan*/],
+		unsigned int num_model, double const model_data[/*num_model * num_chan*/],
 		float clipping_threshold_sigma, unsigned int num_fitting_max,
 		bool get_residual, float out[/*num_chan*/]);
 

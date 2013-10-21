@@ -61,8 +61,8 @@ protected:
 		return in_value ? "T" : "F";
 	}
 
-	SIMD_ALIGN bool in1_[NUM_IN];
-	SIMD_ALIGN bool in2_[NUM_IN];
+	bool in1_[NUM_IN];
+	bool in2_[NUM_IN];
 	bool verbose;
 
 };
@@ -73,18 +73,24 @@ protected:
  * out = [false, false, false, true]
  */
 TEST_F(LogicalOperation, And) {
+	SIMD_ALIGN bool in1[NUM_IN];
+	SIMD_ALIGN bool in2[NUM_IN];
 	SIMD_ALIGN bool out[NUM_IN];
 	bool result[NUM_IN] = {false, false, false, true};
 	size_t const num_in(NUM_IN);
 
 	if (verbose) PrintInputs();
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateLogicalAnd(num_in, in1_, in2_, out);
+	for (size_t i = 0; i < NUM_IN; ++i) {
+		in1[i] = in1_[i];
+		in2[i] = in2_[i];
+	}
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateLogicalAnd(num_in, in1, in2, out);
 
 	if (verbose) PrintArray("out", num_in, out);
 
 	// Verification
-	//EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; ++i){
 		ASSERT_EQ(out[i], result[i]);
 	}
