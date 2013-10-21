@@ -8,12 +8,18 @@
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in, bool const in1[],
 		bool const in2[], bool out[]) {
-	assert(in1 != nullptr);
-	assert(in2 != nullptr);
-	assert(out != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	if (in1 == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (in2 == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in1)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in2)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto logicop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetLogicalOperationImpl();

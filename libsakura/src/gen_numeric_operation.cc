@@ -8,12 +8,18 @@
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(size_t num_in, float const in1[],
 		float const in2[], float out[]) {
-	assert(in1 != nullptr);
-	assert(in2 != nullptr);
-	assert(out != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	if (in1 == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (in2 == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in1)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in2)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
@@ -25,16 +31,26 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(si
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(size_t num_in,
 		float const in_data[], bool const in_mask[], size_t num_model, double const model[],
 		double out[], double out_vector[]) {
-	assert(in_data    != nullptr);
-	assert(in_mask    != nullptr);
-	assert(model      != nullptr);
-	assert(out        != nullptr);
-	assert(out_vector != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_vector));
+	if (in_data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (in_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (model == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out_vector == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out_vector)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
@@ -45,12 +61,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(size_
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(size_t num_eqn,
 		double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
-	assert(lsq_matrix0 != nullptr);
-	assert(lsq_vector0 != nullptr);
-	assert(out         != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix0));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector0));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	if (lsq_matrix0 == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (lsq_vector0 == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix0)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_vector0)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
@@ -61,12 +83,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_chan,
 		size_t num_eqn, double const model[], double const coeff[], float out[]) {
-	assert(model != nullptr);
-	assert(coeff != nullptr);
-	assert(out   != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	if (model == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (coeff == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(coeff)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
@@ -78,14 +106,22 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t n
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
 		float const in_data[], bool const in_mask[], size_t num_model,
 		double const model[], float out[]) {
-	assert(in_data != nullptr);
-	assert(in_mask != nullptr);
-	assert(model   != nullptr);
-	assert(out     != nullptr);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	if (in_data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (in_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (model == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
