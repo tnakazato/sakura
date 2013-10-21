@@ -20,19 +20,19 @@ using ::Eigen::Aligned;
 namespace {
 
 inline void GetBaselineModel(
-		size_t num_chan, size_t order, double *out) {
+		size_t num_data, size_t order, double *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	size_t num_model = order + 1;
 
 	for (size_t i = 0; i < num_model; ++i) {
-		for (size_t j = 0; j < num_chan; ++j) {
-			out[num_chan*i+j] = pow(static_cast<double>(j), static_cast<double>(i));
+		for (size_t j = 0; j < num_data; ++j) {
+			out[num_data*i+j] = pow(static_cast<double>(j), static_cast<double>(i));
 		}
 	}
 }
 
 inline void DoSubtractBaseline(
-		size_t num_chan, float const *in_data, bool const *in_mask, size_t num_model,
+		size_t num_data, float const *in_data, bool const *in_mask, size_t num_model,
 		double const *model_data, float clipping_threshold_sigma, size_t num_fitting_max,
 		bool get_residual, float *out) {
 	//std::cout << "DoSubtractBaselineEigen function is called" << std::endl;
@@ -42,27 +42,27 @@ inline void DoSubtractBaseline(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
-	bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_chan));
-	for (size_t i = 0; i < num_chan; ++i) {
+	bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
+	for (size_t i = 0; i < num_data; ++i) {
 		clip_mask[i] = true;
 	}
 
-	bool *composite_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_chan));
-	float *best_fit_model = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_chan));
-	float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_chan));
-	//bool *new_clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_chan));
+	bool *composite_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
+	float *best_fit_model = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
+	float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
+	//bool *new_clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
-		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_chan, in_mask, clip_mask, composite_mask);
-		LIBSAKURA_SYMBOL(GetBestFitModel)(num_chan, in_data, composite_mask, num_model, model_data, best_fit_model);
-		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_chan, in_data, best_fit_model, residual_data);
+		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, in_mask, clip_mask, composite_mask);
+		LIBSAKURA_SYMBOL(GetBestFitModel)(num_data, in_data, composite_mask, num_model, model_data, best_fit_model);
+		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_data, in_data, best_fit_model, residual_data);
 
 		//GetRms(); // calculate rms
 		//LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(); //new_clip_mask generated based on rms and residual_data
 
 		/*
 		bool mask_changed_after_clipping = false;
-		for (size_t j = 0; j < num_chan; ++j) {
+		for (size_t j = 0; j < num_data; ++j) {
 			if (new_clip_mask[j] != clip_mask[j]) {
 				mask_changed_after_clipping = true;
 				break;
@@ -70,7 +70,7 @@ inline void DoSubtractBaseline(
 		}
 
 		if (mask_changed_after_clipping) {
-			for (size_t j = 0; j < num_chan; ++j) {
+			for (size_t j = 0; j < num_data; ++j) {
 				clip_mask[j] = new_clip_mask[j];
 			}
 		} else {
@@ -80,11 +80,11 @@ inline void DoSubtractBaseline(
 	}
 
 	if (get_residual) {
-		for (size_t i = 0; i < num_chan; ++i) {
+		for (size_t i = 0; i < num_data; ++i) {
 			out[i] = residual_data[i];
 		}
 	} else {
-		for (size_t i = 0; i < num_chan; ++i) {
+		for (size_t i = 0; i < num_data; ++i) {
 			out[i] = best_fit_model[i];
 		}
 	}
@@ -97,15 +97,15 @@ inline void DoSubtractBaseline(
 }
 
 inline void SubtractBaselinePolynomial(
-		size_t num_chan, float const *in_data, bool const *in_mask,
+		size_t num_data, float const *in_data, bool const *in_mask,
 		size_t order, float clipping_threshold_sigma,
 		size_t num_fitting_max, bool get_residual,
 		float *out) {
 	size_t num_model = order + 1;
-	double *model_data = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_chan*num_model));
+	double *model_data = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model));
 
-	GetBaselineModel(num_chan, order, model_data);
-	DoSubtractBaseline(num_chan, in_data, in_mask, num_model, model_data,
+	GetBaselineModel(num_data, order, model_data);
+	DoSubtractBaseline(num_data, in_data, in_mask, num_model, model_data,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);
 
 	LIBSAKURA_PREFIX::Memory::Free(model_data);
@@ -115,26 +115,26 @@ inline void SubtractBaselinePolynomial(
 
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
-		size_t num_chan, float const in_data[/*num_chan*/],
-		bool const in_mask[/*num_chan*/], size_t order,
+		size_t num_data, float const in_data[/*num_data*/],
+		bool const in_mask[/*num_data*/], size_t order,
 		float clipping_threshold_sigma, size_t num_fitting_max,
-		bool get_residual, float out[/*num_chan*/]) const {
-	SubtractBaselinePolynomial(num_chan, in_data, in_mask, order,
+		bool get_residual, float out[/*num_data*/]) const {
+	SubtractBaselinePolynomial(num_data, in_data, in_mask, order,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModel(
-		size_t num_chan, size_t order, double out[/*(order+1)*num_chan*/]) const {
-	GetBaselineModel(num_chan, order, out);
+		size_t num_data, size_t order, double out[/*(order+1)*num_data*/]) const {
+	GetBaselineModel(num_data, order, out);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(
-		size_t num_chan, float const in_data[/*num_chan*/],
-		bool const in_mask[/*num_chan*/], size_t num_model,
-		double const model_data[/*num_model * num_chan*/],
+		size_t num_data, float const in_data[/*num_data*/],
+		bool const in_mask[/*num_data*/], size_t num_model,
+		double const model_data[/*num_model * num_data*/],
 		float clipping_threshold_sigma, size_t num_fitting_max,
-		bool get_residual, float out[/*num_chan*/]) const {
-	DoSubtractBaseline(num_chan, in_data, in_mask, num_model, model_data,
+		bool get_residual, float out[/*num_data*/]) const {
+	DoSubtractBaseline(num_data, in_data, in_mask, num_model, model_data,
 		clipping_threshold_sigma, num_fitting_max, get_residual, out);
 }
 

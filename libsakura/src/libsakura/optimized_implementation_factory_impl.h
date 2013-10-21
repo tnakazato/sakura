@@ -37,38 +37,38 @@ class BaselineDefault: public Baseline {
 public:
 	virtual ~BaselineDefault() {
 	}
-	virtual void SubtractBaselinePolynomial(size_t num_chan,
-			float const in_data[/*num_chan*/],
-			bool const in_mask[/*num_chan*/], size_t order,
+	virtual void SubtractBaselinePolynomial(size_t num_data,
+			float const in_data[/*num_data*/],
+			bool const in_mask[/*num_data*/], size_t order,
 			float clipping_threshold_sigma, size_t num_fitting_max,
-			bool get_residual, float out[/*num_chan*/]) const;
-	virtual void GetBaselineModel(size_t num_chan, size_t order,
-			double out[/*(order+1)*num_chan*/]) const;
-	virtual void DoSubtractBaseline(size_t num_chan,
-			float const in_data[/*num_chan*/],
-			bool const in_mask[/*num_chan*/], size_t num_model,
-			double const model_data[/*num_model * num_chan*/],
+			bool get_residual, float out[/*num_data*/]) const;
+	virtual void GetBaselineModel(size_t num_data, size_t order,
+			double out[/*(order+1)*num_data*/]) const;
+	virtual void DoSubtractBaseline(size_t num_data,
+			float const in_data[/*num_data*/],
+			bool const in_mask[/*num_data*/], size_t num_model,
+			double const model_data[/*num_model * num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
-			bool get_residual, float out[/*num_chan*/]) const;
+			bool get_residual, float out[/*num_data*/]) const;
 };
 
 class BaselineAfterSandyBridge: public Baseline {
 public:
 	virtual ~BaselineAfterSandyBridge() {
 	}
-	virtual void SubtractBaselinePolynomial(size_t num_chan,
-			float const in_data[/*num_chan*/],
-			bool const in_mask[/*num_chan*/], size_t order,
+	virtual void SubtractBaselinePolynomial(size_t num_data,
+			float const in_data[/*num_data*/],
+			bool const in_mask[/*num_data*/], size_t order,
 			float clipping_threshold_sigma, size_t num_fitting_max,
-			bool get_residual, float out[/*num_chan*/]) const;
-	virtual void GetBaselineModel(size_t num_chan, size_t order,
-			double out[/*(order+1)*num_chan*/]) const;
-	virtual void DoSubtractBaseline(size_t num_chan,
-			float const in_data[/*num_chan*/],
-			bool const in_mask[/*num_chan*/], size_t num_model,
-			double const model_data[/*num_model * num_chan*/],
+			bool get_residual, float out[/*num_data*/]) const;
+	virtual void GetBaselineModel(size_t num_data, size_t order,
+			double out[/*(order+1)*num_data*/]) const;
+	virtual void DoSubtractBaseline(size_t num_data,
+			float const in_data[/*num_data*/],
+			bool const in_mask[/*num_data*/], size_t num_model,
+			double const model_data[/*num_model * num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
-			bool get_residual, float out[/*num_chan*/]) const;
+			bool get_residual, float out[/*num_data*/]) const;
 };
 
 template<typename DataType>

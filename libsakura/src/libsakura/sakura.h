@@ -1103,36 +1103,54 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 /**
  * @brief Logical operation AND between two boolean arrays.
  * @details
- * @param[in] num_in channel number.
- * @param[in] in1 the first input data.
- * @param[in] in2 the second input data.
- * @param[out] out the output data.
+ * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
+ * and @a out. @a num_in must be positive.
+ * @param[in] in1 the first input array.
+ * @param[in] in2 the second input array.
+ * @param[out] out the output array. the pointer of @a out can be identical
+ * with that of either @a in1 or @a in2.
  * @return status code.
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
 bool const in1[/*num_in*/], bool const in2[/*num_in*/],
 bool out[/*num_in*/]);
 /**
  * @brief Compute subtraction between two float arrays (in1 - in2).
  * @details
- * @param[in] num_in channel number.
+ * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
+ * and @a out. @a num_in must be positive.
  * @param[in] in1 the first input data.
  * @param[in] in2 the second input data.
- * @param[out] out the output data.
+ * @param[out] out the output data. the pointer of @a out can be identical
+ * with that of @a in1.
  * @return status code.
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
 		size_t num_in, float const in1[/*num_in*/], float const in2[/*num_in*/],
 		float out[/*num_in*/]);
 /**
- * @brief Compute values for Least-Square fitting from input data and a set of model data.
+ * @brief Compute a matrix used for Least-Square fitting.
  * @details
- * @param[in] num_in channel number.
+ * @param[in] num_in the number of elements in the arrays @a in_data
+ * and @a in_mask. @a num_in must be positive.
  * @param[in] in_data input data.
- * @param[in] in_mask channel mask for the input data.
- * @param[in] num_model number of model functions.
- * @param[in] model model data.
- * @param[out] out the least-square matrix
- * @param[out] out_vector the right side value of the simultaneous equations of least-square fitting.
+ * @param[in] in_mask input mask data.
+ * @param[in] num_model number of model functions. must be positive.
+ * @param[in] model model data. should contain all model values
+ * concatenated so the number of elements should be equal to
+ * (@a num_in * @a num_model).
+ * @param[out] out an array containing the values of the least-square
+ * matrix in the left side of the simultaneous equations of least-square
+ * fitting. its number of elements should therefore be equal to
+ * (@a num_model * @a num_model).
+ * @param[out] out_vector the right side value of the simultaneous
+ * equations of least-square fitting. its length should be equal to
+ * @a num_model.
  * @return status code.
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(size_t num_in,
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
@@ -1141,36 +1159,46 @@ bool out[/*num_in*/]);
 /**
  * @brief Solve simultaneous equations via LU decomposition.
  * @details
- * @param[in] num_eqn number of equations.
+ * @param[in] num_eqn number of equations. must be positive number.
  * @param[in] lsq_matrix0 the matrix in the left side of simultaneous equations.
  * @param[in] lsq_vector0 the right side value of simultaneous equations.
  * @param[out] out the solution.
  * @return status code.
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
 		size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
 		double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
 /**
  * @brief Compute the best-fit model spectrum using model spectra and coefficients.
  * @details
- * @param[in] num_chan channel number.
+ * @param[in] num_data the number of elements in the array @a out.
+ * must be positive.
  * @param[in] num_eqn number of models.
- * @param[in] model model data.
+ * @param[in] model an array containing all model values concatenated.
+ * its length should be equal to (@a num_eqn * @a num_data).
  * @param[in] coeff coefficients.
  * @param[out] out the best-fit model.
  * @return status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_chan,
-		size_t num_eqn, double const model[/*num_eqn * num_chan*/],
-		double const coeff[/*num_eqn*/], float out[/*num_in*/]);
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_data,
+		size_t num_eqn, double const model[/*num_eqn * num_data*/],
+		double const coeff[/*num_eqn*/], float out[/*num_data*/]);
 /**
  * @brief Compute the best-fit model spectrum by least-square fitting.
  * @details
- * @param[in] num_in channel number.
+ * @param[in] num_in the number of elements in the arrays @a in_data,
+ * @a in_mask, and @a out. must be positive value. must be positive number.
  * @param[in] in_data the input data.
- * @param[in] in_mask channel mask for the input data.
+ * @param[in] in_mask the input mask data.
  * @param[in] num_model number of model functions.
- * @param[in] model model data.
+ * @param[in] model model data array containing all model values concatenated.
+ * its length therefore must be (@a num_model * @a num_in).
  * @param[out] out the best-fit model.
  * @return status code.
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
@@ -1181,49 +1209,63 @@ bool out[/*num_in*/]);
  * @~english
  * @brief Fit a baseline and subtract it from input spectrum.
  * @details
- * @param[in] num_chan channel number.
+ * @param[in] num_data the number of elements in the arrays @a in_data,
+ * @a in_mask, and @a out. must be positive number.
  * @param[in] in_data the input data.
- * @param[in] in_mask channel mask for the input data.
- * @param[in] order order of polynomial model.
+ * @param[in] in_mask the input mask data.
+ * @param[in] order order of polynomial model. must be zero or positive.
  * @param[in] clipping_threshold_sigma the threshold of clipping.
  * @param[in] num_fitting_max the maximum number of recursive baseline fitting.
  * In case n is given, after the first baseline fitting, clipping and baseline
  * fitting based on the updated channel mask are executed for (n-1) times at maximum.
  * Default is 1 (i.e., baseline fitting done just once and no clipping applied)
- * @param[in] get_residual set the output to be (input - best-fit) if true, or the best-fit value if false.
+ * @param[in] get_residual set the output to be (input - best-fit) if true,
+ * or the best-fit value if false.
  * @param[out] out the output data.
  * @return status code.
+ * @~
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
-		size_t num_chan, float const in_data[/*num_chan*/],
-		bool const in_mask[/*num_chan*/], size_t order,
+		size_t num_data, float const in_data[/*num_data*/],
+		bool const in_mask[/*num_data*/], size_t order,
 		float clipping_threshold_sigma, size_t num_fitting_max,
-		bool get_residual, float out[/*num_chan*/]);
+		bool get_residual, float out[/*num_data*/]);
 /**
  * @brief Compute a set of model spectra.
  * @details
- * @param[in] num_chan channel number.
- * @param[in] order order of polynomial model.
- * @param[out] out the set of baseline model data.
+ * @param[in] num_data the number of elements in each model spectrum.
+ * must be positive.
+ * @param[in] order order of polynomial model. must be zero or positive.
+ * @param[out] out the set of baseline model data. its length must be equal
+ * to (@a num_data * (@a order + 1)).
  * @return status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(size_t num_chan,
-		size_t order, double out[/*(order+1)*num_chan*/]);
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(size_t num_data,
+		size_t order, double out[/*(order+1)*num_data*/]);
 /**
- * @brief Actually fit a baseline and subtract it from input spectrum.
+ * @brief Recursively fit a baseline and subtract it from input spectrum.
  * @details
- * @param[in] num_chan channel number.
+ * @param[in] num_data the number of elements in the arrays @a in_data,
+ * @a in_mask, and @a out. must be positive.
  * @param[in] in_data the input data.
- * @param[in] in_mask channel mask for the input data.
- * @param[in] num_model number of model functions.
- * @param[in] model_data the model data.
- * @param[in] clipping_threshold_sigma the threshold of clipping.
+ * @param[in] in_mask the input mask data.
+ * @param[in] num_model number of model functions. must be positive.
+ * @param[in] model_data an array containing all model values concatenated.
+ * its length must be equal to (@a num_model * @a num_data).
+ * @param[in] clipping_threshold_sigma the threshold of clipping. must be positive.
  * @param[in] num_fitting_max the maximum number of iterative clipping.
- * @param[in] get_residual set the output to be (input - best-fit) if true, or the best-fit value if false.
+ * must be zero or positive.
+ * @param[in] get_residual set the output to be (input - best-fit) if true,
+ * or the best-fit value if false.
  * @param[out] out the output data.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_chan,
-		float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
-		size_t num_model, double const model_data[/*num_model * num_chan*/],
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_data,
+		float const in_data[/*num_data*/], bool const in_mask[/*num_data*/],
+		size_t num_model, double const model_data[/*num_model * num_data*/],
 		float clipping_threshold_sigma, size_t num_fitting_max,
-		bool get_residual, float out[/*num_chan*/]);
+		bool get_residual, float out[/*num_data*/]);
 
 #ifdef __cplusplus
 }

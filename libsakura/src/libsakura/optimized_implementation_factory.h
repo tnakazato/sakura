@@ -28,18 +28,18 @@ class Baseline {
 public:
 	virtual ~Baseline() {
 	}
-	virtual void SubtractBaselinePolynomial(size_t num_chan,
-			float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
+	virtual void SubtractBaselinePolynomial(size_t num_data,
+			float const in_data[/*num_data*/], bool const in_mask[/*num_data*/],
 			size_t order, float clipping_threshold_sigma,
 			size_t num_fitting_max, bool get_residual,
-			float out[/*num_chan*/]) const = 0;
-	virtual void GetBaselineModel(size_t num_chan, size_t order,
-			double out[/*(order+1)*num_chan*/]) const = 0;
-	virtual void DoSubtractBaseline(size_t num_chan,
-			float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
-			size_t num_model, double const model_data[/*num_model * num_chan*/],
+			float out[/*num_data*/]) const = 0;
+	virtual void GetBaselineModel(size_t num_data, size_t order,
+			double out[/*(order+1)*num_data*/]) const = 0;
+	virtual void DoSubtractBaseline(size_t num_data,
+			float const in_data[/*num_data*/], bool const in_mask[/*num_data*/],
+			size_t num_model, double const model_data[/*num_model * num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
-			bool get_residual, float out[/*num_chan*/]) const = 0;
+			bool get_residual, float out[/*num_data*/]) const = 0;
 };
 
 template<typename DataType>
