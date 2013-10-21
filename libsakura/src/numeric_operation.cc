@@ -52,14 +52,14 @@ inline void OperateFloatSubtractionEigen(size_t num_in, float const *in1,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<float, Dynamic, 1>, Aligned> in1_(const_cast<float *>(in1),
+	Map<Array<float, Dynamic, 1>, Aligned> in1_array(const_cast<float *>(in1),
 			num_in);
-	Map<Array<float, Dynamic, 1>, Aligned> in2_(const_cast<float *>(in2),
+	Map<Array<float, Dynamic, 1>, Aligned> in2_array(const_cast<float *>(in2),
 			num_in);
-	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
+	Map<Array<float, Dynamic, 1>, Aligned> out_array(const_cast<float *>(out),
 			num_in);
 
-	out_ = in1_ - in2_;
+	out_array = in1_array - in2_array;
 }
 
 inline void SolveSimultaneousEquationsByLUEigen(size_t num_eqn,
@@ -69,25 +69,25 @@ inline void SolveSimultaneousEquationsByLUEigen(size_t num_eqn,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix0));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector0));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<double, Dynamic, 1>, Aligned> lsq_matrix0_(const_cast<double *>(lsq_matrix0),
+	Map<Array<double, Dynamic, 1>, Aligned> lsq_matrix0_array(const_cast<double *>(lsq_matrix0),
 			num_eqn*num_eqn);
-	Map<Array<double, Dynamic, 1>, Aligned> lsq_vector0_(const_cast<double *>(lsq_vector0),
+	Map<Array<double, Dynamic, 1>, Aligned> lsq_vector0_array(const_cast<double *>(lsq_vector0),
 			num_eqn);
-	Map<Array<double, Dynamic, 1>, Aligned> out_(const_cast<double *>(out),
+	Map<Array<double, Dynamic, 1>, Aligned> out_array(const_cast<double *>(out),
 			num_eqn);
 
 	::Eigen::MatrixXd lsq_matrix(num_eqn, num_eqn);
 	::Eigen::VectorXd lsq_vector(num_eqn);
 	for (size_t i = 0; i < num_eqn; ++i) {
 		for (size_t j = 0; j < num_eqn; ++j) {
-			lsq_matrix(i, j) = lsq_matrix0_[num_eqn*i+j];
+			lsq_matrix(i, j) = lsq_matrix0_array[num_eqn*i+j];
 		}
-		lsq_vector(i) = lsq_vector0_[i];
+		lsq_vector(i) = lsq_vector0_array[i];
 	}
 
 	::Eigen::VectorXd lu_result = lsq_matrix.fullPivLu().solve(lsq_vector);
 	for (size_t i = 0; i < num_eqn; ++i) {
-		out_[i] = lu_result(i);
+		out_array[i] = lu_result(i);
 	}
 }
 
@@ -98,17 +98,17 @@ inline void DoGetBestFitModelEigen(size_t num_chan, size_t num_eqn,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<double, Dynamic, 1>, Aligned> model_(const_cast<double *>(model),
+	Map<Array<double, Dynamic, 1>, Aligned> model_array(const_cast<double *>(model),
 			num_eqn*num_chan);
-	Map<Array<double, Dynamic, 1>, Aligned> coeff_(const_cast<double *>(coeff),
+	Map<Array<double, Dynamic, 1>, Aligned> coeff_array(const_cast<double *>(coeff),
 			num_eqn);
-	Map<Array<float, Dynamic, 1>, Aligned> out_(const_cast<float *>(out),
+	Map<Array<float, Dynamic, 1>, Aligned> out_array(const_cast<float *>(out),
 			num_chan);
 
 	for (size_t i = 0; i < num_chan; ++i) {
-		out_[i] = 0.0f;
+		out_array[i] = 0.0f;
 		for (size_t j = 0; j < num_eqn; ++j) {
-			out_[i] += coeff_[j] * model_[num_chan * j + i];
+			out_array[i] += coeff_array[j] * model_array[num_chan * j + i];
 		}
 	}
 }
