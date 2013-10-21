@@ -30,15 +30,15 @@ public:
 	}
 	virtual void SubtractBaselinePolynomial(size_t num_chan,
 			float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
-			unsigned int order, float clipping_threshold_sigma,
-			unsigned int num_fitting_max, bool get_residual,
+			size_t order, float clipping_threshold_sigma,
+			size_t num_fitting_max, bool get_residual,
 			float out[/*num_chan*/]) const = 0;
-	virtual void GetBaselineModel(size_t num_chan, unsigned int order,
+	virtual void GetBaselineModel(size_t num_chan, size_t order,
 			double out[/*(order+1)*num_chan*/]) const = 0;
 	virtual void DoSubtractBaseline(size_t num_chan,
 			float const in_data[/*num_chan*/], bool const in_mask[/*num_chan*/],
-			unsigned int num_model, double const model_data[/*num_model * num_chan*/],
-			float clipping_threshold_sigma, unsigned int num_fitting_max,
+			size_t num_model, double const model_data[/*num_model * num_chan*/],
+			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_chan*/]) const = 0;
 };
 

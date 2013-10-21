@@ -9,8 +9,8 @@
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_chan, float const in_data[], bool const in_mask[],
-		unsigned int order, float clipping_threshold_sigma,
-		unsigned int num_fitting_max, bool get_residual, float out_data[]) {
+		size_t order, float clipping_threshold_sigma,
+		size_t num_fitting_max, bool get_residual, float out_data[]) {
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
@@ -22,7 +22,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
-		size_t num_chan, unsigned int order, double out[]) {
+		size_t num_chan, size_t order, double out[]) {
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
@@ -33,8 +33,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
 		size_t num_chan, float const in_data[], bool const in_mask[],
-		unsigned int num_model, double const model_data[], float clipping_threshold_sigma,
-		unsigned int num_fitting_max, bool get_residual, float out[]) {
+		size_t num_model, double const model_data[], float clipping_threshold_sigma,
+		size_t num_fitting_max, bool get_residual, float out[]) {
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
