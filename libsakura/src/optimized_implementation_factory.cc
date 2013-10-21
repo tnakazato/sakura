@@ -163,8 +163,7 @@ public:
 		return &apply_calibration_after_sandy_bridge;
 	}
 	virtual Baseline const *GetBaselineImpl() const {
-		// return &baseline_after_sandy_bridge;
-		return &baseline_default;
+		return &baseline_after_sandy_bridge;
 	}
 	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
 		return &bit_operation_after_sandy_bridge_uint8;
@@ -196,12 +195,10 @@ public:
 //		return &interpolation_default;
 	}
 	virtual LogicalOperation const *GetLogicalOperationImpl() const {
-		// return &logical_operation_after_sandy_bridge;
-		return &logical_operation_default;
+		return &logical_operation_after_sandy_bridge;
 	}
 	virtual NumericOperation const *GetNumericOperationImpl() const {
-		// return &numeric_operation_after_sandy_bridge;
-		return &numeric_operation_default;
+		return &numeric_operation_after_sandy_bridge;
 	}
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_sandy_bridge;
