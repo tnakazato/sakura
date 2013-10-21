@@ -41,7 +41,6 @@ void E2eReduce(int argc, char const* const argv[]) {
 	xdispatch::main_queue().async([=] {
 		sleep(1);
 		std::cout << "finished\n";
-		exit(0);
 	});
 	LOG4CXX_INFO(logger, "Leave: E2eReduce");
 }
@@ -59,11 +58,16 @@ void main_(int argc, char const* const argv[]) {
 			LOG4CXX_ERROR(logger, "Exception raised");
 		}
 		xdispatch::main_queue().sync([] {
+			LOG4CXX_INFO(logger, "Cleaning up libsakura");
 			sakura_CleanUp();
+			exit(0);
 		});
 	} else {
 		LOG4CXX_ERROR(logger, "Failed to initialize libsakura.");
 	}
+	xdispatch::main_queue().sync([] {
+		exit(1);
+	});
 }
 
 }
