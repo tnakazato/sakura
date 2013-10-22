@@ -940,7 +940,7 @@ namespace LIBSAKURA_PREFIX {
  * where N and M correspond to num_x_base and num_y respectively.
  */
 template<class XDataType, class YDataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::Interpolate1DX(
+void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::InterpolateXAxis(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_x_base,
 		XDataType const x_base[/*num_x_base*/], size_t num_y,
@@ -969,7 +969,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * where N and M correspond to num_y_base and num_x respectively.
  */
 template<class XDataType, class YDataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::Interpolate1DY(
+void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::InterpolateYAxis(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_y_base,
 		XDataType const y_base[/*num_y_base*/], size_t num_x,

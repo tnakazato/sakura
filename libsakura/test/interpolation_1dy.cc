@@ -21,7 +21,7 @@ protected:
 		ASSERT_EQ(sakura_Status_kOK, initialize_result_)<< "sakura must be properly initialized!";
 
 		// execute interpolation
-		sakura_Status result = sakura_Interpolate1DYFloat(
+		sakura_Status result = sakura_InterpolateYAxisFloat(
 				interpolation_method, polynomial_order_, num_base,
 				x_base_, num_array, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
 

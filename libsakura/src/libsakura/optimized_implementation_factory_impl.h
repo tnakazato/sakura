@@ -234,7 +234,7 @@ class InterpolationDefault: public Interpolation<XDataType, YDataType> {
 public:
 	virtual ~InterpolationDefault() {
 	}
-	virtual void Interpolate1DX(
+	virtual void InterpolateXAxis(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			uint8_t polynomial_order, size_t num_x_base,
 			XDataType const x_base[/*num_x_base*/], size_t num_y,
@@ -242,7 +242,7 @@ public:
 			size_t num_x_interpolated,
 			XDataType const x_interpolated[/*num_x_interpolated*/],
 			YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const;
-	virtual void Interpolate1DY(
+	virtual void InterpolateYAxis(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			uint8_t polynomial_order, size_t num_y_base,
 			XDataType const y_base[/*num_y_base*/], size_t num_x,
@@ -257,7 +257,7 @@ class InterpolationAfterSandyBridge: public Interpolation<XDataType, YDataType> 
 public:
 	virtual ~InterpolationAfterSandyBridge() {
 	}
-	virtual void Interpolate1DX(
+	virtual void InterpolateXAxis(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			uint8_t polynomial_order, size_t num_x_base,
 			XDataType const x_base[/*num_x_base*/], size_t num_y,
@@ -265,7 +265,7 @@ public:
 			size_t num_x_interpolated,
 			XDataType const x_interpolated[/*num_x_interpolated*/],
 			YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const;
-	virtual void Interpolate1DY(
+	virtual void InterpolateYAxis(
 	LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			uint8_t polynomial_order, size_t num_y_base,
 			XDataType const x_base[/*num_y_base*/], size_t num_x,
