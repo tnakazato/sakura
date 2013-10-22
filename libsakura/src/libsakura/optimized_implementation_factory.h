@@ -179,13 +179,13 @@ public:
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const = 0;
 	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
-	bool const in_mask[/*num_in*/], size_t num_model,
+			bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const = 0;
-	virtual void GetLeastSquareMatrix(size_t num_in,
+	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
 			float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 			size_t num_model, double const model[/*num_model * num_in*/],
-			double out[/*num_model * num_model*/],
+			double out_matrix[/*num_model * num_model*/],
 			double out_vector[/*num_model*/]) const = 0;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],

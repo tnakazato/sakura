@@ -1220,6 +1220,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
+
 /**
  * @~japanese
  * @brief ２つの配列の論理積(AND)を返す。
@@ -1241,9 +1242,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t num_in,
-bool const in1[/*num_in*/], bool const in2[/*num_in*/],
-bool out[/*num_in*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(
+		 size_t num_in, bool const in1[/*num_in*/],
+		 bool const in2[/*num_in*/], bool out[/*num_in*/]);
+
 /**
  * @~japanese
  * @brief ２つの配列の差分を要素に持つ配列を返す。
@@ -1266,8 +1268,9 @@ bool out[/*num_in*/]);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
-		size_t num_in, float const in1[/*num_in*/], float const in2[/*num_in*/],
-		float out[/*num_in*/]);
+		 size_t num_in, float const in1[/*num_in*/],
+		 float const in2[/*num_in*/], float out[/*num_in*/]);
+
 /**
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値を計算する。
@@ -1277,7 +1280,7 @@ bool out[/*num_in*/]);
  * @param[in] in_mask 入力データに対するマスク情報。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @param[in] num_model モデルを構成する基底関数の数。正値でなければならない。
  * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_in * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model * @a num_in )でなければならない。
- * @param[out] out 求める連立方程式の左辺側の行列成分を格納する配列。対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out [ @a num_model * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model * @a num_model )となる。
+ * @param[out] out_matrix 求める連立方程式の左辺側の行列成分を格納する配列。対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out_matrix [ @a num_model * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model * @a num_model )となる。
  * @param[out] out_vector 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model となる。
  * @return 終了ステータス。
  * @~english
@@ -1293,26 +1296,28 @@ bool out[/*num_in*/]);
  * @param[in] model an array containing all model values concatenated.
  * loop for data index must be inside that for model index, i.e.,
  * the @a n -th data of the @a m -th model must be stored at
- * model[@a num_in * @a (m-1) + @a (n-1) ]. its length should be equal
- * to (@a num_model * @a num_in).
- * @param[out] out an array containing the values of the least-square
- * matrix in the left side of the simultaneous equations of least-square
- * fitting. its number of elements should therefore be equal to
- * (@a num_model * @a num_model ). loop for columns comes inside that for
- * rows, i.e., the value at the @a m -th row and @a n -th column is
- * stored at out[@a num_model * (@a m -1) + (@a n -1)], though @a out is
- * actually a symmetric matrix.
+ * @a model [ @a num_in * @a (m-1) + @a (n-1) ]. its length should be equal
+ * to ( @a num_model * @a num_in).
+ * @param[out] out_matrix a 1D array containing the values of a matrix
+ * at the left side of simultaneous equations for least-square fitting.
+ * its length should therefore be equal to ( @a num_model * @a num_model ).
+ * loop for columns comes inside that for rows, i.e., the value at the
+ * @a m -th row and @a n -th column is stored at @a out_matrix [ @a
+ * num_model * ( @a m -1) + ( @a n -1)], though @a out_matrix is actually
+ * symmetric.
  * @param[out] out_vector the right side value of the simultaneous
- * equations of least-square fitting. its length should be equal to
+ * equations for least-square fitting. its length should be equal to
  * @a num_model.
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(size_t num_in,
-		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
-		size_t num_model, double const model[/*num_model * num_in*/],
-		double out[/*num_model * num_model*/],
-		double out_vector[/*num_model*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(
+		 size_t num_in, float const in_data[/*num_in*/],
+		 bool const in_mask[/*num_in*/], size_t num_model,
+		 double const model[/*num_model * num_in*/],
+		 double out_matrix[/*num_model * num_model*/],
+		 double out_vector[/*num_model*/]);
+
 /**
  * @~japanese
  * @brief 連立方程式をLU分解によって解く。
@@ -1335,8 +1340,9 @@ bool out[/*num_in*/]);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-		size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
-		double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
+		 size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
+		 double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
+
 /**
  * @brief Compute the best-fit model by least-square fitting.
  * @details
@@ -1358,6 +1364,7 @@ bool out[/*num_in*/]);
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
 		float out[/*num_in*/]);
+
 /**
  * @~japanese
  * @brief 入力スペクトルに多項式ベースラインをフィットし差し引く。
@@ -1387,6 +1394,7 @@ bool out[/*num_in*/]);
 		bool const in_mask[/*num_data*/], size_t order,
 		float clipping_threshold_sigma, size_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
+
 /**
  * @brief Compute a set of model data.
  * @details
@@ -1403,6 +1411,7 @@ bool out[/*num_in*/]);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(size_t num_data,
 		size_t order, double out[/*(order+1)*num_data*/]);
+
 /**
  * @brief Recursively fit a baseline and subtract it from input spectrum.
  * @details

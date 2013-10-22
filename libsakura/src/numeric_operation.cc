@@ -92,27 +92,28 @@ inline void SolveSimultaneousEquationsByLUEigen(size_t num_eqn,
 #endif /* defined(__AVX__) */
 
 namespace {
-inline void GetLeastSquareMatrix(size_t num_in, float const *in_data,
-		bool const *in_mask, size_t num_model, double const *model,
-		double *out, double *out_vector) {
+inline void GetCoefficientsForLeastSquareFitting(size_t num_in,
+		float const *in_data, bool const *in_mask,
+		size_t num_model, double const *model,
+		double *out_matrix, double *out_vector) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_matrix));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_vector));
 
 	for (size_t i = 0; i < num_model; ++i) {
 		for (size_t j = 0; j < num_model; ++j) {
 			size_t idx = num_model * i + j;
-			out[idx] = 0.0;
+			out_matrix[idx] = 0.0;
 
 			for (size_t k = 0; k < num_in ; ++k){
 				if (!in_mask[k]) continue;
 
 				size_t idx_i = num_in * i + k;
 				size_t idx_j = num_in * j + k;
-				out[idx] += model[idx_i] * model[idx_j];
+				out_matrix[idx] += model[idx_i] * model[idx_j];
 			}
 		}
 
@@ -154,11 +155,11 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::OperateFloatSubtraction(size_t nu
 #endif
 }
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetLeastSquareMatrix(size_t num_in,
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetCoefficientsForLeastSquareFitting(size_t num_in,
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
-		double out[/*num_model * num_model*/], double out_vector[/*num_model*/]) const {
-	::GetLeastSquareMatrix(num_in, in_data, in_mask, num_model, model, out, out_vector);
+		double out_matrix[/*num_model * num_model*/], double out_vector[/*num_model*/]) const {
+	GetCoefficientsForLeastSquareFitting(num_in, in_data, in_mask, num_model, model, out_matrix, out_vector);
 }
 
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(size_t num_eqn,
@@ -185,7 +186,7 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(size_t num_in,
 	double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
 	double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
 
-	LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(num_in, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(num_in, in_data, in_mask,
 			num_model, model, lsq_matrix0, lsq_vector0);
 
 	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_model,
