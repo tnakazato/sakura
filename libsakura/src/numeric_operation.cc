@@ -25,10 +25,6 @@ void SolveSimultaneousEquationsByLUSimd(size_t num_eqn,
 		double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
 	std::cout << "SolveSimultaneousEquationsByLUSimd function is called. This function is not implemented yet." << std::endl;
 }
-void DoGetBestFitModelSimd(size_t num_chan, size_t num_eqn,
-		double const model[], double const coeff[], float out[]) {
-	std::cout << "DoGetBestFitModelSimd function is called. This function is not implemented yet." << std::endl;
-}
 
 } /* anonymous namespace */
 
@@ -91,28 +87,6 @@ inline void SolveSimultaneousEquationsByLUEigen(size_t num_eqn,
 	}
 }
 
-inline void DoGetBestFitModelEigen(size_t num_chan, size_t num_eqn,
-		double const *model, double const *coeff, float *out) {
-	//std::cout << "DoGetBestFitModelEigen function is called" << std::endl;
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<double, Dynamic, 1>, Aligned> model_array(const_cast<double *>(model),
-			num_eqn*num_chan);
-	Map<Array<double, Dynamic, 1>, Aligned> coeff_array(const_cast<double *>(coeff),
-			num_eqn);
-	Map<Array<float, Dynamic, 1>, Aligned> out_array(const_cast<float *>(out),
-			num_chan);
-
-	for (size_t i = 0; i < num_chan; ++i) {
-		out_array[i] = 0.0f;
-		for (size_t j = 0; j < num_eqn; ++j) {
-			out_array[i] += coeff_array[j] * model_array[num_chan * j + i];
-		}
-	}
-}
-
 } /* anonymous namespace */
 
 #endif /* defined(__AVX__) */
@@ -152,30 +126,19 @@ inline void GetLeastSquareMatrix(size_t num_in, float const *in_data,
 	}
 }
 
-inline void GetBestFitModel(size_t num_in, float const *in_data,
-		bool const *in_mask, size_t num_model, double const *model,
-		float *out) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
+inline void DoGetBestFitModel(size_t num_data, size_t num_eqn,
+		double const *model, double const *coeff, float *out) {
+
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
-	double *lsq_matrix0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model*num_model));
-	//if (lsq_matrix0 == nullptr) {}
-	double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
-	double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
-
-	LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(num_in, in_data, in_mask,
-			num_model, model, lsq_matrix0, lsq_vector0);
-
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_model,
-			lsq_matrix0, lsq_vector0, coeff);
-
-	LIBSAKURA_SYMBOL(DoGetBestFitModel)(num_in, num_model, model, coeff, out);
-
-	LIBSAKURA_PREFIX::Memory::Free(lsq_matrix0);
-	LIBSAKURA_PREFIX::Memory::Free(lsq_vector0);
-	LIBSAKURA_PREFIX::Memory::Free(coeff);
+	for (size_t i = 0; i < num_data; ++i) {
+		out[i] = 0.0f;
+		for (size_t j = 0; j < num_eqn; ++j) {
+			out[i] += coeff[j] * model[num_data * j + i];
+		}
+	}
 }
 
 } /* anonymous namespace */
@@ -208,21 +171,32 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(si
 #endif
 }
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::DoGetBestFitModel(size_t num_chan,
-		size_t num_eqn, double const model[/*num_eqn * num_chan*/],
-		double const coeff[/*num_eqn*/], float out[/*num_chan*/]) const {
-#if defined( __AVX__) && (! FORCE_EIGEN)
-	DoGetBestFitModelSimd(num_chan, num_eqn, model, coeff, out);
-#else
-	DoGetBestFitModelEigen(num_chan, num_eqn, model, coeff, out);
-#endif
-}
-
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(size_t num_in,
 		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
 		size_t num_model, double const model[/*num_model * num_in*/],
 		float out[/*num_in*/]) const {
-	::GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	double *lsq_matrix0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model*num_model));
+	//if (lsq_matrix0 == nullptr) {}
+	double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
+	double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
+
+	LIBSAKURA_SYMBOL(GetLeastSquareMatrix)(num_in, in_data, in_mask,
+			num_model, model, lsq_matrix0, lsq_vector0);
+
+	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_model,
+			lsq_matrix0, lsq_vector0, coeff);
+
+	DoGetBestFitModel(num_in, num_model, model, coeff, out);
+
+	LIBSAKURA_PREFIX::Memory::Free(lsq_matrix0);
+	LIBSAKURA_PREFIX::Memory::Free(lsq_vector0);
+	LIBSAKURA_PREFIX::Memory::Free(coeff);
+
 }
 
 }

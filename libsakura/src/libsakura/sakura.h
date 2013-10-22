@@ -1221,6 +1221,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
 /**
+ * @~japanese
+ * @brief ２つの配列の論理積(AND)を返す。
+ * @details
+ * @param[in] num_in 配列 @a in1、@a in2、及び@a outの要素数。正値でなければならない。
+ * @param[in] in1 入力される配列その１。
+ * @param[in] in2 入力される配列その２。
+ * @param[in] out 出力される配列。@a outを指すポインタは@a in1または@a in2のいずれかと同じでもよい。
+ * @return 終了ステータス。
+ * @~english
  * @brief Logical operation AND between two boolean arrays.
  * @details
  * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
@@ -1236,6 +1245,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 bool const in1[/*num_in*/], bool const in2[/*num_in*/],
 bool out[/*num_in*/]);
 /**
+ * @~japanese
+ * @brief ２つの配列の差分を要素に持つ配列を返す。
+ * @details
+ * @param[in] num_in 配列 @a in1、@a in2、及び@a outの要素数。正値でなければならない。
+ * @param[in] in1 入力される配列その１。
+ * @param[in] in2 入力される配列その２。
+ * @param[in] out 出力される配列。@a outを指すポインタは@a in1と同じでもよい。
+ * @return 終了ステータス。
+ * @~english
  * @brief Compute subtraction between two float arrays (in1 - in2).
  * @details
  * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
@@ -1251,20 +1269,39 @@ bool out[/*num_in*/]);
 		size_t num_in, float const in1[/*num_in*/], float const in2[/*num_in*/],
 		float out[/*num_in*/]);
 /**
- * @brief Compute a matrix used for Least-Square fitting.
+ * @~japanese
+ * @brief 最小二乗フィットを解くための連立方程式の係数値を計算する。
+ * @details
+ * @param[in] num_in 配列 @a in_data 、 @a in_mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正値でなければならない。
+ * @param[in] in_data 入力データ。
+ * @param[in] in_mask 入力データに対するマスク情報。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @param[in] num_model モデルを構成する基底関数の数。正値でなければならない。
+ * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_in * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model * @a num_in )でなければならない。
+ * @param[out] out 求める連立方程式の左辺側の行列成分を格納する配列。対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out [ @a num_model * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model * @a num_model )となる。
+ * @param[out] out_vector 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model となる。
+ * @return 終了ステータス。
+ * @~english
+ * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
  * @param[in] num_in the number of elements in the arrays @a in_data
- * and @a in_mask. @a num_in must be positive.
+ * and @a in_mask, and also the number of elements in each model data
+ * (i.e., discrete values of basis function) consisting the total model.
+ * @a num_in must be positive.
  * @param[in] in_data input data.
  * @param[in] in_mask input mask data.
  * @param[in] num_model number of model functions. must be positive.
- * @param[in] model model data. should contain all model values
- * concatenated so the number of elements should be equal to
- * (@a num_in * @a num_model).
+ * @param[in] model an array containing all model values concatenated.
+ * loop for data index must be inside that for model index, i.e.,
+ * the @a n -th data of the @a m -th model must be stored at
+ * model[@a num_in * @a (m-1) + @a (n-1) ]. its length should be equal
+ * to (@a num_model * @a num_in).
  * @param[out] out an array containing the values of the least-square
  * matrix in the left side of the simultaneous equations of least-square
  * fitting. its number of elements should therefore be equal to
- * (@a num_model * @a num_model).
+ * (@a num_model * @a num_model ). loop for columns comes inside that for
+ * rows, i.e., the value at the @a m -th row and @a n -th column is
+ * stored at out[@a num_model * (@a m -1) + (@a n -1)], though @a out is
+ * actually a symmetric matrix.
  * @param[out] out_vector the right side value of the simultaneous
  * equations of least-square fitting. its length should be equal to
  * @a num_model.
@@ -1277,12 +1314,23 @@ bool out[/*num_in*/]);
 		double out[/*num_model * num_model*/],
 		double out_vector[/*num_model*/]);
 /**
+ * @~japanese
+ * @brief 連立方程式をLU分解によって解く。
+ * @details
+ * @param[in] num_eqn 連立方程式の数。正値でなければならない。
+ * @param[in] lsq_matrix0 連立方程式の左辺側の行列成分を格納する配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix0 [ @a num_eqn * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_eqn * @a num_eqn )となる。
+ * @param[in] lsq_vector0 連立方程式の右辺値を格納する配列。配列の長さは @a num_eqn でなければならない。
+ * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_eqn でなければならない。
+ * @return 終了ステータス。
+ * @~english
  * @brief Solve simultaneous equations via LU decomposition.
  * @details
- * @param[in] num_eqn number of equations. must be positive number.
+ * @param[in] num_eqn number of equations. must be positive.
  * @param[in] lsq_matrix0 the matrix in the left side of simultaneous equations.
+ * its length must be (@a num_eqn * @a num_eqn).
  * @param[in] lsq_vector0 the right side value of simultaneous equations.
- * @param[out] out the solution.
+ * its length must be @a num_eqn .
+ * @param[out] out the solution. its length must be @a num_eqn .
  * @return status code.
  * @~
  * MT-safe
@@ -1290,31 +1338,18 @@ bool out[/*num_in*/]);
 		size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
 		double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
 /**
- * @brief Compute the best-fit model spectrum using model spectra and coefficients.
- * @details
- * @param[in] num_data the number of elements in the array @a out.
- * must be positive.
- * @param[in] num_eqn number of models.
- * @param[in] model an array containing all model values concatenated.
- * its length should be equal to (@a num_eqn * @a num_data).
- * @param[in] coeff coefficients.
- * @param[out] out the best-fit model.
- * @return status code.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_data,
-		size_t num_eqn, double const model[/*num_eqn * num_data*/],
-		double const coeff[/*num_eqn*/], float out[/*num_data*/]);
-/**
- * @brief Compute the best-fit model spectrum by least-square fitting.
+ * @brief Compute the best-fit model by least-square fitting.
  * @details
  * @param[in] num_in the number of elements in the arrays @a in_data,
- * @a in_mask, and @a out. must be positive value. must be positive number.
+ * @a in_mask, and @a out. must be positive.
  * @param[in] in_data the input data.
  * @param[in] in_mask the input mask data.
- * @param[in] num_model number of model functions.
- * @param[in] model model data array containing all model values concatenated.
- * its length therefore must be (@a num_model * @a num_in).
+ * @param[in] num_model number of model functions. must be positive.
+ * @param[in] model an array containing all model values concatenated.
+ * loop for data index must be inside that for model index, i.e.,
+ * the @a n -th data of the @a m -th model must be stored at
+ * model[@a num_in * @a (m-1) + @a (n-1)]. its length therefore must
+ * be (@a num_model * @a num_in).
  * @param[out] out the best-fit model.
  * @return status code.
  * @~
@@ -1327,18 +1362,20 @@ bool out[/*num_in*/]);
  * @~japanese
  * @brief 入力スペクトルに多項式ベースラインをフィットし差し引く。
  * @~english
- * @brief Fit a baseline and subtract it from input spectrum.
+ * @brief Fit a baseline and subtract it from input data.
  * @details
  * @param[in] num_data the number of elements in the arrays @a in_data,
- * @a in_mask, and @a out. must be positive number.
+ * @a in_mask, and @a out. must be positive.
  * @param[in] in_data the input data.
  * @param[in] in_mask the input mask data.
  * @param[in] order order of polynomial model. must be zero or positive.
  * @param[in] clipping_threshold_sigma the threshold of clipping.
- * @param[in] num_fitting_max the maximum number of recursive baseline fitting.
- * In case n is given, after the first baseline fitting, clipping and baseline
- * fitting based on the updated channel mask are executed for (n-1) times at maximum.
- * Default is 1 (i.e., baseline fitting done just once and no clipping applied)
+ * @param[in] num_fitting_max the maximum of total number of times
+ * baseline fitting is performed recursively. In case n is given, after
+ * the first baseline fitting, subsequent clipping and baseline fitting
+ * based on the updated mask are executed (n-1) times at maximum.
+ * Must be positive and the default is 1 (i.e., baseline fitting done
+ * just once and no clipping applied)
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out the output data.
@@ -1351,13 +1388,16 @@ bool out[/*num_in*/]);
 		float clipping_threshold_sigma, size_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 /**
- * @brief Compute a set of model spectra.
+ * @brief Compute a set of model data.
  * @details
- * @param[in] num_data the number of elements in each model spectrum.
+ * @param[in] num_data the number of elements in each model data.
  * must be positive.
  * @param[in] order order of polynomial model. must be zero or positive.
- * @param[out] out the set of baseline model data. its length must be equal
- * to (@a num_data * (@a order + 1)).
+ * @param[out] out a 1D array containing all output model values
+ * concatenated. loop for data index comes inside of that for model
+ * index, i.e., the @a n -th data of the @a m -th model is stored at
+ * out[@a num_data * @a (m-1) + @a (n-1)]. its length must be equal to
+ * ((@a order + 1) * @a num_data).
  * @return status code.
  * @~
  * MT-safe
@@ -1372,7 +1412,10 @@ bool out[/*num_in*/]);
  * @param[in] in_mask the input mask data.
  * @param[in] num_model number of model functions. must be positive.
  * @param[in] model_data an array containing all model values concatenated.
- * its length must be equal to (@a num_model * @a num_data).
+ * loop for data index must be inside of that for model index, i.e., the
+ * @a n -th data of the @a m -th model should be stored at
+ * model_data[@a num_data * @a (m-1) + @a (n-1)]. its length must be equal
+ * to (@a num_model * @a num_data).
  * @param[in] clipping_threshold_sigma the threshold of clipping. must be positive.
  * @param[in] num_fitting_max the maximum number of iterative clipping.
  * must be zero or positive.

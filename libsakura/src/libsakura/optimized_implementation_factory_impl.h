@@ -312,9 +312,6 @@ public:
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const;
-	virtual void DoGetBestFitModel(size_t num_chan, size_t num_eqn,
-			double const model[/*num_eqn * num_in*/],
-			double const coeff[/*num_eqn*/], float out[/*num_in*/]) const;
 };
 
 class NumericOperationAfterSandyBridge: public NumericOperation {
@@ -328,7 +325,6 @@ public:
 	bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const;
-protected:
 	virtual void GetLeastSquareMatrix(size_t num_in,
 			float const in_data[/*num_in*/],
 			bool const in_mask[/*num_in*/], size_t num_model,
@@ -339,9 +335,6 @@ protected:
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const;
-	virtual void DoGetBestFitModel(size_t num_chan, size_t num_eqn,
-			double const model[/*num_eqn * num_chan*/],
-			double const coeff[/*num_eqn*/], float out[/*num_in*/]) const;
 };
 
 class StatisticsDefault: public Statistics {

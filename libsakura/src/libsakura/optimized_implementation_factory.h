@@ -191,9 +191,6 @@ public:
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const = 0;
-	virtual void DoGetBestFitModel(size_t num_chan, size_t num_eqn,
-			double const model[/*num_eqn * num_chan*/],
-			double const coeff[/*num_eqn*/], float out[/*num_in*/]) const = 0;
 };
 
 class Statistics {

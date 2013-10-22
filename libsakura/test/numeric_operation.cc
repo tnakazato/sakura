@@ -166,26 +166,3 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 		ASSERT_EQ((float)out[i], result[i]);
 	}
 }
-
-/*
- * Test sakura_DoGetBestFitModel
- * RESULT:
- * out = []
- */
-TEST_F(NumericOperation, DoGetBestFitModel) {
-	size_t const num_chan(NUM_IN);
-	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double model[NUM_MODEL*NUM_IN] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
-	SIMD_ALIGN double coeff[NUM_MODEL] = {1.0, 1.0, 1.0};
-	SIMD_ALIGN float out[NUM_IN];
-	float result[NUM_IN] = {1.0, 3.0, 7.0, 13.0, 21.0};
-
-	LIBSAKURA_SYMBOL(Status) status =
-			sakura_DoGetBestFitModel(num_chan, num_model, model, coeff, out);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < NUM_IN; ++i){
-		ASSERT_EQ((float)out[i], result[i]);
-	}
-}

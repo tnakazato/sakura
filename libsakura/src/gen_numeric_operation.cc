@@ -81,28 +81,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoGetBestFitModel)(size_t num_chan,
-		size_t num_eqn, double const model[], double const coeff[], float out[]) {
-	if (model == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (coeff == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(coeff)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	auto numop =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	numop->DoGetBestFitModel(num_chan, num_eqn, model, coeff, out);
-
-	return LIBSAKURA_SYMBOL(Status_kOK);
-}
-
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
 		float const in_data[], bool const in_mask[], size_t num_model,
 		double const model[], float out[]) {
