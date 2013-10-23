@@ -82,9 +82,8 @@ YDataType const *GetAscendingArray(size_t num_base,
 		storage->reset(
 				AllocateAndAlign<YDataType>(num_base * num_array,
 						&output_array));
-		YDataType *work_array = const_cast<YDataType *>(output_array);
-		Reorderer::Reorder(num_base, num_array, unordered_array, work_array);
-		return static_cast<YDataType *>(output_array);
+		Reorderer::Reorder(num_base, num_array, unordered_array, output_array);
+		return output_array;
 	}
 }
 
