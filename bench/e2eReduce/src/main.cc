@@ -16,14 +16,16 @@
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
 
-void SerializedJob(int i) {
-	std::cout << i << std::endl;
+void JobFinished(int i) {
+	std::cout << "Job ";
+	std::cout << i;
+	std::cout << " have done.\n";
 }
 
 void ParallelJob(int i) {
-	sleep(i % 3);
+	sleep(i % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=] {
-		SerializedJob(i);
+		JobFinished(i);
 	});
 }
 
