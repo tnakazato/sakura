@@ -27,9 +27,15 @@ void *AllocateAndAlign(size_t num_array, DataType **array) {
 	size_t elements_in_arena = num_array + sakura_alignment - 1;
 	void *storage = LIBSAKURA_PREFIX::Memory::Allocate(
 			sizeof(DataType) * elements_in_arena);
+	if (storage == nullptr) {
+		throw "Failed to allocate memory";
+	}
 	*array = reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
 			sizeof(DataType) * elements_in_arena, storage,
 			sizeof(DataType) * num_array));
+	if (array == nullptr) {
+		throw "Alignment failed";
+	}
 	return storage;
 }
 
@@ -327,7 +333,7 @@ template<class XDataType, class YDataType>
 class SplineXAxisInterpolator {
 public:
 	SplineXAxisInterpolator() :
-			d2ydx2_(nullptr) {
+			d2ydx2_(nullptr), upper_triangular_(nullptr) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -335,6 +341,8 @@ public:
 		// Derive second derivative at x_base
 		storage_for_d2ydx2_.reset(
 				AllocateAndAlign(num_base * num_array, &d2ydx2_));
+		storage_for_u_.reset(
+				AllocateAndAlign<YDataType>(num_base, &upper_triangular_));
 		for (size_t i = 0; i < num_array; ++i) {
 			size_t start_position = i * num_base;
 			YDataType const *base_data_work = &(base_data[start_position]);
@@ -374,14 +382,10 @@ private:
 	void DeriveSplineCorrectionTerm(size_t num_base,
 			XDataType const base_position[], YDataType const base_data[],
 			YDataType d2ydx2[]) {
-		YDataType *upper_triangular = nullptr;
-		std::unique_ptr<void, InterpolationDeleter> storage_for_u(
-				AllocateAndAlign<YDataType>(num_base, &upper_triangular));
-
 		// This is a condition of natural cubic spline
 		d2ydx2[0] = 0.0;
 		d2ydx2[num_base - 1] = 0.0;
-		upper_triangular[0] = 0.0;
+		upper_triangular_[0] = 0.0;
 
 		// Solve tridiagonal system.
 		// Here tridiagonal matrix is decomposed to upper triangular matrix.
@@ -398,19 +402,21 @@ private:
 					* ((base_data[i + 1] - base_data[i]) / a2
 							- (base_data[i] - base_data[i - 1]) / a1
 							- d2ydx2[i - 1] * 0.5 * a1);
-			a1 = 1.0 / (1.0 - upper_triangular[i - 1] * 0.5 * a1 * b1);
+			a1 = 1.0 / (1.0 - upper_triangular_[i - 1] * 0.5 * a1 * b1);
 			d2ydx2[i] *= a1;
-			upper_triangular[i] = 0.5 * a2 * b1 * a1;
+			upper_triangular_[i] = 0.5 * a2 * b1 * a1;
 			a1 = a2;
 		}
 
 		// Solve the system by backsubstitution and store solution to d2ydx2_
 		for (size_t k = num_base - 2; k >= 1; --k) {
-			d2ydx2[k] -= upper_triangular[k] * d2ydx2[k + 1];
+			d2ydx2[k] -= upper_triangular_[k] * d2ydx2[k + 1];
 		}
 	}
 	std::unique_ptr<void, InterpolationDeleter> storage_for_d2ydx2_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_u_;
 	YDataType *d2ydx2_;
+	YDataType *upper_triangular_;
 };
 
 template<class XDataType, class YDataType>
@@ -587,7 +593,7 @@ template<class XDataType, class YDataType>
 class SplineYAxisInterpolator {
 public:
 	SplineYAxisInterpolator() :
-			d2ydx2_(nullptr) {
+			d2ydx2_(nullptr), upper_triangular_(nullptr) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -595,6 +601,9 @@ public:
 		// Derive second derivative at x_base
 		storage_for_d2ydx2_.reset(
 				AllocateAndAlign(num_base * num_array, &d2ydx2_));
+		storage_for_u_.reset(
+				AllocateAndAlign<YDataType>(num_base * num_array,
+						&upper_triangular_));
 		DeriveSplineCorrectionTerm(num_base, base_position, num_array,
 				base_data, d2ydx2_);
 	}
@@ -629,16 +638,11 @@ private:
 	void DeriveSplineCorrectionTerm(size_t num_base,
 			XDataType const base_position[], size_t num_array,
 			YDataType const base_data[], YDataType d2ydx2[]) {
-		YDataType *upper_triangular = nullptr;
-		std::unique_ptr<void, InterpolationDeleter> storage_for_u(
-				AllocateAndAlign<YDataType>(num_base * num_array,
-						&upper_triangular));
-
 		// This is a condition of natural cubic spline
 		for (size_t i = 0; i < num_array; ++i) {
 			d2ydx2[i] = 0.0;
 			d2ydx2[(num_base - 1) * num_array + i] = 0.0;
-			upper_triangular[i] = 0.0;
+			upper_triangular_[i] = 0.0;
 		}
 
 		// Solve tridiagonal system.
@@ -662,10 +666,10 @@ private:
 								- d2ydx2[num_array * (i - 1) + j] * 0.5 * a1);
 				XDataType a3 = 1.0
 						/ (1.0
-								- upper_triangular[num_array * (i - 1) + j]
+								- upper_triangular_[num_array * (i - 1) + j]
 										* 0.5 * a1 * b1);
 				d2ydx2[num_array * i + j] *= a3;
-				upper_triangular[num_array * i + j] = 0.5 * a2 * b1 * a3;
+				upper_triangular_[num_array * i + j] = 0.5 * a2 * b1 * a3;
 			}
 			a1 = a2;
 		}
@@ -673,13 +677,16 @@ private:
 		// Solve the system by backsubstitution and store solution to d2ydx2_
 		for (size_t k = num_base - 2; k >= 1; --k) {
 			for (size_t j = 0; j < num_array; ++j) {
-				d2ydx2[k * num_array + j] -= upper_triangular[k * num_array + j]
-						* d2ydx2[(k + 1) * num_array + j];
+				d2ydx2[k * num_array + j] -=
+						upper_triangular_[k * num_array + j]
+								* d2ydx2[(k + 1) * num_array + j];
 			}
 		}
 	}
 	std::unique_ptr<void, InterpolationDeleter> storage_for_d2ydx2_;
+	std::unique_ptr<void, InterpolationDeleter> storage_for_u_;
 	YDataType *d2ydx2_;
+	YDataType *upper_triangular_;
 };
 
 template<class XDataType, class YDataType>
@@ -841,11 +848,12 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			&storage_for_interpolated_position);
 
 	// Generate worker class
-	std::unique_ptr<Interpolator> interpolator(new Interpolator());
+//	std::unique_ptr<Interpolator> interpolator(new Interpolator());
+	Interpolator interpolator;
 
 	// Perform 1-dimensional interpolation
 	// Any preparation for interpolation should be done here
-	interpolator->PrepareForInterpolation(polynomial_order, num_base, num_array,
+	interpolator.PrepareForInterpolation(polynomial_order, num_base, num_array,
 			base_position_work, base_data_work);
 
 	// Locate each element in x_base against x_interpolated
@@ -860,7 +868,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			num_interpolated, base_data_work, interpolated_data);
 
 	// Between x_base[0] and x_base[num_x_base-1]
-	interpolator->Interpolate1D(num_base, base_position_work, num_array,
+	interpolator.Interpolate1D(num_base, base_position_work, num_array,
 			base_data_work, num_interpolated, interpolated_position_work,
 			interpolated_data, num_location_base, location_base);
 
