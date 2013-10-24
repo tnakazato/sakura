@@ -23,18 +23,25 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 template<class DataType>
 void *AllocateAndAlign(size_t num_array, DataType **array) {
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t elements_in_arena = num_array + sakura_alignment - 1;
+	size_t elements_in_arena = num_array + LIBSAKURA_SYMBOL(GetAlignment)() - 1;
 	void *storage = LIBSAKURA_PREFIX::Memory::Allocate(
 			sizeof(DataType) * elements_in_arena);
 	if (storage == nullptr) {
-		throw "Failed to allocate memory";
+		char *msg = "Failed to allocate memory";
+		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
+			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
+		}
+		throw msg;
 	}
 	*array = reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
 			sizeof(DataType) * elements_in_arena, storage,
 			sizeof(DataType) * num_array));
 	if (array == nullptr) {
-		throw "Alignment failed";
+		char *msg = "Failed alignment";
+		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
+			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
+		}
+		throw msg;
 	}
 	return storage;
 }
@@ -170,7 +177,7 @@ size_t Locate(size_t num_base, size_t num_located,
 }
 
 template<class XDataType, class YDataType>
-class NearestXAxisInterpolator {
+class NearestXInterpolatorImpl {
 public:
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -213,7 +220,7 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class LinearXAxisInterpolator {
+class LinearXInterpolatorImpl {
 public:
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -245,9 +252,9 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class PolynomialXAxisInterpolator {
+class PolynomialXInterpolatorImpl {
 public:
-	PolynomialXAxisInterpolator() :
+	PolynomialXInterpolatorImpl() :
 			polynomial_order_(0), num_elements_(0), c_(nullptr), d_(nullptr) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
@@ -329,9 +336,9 @@ private:
 };
 
 template<class XDataType, class YDataType>
-class SplineXAxisInterpolator {
+class SplineXInterpolatorImpl {
 public:
-	SplineXAxisInterpolator() :
+	SplineXInterpolatorImpl() :
 			d2ydx2_(nullptr), upper_triangular_(nullptr) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
@@ -419,7 +426,7 @@ private:
 };
 
 template<class XDataType, class YDataType>
-class NearestYAxisInterpolator {
+class NearestYInterpolatorImpl {
 public:
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -462,7 +469,7 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class LinearYAxisInterpolator {
+class LinearYInterpolatorImpl {
 public:
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -492,9 +499,9 @@ public:
 };
 
 template<class XDataType, class YDataType>
-class PolynomialYAxisInterpolator {
+class PolynomialYInterpolatorImpl {
 public:
-	PolynomialYAxisInterpolator() :
+	PolynomialYInterpolatorImpl() :
 			polynomial_order_(0), num_elements_(0), c_(nullptr), d_(nullptr), work_(
 					nullptr) {
 	}
@@ -589,9 +596,9 @@ private:
 };
 
 template<class XDataType, class YDataType>
-class SplineYAxisInterpolator {
+class SplineYInterpolatorImpl {
 public:
-	SplineYAxisInterpolator() :
+	SplineYInterpolatorImpl() :
 			d2ydx2_(nullptr), upper_triangular_(nullptr) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
@@ -688,42 +695,27 @@ private:
 	YDataType *upper_triangular_;
 };
 
-template<class XDataType, class YDataType>
-struct XAxisUtility {
+template<class InterpolatorImpl, class XDataType, class YDataType>
+struct XInterpolator: public InterpolatorImpl {
 	typedef XAxisReordererImpl<XDataType> XDataReorderer;
 	typedef XAxisReordererImpl<YDataType> YDataReorderer;
 	static inline void SubstituteSingleBaseData(size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		for (size_t i = 0; i < num_array; ++i) {
-			YDataType *work = &interpolated_data[i * num_interpolated];
-			YDataType const value = base_data[i * num_base];
-			for (size_t j = 0; j < num_interpolated; ++j) {
-				work[j] = value;
-			}
-		}
+		Substitute(0, num_interpolated, num_array, 0, num_interpolated,
+				num_base, base_data, interpolated_data);
 	}
 	static inline void SubstituteLeftMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		for (size_t j = 0; j < num_array; ++j) {
-			YDataType *work = &interpolated_data[j * num_interpolated];
-			YDataType const value = base_data[j * num_base];
-			for (size_t i = 0; i < location; ++i) {
-				work[i] = value;
-			}
-		}
+		Substitute(0, location, num_array, 0, num_interpolated, num_base,
+				base_data, interpolated_data);
 	}
 	static inline void SubstituteRightMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		for (size_t j = 0; j < num_array; ++j) {
-			YDataType *work = &interpolated_data[j * num_interpolated];
-			YDataType const value = base_data[(j + 1) * num_base - 1];
-			for (size_t i = location; i < num_interpolated; ++i) {
-				work[i] = value;
-			}
-		}
+		Substitute(location, num_interpolated, num_array, num_base - 1,
+				num_interpolated, num_base, base_data, interpolated_data);
 	}
 	static inline void SwapResult(size_t num_array, size_t num_interpolated,
 			YDataType interpolated_data[]) {
@@ -736,42 +728,38 @@ struct XAxisUtility {
 			}
 		}
 	}
+private:
+	static inline void Substitute(size_t start, size_t end, size_t num,
+			size_t offset, size_t step_in, size_t step_out,
+			YDataType const in[], YDataType out[]) {
+		for (size_t j = 0; j < num; ++j) {
+			for (size_t i = start; i < end; ++i) {
+				out[j * step_in + i] = in[j * step_out + offset];
+			}
+		}
+	}
 };
 
-template<class XDataType, class YDataType>
-struct YAxisUtility {
+template<class InterpolatorImpl, class XDataType, class YDataType>
+struct YInterpolator: public InterpolatorImpl {
 	typedef YAxisReordererImpl<XDataType> XDataReorderer;
 	typedef YAxisReordererImpl<YDataType> YDataReorderer;
 	static inline void SubstituteSingleBaseData(size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		for (size_t i = 0; i < num_interpolated; ++i) {
-			YDataType *work = &interpolated_data[i * num_array];
-			for (size_t j = 0; j < num_array; ++j) {
-				work[j] = base_data[j];
-			}
-		}
+		Substitute(0, num_interpolated, num_array, 0, base_data,
+				interpolated_data);
 	}
 	static inline void SubstituteLeftMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		for (size_t i = 0; i < location; ++i) {
-			YDataType *work = &interpolated_data[i * num_array];
-			for (size_t j = 0; j < num_array; ++j) {
-				work[j] = base_data[j];
-			}
-		}
+		Substitute(0, location, num_array, 0, base_data, interpolated_data);
 	}
 	static inline void SubstituteRightMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
-			YDataType const base_data_[], YDataType interpolated_data_[]) {
-		YDataType const *value = &base_data_[(num_base - 1) * num_array];
-		for (size_t i = location; i < num_interpolated; ++i) {
-			YDataType *work = &interpolated_data_[i * num_array];
-			for (size_t j = 0; j < num_array; ++j) {
-				work[j] = value[j];
-			}
-		}
+			YDataType const base_data[], YDataType interpolated_data[]) {
+		Substitute(location, num_interpolated, num_array, num_base - 1,
+				base_data, interpolated_data);
 	}
 	static inline void SwapResult(size_t num_array, size_t num_interpolated,
 			YDataType interpolated_data[]) {
@@ -785,27 +773,42 @@ struct YAxisUtility {
 			}
 		}
 	}
+private:
+	static inline void Substitute(size_t start, size_t end, size_t num,
+			size_t offset, YDataType const in[], YDataType out[]) {
+		for (size_t i = start; i < end; ++i) {
+			for (size_t j = 0; j < num; ++j) {
+				out[i * num + j] = in[offset * num + j];
+			}
+		}
+	}
 };
 
 template<class XDataType, class YDataType>
-struct XAxisInterpolator {
-	typedef XAxisUtility<XDataType, YDataType> Utility;
-	typedef NearestXAxisInterpolator<XDataType, YDataType> NearestInterpolator;
-	typedef LinearXAxisInterpolator<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialXAxisInterpolator<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineXAxisInterpolator<XDataType, YDataType> SplineInterpolator;
+struct XInterpolatorSet {
+	typedef XInterpolator<NearestXInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> NearestInterpolator;
+	typedef XInterpolator<LinearXInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> LinearInterpolator;
+	typedef XInterpolator<PolynomialXInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> PolynomialInterpolator;
+	typedef XInterpolator<SplineXInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> SplineInterpolator;
 };
 
 template<class XDataType, class YDataType>
-struct YAxisInterpolator {
-	typedef YAxisUtility<XDataType, YDataType> Utility;
-	typedef NearestYAxisInterpolator<XDataType, YDataType> NearestInterpolator;
-	typedef LinearYAxisInterpolator<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialYAxisInterpolator<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineYAxisInterpolator<XDataType, YDataType> SplineInterpolator;
+struct YInterpolatorSet {
+	typedef YInterpolator<NearestYInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> NearestInterpolator;
+	typedef YInterpolator<LinearYInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> LinearInterpolator;
+	typedef YInterpolator<PolynomialYInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> PolynomialInterpolator;
+	typedef YInterpolator<SplineYInterpolatorImpl<XDataType, YDataType>,
+			XDataType, YDataType> SplineInterpolator;
 };
 
-template<class Interpolator, class Utility, class XDataType, class YDataType>
+template<class Interpolator, class XDataType, class YDataType>
 void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		XDataType const base_position[/*num_x_base*/], size_t num_array,
 		YDataType const base_data[/*num_x_base*num_y*/],
@@ -827,8 +830,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	if (num_base == 1) {
 		// No need to interpolate, just substitute base_data
 		// to all elements in y_interpolated
-		Utility::SubstituteSingleBaseData(num_base, num_array, num_interpolated,
-				base_data, interpolated_data);
+		Interpolator::SubstituteSingleBaseData(num_base, num_array,
+				num_interpolated, base_data, interpolated_data);
 		return;
 	}
 
@@ -836,18 +839,19 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	std::unique_ptr<void, InterpolationDeleter> storage_for_base_data;
 	std::unique_ptr<void, InterpolationDeleter> storage_for_interpolated_position;
 	XDataType const *base_position_work = GetAscendingArray<
-			typename Utility::XDataReorderer, XDataType, XDataType>(num_base,
-			base_position, 1, base_position, &storage_for_base_position);
+			typename Interpolator::XDataReorderer, XDataType, XDataType>(
+			num_base, base_position, 1, base_position,
+			&storage_for_base_position);
 	YDataType const *base_data_work = GetAscendingArray<
-			typename Utility::YDataReorderer, XDataType, YDataType>(num_base,
-			base_position, num_array, base_data, &storage_for_base_data);
+			typename Interpolator::YDataReorderer, XDataType, YDataType>(
+			num_base, base_position, num_array, base_data,
+			&storage_for_base_data);
 	XDataType const *interpolated_position_work = GetAscendingArray<
-			typename Utility::XDataReorderer, XDataType, XDataType>(
+			typename Interpolator::XDataReorderer, XDataType, XDataType>(
 			num_interpolated, interpolated_position, 1, interpolated_position,
 			&storage_for_interpolated_position);
 
 	// Generate worker class
-//	std::unique_ptr<Interpolator> interpolator(new Interpolator());
 	Interpolator interpolator;
 
 	// Perform 1-dimensional interpolation
@@ -863,7 +867,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			interpolated_position_work, base_position_work, location_base);
 
 	// Outside of x_base[0]
-	Utility::SubstituteLeftMostData(location_base[0], num_base, num_array,
+	Interpolator::SubstituteLeftMostData(location_base[0], num_base, num_array,
 			num_interpolated, base_data_work, interpolated_data);
 
 	// Between x_base[0] and x_base[num_x_base-1]
@@ -872,14 +876,15 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			interpolated_data, num_location_base, location_base);
 
 	// Outside of x_base[num_x_base-1]
-	Utility::SubstituteRightMostData(location_base[num_location_base - 1],
+	Interpolator::SubstituteRightMostData(location_base[num_location_base - 1],
 			num_base, num_array, num_interpolated, base_data_work,
 			interpolated_data);
 
 	// swap output array
 	if (interpolated_position[0]
 			> interpolated_position[num_interpolated - 1]) {
-		Utility::SwapResult(num_array, num_interpolated, interpolated_data);
+		Interpolator::SwapResult(num_array, num_interpolated,
+				interpolated_data);
 	}
 }
 
@@ -897,26 +902,26 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	switch (interpolation_method) {
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
 		func = Interpolate1D<typename Interpolator::NearestInterpolator,
-				typename Interpolator::Utility, XDataType, YDataType>;
+				XDataType, YDataType>;
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
 		func = Interpolate1D<typename Interpolator::LinearInterpolator,
-				typename Interpolator::Utility, XDataType, YDataType>;
+				XDataType, YDataType>;
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
 		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
 			func = Interpolate1D<typename Interpolator::NearestInterpolator,
-					typename Interpolator::Utility, XDataType, YDataType>;
+					XDataType, YDataType>;
 		} else {
 			func = Interpolate1D<typename Interpolator::PolynomialInterpolator,
-					typename Interpolator::Utility, XDataType, YDataType>;
+					XDataType, YDataType>;
 		}
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
 		func = Interpolate1D<typename Interpolator::SplineInterpolator,
-				typename Interpolator::Utility, XDataType, YDataType>;
+				XDataType, YDataType>;
 		break;
 	default:
 		// invalid interpolation method type
@@ -955,7 +960,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t num_x_interpolated,
 		XDataType const x_interpolated[/*num_x_interpolated*/],
 		YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const {
-	ExecuteInterpolate1D<XAxisInterpolator<XDataType, YDataType>, XDataType,
+	ExecuteInterpolate1D<XInterpolatorSet<XDataType, YDataType>, XDataType,
 			YDataType>(interpolation_method, polynomial_order, num_x_base,
 			x_base, num_y, data_base, num_x_interpolated, x_interpolated,
 			data_interpolated);
@@ -984,7 +989,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		size_t num_y_interpolated,
 		XDataType const y_interpolated[/*num_y_interpolated*/],
 		YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const {
-	ExecuteInterpolate1D<YAxisInterpolator<XDataType, YDataType>, XDataType,
+	ExecuteInterpolate1D<YInterpolatorSet<XDataType, YDataType>, XDataType,
 			YDataType>(interpolation_method, polynomial_order, num_y_base,
 			y_base, num_x, data_base, num_y_interpolated, y_interpolated,
 			data_interpolated);
