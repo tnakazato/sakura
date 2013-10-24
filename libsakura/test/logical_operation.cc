@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
@@ -68,20 +69,20 @@ protected:
 };
 
 /*
- * Test logical operation AND by sakura_OperateLogocalAnd
+ * Test logical operation AND by sakura_OperateLogicalAnd
  * RESULT:
  * out = [false, false, false, true]
  */
 TEST_F(LogicalOperation, And) {
-	SIMD_ALIGN bool in1[NUM_IN];
-	SIMD_ALIGN bool in2[NUM_IN];
-	SIMD_ALIGN bool out[NUM_IN];
-	bool result[NUM_IN] = {false, false, false, true};
 	size_t const num_in(NUM_IN);
+	SIMD_ALIGN bool in1[num_in];
+	SIMD_ALIGN bool in2[ELEMENTSOF(in1)];
+	SIMD_ALIGN bool out[ELEMENTSOF(in1)];
+	bool answer[ELEMENTSOF(in1)] = {false, false, false, true};
 
 	if (verbose) PrintInputs();
 
-	for (size_t i = 0; i < NUM_IN; ++i) {
+	for (size_t i = 0; i < num_in; ++i) {
 		in1[i] = in1_[i];
 		in2[i] = in2_[i];
 	}
@@ -92,6 +93,6 @@ TEST_F(LogicalOperation, And) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_in ; ++i){
-		ASSERT_EQ(out[i], result[i]);
+		ASSERT_EQ(out[i], answer[i]);
 	}
 }

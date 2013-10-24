@@ -2,6 +2,7 @@
 #include <string>
 
 #include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
@@ -97,9 +98,9 @@ protected:
 TEST_F(NumericOperation, OperateFloatSubtraction) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN float in1[num_data] = {0.0, 1.0, 2.0, -3.0, -4.0};
-	SIMD_ALIGN float in2[num_data] = {5.0, 4.0, -1.0, 2.0, -3.0};
-	SIMD_ALIGN float out[num_data];
-	float answer[num_data] = {-5.0, -3.0, 3.0, -5.0, -1.0};
+	SIMD_ALIGN float in2[ELEMENTSOF(in1)] = {5.0, 4.0, -1.0, 2.0, -3.0};
+	SIMD_ALIGN float out[ELEMENTSOF(in1)];
+	float answer[ELEMENTSOF(in1)] = {-5.0, -3.0, 3.0, -5.0, -1.0};
 
 	if (verbose) {
 		PrintArray("in1", num_data, in1);
@@ -128,11 +129,11 @@ TEST_F(NumericOperation, OperateFloatSubtraction) {
 TEST_F(NumericOperation, GetBestFitModel) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
-	SIMD_ALIGN bool in_mask[num_data] = {true, true, true, false, true};
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {true, true, true, false, true};
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double model[num_model*num_data] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
-	SIMD_ALIGN float out[num_data];
-	float answer[num_data] = {1.0, 3.0, 7.0, 13.0, 21.0};
+	SIMD_ALIGN double model[num_model*ELEMENTSOF(in_data)] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	SIMD_ALIGN float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)] = {1.0, 3.0, 7.0, 13.0, 21.0};
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -162,13 +163,16 @@ TEST_F(NumericOperation, GetBestFitModel) {
 TEST_F(NumericOperation, GetCoefficientsForLeastSquareFitting) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
-	SIMD_ALIGN bool in_mask[num_data] = {true, true, true, false, true};
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {true, true, true, false, true};
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double model[num_model*num_data] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
-	SIMD_ALIGN double out_matrix[num_model*num_model];
 	SIMD_ALIGN double out_vector[num_model];
-	float answer_matrix[num_model*num_model] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
-	float answer_vector[num_model] = {32.0, 101.0, 367.0};
+	SIMD_ALIGN double out_matrix[ELEMENTSOF(out_vector)*ELEMENTSOF(out_vector)];
+	SIMD_ALIGN double model[ELEMENTSOF(out_vector)*ELEMENTSOF(in_data)]
+	                        = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	float answer_matrix[ELEMENTSOF(out_vector)*ELEMENTSOF(out_vector)]
+	                    = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+	float answer_vector[ELEMENTSOF(out_vector)]
+	                    = {32.0, 101.0, 367.0};
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -205,10 +209,10 @@ TEST_F(NumericOperation, GetCoefficientsForLeastSquareFitting) {
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double lsq_matrix[num_model*num_model] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
 	SIMD_ALIGN double lsq_vector[num_model] = {32.0, 101.0, 367.0};
-	SIMD_ALIGN double out[num_model];
-	float answer[num_model] = {1.0, 1.0, 1.0};
+	SIMD_ALIGN double lsq_matrix[ELEMENTSOF(lsq_vector)*ELEMENTSOF(lsq_vector)] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+	SIMD_ALIGN double out[ELEMENTSOF(lsq_vector)];
+	float answer[ELEMENTSOF(lsq_vector)] = {1.0, 1.0, 1.0};
 
 	if (verbose) {
 		PrintArray("lsq_matrix", num_model, num_model, lsq_matrix);
