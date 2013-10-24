@@ -6,8 +6,8 @@
 #include "libsakura/optimized_implementation_factory.h"
 #include "libsakura/localdef.h"
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(size_t num_in, float const in1[],
-		float const in2[], float out[]) {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
+		size_t num_in, float const in1[], float const in2[], float out[]) {
 	if (in1 == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (in2 == nullptr)
@@ -32,12 +32,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(si
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(size_t num_in,
-		float const in_data[], bool const in_mask[], size_t num_model, double const model[],
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(
+		size_t num_data, float const data[], bool const mask[],
+		size_t num_model_bases, double const model[],
 		double out_matrix[], double out_vector[]) {
-	if (in_data == nullptr)
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in_mask == nullptr)
+	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (model == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -45,9 +46,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSqua
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out_vector == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_data)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_mask)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -60,8 +61,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSqua
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
 		numop->GetCoefficientsForLeastSquareFitting(
-				num_in, in_data, in_mask,
-				num_model, model,
+				num_data, data, mask,
+				num_model_bases, model,
 				out_matrix, out_vector);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -70,8 +71,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSqua
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(size_t num_eqn,
-		double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+		size_t num_eqn, double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
 	if (lsq_matrix0 == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (lsq_vector0 == nullptr)
@@ -96,20 +97,20 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
-		float const in_data[], bool const in_mask[], size_t num_model,
-		double const model[], float out[]) {
-	if (in_data == nullptr)
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(
+		size_t num_data, float const data[], bool const mask[],
+		size_t num_model_bases, double const model[], float out[]) {
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in_mask == nullptr)
+	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (model == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_data)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_mask)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -119,7 +120,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+		numop->GetBestFitModel(num_data, data, mask, num_model_bases, model, out);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

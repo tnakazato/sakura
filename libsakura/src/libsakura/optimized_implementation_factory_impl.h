@@ -38,16 +38,16 @@ public:
 	virtual ~BaselineDefault() {
 	}
 	virtual void SubtractBaselinePolynomial(size_t num_data,
-			float const in_data[/*num_data*/],
-			bool const in_mask[/*num_data*/], size_t order,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/], size_t order,
 			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_data*/]) const;
-	virtual void GetBaselineModel(size_t num_data, size_t order,
-			double out[/*(order+1)*num_data*/]) const;
+	virtual void GetBaselineModel(size_t num_each_basis, size_t order,
+			double model[/*(order+1)*num_each_basis*/]) const;
 	virtual void DoSubtractBaseline(size_t num_data,
-			float const in_data[/*num_data*/],
-			bool const in_mask[/*num_data*/], size_t num_model,
-			double const model_data[/*num_model * num_data*/],
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/], size_t num_model_bases,
+			double const model[/*num_model_bases * num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_data*/]) const;
 };
@@ -57,16 +57,16 @@ public:
 	virtual ~BaselineAfterSandyBridge() {
 	}
 	virtual void SubtractBaselinePolynomial(size_t num_data,
-			float const in_data[/*num_data*/],
-			bool const in_mask[/*num_data*/], size_t order,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/], size_t order,
 			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_data*/]) const;
-	virtual void GetBaselineModel(size_t num_data, size_t order,
-			double out[/*(order+1)*num_data*/]) const;
+	virtual void GetBaselineModel(size_t num_each_basis, size_t order,
+			double model[/*(order+1)*num_each_basis*/]) const;
 	virtual void DoSubtractBaseline(size_t num_data,
-			float const in_data[/*num_data*/],
-			bool const in_mask[/*num_data*/], size_t num_model,
-			double const model_data[/*num_model * num_data*/],
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/], size_t num_model_bases,
+			double const model[/*num_model_bases * num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_data*/]) const;
 };
@@ -299,20 +299,25 @@ class NumericOperationDefault: public NumericOperation {
 public:
 	virtual ~NumericOperationDefault() {
 	}
-	virtual void OperateFloatSubtraction(size_t num_in,
+	virtual void OperateFloatSubtraction(
+			size_t num_in,
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/], size_t num_model,
-			double const model[/*num_model * num_in*/],
-			float out[/*num_in*/]) const;
-	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
-			float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/], size_t num_model,
-			double const model[/*num_model * num_in*/],
-			double out_matrix[/*num_model * num_model*/],
-			double out_vector[/*num_model*/]) const;
-	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
+	virtual void GetBestFitModel(
+			size_t num_data,
+			float const data[/*num_data*/], bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases * num_data*/],
+			float out[/*num_data*/]) const;
+	virtual void GetCoefficientsForLeastSquareFitting(
+			size_t num_data,
+			float const data[/*num_data*/], bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases * num_data*/],
+			double out_matrix[/*num_model_bases * num_model_bases*/],
+			double out_vector[/*num_model_bases*/]) const;
+	virtual void SolveSimultaneousEquationsByLU(
+			size_t num_eqn,
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const;
@@ -322,20 +327,25 @@ class NumericOperationAfterSandyBridge: public NumericOperation {
 public:
 	virtual ~NumericOperationAfterSandyBridge() {
 	}
-	virtual void OperateFloatSubtraction(size_t num_in,
+	virtual void OperateFloatSubtraction(
+			size_t num_in,
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/], size_t num_model,
-			double const model[/*num_model * num_in*/],
-			float out[/*num_in*/]) const;
-	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
-			float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/], size_t num_model,
-			double const model[/*num_model * num_in*/],
-			double out_matrix[/*num_model * num_model*/],
-			double out_vector[/*num_model*/]) const;
-	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
+	virtual void GetBestFitModel(
+			size_t num_data,
+			float const data[/*num_data*/], bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases * num_data*/],
+			float out[/*num_data*/]) const;
+	virtual void GetCoefficientsForLeastSquareFitting(
+			size_t num_data,
+			float const data[/*num_data*/], bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases * num_data*/],
+			double out_matrix[/*num_model_bases * num_model_bases*/],
+			double out_vector[/*num_model_bases*/]) const;
+	virtual void SolveSimultaneousEquationsByLU(
+			size_t num_eqn,
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const;

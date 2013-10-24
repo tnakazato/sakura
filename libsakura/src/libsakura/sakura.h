@@ -1275,48 +1275,47 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値を計算する。
  * @details
- * @param[in] num_in 配列 @a in_data 、 @a in_mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正値でなければならない。
- * @param[in] in_data 入力データ。
- * @param[in] in_mask 入力データに対するマスク情報。値がfalseの要素に対応する入力データはフィッティングに用いられない。
- * @param[in] num_model モデルを構成する基底関数の数。正値でなければならない。
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_in * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model * @a num_in )でなければならない。
- * @param[out] out_matrix 求める連立方程式の左辺側の行列成分を格納する配列。対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out_matrix [ @a num_model * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model * @a num_model )となる。
- * @param[out] out_vector 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model となる。
+ * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正値でなければならない。
+ * @param[in] data 入力データ。
+ * @param[in] mask 入力データに対するマスク情報。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @param[in] num_model_bases モデルを構成する基底関数の数。正値でなければならない。
+ * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @param[out] out_matrix 求める連立方程式の左辺側の行列成分を格納する配列。対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
+ * @param[out] out_vector 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
  * @return 終了ステータス。
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
- * @param[in] num_in the number of elements in the arrays @a in_data
- * and @a in_mask, and also the number of elements in each model data
+ * @param[in] num_data the number of elements in the arrays @a data
+ * and @a mask, and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the total model.
- * @a num_in must be positive.
- * @param[in] in_data input data.
- * @param[in] in_mask input mask data.
- * @param[in] num_model number of model functions. must be positive.
- * @param[in] model an array containing all model values concatenated.
- * loop for data index must be inside that for model index, i.e.,
- * the @a n -th data of the @a m -th model must be stored at
- * @a model [ @a num_in * @a (m-1) + @a (n-1) ]. its length should be equal
- * to ( @a num_model * @a num_in).
+ * @a num_data must be positive.
+ * @param[in] data input data.
+ * @param[in] mask input mask data.
+ * @param[in] num_model_bases number of basis functions of @a model. must be positive.
+ * @param[in] model a 1D array containing values of all its basis functions
+ * concatenated. loop for data index must be inside of that for basis index,
+ * i.e., the @a n -th data of the @a m -th model should be stored at
+ * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
+ * to ( @a num_model_bases * @a num_data ).
  * @param[out] out_matrix a 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_model * @a num_model ).
+ * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
  * loop for columns comes inside that for rows, i.e., the value at the
  * @a m -th row and @a n -th column is stored at @a out_matrix [ @a
- * num_model * ( @a m -1) + ( @a n -1)], though @a out_matrix is actually
+ * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out_matrix is actually
  * symmetric.
  * @param[out] out_vector the right side value of the simultaneous
  * equations for least-square fitting. its length should be equal to
- * @a num_model.
+ * @a num_model_bases.
  * @return status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(
-		 size_t num_in, float const in_data[/*num_in*/],
-		 bool const in_mask[/*num_in*/], size_t num_model,
-		 double const model[/*num_model * num_in*/],
-		 double out_matrix[/*num_model * num_model*/],
-		 double out_vector[/*num_model*/]);
+		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
+		 double out_matrix[/*num_model_bases*num_model_bases*/],
+		 double out_vector[/*num_model_bases*/]);
 
 /**
  * @~japanese
@@ -1340,30 +1339,30 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-		 size_t num_eqn, double const lsq_matrix0[/*num_eqn * num_eqn*/],
+		 size_t num_eqn, double const lsq_matrix0[/*num_eqn*num_eqn*/],
 		 double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
 
 /**
  * @brief Compute the best-fit model by least-square fitting.
  * @details
- * @param[in] num_in the number of elements in the arrays @a in_data,
- * @a in_mask, and @a out. must be positive.
- * @param[in] in_data the input data.
- * @param[in] in_mask the input mask data.
- * @param[in] num_model number of model functions. must be positive.
- * @param[in] model an array containing all model values concatenated.
- * loop for data index must be inside that for model index, i.e.,
- * the @a n -th data of the @a m -th model must be stored at
- * model[@a num_in * @a (m-1) + @a (n-1)]. its length therefore must
- * be (@a num_model * @a num_in).
+ * @param[in] num_data the number of elements in the arrays @a data,
+ * @a mask, and @a out. must be positive.
+ * @param[in] data the input data.
+ * @param[in] mask the input mask data.
+ * @param[in] num_model_bases number of model functions. must be positive.
+ * @param[in] model a 1D array containing values of all its basis functions
+ * concatenated. loop for data index must be inside of that for basis index,
+ * i.e., the @a n -th data of the @a m -th model should be stored at
+ * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
+ * to ( @a num_model_bases * @a num_data ).
  * @param[out] out the best-fit model.
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num_in,
-		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
-		size_t num_model, double const model[/*num_model * num_in*/],
-		float out[/*num_in*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(
+		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
+		 float out[/*num_data*/]);
 
 /**
  * @~japanese
@@ -1371,10 +1370,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief Fit a baseline and subtract it from input data.
  * @details
- * @param[in] num_data the number of elements in the arrays @a in_data,
- * @a in_mask, and @a out. must be positive.
- * @param[in] in_data the input data.
- * @param[in] in_mask the input mask data.
+ * @param[in] num_data the number of elements in the arrays @a data,
+ * @a mask, and @a out. must be positive.
+ * @param[in] data the input data.
+ * @param[in] mask the input mask data.
  * @param[in] order order of polynomial model. must be zero or positive.
  * @param[in] clipping_threshold_sigma the threshold of clipping.
  * @param[in] num_fitting_max the maximum of total number of times
@@ -1390,41 +1389,42 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
-		size_t num_data, float const in_data[/*num_data*/],
-		bool const in_mask[/*num_data*/], size_t order,
-		float clipping_threshold_sigma, size_t num_fitting_max,
+		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t order, float clipping_threshold_sigma, size_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 
 /**
  * @brief Compute a set of model data.
  * @details
- * @param[in] num_data the number of elements in each model data.
+ * @param[in] num_each_basis the number of data elements for each model basis.
  * must be positive.
  * @param[in] order order of polynomial model. must be zero or positive.
- * @param[out] out a 1D array containing all output model values
- * concatenated. loop for data index comes inside of that for model
- * index, i.e., the @a n -th data of the @a m -th model is stored at
- * out[@a num_data * @a (m-1) + @a (n-1)]. its length must be equal to
- * ((@a order + 1) * @a num_data).
+ * @param[out] model a 1D array containing values of all its basis functions
+ * concatenated. loop for data index must be inside of that for basis index,
+ * i.e., the @a n -th data of the @a m -th model should be stored at
+ * @a model [ @a num_each_basis * @a (m-1) + @a (n-1) ]. its length must be equal
+ * to (( @a order + 1) * @a num_each_basis ).
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(size_t num_data,
-		size_t order, double out[/*(order+1)*num_data*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
+		 size_t num_each_basis, size_t order,
+		 double model[/*(order+1)*num_each_basis*/]);
 
 /**
  * @brief Recursively fit a baseline and subtract it from input spectrum.
  * @details
- * @param[in] num_data the number of elements in the arrays @a in_data,
- * @a in_mask, and @a out. must be positive.
- * @param[in] in_data the input data.
- * @param[in] in_mask the input mask data.
- * @param[in] num_model number of model functions. must be positive.
- * @param[in] model_data an array containing all model values concatenated.
- * loop for data index must be inside of that for model index, i.e., the
- * @a n -th data of the @a m -th model should be stored at
- * model_data[@a num_data * @a (m-1) + @a (n-1)]. its length must be equal
- * to (@a num_model * @a num_data).
+ * @param[in] num_data the number of elements in the arrays @a data,
+ * @a mask, and @a out. must be positive.
+ * @param[in] data the input data.
+ * @param[in] mask the input mask data.
+ * @param[in] num_model_bases number of basis functions consisting @a model.
+ * must be positive.
+ * @param[in] model a 1D array containing values of all its basis functions
+ * concatenated. loop for data index must be inside of that for basis index,
+ * i.e., the @a n -th data of the @a m -th model should be stored at
+ * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
+ * to ( @a num_model_bases * @a num_data ).
  * @param[in] clipping_threshold_sigma the threshold of clipping. must be positive.
  * @param[in] num_fitting_max the maximum number of iterative clipping.
  * must be zero or positive.
@@ -1434,8 +1434,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_data,
-		float const in_data[/*num_data*/], bool const in_mask[/*num_data*/],
-		size_t num_model, double const model_data[/*num_model * num_data*/],
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
 		float clipping_threshold_sigma, size_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 

@@ -20,26 +20,28 @@ using ::Eigen::Aligned;
 namespace {
 
 inline void GetBaselineModel(
-		size_t num_data, size_t order, double *out) {
+		size_t num_each_basis, size_t order, double *model) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	size_t num_model = order + 1;
+	size_t num_model_bases = order + 1;
 
-	for (size_t i = 0; i < num_model; ++i) {
-		for (size_t j = 0; j < num_data; ++j) {
-			out[num_data*i+j] = pow(static_cast<double>(j), static_cast<double>(i));
+	for (size_t i = 0; i < num_model_bases; ++i) {
+		for (size_t j = 0; j < num_each_basis; ++j) {
+			model[num_each_basis*i+j] =
+					pow(static_cast<double>(j), static_cast<double>(i));
 		}
 	}
 }
 
 inline void DoSubtractBaseline(
-		size_t num_data, float const *in_data, bool const *in_mask, size_t num_model,
-		double const *model_data, float clipping_threshold_sigma, size_t num_fitting_max,
+		size_t num_data, float const *data, bool const *mask,
+		size_t num_model_bases, double const *model,
+		float clipping_threshold_sigma, size_t num_fitting_max,
 		bool get_residual, float *out) {
 	//std::cout << "DoSubtractBaselineEigen function is called" << std::endl;
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
@@ -53,9 +55,9 @@ inline void DoSubtractBaseline(
 	//bool *new_clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
-		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, in_mask, clip_mask, composite_mask);
-		LIBSAKURA_SYMBOL(GetBestFitModel)(num_data, in_data, composite_mask, num_model, model_data, best_fit_model);
-		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_data, in_data, best_fit_model, residual_data);
+		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, mask, clip_mask, composite_mask);
+		LIBSAKURA_SYMBOL(GetBestFitModel)(num_data, data, composite_mask, num_model_bases, model, best_fit_model);
+		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_data, data, best_fit_model, residual_data);
 
 		//GetRms(); // calculate rms
 		//LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(); //new_clip_mask generated based on rms and residual_data
@@ -97,45 +99,43 @@ inline void DoSubtractBaseline(
 }
 
 inline void SubtractBaselinePolynomial(
-		size_t num_data, float const *in_data, bool const *in_mask,
+		size_t num_data, float const *data, bool const *mask,
 		size_t order, float clipping_threshold_sigma,
 		size_t num_fitting_max, bool get_residual,
 		float *out) {
-	size_t num_model = order + 1;
-	double *model_data = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model));
+	size_t num_model_bases = order + 1;
+	double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
 
-	GetBaselineModel(num_data, order, model_data);
-	DoSubtractBaseline(num_data, in_data, in_mask, num_model, model_data,
+	GetBaselineModel(num_data, order, model);
+	DoSubtractBaseline(num_data, data, mask, num_model_bases, model,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);
 
-	LIBSAKURA_PREFIX::Memory::Free(model_data);
+	LIBSAKURA_PREFIX::Memory::Free(model);
 }
 
 } /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
-		size_t num_data, float const in_data[/*num_data*/],
-		bool const in_mask[/*num_data*/], size_t order,
-		float clipping_threshold_sigma, size_t num_fitting_max,
-		bool get_residual, float out[/*num_data*/]) const {
-	SubtractBaselinePolynomial(num_data, in_data, in_mask, order,
-			clipping_threshold_sigma, num_fitting_max, get_residual, out);
-}
-
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModel(
-		size_t num_data, size_t order, double out[/*(order+1)*num_data*/]) const {
-	GetBaselineModel(num_data, order, out);
+		size_t num_model, size_t order, double model[/*(order+1)*num_model*/]) const {
+	::GetBaselineModel(num_model, order, model);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(
-		size_t num_data, float const in_data[/*num_data*/],
-		bool const in_mask[/*num_data*/], size_t num_model,
-		double const model_data[/*num_model * num_data*/],
-		float clipping_threshold_sigma, size_t num_fitting_max,
-		bool get_residual, float out[/*num_data*/]) const {
-	DoSubtractBaseline(num_data, in_data, in_mask, num_model, model_data,
+		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t num_model_bases, double const model[/*num_model_bases * num_data*/],
+		float clipping_threshold_sigma, size_t num_fitting_max, bool get_residual,
+		float out[/*num_data*/]) const {
+	::DoSubtractBaseline(num_data, data, mask, num_model_bases, model,
 		clipping_threshold_sigma, num_fitting_max, get_residual, out);
+}
+
+void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
+		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t order, float clipping_threshold_sigma, size_t num_fitting_max,
+		bool get_residual, float out[/*num_data*/]) const {
+	::SubtractBaselinePolynomial(num_data, data, mask, order,
+			clipping_threshold_sigma, num_fitting_max, get_residual, out);
 }
 
 }

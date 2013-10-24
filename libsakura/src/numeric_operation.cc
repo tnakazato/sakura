@@ -57,37 +57,37 @@ inline void SolveSimultaneousEquationsByLU(size_t num_eqn,
 	}
 }
 
-inline void GetCoefficientsForLeastSquareFitting(size_t num_in,
-		float const *in_data, bool const *in_mask,
-		size_t num_model, double const *model,
+inline void GetCoefficientsForLeastSquareFitting(size_t num_data,
+		float const *data, bool const *mask,
+		size_t num_model_bases, double const *model,
 		double *out_matrix, double *out_vector) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_matrix));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_vector));
 
-	for (size_t i = 0; i < num_model; ++i) {
-		for (size_t j = 0; j < num_model; ++j) {
-			size_t idx = num_model * i + j;
+	for (size_t i = 0; i < num_model_bases; ++i) {
+		for (size_t j = 0; j < num_model_bases; ++j) {
+			size_t idx = num_model_bases * i + j;
 			out_matrix[idx] = 0.0;
 
-			for (size_t k = 0; k < num_in ; ++k){
-				if (!in_mask[k]) continue;
+			for (size_t k = 0; k < num_data ; ++k){
+				if (!mask[k]) continue;
 
-				size_t idx_i = num_in * i + k;
-				size_t idx_j = num_in * j + k;
+				size_t idx_i = num_data * i + k;
+				size_t idx_j = num_data * j + k;
 				out_matrix[idx] += model[idx_i] * model[idx_j];
 			}
 		}
 
 		out_vector[i] = 0.0;
-		for (size_t k = 0; k < num_in; ++k) {
-			if (!in_mask[k]) continue;
+		for (size_t k = 0; k < num_data; ++k) {
+			if (!mask[k]) continue;
 
-			size_t idx = num_in * i + k;
-			out_vector[i] += model[idx] * in_data[k];
+			size_t idx = num_data * i + k;
+			out_vector[i] += model[idx] * data[k];
 		}
 	}
 }
@@ -107,27 +107,27 @@ inline void DoGetBestFitModel(size_t num_data, size_t num_eqn,
 	}
 }
 
-inline void GetBestFitModel(size_t num_in,
-		float const *in_data, bool const *in_mask,
-		size_t num_model, double const *model,
+inline void GetBestFitModel(size_t num_data,
+		float const *data, bool const *mask,
+		size_t num_model_bases, double const *model,
 		float *out) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
-	double *lsq_matrix0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model*num_model));
+	double *lsq_matrix0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases*num_model_bases));
 	//if (lsq_matrix0 == nullptr) {}
-	double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
-	double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model));
+	double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases));
+	double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases));
 
-	GetCoefficientsForLeastSquareFitting(num_in, in_data, in_mask,
-			num_model, model, lsq_matrix0, lsq_vector0);
+	GetCoefficientsForLeastSquareFitting(num_data, data, mask,
+			num_model_bases, model, lsq_matrix0, lsq_vector0);
 
-	SolveSimultaneousEquationsByLU(num_model,
+	SolveSimultaneousEquationsByLU(num_model_bases,
 			lsq_matrix0, lsq_vector0, coeff);
 
-	DoGetBestFitModel(num_in, num_model, model, coeff, out);
+	DoGetBestFitModel(num_data, num_model_bases, model, coeff, out);
 
 	LIBSAKURA_PREFIX::Memory::Free(lsq_matrix0);
 	LIBSAKURA_PREFIX::Memory::Free(lsq_vector0);
@@ -145,24 +145,28 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::OperateFloatSubtraction(
 	::OperateFloatSubtraction(num_in, in1, in2, out);
 }
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetCoefficientsForLeastSquareFitting(size_t num_in,
-		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
-		size_t num_model, double const model[/*num_model * num_in*/],
-		double out_matrix[/*num_model * num_model*/], double out_vector[/*num_model*/]) const {
-	::GetCoefficientsForLeastSquareFitting(num_in, in_data, in_mask, num_model, model, out_matrix, out_vector);
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetCoefficientsForLeastSquareFitting(
+		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
+		double out_matrix[/*num_model_bases*num_model_bases*/],
+		double out_vector[/*num_model_bases*/]) const {
+	::GetCoefficientsForLeastSquareFitting(num_data, data, mask, num_model_bases, model, out_matrix, out_vector);
 }
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(size_t num_eqn,
-		double const lsq_matrix0[/*num_eqn * num_eqn*/],
-		double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]) const {
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(
+		size_t num_eqn,
+		double const lsq_matrix0[/*num_eqn*num_eqn*/],
+		double const lsq_vector0[/*num_eqn*/],
+		double out[/*num_eqn*/]) const {
 	::SolveSimultaneousEquationsByLU(num_eqn, lsq_matrix0, lsq_vector0, out);
 }
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(size_t num_in,
-		float const in_data[/*num_in*/], bool const in_mask[/*num_in*/],
-		size_t num_model, double const model[/*num_model * num_in*/],
-		float out[/*num_in*/]) const {
-	::GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(
+		size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
+		float out[/*num_data*/]) const {
+	::GetBestFitModel(num_data, data, mask, num_model_bases, model, out);
 }
 
 }
