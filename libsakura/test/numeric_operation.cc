@@ -17,7 +17,7 @@ using namespace std;
 class NumericOperation : public ::testing::Test {
 protected:
 
-	NumericOperation() : verbose(true)
+	NumericOperation() : verbose(false)
 	{}
 
 	virtual void SetUp() {
