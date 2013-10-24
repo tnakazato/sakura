@@ -279,50 +279,40 @@ class LogicalOperationDefault: public LogicalOperation {
 public:
 	virtual ~LogicalOperationDefault() {
 	}
-	virtual void OperateLogicalAnd(
-			size_t num_in,
-			bool const in1[/*num_in*/],
-			bool const in2[/*num_in*/],
-			bool out[/*num_in*/]) const;
+	virtual void OperateLogicalAnd(size_t num_in,
+	bool const in1[/*num_in*/],
+	bool const in2[/*num_in*/],
+	bool out[/*num_in*/]) const;
 };
 
 class LogicalOperationAfterSandyBridge: public LogicalOperation {
 public:
 	virtual ~LogicalOperationAfterSandyBridge() {
 	}
-	virtual void OperateLogicalAnd(
-			size_t num_in,
-			bool const in1[/*num_in*/],
-			bool const in2[/*num_in*/],
-			bool out[/*num_in*/]) const;
+	virtual void OperateLogicalAnd(size_t num_in,
+	bool const in1[/*num_in*/],
+	bool const in2[/*num_in*/],
+	bool out[/*num_in*/]) const;
 };
 
 class NumericOperationDefault: public NumericOperation {
 public:
 	virtual ~NumericOperationDefault() {
 	}
-	virtual void OperateFloatSubtraction(
-			size_t num_in,
-			float const in1[/*num_in*/],
-			float const in2[/*num_in*/],
+	virtual void OperateFloatSubtraction(size_t num_in,
+			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetBestFitModel(
-			size_t num_in,
-			float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/],
-			size_t num_model,
+	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
+	bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetCoefficientsForLeastSquareFitting(
-			size_t num_in,
+	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
 			float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/],
-			size_t num_model,
+			bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			double out_matrix[/*num_model * num_model*/],
 			double out_vector[/*num_model*/]) const;
-	virtual void SolveSimultaneousEquationsByLU(
-			size_t num_eqn,
+	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const;
@@ -332,28 +322,20 @@ class NumericOperationAfterSandyBridge: public NumericOperation {
 public:
 	virtual ~NumericOperationAfterSandyBridge() {
 	}
-	virtual void OperateFloatSubtraction(
-			size_t num_in,
-			float const in1[/*num_in*/],
-			float const in2[/*num_in*/],
+	virtual void OperateFloatSubtraction(size_t num_in,
+			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetBestFitModel(
-			size_t num_in,
-			float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/],
-			size_t num_model,
+	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
+	bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetCoefficientsForLeastSquareFitting(
-			size_t num_in,
+	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
 			float const in_data[/*num_in*/],
-			bool const in_mask[/*num_in*/],
-			size_t num_model,
+			bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			double out_matrix[/*num_model * num_model*/],
 			double out_vector[/*num_model*/]) const;
-	virtual void SolveSimultaneousEquationsByLU(
-			size_t num_eqn,
+	virtual void SolveSimultaneousEquationsByLU(size_t num_eqn,
 			double const lsq_matrix0[/*num_eqn * num_eqn*/],
 			double const lsq_vector0[/*num_eqn*/],
 			double out[/*num_eqn*/]) const;
