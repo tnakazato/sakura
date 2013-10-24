@@ -19,9 +19,9 @@ namespace {
 
 template<class DataType>
 inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-		DataType const * __restrict__ scaling_factor, size_t num_data,
-		DataType const * __restrict__ target,
-		DataType const * __restrict__ reference, DataType * __restrict__ result) {
+		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+		DataType const target[/*num_data*/],
+		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
 	if (num_scaling_factor == 1) {
 		DataType const constant_scaling_factor = scaling_factor[0];
 		for (size_t i = 0; i < num_data; ++i) {
@@ -85,9 +85,9 @@ void ADDSUFFIX(ApplyCalibration, ARCH_SUFFIX)<DataType>::ApplyPositionSwitchCali
 	assert(LIBSAKURA_SYMBOL(IsAligned)(target));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(reference));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	ApplyPositionSwitchCalibration(num_scaling_factor, scaling_factor,
+	::ApplyPositionSwitchCalibration(num_scaling_factor, scaling_factor,
 			num_data, target, reference, result);
-//	ApplyPositionSwitchCalibrationEigen(num_scaling_factor, scaling_factor,
+//	::ApplyPositionSwitchCalibrationEigen(num_scaling_factor, scaling_factor,
 //			num_data, target, reference, result);
 }
 
