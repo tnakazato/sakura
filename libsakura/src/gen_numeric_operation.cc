@@ -72,7 +72,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSqua
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-		size_t num_eqn, double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
+		size_t num_equations, double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
 	if (lsq_matrix0 == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (lsq_vector0 == nullptr)
@@ -89,7 +89,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->SolveSimultaneousEquationsByLU(num_eqn, lsq_matrix0, lsq_vector0, out);
+		numop->SolveSimultaneousEquationsByLU(num_equations, lsq_matrix0, lsq_vector0, out);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

@@ -30,29 +30,29 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1,
 	}
 }
 
-inline void SolveSimultaneousEquationsByLU(size_t num_eqn,
+inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 		double const *lsq_matrix0, double const *lsq_vector0, double *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix0));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector0));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	Map<Array<double, Dynamic, 1>, Aligned> lsq_matrix0_array(const_cast<double *>(lsq_matrix0),
-			num_eqn*num_eqn);
+			num_equations*num_equations);
 	Map<Array<double, Dynamic, 1>, Aligned> lsq_vector0_array(const_cast<double *>(lsq_vector0),
-			num_eqn);
+			num_equations);
 	Map<Array<double, Dynamic, 1>, Aligned> out_array(const_cast<double *>(out),
-			num_eqn);
+			num_equations);
 
-	::Eigen::MatrixXd lsq_matrix(num_eqn, num_eqn);
-	::Eigen::VectorXd lsq_vector(num_eqn);
-	for (size_t i = 0; i < num_eqn; ++i) {
-		for (size_t j = 0; j < num_eqn; ++j) {
-			lsq_matrix(i, j) = lsq_matrix0_array[num_eqn*i+j];
+	::Eigen::MatrixXd lsq_matrix(num_equations, num_equations);
+	::Eigen::VectorXd lsq_vector(num_equations);
+	for (size_t i = 0; i < num_equations; ++i) {
+		for (size_t j = 0; j < num_equations; ++j) {
+			lsq_matrix(i, j) = lsq_matrix0_array[num_equations*i+j];
 		}
 		lsq_vector(i) = lsq_vector0_array[i];
 	}
 
 	::Eigen::VectorXd lu_result = lsq_matrix.fullPivLu().solve(lsq_vector);
-	for (size_t i = 0; i < num_eqn; ++i) {
+	for (size_t i = 0; i < num_equations; ++i) {
 		out_array[i] = lu_result(i);
 	}
 }
@@ -92,7 +92,7 @@ inline void GetCoefficientsForLeastSquareFitting(size_t num_data,
 	}
 }
 
-inline void DoGetBestFitModel(size_t num_data, size_t num_eqn,
+inline void DoGetBestFitModel(size_t num_data, size_t num_equations,
 		double const *model, double const *coeff, float *out) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
@@ -101,7 +101,7 @@ inline void DoGetBestFitModel(size_t num_data, size_t num_eqn,
 
 	for (size_t i = 0; i < num_data; ++i) {
 		out[i] = 0.0f;
-		for (size_t j = 0; j < num_eqn; ++j) {
+		for (size_t j = 0; j < num_equations; ++j) {
 			out[i] += coeff[j] * model[num_data * j + i];
 		}
 	}
@@ -154,11 +154,11 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetCoefficientsForLeastSquareFitt
 }
 
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(
-		size_t num_eqn,
-		double const lsq_matrix0[/*num_eqn*num_eqn*/],
-		double const lsq_vector0[/*num_eqn*/],
-		double out[/*num_eqn*/]) const {
-	::SolveSimultaneousEquationsByLU(num_eqn, lsq_matrix0, lsq_vector0, out);
+		size_t num_equations,
+		double const lsq_matrix0[/*num_equations*num_equations*/],
+		double const lsq_vector0[/*num_equations*/],
+		double out[/*num_equations*/]) const {
+	::SolveSimultaneousEquationsByLU(num_equations, lsq_matrix0, lsq_vector0, out);
 }
 
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(

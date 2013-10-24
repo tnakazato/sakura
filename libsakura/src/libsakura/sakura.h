@@ -1321,26 +1321,26 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 連立方程式をLU分解によって解く。
  * @details
- * @param[in] num_eqn 連立方程式の数。正値でなければならない。
- * @param[in] lsq_matrix0 連立方程式の左辺側の行列成分を格納する配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix0 [ @a num_eqn * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_eqn * @a num_eqn )となる。
- * @param[in] lsq_vector0 連立方程式の右辺値を格納する配列。配列の長さは @a num_eqn でなければならない。
- * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_eqn でなければならない。
+ * @param[in] num_equations 連立方程式の数。正値でなければならない。
+ * @param[in] lsq_matrix0 連立方程式の左辺側の行列成分を格納する配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix0 [ @a num_equations * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_equations * @a num_equations )となる。
+ * @param[in] lsq_vector0 連立方程式の右辺値を格納する配列。配列の長さは @a num_equations でなければならない。
+ * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_equations でなければならない。
  * @return 終了ステータス。
  * @~english
  * @brief Solve simultaneous equations via LU decomposition.
  * @details
- * @param[in] num_eqn number of equations. must be positive.
+ * @param[in] num_equations number of equations. must be positive.
  * @param[in] lsq_matrix0 the matrix in the left side of simultaneous equations.
- * its length must be (@a num_eqn * @a num_eqn).
+ * its length must be (@a num_equations * @a num_equations).
  * @param[in] lsq_vector0 the right side value of simultaneous equations.
- * its length must be @a num_eqn .
- * @param[out] out the solution. its length must be @a num_eqn .
+ * its length must be @a num_equations .
+ * @param[out] out the solution. its length must be @a num_equations .
  * @return status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-		 size_t num_eqn, double const lsq_matrix0[/*num_eqn*num_eqn*/],
-		 double const lsq_vector0[/*num_eqn*/], double out[/*num_eqn*/]);
+		 size_t num_equations, double const lsq_matrix0[/*num_equations*num_equations*/],
+		 double const lsq_vector0[/*num_equations*/], double out[/*num_equations*/]);
 
 /**
  * @brief Compute the best-fit model by least-square fitting.

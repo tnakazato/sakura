@@ -47,7 +47,7 @@ public:
 	virtual void DoSubtractBaseline(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/], size_t num_model_bases,
-			double const model[/*num_model_bases * num_data*/],
+			double const model[/*num_model_bases*num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_data*/]) const;
 };
@@ -66,7 +66,7 @@ public:
 	virtual void DoSubtractBaseline(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/], size_t num_model_bases,
-			double const model[/*num_model_bases * num_data*/],
+			double const model[/*num_model_bases*num_data*/],
 			float clipping_threshold_sigma, size_t num_fitting_max,
 			bool get_residual, float out[/*num_data*/]) const;
 };
@@ -307,20 +307,20 @@ public:
 			size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,
-			double const model[/*num_model_bases * num_data*/],
+			double const model[/*num_model_bases*num_data*/],
 			float out[/*num_data*/]) const;
 	virtual void GetCoefficientsForLeastSquareFitting(
 			size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,
-			double const model[/*num_model_bases * num_data*/],
-			double out_matrix[/*num_model_bases * num_model_bases*/],
+			double const model[/*num_model_bases*num_data*/],
+			double out_matrix[/*num_model_bases*num_model_bases*/],
 			double out_vector[/*num_model_bases*/]) const;
 	virtual void SolveSimultaneousEquationsByLU(
-			size_t num_eqn,
-			double const lsq_matrix0[/*num_eqn * num_eqn*/],
-			double const lsq_vector0[/*num_eqn*/],
-			double out[/*num_eqn*/]) const;
+			size_t num_equations,
+			double const lsq_matrix0[/*num_equations*num_equations*/],
+			double const lsq_vector0[/*num_equations*/],
+			double out[/*num_equations*/]) const;
 };
 
 class NumericOperationAfterSandyBridge: public NumericOperation {
@@ -335,20 +335,20 @@ public:
 			size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,
-			double const model[/*num_model_bases * num_data*/],
+			double const model[/*num_model_bases*num_data*/],
 			float out[/*num_data*/]) const;
 	virtual void GetCoefficientsForLeastSquareFitting(
 			size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,
-			double const model[/*num_model_bases * num_data*/],
-			double out_matrix[/*num_model_bases * num_model_bases*/],
+			double const model[/*num_model_bases*num_data*/],
+			double out_matrix[/*num_model_bases*num_model_bases*/],
 			double out_vector[/*num_model_bases*/]) const;
 	virtual void SolveSimultaneousEquationsByLU(
-			size_t num_eqn,
-			double const lsq_matrix0[/*num_eqn * num_eqn*/],
-			double const lsq_vector0[/*num_eqn*/],
-			double out[/*num_eqn*/]) const;
+			size_t num_equations,
+			double const lsq_matrix0[/*num_equations*num_equations*/],
+			double const lsq_vector0[/*num_equations*/],
+			double out[/*num_equations*/]) const;
 };
 
 class StatisticsDefault: public Statistics {
