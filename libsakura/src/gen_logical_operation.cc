@@ -23,7 +23,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateLogicalAnd)(size_t n
 
 	auto logicop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetLogicalOperationImpl();
-	logicop->OperateLogicalAnd(num_in, in1, in2, out);
+	try {
+		logicop->OperateLogicalAnd(num_in, in1, in2, out);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

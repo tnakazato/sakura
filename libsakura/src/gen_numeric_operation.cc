@@ -23,7 +23,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(si
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	numop->OperateFloatSubtraction(num_in, in1, in2, out);
+	try {
+		numop->OperateFloatSubtraction(num_in, in1, in2, out);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
@@ -54,7 +58,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSqua
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	numop->GetCoefficientsForLeastSquareFitting(num_in, in_data, in_mask, num_model, model, out_matrix, out_vector);
+	try {
+		numop->GetCoefficientsForLeastSquareFitting(
+				num_in, in_data, in_mask,
+				num_model, model,
+				out_matrix, out_vector);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
@@ -76,7 +87,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	numop->SolveSimultaneousEquationsByLU(num_eqn, lsq_matrix0, lsq_vector0, out);
+	try {
+		numop->SolveSimultaneousEquationsByLU(num_eqn, lsq_matrix0, lsq_vector0, out);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
@@ -103,7 +118,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(size_t num
 
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	numop->GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+	try {
+		numop->GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
