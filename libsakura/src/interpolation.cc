@@ -27,7 +27,7 @@ void *AllocateAndAlign(size_t num_array, DataType **array) {
 	void *storage = LIBSAKURA_PREFIX::Memory::Allocate(
 			sizeof(DataType) * elements_in_arena);
 	if (storage == nullptr) {
-		char *msg = "Failed to allocate memory";
+		char const *msg = "Failed to allocate memory";
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
 		}
@@ -37,7 +37,7 @@ void *AllocateAndAlign(size_t num_array, DataType **array) {
 			sizeof(DataType) * elements_in_arena, storage,
 			sizeof(DataType) * num_array));
 	if (array == nullptr) {
-		char *msg = "Failed alignment";
+		char const *msg = "Failed alignment";
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
 		}
@@ -261,7 +261,7 @@ public:
 			size_t num_array, XDataType const base_position[],
 			YDataType const base_data[]) {
 		polynomial_order_ =
-				(static_cast<size_t>(polynomial_order + 1) >= num_base) ?
+				(polynomial_order + 1u >= num_base) ?
 						static_cast<uint8_t>(num_base - 1) : polynomial_order;
 		num_elements_ = polynomial_order_ + 1;
 		storage_for_c_.reset(AllocateAndAlign<XDataType>(num_elements_, &c_));
@@ -273,7 +273,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[]) {
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			int left_edge1 = k - static_cast<int>(polynomial_order_) / 2;
+			int left_edge1 = k - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);
@@ -509,7 +509,7 @@ public:
 			size_t num_array, XDataType const base_position[],
 			YDataType const base_data[]) {
 		polynomial_order_ =
-				(static_cast<size_t>(polynomial_order + 1) >= num_base) ?
+				(polynomial_order + 1u >= num_base) ?
 						static_cast<uint8_t>(num_base - 1) : polynomial_order;
 		num_elements_ = polynomial_order_ + 1;
 		storage_for_c_.reset(
@@ -524,7 +524,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[]) {
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			int left_edge1 = k - static_cast<int>(polynomial_order_) / 2;
+			int left_edge1 = k - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);
