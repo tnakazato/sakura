@@ -25,12 +25,16 @@ protected:
 		<< "sakura must be properly initialized!";
 
 		// execute interpolation
+		double start = sakura_GetCurrentTime();
 		sakura_Status result = sakura_InterpolateXAxisFloat(
 				interpolation_method, polynomial_order_, num_base,
 				x_base_, 1, y_base_, num_interpolated, x_interpolated_,
 				y_interpolated_);
+		double end = sakura_GetCurrentTime();
 
 		InspectResult(expected_status, result, num_interpolated, 1, check_result);
+
+		std::cout << "Elapsed time " << end-start << " sec" << std::endl;
 	}
 };
 

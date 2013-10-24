@@ -32,30 +32,40 @@ public:
 	}
 	virtual void PerformTest(LIBSAKURA_SYMBOL(Status) expected_status,
 			size_t num_scaling_factor, float const scaling_factor[],
-			size_t num_data, float const target[], float const reference[],
-			float result[], float const expected[], bool check_result) {
+			size_t num_data, size_t iteration, float const target[],
+			float const reference[], float result[], float const expected[],
+			bool check_result) {
 		std::string message =
 				(expected_status == sakura_Status_kOK) ?
 						"ApplyCalibration had any problems during execution." :
 						"ApplyCalibration should fail!";
-		LIBSAKURA_SYMBOL(Status) result_status =
-		LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(num_scaling_factor,
-				scaling_factor, num_data, target, reference, result);
+		double elapsed_time = 0.0;
+		for (size_t i = 0; i < iteration; ++i) {
+			float const *ws = (num_scaling_factor==1)?scaling_factor:&scaling_factor[i*num_data];
+			float const *wt = &target[i*num_data];
+			float const *wf = &reference[i*num_data];
+			float *wr = &result[i*num_data];
+			double start = sakura_GetCurrentTime();
+			LIBSAKURA_SYMBOL(Status) result_status =
+			LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(num_scaling_factor,
+					ws, num_data, wt, wf, wr);
+			double end = sakura_GetCurrentTime();
+			elapsed_time += end - start;
+			EXPECT_EQ(expected_status, result_status) << message;
 
-		EXPECT_EQ(expected_status, result_status) << message;
-
-		if (check_result && (expected_status == result_status)) {
-			// Value check
-			for (size_t index = 0; index < num_data; ++index) {
-				std::cout << "Expected value at index " << index << ": "
-						<< expected[index] << std::endl;
-				EXPECT_FLOAT_EQ(expected[index], result[index])
-						<< "interpolated value differs from expected value at "
-						<< index << ": " << expected[index] << ", "
-						<< result[index];
+			if (check_result && (expected_status == result_status)) {
+				// Value check
+				for (size_t index = 0; index < num_data; ++index) {
+					std::cout << "Expected value at index " << index << ": "
+							<< expected[index] << std::endl;
+					EXPECT_FLOAT_EQ(expected[index], result[index])
+							<< "interpolated value differs from expected value at "
+							<< index << ": " << expected[index] << ", "
+							<< result[index];
+				}
 			}
 		}
-
+		std::cout << "Elapsed time (" << iteration << " iterations) " << elapsed_time << " sec" << std::endl;
 	}
 };
 TEST_F(ApplyCalibrationTest, ZeroLengthData) {
@@ -68,7 +78,7 @@ TEST_F(ApplyCalibrationTest, ZeroLengthData) {
 	float target[num_data];
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, target, target, nullptr, true);
+			scaling_factor, num_data, 1, target, target, target, nullptr, true);
 }
 
 TEST_F(ApplyCalibrationTest, ZeroLengthScalingFactor) {
@@ -81,7 +91,7 @@ TEST_F(ApplyCalibrationTest, ZeroLengthScalingFactor) {
 	InitializeFloatArray(num_data, target, 1.0);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
-			scaling_factor, num_data, target, target, target, nullptr, false);
+			scaling_factor, num_data, 1, target, target, target, nullptr, false);
 }
 
 TEST_F(ApplyCalibrationTest, NullPointer) {
@@ -95,7 +105,7 @@ TEST_F(ApplyCalibrationTest, NullPointer) {
 	InitializeFloatArray(num_data, target, 1.0);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
-			scaling_factor, num_data, target, nullptr, target, nullptr, false);
+			scaling_factor, num_data, 1, target, nullptr, target, nullptr, false);
 }
 
 TEST_F(ApplyCalibrationTest, InputArrayNotAligned) {
@@ -109,7 +119,7 @@ TEST_F(ApplyCalibrationTest, InputArrayNotAligned) {
 	InitializeFloatArray(num_data + 1, target, 1.0, 1.0);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
-			scaling_factor, num_data, &target[1], target, target, nullptr,
+			scaling_factor, num_data, 1, &target[1], target, target, nullptr,
 			false);
 }
 
@@ -124,7 +134,7 @@ TEST_F(ApplyCalibrationTest, InvaidNumberOfScalingFactor) {
 	InitializeFloatArray(num_data, target, 1.0, 1.0, 1.0);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
-			scaling_factor, num_data, target, target, target, nullptr, false);
+			scaling_factor, num_data, 1, target, target, target, nullptr, false);
 }
 
 TEST_F(ApplyCalibrationTest, ZeroDivision) {
@@ -143,7 +153,7 @@ TEST_F(ApplyCalibrationTest, ZeroDivision) {
 	float result[num_data];
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, result, nullptr,
+			scaling_factor, num_data, 1, target, reference, result, nullptr,
 			false);
 
 	// Check result is inf or not.
@@ -173,7 +183,7 @@ TEST_F(ApplyCalibrationTest, BasicTest) {
 	InitializeFloatArray(num_data, expected, 0.0, 1.0);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, result, expected,
+			scaling_factor, num_data, 1, target, reference, result, expected,
 			true);
 }
 
@@ -198,7 +208,7 @@ TEST_F(ApplyCalibrationTest, ShareInputOutputStorage) {
 		original_target[i] = target[i];
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, target, expected,
+			scaling_factor, num_data, 1, target, reference, target, expected,
 			true);
 
 	// additional test:
@@ -231,7 +241,7 @@ TEST_F(ApplyCalibrationTest, SingleScalingFactor) {
 	InitializeFloatArray(num_data, expected, 0.0, 0.5);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, result, expected,
+			scaling_factor, num_data, 1, target, reference, result, expected,
 			true);
 }
 
@@ -254,7 +264,7 @@ TEST_F(ApplyCalibrationTest, TooManyScalingFactor) {
 	InitializeFloatArray(num_data, expected, 0.0, 1.0);
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, result, expected,
+			scaling_factor, num_data, 1, target, reference, result, expected,
 			true);
 }
 
@@ -280,12 +290,13 @@ TEST_F(ApplyCalibrationTest, PerformanceTestAllAtOnce) {
 	float *result = sakura_AlignFloat(num_arena, storage_for_result.get(),
 			num_data);
 	for (size_t i = 0; i < num_data; ++i) {
-		target[i] = 2.0;;
+		target[i] = 2.0;
+		;
 		reference[i] = 1.0;
 	}
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, result, nullptr,
+			scaling_factor, num_data, 1, target, reference, result, nullptr,
 			false);
 }
 
@@ -315,15 +326,15 @@ TEST_F(ApplyCalibrationTest, PerformanceTestIndividual) {
 		reference[i] = 1.0;
 	}
 
-	for (size_t i = 0; i < iteration; ++i) {
-		float const *scaling_factor_local = &scaling_factor[i * length];
-		float const *target_local = &target[i * length];
-		float const *reference_local = &reference[i * length];
-		float *result_local = &result[i * length];
-		PerformTest(LIBSAKURA_SYMBOL(Status_kOK), length, scaling_factor_local,
-				length, target_local, reference_local, result_local, nullptr,
+//	for (size_t i = 0; i < iteration; ++i) {
+//		float const *scaling_factor_local = &scaling_factor[i * length];
+//		float const *target_local = &target[i * length];
+//		float const *reference_local = &reference[i * length];
+//		float *result_local = &result[i * length];
+		PerformTest(LIBSAKURA_SYMBOL(Status_kOK), length, scaling_factor,
+				length, iteration, target, reference, result, nullptr,
 				false);
-	}
+//	}
 }
 
 TEST_F(ApplyCalibrationTest, PerformanceTestSingleScalingFactor) {
@@ -353,7 +364,7 @@ TEST_F(ApplyCalibrationTest, PerformanceTestSingleScalingFactor) {
 	}
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), 1, scaling_factor, num_data,
-			target, reference, result, nullptr,
+			1, target, reference, result, nullptr,
 			false);
 }
 
@@ -381,6 +392,6 @@ TEST_F(ApplyCalibrationTest, PerformanceTestShareInputOutput) {
 	}
 
 	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, target, reference, target, nullptr,
+			scaling_factor, num_data, 1, target, reference, target, nullptr,
 			false);
 }
