@@ -6,64 +6,85 @@
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
-#define NUM_IN 5
+#define NUM_DATA 5
 #define NUM_MODEL 3
 
 using namespace std;
 
 /*
  * A super class to test numeric operations of array(s)
- * INPUTS:
- * - in1 = [ 0.0, 1.0, 2.0, -3.0, -4.0 ]
- * - in2 = [ 5.0, 4.0, -1.0, 2.0, -3.0 ]
  */
-class NumericOperation : public ::testing::Test
-{
+class NumericOperation : public ::testing::Test {
 protected:
 
-	NumericOperation() : verbose(false)
+	NumericOperation() : verbose(true)
 	{}
 
-	virtual void SetUp()
-	{
-		in1_[0] = 0.0;
-		in1_[1] = 1.0;
-		in1_[2] = 2.0;
-		in1_[3] = -3.0;
-		in1_[4] = -4.0;
-
-		in2_[0] = 5.0;
-		in2_[1] = 4.0;
-		in2_[2] = -1.0;
-		in2_[3] = 2.0;
-		in2_[4] = -3.0;
-
+	virtual void SetUp() {
 		// Initialize sakura
 		LIBSAKURA_SYMBOL(Status) status =
 				LIBSAKURA_SYMBOL(Initialize)(nullptr, nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 
-	virtual void TearDown()
-	{
+	virtual void TearDown() {
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	void PrintInputs(){
-		PrintArray("in1", NUM_IN, in1_);
-		PrintArray("in2", NUM_IN, in2_);
+	//1D float array
+	void PrintArray(char const *name, size_t print_length, float const *data,
+			size_t start_idx = 0, bool print_name = true, bool newline = true) {
+		if (print_name) cout << name << " = ";
+		cout << "[";
+		for (size_t i = start_idx; i < start_idx+print_length-1; ++i)
+			cout << data[i] << ", " ;
+		cout << data[start_idx+print_length-1];
+		cout << " ]";
+		if (newline) cout << endl;
 	}
-
-	void PrintArray(char const *name, size_t num_in, float *in){
+	//1D double array
+	void PrintArray(char const *name, size_t print_length, double const *data,
+			size_t start_idx = 0, bool print_name = true, bool newline = true) {
+		if (print_name) cout << name << " = ";
+		cout << "[";
+		for (size_t i = start_idx; i < start_idx+print_length-1; ++i)
+			cout << data[i] << ", " ;
+		cout << data[start_idx+print_length-1];
+		cout << " ]";
+		if (newline) cout << endl;
+	}
+	//1D bool array
+	void PrintArray(char const *name, size_t print_length, bool const *data,
+			size_t start_idx = 0, bool print_name = true, bool newline = true) {
+		if (print_name) cout << name << " = ";
+		cout << "[";
+		for (size_t i = start_idx; i < start_idx+print_length-1; ++i)
+			cout << (data[i] ? "T" : "F") << ", " ;
+		cout << (data[start_idx+print_length-1] ? "T" : "F");
+		cout << " ]";
+		if (newline) cout << endl;
+	}
+	//given as 1D float array but actually stores (num_row * num_column) 2D data
+	//for which column loop comes inside row loop.
+	void PrintArray(char const *name, size_t num_row, size_t num_column, float const *data) {
 		cout << name << " = [";
-		for (size_t i = 0; i < num_in-1; i++)
-			cout << in[i] << ", " ;
-		cout << in[num_in-1];
+		for (size_t i = 0; i < num_row; ++i) {
+			PrintArray(name, num_column, data, num_column*i, false, false);
+			if (i < num_row-1) cout << ", ";
+		}
+		cout << " ]" << endl;
+	}
+	//given as 1D double array but actually stores (num_row * num_column) 2D data
+	//for which column loop comes inside row loop.
+	void PrintArray(char const *name, size_t num_row, size_t num_column, double const *data) {
+		cout << name << " = [";
+		for (size_t i = 0; i < num_row; ++i) {
+			PrintArray(name, num_column, data, num_column*i, false, false);
+			if (i < num_row-1) cout << ", ";
+		}
 		cout << " ]" << endl;
 	}
 
-	SIMD_ALIGN float in1_[NUM_IN];
-	SIMD_ALIGN float in2_[NUM_IN];
 	bool verbose;
 
 };
@@ -73,22 +94,29 @@ protected:
  * RESULT:
  * out = [ -5.0, -3.0, 3.0, -5.0, -1.0 ]
  */
-TEST_F(NumericOperation, Subtraction) {
-	SIMD_ALIGN float out[NUM_IN];
-	float result[NUM_IN] = {-5.0, -3.0, 3.0, -5.0, -1.0};
-	size_t const num_in(NUM_IN);
+TEST_F(NumericOperation, OperateFloatSubtraction) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN float in1[num_data] = {0.0, 1.0, 2.0, -3.0, -4.0};
+	SIMD_ALIGN float in2[num_data] = {5.0, 4.0, -1.0, 2.0, -3.0};
+	SIMD_ALIGN float out[num_data];
+	float answer[num_data] = {-5.0, -3.0, 3.0, -5.0, -1.0};
 
-	if (verbose) PrintInputs();
+	if (verbose) {
+		PrintArray("in1", num_data, in1);
+		PrintArray("in2", num_data, in2);
+	}
 
-	LIBSAKURA_SYMBOL(Status) status =
-			sakura_OperateFloatSubtraction(num_in, in1_, in2_, out);
+	LIBSAKURA_SYMBOL(Status) status = sakura_OperateFloatSubtraction(num_data, in1, in2, out);
 
-	if (verbose) PrintArray("out", num_in, out);
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_in; ++i){
-		ASSERT_EQ(out[i], result[i]);
+	for (size_t i = 0 ; i < num_data; ++i){
+		ASSERT_EQ(out[i], answer[i]);
 	}
 }
 
@@ -98,21 +126,31 @@ TEST_F(NumericOperation, Subtraction) {
  * out = []
  */
 TEST_F(NumericOperation, GetBestFitModel) {
-	size_t const num_in(NUM_IN);
-	SIMD_ALIGN float in_data[NUM_IN] = {1.0, 3.0, 7.0, 130.0, 21.0};
-	SIMD_ALIGN bool in_mask[NUM_IN] = {true, true, true, false, true};
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
+	SIMD_ALIGN bool in_mask[num_data] = {true, true, true, false, true};
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double model[NUM_MODEL*NUM_IN] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
-	SIMD_ALIGN float out[NUM_IN];
-	float result[NUM_IN] = {1.0, 3.0, 7.0, 13.0, 21.0};
+	SIMD_ALIGN double model[num_model*num_data] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	SIMD_ALIGN float out[num_data];
+	float answer[num_data] = {1.0, 3.0, 7.0, 13.0, 21.0};
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
 
 	LIBSAKURA_SYMBOL(Status) status =
-			sakura_GetBestFitModel(num_in, in_data, in_mask, num_model, model, out);
+			sakura_GetBestFitModel(num_data, in_data, in_mask, num_model, model, out);
+
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_model; ++i){
-		ASSERT_EQ(out[i], result[i]);
+		ASSERT_EQ(out[i], answer[i]);
 	}
 }
 
@@ -122,28 +160,41 @@ TEST_F(NumericOperation, GetBestFitModel) {
  * out = []
  */
 TEST_F(NumericOperation, GetCoefficientsForLeastSquareFitting) {
-	size_t const num_in(NUM_IN);
-	SIMD_ALIGN float in_data[NUM_IN] = {1.0, 3.0, 7.0, 130.0, 21.0};
-	SIMD_ALIGN bool in_mask[NUM_IN] = {true, true, true, false, true};
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
+	SIMD_ALIGN bool in_mask[num_data] = {true, true, true, false, true};
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double model[NUM_MODEL*NUM_IN] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
-	SIMD_ALIGN double out_matrix[NUM_MODEL*NUM_MODEL];
-	SIMD_ALIGN double out_vector[NUM_MODEL];
-	float result_matrix[NUM_MODEL*NUM_MODEL] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
-	float result_vector[NUM_MODEL] = {32.0, 101.0, 367.0};
+	SIMD_ALIGN double model[num_model*num_data] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	SIMD_ALIGN double out_matrix[num_model*num_model];
+	SIMD_ALIGN double out_vector[num_model];
+	float answer_matrix[num_model*num_model] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+	float answer_vector[num_model] = {32.0, 101.0, 367.0};
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+		PrintArray("model  ", num_model, num_data, model);
+	}
 
 	LIBSAKURA_SYMBOL(Status) status =
 			sakura_GetCoefficientsForLeastSquareFitting(
-					num_in, in_data, in_mask,
+					num_data, in_data, in_mask,
 					num_model, model, out_matrix, out_vector);
+
+	if (verbose) {
+		PrintArray("out_matrix   ", num_model, num_model, out_matrix);
+		PrintArray("out_vector   ", num_model, out_vector);
+		PrintArray("answer_matrix", num_model, num_model, answer_matrix);
+		PrintArray("answer_vector", num_model, answer_vector);
+	}
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_model*num_model; ++i){
-		ASSERT_EQ(out_matrix[i], result_matrix[i]);
+		ASSERT_EQ(out_matrix[i], answer_matrix[i]);
 	}
 	for (size_t i = 0 ; i < num_model; ++i){
-		ASSERT_EQ(out_vector[i], result_vector[i]);
+		ASSERT_EQ(out_vector[i], answer_vector[i]);
 	}
 }
 
@@ -154,17 +205,27 @@ TEST_F(NumericOperation, GetCoefficientsForLeastSquareFitting) {
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double lsq_matrix[NUM_MODEL*NUM_MODEL] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
-	SIMD_ALIGN double lsq_vector[NUM_MODEL] = {32.0, 101.0, 367.0};
-	SIMD_ALIGN double out[NUM_MODEL];
-	float result[NUM_MODEL] = {1.0, 1.0, 1.0};
+	SIMD_ALIGN double lsq_matrix[num_model*num_model] = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+	SIMD_ALIGN double lsq_vector[num_model] = {32.0, 101.0, 367.0};
+	SIMD_ALIGN double out[num_model];
+	float answer[num_model] = {1.0, 1.0, 1.0};
+
+	if (verbose) {
+		PrintArray("lsq_matrix", num_model, num_model, lsq_matrix);
+		PrintArray("lsq_vector", num_model, lsq_vector);
+	}
 
 	LIBSAKURA_SYMBOL(Status) status =
 				sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix, lsq_vector, out);
 
+	if (verbose) {
+		PrintArray("out   ", num_model, out);
+		PrintArray("answer", num_model, answer);
+	}
+
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_model; ++i){
-		ASSERT_EQ((float)out[i], result[i]);
+		ASSERT_EQ((float)out[i], answer[i]);
 	}
 }

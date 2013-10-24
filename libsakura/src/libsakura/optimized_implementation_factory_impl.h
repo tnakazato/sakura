@@ -303,7 +303,7 @@ public:
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
 	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
-	bool const in_mask[/*num_in*/], size_t num_model,
+			bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const;
 	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
@@ -326,7 +326,7 @@ public:
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
 	virtual void GetBestFitModel(size_t num_in, float const in_data[/*num_in*/],
-	bool const in_mask[/*num_in*/], size_t num_model,
+			bool const in_mask[/*num_in*/], size_t num_model,
 			double const model[/*num_model * num_in*/],
 			float out[/*num_in*/]) const;
 	virtual void GetCoefficientsForLeastSquareFitting(size_t num_in,
