@@ -1225,10 +1225,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief ２つの配列の論理積(AND)を返す。
  * @details
- * @param[in] num_in 配列 @a in1、@a in2、及び@a outの要素数。正値でなければならない。
+ * @param[in] num_in 配列 @a in1 、 @a in2 、及び @a out の要素数。正値でなければならない。
  * @param[in] in1 入力される配列その１。
  * @param[in] in2 入力される配列その２。
- * @param[in] out 出力される配列。@a outを指すポインタは@a in1または@a in2のいずれかと同じでもよい。
+ * @param[in] out 出力される配列。 @a out を指すポインタは @a in1 または @a in2 のいずれかと同じでもよい。
  * @return 終了ステータス。
  * @~english
  * @brief Logical operation AND between two boolean arrays.
@@ -1250,10 +1250,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief ２つの配列の差分を要素に持つ配列を返す。
  * @details
- * @param[in] num_in 配列 @a in1、@a in2、及び@a outの要素数。正値でなければならない。
+ * @param[in] num_in 配列 @a in1 、 @a in2 、及び @a out の要素数。正値でなければならない。
  * @param[in] in1 入力される配列その１。
  * @param[in] in2 入力される配列その２。
- * @param[in] out 出力される配列。@a outを指すポインタは@a in1と同じでもよい。
+ * @param[in] out 出力される配列。 @a out を指すポインタは @a in1 または @a in2 のいずれかと同じでもよい。
  * @return 終了ステータス。
  * @~english
  * @brief Compute subtraction between two float arrays (in1 - in2).
@@ -1263,7 +1263,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] in1 the first input data.
  * @param[in] in2 the second input data.
  * @param[out] out the output data. the pointer of @a out can be identical
- * with that of @a in1.
+ * with that of either @a in1 or @a in2.
  * @return status code.
  * @~
  * MT-safe
