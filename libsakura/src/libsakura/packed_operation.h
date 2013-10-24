@@ -108,6 +108,12 @@ public:
 template<typename Arch, typename ElementType>
 class LIBSAKURA_SYMBOL(SimdMath) {
 public:
+	static inline typename Arch::PacketType Reciprocal(
+			typename Arch::PacketType value) {
+		assert(false);
+		typename Arch::PacketType result = { 0 };
+		return result;
+	}
 	static inline typename Arch::PacketType Add(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
 		assert(false);
@@ -162,6 +168,17 @@ template<typename Arch>
 class LIBSAKURA_SYMBOL(SimdMath)<Arch, float> {
 	typedef float Type;
 public:
+	static inline typename Arch::PacketType Reciprocal(
+			typename Arch::PacketType value) {
+		typename Arch::PacketType result;
+		for (size_t i = 0;
+				i
+						< LIBSAKURA_SYMBOL(SimdScalarType)<Arch, Type>::kElementsInPacket;
+				++i) {
+			result.v_float.v[i] = float(1) / value.v_float.v[i];
+		}
+		return result;
+	}
 	static inline typename Arch::PacketType Add(
 			typename Arch::PacketType const &lhs,
 			typename Arch::PacketType const &rhs) {
@@ -450,6 +467,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), int8_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef int8_t Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType one;
+		one.set1(Type(1));
+		return Div(one, lhs);
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -514,6 +536,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef int32_t Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType one;
+		one.set1(Type(1));
+		return Div(one, lhs);
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -572,6 +599,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef float Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm_rcp_ps(lhs.raw_float);
+		return result;
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -603,6 +635,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchSSE), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) Arch;
 	typedef double Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType one;
+		one.set1(Type(1.));
+		return Div(one, lhs);
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -817,6 +854,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), int32_t> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 	typedef int32_t Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_rcp_ps(lhs.raw_float);
+		return result;
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -899,6 +941,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), float> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 	typedef float Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_rcp_ps(lhs.raw_float);
+		return result;
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -930,6 +977,11 @@ class LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchAVX), double> {
 	typedef LIBSAKURA_SYMBOL(SimdArchAVX) Arch;
 	typedef double Type;
 public:
+	static inline Arch::PacketType Reciprocal(Arch::PacketType lhs) {
+		Arch::PacketType one;
+		one.set1(Type(1.));
+		return Div(one, lhs);
+	}
 	static inline Arch::PacketType Add(Arch::PacketType const &lhs,
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
@@ -1289,6 +1341,42 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 	ScalarAction::prologue(context);
 	for (size_t i = packet_count * kUnit; i < elements; ++i) {
 		ScalarAction::action(i, &data1[i], &data2[i], &data3[i], context);
+	}
+	ScalarAction::epilogue(context);
+}
+
+template<typename Arch1, typename ScalarType1, typename Arch2,
+		typename ScalarType2, typename Arch3, typename ScalarType3,
+		typename Arch4, typename ScalarType4, typename PacketAction,
+		typename ScalarAction, typename Context>
+void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
+		ScalarType2 data2[], ScalarType3 data3[], ScalarType4 data4[],
+		Context *context) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data1));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data3));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data4));
+	size_t const kUnit =
+	LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
+	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
+	auto ptr1 =
+			const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
+	auto ptr2 =
+			const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
+	auto ptr3 =
+			const_cast<typename Arch3::PacketType *>(reinterpret_cast<typename Arch3::PacketType const *>(data3));
+	auto ptr4 =
+			const_cast<typename Arch4::PacketType *>(reinterpret_cast<typename Arch4::PacketType const *>(data4));
+	PacketAction::prologue(context);
+	for (size_t i = 0; i < packet_count; ++i) {
+		PacketAction::action(i, &ptr1[i], &ptr2[i], &ptr3[i], &ptr4[i],
+				context);
+	}
+	PacketAction::epilogue(context);
+	ScalarAction::prologue(context);
+	for (size_t i = packet_count * kUnit; i < elements; ++i) {
+		ScalarAction::action(i, &data1[i], &data2[i], &data3[i], &data4[i],
+				context);
 	}
 	ScalarAction::epilogue(context);
 }
