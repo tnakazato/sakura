@@ -12,11 +12,18 @@
 #include <xdispatch/dispatch>
 #include <libsakura/sakura.h>
 #include <casacore/tables/Tables/Table.h>
+#include <casa/Arrays/Array.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/ArrayIO.h>
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
 
 void JobFinished(int i) {
+	std::cout << "Start Job " << i << std::endl;
+	std::cout << "Ouput array:";
+	casa::Vector<int> v(1, i);
+	std::cout << v << std::endl;
 	std::cout << "Job ";
 	std::cout << i;
 	std::cout << " have done.\n";
