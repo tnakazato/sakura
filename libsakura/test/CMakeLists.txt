@@ -81,6 +81,9 @@ add_custom_target(testLogicalOperationRun      COMMAND ./testLogicalOperation   
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
+add_custom_target(testInterpolation1DRunShort  COMMAND ./testInterpolation1D --gtest_filter="-*Performance*"  DEPENDS testInterpolation1D)
+add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX --gtest_filter="-*Performance*"   DEPENDS testInterpolationX)
+add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY --gtest_filter="-*Performance*"   DEPENDS testInterpolationY)
 
 # テストの順序
 # 1 より低レベルのもの(他のテストの前提となる、初期化とかログとかメモリー管理とか)
