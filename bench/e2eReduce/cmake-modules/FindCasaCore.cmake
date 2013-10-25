@@ -1,13 +1,16 @@
-FIND_PATH(CASACORE_INCLUDE_DIR casacore/casa/Arrays.h PATHS /opt/share/casa/current/release/include)
-FIND_LIBRARY(CASACORE_LIBRARY NAMES casacore PATHS /opt/share/casa/current/release/lib64)
+# Here it is assumed that casacore is located in /nfsstore1/casacore/
+FIND_PATH(CASACORE_INCLUDE_DIR casacore/casa/Arrays.h PATHS /nfsstore1/casacore/include /opt/share/casa/current/release/include)
+FIND_LIBRARY(CASACORE_CASA_LIBRARY NAMES casa_casa PATHS /nfsstore1/casacore/lib /opt/share/casa/current/release/lib64)
+FIND_LIBRARY(CASACORE_TABLE_LIBRARY NAMES casa_tables PATHS /nfsstore1/casacore/lib /opt/share/casa/current/release/lib64)
+SET(CASACORE_LIBRARY ${CASACORE_CASA_LIBRARY} ${CASACORE_TABLE_LIBRARY})
 
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(CASACORE DEFAULT_MSG CASACORE_LIBRARY CASACORE_INCLUDE_DIR)
 
 IF(CASACORE_FOUND)
   SET(CASACORE_LIBRARIES ${CASACORE_LIBRARY})
-  get_filename_component(CASACORE_LIBRARY_PATH "${CASACORE_LIBRARY}" PATH)
-  SET(CASACORE_EXE_LINKER_FLAGS "-L ${CASACORE_LIBRARY_PATH} -Wl,-rpath,${CASACORE_LIBRARY_PATH} -lcasacore")
+  get_filename_component(CASACORE_LIBRARY_PATH "${CASACORE_CASA_LIBRARY}" PATH)
+  SET(CASACORE_EXE_LINKER_FLAGS "-L ${CASACORE_LIBRARY_PATH} -Wl,-rpath,${CASACORE_LIBRARY_PATH} -lcasa_casa -lcasa_tables")
 ELSE(CASACORE_FOUND)
   SET(CASACORE_LIBRARIES)
 ENDIF(CASACORE_FOUND)

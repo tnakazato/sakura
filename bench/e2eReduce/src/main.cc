@@ -11,7 +11,7 @@
 #include <log4cxx/propertyconfigurator.h>
 #include <xdispatch/dispatch>
 #include <libsakura/sakura.h>
-#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/tables/Tables/Table.h>
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
