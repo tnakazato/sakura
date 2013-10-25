@@ -19,6 +19,8 @@ using ::Eigen::Aligned;
 namespace {
 
 #if defined(__AVX__)
+#include <immintrin.h>
+
 template<typename Arch, typename DataType, typename Context>
 struct PacketAction {
 	static inline void prologue(Context *context) {
@@ -70,6 +72,56 @@ inline void ApplyPositionSwitchCalibrationSimd(size_t num_scaling_factor,
 				target, reference, result, (void*) nullptr);
 	}
 }
+template<class DataType>
+inline void ApplyPositionSwitchCalibrationSimd2(size_t num_scaling_factor,
+		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+		DataType const target[/*num_data*/],
+		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
+	if (num_scaling_factor == 1) {
+		DataType const constant_scaling_factor = scaling_factor[0];
+		for (size_t i = 0; i < num_data; ++i) {
+			result[i] = constant_scaling_factor * (target[i] - reference[i])
+					/ reference[i];
+		}
+	} else {
+		typedef LIBSAKURA_SYMBOL(SimdArchNative) Arch;
+		LIBSAKURA_SYMBOL(SimdIterate)<Arch, DataType const, Arch,
+				DataType const, Arch, DataType const, Arch, DataType,
+				PacketAction<Arch, DataType, void>,
+				ScalarAction<DataType, void>, void>(num_data, scaling_factor,
+				target, reference, result, (void*) nullptr);
+	}
+}
+
+template<>
+inline void ApplyPositionSwitchCalibrationSimd2<float>(
+		size_t num_scaling_factor,
+		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+		float const target[/*num_data*/], float const reference[/*num_data*/],
+		float result[/*num_data*/]) {
+	if (num_scaling_factor == 1) {
+		float const constant_scaling_factor = scaling_factor[0];
+		for (size_t i = 0; i < num_data; ++i) {
+			result[i] = constant_scaling_factor * (target[i] - reference[i])
+					/ reference[i];
+		}
+	} else {
+		for (size_t i = 0; i < num_data; i += 8) {
+			__m256 s = _mm256_load_ps(&scaling_factor[i]);
+			__m256 t = _mm256_load_ps(&target[i]);
+			__m256 f = _mm256_load_ps(&reference[i]);
+			__m256 r = _mm256_div_ps(_mm256_mul_ps(s, _mm256_sub_ps(t, f)), f);
+			_mm256_store_ps(&result[i], r);
+		}
+		for (size_t i = std::max((size_t) 8, num_data - num_data % 8);
+				i < num_data; ++i) {
+			result[i] = scaling_factor[i] * (target[i] - reference[i])
+					/ reference[i];
+		}
+		// TODO: loop on num_data % 8
+		// TODO: use rcp and mul instead of div
+	}
+}
 #endif
 template<class DataType>
 inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
@@ -84,7 +136,8 @@ inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 		}
 	} else {
 #if defined(__AVX__)
-		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
+		ApplyPositionSwitchCalibrationSimd2(num_scaling_factor, scaling_factor,
+		//ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
 				num_data, target, reference, result);
 #else
 		for (size_t i = 0; i < num_data; ++i) {
