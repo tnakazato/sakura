@@ -228,7 +228,7 @@ TEST(Statistics, ComputeStatistics) {
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
 
-TEST(Statistics, ComputeStatistics_Speed) {
+TEST(Statistics, ComputeStatistics_Performance) {
 	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 			nullptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -246,7 +246,7 @@ TEST(Statistics, ComputeStatistics_Speed) {
 		{
 			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 
-			for (size_t i = 0; i < 30000; ++i) {
+			for (size_t i = 0; i < 20000; ++i) {
 				LIBSAKURA_SYMBOL(Status) status =
 				LIBSAKURA_SYMBOL (ComputeStatistics)(ELEMENTSOF(data), data,
 						is_valid, &result);
