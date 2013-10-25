@@ -267,6 +267,30 @@ TEST_F(ApplyCalibrationTest, TooManyScalingFactor) {
 			scaling_factor, num_data, 1, target, reference, result, expected,
 			true);
 }
+TEST_F(ApplyCalibrationTest, IntrinsicsTest) {
+	size_t const num_scaling_factor = 10;
+	size_t const num_data = 10;
+	SIMD_ALIGN
+	float scaling_factor[num_scaling_factor];
+	SIMD_ALIGN
+	float target[num_data];
+	SIMD_ALIGN
+	float reference[num_data];
+	SIMD_ALIGN
+	float result[num_data];
+	SIMD_ALIGN
+	float expected[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		scaling_factor[i] = 10.0;
+		target[i] = 2.0;
+		reference[i] = 1.0;
+		expected[i] = 10.0;
+	}
+
+	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
+			scaling_factor, num_data, 1, target, reference, result, expected,
+			true);
+}
 
 TEST_F(ApplyCalibrationTest, PerformanceTestAllAtOnce) {
 	size_t const iteration = 1000;
