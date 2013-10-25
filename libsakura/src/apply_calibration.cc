@@ -30,10 +30,14 @@ struct PacketAction {
 			typename Arch::PacketType const *target,
 			typename Arch::PacketType const *reference,
 			typename Arch::PacketType *result, Context *context) {
-		*result = LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(
+//		*result = LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(
+//		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(*scaling_factor,
+//		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Sub(*target, *reference)),
+//		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Reciprocal(*reference));
+		*result = LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Div(
 		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(*scaling_factor,
 		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Sub(*target, *reference)),
-		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Reciprocal(*reference));
+				*reference);
 	}
 	static inline void epilogue(Context *context) {
 	}
@@ -74,85 +78,98 @@ inline void ApplyPositionSwitchCalibrationSimd(size_t num_scaling_factor,
 }
 
 template<>
-inline void ApplyPositionSwitchCalibrationSimd<float>(
-		size_t num_scaling_factor,
+inline void ApplyPositionSwitchCalibrationSimd<float>(size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) {
+	size_t num_packed_operation = num_data / 8;
+	size_t num_data_packed = num_packed_operation * 8;
 	if (num_scaling_factor == 1) {
-		float const constant_scaling_factor = scaling_factor[0];
-		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = constant_scaling_factor * (target[i] - reference[i])
+		__m256 s = _mm256_broadcast_ss(scaling_factor);
+//		__m256 s = _mm256_set1_ps(scaling_factor[0]);
+		__m256  const *tar_m256 = reinterpret_cast<__m256  const *>(target);
+		__m256  const *ref_m256 = reinterpret_cast<__m256  const *>(reference);
+		__m256 *res_m256 = reinterpret_cast<__m256 *>(result);
+		for (size_t i = 0; i < num_packed_operation; ++i) {
+			res_m256[i] = _mm256_div_ps(
+					_mm256_mul_ps(s, _mm256_sub_ps(tar_m256[i], ref_m256[i])),
+					ref_m256[i]);
+		}
+		for (size_t i = num_packed_operation * 8; i < num_data; ++i) {
+			result[i] = scaling_factor[0] * (target[i] - reference[i])
 					/ reference[i];
 		}
 	} else {
-		for (size_t i = 0; i < num_data; i += 8) {
-			__m256 s = _mm256_load_ps(&scaling_factor[i]);
-			__m256 t = _mm256_load_ps(&target[i]);
-			__m256 f = _mm256_load_ps(&reference[i]);
-			__m256 r = _mm256_div_ps(_mm256_mul_ps(s, _mm256_sub_ps(t, f)), f);
-			_mm256_store_ps(&result[i], r);
+		__m256  const *sca_m256 =
+				reinterpret_cast<__m256  const *>(scaling_factor);
+		__m256  const *tar_m256 = reinterpret_cast<__m256  const *>(target);
+		__m256  const *ref_m256 = reinterpret_cast<__m256  const *>(reference);
+		__m256 *res_m256 = reinterpret_cast<__m256 *>(result);
+		for (size_t i = 0; i < num_packed_operation; ++i) {
+			// Here, we don't use _mm256_rcp_ps with _mm256_mul_ps instead of
+			// _mm256_div_ps since the former loses accuracy (worse than
+			// documented).
+			res_m256[i] = _mm256_div_ps(
+					_mm256_mul_ps(sca_m256[i],
+							_mm256_sub_ps(tar_m256[i], ref_m256[i])),
+					ref_m256[i]);
 		}
-		for (size_t i = std::max((size_t) 8, num_data - num_data % 8);
-				i < num_data; ++i) {
+		for (size_t i = num_data_packed; i < num_data; ++i) {
 			result[i] = scaling_factor[i] * (target[i] - reference[i])
 					/ reference[i];
 		}
-		// TODO: loop on num_data % 8
-		// TODO: use rcp and mul instead of div
 	}
 }
 #endif
-template<class DataType>
-inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-		DataType const target[/*num_data*/],
-		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
-	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
-		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = constant_scaling_factor * (target[i] - reference[i])
-					/ reference[i];
-		}
-	} else {
-#if defined(__AVX__)
-		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
-				num_data, target, reference, result);
-#else
-		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = scaling_factor[i] * (target[i] - reference[i])
-			/ reference[i];
-		}
-#endif
-	}
-}
 
 template<class DataType>
 inline void ApplyPositionSwitchCalibrationEigen(size_t num_scaling_factor,
 		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		DataType const target[/*num_data*/],
 		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
+	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result, num_data);
+	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_target(
+			const_cast<DataType *>(target), num_data);
+	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
+			const_cast<DataType *>(reference), num_data);
 	if (num_scaling_factor == 1) {
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result,
-				num_data);
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_target(
-				const_cast<DataType *>(target), num_data);
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
-				const_cast<DataType *>(reference), num_data);
 		DataType const constant_scaling_factor = scaling_factor[0];
 		eigen_result = constant_scaling_factor
 				* (eigen_target - eigen_reference) / eigen_reference;
 	} else {
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result,
-				num_data);
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_target(
-				const_cast<DataType *>(target), num_data);
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
-				const_cast<DataType *>(reference), num_data);
 		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
 				const_cast<DataType *>(scaling_factor), num_data);
 		eigen_result = eigen_scaling_factor * (eigen_target - eigen_reference)
 				/ eigen_reference;
+	}
+}
+
+template<class DataType>
+inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
+		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+		DataType const target[/*num_data*/],
+		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
+	if (target == result) {
+#if defined(__AVX__)
+		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
+				num_data, target, reference, result);
+#else
+		ApplyPositionSwitchCalibrationEigen(num_scaling_factor, scaling_factor,
+				num_data, target, reference, result);
+#endif
+	} else {
+		if (num_scaling_factor == 1) {
+			DataType const constant_scaling_factor = scaling_factor[0];
+			for (size_t i = 0; i < num_data; ++i) {
+				result[i] = constant_scaling_factor * (target[i] - reference[i])
+						/ reference[i];
+			}
+		} else {
+			for (size_t i = 0; i < num_data; ++i) {
+				result[i] = scaling_factor[i] * (target[i] - reference[i])
+						/ reference[i];
+			}
+		}
 	}
 }
 
@@ -178,8 +195,6 @@ void ADDSUFFIX(ApplyCalibration, ARCH_SUFFIX)<DataType>::ApplyPositionSwitchCali
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	::ApplyPositionSwitchCalibration(num_scaling_factor, scaling_factor,
 			num_data, target, reference, result);
-//	::ApplyPositionSwitchCalibrationEigen(num_scaling_factor, scaling_factor,
-//			num_data, target, reference, result);
 }
 
 template class ADDSUFFIX(ApplyCalibration, ARCH_SUFFIX)<float> ;
