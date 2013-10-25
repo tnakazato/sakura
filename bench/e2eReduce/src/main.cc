@@ -12,9 +12,9 @@
 #include <xdispatch/dispatch>
 #include <libsakura/sakura.h>
 #include <casacore/tables/Tables/Table.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
