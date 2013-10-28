@@ -20,7 +20,7 @@ using ::Eigen::Aligned;
 namespace {
 
 inline void GetBaselineModel(
-		size_t num_each_basis, uint8_t order, double *model) {
+		size_t num_each_basis, uint16_t order, double *model) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	size_t num_model_bases = order + 1;
 
@@ -35,7 +35,7 @@ inline void GetBaselineModel(
 inline void DoSubtractBaseline(
 		size_t num_data, float const *data, bool const *mask,
 		size_t num_model_bases, double const *model,
-		float clipping_threshold_sigma, uint8_t num_fitting_max,
+		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, float *out) {
 	//std::cout << "DoSubtractBaselineEigen function is called" << std::endl;
 
@@ -100,8 +100,8 @@ inline void DoSubtractBaseline(
 
 inline void SubtractBaselinePolynomial(
 		size_t num_data, float const *data, bool const *mask,
-		uint8_t order, float clipping_threshold_sigma,
-		uint8_t num_fitting_max, bool get_residual,
+		uint16_t order, float clipping_threshold_sigma,
+		uint16_t num_fitting_max, bool get_residual,
 		float *out) {
 	size_t num_model_bases = order + 1;
 	double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
@@ -117,14 +117,14 @@ inline void SubtractBaselinePolynomial(
 
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModel(
-		size_t num_model, uint8_t order, double model[/*(order+1)*num_model*/]) const {
+		size_t num_model, uint16_t order, double model[/*(order+1)*num_model*/]) const {
 	::GetBaselineModel(num_model, order, model);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(
 		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
 		size_t num_model_bases, double const model[/*num_model_bases * num_data*/],
-		float clipping_threshold_sigma, uint8_t num_fitting_max, bool get_residual,
+		float clipping_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
 		float out[/*num_data*/]) const {
 	::DoSubtractBaseline(num_data, data, mask, num_model_bases, model,
 		clipping_threshold_sigma, num_fitting_max, get_residual, out);
@@ -132,7 +132,7 @@ void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
 		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
-		uint8_t order, float clipping_threshold_sigma, uint8_t num_fitting_max,
+		uint16_t order, float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]) const {
 	::SubtractBaselinePolynomial(num_data, data, mask, order,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);

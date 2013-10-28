@@ -1356,14 +1356,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @a mask, and @a out. must be positive.
  * @param[in] data the input data.
  * @param[in] mask the input mask data.
- * @param[in] order order of polynomial model. must be zero or positive.
+ * @param[in] order order of polynomial model. must be zero or positive. (uint16_t)
  * @param[in] clipping_threshold_sigma the threshold of clipping.
  * @param[in] num_fitting_max the maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
  * Must be positive and the default is 1 (i.e., baseline fitting done
- * just once and no clipping applied)
+ * just once and no clipping applied) (uint16_t)
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out the output data.
@@ -1372,7 +1372,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
-		uint8_t order, float clipping_threshold_sigma, uint8_t num_fitting_max,
+		uint16_t order, float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 
 /**
@@ -1380,7 +1380,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_each_basis the number of data elements for each model basis.
  * must be positive.
- * @param[in] order order of polynomial model. must be zero or positive.
+ * @param[in] order order of polynomial model. must be zero or positive. (uint16_t)
  * @param[out] model a 1D array containing values of all its basis functions
  * concatenated. loop for data index must be inside of that for basis index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
@@ -1390,7 +1390,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
-		 size_t num_each_basis, uint8_t order,
+		 size_t num_each_basis, uint16_t order,
 		 double model[/*(order+1)*num_each_basis*/]);
 
 /**
@@ -1409,7 +1409,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * to ( @a num_model_bases * @a num_data ).
  * @param[in] clipping_threshold_sigma the threshold of clipping. must be positive.
  * @param[in] num_fitting_max the maximum number of iterative clipping.
- * must be zero or positive.
+ * must be zero or positive. (uint16_t)
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out the output data.
@@ -1418,7 +1418,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
-		float clipping_threshold_sigma, uint8_t num_fitting_max,
+		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 
 #ifdef __cplusplus
