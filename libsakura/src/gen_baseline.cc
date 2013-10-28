@@ -8,7 +8,7 @@
 #include "libsakura/localdef.h"
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
-		size_t num_each_basis, size_t order, double model[]) {
+		size_t num_each_basis, uint8_t order, double model[]) {
 	if (model == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
@@ -27,7 +27,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_model_bases, double const model[],
-		float clipping_threshold_sigma, size_t num_fitting_max,
+		float clipping_threshold_sigma, uint8_t num_fitting_max,
 		bool get_residual, float out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -60,8 +60,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_data, float const data[], bool const mask[],
-		size_t order, float clipping_threshold_sigma,
-		size_t num_fitting_max, bool get_residual, float out[]) {
+		uint8_t order, float clipping_threshold_sigma,
+		uint8_t num_fitting_max, bool get_residual, float out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (mask == nullptr)

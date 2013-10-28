@@ -1372,7 +1372,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
-		size_t order, float clipping_threshold_sigma, size_t num_fitting_max,
+		uint8_t order, float clipping_threshold_sigma, uint8_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 
 /**
@@ -1390,7 +1390,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
-		 size_t num_each_basis, size_t order,
+		 size_t num_each_basis, uint8_t order,
 		 double model[/*(order+1)*num_each_basis*/]);
 
 /**
@@ -1418,7 +1418,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
-		float clipping_threshold_sigma, size_t num_fitting_max,
+		float clipping_threshold_sigma, uint8_t num_fitting_max,
 		bool get_residual, float out[/*num_data*/]);
 
 #ifdef __cplusplus
