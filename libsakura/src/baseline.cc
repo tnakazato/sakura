@@ -19,7 +19,7 @@ using ::Eigen::Aligned;
 
 namespace {
 
-inline void GetBaselineModel(
+inline void GetBaselineModelPolynomial(
 		size_t num_each_basis, uint16_t order, double *model) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	size_t num_model_bases = order + 1;
@@ -106,7 +106,7 @@ inline void SubtractBaselinePolynomial(
 	size_t num_model_bases = order + 1;
 	double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
 
-	GetBaselineModel(num_data, order, model);
+	GetBaselineModelPolynomial(num_data, order, model);
 	DoSubtractBaseline(num_data, data, mask, num_model_bases, model,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);
 
@@ -116,9 +116,9 @@ inline void SubtractBaselinePolynomial(
 } /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModel(
+void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBaselineModelPolynomial(
 		size_t num_model, uint16_t order, double model[/*(order+1)*num_model*/]) const {
-	::GetBaselineModel(num_model, order, model);
+	::GetBaselineModelPolynomial(num_model, order, model);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DoSubtractBaseline(

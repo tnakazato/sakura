@@ -28,18 +28,29 @@ class Baseline {
 public:
 	virtual ~Baseline() {
 	}
-	virtual void SubtractBaselinePolynomial(size_t num_data,
-			float const data[/*num_data*/], bool const mask[/*num_data*/],
-			uint16_t order, float clipping_threshold_sigma,
-			uint16_t num_fitting_max, bool get_residual,
+	virtual void SubtractBaselinePolynomial(
+			size_t num_data,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/],
+			uint16_t order,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
 			float out[/*num_data*/]) const = 0;
-	virtual void GetBaselineModel(size_t num_each_basis, uint16_t order,
+	virtual void GetBaselineModelPolynomial(
+			size_t num_each_basis,
+			uint16_t order,
 			double model[/*(order+1)*num_each_basis*/]) const = 0;
-	virtual void DoSubtractBaseline(size_t num_data,
-			float const data[/*num_data*/], bool const mask[/*num_data*/],
-			size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const = 0;
+	virtual void DoSubtractBaseline(
+			size_t num_data,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases*num_data*/],
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const = 0;
 };
 
 template<typename DataType>

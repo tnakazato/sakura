@@ -1389,7 +1389,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModel)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModelPolynomial)(
 		 size_t num_each_basis, uint16_t order,
 		 double model[/*(order+1)*num_each_basis*/]);
 

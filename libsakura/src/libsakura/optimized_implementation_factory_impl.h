@@ -37,38 +37,56 @@ class BaselineDefault: public Baseline {
 public:
 	virtual ~BaselineDefault() {
 	}
-	virtual void SubtractBaselinePolynomial(size_t num_data,
+	virtual void SubtractBaselinePolynomial(
+			size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], uint16_t order,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
-	virtual void GetBaselineModel(size_t num_each_basis, uint16_t order,
+			bool const mask[/*num_data*/],
+			uint16_t order,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
+	virtual void GetBaselineModelPolynomial(
+			size_t num_each_basis,
+			uint16_t order,
 			double model[/*(order+1)*num_each_basis*/]) const;
 	virtual void DoSubtractBaseline(size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_model_bases,
+			bool const mask[/*num_data*/],
+			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
 };
 
 class BaselineAfterSandyBridge: public Baseline {
 public:
 	virtual ~BaselineAfterSandyBridge() {
 	}
-	virtual void SubtractBaselinePolynomial(size_t num_data,
+	virtual void SubtractBaselinePolynomial(
+			size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], uint16_t order,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
-	virtual void GetBaselineModel(size_t num_each_basis, uint16_t order,
+			bool const mask[/*num_data*/],
+			uint16_t order,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
+	virtual void GetBaselineModelPolynomial(
+			size_t num_each_basis,
+			uint16_t order,
 			double model[/*(order+1)*num_each_basis*/]) const;
 	virtual void DoSubtractBaseline(size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_model_bases,
+			bool const mask[/*num_data*/],
+			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
 };
 
 template<typename DataType>
