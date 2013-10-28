@@ -813,19 +813,10 @@ typedef enum {
  * @a base_data の要素数は @a num_base × @a num_y でなければならない。 @a M を列優先
  * の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、 @a base_data のメモリレイアウトは、
  *
- * @code
- * base_data[0]                = M[0][0]
- * base_data[1]                = M[1][0]
- * ...
- * base_data[num_base-1]       = M[num_base-1][0]
- * base_data[num_base]         = M[0][1]
- * ...
- * base_data[2*num_base-1]     = M[num_base-1][1]
- * ...
- * base_data[num_base*num_y-1] = M[num_base-1][num_y-1]
- * @endcode
+ * @image html InterpolateXAxisFloat.png
  *
- * であり、この関数はx軸に沿った補間を行う。
+ * となっており、この関数はx軸に沿った補間を行う。
+ *
  * 補間によって値を得たい点のx軸方向の位置のリストを長さ
  * @a num_interpolated の配列 @a interpolated_x に渡すと、補間結果が
  * 長さ @a num_interpolated の配列 @a interpolated_data に格納される。
@@ -927,19 +918,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @a base_data の要素数は @a num_base × @a num_x でなければならない。 @a M を列優先
  * の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、 @a base_data のメモリレイアウトは、
  *
- * @code
- * base_data[0]                = M[0][0]
- * base_data[1]                = M[1][0]
- * ...
- * base_data[num_x-1]          = M[num_x-1][0]
- * base_data[num_x]            = M[0][1]
- * ...
- * base_data[2*num_x-1]        = M[num_x-1][1]
- * ...
- * base_data[num_base*num_x-1] = M[num_x-1][num_base-1]
- * @endcode
+ * @image html InterpolateYAxisFloat.png
  *
- * であり、この関数はy軸に沿った補間を行う。
+ * となっており、この関数はY軸に沿った補間を行う。
+ *
  * 補間によって値を得たい点のy軸方向の位置のリストを長さ
  * @a num_interpolated の配列 @a interpolated_y に渡すと、補間結果が
  * 長さ @a num_interpolated の配列 @a interpolated_data に格納される。
