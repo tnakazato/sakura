@@ -177,13 +177,13 @@ class ConvolutionDefault: public Convolution {
 public:
 	virtual ~ConvolutionDefault() {
 	}
-	virtual void CreateConvolve1DContext(size_t num_channel,
+	virtual void CreateConvolve1DContext(size_t num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-			float input_spectrum[/*num_channels*/],
-			bool const input_flag[/*num_channels*/],
-			float output_spectrum[/*num_channels*/]) const;
+			float input_data[/*num_data*/],
+			bool const input_flag[/*num_data*/],
+			float output_data[/*num_data*/]) const;
 	virtual void DestroyConvolve1DContext(
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
 };
@@ -192,13 +192,13 @@ class ConvolutionAfterSandyBridge: public Convolution {
 public:
 	virtual ~ConvolutionAfterSandyBridge() {
 	}
-	virtual void CreateConvolve1DContext(size_t num_channel,
+	virtual void CreateConvolve1DContext(size_t num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-			float input_spectrum[/*num_channels*/],
-			bool const input_flag[/*num_channels*/],
-			float output_spectrum[/*num_channels*/]) const;
+			float input_data[/*num_data*/],
+			bool const input_flag[/*num_data*/],
+			float output_data[/*num_data*/]) const;
 	virtual void DestroyConvolve1DContext(
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const;
 };

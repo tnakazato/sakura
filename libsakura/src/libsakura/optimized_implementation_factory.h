@@ -101,13 +101,13 @@ class Convolution {
 public:
 	virtual ~Convolution() {
 	}
-	virtual void CreateConvolve1DContext(size_t num_channel,
+	virtual void CreateConvolve1DContext(size_t num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-			float input_spectrum[/*num_channels*/],
+			float input_data[/*num_channels*/],
 			bool const input_flag[/*num_channels*/],
-			float output_spectrum[/*num_channels*/]) const = 0;
+			float output_data[/*num_channels*/]) const = 0;
 	virtual void DestroyConvolve1DContext(
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context) const = 0;
 };
