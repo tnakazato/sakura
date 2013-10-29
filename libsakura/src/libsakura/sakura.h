@@ -1113,7 +1113,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。
  * @param[in] kernel_width カーネル幅
  * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
- * @param[out] context コンテキスト. コンテキストは使用後にsakura_DestroyConvolve1DContext
+ * @param[out] context コンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
  * により解放されなければならない。
  * @return 終了ステータス。
  * @~english
@@ -1125,7 +1125,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @kernel_type is defined as enum.
  * @param[in] kernel_width kernel width.
  * @param[in] use_fft if use fft then true, if not, false.
- * @param[out] context context. It should be destroy by sakura_DestroyConvolve1DContext after use.
+ * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
