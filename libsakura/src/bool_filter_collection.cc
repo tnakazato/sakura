@@ -1,5 +1,6 @@
 #include <cassert>
 #include <iostream>
+#include <cmath>
 
 #include "libsakura/sakura.h"
 #include "libsakura/optimized_implementation_factory_impl.h"
@@ -72,6 +73,18 @@ inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
 		result[i] = (data[i] - threshold) > zero;
+	}
+}
+
+template<typename DataType>
+inline void SetFalseIfNanOrInf(size_t num_data, DataType const *data,
+		bool *result) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
+
+	// No operation is done when num_data==0.
+	for (size_t i = 0; i < num_data; ++i) {
+		result[i] = std::isfinite(data[i]);
 	}
 }
 
@@ -167,6 +180,13 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueGreaterThan(
 		size_t num_data, DataType const data[/*num_data*/], DataType threshold,
 		bool result[/*num_data*/]) const {
 	::SetTrueGreaterThan(num_data, data, threshold, result);
+}
+
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetFalseIfNanOrInf(
+		size_t num_data, DataType const data[/*num_data*/],
+		bool result[/*num_data*/]) const {
+	::SetFalseIfNanOrInf(num_data, data, result);
 }
 
 template<typename DataType>
