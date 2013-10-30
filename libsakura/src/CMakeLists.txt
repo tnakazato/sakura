@@ -36,7 +36,8 @@ set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fo
 set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
-set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -fno-finite-math-only -DNDEBUG ${VECT_VERB}")
+#set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -fno-finite-math-only -DNDEBUG ${VECT_VERB}")
+set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
 #set(ADDITIONAL_CXXFLAGS_Default "-mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
