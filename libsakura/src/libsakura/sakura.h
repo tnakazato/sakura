@@ -707,6 +707,38 @@ typedef struct {
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
+ /**
+  * @~english
+  * @brief Returns if the values in input array are finite numbers.
+  * @details Returns false if the corresponding element in the input array
+  * is not a number (NaN) or infinity.
+  *
+  * @note No operation is done when the data array is zero length, i.e., @a num_data = 0.
+  *
+  * @param[in] num_data The number of elements in the arrays, @a data
+  * and @a result
+  * @param[in] data The input array of of size, @a num_data.
+  * @n must-be-aligned
+  * @param[out] result The output array of of size, @a num_data.
+  * @n must-be-aligned
+  * @return status code
+  * @~japanese
+  * @brief 入力配列の値が、有限の値かどうかを検定する。
+  * @details 入力配列の要素の値が非数（NaN）または無限大（Inf）ならば偽を返す。
+  *
+  * @note 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+  *
+  * @param[in] num_data @a data 及び@a result の要素の数。
+  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+  * @n must-be-aligned
+  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+  * @n must-be-aligned
+  * @return 終了ステータス
+  *@~
+  * MT-safe
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(size_t num_data,
+ float const data[/*num_data*/], bool result[/*num_data*/]);
+
 /**
  * @~english
  * @brief Convert an input array to a boolean array.

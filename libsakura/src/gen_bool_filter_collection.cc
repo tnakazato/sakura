@@ -132,6 +132,31 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThan)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(
+		size_t num_data,
+		float const data[], bool result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
+	try {
+		bfc->SetFalseIfNanOrInf(num_data, data, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[], bool result[]) {
 	// Check parameter arguments.
