@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sys/time.h>
+#include <math.h>
 
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
@@ -815,6 +816,169 @@ TEST_F(BoolFilterInt, GreaterThanLengthLenghZero) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
 			in_data, threshold_, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * RESULT:
+ * result = [T, T, F, F, F, T, T, T]
+ */
+TEST_F(BoolFilterFloat, NanOrInf) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+	bool answer[] = { true, true, false, false, false, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+	// modify in_data and insert NaN and Infs
+	float posinf(1.0 / 0.0), neginf(-1.0 / 0.0), nanval(0.0 / 0.0);
+	float infnans[] = { posinf, neginf, nanval };
+	size_t j(0);
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		if ( !answer[i % ELEMENTSOF(answer)]) {
+			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
+			++j;
+		}
+	}
+
+	if (verbose) {
+		PrintArray("data", num_data, in_data);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			in_data, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * with an array of 11 elements (num_data=11).
+ * RESULT:
+ * result = [T, T, F, F, F, T, T, T,
+ *           T, T, F]
+ */
+TEST_F(BoolFilterFloat, NanOrInfEleven) {
+	size_t const num_data(11);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, true, false, false, false, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+	// modify in_data and insert NaN and Infs
+	float posinf(1.0 / 0.0), neginf(-1.0 / 0.0), nanval(0.0 / 0.0);
+	float infnans[] = { posinf, neginf, nanval };
+	size_t j(0);
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		if ( !answer[i % ELEMENTSOF(answer)]) {
+			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
+			++j;
+		}
+	}
+
+	if (verbose) {
+		PrintArray("data", num_data, in_data);
+		cout << "threshold = " << threshold_ << endl;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			in_data, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * with a long array
+ * RESULT:
+ * result = [T, T, F, F, F, T, T, T, ...]
+ */
+TEST_F(BoolFilterFloat, NanOrInfLong) {
+	size_t const num_data(NUM_IN_LONG);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, true, false, false, false, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+	// modify in_data and insert NaN and Infs
+	float posinf(1.0 / 0.0), neginf(-1.0 / 0.0), nanval(0.0 / 0.0);
+	float infnans[] = { posinf, neginf, nanval };
+	size_t j(0);
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		if ( !answer[i % ELEMENTSOF(answer)]) {
+			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
+			++j;
+		}
+	}
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_data << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_SetFalseFloatIfNanOrInf(num_data, in_data, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * with an array of zero elements (num_data=0).
+ * RESULT:
+ * result = []
+ */
+TEST_F(BoolFilterFloat, NanOrInfZero) {
+	size_t const num_data(0);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			in_data, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
@@ -1651,7 +1815,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedUpper) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatInGreaterThan
+ * Test failure cases of sakura_SetTrueFloatGreaterThan
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -1733,9 +1897,8 @@ TEST_F(BoolFilterFloat, GreaterThanNotAlignedResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-
 /*
- * Test failure cases of sakura_SetTrueIntInGreaterThan
+ * Test failure cases of sakura_SetTrueIntGreaterThan
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -1812,6 +1975,91 @@ TEST_F(BoolFilterInt, GreaterThanNotAlignedResult) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
 			data, threshold_, result_shift);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Test failure cases of sakura_SetFalseFloatIfNanOrInf
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BoolFilterFloat, NanOrInfFailNullData) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	bool result[num_data];
+
+	float *data_null = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			data_null, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BoolFilterFloat, NanOrInfFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	float in_data[num_data];
+
+	bool *result_null = nullptr;
+
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(in_data), in_data);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			in_data, result_null);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BoolFilterFloat, NanOrInfNotAlignedData) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	float data[num_elements];
+	SIMD_ALIGN
+	bool result[num_data];
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(data), data);
+
+	// Define unaligned array
+	float *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			data_shift, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BoolFilterFloat, NanOrInfNotAlignedResult) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	float data[num_data];
+	SIMD_ALIGN
+	bool result[num_elements];
+
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(data), data);
+
+	// Define unaligned array
+	bool *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+			data, result_shift);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
