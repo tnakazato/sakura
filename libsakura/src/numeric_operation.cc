@@ -24,6 +24,9 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	STATIC_ASSERT(sizeof(in1) == sizeof(in2));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
 
 	for (size_t i = 0; i < num_in; ++i) {
 		out[i] = in1[i] - in2[i];
