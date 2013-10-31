@@ -108,12 +108,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		(*context)->fft_applied_complex_kernel =
 				work_fft_applied_complex_kernel;
 
-		// copy from work to (*context)->real_array[j]
-		for (size_t j = 0; j < num_data; ++j) {
-			(*context)->real_array[j] = work_real_array[j];
-		}
-		delete work_real_array;
-
 		//fft_applied_complex_input_data
 		fftwf_complex *work_fft_applied_complex_input_data =
 				(fftwf_complex*) fftwf_malloc(
@@ -158,6 +152,13 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			(*context)->plan_complex_to_real_float =
 					work_plan_complex_to_real_float;
 		}
+
+		// copy from work to (*context)->real_array[j]
+		for (size_t j = 0; j < num_data; ++j) {
+			(*context)->real_array[j] = work_real_array[j];
+		}
+		delete work_real_array;
+
 	} else {
 		// not implemented yet
 	}
