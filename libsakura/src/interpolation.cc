@@ -3,7 +3,7 @@
 #include <memory>
 #include <cstdalign>
 #include <utility>
-#include <new>
+#include <vector>
 
 #include <libsakura/sakura.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
@@ -12,40 +12,29 @@
 #include <libsakura/memory_manager.h>
 
 namespace {
-// deleter for interpolation
-struct InterpolationDeleter {
-	void operator()(void *pointer) const {
-		LIBSAKURA_PREFIX::Memory::Free(pointer);
-	}
-};
-
 // a logger for this module
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 template<class DataType>
-void *AllocateAndAlign(size_t num_array, DataType **array) {
-	size_t elements_in_arena = num_array + LIBSAKURA_SYMBOL(GetAlignment)() - 1;
-	void *storage = LIBSAKURA_PREFIX::Memory::Allocate(
-			sizeof(DataType) * elements_in_arena);
-	if (storage == nullptr) {
-		char const *msg = "Failed to allocate memory";
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
-		}
-		throw std::bad_alloc();
+struct StorageAndAlignedPointer {
+	StorageAndAlignedPointer() :
+			storage(nullptr), pointer(nullptr) {
 	}
-	*array = reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
-			sizeof(DataType) * elements_in_arena, storage,
-			sizeof(DataType) * num_array));
-	if (array == nullptr) {
-		char const *msg = "Failed alignment";
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
+	~StorageAndAlignedPointer() {
+		if (storage != nullptr) {
+			LIBSAKURA_PREFIX::Memory::Free(storage);
+			storage = nullptr;
 		}
-		LIBSAKURA_PREFIX::Memory::Free(storage);
-		throw msg;
 	}
-	return storage;
+	void *storage;
+	DataType *pointer;
+};
+
+template<class DataType>
+inline void AllocateAndAlign(size_t num_array,
+		StorageAndAlignedPointer<DataType> *holder) {
+	holder->storage = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+			num_array * sizeof(DataType), &(holder->pointer));
 }
 
 template<class DataType>
@@ -80,19 +69,16 @@ public:
 };
 
 template<class Reorderer, class XDataType, class YDataType>
-YDataType const *GetAscendingArray(size_t num_base,
+inline void GetAscendingArray(size_t num_base,
 		XDataType const base_array[/*num_base*/], size_t num_array,
 		YDataType const unordered_array[/*num_base*num_array*/],
-		std::unique_ptr<void, InterpolationDeleter> *storage) {
+		StorageAndAlignedPointer<YDataType> *storage) {
 	if (base_array[0] < base_array[num_base - 1]) {
-		return unordered_array;
+		storage->pointer = const_cast<YDataType *>(unordered_array);
 	} else {
-		YDataType *output_array = nullptr;
-		storage->reset(
-				AllocateAndAlign<YDataType>(num_base * num_array,
-						&output_array));
-		Reorderer::Reorder(num_base, num_array, unordered_array, output_array);
-		return output_array;
+		AllocateAndAlign(num_base * num_array, storage);
+		Reorderer::Reorder(num_base, num_array, unordered_array,
+				storage->pointer);
 	}
 }
 
@@ -257,7 +243,7 @@ template<class XDataType, class YDataType>
 class PolynomialXInterpolatorImpl {
 public:
 	PolynomialXInterpolatorImpl() :
-			polynomial_order_(0), num_elements_(0), c_(nullptr), d_(nullptr) {
+			polynomial_order_(0), num_elements_(0), holder_(2) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -266,8 +252,8 @@ public:
 				(polynomial_order + 1u >= num_base) ?
 						static_cast<uint8_t>(num_base - 1) : polynomial_order;
 		num_elements_ = polynomial_order_ + 1;
-		storage_for_c_.reset(AllocateAndAlign<XDataType>(num_elements_, &c_));
-		storage_for_d_.reset(AllocateAndAlign<XDataType>(num_elements_, &d_));
+		AllocateAndAlign<XDataType>(num_elements_, &holder_[0]);
+		AllocateAndAlign<XDataType>(num_elements_, &holder_[1]);
 	}
 	void Interpolate1D(size_t num_base, XDataType const base_position[],
 			size_t num_array, YDataType const base_data[],
@@ -300,30 +286,33 @@ private:
 		YDataType const *y_ptr =
 				&(base_data[num_base * array_index + left_index]);
 
+		XDataType *c = holder_[0].pointer;
+		XDataType *d = holder_[1].pointer;
+
 		for (size_t i = 0; i < num_elements_; ++i) {
-			c_[i] = static_cast<XDataType>(y_ptr[i]);
-			d_[i] = c_[i];
+			c[i] = static_cast<XDataType>(y_ptr[i]);
+			d[i] = c[i];
 		}
 
 		// Neville's algorithm
-		XDataType work = c_[0];
+		XDataType work = c[0];
 		for (size_t m = 1; m < num_elements_; ++m) {
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 			// d[n-m-1].
 			for (size_t i = 0; i < num_elements_ - m; ++i) {
-				XDataType cd = c_[i + 1] - d_[i];
+				XDataType cd = c[i + 1] - d[i];
 				XDataType dx = x_ptr[i] - x_ptr[i + m];
 				assert(dx != 0);
 				cd /= dx;
-				c_[i] = (x_ptr[i] - interpolated_position) * cd;
-				d_[i] = (x_ptr[i + m] - interpolated_position) * cd;
+				c[i] = (x_ptr[i] - interpolated_position) * cd;
+				d[i] = (x_ptr[i + m] - interpolated_position) * cd;
 			}
 
 			// In each step, c[0] holds Cm1 which is a correction between
 			// P12...m and P12...[m+1]. Thus, the following repeated update
 			// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
-			work += c_[0];
+			work += c[0];
 		}
 
 		*interpolated_data = static_cast<YDataType>(work);
@@ -331,32 +320,27 @@ private:
 
 	uint8_t polynomial_order_;
 	size_t num_elements_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_c_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_d_;
-	XDataType *c_;
-	XDataType *d_;
+	std::vector<StorageAndAlignedPointer<XDataType> > holder_;
 };
 
 template<class XDataType, class YDataType>
 class SplineXInterpolatorImpl {
 public:
 	SplineXInterpolatorImpl() :
-			d2ydx2_(nullptr), upper_triangular_(nullptr) {
+			holder_(2) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
 			YDataType const base_data[]) {
 		// Derive second derivative at x_base
-		storage_for_d2ydx2_.reset(
-				AllocateAndAlign(num_base * num_array, &d2ydx2_));
-		storage_for_u_.reset(
-				AllocateAndAlign<YDataType>(num_base, &upper_triangular_));
+		AllocateAndAlign<YDataType>(num_base * num_array, &holder_[0]);
+		AllocateAndAlign<YDataType>(num_base, &holder_[1]);
 		for (size_t i = 0; i < num_array; ++i) {
 			size_t start_position = i * num_base;
 			YDataType const *base_data_work = &(base_data[start_position]);
-			YDataType *d2ydx2_local = &(d2ydx2_[start_position]);
+			YDataType *d2ydx2 = &(holder_[0].pointer[start_position]);
 			DeriveSplineCorrectionTerm(num_base, base_position, base_data_work,
-					d2ydx2_local);
+					d2ydx2);
 		}
 	}
 	void Interpolate1D(size_t num_base, XDataType const base_position[],
@@ -364,7 +348,8 @@ public:
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[]) {
-		assert(d2ydx2_ != nullptr);
+		YDataType *d2ydx2 = holder_[0].pointer;
+		assert(d2ydx2 != nullptr);
 		for (size_t k = 0; k < num_location - 1; ++k) {
 			XDataType dx = base_position[k + 1] - base_position[k];
 			XDataType dx_factor = dx * dx / 6.0;
@@ -378,9 +363,9 @@ public:
 					work[i] = static_cast<YDataType>(a
 							* base_data[offset_index_left]
 							+ b * base_data[offset_index_left + 1]
-							+ ((a * a * a - a) * d2ydx2_[offset_index_left]
+							+ ((a * a * a - a) * d2ydx2[offset_index_left]
 									+ (b * b * b - b)
-											* d2ydx2_[offset_index_left + 1])
+											* d2ydx2[offset_index_left + 1])
 									* dx_factor);
 				}
 			}
@@ -390,10 +375,12 @@ private:
 	void DeriveSplineCorrectionTerm(size_t num_base,
 			XDataType const base_position[], YDataType const base_data[],
 			YDataType d2ydx2[]) {
+		YDataType *upper_triangular = holder_[1].pointer;
+
 		// This is a condition of natural cubic spline
 		d2ydx2[0] = 0.0;
 		d2ydx2[num_base - 1] = 0.0;
-		upper_triangular_[0] = 0.0;
+		upper_triangular[0] = 0.0;
 
 		// Solve tridiagonal system.
 		// Here tridiagonal matrix is decomposed to upper triangular matrix.
@@ -410,21 +397,18 @@ private:
 					* ((base_data[i + 1] - base_data[i]) / a2
 							- (base_data[i] - base_data[i - 1]) / a1
 							- d2ydx2[i - 1] * 0.5 * a1);
-			a1 = 1.0 / (1.0 - upper_triangular_[i - 1] * 0.5 * a1 * b1);
+			a1 = 1.0 / (1.0 - upper_triangular[i - 1] * 0.5 * a1 * b1);
 			d2ydx2[i] *= a1;
-			upper_triangular_[i] = 0.5 * a2 * b1 * a1;
+			upper_triangular[i] = 0.5 * a2 * b1 * a1;
 			a1 = a2;
 		}
 
 		// Solve the system by backsubstitution and store solution to d2ydx2_
 		for (size_t k = num_base - 2; k >= 1; --k) {
-			d2ydx2[k] -= upper_triangular_[k] * d2ydx2[k + 1];
+			d2ydx2[k] -= upper_triangular[k] * d2ydx2[k + 1];
 		}
 	}
-	std::unique_ptr<void, InterpolationDeleter> storage_for_d2ydx2_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_u_;
-	YDataType *d2ydx2_;
-	YDataType *upper_triangular_;
+	std::vector<StorageAndAlignedPointer<YDataType> > holder_;
 };
 
 template<class XDataType, class YDataType>
@@ -504,8 +488,7 @@ template<class XDataType, class YDataType>
 class PolynomialYInterpolatorImpl {
 public:
 	PolynomialYInterpolatorImpl() :
-			polynomial_order_(0), num_elements_(0), c_(nullptr), d_(nullptr), work_(
-					nullptr) {
+			polynomial_order_(0), num_elements_(0), holder_(3) {
 	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
@@ -514,11 +497,9 @@ public:
 				(polynomial_order + 1u >= num_base) ?
 						static_cast<uint8_t>(num_base - 1) : polynomial_order;
 		num_elements_ = polynomial_order_ + 1;
-		storage_for_c_.reset(
-				AllocateAndAlign<XDataType>(num_elements_ * num_array, &c_));
-		storage_for_d_.reset(
-				AllocateAndAlign<XDataType>(num_elements_ * num_array, &d_));
-		storage_for_work_.reset(AllocateAndAlign<XDataType>(num_array, &work_));
+		AllocateAndAlign(num_elements_ * num_array, &holder_[0]);
+		AllocateAndAlign(num_elements_ * num_array, &holder_[1]);
+		AllocateAndAlign(num_array, &holder_[2]);
 	}
 	void Interpolate1D(size_t num_base, XDataType const base_position[],
 			size_t num_array, YDataType const base_data[],
@@ -545,17 +526,20 @@ private:
 			YDataType interpolated_data[]) {
 		// working pointers
 		XDataType const *x_ptr = &(base_position[left_index]);
+		XDataType *c = holder_[0].pointer;
+		XDataType *d = holder_[1].pointer;
+		XDataType *work = holder_[2].pointer;
 
 		size_t start = left_index * num_array;
 		size_t num_elements = num_elements_ * num_array;
 		for (size_t i = 0; i < num_elements; ++i) {
-			c_[i] = static_cast<XDataType>(base_data[start + i]);
-			d_[i] = c_[i];
+			c[i] = static_cast<XDataType>(base_data[start + i]);
+			d[i] = c[i];
 		}
 
 		// Neville's algorithm
 		for (size_t i = 0; i < num_array; ++i) {
-			work_[i] = c_[i];
+			work[i] = c[i];
 		}
 		for (size_t m = 1; m < num_elements_; ++m) {
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
@@ -566,11 +550,10 @@ private:
 				assert(dx != 0);
 				size_t offset = i * num_array;
 				for (size_t j = 0; j < num_array; ++j) {
-					XDataType cd = (c_[offset + num_array + j] - d_[offset + j])
+					XDataType cd = (c[offset + num_array + j] - d[offset + j])
 							/ dx;
-					c_[offset + j] = (x_ptr[i] - interpolated_position) * cd;
-					d_[offset + j] = (x_ptr[i + m] - interpolated_position)
-							* cd;
+					c[offset + j] = (x_ptr[i] - interpolated_position) * cd;
+					d[offset + j] = (x_ptr[i + m] - interpolated_position) * cd;
 				}
 			}
 
@@ -578,55 +561,44 @@ private:
 			// P12...m and P12...[m+1]. Thus, the following repeated update
 			// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
 			for (size_t i = 0; i < num_array; ++i) {
-				work_[i] += c_[i];
+				work[i] += c[i];
 			}
 		}
 
 		for (size_t i = 0; i < num_array; ++i) {
-			interpolated_data[i] = static_cast<YDataType>(work_[i]);
+			interpolated_data[i] = static_cast<YDataType>(work[i]);
 		}
 	}
 
 	uint8_t polynomial_order_;
 	size_t num_elements_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_c_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_d_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_work_;
-	XDataType *c_;
-	XDataType *d_;
-	XDataType *work_;
+	std::vector<StorageAndAlignedPointer<XDataType> > holder_;
 };
 
 template<class XDataType, class YDataType>
 class SplineYInterpolatorImpl {
 public:
-	SplineYInterpolatorImpl() :
-			d2ydx2_(nullptr), upper_triangular_(nullptr) {
-	}
 	void PrepareForInterpolation(uint8_t polynomial_order, size_t num_base,
 			size_t num_array, XDataType const base_position[],
 			YDataType const base_data[]) {
 		// Derive second derivative at x_base
-		storage_for_d2ydx2_.reset(
-				AllocateAndAlign(num_base * num_array, &d2ydx2_));
-		storage_for_u_.reset(
-				AllocateAndAlign<YDataType>(num_base * num_array,
-						&upper_triangular_));
+		AllocateAndAlign<YDataType>(num_base * num_array, &holder_);
 		DeriveSplineCorrectionTerm(num_base, base_position, num_array,
-				base_data, d2ydx2_);
+				base_data, holder_.pointer);
 	}
 	void Interpolate1D(size_t num_base, XDataType const base_position[],
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[]) {
-		assert(d2ydx2_ != nullptr);
+		YDataType *d2ydx2 = holder_.pointer;
+		assert(d2ydx2 != nullptr);
 		for (size_t k = 0; k < num_location - 1; ++k) {
 			XDataType dx = base_position[k + 1] - base_position[k];
 			YDataType const *left_value = &base_data[k * num_array];
 			YDataType const *right_value = &base_data[(k + 1) * num_array];
-			YDataType const *d2ydx2_left = &d2ydx2_[k * num_array];
-			YDataType const *d2ydx2_right = &d2ydx2_[(k + 1) * num_array];
+			YDataType const *d2ydx2_left = &d2ydx2[k * num_array];
+			YDataType const *d2ydx2_right = &d2ydx2[(k + 1) * num_array];
 			for (size_t i = location[k]; i < location[k + 1]; ++i) {
 				XDataType a = (base_position[k + 1] - interpolated_position[i])
 						/ dx;
@@ -646,11 +618,15 @@ private:
 	void DeriveSplineCorrectionTerm(size_t num_base,
 			XDataType const base_position[], size_t num_array,
 			YDataType const base_data[], YDataType d2ydx2[]) {
+		StorageAndAlignedPointer<YDataType> holder_for_u;
+		AllocateAndAlign<YDataType>(num_base * num_array, &holder_for_u);
+		YDataType *upper_triangular = holder_for_u.pointer;
+
 		// This is a condition of natural cubic spline
 		for (size_t i = 0; i < num_array; ++i) {
 			d2ydx2[i] = 0.0;
 			d2ydx2[(num_base - 1) * num_array + i] = 0.0;
-			upper_triangular_[i] = 0.0;
+			upper_triangular[i] = 0.0;
 		}
 
 		// Solve tridiagonal system.
@@ -674,10 +650,10 @@ private:
 								- d2ydx2[num_array * (i - 1) + j] * 0.5 * a1);
 				XDataType a3 = 1.0
 						/ (1.0
-								- upper_triangular_[num_array * (i - 1) + j]
+								- upper_triangular[num_array * (i - 1) + j]
 										* 0.5 * a1 * b1);
 				d2ydx2[num_array * i + j] *= a3;
-				upper_triangular_[num_array * i + j] = 0.5 * a2 * b1 * a3;
+				upper_triangular[num_array * i + j] = 0.5 * a2 * b1 * a3;
 			}
 			a1 = a2;
 		}
@@ -685,16 +661,12 @@ private:
 		// Solve the system by backsubstitution and store solution to d2ydx2_
 		for (size_t k = num_base - 2; k >= 1; --k) {
 			for (size_t j = 0; j < num_array; ++j) {
-				d2ydx2[k * num_array + j] -=
-						upper_triangular_[k * num_array + j]
-								* d2ydx2[(k + 1) * num_array + j];
+				d2ydx2[k * num_array + j] -= upper_triangular[k * num_array + j]
+						* d2ydx2[(k + 1) * num_array + j];
 			}
 		}
 	}
-	std::unique_ptr<void, InterpolationDeleter> storage_for_d2ydx2_;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_u_;
-	YDataType *d2ydx2_;
-	YDataType *upper_triangular_;
+	StorageAndAlignedPointer<YDataType> holder_;
 };
 
 template<class InterpolatorImpl, class XDataType, class YDataType>
@@ -837,21 +809,20 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		return;
 	}
 
-	std::unique_ptr<void, InterpolationDeleter> storage_for_base_position;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_base_data;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_interpolated_position;
-	XDataType const *base_position_work = GetAscendingArray<
-			typename Interpolator::XDataReorderer, XDataType, XDataType>(
-			num_base, base_position, 1, base_position,
-			&storage_for_base_position);
-	YDataType const *base_data_work = GetAscendingArray<
-			typename Interpolator::YDataReorderer, XDataType, YDataType>(
-			num_base, base_position, num_array, base_data,
-			&storage_for_base_data);
-	XDataType const *interpolated_position_work = GetAscendingArray<
-			typename Interpolator::XDataReorderer, XDataType, XDataType>(
-			num_interpolated, interpolated_position, 1, interpolated_position,
-			&storage_for_interpolated_position);
+	std::vector<StorageAndAlignedPointer<XDataType> > xdatatype_holder(2);
+	StorageAndAlignedPointer<YDataType> ydatatype_holder;
+	GetAscendingArray<typename Interpolator::XDataReorderer, XDataType,
+			XDataType>(num_base, base_position, 1, base_position,
+			&xdatatype_holder[0]);
+	GetAscendingArray<typename Interpolator::YDataReorderer, XDataType,
+			YDataType>(num_base, base_position, num_array, base_data,
+			&ydatatype_holder);
+	GetAscendingArray<typename Interpolator::XDataReorderer, XDataType,
+			XDataType>(num_interpolated, interpolated_position, 1,
+			interpolated_position, &xdatatype_holder[1]);
+	XDataType const *base_position_work = xdatatype_holder[0].pointer;
+	YDataType const *base_data_work = ydatatype_holder.pointer;
+	XDataType const *interpolated_position_work = xdatatype_holder[1].pointer;
 
 	// Generate worker class
 	Interpolator interpolator;
@@ -862,9 +833,9 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			base_position_work, base_data_work);
 
 	// Locate each element in x_base against x_interpolated
-	size_t *location_base = nullptr;
-	std::unique_ptr<void, InterpolationDeleter> storage_for_location_base(
-			AllocateAndAlign<size_t>(num_base, &location_base));
+	StorageAndAlignedPointer<size_t> size_t_holder;
+	AllocateAndAlign<size_t>(num_base, &size_t_holder);
+	size_t *location_base = size_t_holder.pointer;
 	size_t num_location_base = Locate<XDataType>(num_interpolated, num_base,
 			interpolated_position_work, base_position_work, location_base);
 
