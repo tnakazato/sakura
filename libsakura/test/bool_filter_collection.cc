@@ -550,7 +550,6 @@ TEST_F(BoolFilterInt, RangesInclusiveZeroCondition) {
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
 /*
  * Test bool filter generation sakura_SetTrueFloatInRangesExclusive
  * RESULT:
@@ -1069,7 +1068,7 @@ TEST_F(BoolFilterFloat, GreaterThanLong) {
  * RESULT:
  * result = []
  */
-TEST_F(BoolFilterFloat, GreaterThanLengthLenghZero) {
+TEST_F(BoolFilterFloat, GreaterThanLenghZero) {
 	size_t const num_data(0);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -1204,7 +1203,7 @@ TEST_F(BoolFilterInt, GreaterThanLong) {
  * RESULT:
  * result = []
  */
-TEST_F(BoolFilterInt, GreaterThanLengthLenghZero) {
+TEST_F(BoolFilterInt, GreaterThanLengthZero) {
 	size_t const num_data(0);
 	SIMD_ALIGN
 	int in_data[num_data];
@@ -1213,6 +1212,278 @@ TEST_F(BoolFilterInt, GreaterThanLengthLenghZero) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
 			in_data, threshold_, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * RESULT:
+ * result = [T, F, F, F, T, T, T, T]
+ */
+TEST_F(BoolFilterFloat, GreaterThanOrEquals) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, false, false, false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+
+	//verbose = true;
+	if (verbose) {
+		PrintArray("data", num_data, in_data);
+		cout << "threshold = " << threshold_ << endl;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, in_data, threshold_, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * with an array of 11 elements (num_data=11).
+ * RESULT:
+ * result = [T, F, F, F, T, T, T, T,
+ *           T, F, F]
+ */
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsLengthEleven) {
+	size_t const num_data(11);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, false, false, false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+
+	if (verbose) {
+		PrintArray("data", num_data, in_data);
+		cout << "threshold = " << threshold_ << endl;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, in_data, threshold_, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * with a long array
+ * RESULT:
+ * result = [T, F, F, F, T, T, T, T, ...]
+ */
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsLong) {
+	size_t const num_data(NUM_IN_LONG);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, false, false, false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_data << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_SetTrueFloatGreaterThanOrEquals(num_data, in_data,
+				threshold_, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * with an array of zero elements (num_data=0).
+ * RESULT:
+ * result = []
+ */
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsLenghZero) {
+	size_t const num_data(0);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, in_data, threshold_, result);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * RESULT:
+ * result = [T, F, F, F, T, T, T, T]
+ */
+TEST_F(BoolFilterInt, GreaterThanOrEquals) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	int in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, false, false, false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+
+	//verbose = true;
+	if (verbose) {
+		PrintArray("data", num_data, in_data);
+		cout << "threshold = " << threshold_ << endl;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, in_data, threshold_, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * with an array of 11 elements (num_data=11).
+ * RESULT:
+ * result = [T, F, F, F, T, T, T, T,
+ *           T, F, F]
+ */
+TEST_F(BoolFilterInt, GreaterThanOrEqualsLengthEleven) {
+	size_t const num_data(11);
+	SIMD_ALIGN
+	int in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, false, false, false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+
+	if (verbose) {
+		PrintArray("data", num_data, in_data);
+		cout << "threshold = " << threshold_ << endl;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, in_data, threshold_, result);
+
+	if (verbose)
+		PrintArray("result", num_data, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * with a long array
+ * RESULT:
+ * result = [T, F, F, F, T, T, T, T, ...]
+ */
+TEST_F(BoolFilterInt, GreaterThanOrEqualsLong) {
+	size_t const num_data(NUM_IN_LONG);
+	SIMD_ALIGN
+	int in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	bool answer[] = { true, false, false, false, true, true, true, true };
+	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
+
+	// Create long input data by repeating data_
+	GetDataInLength(num_data, in_data);
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	LIBSAKURA_SYMBOL(Status) status;
+
+	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
+			<< num_data << endl;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_SetTrueIntGreaterThanOrEquals(num_data, in_data,
+				threshold_, result);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
+	}
+}
+
+/*
+ * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * with an array of zero elements (num_data=0).
+ * RESULT:
+ * result = []
+ */
+TEST_F(BoolFilterInt, GreaterThanOrEqualsLenghZero) {
+	size_t const num_data(0);
+	SIMD_ALIGN
+	int in_data[num_data];
+	SIMD_ALIGN
+	bool result[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
@@ -1240,7 +1511,7 @@ TEST_F(BoolFilterFloat, NanOrInf) {
 	float infnans[] = { posinf, neginf, nanval };
 	size_t j(0);
 	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		if ( !answer[i % ELEMENTSOF(answer)]) {
+		if (!answer[i % ELEMENTSOF(answer)]) {
 			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
 			++j;
 		}
@@ -1287,7 +1558,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
 	float infnans[] = { posinf, neginf, nanval };
 	size_t j(0);
 	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		if ( !answer[i % ELEMENTSOF(answer)]) {
+		if (!answer[i % ELEMENTSOF(answer)]) {
 			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
 			++j;
 		}
@@ -1334,7 +1605,7 @@ TEST_F(BoolFilterFloat, NanOrInfLong) {
 	float infnans[] = { posinf, neginf, nanval };
 	size_t j(0);
 	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		if ( !answer[i % ELEMENTSOF(answer)]) {
+		if (!answer[i % ELEMENTSOF(answer)]) {
 			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
 			++j;
 		}
@@ -2905,6 +3176,174 @@ TEST_F(BoolFilterInt, GreaterThanNotAlignedResult) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
 			data, threshold_, result_shift);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * Test failure cases of sakura_SetTrueFloatGreaterThanOrEquals
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsFailNullData) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	bool result[num_data];
+
+	float *data_null = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, data_null, threshold_, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	float in_data[num_data];
+
+	bool *result_null = nullptr;
+
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(in_data), in_data);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, in_data, threshold_, result_null);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedData) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	float data[num_elements];
+	SIMD_ALIGN
+	bool result[num_data];
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(data), data);
+
+	// Define unaligned array
+	float *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, data_shift, threshold_, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedResult) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	float data[num_data];
+	SIMD_ALIGN
+	bool result[num_elements];
+
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(data), data);
+
+	// Define unaligned array
+	bool *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+			num_data, data, threshold_, result_shift);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test failure cases of sakura_SetTrueIntGreaterThanOrEquals
+ * RESULT:
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+ */
+/* Null pointer arrays */
+TEST_F(BoolFilterInt, GreaterThanOrEqualsFailNullData) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	bool result[num_data];
+
+	int *data_null = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, data_null, threshold_, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BoolFilterInt, GreaterThanOrEqualsFailNullResult) {
+	size_t const num_data(NUM_IN);
+	SIMD_ALIGN
+	int in_data[num_data];
+
+	bool *result_null = nullptr;
+
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(in_data), in_data);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, in_data, threshold_, result_null);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/* Unaligned arrays */
+TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedData) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	int data[num_elements];
+	SIMD_ALIGN
+	bool result[num_data];
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(data), data);
+
+	// Define unaligned array
+	int *data_shift = &data[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, data_shift, threshold_, result);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedResult) {
+	size_t offset(UNALIGN_OFFSET);
+	size_t const num_data(NUM_IN);
+	size_t const num_elements(num_data + offset);
+	SIMD_ALIGN
+	int data[num_data];
+	SIMD_ALIGN
+	bool result[num_elements];
+
+	// Create long input data by repeating data_
+	GetDataInLength(ELEMENTSOF(data), data);
+
+	// Define unaligned array
+	bool *result_shift = &result[offset];
+	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+			num_data, data, threshold_, result_shift);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);

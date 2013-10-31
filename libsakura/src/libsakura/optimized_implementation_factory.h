@@ -87,6 +87,9 @@ public:
 	virtual void SetTrueGreaterThan(size_t num_data,
 			DataType const data[/*num_data*/], DataType threshold,
 			bool result[/*num_data*/]) const = 0;
+	virtual void SetTrueGreaterThanOrEquals(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
+			bool result[/*num_data*/]) const = 0;
 	virtual void SetFalseIfNanOrInf(size_t num_data,
 			DataType const data[/*num_data*/],
 			bool result[/*num_data*/]) const = 0;
