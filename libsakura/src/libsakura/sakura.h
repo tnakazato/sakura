@@ -1409,6 +1409,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * FFTを使用しない場合：
  * FFTを使用せず、実数配列のまま入力スペクトルとカーネルとでコンボリューションを行う。
  * @param[in,out] context コンテキスト
+ * @param[in] num_data チャネル数
  * @param[in] input_data 入力スペクトル
  * 配列の長さは @a num_data と同じ。
  * @param[in] input_flag 入力フラグ
@@ -1435,6 +1436,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+		size_t num_data,
 		float input_data[/*num_data*/], bool const input_flag[/*num_data*/],
 		float output_data[/*num_data*/]);
 /**

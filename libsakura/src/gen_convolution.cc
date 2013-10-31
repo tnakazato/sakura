@@ -24,14 +24,15 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 LIBSAKURA_SYMBOL(Convolve1DContext) **context,
-		float input_data[/*num_channels*/],
-		bool const input_flag[/*num_channels*/],
-		float output_data[/*num_channels*/]) {
+        size_t num_data,
+		float input_data[/*num_data*/],
+		bool const input_flag[/*num_data*/],
+		float output_data[/*num_data*/]) {
 
 	try {
 		auto createconv =
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
-		createconv->Convolve1D(context, input_data, input_flag,
+		createconv->Convolve1D(context, num_data, input_data, input_flag,
 				output_data);
 	} catch (...) {
 		assert(false); // no exception should not be raised for the current implementation.

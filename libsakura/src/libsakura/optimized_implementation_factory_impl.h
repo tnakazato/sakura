@@ -195,6 +195,7 @@ public:
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+			size_t num_data,
 			float input_data[/*num_data*/],
 			bool const input_flag[/*num_data*/],
 			float output_data[/*num_data*/]) const;
@@ -210,6 +211,7 @@ public:
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+			size_t num_data,
 			float input_data[/*num_data*/],
 			bool const input_flag[/*num_data*/],
 			float output_data[/*num_data*/]) const;
