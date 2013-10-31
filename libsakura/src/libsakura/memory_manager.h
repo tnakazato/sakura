@@ -52,6 +52,16 @@ public:
 		deallocator_(ptr);
 	}
 
+	/**
+	 * @~
+	 * Frees the memory by calling @ref Free(void *ptr)
+	 *
+	 * This method is intended to use with std::unique_ptr.
+	 *
+	 * MT-safe
+	 *
+	 * @param[in] ptr nullptr is acceptable.
+	 */
 	inline void operator()(void *ptr) const noexcept {
 		Free(ptr);
 	}
