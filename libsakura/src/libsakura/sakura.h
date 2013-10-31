@@ -737,7 +737,7 @@ typedef struct {
  * @details Returns true if the corresponding element in the input array
  * is greater than a @a threshold,
  * @par
- * @a data[i] >  @a threshold .
+ * @a data[i] > @a threshold .
  *
  * @note
  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
@@ -756,7 +756,7 @@ typedef struct {
  * @details 入力配列の要素の値がしきい値( @a threshold )より大きければ真を返す。@n
  * すなわち、
  * @par
- * @a data[i] >  @a threshold .
+ * @a data[i] > @a threshold .
  *
  * を検定する。@n
  *
@@ -786,11 +786,11 @@ typedef struct {
 
  /**
   * @~english
-  * @brief Returns if the values in input array are greater than or equals to a threshold.
+  * @brief Returns if the values in input array are greater than or equal to a threshold.
   * @details Returns true if the corresponding element in the input array
   * is greater than or equals to a @a threshold,
   * @par
-  * @a data[i] >=  @a threshold .
+  * @a data[i] >= @a threshold .
   *
   * @note
   * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
@@ -809,7 +809,7 @@ typedef struct {
   * @details 入力配列の要素の値がしきい値( @a threshold )以上であれば真を返す。@n
   * すなわち、
   * @par
-  * @a data[i] >+  @a threshold .
+  * @a data[i] >= @a threshold .
   *
   * を検定する。@n
   *
@@ -836,6 +836,112 @@ typedef struct {
   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThanOrEquals)(
  		size_t num_data, int const data[/*num_data*/], int threshold,
  		bool result[/*num_data*/]);
+
+  /**
+   * @~english
+   * @brief Returns if the values in input array are less than a threshold.
+   * @details Returns true if the corresponding element in the input array
+   * is less than a @a threshold,
+   * @par
+   * @a data[i] < @a threshold .
+   *
+   * @note
+   * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+   *
+   * @param[in] num_data The number of elements in the arrays, @a data
+   * and @a result
+   * @param[in] data An input array of size, @a num_data.
+   * Array elements should not contain Inf nor NaN.
+   * @n must-be-aligned
+   * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+   * @param[out] result The output array of size, @a num_data.
+   * @n must-be-aligned
+   * @return status code
+   * @~japanese
+   * @brief 入力配列の値が、与えられたしきい値より小さいかどうかを検定する。
+   * @details 入力配列の要素の値がしきい値( @a threshold )より小さければ真を返す。@n
+   * すなわち、
+   * @par
+   * @a data[i] < @a threshold .
+   *
+   * を検定する。@n
+   *
+   * @note
+   * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+   *
+   * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+   * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+   * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+   * @n must-be-aligned
+   * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+   * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+   * @n must-be-aligned
+   * @return 終了ステータス
+   *@~
+   * MT-safe
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThan)(
+  		size_t num_data, float const data[/*num_data*/], float threshold,
+  		bool result[/*num_data*/]);
+
+  /**
+   * @copybrief sakura_SetTrueFloatLessThan
+   * @copydetails sakura_SetTrueFloatLessThan
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThan)(
+  		size_t num_data, int const data[/*num_data*/], int threshold,
+  		bool result[/*num_data*/]);
+
+   /**
+    * @~english
+    * @brief Returns if the values in input array are less than or equal to a threshold.
+    * @details Returns true if the corresponding element in the input array
+    * is less than or equals to a @a threshold,
+    * @par
+    * @a data[i] <= @a threshold .
+    *
+    * @note
+    * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+    *
+    * @param[in] num_data The number of elements in the arrays, @a data
+    * and @a result
+    * @param[in] data An input array of size, @a num_data.
+    * Array elements should not contain Inf nor NaN.
+    * @n must-be-aligned
+    * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+    * @param[out] result The output array of size, @a num_data.
+    * @n must-be-aligned
+    * @return status code
+    * @~japanese
+    * @brief 入力配列の値が、与えられたしきい値以下かどうかを検定する。
+    * @details 入力配列の要素の値がしきい値( @a threshold )以下であれば真を返す。@n
+    * すなわち、
+    * @par
+    * @a data[i] <= @a threshold .
+    *
+    * を検定する。@n
+    *
+    * @note
+    * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+    *
+    * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+    * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+    * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+    * @n must-be-aligned
+    * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+    * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+    * @n must-be-aligned
+    * @return 終了ステータス
+    *@~
+    * MT-safe
+    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThanOrEquals)(
+   		size_t num_data, float const data[/*num_data*/], float threshold,
+   		bool result[/*num_data*/]);
+
+   /**
+    * @copybrief sakura_SetTrueFloatLessThanOrEquals
+    * @copydetails sakura_SetTrueFloatLessThanOrEquals
+    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThanOrEquals)(
+   		size_t num_data, int const data[/*num_data*/], int threshold,
+   		bool result[/*num_data*/]);
 
  /**
   * @~english

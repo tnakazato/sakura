@@ -260,6 +260,106 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThanOrEqua
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThan)(
+		size_t num_data, float const data[], float threshold,
+		bool result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
+	try {
+		bfc->SetTrueLessThan(num_data, data, threshold, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThan)(
+		size_t num_data, int const data[/*num_data*/], int threshold,
+		bool result[/*num_data*/]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplInt();
+	try {
+		bfc->SetTrueLessThan(num_data, data, threshold, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThanOrEquals)(
+		size_t num_data, float const data[], float threshold,
+		bool result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
+	try {
+		bfc->SetTrueLessThanOrEquals(num_data, data, threshold, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThanOrEquals)(
+		size_t num_data, int const data[/*num_data*/], int threshold,
+		bool result[/*num_data*/]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplInt();
+	try {
+		bfc->SetTrueLessThanOrEquals(num_data, data, threshold, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(
 		size_t num_data,
 		float const data[], bool result[]) {

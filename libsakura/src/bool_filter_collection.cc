@@ -126,6 +126,24 @@ inline void SetTrueGreaterThanOrEquals(size_t num_data, DataType const *data,
 }
 
 template<typename DataType>
+inline void SetTrueLessThan(size_t num_data, DataType const *data,
+		DataType threshold, bool *result) {
+	DataType const zero(static_cast<DataType>(0));
+	for (size_t i = 0; i < num_data; ++i) {
+		result[i] = (threshold - data[i]) > zero;
+	}
+}
+
+template<typename DataType>
+inline void SetTrueLessThanOrEquals(size_t num_data, DataType const *data,
+		DataType threshold, bool *result) {
+	DataType const zero(static_cast<DataType>(0));
+	for (size_t i = 0; i < num_data; ++i) {
+		result[i] = (threshold - data[i]) >= zero;
+	}
+}
+
+template<typename DataType>
 inline void SetFalseIfNanOrInf(size_t num_data, DataType const *data,
 		bool *result) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -290,6 +308,20 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueGreaterThanO
 		size_t num_data, DataType const data[/*num_data*/], DataType threshold,
 		bool result[/*num_data*/]) const {
 	::SetTrueGreaterThanOrEquals(num_data, data, threshold, result);
+}
+
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueLessThan(
+		size_t num_data, DataType const data[/*num_data*/], DataType threshold,
+		bool result[/*num_data*/]) const {
+	::SetTrueLessThan(num_data, data, threshold, result);
+}
+
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueLessThanOrEquals(
+		size_t num_data, DataType const data[/*num_data*/], DataType threshold,
+		bool result[/*num_data*/]) const {
+	::SetTrueLessThanOrEquals(num_data, data, threshold, result);
 }
 
 template<typename DataType>

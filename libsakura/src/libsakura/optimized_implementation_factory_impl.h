@@ -138,6 +138,12 @@ public:
 	virtual void SetTrueGreaterThanOrEquals(size_t num_data,
 			DataType const data[/*num_data*/], DataType threshold,
 			bool result[/*num_data*/]) const;
+	virtual void SetTrueLessThan(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
+			bool result[/*num_data*/]) const;
+	virtual void SetTrueLessThanOrEquals(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
+			bool result[/*num_data*/]) const;
 	virtual void SetFalseIfNanOrInf(size_t num_data,
 			DataType const data[/*num_data*/], bool result[/*num_data*/]) const;
 	virtual void ToBool(size_t num_data, DataType const data[/*num_data*/],
@@ -165,6 +171,12 @@ public:
 			DataType const data[/*num_data*/], DataType threshold,
 			bool result[/*num_data*/]) const;
 	virtual void SetTrueGreaterThanOrEquals(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
+			bool result[/*num_data*/]) const;
+	virtual void SetTrueLessThan(size_t num_data,
+			DataType const data[/*num_data*/], DataType threshold,
+			bool result[/*num_data*/]) const;
+	virtual void SetTrueLessThanOrEquals(size_t num_data,
 			DataType const data[/*num_data*/], DataType threshold,
 			bool result[/*num_data*/]) const;
 	virtual void SetFalseIfNanOrInf(size_t num_data,
