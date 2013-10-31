@@ -52,6 +52,10 @@ public:
 		deallocator_(ptr);
 	}
 
+	inline void operator()(void *ptr) const noexcept {
+		Free(ptr);
+	}
+
 	/**
 	 * @~
 	 * @brief
@@ -81,11 +85,11 @@ public:
 		return ptr;
 	}
 
+	Memory() = default;
 private:
 	friend ::LIBSAKURA_SYMBOL(Status) (::LIBSAKURA_SYMBOL(Initialize))(
 			::LIBSAKURA_SYMBOL(UserAllocator) allocator,
 			::LIBSAKURA_SYMBOL(UserDeallocator) deallocator);
-	Memory() = delete;
 	static ::LIBSAKURA_SYMBOL(UserAllocator) allocator_;
 	static ::LIBSAKURA_SYMBOL(UserDeallocator) deallocator_;
 };
