@@ -1318,7 +1318,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_equations 連立方程式の数。正値でなければならない。
  * @param[in] lsq_matrix0 連立方程式の左辺側の行列成分を格納する１次元配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix0 [ @a num_equations * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_equations * @a num_equations )となる。
  * @param[in] lsq_vector0 連立方程式の右辺値を格納する配列。配列の長さは @a num_equations でなければならない。
- * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_equations でなければならない。
+ * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_equations でなければならない。 @a out を指すポインタは @a lsq_vector0 と同じでもよい。
  * @return 終了ステータス。
  * @~english
  * @brief Solve simultaneous equations via LU decomposition.
@@ -1331,7 +1331,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * its length must be (@a num_equations * @a num_equations).
  * @param[in] lsq_vector0 the right side value of simultaneous equations.
  * its length must be @a num_equations .
- * @param[out] out the solution. its length must be @a num_equations .
+ * @param[out] out the solution. its length must be @a num_equations . the
+ * pointer of @a out can be identical with that of @a lsq_vector0 .
  * @return status code.
  * @~
  * MT-safe
