@@ -79,6 +79,11 @@ public:
 			DataType const lower_bounds[/*num_condition*/],
 			DataType const upper_bounds[/*num_condition*/],
 			bool result[/*num_data*/]) const = 0;
+	virtual void SetTrueInRangesExclusive(size_t num_data,
+			DataType const data[/*num_data*/], size_t num_condition,
+			DataType const lower_bounds[/*num_condition*/],
+			DataType const upper_bounds[/*num_condition*/],
+			bool result[/*num_data*/]) const = 0;
 	virtual void SetTrueGreaterThan(size_t num_data,
 			DataType const data[/*num_data*/], DataType threshold,
 			bool result[/*num_data*/]) const = 0;

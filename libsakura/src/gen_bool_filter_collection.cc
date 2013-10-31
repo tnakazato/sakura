@@ -82,6 +82,84 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)(
+		size_t num_data, float const data[], size_t num_condition,
+		float const lower_bounds[], float const upper_bounds[], bool result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (lower_bounds == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (upper_bounds == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(lower_bounds)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(upper_bounds)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	// lower_bounds should be smaller or equals to corresponding upper_bounds.
+	for (size_t i = 0; i < num_condition; ++i) {
+		if (lower_bounds[i] > upper_bounds[i])
+			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplFloat();
+	try {
+		bfc->SetTrueInRangesExclusive(num_data, data, num_condition,
+				lower_bounds, upper_bounds, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)(
+		size_t num_data, int const data[], size_t num_condition,
+		int const lower_bounds[], int const upper_bounds[], bool result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (lower_bounds == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (upper_bounds == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(lower_bounds)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(upper_bounds)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	// lower_bounds should be smaller or equals to corresponding upper_bounds.
+	for (size_t i = 0; i < num_condition; ++i) {
+		if (lower_bounds[i] > upper_bounds[i])
+			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	// Now actual operation
+	auto bfc =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBoolFilterCollectionImplInt();
+	try {
+		bfc->SetTrueInRangesExclusive(num_data, data, num_condition,
+				lower_bounds, upper_bounds, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThan)(
 		size_t num_data, float const data[], float threshold,
 		bool result[]) {

@@ -67,6 +67,46 @@ inline void SetTrueInRangesInclusiveGeneric(size_t num_data,
 	}
 }
 
+template<typename DataType, size_t NUM_BOUNDS>
+inline void SetTrueInRangesExclusiveScalar(size_t num_data,
+		DataType const *data, DataType const *lower_bounds,
+		DataType const *upper_bounds,
+		bool *result) {
+	DataType const zero(static_cast<DataType>(0));
+
+	for (size_t i = 0; i < num_data; ++i) {
+		bool is_in_range = false;
+		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
+			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
+					> zero)) {
+				is_in_range = true;
+				break;
+			}
+		}
+		result[i] = is_in_range;
+	}
+}
+
+template<typename DataType>
+inline void SetTrueInRangesExclusiveGeneric(size_t num_data,
+		DataType const *data, size_t num_condition,
+		DataType const *lower_bounds, DataType const *upper_bounds,
+		bool *result) {
+	DataType const zero(static_cast<DataType>(0));
+	for (size_t i = 0; i < num_data; ++i) {
+		bool is_in_range = false;
+		for (size_t j = 0; j < num_condition; ++j) {
+			DataType lower_value = lower_bounds[j];
+			DataType upper_value = upper_bounds[j];
+			if (((data[i] - lower_value) * (upper_value - data[i]) > zero)) {
+				is_in_range = true;
+				break;
+			}
+		}
+		result[i] = is_in_range;
+	}
+}
+
 template<typename DataType>
 inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
@@ -171,6 +211,60 @@ void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesIncl
 				result);
 	} else {
 		SetTrueInRangesInclusiveGeneric(num_data, data, num_condition,
+				lower_bounds, upper_bounds, result);
+	}
+}
+
+template<typename DataType>
+void ADDSUFFIX(BoolFilterCollection, ARCH_SUFFIX)<DataType>::SetTrueInRangesExclusive(
+		size_t num_data, DataType const data[/*num_data*/],
+		size_t num_condition, DataType const lower_bounds[/*num_condition*/],
+		DataType const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]) const {
+	typedef void (*SetTrueInRangesExclusiveFunc)(size_t num_data,
+			DataType const *data, DataType const *lower_bounds,
+			DataType const *upper_bounds,
+			bool *result);
+	// Use Scalar version for now
+	static SetTrueInRangesExclusiveFunc const funcs[] = {
+			SetTrueInRangesExclusiveScalar<DataType, 0>,
+			SetTrueInRangesExclusiveScalar<DataType, 1>,
+			SetTrueInRangesExclusiveScalar<DataType, 2>,
+			SetTrueInRangesExclusiveScalar<DataType, 3>,
+			SetTrueInRangesExclusiveScalar<DataType, 4>,
+			SetTrueInRangesExclusiveScalar<DataType, 5>,
+			SetTrueInRangesExclusiveScalar<DataType, 6>,
+			SetTrueInRangesExclusiveScalar<DataType, 7>,
+			SetTrueInRangesExclusiveScalar<DataType, 8>,
+			SetTrueInRangesExclusiveScalar<DataType, 9>,
+			SetTrueInRangesExclusiveScalar<DataType, 10>,
+			SetTrueInRangesExclusiveScalar<DataType, 11>,
+			SetTrueInRangesExclusiveScalar<DataType, 12>,
+			SetTrueInRangesExclusiveScalar<DataType, 13>,
+			SetTrueInRangesExclusiveScalar<DataType, 14>,
+			SetTrueInRangesExclusiveScalar<DataType, 15>,
+			SetTrueInRangesExclusiveScalar<DataType, 16> };
+
+	// So far, only unit8_t version is vectorized
+	//std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lower_bounds));
+#ifndef NDEBUG
+	for (size_t j = 0; j < num_condition; ++j) {
+		assert(lower_bounds[j] <= upper_bounds[j]);
+	}
+#endif
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
+	// Initialize result with false
+
+	if (num_condition < ELEMENTSOF(funcs)) {
+		funcs[num_condition](num_data, data, lower_bounds, upper_bounds,
+				result);
+	} else {
+		SetTrueInRangesExclusiveGeneric(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	}
 }

@@ -654,6 +654,83 @@ typedef struct {
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
 
+ /**
+  * @~english
+  * @brief Returns if the values in input array are in any of specified range (exclusive).
+  * @details Returns true if the corresponding element in the input array
+  * is in between upper and lower boundary pairs,
+  * @par
+  * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
+  *
+  * The function takes more than one upper and lower boundary pairs as arrays,
+  * @a lower_bounds and @a upper_bounds.@n
+  *
+  * @note
+  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+  * All elements in @a result are set to false when no condition is given, i.e., @a num_condition = 0.
+  *
+  * @param[in] num_data The number of elements in the arrays, @a data
+  * and @a result
+  * @param[in] data An input array of size, @a num_data.
+  * Array elements should not contain Inf nor NaN.
+  * @n must-be-aligned
+  * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
+  * and @a upper_bounds.
+  * @param[in] lower_bounds The input array of size, @a num_condition.
+  * Array elements should not contain Inf nor NaN.
+  * @n must-be-aligned
+  * @param[in] upper_bounds The input array of size, @a num_condition.
+  * Array elements should not contain Inf nor NaN.
+  * @n must-be-aligned
+  * @param[out] result The output array of size, @a num_data.
+  * @n must-be-aligned
+  * @return status code
+  * @~japanese
+  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(exclusive).
+  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
+  * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。@n
+  * すなわち、
+  * @par
+  * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
+  *
+  * を検定する。@n
+  *
+  * @note
+  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+  * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての要素がfalseとなる。
+  *
+  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+  * @n must-be-aligned
+  * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
+  * 下限値と上限値の組の数を表す。
+  * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
+  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+  * @n must-be-aligned
+  * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
+  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+  * @n must-be-aligned
+  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+  * @n must-be-aligned
+  * @return 終了ステータス
+  *@~
+  * MT-safe
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)(
+ 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
+ 		float const lower_bounds[/*num_condition*/],
+ 		float const upper_bounds[/*num_condition*/],
+ 		bool result[/*num_data*/]);
+
+ /**
+  * @copybrief sakura_SetTrueFloatInRangesExclusive
+  * @copydetails sakura_SetTrueFloatInRangesExclusive
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)(
+ 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
+ 		int const lower_bounds[/*num_condition*/],
+ 		int const upper_bounds[/*num_condition*/],
+ 		bool result[/*num_data*/]);
+
 /**
  * @~english
  * @brief Returns if the values in input array are greater than a threshold.
