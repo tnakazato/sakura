@@ -41,6 +41,7 @@ void *AllocateAndAlign(size_t num_array, DataType **array) {
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
 		}
+		LIBSAKURA_PREFIX::Memory::Free(storage);
 		throw msg;
 	}
 	return storage;
