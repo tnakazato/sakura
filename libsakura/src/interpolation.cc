@@ -3,6 +3,7 @@
 #include <memory>
 #include <cstdalign>
 #include <utility>
+#include <new>
 
 #include <libsakura/sakura.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
@@ -31,7 +32,7 @@ void *AllocateAndAlign(size_t num_array, DataType **array) {
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			LIBSAKURA_PREFIX::Logger::Error(logger, msg);
 		}
-		throw msg;
+		throw std::bad_alloc();
 	}
 	*array = reinterpret_cast<DataType *>(LIBSAKURA_SYMBOL(AlignAny)(
 			sizeof(DataType) * elements_in_arena, storage,

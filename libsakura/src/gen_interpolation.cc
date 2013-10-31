@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <climits>
 #include <memory>
+#include <new>
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -117,6 +118,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		interpolator->InterpolateXAxis(interpolation_method,
 				polynomial_order, num_x_base, x_base, num_y, data_base,
 				num_x_interpolated, x_interpolated, data_interpolated);
+	} catch (const std::bad_alloc &e) {
+		// failed to allocate memory
+		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
+			std::ostringstream oss;
+			oss << "ERROR: Memory allocation failed." << std::endl;
+			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
+		}
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
@@ -153,6 +162,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		interpolator->InterpolateYAxis(interpolation_method,
 				polynomial_order, num_y_base, y_base, num_x, data_base,
 				num_y_interpolated, y_interpolated, data_interpolated);
+	} catch (const std::bad_alloc &e) {
+		// failed to allocate memory
+		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
+			std::ostringstream oss;
+			oss << "ERROR: Memory allocation failed." << std::endl;
+			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
+		}
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
