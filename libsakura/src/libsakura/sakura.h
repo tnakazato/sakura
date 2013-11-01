@@ -1100,7 +1100,7 @@ typedef enum {
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
  * が返された場合、
- * 考えられる原因は以下の三つである。
+ * 考えられる原因は以下の二つである。
  *     - @a interpolation_method が正しくない
  *     - 引数に渡した配列がアラインされていない
  *
@@ -1206,7 +1206,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
  * が返された場合、
- * 考えられる原因は以下の三つである。
+ * 考えられる原因は以下の二つである。
  *     - @a interpolation_method が正しくない
  *     - 引数に渡した配列がアラインされていない
  *
