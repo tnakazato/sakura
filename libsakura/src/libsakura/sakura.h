@@ -904,6 +904,82 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
  		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
+  /**
+   * @~english
+   * @brief Invoke bit operation, Material Implication, between a bit mask and an array.
+   * @details Invokes the following bit operation to the @a i- th element of @a result :
+   * @code
+   * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
+   * @endcode
+   *
+   * @note
+   * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+   *
+   * @note
+   * The function can also be used to invoke bitwise NAND operation of @a data and @a bit_mask .
+   * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise NAND operation.
+   * For details of bitwise NAND operation, see, e.g.,@n
+   * http://en.wikipedia.org/wiki/Truth_table
+   *
+   * @param[in] bit_mask A bit mask. The bit operation is invoked
+   * between this value and the array, @a data.
+   * @param[in] num_data The number of elements in the arrays, @a data,
+   * @a edit_mask, and @a result.
+   * @param[in] data An input array of size, @a num_data. The bit operation
+   * is invoked between this array and @a bit_mask.@n
+   * must-be-aligned
+   * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+   * is skipped for the elements with the value, false.@n
+   * must-be-aligned
+   * @param[out] result The output array of size, @a num_data. It stores the result
+   * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+   * and the value in array, @a data, is adopted for the elements where corresponding
+   * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+   * that of @a in (@a result == @a data), indicating in-place operation.@n
+   * must-be-aligned
+   * @return status code
+   * @~japanese
+   * @brief ビットマスクと一次元配列の含意ビット演算を実行する。
+   * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
+   * @code
+   * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
+   * @endcode
+   *
+   * @note
+   * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+   *
+   * @note
+   * この関数は、@a data と@a bit_mask の間の否定論理積ビット演算(NAND)にも使用できる。
+   * 否定論理積のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+   * ( ~@a bit_mask )を関数の入力として与える。
+   * 否定論理積ビット演算についての詳細は、例えば次のページを参照:@n
+   * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
+   *
+   *
+   * @param[in] bit_mask ビットマスク
+   * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+   * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+   * @n must-be-aligned
+   * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+   * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
+   * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+   * @n must-be-aligned
+   * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+   * @n must-be-aligned
+   * @return 終了ステータス
+   *@~
+   * MT-safe
+   *
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication)(
+  		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+  		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+  /**
+   * @copybrief sakura_OperateBitsUint8Implication
+   * @copydetails sakura_OperateBitsUint8Implication
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implication)(
+  		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+  		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+
  /**
   * @~english
   * @brief Invoke bitwise NOT operation of an array.

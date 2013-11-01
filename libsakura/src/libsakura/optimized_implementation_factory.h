@@ -58,6 +58,10 @@ public:
 			size_t num_data, DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const = 0;
+	virtual void OperateBitsImplication(DataType bit_mask,
+			size_t num_data, DataType const data[/*num_data*/],
+			bool const edit_mask[/*num_data*/],
+			DataType result[/*num_data*/]) const = 0;
 	virtual void OperateBitsNot(size_t num_data,
 			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
