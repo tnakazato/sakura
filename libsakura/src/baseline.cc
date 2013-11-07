@@ -45,15 +45,40 @@ inline void DoSubtractBaseline(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
-	bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
+	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+	size_t num_arena = num_data + sakura_alignment - 1;
+
+	std::unique_ptr<bool[]> storage_for_clip_mask(new bool[num_data]);
+	bool *clip_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
+			(num_arena*sizeof(bool), storage_for_clip_mask.get(),
+					num_arena*sizeof(bool)));
+	//bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 	for (size_t i = 0; i < num_data; ++i) {
 		clip_mask[i] = true;
 	}
 
-	bool *composite_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
-	float *best_fit_model = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
-	float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
-	//bool *new_clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
+	std::unique_ptr<bool[]> storage_for_composite_mask(new bool[num_data]);
+	bool *composite_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
+			(num_arena*sizeof(bool), storage_for_composite_mask.get(),
+					num_arena*sizeof(bool)));
+	//bool *composite_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
+
+	std::unique_ptr<float[]> storage_for_best_fit_model(new float[num_data]);
+	float *best_fit_model = sakura_AlignFloat(num_arena,
+			storage_for_best_fit_model.get(), num_arena);
+	//float *best_fit_model = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
+
+	std::unique_ptr<float[]> storage_for_residual_data(new float[num_data]);
+	float *residual_data = sakura_AlignFloat(num_arena,
+			storage_for_residual_data.get(), num_arena);
+	//float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
+
+	/*
+	std::unique_ptr<bool[]> storage_for_new_clip_mask(new bool[num_data]);
+	bool *new_clip_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
+			(num_arena*sizeof(bool), storage_for_new_clip_mask.get(),
+					num_arena*sizeof(bool)));
+	*/
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
 		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, mask, clip_mask, composite_mask);
@@ -92,11 +117,10 @@ inline void DoSubtractBaseline(
 		}
 	}
 
-	LIBSAKURA_PREFIX::Memory::Free(clip_mask);
-	LIBSAKURA_PREFIX::Memory::Free(composite_mask);
-	LIBSAKURA_PREFIX::Memory::Free(best_fit_model);
-	LIBSAKURA_PREFIX::Memory::Free(residual_data);
-	//LIBSAKURA_PREFIX::Memory::Free(new_clip_mask);
+	//LIBSAKURA_PREFIX::Memory::Free(clip_mask);
+	//LIBSAKURA_PREFIX::Memory::Free(composite_mask);
+	//LIBSAKURA_PREFIX::Memory::Free(best_fit_model);
+	//LIBSAKURA_PREFIX::Memory::Free(residual_data);
 }
 
 inline void SubtractBaselinePolynomial(
@@ -105,13 +129,21 @@ inline void SubtractBaselinePolynomial(
 		uint16_t num_fitting_max, bool get_residual,
 		float *out) {
 	size_t num_model_bases = order + 1;
-	double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
+
+	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+	size_t num_model = num_data * num_model_bases;
+	size_t num_arena = num_model + sakura_alignment - 1;
+	std::unique_ptr<double[]> storage_for_model(new double[num_arena]);
+	double *model = sakura_AlignDouble(num_arena,
+			storage_for_model.get(), num_model);
+
+	//double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
 
 	GetBaselineModelPolynomial(num_data, order, model);
 	DoSubtractBaseline(num_data, data, mask, num_model_bases, model,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);
 
-	LIBSAKURA_PREFIX::Memory::Free(model);
+	//LIBSAKURA_PREFIX::Memory::Free(model);
 }
 
 } /* anonymous namespace */
