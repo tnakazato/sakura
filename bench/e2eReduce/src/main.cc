@@ -5,44 +5,148 @@
  *      Author: kohji
  */
 
+#include <getopt.h>
 #include <iostream>
 #include <unistd.h>
+#include <vector>
+#include <memory>
 #include <log4cxx/logger.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <xdispatch/dispatch>
-#include <libsakura/sakura.h>
-#include <casacore/tables/Tables/Table.h>
+
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
+
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ExprNode.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+
+#include <libsakura/sakura.h>
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
 
 void JobFinished(int i) {
-	std::cout << "Start Job " << i << std::endl;
-	std::cout << "Ouput array:";
-	casa::Vector<int> v(1, i);
-	std::cout << v << std::endl;
 	std::cout << "Job ";
 	std::cout << i;
 	std::cout << " have done.\n";
 }
 
-void ParallelJob(int i) {
+void ParallelJob(int i, unsigned int n, float const *v) {
+	float sum = 0.0;
+	for (unsigned int i = 0; i < n; ++i)
+		sum += v[i];
+	std::cout << "Job " << i << ": v[0]=" << v[0] << ", sum(v)=" << sum
+			<< std::endl;
 	sleep(i % 3); // my job is sleeping.
-	xdispatch::main_queue().sync([=] {
+	xdispatch::main_queue().sync([=]() {
 		JobFinished(i);
 	});
 }
 
+void PrintUsage(char const *name) {
+	std::ostringstream oss;
+	oss << name << "\t-i|--input-file input_filename\n"
+			<< "\t[-o|--output-file output_filename]\n"
+			<< "\t-s|--sky-file skycal_table\n"
+			<< "\t[-t|--tsys-file tsyscal_table]\n";
+	std::cout << oss.str();
+}
+
+void AnalyseArguments(int argc, char const* const argv[],
+		casa::String *input_file, casa::String *output_file,
+		casa::String *calsky_file, casa::String *caltsys_file) {
+	// argument analysis
+	int opt = -1;
+	int option_index = -1;
+	struct option long_options[] = { { "help", no_argument, nullptr, 'h' }, {
+			"input-file", required_argument, nullptr, 'i' }, { "calsky-file",
+	required_argument, nullptr, 's' }, { "caltsys-file",
+	required_argument, nullptr, 't' }, { "output-file",
+	required_argument, nullptr, 'o' }, { 0, 0, 0, 0 } };
+
+	while ((opt = getopt_long(argc, const_cast<char * const *>(argv),
+			"hi:s:t:o:", long_options, &option_index)) != -1) {
+		switch (opt) {
+		case 'i':
+			*input_file = optarg;
+			break;
+		case 's':
+			*calsky_file = optarg;
+			break;
+		case 't':
+			*caltsys_file = optarg;
+			break;
+		case 'o':
+			*output_file = optarg;
+			break;
+		case 'h':
+			PrintUsage(argv[0]);
+			return;
+		case '?':
+			std::cout << "Invalid options were specified" << std::endl;
+			PrintUsage(argv[0]);
+			exit(1);
+		}
+	}
+
+	if (output_file->length() == 0) {
+		if (input_file->rfind("/") == input_file->length() - 1) {
+			std::cout << "match" << std::endl;
+		}
+		*output_file = (
+				(input_file->rfind("/") == input_file->length() - 1) ?
+						input_file->substr(0, input_file->length() - 1) :
+						*input_file) + "_out";
+	}
+	std::ostringstream oss;
+	oss << "Input parameter summary:" << std::endl << "\tinput-file=\""
+			<< *input_file << "\"" << std::endl << "\tcalsky-file=\""
+			<< *calsky_file << "\"" << std::endl << "\tcaltsys-file=\""
+			<< *caltsys_file << "\"" << std::endl << "\toutput-file=\""
+			<< *output_file << "\"" << std::endl;
+	LOG4CXX_INFO(logger, oss.str().c_str());
+}
+
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "Enter: E2eReduce");
-	{
+	casa::String input_file;
+	casa::String output_file;
+	casa::String calsky_file;
+	casa::String caltsys_file;
+	AnalyseArguments(argc, argv, &input_file, &output_file, &calsky_file,
+			&caltsys_file);
+	if (input_file.length() > 0) {
+		casa::Table table(input_file, casa::Table::Old);
+
+		casa::ROScalarColumn<unsigned int> ifno_column(table, "IFNO");
+		unsigned int ifno = ifno_column(0);
+		{
+			std::ostringstream oss;
+			oss << "Processing IFNO " << ifno << std::endl;
+			LOG4CXX_INFO(logger, oss.str().c_str());
+		}
+		casa::Table selected_table = table(table.col("IFNO") == ifno);
+
+		casa::ROArrayColumn<float> spectra_column(selected_table, "SPECTRA");
+		unsigned int nchan = spectra_column(0).nelements();
 		auto group = xdispatch::group();
+		size_t alignment = sakura_GetAlignment();
+		std::vector<std::unique_ptr<float[]> > pointer_holder(20);
 		for (int i = 0; i < 20; ++i) {
+			pointer_holder[i].reset(new float[nchan + alignment - 1]);
+			float *spectrum = sakura_AlignFloat(nchan + alignment - 1,
+					pointer_holder[i].get(), nchan);
+			casa::Vector<float> spectrum_vector(casa::IPosition(1, nchan),
+					spectrum, casa::SHARE);
+			spectra_column.get(i, spectrum_vector);
+			float const *v = spectrum;
 			group.async([=] {
-				ParallelJob(i);
+				ParallelJob(i, nchan, v);
 			});
 		}
 		group.wait(xdispatch::time_forever);

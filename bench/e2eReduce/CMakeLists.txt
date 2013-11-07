@@ -55,4 +55,5 @@ add_dependencies(main logConfig)
 
 target_link_libraries (main -L${PROJECT_BINARY_DIR}/bin -Wl,-rpath,${PROJECT_BINARY_DIR}/bin -lpthread)
 
-add_custom_target(run      COMMAND ./main      DEPENDS main)
+#add_custom_target(run      COMMAND ./main      DEPENDS main)
+add_custom_target(run COMMAND ./main --input-file=/nfsstore1/sakura_e2e/data/uid___A002_X70402d_X8db.PM01.asap DEPENDS main)
