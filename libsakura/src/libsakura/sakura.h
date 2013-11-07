@@ -1528,10 +1528,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief コンテキストを作成する。
  * @details
- * @param[in] num_data チャネル数
+ * @param[in] num_data データの要素数。
  * @param[in] kernel_type カーネルタイプ
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとにコンボリューションの結果は異なる。
- * @param[in] kernel_width カーネル幅
+ * @param[in] kernel_width カーネルの幅
  * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
  * @param[out] context コンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
  * により解放されなければならない。
@@ -1539,7 +1539,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief Create context
  * @details
- * @param[in] num_data channel number. @num_data must
+ * @param[in] num_data number of data. @num_data must
  * be positive.
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
@@ -1554,32 +1554,33 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 /**
  * @~japanese
  * @brief コンボリューションを行う。
- * @details 入力スペクトルに対するコンボリューションを行う。
+ * @details 入力データに対するコンボリューションを行う。
  * FFTを使用する場合：
- * 入力スペクトルに対しFFTを行った複素数配列と、事前に作った複素数のFFT済みカーネルとを
- * 掛け合せ一つの複素数配列を得る。それをIFFTし、実数配列である出力スペクトルを得る。
+ * 入力データに対しFFTを行った複素数配列と、事前に作った複素数のFFT済みカーネルとを
+ * 掛け合せ一つの複素数配列を得る。それをIFFTし、実数配列である出力データを得る。
  * FFTを使用しない場合：
- * FFTを使用せず、実数配列のまま入力スペクトルとカーネルとでコンボリューションを行う。
+ * FFTを使用せず、実数配列のまま入力データとカーネルとでコンボリューションを行う。
  * @param[in,out] context コンテキスト
- * @param[in] num_data チャネル数
- * @param[in] input_data 入力スペクトル
+ * @param[in] num_data データの要素数。
+ * @param[in] input_data 入力データ
  * 配列の長さは @a num_data と同じ。
  * @param[in] input_flag 入力フラグ
  * 配列の長さは @a num_data と同じ。
- * @param[out] output_data 出力スペクトル
+ * @param[out] output_data 出力データ
  * 配列の長さは @a num_data と同じ。
  * @return 終了ステータス。
  * @~english
  * @brief Do Convolution
- * @details It can do convolution input spectrum
+ * @details It can do convolution input data
  * with using fft or not. If using fft, fft applied kernel which is
  * already included context by CreateConvolve1DContext will be multiplied
- * with input spectrum by complex-complex multiplication and then
+ * with input data by complex-complex multiplication and then
  * the multiplied complex array will be created. Finally IFFT will be
- * applied against it and then real output spectrum will be created.
+ * applied against it and then real output data will be created.
  * @param[in,out] context context which contain @a fftwf_plan, @a fftw_complex
  * and @a num_data, @a input_real_array
- * @param[in] input_data input spectrum
+ * @param[in] num_data number of data
+ * @param[in] input_data input data
  * Its length equals to channel number
  * @param[in] input_flag
  * Its length equals to channel number

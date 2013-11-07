@@ -4,15 +4,17 @@
 #include <algorithm>
 #include <iostream>
 #include <fftw3.h>
+#include <memory>
 
-#include "libsakura/sakura.h"
-#include "libsakura/optimized_implementation_factory_impl.h"
-#include "libsakura/localdef.h"
+#include <libsakura/sakura.h>
+#include <libsakura/optimized_implementation_factory_impl.h>
+#include <libsakura/localdef.h>
 #include <libsakura/logger.h>
 #include <libsakura/memory_manager.h>
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
+	size_t num_data;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_input_data;
@@ -30,38 +32,26 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 
 	float const sqrt_ln16 = 1.66510922231539551270632928979040;
 	float const height = .939437278699651333772340328410 / kernel_width; // sqrt((8*ln2)/(2*pi)) / kernel_width
-	float *work_real_array;
+	std::unique_ptr<float[]> work_real_array(new float[num_data]);
+	for (size_t j = 0; j < num_data; ++j)
+		work_real_array[j] = 0;
 
+	size_t loop_max = 0;
+	if (num_data % 2 == 0) { // even
+		loop_max = num_data / 2;
+	} else if (num_data % 2 != 0) { // odd
+		loop_max = (num_data - 1) / 2.f;
+		work_real_array[0] = height;
+	}
+	float center = (num_data - 1) / 2.f;
 	switch (kernel_type) {
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
-
-		work_real_array = new float[num_data];
-		assert(work_real_array != nullptr);
-		for (size_t j = 0; j < num_data; ++j)
-			work_real_array[j] = 0;
-
-		if (!(num_data & 1)) { // even
-			float center = (num_data - 1) / 2.f;
-			work_real_array[0] = height; // max
-			for (size_t j = 0; j < num_data / 2; ++j) {
-				float value = (j - center) * sqrt_ln16 / kernel_width;
-				work_real_array[(uint32_t) center + 1 + j] =
-						work_real_array[(uint32_t) center - j] = height
-								* exp(-(value * value));
-			}
-		} else if (num_data & 1) { // odd
-			float center = (num_data - 1) / 2.f;
-			work_real_array[0] = height; // max
-			for (size_t j = 0; j < (uint32_t) center; ++j) {
-				float value = (j - center) * sqrt_ln16 / kernel_width;
-				work_real_array[(uint32_t) center + 1 + j] =
-						work_real_array[(uint32_t) center - j] = height
-								* exp(-(value * value));
-			}
-		} else {
-			throw "";
+		for (size_t j = 0; j < loop_max; ++j) {
+			float value = (j - center) * sqrt_ln16 / kernel_width;
+			work_real_array[(size_t) center + 1 + j] =
+					work_real_array[(size_t) center - j] = height
+							* exp(-(value * value));
 		}
-
 		break;
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar):
 		// BoxCar
@@ -87,9 +77,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 
 		// create plan for kernel
 		fftwf_plan work_plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(
-				num_data, work_real_array, work_fft_applied_complex_kernel,
+				num_data, work_real_array.get(),
+				work_fft_applied_complex_kernel,
 				FFTW_ESTIMATE);
-		//assert(work_plan_real_to_complex_float != nullptr);
+
 		if (work_plan_real_to_complex_float == nullptr) {
 			throw "";
 		} else {
@@ -157,7 +148,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		for (size_t j = 0; j < num_data; ++j) {
 			(*context)->real_array[j] = work_real_array[j];
 		}
-		delete work_real_array;
+
+		(*context)->num_data = num_data;
 
 	} else {
 		// not implemented yet
@@ -169,12 +161,9 @@ inline void Convolve1DDefault(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
 		size_t num_data, float input_data[/*num_data*/],
 		bool const input_flag[/*num_data*/], float output_data[/*num_data*/]) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data));
-
-	for (size_t i = 0; i < num_data; ++i) {
-		(*context)->real_array[i] = input_data[i];
-	}
+		for (size_t i = 0; i < num_data; ++i) {
+			(*context)->real_array[i] = input_data[i];
+		}
 
 	if ((*context)->plan_real_to_complex_float != nullptr)
 		fftwf_execute((*context)->plan_real_to_complex_float);
