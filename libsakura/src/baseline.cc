@@ -136,7 +136,6 @@ inline void SubtractBaselinePolynomial(
 	std::unique_ptr<double[]> storage_for_model(new double[num_arena]);
 	double *model = sakura_AlignDouble(num_arena,
 			storage_for_model.get(), num_model);
-
 	//double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
 
 	GetBaselineModelPolynomial(num_data, order, model);
