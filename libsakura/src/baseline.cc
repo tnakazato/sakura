@@ -1,13 +1,14 @@
-#include <cassert>
-#include <cstddef>
-#include <cmath>
 #include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <memory>
 
-#include "libsakura/sakura.h"
-#include "libsakura/memory_manager.h"
-#include "libsakura/optimized_implementation_factory_impl.h"
-#include "libsakura/localdef.h"
+#include <libsakura/localdef.h>
+#include <libsakura/memory_manager.h>
+#include <libsakura/optimized_implementation_factory_impl.h>
+#include <libsakura/sakura.h>
 
 #define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
 #include <Eigen/Core>
@@ -24,14 +25,12 @@ inline void GetBaselineModelPolynomial(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	size_t num_model_bases = order + 1;
 
-	uint64_t idx = 0;
-	for (size_t i = 0; i < num_model_bases; ++i) {
-		for (size_t j = 0; j < num_each_basis; ++j) {
-			double val = 1.0;
-			for (size_t k = 0; k < i; ++k) {
-				val *= static_cast<double>(j);
-			}
-			model[idx++] = val;
+	for (size_t j = 0; j < num_each_basis; ++j) {
+		double val = 1.0;
+		model[j] = val;
+		for (size_t i = 1; i < num_model_bases; ++i) {
+			val *= static_cast<double>(j);
+			model[num_each_basis*i+j] = val;
 		}
 	}
 }
@@ -41,8 +40,6 @@ inline void DoSubtractBaseline(
 		size_t num_model_bases, double const *model,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, float *out) {
-	//std::cout << "DoSubtractBaselineEigen function is called" << std::endl;
-
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
