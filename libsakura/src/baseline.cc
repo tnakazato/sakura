@@ -21,13 +21,17 @@ namespace {
 
 inline void GetBaselineModelPolynomial(
 		size_t num_each_basis, uint16_t order, double *model) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	size_t num_model_bases = order + 1;
 
+	uint64_t idx = 0;
 	for (size_t i = 0; i < num_model_bases; ++i) {
 		for (size_t j = 0; j < num_each_basis; ++j) {
-			model[num_each_basis*i+j] =
-					pow(static_cast<double>(j), static_cast<double>(i));
+			double val = 1.0;
+			for (size_t k = 0; k < i; ++k) {
+				val *= static_cast<double>(j);
+			}
+			model[idx++] = val;
 		}
 	}
 }
