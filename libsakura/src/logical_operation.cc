@@ -22,12 +22,6 @@ void OperateLogicalAnd(size_t num_in, bool const *in1,
 	for (size_t i = 0; i < num_in; ++i) {
 		out[i] = static_cast<bool>(src1[i] & src2[i]);
 	}
-
-	/* old logic
-	for (size_t i = 0; i < num_in; ++i) {
-		out[i] = in1[i] && in2[i];
-	}
-	*/
 }
 
 } /* anonymous namespace */
