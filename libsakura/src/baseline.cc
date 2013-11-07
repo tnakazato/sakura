@@ -51,7 +51,7 @@ inline void DoSubtractBaseline(
 	std::unique_ptr<bool[]> storage_for_clip_mask(new bool[num_data]);
 	bool *clip_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
 			(num_arena*sizeof(bool), storage_for_clip_mask.get(),
-					num_arena*sizeof(bool)));
+					num_data*sizeof(bool)));
 	//bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 	for (size_t i = 0; i < num_data; ++i) {
 		clip_mask[i] = true;
@@ -60,24 +60,24 @@ inline void DoSubtractBaseline(
 	std::unique_ptr<bool[]> storage_for_composite_mask(new bool[num_data]);
 	bool *composite_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
 			(num_arena*sizeof(bool), storage_for_composite_mask.get(),
-					num_arena*sizeof(bool)));
+					num_data*sizeof(bool)));
 	//bool *composite_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 
 	std::unique_ptr<float[]> storage_for_best_fit_model(new float[num_data]);
 	float *best_fit_model = sakura_AlignFloat(num_arena,
-			storage_for_best_fit_model.get(), num_arena);
+			storage_for_best_fit_model.get(), num_data);
 	//float *best_fit_model = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
 
 	std::unique_ptr<float[]> storage_for_residual_data(new float[num_data]);
 	float *residual_data = sakura_AlignFloat(num_arena,
-			storage_for_residual_data.get(), num_arena);
+			storage_for_residual_data.get(), num_data);
 	//float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
 
 	/*
 	std::unique_ptr<bool[]> storage_for_new_clip_mask(new bool[num_data]);
 	bool *new_clip_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
 			(num_arena*sizeof(bool), storage_for_new_clip_mask.get(),
-					num_arena*sizeof(bool)));
+					num_data*sizeof(bool)));
 	*/
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
