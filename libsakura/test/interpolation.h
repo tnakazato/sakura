@@ -46,12 +46,13 @@ protected:
 	}
 	virtual void AllocateMemory(size_t num_base, size_t num_interpolated,
 			size_t num_array) {
-		size_t num_arena_xbase = num_base + sakura_alignment_ - 1;
-		size_t num_arena_ybase = num_base * num_array + sakura_alignment_ - 1;
-		size_t num_arena_xinterpolated = num_interpolated + sakura_alignment_
-				- 1;
+		size_t margin_double = ((sakura_alignment_ - 1) / sizeof(double) + 1);
+		size_t margin_float = ((sakura_alignment_ - 1) / sizeof(float) + 1);
+		size_t num_arena_xbase = num_base + margin_double;
+		size_t num_arena_ybase = num_base * num_array + margin_float;
+		size_t num_arena_xinterpolated = num_interpolated + margin_double;
 		size_t num_arena_yinterpolated = num_interpolated * num_array
-				+ sakura_alignment_ - 1;
+				+ margin_float;
 		storage_for_x_base_.reset(new double[num_arena_xbase]);
 		x_base_ = sakura_AlignDouble(num_arena_xbase, storage_for_x_base_.get(),
 				num_base);
@@ -70,28 +71,33 @@ protected:
 				storage_for_y_expected_.get(), num_interpolated * num_array);
 
 		// check alignment
-		ASSERT_TRUE(x_base_ != nullptr)<< "x_base_ is null";
-		ASSERT_TRUE(sakura_IsAligned(x_base_))<< "x_base_ is not aligned";
-		ASSERT_TRUE(sakura_IsAligned(y_base_))<< "y_base_ is not aligned";
-		ASSERT_TRUE(sakura_IsAligned(y_interpolated_))<< "y_interpolated_ is not aligned";
+		ASSERT_TRUE(x_base_ != nullptr) << "x_base_ is null";
+		ASSERT_TRUE(sakura_IsAligned(x_base_)) << "x_base_ is not aligned";
+		ASSERT_TRUE(sakura_IsAligned(y_base_)) << "y_base_ is not aligned";
+		ASSERT_TRUE(sakura_IsAligned(y_interpolated_))
+				<< "y_interpolated_ is not aligned";
 	}
 
-	virtual void InspectResult(sakura_Status expected_status, sakura_Status result_status,
-			size_t num_interpolated, size_t num_array, bool check_result) {
+	virtual void InspectResult(sakura_Status expected_status,
+			sakura_Status result_status, size_t num_interpolated,
+			size_t num_array, bool check_result) {
 		// Should return InvalidArgument status
-		std::string message = (expected_status == sakura_Status_kOK) ?
-		"There was any problems during execution." :
-		"The execution should fail!";
+		std::string message =
+				(expected_status == sakura_Status_kOK) ?
+						"There was any problems during execution." :
+						"The execution should fail!";
 		EXPECT_EQ(expected_status, result_status) << message;
 
 		if (check_result && (expected_status == result_status)) {
 			// Value check
-			for (size_t index = 0; index < num_interpolated * num_array; ++index) {
+			for (size_t index = 0; index < num_interpolated * num_array;
+					++index) {
 				std::cout << "Expected value at index " << index << ": "
-				<< y_expected_[index] << std::endl;
+						<< y_expected_[index] << std::endl;
 				EXPECT_FLOAT_EQ(y_expected_[index], y_interpolated_[index])
-				<< "interpolated value differs from expected value at " << index
-				<< ": " << y_expected_[index] << ", " << y_interpolated_[index];
+						<< "interpolated value differs from expected value at "
+						<< index << ": " << y_expected_[index] << ", "
+						<< y_interpolated_[index];
 			}
 		}
 
