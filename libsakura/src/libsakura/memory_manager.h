@@ -71,7 +71,7 @@ public:
 	 * @brief
 	 * Allocate an aligned memory with @a size_in_bytes size and the aligned address is assigned to @a aligned_address
 	 *
-	 * @param[in] size_in_bytes size in bytes you requires, not a number of T.
+	 * @param[in] size_in_bytes size in bytes you requires, not a number of objects of type T.
 	 * @param[out] aligned_address @a *aligned_address points aligned memory on successful call, otherwise @a *aligned_address is set to nullptr.
 	 * @return the address of the top of allocated area which may be unaligned. This address is required when freeing the area by @ref Free(void *ptr).
 	 *
