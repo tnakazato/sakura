@@ -121,27 +121,20 @@ inline void GetBestFitModel(size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	size_t num_lsq_matrix0 = num_model_bases * num_model_bases;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_double_alignment = sakura_alignment / sizeof(double);
-	size_t num_arena = num_lsq_matrix0 + num_double_alignment;
-	std::unique_ptr<double[]> storage_for_lsq_matrix0(new double[num_arena]);
-	double *lsq_matrix0 = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
-			storage_for_lsq_matrix0.get(), num_lsq_matrix0);
-	//double *lsq_matrix0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases*num_model_bases));
-
+	double *lsq_matrix0 = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix0(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*lsq_matrix0) * num_lsq_matrix0, &lsq_matrix0));
 	size_t num_lsq_vector0 = num_model_bases;
-	num_arena = num_lsq_vector0 + num_double_alignment;
-	std::unique_ptr<double[]> storage_for_lsq_vector0(new double[num_arena]);
-	double *lsq_vector0 = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
-			storage_for_lsq_vector0.get(), num_lsq_vector0);
-	//double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases));
-
+	double *lsq_vector0 = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector0(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*lsq_vector0) * num_lsq_vector0, &lsq_vector0));
 	size_t num_coeff = num_model_bases;
-	num_arena = num_coeff + num_double_alignment;
-	std::unique_ptr<double[]> storage_for_coeff(new double[num_arena]);
-	double *coeff = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
-			storage_for_coeff.get(), num_coeff);
-	//double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases));
+	double *coeff = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*coeff) * num_coeff, &coeff));
 
 	GetCoefficientsForLeastSquareFitting(num_data, data, mask,
 			num_model_bases, model, lsq_matrix0, lsq_vector0);
@@ -150,10 +143,6 @@ inline void GetBestFitModel(size_t num_data,
 			lsq_matrix0, lsq_vector0, coeff);
 
 	DoGetBestFitModel(num_data, num_model_bases, model, coeff, out);
-
-	//LIBSAKURA_PREFIX::Memory::Free(lsq_matrix0);
-	//LIBSAKURA_PREFIX::Memory::Free(lsq_vector0);
-	//LIBSAKURA_PREFIX::Memory::Free(coeff);
 }
 
 } /* anonymous namespace */
@@ -172,7 +161,8 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetCoefficientsForLeastSquareFitt
 		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
 		double out_matrix[/*num_model_bases*num_model_bases*/],
 		double out_vector[/*num_model_bases*/]) const {
-	::GetCoefficientsForLeastSquareFitting(num_data, data, mask, num_model_bases, model, out_matrix, out_vector);
+	::GetCoefficientsForLeastSquareFitting(
+			num_data, data, mask, num_model_bases, model, out_matrix, out_vector);
 }
 
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(
