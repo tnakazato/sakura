@@ -120,7 +120,7 @@ public:
 	virtual void CreateConvolve1DContext(size_t num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
-	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 			size_t num_data,
 			float input_data[/*num_data*/],
 			bool const input_flag[/*num_data*/],

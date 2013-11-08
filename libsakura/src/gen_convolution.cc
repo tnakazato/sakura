@@ -23,7 +23,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
-LIBSAKURA_SYMBOL(Convolve1DContext) **context,
+LIBSAKURA_SYMBOL(Convolve1DContext) *context,
         size_t num_data,
 		float input_data[/*num_data*/],
 		bool const input_flag[/*num_data*/],

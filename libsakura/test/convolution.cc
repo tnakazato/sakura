@@ -199,7 +199,7 @@ TEST_F(CreateConvolve1DContext , FFTWfResult) {
 		inspec_[i] = context->real_array[i];
 		input_flag_[i] = 0;
 	}
-	LIBSAKURA_SYMBOL(Convolve1D)(&context, num_data, inspec_, input_flag_, outspec_);
+	LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, inspec_, input_flag_, outspec_);
 
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
