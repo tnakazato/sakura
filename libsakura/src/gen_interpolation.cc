@@ -31,22 +31,14 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 					!= LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
 			&& interpolation_method
 					!= LIBSAKURA_SYMBOL(InterpolationMethod_kSpline)) {
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Invalid interpolation method" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "Invalid interpolation method\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
 
 	// num_base must be non-zero
 	if (num_interpolation_axis == 0) {
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: num_base must be > 0" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: num_base must be >0\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -54,12 +46,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// no interpolation will be done
 	if (num_interpolated == 0 || num_array == 0) {
 		// Nothing to do
-		if (LIBSAKURA_PREFIX::Logger::IsInfoEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Nothing has been done since num_interpolated is 0"
-					<< std::endl;
-			LIBSAKURA_PREFIX::Logger::Info(logger, oss.str().c_str());
-		}
+		LOG4CXX_INFO(logger, "Nothing has been done since num_interpolated is 0\n");
 		*status = LIBSAKURA_SYMBOL(Status_kOK);
 		process_data = false;
 	}
@@ -69,11 +56,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(interpolated)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: input arrays are not aligned" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: input arrays are not aligned\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -81,11 +64,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// input arrays are null
 	if (base == nullptr || data_base == nullptr || interpolated == nullptr
 			|| data_interpolated == nullptr) {
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: input arrays are null" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: input arrays are null\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -120,19 +99,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				num_x_interpolated, x_interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: Memory allocation failed." << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: Aborted due to unknown error" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: Aborted due to unknown error\n");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return status;
@@ -164,19 +135,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				num_y_interpolated, y_interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: Memory allocation failed." << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "ERROR: Aborted due to unknown error" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "ERROR: Aborted due to unknown error\n");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return status;
