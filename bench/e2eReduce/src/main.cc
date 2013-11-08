@@ -36,15 +36,15 @@ void JobFinished(int i) {
 	std::cout << " have done.\n";
 }
 
-void ParallelJob(int i, unsigned int n, float const *v) {
+void ParallelJob(int job_id, unsigned int num_v, float const *v) {
 	float sum = 0.0;
-	for (unsigned int i = 0; i < n; ++i)
+	for (unsigned int i = 0; i < num_v; ++i)
 		sum += v[i];
-	std::cout << "Job " << i << ": v[0]=" << v[0] << ", sum(v)=" << sum
+	std::cout << "Job " << job_id << ": v[0]=" << v[0] << ", sum(v)=" << sum
 			<< std::endl;
-	sleep(i % 3); // my job is sleeping.
+	// sleep(job_id % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=]() {
-		JobFinished(i);
+		JobFinished(job_id);
 	});
 }
 
@@ -114,10 +114,13 @@ void AnalyseArguments(int argc, char const* const argv[],
 
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "Enter: E2eReduce");
+	bool const serialize = false;
+
 	casa::String input_file;
 	casa::String output_file;
 	casa::String calsky_file;
 	casa::String caltsys_file;
+	double start_time = sakura_GetCurrentTime();
 	AnalyseArguments(argc, argv, &input_file, &output_file, &calsky_file,
 			&caltsys_file);
 	if (input_file.length() > 0) {
@@ -138,22 +141,26 @@ void E2eReduce(int argc, char const* const argv[]) {
 		size_t alignment = sakura_GetAlignment();
 		std::vector<std::unique_ptr<float[]> > pointer_holder(20);
 		for (int i = 0; i < 20; ++i) {
-			pointer_holder[i].reset(new float[nchan + alignment - 1]);
-			float *spectrum = sakura_AlignFloat(nchan + alignment - 1,
-					pointer_holder[i].get(), nchan);
+			pointer_holder[i].reset(new float[nchan + alignment - 1]); // FIXME nchan + ((alignment - 1) / sizeof(float) + 1)
+			float *spectrum = sakura_AlignFloat(nchan + alignment - 1, // FIXME nchan + ((alignment - 1) / sizeof(float) + 1)
+			pointer_holder[i].get(), nchan);
 			casa::Vector<float> spectrum_vector(casa::IPosition(1, nchan),
 					spectrum, casa::SHARE);
 			spectra_column.get(i, spectrum_vector);
 			float const *v = spectrum;
-			group.async([=] {
+			if (serialize) {
 				ParallelJob(i, nchan, v);
-			});
+			} else {
+				group.async([=] {
+					ParallelJob(i, nchan, v);
+				});
+			}
 		}
 		group.wait(xdispatch::time_forever);
 	}
 	xdispatch::main_queue().async([=] {
-		sleep(1);
-		std::cout << "finished\n";
+		double end_time = sakura_GetCurrentTime();
+		std::cout << "finished " << end_time - start_time << "secs\n";
 	});
 	LOG4CXX_INFO(logger, "Leave: E2eReduce");
 }
