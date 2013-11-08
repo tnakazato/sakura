@@ -352,7 +352,7 @@ public:
 	virtual void OperateFloatSubtraction(size_t num_in,
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetBestFitModel(size_t num_data,
+	virtual void GetBestFitBaselineModel(size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
@@ -376,7 +376,7 @@ public:
 	virtual void OperateFloatSubtraction(size_t num_in,
 			float const in1[/*num_in*/], float const in2[/*num_in*/],
 			float out[/*num_in*/]) const;
-	virtual void GetBestFitModel(size_t num_data,
+	virtual void GetBestFitBaselineModel(size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],

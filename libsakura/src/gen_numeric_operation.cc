@@ -97,7 +97,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineModel)(
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_model_bases, double const model[], float out[]) {
 	if (data == nullptr)
@@ -120,7 +120,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->GetBestFitModel(num_data, data, mask, num_model_bases, model, out);
+		numop->GetBestFitBaselineModel(num_data, data, mask, num_model_bases, model, out);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

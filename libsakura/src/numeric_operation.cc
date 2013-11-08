@@ -96,7 +96,7 @@ inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 	}
 }
 
-inline void DoGetBestFitModel(size_t num_data, size_t num_equations,
+inline void DoGetBestFitBaselineModel(size_t num_data, size_t num_equations,
 		double const *model, double const *coeff, float *out) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
@@ -111,7 +111,7 @@ inline void DoGetBestFitModel(size_t num_data, size_t num_equations,
 	}
 }
 
-inline void GetBestFitModel(size_t num_data,
+inline void GetBestFitBaselineModel(size_t num_data,
 		float const *data, bool const *mask,
 		size_t num_model_bases, double const *model,
 		float *out) {
@@ -142,7 +142,7 @@ inline void GetBestFitModel(size_t num_data,
 	SolveSimultaneousEquationsByLU(num_model_bases,
 			lsq_matrix0, lsq_vector0, coeff);
 
-	DoGetBestFitModel(num_data, num_model_bases, model, coeff, out);
+	DoGetBestFitBaselineModel(num_data, num_model_bases, model, coeff, out);
 }
 
 } /* anonymous namespace */
@@ -173,12 +173,12 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(
 	::SolveSimultaneousEquationsByLU(num_equations, lsq_matrix0, lsq_vector0, out);
 }
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitModel(
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetBestFitBaselineModel(
 		size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
 		float out[/*num_data*/]) const {
-	::GetBestFitModel(num_data, data, mask, num_model_bases, model, out);
+	::GetBestFitBaselineModel(num_data, data, mask, num_model_bases, model, out);
 }
 
 }

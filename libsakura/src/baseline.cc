@@ -70,7 +70,7 @@ inline void DoSubtractBaseline(
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
 		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, mask, clip_mask, composite_mask);
-		LIBSAKURA_SYMBOL(GetBestFitModel)(num_data, data, composite_mask, num_model_bases, model, best_fit_model);
+		LIBSAKURA_SYMBOL(GetBestFitBaselineModel)(num_data, data, composite_mask, num_model_bases, model, best_fit_model);
 		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_data, data, best_fit_model, residual_data);
 
 		//GetRms(); // calculate rms
@@ -111,6 +111,10 @@ inline void SubtractBaselinePolynomial(
 		uint16_t order, float clipping_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		float *out) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+
 	size_t num_model_bases = order + 1;
 	size_t num_model = num_data * num_model_bases;
 	double *model = nullptr;

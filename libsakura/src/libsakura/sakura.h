@@ -1612,8 +1612,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_in 配列 @a in1 、 @a in2 、及び @a out の要素数。
  * @param[in] in1 入力される配列その１。要素数は @a num_in でなければならない。
+ * @n must-be-aligned
  * @param[in] in2 入力される配列その２。要素数は @a num_in でなければならない。
+ * @n must-be-aligned
  * @param[in] out 出力される配列。要素数は @a num_in でなければならない。 @a out を指すポインタは @a in1 または @a in2 のいずれかと同じでもよい。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Logical operation AND between two boolean arrays.
@@ -1621,9 +1624,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
  * and @a out.
  * @param[in] in1 the first input array with length of @a num_in .
+ * @n must-be-aligned
  * @param[in] in2 the second input array with length of @a num_in .
+ * @n must-be-aligned
  * @param[out] out the output array with length of @a num_in . the pointer
  * of @a out can be identical with that of either @a in1 or @a in2.
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1637,8 +1643,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_in 配列 @a in1 、 @a in2 、及び @a out の要素数。
  * @param[in] in1 入力される配列その１。要素数は @a num_in でなければならない。
+ * @n must-be-aligned
  * @param[in] in2 入力される配列その２。要素数は @a num_in でなければならない。
+ * @n must-be-aligned
  * @param[in] out 出力される配列。要素数は @a num_in でなければならない。 @a out を指すポインタは @a in1 または @a in2 のいずれかと同じでもよい。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Compute subtraction between two float arrays (in1 - in2).
@@ -1646,9 +1655,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
  * and @a out.
  * @param[in] in1 the first input data with length of @a num_in .
+ * @n must-be-aligned
  * @param[in] in2 the second input data with length of @a num_in .
+ * @n must-be-aligned
  * @param[out] out the output data with length of @a num_in . the pointer
  * of @a out can be identical with that of either @a in1 or @a in2.
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1662,11 +1674,16 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
  * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @n must-be-aligned
  * @param[out] out_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
+ * @n must-be-aligned
  * @param[out] out_vector 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
@@ -1675,13 +1692,16 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * and @a mask, and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the total model.
  * @param[in] data input data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] mask input mask data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] num_model_bases number of basis functions of @a model.
  * @param[in] model a 1D array containing values of all its basis functions
  * concatenated. loop for data index must be inside of that for basis index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
  * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
  * to ( @a num_model_bases * @a num_data ).
+ * @n must-be-aligned
  * @param[out] out_matrix a 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
  * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
@@ -1689,9 +1709,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @a m -th row and @a n -th column is stored at @a out_matrix [ @a
  * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out_matrix is actually
  * symmetric.
+ * @n must-be-aligned
  * @param[out] out_vector the right side value of the simultaneous
  * equations for least-square fitting. its length should be equal to
  * @a num_model_bases.
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1707,8 +1729,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_equations 連立方程式の数。
  * @param[in] lsq_matrix0 連立方程式の左辺側の行列成分を格納する１次元配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix0 [ @a num_equations * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_equations * @a num_equations )となる。
+ * @n must-be-aligned
  * @param[in] lsq_vector0 連立方程式の右辺値を格納する配列。配列の長さは @a num_equations でなければならない。
+ * @n must-be-aligned
  * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_equations でなければならない。 @a out を指すポインタは @a lsq_vector0 と同じでもよい。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Solve simultaneous equations via LU decomposition.
@@ -1719,10 +1744,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * for rows, i.e., the value at the @a m -th row and @a n -th column is
  * stored at @a lsq_matrix0 [ @a num_equations * ( @a m -1) + ( @a n -1)].
  * its length must be (@a num_equations * @a num_equations).
+ * @n must-be-aligned
  * @param[in] lsq_vector0 the right side value of simultaneous equations.
  * its length must be @a num_equations .
+ * @n must-be-aligned
  * @param[out] out the solution. its length must be @a num_equations . the
  * pointer of @a out can be identical with that of @a lsq_vector0 .
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1736,10 +1764,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、 @a out 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
  * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @n must-be-aligned
  * @param[out] out 出力される配列。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Compute the best-fit model by least-square fitting.
@@ -1748,19 +1780,23 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @a mask, @a out , and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the total model.
  * @param[in] data the input data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] num_model_bases number of model functions.
  * @param[in] model a 1D array containing values of all its basis functions
  * concatenated. loop for data index must be inside of that for basis index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
  * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
  * to ( @a num_model_bases * @a num_data ).
+ * @n must-be-aligned
  * @param[out] out the best-fit model with length of @a num_data . the
  * pointer of @a out can be identical with that of @a data .
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitModel)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineModel)(
 		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
 		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
 		 float out[/*num_data*/]);
@@ -1771,19 +1807,24 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
  * @param[in] order 多項式モデルの次数。ゼロまたは正値でなければならない。
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。ゼロまたは正値でなければならない。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
+ * @n must-be-aligned
  * @~english
  * @brief Fit a baseline and subtract it from input data.
  * @details
  * @param[in] num_data the number of elements in the arrays @a data,
  * @a mask, and @a out.
  * @param[in] data the input data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] order order of polynomial model. must be zero or positive.
  * @param[in] clipping_threshold_sigma the threshold of clipping in unit
  * of sigma. must be positive.
@@ -1797,6 +1838,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * or the best-fit value if false.
  * @param[out] out the output data with length of @a num_data . the
  * pointer of @a out can be identical with that of @a data .
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1812,6 +1854,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_each_basis モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] order 多項式モデルの次数。ゼロまたは正値でなければならない。
  * @param[out] out モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_each_basis * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは(( @a order + 1) * @a num_each_basis )でなければならない。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Compute a set of polynomial model data.
@@ -1823,6 +1866,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * i.e., the @a n -th data of the @a m -th model should be stored at
  * @a model [ @a num_each_basis * @a (m-1) + @a (n-1) ]. its length must be equal
  * to (( @a order + 1) * @a num_each_basis ).
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1836,13 +1880,17 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
  * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @n must-be-aligned
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。ゼロまたは正値でなければならない。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Recursively fit a baseline and subtract it from input spectrum.
@@ -1850,13 +1898,16 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data the number of elements in the arrays @a data,
  * @a mask, and @a out.
  * @param[in] data the input data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
+ * @n must-be-aligned
  * @param[in] num_model_bases number of basis functions consisting @a model.
  * @param[in] model a 1D array containing values of all its basis functions
  * concatenated. loop for data index must be inside of that for basis index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
  * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
  * to ( @a num_model_bases * @a num_data ).
+ * @n must-be-aligned
  * @param[in] clipping_threshold_sigma the threshold of clipping in unit of
  * sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
@@ -1869,6 +1920,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * or the best-fit value if false.
  * @param[out] out the output data with length of @a num_data . the pointer
  * of @a out can be identical with that of @a data .
+ * @n must-be-aligned
+ * @return status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_data,

@@ -12,6 +12,9 @@ namespace {
 
 void OperateLogicalAnd(size_t num_in, bool const *in1,
 		bool const *in2, bool *out) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	STATIC_ASSERT(sizeof(*in1) == sizeof(uint8_t));
 	STATIC_ASSERT(sizeof(*in2) == sizeof(uint8_t));
 	STATIC_ASSERT(true == 1);
