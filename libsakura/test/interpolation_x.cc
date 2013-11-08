@@ -219,7 +219,7 @@ TEST_F(InterpolateArray1DFloatTest, LinearDescending) {
 	size_t const num_array = 2;
 	AllocateMemory(num_base, num_interpolated, num_array);
 	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-	InitializeFloatArray(num_base * num_interpolated, y_base_, -1.0, 1.0, 0.5,
+	InitializeFloatArray(num_base * num_array, y_base_, -1.0, 1.0, 0.5,
 			0.0);
 
 	x_interpolated_[0] = -1.0;
@@ -258,7 +258,7 @@ TEST_F(InterpolateArray1DFloatTest, LinearOpposite) {
 	size_t const num_array = 2;
 	AllocateMemory(num_base, num_interpolated, num_array);
 	InitializeDoubleArray(num_base, x_base_, 1.0, 0.0);
-	InitializeFloatArray(num_base * num_interpolated, y_base_, -1.0, 1.0, 0.5,
+	InitializeFloatArray(num_base * num_array, y_base_, -1.0, 1.0, 0.5,
 			0.0);
 
 	x_interpolated_[0] = 10.0;
