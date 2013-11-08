@@ -136,23 +136,24 @@ void E2eReduce(int argc, char const* const argv[]) {
 		casa::Table selected_table = table(table.col("IFNO") == ifno);
 
 		casa::ROArrayColumn<float> spectra_column(selected_table, "SPECTRA");
-		unsigned int nchan = spectra_column(0).nelements();
+		unsigned int num_chan = spectra_column(0).nelements();
 		auto group = xdispatch::group();
 		size_t alignment = sakura_GetAlignment();
+		size_t num_arena = num_chan + ((alignment - 1) / sizeof(float) + 1);
 		std::vector<std::unique_ptr<float[]> > pointer_holder(20);
 		for (int i = 0; i < 20; ++i) {
-			pointer_holder[i].reset(new float[nchan + alignment - 1]); // FIXME nchan + ((alignment - 1) / sizeof(float) + 1)
-			float *spectrum = sakura_AlignFloat(nchan + alignment - 1, // FIXME nchan + ((alignment - 1) / sizeof(float) + 1)
-			pointer_holder[i].get(), nchan);
-			casa::Vector<float> spectrum_vector(casa::IPosition(1, nchan),
+			pointer_holder[i].reset(new float[num_arena]);
+			float *spectrum = sakura_AlignFloat(num_arena,
+					pointer_holder[i].get(), num_chan);
+			casa::Vector<float> spectrum_vector(casa::IPosition(1, num_chan),
 					spectrum, casa::SHARE);
 			spectra_column.get(i, spectrum_vector);
 			float const *v = spectrum;
 			if (serialize) {
-				ParallelJob(i, nchan, v);
+				ParallelJob(i, num_chan, v);
 			} else {
 				group.async([=] {
-					ParallelJob(i, nchan, v);
+					ParallelJob(i, num_chan, v);
 				});
 			}
 		}
