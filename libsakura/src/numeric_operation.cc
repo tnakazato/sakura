@@ -120,25 +120,26 @@ inline void GetBestFitModel(size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t num_lsq_matrix0 = num_model_bases * num_model_bases;
-	size_t num_arena = num_lsq_matrix0 + sakura_alignment - 1;
+	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+	size_t num_double_alignment = sakura_alignment / sizeof(double);
+	size_t num_arena = num_lsq_matrix0 + num_double_alignment;
 	std::unique_ptr<double[]> storage_for_lsq_matrix0(new double[num_arena]);
-	double *lsq_matrix0 = sakura_AlignDouble(num_arena,
+	double *lsq_matrix0 = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
 			storage_for_lsq_matrix0.get(), num_lsq_matrix0);
 	//double *lsq_matrix0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases*num_model_bases));
 
 	size_t num_lsq_vector0 = num_model_bases;
-	num_arena = num_lsq_vector0 + sakura_alignment - 1;
+	num_arena = num_lsq_vector0 + num_double_alignment;
 	std::unique_ptr<double[]> storage_for_lsq_vector0(new double[num_arena]);
-	double *lsq_vector0 = sakura_AlignDouble(num_arena,
+	double *lsq_vector0 = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
 			storage_for_lsq_vector0.get(), num_lsq_vector0);
 	//double *lsq_vector0 = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases));
 
 	size_t num_coeff = num_model_bases;
-	num_arena = num_coeff + sakura_alignment - 1;
+	num_arena = num_coeff + num_double_alignment;
 	std::unique_ptr<double[]> storage_for_coeff(new double[num_arena]);
-	double *coeff = sakura_AlignDouble(num_arena,
+	double *coeff = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
 			storage_for_coeff.get(), num_coeff);
 	//double *coeff = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_model_bases));
 

@@ -46,30 +46,32 @@ inline void DoSubtractBaseline(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_data + sakura_alignment - 1;
+	//size_t num_arena = num_data + sakura_alignment - 1;
+	size_t num_arena_bool  = num_data + sakura_alignment / sizeof(bool);
+	size_t num_arena_float = num_data + sakura_alignment / sizeof(float);
 
-	std::unique_ptr<bool[]> storage_for_clip_mask(new bool[num_data]);
+	std::unique_ptr<bool[]> storage_for_clip_mask(new bool[num_arena_bool]);
 	bool *clip_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
-			(num_arena*sizeof(bool), storage_for_clip_mask.get(),
+			(num_arena_bool*sizeof(bool), storage_for_clip_mask.get(),
 					num_data*sizeof(bool)));
 	//bool *clip_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 	for (size_t i = 0; i < num_data; ++i) {
 		clip_mask[i] = true;
 	}
 
-	std::unique_ptr<bool[]> storage_for_composite_mask(new bool[num_data]);
+	std::unique_ptr<bool[]> storage_for_composite_mask(new bool[num_arena_bool]);
 	bool *composite_mask = static_cast<bool *>(LIBSAKURA_SYMBOL(AlignAny)
-			(num_arena*sizeof(bool), storage_for_composite_mask.get(),
+			(num_arena_bool*sizeof(bool), storage_for_composite_mask.get(),
 					num_data*sizeof(bool)));
 	//bool *composite_mask = reinterpret_cast<bool *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(bool)*num_data));
 
-	std::unique_ptr<float[]> storage_for_best_fit_model(new float[num_data]);
-	float *best_fit_model = sakura_AlignFloat(num_arena,
+	std::unique_ptr<float[]> storage_for_best_fit_model(new float[num_arena_float]);
+	float *best_fit_model = LIBSAKURA_SYMBOL(AlignFloat)(num_arena_float,
 			storage_for_best_fit_model.get(), num_data);
 	//float *best_fit_model = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
 
-	std::unique_ptr<float[]> storage_for_residual_data(new float[num_data]);
-	float *residual_data = sakura_AlignFloat(num_arena,
+	std::unique_ptr<float[]> storage_for_residual_data(new float[num_arena_float]);
+	float *residual_data = LIBSAKURA_SYMBOL(AlignFloat)(num_arena_float,
 			storage_for_residual_data.get(), num_data);
 	//float *residual_data = reinterpret_cast<float *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(float)*num_data));
 
@@ -132,9 +134,9 @@ inline void SubtractBaselinePolynomial(
 
 	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 	size_t num_model = num_data * num_model_bases;
-	size_t num_arena = num_model + sakura_alignment - 1;
+	size_t num_arena = num_model + sakura_alignment / sizeof(double);
 	std::unique_ptr<double[]> storage_for_model(new double[num_arena]);
-	double *model = sakura_AlignDouble(num_arena,
+	double *model = LIBSAKURA_SYMBOL(AlignDouble)(num_arena,
 			storage_for_model.get(), num_model);
 	//double *model = reinterpret_cast<double *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(double)*num_data*num_model_bases));
 
