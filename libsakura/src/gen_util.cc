@@ -13,8 +13,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "libsakura/sakura.h"
 #include <log4cxx/propertyconfigurator.h>
+
+#include "libsakura/sakura.h"
 #include "libsakura/logger.h"
 #include "libsakura/memory_manager.h"
 #include "libsakura/optimized_implementation_factory.h"
