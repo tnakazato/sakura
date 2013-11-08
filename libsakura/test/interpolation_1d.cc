@@ -54,26 +54,45 @@ TEST_F(Interpolate1DFloatTest, InvalidType) {
 			num_interpolated, sakura_Status_kInvalidArgument, false);
 }
 
-TEST_F(Interpolate1DFloatTest, ZeroLengthBaseArray) {
+TEST_F(Interpolate1DFloatTest, NullArray) {
 	// initial setup
-	size_t const num_base = 0;
+	size_t const num_base = 3;
 	size_t const num_interpolated = 5;
+	AllocateMemory(num_base, num_interpolated);
+
+	double *x_base_saved = x_base_;
+	x_base_ = nullptr;
 
 	// execute interpolation
 	// Should return InvalidArgument status
 	RunInterpolate1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, sakura_Status_kInvalidArgument, false);
+
+	x_base_ = x_base_saved;
+}
+
+TEST_F(Interpolate1DFloatTest, ZeroLengthBaseArray) {
+	// initial setup
+	size_t const num_base = 1;
+	size_t const num_interpolated = 5;
+	AllocateMemory(num_base, num_interpolated);
+
+	// execute interpolation
+	// Should return InvalidArgument status
+	RunInterpolate1D(sakura_InterpolationMethod_kNearest, 0,
 			num_interpolated, sakura_Status_kInvalidArgument, false);
 }
 
 TEST_F(Interpolate1DFloatTest, ZeroLengthInterpolatedArray) {
 	// initial setup
 	size_t const num_base = 2;
-	size_t const num_interpolated = 0;
+	size_t const num_interpolated = 1;
+	AllocateMemory(num_base, num_interpolated);
 
 	// execute interpolation
 	// Should return InvalidArgument status
 	RunInterpolate1D(sakura_InterpolationMethod_kNearest, num_base,
-			num_interpolated, sakura_Status_kOK, false);
+			0, sakura_Status_kOK, false);
 }
 
 TEST_F(Interpolate1DFloatTest, InputArrayNotAligned) {

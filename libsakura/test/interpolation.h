@@ -32,9 +32,17 @@ protected:
 		initialize_result_ = sakura_Initialize(nullptr, nullptr);
 		polynomial_order_ = 0;
 		sakura_alignment_ = sakura_GetAlignment();
+		InitializePointers();
 	}
 	virtual void TearDown() {
 		sakura_CleanUp();
+	}
+	void InitializePointers() {
+		x_base_ = nullptr;
+		y_base_ = nullptr;
+		x_interpolated_ = nullptr;
+		y_interpolated_ = nullptr;
+		y_expected_ = nullptr;
 	}
 	virtual void AllocateMemory(size_t num_base, size_t num_interpolated,
 			size_t num_array) {
@@ -72,8 +80,8 @@ protected:
 			size_t num_interpolated, size_t num_array, bool check_result) {
 		// Should return InvalidArgument status
 		std::string message = (expected_status == sakura_Status_kOK) ?
-		"InterpolateArray1DFloat had any problems during execution." :
-		"InterpolateArray1DFloat should fail!";
+		"There was any problems during execution." :
+		"The execution should fail!";
 		EXPECT_EQ(expected_status, result_status) << message;
 
 		if (check_result && (expected_status == result_status)) {
