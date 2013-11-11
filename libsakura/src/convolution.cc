@@ -26,11 +26,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 
 namespace {
 
-inline void CreateConvolve1DContextDefault(size_t num_data,
+inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 
-	float const reciprocal_of_denominator = 1.66510922231539551270632928979040 / kernel_width; // sqrt(log(16))/ kernel_width
+	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
+			/ kernel_width; // sqrt(log(16))/ kernel_width
 	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	std::unique_ptr<float[]> work_real_array(new float[num_data]);
 
@@ -151,7 +152,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 
 }
 
-inline void Convolve1DDefault(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
+inline void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 		size_t num_data, float input_data[/*num_data*/],
 		bool const input_flag[/*num_data*/], float output_data[/*num_data*/]) {
 
@@ -186,7 +187,7 @@ inline void Convolve1DDefault(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 	}
 }
 
-inline void DestroyConvolve1DContextDefault(
+inline void DestroyConvolve1DContext(
 LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 	std::cout << " DestroyConvolve1DContextEigen function is called"
 			<< std::endl;
@@ -223,7 +224,7 @@ void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) const {
-	CreateConvolve1DContextDefault(num_data, kernel_type, kernel_width, use_fft,
+	::CreateConvolve1DContext(num_data, kernel_type, kernel_width, use_fft,
 			context);
 }
 
@@ -232,13 +233,13 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 		float input_data[/*num_data*/],
 		bool const input_flag[/*num_data*/],
 		float output_data[/*num_data*/]) const {
-	Convolve1DDefault(context, num_data, input_data, input_flag, output_data);
+	::Convolve1D(context, num_data, input_data, input_flag, output_data);
 
 }
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::DestroyConvolve1DContext(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context) const {
-	DestroyConvolve1DContextDefault(context);
+	::DestroyConvolve1DContext(context);
 }
 
 }
