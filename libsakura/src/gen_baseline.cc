@@ -9,7 +9,7 @@
 #include "libsakura/sakura.h"
 
 namespace {
-	auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
+	auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("baseline");
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModelPolynomial)(
