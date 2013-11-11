@@ -1439,15 +1439,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @details
  * position switch calibrationを実行する。
  * 具体的には、
- * @f[
- *  {\rm result} = {\rm scaling\_factor} \times \frac{{\rm target} - {\rm reference}}
- *               {\rm reference}
- * @f]
+ * @verbatim result = scaling_factor * (target - reference) / reference @endverbatim
  * を実行する。これは、position switch観測の温度較正
- * @f[
- *  \rm{calibrated} = T_{\rm sys} \times \frac{{\rm ON} - {\rm OFF}}{\rm OFF}
- * @f]
- * に相当する処理である。ただし、@f$ T_{\rm{sys}}@f$ はシステム雑音温度、ONおよびOFFはそれぞれ
+ * @verbatim calibrated = Tsys * (ON - OFF) / OFF @endverbatim
+ * に相当する処理である。ただし、Tsys はシステム雑音温度、ONおよびOFFはそれぞれ
  * on sourceおよびoff sourceの生データである。
  * @n
  * @n
