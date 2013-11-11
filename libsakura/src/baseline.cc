@@ -20,6 +20,20 @@ using ::Eigen::Aligned;
 
 namespace {
 
+inline void OperateFloatSubtraction(size_t num_in, float const *in1,
+		float const *in2, float *out) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	STATIC_ASSERT(sizeof(in1) == sizeof(in2));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
+
+	for (size_t i = 0; i < num_in; ++i) {
+		out[i] = in1[i] - in2[i];
+	}
+}
+
 inline void GetBaselineModelPolynomial(
 		size_t num_each_basis, uint16_t order, double *model) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
@@ -122,7 +136,7 @@ inline void DoSubtractBaseline(
 	for (size_t i = 0; i < num_fitting_max; ++i) {
 		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, mask, clip_mask, composite_mask);
 		GetBestFitBaseline(num_data, data, composite_mask, num_model_bases, model, best_fit_model);
-		LIBSAKURA_SYMBOL(OperateFloatSubtraction)(num_data, data, best_fit_model, residual_data);
+		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		//GetRms(); // calculate rms
 		//LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(); //new_clip_mask generated based on rms and residual_data

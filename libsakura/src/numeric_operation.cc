@@ -20,19 +20,6 @@ using ::Eigen::Dynamic;
 using ::Eigen::Aligned;
 
 namespace {
-inline void OperateFloatSubtraction(size_t num_in, float const *in1,
-		float const *in2, float *out) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	STATIC_ASSERT(sizeof(in1) == sizeof(in2));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
-	for (size_t i = 0; i < num_in; ++i) {
-		out[i] = in1[i] - in2[i];
-	}
-}
 
 inline void GetCoefficientsForLeastSquareFitting(size_t num_data,
 		float const *data, bool const *mask,
@@ -103,13 +90,6 @@ inline void GetBestFitBaselineModel(size_t num_data,
 } /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::OperateFloatSubtraction(
-		size_t num_in,
-		float const in1[/*num_in*/],
-		float const in2[/*num_in*/],
-		float out[/*num_in*/]) const {
-	::OperateFloatSubtraction(num_in, in1, in2, out);
-}
 
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetCoefficientsForLeastSquareFitting(
 		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],

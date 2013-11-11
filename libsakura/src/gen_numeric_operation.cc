@@ -6,32 +6,6 @@
 #include "libsakura/optimized_implementation_factory.h"
 #include "libsakura/localdef.h"
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
-		size_t num_in, float const in1[], float const in2[], float out[]) {
-	if (in1 == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in2 == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in1)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in2)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	auto numop =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
-	try {
-		numop->OperateFloatSubtraction(num_in, in1, in2, out);
-	} catch (...) {
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-
-	return LIBSAKURA_SYMBOL(Status_kOK);
-}
-
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_model_bases, double const model[],

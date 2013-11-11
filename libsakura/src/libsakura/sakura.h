@@ -1639,37 +1639,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 
 /**
  * @~japanese
- * @brief ２つの配列の差分を要素に持つ配列を返す。
- * @details
- * @param[in] num_in 配列 @a in1 、 @a in2 、及び @a out の要素数。
- * @param[in] in1 入力される配列その１。要素数は @a num_in でなければならない。
- * @n must-be-aligned
- * @param[in] in2 入力される配列その２。要素数は @a num_in でなければならない。
- * @n must-be-aligned
- * @param[in] out 出力される配列。要素数は @a num_in でなければならない。 @a out を指すポインタは @a in1 または @a in2 のいずれかと同じでもよい。
- * @n must-be-aligned
- * @return 終了ステータス。
- * @~english
- * @brief Compute subtraction between two float arrays (in1 - in2).
- * @details
- * @param[in] num_in the number of elements in the arrays @a in1, @a in2,
- * and @a out.
- * @param[in] in1 the first input data with length of @a num_in .
- * @n must-be-aligned
- * @param[in] in2 the second input data with length of @a num_in .
- * @n must-be-aligned
- * @param[out] out the output data with length of @a num_in . the pointer
- * of @a out can be identical with that of either @a in1 or @a in2.
- * @n must-be-aligned
- * @return status code.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateFloatSubtraction)(
-		 size_t num_in, float const in1[/*num_in*/],
-		 float const in2[/*num_in*/], float out[/*num_in*/]);
-
-/**
- * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値を計算する。
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。

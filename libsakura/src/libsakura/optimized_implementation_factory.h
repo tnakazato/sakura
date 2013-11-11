@@ -207,10 +207,6 @@ class NumericOperation {
 public:
 	virtual ~NumericOperation() {
 	}
-
-	virtual void OperateFloatSubtraction(size_t num_in,
-			float const in1[/*num_in*/], float const in2[/*num_in*/],
-			float out[/*num_in*/]) const = 0;
 	virtual void GetCoefficientsForLeastSquareFitting(size_t num_data,
 			float const data[/*num_data*/], bool const mask[/*num_data*/],
 			size_t num_model_bases,

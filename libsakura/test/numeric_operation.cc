@@ -92,37 +92,6 @@ protected:
 };
 
 /*
- * Test subtraction in1 - in2 by sakura_OperateFloatSubtraction
- * RESULT:
- * out = [ -5.0, -3.0, 3.0, -5.0, -1.0 ]
- */
-TEST_F(NumericOperation, OperateFloatSubtraction) {
-	size_t const num_data(NUM_DATA);
-	SIMD_ALIGN float in1[num_data] = {0.0, 1.0, 2.0, -3.0, -4.0};
-	SIMD_ALIGN float in2[ELEMENTSOF(in1)] = {5.0, 4.0, -1.0, 2.0, -3.0};
-	SIMD_ALIGN float out[ELEMENTSOF(in1)];
-	float answer[ELEMENTSOF(in1)] = {-5.0, -3.0, 3.0, -5.0, -1.0};
-
-	if (verbose) {
-		PrintArray("in1", num_data, in1);
-		PrintArray("in2", num_data, in2);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_OperateFloatSubtraction(num_data, in1, in2, out);
-
-	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
-	}
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_data; ++i){
-		ASSERT_EQ(out[i], answer[i]);
-	}
-}
-
-/*
  * Test sakura_GetCoefficientsForLeastSquareFitting
  * RESULT:
  * out = []
