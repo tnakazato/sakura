@@ -16,6 +16,7 @@
 #include <log4cxx/propertyconfigurator.h>
 
 #include "libsakura/sakura.h"
+#include "libsakura/localdef.h"
 #include "libsakura/logger.h"
 #include "libsakura/memory_manager.h"
 #include "libsakura/optimized_implementation_factory.h"
@@ -84,18 +85,13 @@ extern "C" double LIBSAKURA_SYMBOL(GetCurrentTime)() {
 	return tv.tv_sec + ((double) tv.tv_usec) / 1000000.;
 }
 
-/*
- * ALIGNMENT must be a power of 2.
- */
-#define ALIGNMENT (256/* avx 256bits */ / 8)
-
 extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() {
-	return ALIGNMENT;
+	return LIBSAKURA_ALIGNMENT;
 }
 
 extern "C" bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) {
 	uint64_t addr = (uint64_t) ptr;
-	return addr % ALIGNMENT == 0;
+	return addr % LIBSAKURA_ALIGNMENT == 0;
 }
 
 extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
@@ -104,7 +100,8 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 		return nullptr;
 	}
 	uint64_t addr = (uint64_t) vp;
-	uint64_t new_addr = (addr + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1);
+	uint64_t new_addr = (addr + (LIBSAKURA_ALIGNMENT - 1))
+			& ~(LIBSAKURA_ALIGNMENT - 1);
 	if (size_of_arena - (size_t) (new_addr - addr) < size_required) {
 		return nullptr;
 	}

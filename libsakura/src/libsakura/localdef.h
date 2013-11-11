@@ -30,6 +30,11 @@
 #define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
 #define STATIC_ASSERT(x) static_assert((x), # x)
 
+/*
+ * ALIGNMENT must be a power of 2.
+ */
+#define LIBSAKURA_ALIGNMENT (256u/* avx 256bits */ / 8u)
+
 #if defined(__cplusplus)
 
 #include <cassert>
@@ -79,7 +84,26 @@ private:
 	bool called_;
 };
 
+#ifdef __GNUG__
+template<typename T>
+inline T AssumeAligned(T ptr) {
+	return reinterpret_cast<T>(__builtin_assume_aligned(ptr,
+			LIBSAKURA_ALIGNMENT));
 }
+#else /* __GNUG__ */
+inline T AssumeAligned(T ptr) {
+	return ptr;
+}
+#endif /* __GNUG__ */
+}
+
+#else /* defined(__cplusplus) */
+
+#ifdef __GNUC__
+# define AssumeAligned(ptr) ((__typeof__(ptr))__builtin_assume_aligned((ptr), LIBSAKURA_ALIGNMENT))
+#else /* __GNUC__ */
+# define AssumeAligned(ptr) (ptr)
+#endif /* __GNUC__ */
 
 #endif /* defined(__cplusplus) */
 
