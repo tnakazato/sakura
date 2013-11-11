@@ -1531,7 +1531,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data データの要素数。
  * @param[in] kernel_type カーネルタイプ
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとにコンボリューションの結果は異なる。
- * @param[in] kernel_width カーネルの幅
+ * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。
  * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
  * @param[out] context コンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
  * により解放されなければならない。
@@ -1543,7 +1543,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * be positive.
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
- * @param[in] kernel_width kernel width.
+ * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM.
  * @param[in] use_fft if use fft then true, if not, false.
  * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
