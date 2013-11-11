@@ -145,11 +145,35 @@ inline void ApplyPositionSwitchCalibrationEigen(size_t num_scaling_factor,
 }
 
 template<class DataType>
+inline void ApplyPositionSwitchCalibrationDefault(size_t num_scaling_factor,
+		DataType const *scaling_factor_arg, size_t num_data,
+		DataType const *target_arg,
+		DataType const *reference_arg,
+		DataType *result_arg) {
+	DataType const *__restrict scaling_factor = AssumeAligned(
+			scaling_factor_arg);
+	DataType const *__restrict target = AssumeAligned(target_arg);
+	DataType const *__restrict reference = AssumeAligned(reference_arg);
+	DataType *__restrict result = AssumeAligned(result_arg);
+	if (num_scaling_factor == 1) {
+		DataType const constant_scaling_factor = scaling_factor[0];
+		for (size_t i = 0; i < num_data; ++i) {
+			result[i] = constant_scaling_factor * (target[i] - reference[i])
+					/ reference[i];
+		}
+	} else {
+		for (size_t i = 0; i < num_data; ++i) {
+			result[i] = scaling_factor[i] * (target[i] - reference[i])
+					/ reference[i];
+		}
+	}
+}
+
+template<class DataType>
 inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
-		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-		DataType const target[/*num_data*/],
-		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
-	if (target == result) {
+		DataType const *scaling_factor, size_t num_data, DataType const *target,
+		DataType const *reference, DataType *result) {
+	if (target == result && false) {
 #if defined(__AVX__)
 		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
 				num_data, target, reference, result);
@@ -158,18 +182,8 @@ inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 				num_data, target, reference, result);
 #endif
 	} else {
-		if (num_scaling_factor == 1) {
-			DataType const constant_scaling_factor = scaling_factor[0];
-			for (size_t i = 0; i < num_data; ++i) {
-				result[i] = constant_scaling_factor * (target[i] - reference[i])
-						/ reference[i];
-			}
-		} else {
-			for (size_t i = 0; i < num_data; ++i) {
-				result[i] = scaling_factor[i] * (target[i] - reference[i])
-						/ reference[i];
-			}
-		}
+		ApplyPositionSwitchCalibrationDefault(num_scaling_factor,
+				scaling_factor, num_data, target, reference, result);
 	}
 }
 
