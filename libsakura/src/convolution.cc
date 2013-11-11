@@ -30,8 +30,8 @@ inline void CreateConvolve1DContextDefault(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 
-	float const sqrt_ln16 = 1.66510922231539551270632928979040;
-	float const height = .939437278699651333772340328410 / kernel_width; // sqrt((8*ln2)/(2*pi)) / kernel_width
+	float const reciprocal_of_denominator = 1.66510922231539551270632928979040 / kernel_width; // sqrt(log(16))/ kernel_width
+	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	std::unique_ptr<float[]> work_real_array(new float[num_data]);
 
 	size_t loop_max = num_data / 2;
@@ -42,7 +42,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	switch (kernel_type) {
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
 		for (size_t j = 0; j < loop_max; ++j) {
-			float value = (j - center) * sqrt_ln16 / kernel_width;
+			float value = (j - center) * reciprocal_of_denominator;
 			work_real_array[middle + 1 + j] = work_real_array[middle - j] =
 					height * exp(-(value * value));
 		}
