@@ -41,6 +41,7 @@ add_custom_target(logConfig
 )
 
 add_executable(testApplyCalibration      apply_calibration.cc)
+add_executable(testBaseline              baseline.cc)
 add_executable(testBitOperation          bit_operation.cc)
 add_executable(testBoolFilterCollection  bool_filter_collection.cc)
 add_executable(testConvolution           convolution.cc)
@@ -54,6 +55,7 @@ add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
 
 target_link_libraries (testApplyCalibration      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
+target_link_libraries (testBaseline              ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBitOperation          ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testBoolFilterCollection  ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testConvolution           ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
@@ -69,6 +71,7 @@ target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST
 add_dependencies(testInit logConfig)
 
 add_custom_target(testApplyCalibrationRun      COMMAND ./testApplyCalibration      DEPENDS testApplyCalibration)
+add_custom_target(testBaselineRun              COMMAND ./testBaseline              DEPENDS testBaseline)
 add_custom_target(testBitOperationRun          COMMAND ./testBitOperation          DEPENDS testBitOperation)
 add_custom_target(testBoolFilterCollectionRun  COMMAND ./testBoolFilterCollection  DEPENDS testBoolFilterCollection)
 add_custom_target(testConvolutionRun           COMMAND ./testConvolution           DEPENDS testConvolution)
@@ -96,11 +99,12 @@ add_custom_target(test
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
 	COMMAND ./testLogicalOperation
+	COMMAND ./testNumericOperation
+	COMMAND ./testBaseline
 	COMMAND ./testGridding
 	COMMAND ./testInterpolation1D
 	COMMAND ./testInterpolationX
 	COMMAND ./testInterpolationY
 	COMMAND ./testApplyCalibration
-	COMMAND ./testNumericOperation
 	COMMAND ./testConvolution
 	)
