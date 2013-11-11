@@ -1,11 +1,16 @@
-#include <iostream>
 #include <cassert>
 #include <cstdlib>
 #include <climits>
+#include <iostream>
 
-#include "libsakura/sakura.h"
-#include "libsakura/optimized_implementation_factory.h"
 #include "libsakura/localdef.h"
+#include "libsakura/logger.h"
+#include "libsakura/optimized_implementation_factory.h"
+#include "libsakura/sakura.h"
+
+namespace {
+	auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
+}
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModelPolynomial)(
 		size_t num_each_basis, uint16_t order, double model[]) {
@@ -48,6 +53,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->GetBestFitBaseline(num_data, data, mask, num_model_bases, model, out);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -83,6 +91,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(
 		baselineop->DoSubtractBaseline(
 			num_data, data, mask, num_model_bases, model,
 			clipping_threshold_sigma, num_fitting_max, get_residual, out);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -113,6 +124,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 				num_data, data, mask, order,
 				clipping_threshold_sigma, num_fitting_max,
 				get_residual, out);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

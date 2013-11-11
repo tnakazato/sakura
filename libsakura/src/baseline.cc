@@ -37,7 +37,6 @@ inline void GetBaselineModelPolynomial(
 
 inline void DoGetBestFitBaseline(size_t num_data, size_t num_equations,
 		double const *model, double const *coeff, float *out) {
-
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
