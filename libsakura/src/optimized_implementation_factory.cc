@@ -18,7 +18,6 @@ using ::LIBSAKURA_PREFIX::BitOperation;
 using ::LIBSAKURA_PREFIX::BoolFilterCollection;
 using ::LIBSAKURA_PREFIX::Convolution;
 using ::LIBSAKURA_PREFIX::Interpolation;
-using ::LIBSAKURA_PREFIX::LogicalOperation;
 using ::LIBSAKURA_PREFIX::NumericOperation;
 using ::LIBSAKURA_PREFIX::Gridding;
 using ::LIBSAKURA_PREFIX::Statistics;
@@ -84,7 +83,6 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 ::LIBSAKURA_PREFIX::BoolFilterCollectionDefault<uint32_t> const bool_filter_collection_default_uint32;
 ::LIBSAKURA_PREFIX::ConvolutionDefault const convolution_default;
 ::LIBSAKURA_PREFIX::InterpolationDefault<double, float> const interpolation_default;
-::LIBSAKURA_PREFIX::LogicalOperationDefault const logical_operation_default;
 ::LIBSAKURA_PREFIX::NumericOperationDefault const numeric_operation_default;
 ::LIBSAKURA_PREFIX::GriddingDefault const gridding_default;
 ::LIBSAKURA_PREFIX::StatisticsDefault const statistics_default;
@@ -127,9 +125,6 @@ public:
 	virtual Interpolation<double, float> const *GetInterpolationImpl() const {
 		return &interpolation_default;
 	}
-	virtual LogicalOperation const *GetLogicalOperationImpl() const {
-		return &logical_operation_default;
-	}
 	virtual NumericOperation const *GetNumericOperationImpl() const {
 		return &numeric_operation_default;
 	}
@@ -149,7 +144,6 @@ public:
 ::LIBSAKURA_PREFIX::BoolFilterCollectionAfterSandyBridge<uint32_t> const bool_filter_collection_after_sandy_bridge_uint32;
 ::LIBSAKURA_PREFIX::ConvolutionAfterSandyBridge const convolution_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::InterpolationAfterSandyBridge<double, float> const interpolation_after_sandy_bridge;
-::LIBSAKURA_PREFIX::LogicalOperationAfterSandyBridge const logical_operation_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::GriddingAfterSandyBridge const gridding_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
@@ -193,9 +187,6 @@ public:
 	virtual Interpolation<double, float> const *GetInterpolationImpl() const {
 		return &interpolation_after_sandy_bridge;
 //		return &interpolation_default;
-	}
-	virtual LogicalOperation const *GetLogicalOperationImpl() const {
-		return &logical_operation_after_sandy_bridge;
 	}
 	virtual NumericOperation const *GetNumericOperationImpl() const {
 		return &numeric_operation_after_sandy_bridge;

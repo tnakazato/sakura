@@ -194,15 +194,6 @@ public:
 			YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const = 0;
 };
 
-class LogicalOperation {
-public:
-	virtual ~LogicalOperation() {
-	}
-
-	virtual void OperateLogicalAnd(size_t num_in, bool const in1[/*num_in*/],
-	bool const in2[/*num_in*/], bool out[/*num_in*/]) const = 0;
-};
-
 class NumericOperation {
 public:
 	virtual ~NumericOperation() {
@@ -263,7 +254,6 @@ public:
 	virtual Convolution const *GetConvolutionImpl() const = 0;
 	virtual Gridding const *GetGriddingImpl() const = 0;
 	virtual Interpolation<double, float> const *GetInterpolationImpl() const = 0;
-	virtual LogicalOperation const *GetLogicalOperationImpl() const = 0;
 	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
 protected:

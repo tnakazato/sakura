@@ -20,6 +20,23 @@ using ::Eigen::Aligned;
 
 namespace {
 
+inline void OperateLogicalAnd(size_t num_in, bool const *in1,
+		bool const *in2, bool *out) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	STATIC_ASSERT(sizeof(*in1) == sizeof(uint8_t));
+	STATIC_ASSERT(sizeof(*in2) == sizeof(uint8_t));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
+
+	auto src1 = reinterpret_cast<uint8_t const *>(in1);
+	auto src2 = reinterpret_cast<uint8_t const *>(in2);
+	for (size_t i = 0; i < num_in; ++i) {
+		out[i] = static_cast<bool>(src1[i] & src2[i]);
+	}
+}
+
 inline void OperateFloatSubtraction(size_t num_in, float const *in1,
 		float const *in2, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
@@ -134,7 +151,7 @@ inline void DoSubtractBaseline(
 					sizeof(*residual_data) * num_data, &residual_data));
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
-		LIBSAKURA_SYMBOL(OperateLogicalAnd)(num_data, mask, clip_mask, composite_mask);
+		OperateLogicalAnd(num_data, mask, clip_mask, composite_mask);
 		GetBestFitBaseline(num_data, data, composite_mask, num_model_bases, model, best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 

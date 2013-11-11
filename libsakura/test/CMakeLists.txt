@@ -50,7 +50,6 @@ add_executable(testInit                  init.cc)
 add_executable(testInterpolation1D       interpolation_1d.cc)
 add_executable(testInterpolationX        interpolation_x.cc)
 add_executable(testInterpolationY        interpolation_y.cc)
-add_executable(testLogicalOperation      logical_operation.cc)
 add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
 
@@ -64,7 +63,6 @@ target_link_libraries (testInit                  ${GTEST_MAIN_LIBRARIES} ${GTEST
 target_link_libraries (testInterpolation1D       ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testInterpolationX        ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testInterpolationY        ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
-target_link_libraries (testLogicalOperation      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testNumericOperation      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura -lpthread)
 
@@ -80,7 +78,6 @@ add_custom_target(testInitRun                  COMMAND ./testInit               
 add_custom_target(testInterpolation1DRun       COMMAND ./testInterpolation1D       DEPENDS testInterpolation1D)
 add_custom_target(testInterpolationXRun        COMMAND ./testInterpolationX        DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRun        COMMAND ./testInterpolationY        DEPENDS testInterpolationY)
-add_custom_target(testLogicalOperationRun      COMMAND ./testLogicalOperation      DEPENDS testLogicalOperation)
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
@@ -98,7 +95,6 @@ add_custom_target(test
 	COMMAND ./testStatistics
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
-	COMMAND ./testLogicalOperation
 	COMMAND ./testNumericOperation
 	COMMAND ./testBaseline
 	COMMAND ./testGridding

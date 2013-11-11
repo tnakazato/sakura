@@ -50,14 +50,13 @@ else(SCALAR)
 	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge -DARCH_AFTER_SANDY_BRIDGE=1")
 endif(SCALAR)
 
-set(MULTI_SOURCE bit_operation.cc  bool_filter_collection.cc convolution.cc
-	gridding.cc interpolation.cc logical_operation.cc numeric_operation.cc
-	baseline.cc statistics.cc apply_calibration.cc)
+set(MULTI_SOURCE apply_calibration.cc baseline.cc bit_operation.cc 
+	bool_filter_collection.cc convolution.cc gridding.cc interpolation.cc 
+	numeric_operation.cc statistics.cc)
 set(UNI_SOURCE gen_util.cc concurrent.cc optimized_implementation_factory.cc
-    gen_apply_calibration.cc
-	gen_bit_operation.cc gen_bool_filter_collection.cc gen_convolution.cc
-	gen_gridding.cc gen_interpolation.cc gen_logical_operation.cc
-	gen_numeric_operation.cc gen_baseline.cc gen_statistics.cc)
+    gen_apply_calibration.cc gen_bit_operation.cc gen_bool_filter_collection.cc 
+    gen_convolution.cc gen_gridding.cc gen_interpolation.cc 
+    gen_numeric_operation.cc gen_baseline.cc gen_statistics.cc)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"

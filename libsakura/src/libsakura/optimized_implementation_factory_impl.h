@@ -335,26 +335,6 @@ public:
 			YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const;
 };
 
-class LogicalOperationDefault: public LogicalOperation {
-public:
-	virtual ~LogicalOperationDefault() {
-	}
-	virtual void OperateLogicalAnd(size_t num_in,
-	bool const in1[/*num_in*/],
-	bool const in2[/*num_in*/],
-	bool out[/*num_in*/]) const;
-};
-
-class LogicalOperationAfterSandyBridge: public LogicalOperation {
-public:
-	virtual ~LogicalOperationAfterSandyBridge() {
-	}
-	virtual void OperateLogicalAnd(size_t num_in,
-	bool const in1[/*num_in*/],
-	bool const in2[/*num_in*/],
-	bool out[/*num_in*/]) const;
-};
-
 class NumericOperationDefault: public NumericOperation {
 public:
 	virtual ~NumericOperationDefault() {
