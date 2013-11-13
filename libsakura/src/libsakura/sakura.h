@@ -1691,75 +1691,125 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		 size_t num_equations, double const lsq_matrix0[/*num_equations*num_equations*/],
 		 double const lsq_vector0[/*num_equations*/], double out[/*num_equations*/]);
 
+ /**
+  * @~japanese
+  * @brief ベースラインの関数形を格納する列挙型。
+  * @~english
+  * @brief Enumerations to define baseline type.
+  */
+ typedef enum {
+ 	/**
+ 	 * @~japanese
+ 	 * @brief 羃多項式
+ 	 * @~english
+ 	 * @brief Polynomial
+ 	 */LIBSAKURA_SYMBOL(BaselineType_kPolynomial), /**
+ 	 * @~japanese
+ 	 * @brief チェビシェフ多項式
+ 	 * @~english
+ 	 * @brief Chebyshev Polynomial
+ 	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev), /**
+ 	 * @~japanese
+ 	 * @brief 三次自然スプライン
+ 	 * @~english
+ 	 * @brief Cubic Spline
+ 	 */LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), /**
+ 	 * @~japanese
+ 	 * @brief 三角多項式
+ 	 * @~english
+ 	 * @brief Sinusoids
+ 	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid)
+ }LIBSAKURA_SYMBOL(BaselineType);
+
+ /**
+  * @~japanese
+  * @brief ベースラインフィッティングに用いるモデルデータと関連する情報を格納する構造体。
+  * @~english
+  * @brief Context struct for baseline fitting
+  */
+typedef struct {
+	LIBSAKURA_SYMBOL(BaselineType) baseline_type; /**< ベースラインの関数形 */
+	size_t num_bases; /**< ベースラインモデルを構成する基底関数の数 */
+	size_t num_basis_data; /**< 個々の基底関数を表現するデータ点の数 */
+	void *basis_data_storage; /**< 基底関数データを格納する領域を確保した時に返されるアドレス。アラインされておらず、解放時に用いる目的のみのために保持される。 */
+	double *basis_data; /**< 基底関数データを指すポインタ。アドレスはアラインされている。要素数は @a num_bases * @a num_basis_data 。i 番目の基底関数の j 番目の点のデータは [ @a num_basis_data * i + j ] 番目の要素に格納される。 */
+}LIBSAKURA_SYMBOL(BaselineContext);
+
 /**
  * @~japanese
- * @brief 多項式モデルデータを生成する。
+ * @brief ベースラインモデル情報を格納するオブジェクトを生成する。
  * @details
- * @param[in] num_each_basis モデルを構成する各基底関数の離散的データ点の要素数。
- * @param[in] order 多項式モデルの次数。ゼロまたは正値でなければならない。
- * @param[out] out モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_each_basis * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは(( @a order + 1) * @a num_each_basis )でなければならない。
+ * @param[in] baseline_type ベースラインを表現する関数形。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。
+ * @param[in] num_data フィットするデータ点の数。
+ * @param[out] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
- * @brief Compute a set of polynomial model data.
+ * @brief Create an object containing baseline model data.
  * @details
- * @param[in] num_each_basis the number of data elements for each model basis.
- * @param[in] order order of polynomial model. must be zero or positive.
- * @param[out] model a 1D array containing values of all its basis functions
- * concatenated. loop for data index must be inside of that for basis index,
- * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_each_basis * @a (m-1) + @a (n-1) ]. its length must be equal
- * to (( @a order + 1) * @a num_each_basis ).
+ * @param[in] baseline_type type of basis function.
+ * @param[in] order parameter for the specified function. actually it is the order (for polynomial and chebyshev), or number of subsections (for cubic spline), or maximum wave number (for sinusoid). must be positive for cubic spline, while other models accept zero value.
+ * @param[in] num_data number of data to fit baseline.
+ * @param[out] context an object containing baseline model data.
+ * @return status code.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
+ 		LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+ 		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context);
+
+/**
+ * @~japanese
+ * @brief ベースラインモデル情報を格納するオブジェクトを破棄する。
+ * @details
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @return 終了ステータス。
+ * @~english
+ * @brief Destroy an object containing baseline model data.
+ * @details
+ * @param[in] context an object containing baseline model data.
+ * @return status code.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
+		 LIBSAKURA_SYMBOL(BaselineContext) *context);
+
+/**
+ * @~japanese
+ * @brief 与えられたデータに対して、同じく与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求める。
+ * @details
+ * @param[in] num_data 配列 @a data 、 @a mask 、 @a out 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
+ * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[out] out 出力される配列。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
+ * @n must-be-aligned
+ * @return 終了ステータス。
+ * @~english
+ * @brief Compute the best-fit model by least-square fitting.
+ * @details
+ * @param[in] num_data the number of elements in the arrays @a data,
+ * @a mask, @a out , and also the number of elements in each model data
+ * (i.e., discrete values of basis function) consisting the total model.
+ * @param[in] data the input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask the input mask data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] context an object containing baseline model data.
+ * @param[out] out the best-fit model with length of @a num_data . the
+ * pointer of @a out can be identical with that of @a data .
  * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBaselineModelPolynomial)(
-		 size_t num_each_basis, uint16_t order,
-		 double model[/*(order+1)*num_each_basis*/]);
-
- /**
-  * @~japanese
-  * @brief 与えられたデータに対して、同じく与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求める。
-  * @details
-  * @param[in] num_data 配列 @a data 、 @a mask 、 @a out 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
-  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
-  * @n must-be-aligned
-  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
-  * @n must-be-aligned
-  * @param[in] num_model_bases モデルを構成する基底関数の数。
-  * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
-  * @n must-be-aligned
-  * @param[out] out 出力される配列。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
-  * @n must-be-aligned
-  * @return 終了ステータス。
-  * @~english
-  * @brief Compute the best-fit model by least-square fitting.
-  * @details
-  * @param[in] num_data the number of elements in the arrays @a data,
-  * @a mask, @a out , and also the number of elements in each model data
-  * (i.e., discrete values of basis function) consisting the total model.
-  * @param[in] data the input data with length of @a num_data .
-  * @n must-be-aligned
-  * @param[in] mask the input mask data with length of @a num_data .
-  * @n must-be-aligned
-  * @param[in] num_model_bases number of model functions.
-  * @param[in] model a 1D array containing values of all its basis functions
-  * concatenated. loop for data index must be inside of that for basis index,
-  * i.e., the @a n -th data of the @a m -th model should be stored at
-  * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
-  * to ( @a num_model_bases * @a num_data ).
-  * @n must-be-aligned
-  * @param[out] out the best-fit model with length of @a num_data . the
-  * pointer of @a out can be identical with that of @a data .
-  * @n must-be-aligned
-  * @return status code.
-  * @~
-  * MT-safe
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
- 		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
- 		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
- 		 float out[/*num_data*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
+		 size_t num_data, float const data[/*num_data*/],
+		 bool const mask[/*num_data*/],
+		 LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		 float out[/*num_data*/]);
 
 /**
  * @~japanese
@@ -1770,11 +1820,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
- * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
- * @n must-be-aligned
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
- * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。ゼロまたは正値でなければならない。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
  * @n must-be-aligned
@@ -1788,21 +1836,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_model_bases number of basis functions consisting @a model.
- * @param[in] model a 1D array containing values of all its basis functions
- * concatenated. loop for data index must be inside of that for basis index,
- * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
- * to ( @a num_model_bases * @a num_data ).
- * @n must-be-aligned
+ * @param[in] context an object containing baseline model data.
  * @param[in] clipping_threshold_sigma the threshold of clipping in unit of
  * sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * Must be zero or positive. The default is 1 (i.e., baseline fitting done
- * just once and no clipping applied)
+ * The default is 1 (i.e., baseline fitting done just once and no
+ * clipping applied)
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out the output data with length of @a num_data . the pointer
@@ -1811,11 +1853,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DoSubtractBaseline)(size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual, float out[/*num_data*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
+		 size_t num_data, float const data[/*num_data*/],
+		 bool const mask[/*num_data*/],
+		 LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		 float clipping_threshold_sigma, uint16_t num_fitting_max,
+		 bool get_residual, float out[/*num_data*/]);
 
  /**
   * @~japanese
@@ -1826,9 +1869,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
   * @n must-be-aligned
   * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
   * @n must-be-aligned
-  * @param[in] order 多項式モデルの次数。ゼロまたは正値でなければならない。
+  * @param[in] order 多項式モデルの次数。
   * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
-  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。ゼロまたは正値でなければならない。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
   * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
   * @param[out] out 出力データ。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
   * @n must-be-aligned
@@ -1841,15 +1884,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
   * @n must-be-aligned
   * @param[in] mask the input mask data with length of @a num_data .
   * @n must-be-aligned
-  * @param[in] order order of polynomial model. must be zero or positive.
+  * @param[in] order order of polynomial model.
   * @param[in] clipping_threshold_sigma the threshold of clipping in unit
   * of sigma. must be positive.
   * @param[in] num_fitting_max the maximum of total number of times
   * baseline fitting is performed recursively. In case n is given, after
   * the first baseline fitting, subsequent clipping and baseline fitting
   * based on the updated mask are executed (n-1) times at maximum.
-  * Must be zero or positive. The default is 1 (i.e., baseline fitting done
-  * just once and no clipping applied)
+  * The default is 1 (i.e., baseline fitting done just once and no
+  * clipping applied)
   * @param[in] get_residual set the output to be (input - best-fit) if true,
   * or the best-fit value if false.
   * @param[out] out the output data with length of @a num_data . the

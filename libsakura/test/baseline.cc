@@ -99,24 +99,24 @@ protected:
 };
 
 /*
- * Test sakura_SolveSimultaneousEquationsByLU
+ * Test sakura_GetBaselineModelPolynomial
  * RESULT:
  * out = []
  */
 TEST_F(Baseline, GetBaselineModelPolynomial) {
-	size_t const num_chan(1000);
 	uint16_t const order(5);
-	SIMD_ALIGN double out[num_chan*(order+1)];
+	size_t const num_chan(1000);
+	double out[num_chan*(order+1)];
 
-	double start, end;
-	size_t const num_repeat = 20000;
 	LIBSAKURA_SYMBOL(Status) status;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_GetBaselineModelPolynomial(num_chan, order, out);
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	status = LIBSAKURA_SYMBOL(CreateBaselineContext)(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
+	for (size_t j = 0; j < num_chan*(order+1); ++j) {
+		out[j] = context->basis_data[j];
 	}
-	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec" << endl;
+	sakura_DestroyBaselineContext(context);
+
 	cout.precision(20);
 	cout << "-------------------------" << endl;
 	cout << "power0 : [" << out[0] << "], ..., [" << out[999] << "]" << endl;
@@ -140,7 +140,7 @@ TEST_F(Baseline, GetBestFitBaseline) {
 	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
 	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {true, true, true, false, true};
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN double model[num_model*ELEMENTSOF(in_data)] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	//SIMD_ALIGN double model[num_model*ELEMENTSOF(in_data)] = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
 	SIMD_ALIGN float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)] = {1.0, 3.0, 7.0, 13.0, 21.0};
 
@@ -149,8 +149,14 @@ TEST_F(Baseline, GetBestFitBaseline) {
 		PrintArray("in_mask", num_data, in_mask);
 	}
 
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+					LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
 	LIBSAKURA_SYMBOL(Status) status =
-			sakura_GetBestFitBaseline(num_data, in_data, in_mask, num_model, model, out);
+			//sakura_GetBestFitBaseline(num_data, in_data, in_mask, num_model, model, out);
+			LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context, out);
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
 
 	if (verbose) {
 		PrintArray("out   ", num_data, out);

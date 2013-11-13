@@ -37,48 +37,74 @@ class BaselineDefault: public Baseline {
 public:
 	virtual ~BaselineDefault() {
 	}
-	virtual void GetBaselineModelPolynomial(size_t num_each_basis,
-			uint16_t order, double model[/*(order+1)*num_each_basis*/]) const;
-	virtual void GetBestFitBaseline(size_t num_data,
-			float const data[/*num_data*/], bool const mask[/*num_data*/],
-			size_t num_model_bases,
-			double const model[/*num_model_bases*num_data*/],
+	virtual void CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
+			uint16_t const order,
+			size_t const num_data,
+			LIBSAKURA_SYMBOL(BaselineContext) **context) const;
+	virtual void DestroyBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineContext) *context) const;
+	virtual void GetBestFitBaseline(
+			size_t num_data,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/],
+			LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			float out[/*num_data*/]) const;
-	virtual void DoSubtractBaseline(size_t num_data,
+	virtual void SubtractBaseline(
+			size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_model_bases,
-			double const model[/*num_model_bases*num_data*/],
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
-	virtual void SubtractBaselinePolynomial(size_t num_data,
+			bool const mask[/*num_data*/],
+			LIBSAKURA_SYMBOL(BaselineContext) const *context,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
+	virtual void SubtractBaselinePolynomial(
+			size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], uint16_t order,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
+			bool const mask[/*num_data*/],
+			uint16_t order,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
 };
 
 class BaselineAfterSandyBridge: public Baseline {
 public:
 	virtual ~BaselineAfterSandyBridge() {
 	}
-	virtual void GetBaselineModelPolynomial(size_t num_each_basis,
-			uint16_t order, double model[/*(order+1)*num_each_basis*/]) const;
-	virtual void GetBestFitBaseline(size_t num_data,
-			float const data[/*num_data*/], bool const mask[/*num_data*/],
-			size_t num_model_bases,
-			double const model[/*num_model_bases*num_data*/],
+	virtual void CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
+			uint16_t const order,
+			size_t const num_data,
+			LIBSAKURA_SYMBOL(BaselineContext) **context) const;
+	virtual void DestroyBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineContext) *context) const;
+	virtual void GetBestFitBaseline(
+			size_t num_data,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/],
+			LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			float out[/*num_data*/]) const;
-	virtual void DoSubtractBaseline(size_t num_data,
+	virtual void SubtractBaseline(
+			size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_model_bases,
-			double const model[/*num_model_bases*num_data*/],
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
-	virtual void SubtractBaselinePolynomial(size_t num_data,
+			bool const mask[/*num_data*/],
+			LIBSAKURA_SYMBOL(BaselineContext) const *context,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
+	virtual void SubtractBaselinePolynomial(
+			size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], uint16_t order,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
-			bool get_residual, float out[/*num_data*/]) const;
+			bool const mask[/*num_data*/],
+			uint16_t order,
+			float clipping_threshold_sigma,
+			uint16_t num_fitting_max,
+			bool get_residual,
+			float out[/*num_data*/]) const;
 };
 
 template<typename DataType>

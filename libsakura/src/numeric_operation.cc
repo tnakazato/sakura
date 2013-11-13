@@ -83,10 +83,6 @@ inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 	}
 }
 
-/*
-inline void DoGetBestFitBaselineModel(size_t num_data, size_t num_equations,
-inline void GetBestFitBaselineModel(size_t num_data,
-*/
 } /* anonymous namespace */
 
 namespace LIBSAKURA_PREFIX {
