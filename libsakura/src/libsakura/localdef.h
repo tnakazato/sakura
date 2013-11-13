@@ -88,10 +88,11 @@ private:
 template<typename T>
 inline T AssumeAligned(T ptr) {
 	return reinterpret_cast<T>(__builtin_assume_aligned(ptr,
-			LIBSAKURA_ALIGNMENT));
+	LIBSAKURA_ALIGNMENT));
 }
 #else /* __GNUG__ */
-inline T AssumeAligned(T ptr) {
+template<typename T>
+inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr) {
 	return ptr;
 }
 #endif /* __GNUG__ */
