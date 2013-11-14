@@ -29,7 +29,7 @@ namespace {
 inline void DestroyFFTPlan(fftwf_plan *ptr) {
 	if (*ptr != nullptr) {
 		fftwf_destroy_plan(*ptr);
-		delete ptr;
+		LIBSAKURA_PREFIX::Memory::Free(ptr);
 	}
 }
 
@@ -171,20 +171,16 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	} else {
 		// not implemented yet
 	}
-
 }
 
 inline void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 		size_t num_data, float input_data[/*num_data*/],
 		bool const input_flag[/*num_data*/], float output_data[/*num_data*/]) {
-
 	for (size_t i = 0; i < num_data; ++i) {
 		(context)->real_array[i] = input_data[i];
 	}
-
 	if ((context)->plan_real_to_complex_float != nullptr)
 		fftwf_execute(*(context)->plan_real_to_complex_float);
-
 	float scale = 1.0 / num_data;
 	for (size_t i = 0; i < num_data / 2 + 1; ++i) {
 		(context)->multiplied_complex_data[i][0] =
@@ -200,10 +196,8 @@ inline void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 								* (context)->fft_applied_complex_input_data[i][0])
 						* scale;
 	}
-
 	if ((context)->plan_complex_to_real_float != nullptr)
 		fftwf_execute(*(context)->plan_complex_to_real_float);
-
 	for (size_t i = 0; i < num_data; ++i) {
 		output_data[i] = (context)->real_array[i];
 	}
