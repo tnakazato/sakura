@@ -99,9 +99,13 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 	if (vp == nullptr) {
 		return nullptr;
 	}
+
+	STATIC_ASSERT(sizeof(uint64_t) >= sizeof(void *));
+	STATIC_ASSERT(sizeof(uint64_t) >= sizeof(size_t));
+
 	uint64_t addr = (uint64_t) vp;
-	uint64_t new_addr = (addr + (LIBSAKURA_ALIGNMENT - 1))
-			& ~(LIBSAKURA_ALIGNMENT - 1);
+	uint64_t max_padding = LIBSAKURA_ALIGNMENT - 1u;
+	uint64_t new_addr = (addr + max_padding) & ~max_padding;
 	if (size_of_arena - (size_t) (new_addr - addr) < size_required) {
 		return nullptr;
 	}
