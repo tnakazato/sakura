@@ -103,13 +103,8 @@ void AnalyseArguments(int argc, char const* const argv[],
 						input_file->substr(0, input_file->length() - 1) :
 						*input_file) + "_out";
 	}
-	std::ostringstream oss;
-	oss << "Input parameter summary:" << std::endl << "\tinput-file=\""
-			<< *input_file << "\"" << std::endl << "\tcalsky-file=\""
-			<< *calsky_file << "\"" << std::endl << "\tcaltsys-file=\""
-			<< *caltsys_file << "\"" << std::endl << "\toutput-file=\""
-			<< *output_file << "\"" << std::endl;
-	LOG4CXX_INFO(logger, oss.str().c_str());
+	LOG4CXX_INFO(logger,
+			"Input parameter summary:\n" << "\tinput-file=\"" << *input_file << "\"\n" << "\tcalsky-file=\"" << *calsky_file << "\"\n" << "\tcaltsys-file=\"" << *caltsys_file << "\"\n" << "\toutput-file=\"" << *output_file << "\"");
 }
 
 void E2eReduce(int argc, char const* const argv[]) {
