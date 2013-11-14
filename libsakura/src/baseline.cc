@@ -9,6 +9,7 @@
 #include <libsakura/memory_manager.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/sakura.h>
+#include "baseline.h"
 
 namespace {
 
@@ -16,7 +17,7 @@ inline void SetBasisDataPolynomial(
 		LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 
-	for (size_t i = 0; i < context->num_basis_data; ++i) {
+	for (size_t i = 0; i < (context)->num_basis_data; ++i) {
 		double val = 1.0;
 		context->basis_data[i] = val;
 		for (size_t j = 1; j < context->num_bases; ++j) {

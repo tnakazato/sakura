@@ -1691,12 +1691,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		 size_t num_equations, double const lsq_matrix0[/*num_equations*num_equations*/],
 		 double const lsq_vector0[/*num_equations*/], double out[/*num_equations*/]);
 
- /**
-  * @~japanese
-  * @brief ベースラインの関数形を格納する列挙型。
-  * @~english
-  * @brief Enumerations to define baseline type.
-  */
+/**
+ * @~japanese
+ * @brief ベースラインの関数形を格納する列挙型。
+ * @~english
+ * @brief Enumerations to define baseline type.
+ */
  typedef enum {
  	/**
  	 * @~japanese
@@ -1721,19 +1721,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid)
  }LIBSAKURA_SYMBOL(BaselineType);
 
- /**
-  * @~japanese
-  * @brief ベースラインフィッティングに用いるモデルデータと関連する情報を格納する構造体。
-  * @~english
-  * @brief Context struct for baseline fitting
-  */
-typedef struct {
-	LIBSAKURA_SYMBOL(BaselineType) baseline_type; /**< ベースラインの関数形 */
-	size_t num_bases; /**< ベースラインモデルを構成する基底関数の数 */
-	size_t num_basis_data; /**< 個々の基底関数を表現するデータ点の数 */
-	void *basis_data_storage; /**< 基底関数データを格納する領域を確保した時に返されるアドレス。アラインされておらず、解放時に用いる目的のみのために保持される。 */
-	double *basis_data; /**< 基底関数データを指すポインタ。アドレスはアラインされている。要素数は @a num_bases * @a num_basis_data 。i 番目の基底関数の j 番目の点のデータは [ @a num_basis_data * i + j ] 番目の要素に格納される。 */
-}LIBSAKURA_SYMBOL(BaselineContext);
+/**
+ * @~japanese
+ * @brief ベースラインフィッティングに用いるモデルデータと関連する情報を格納する構造体。
+ * @~english
+ * @brief Context struct for baseline fitting
+ */
+struct LIBSAKURA_SYMBOL(BaselineContext);
 
 /**
  * @~japanese

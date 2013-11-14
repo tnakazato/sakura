@@ -13,6 +13,7 @@
 #include <libsakura/localdef.h>
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
+#include "baseline.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_DATA 5
