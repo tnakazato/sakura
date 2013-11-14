@@ -102,7 +102,8 @@
 			</target>
 			<target name="Run_Cmake" path="build" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 				<buildCommand>cmake</buildCommand>
-				<buildArguments>-D CMAKE_MODULE_PATH=${ProjDirPath}/cmake-modules chdir ${ProjDirPath}/build cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=${ProjDirPath}/build/installed -D BUILD_DOC:BOOL=ON ..</buildArguments>
+				<buildArguments>-D CMAKE_MODULE_PATH=${ProjDirPath}/cmake-modules chdir ${ProjDirPath}/build cmake -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX:PATH=${ProjDirPath}/build/installed -D BUILD_DOC:BOOL=ON ..</buildArguments>
+				<buildTarget/>
 				<stopOnError>true</stopOnError>
 				<useDefaultCommand>false</useDefaultCommand>
 				<runAllBuilders>true</runAllBuilders>
