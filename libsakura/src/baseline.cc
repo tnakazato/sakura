@@ -91,8 +91,9 @@ inline void CreateBaselineContext(
 		break;
 	}
 
-	*context = (LIBSAKURA_SYMBOL(BaselineContext) *)malloc(
-			sizeof(LIBSAKURA_SYMBOL(BaselineContext)));
+	*context = reinterpret_cast<LIBSAKURA_SYMBOL(BaselineContext) *>
+					(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(LIBSAKURA_SYMBOL(BaselineContext))));
 	if (*context == nullptr) {
 		throw std::bad_alloc();
 	}
@@ -121,7 +122,7 @@ inline void DestroyBaselineContext(
 		context->basis_data_storage = nullptr;
 	}
 
-	free(context);
+	LIBSAKURA_PREFIX::Memory::Free(context);
 	if (context != nullptr) {
 		context = nullptr;
 	}
