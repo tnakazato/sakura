@@ -1603,7 +1603,51 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 
 /**
  * @~japanese
- * @brief 最小二乗フィットを解くための連立方程式の係数値を計算する。
+ * @brief 最小二乗フィットを解くための連立方程式の係数値（左辺側の行列成分）を計算する。
+ * @details
+ * @param[in] num_mask 配列 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
+ * @param[in] num_model_bases モデルを構成する基底関数の数。
+ * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_mask * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_mask )でなければならない。
+ * @n must-be-aligned
+ * @param[out] out 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
+ * @n must-be-aligned
+ * @return 終了ステータス。
+ * @~english
+ * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
+ * @details
+ * @param[in] num_mask the number of elements in the arrays @a data
+ * and @a mask, and also the number of elements in each model data
+ * (i.e., discrete values of basis function) consisting the total model.
+ * @param[in] mask input mask data with length of @a num_mask .
+ * @n must-be-aligned
+ * @param[in] num_model_bases number of basis functions of @a model.
+ * @param[in] model a 1D array containing values of all its basis functions
+ * concatenated. loop for data index must be inside of that for basis index,
+ * i.e., the @a n -th data of the @a m -th model should be stored at
+ * @a model [ @a num_mask * @a (m-1) + @a (n-1) ]. its length must be equal
+ * to ( @a num_model_bases * @a num_mask ).
+ * @n must-be-aligned
+ * @param[out] out a 1D array containing the values of a matrix
+ * at the left side of simultaneous equations for least-square fitting.
+ * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
+ * loop for columns comes inside that for rows, i.e., the value at the
+ * @a m -th row and @a n -th column is stored at @a out [ @a
+ * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
+ * symmetric.
+ * @n must-be-aligned
+ * @return status code.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
+  		 size_t num_mask, bool const mask[/*num_mask*/],
+  		 size_t num_model_bases, double const model[/*num_model_bases*num_mask*/],
+  		 double out[/*num_model_bases*num_model_bases*/]);
+
+/**
+ * @~japanese
+ * @brief 最小二乗フィットを解くための連立方程式の係数値（右辺側のベクトル成分）を計算する。
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
@@ -1613,9 +1657,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_model_bases モデルを構成する基底関数の数。
  * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
- * @param[out] out_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
- * @n must-be-aligned
- * @param[out] out_vector 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
+ * @param[out] out 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
@@ -1635,26 +1677,17 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
  * to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
- * @param[out] out_matrix a 1D array containing the values of a matrix
- * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
- * loop for columns comes inside that for rows, i.e., the value at the
- * @a m -th row and @a n -th column is stored at @a out_matrix [ @a
- * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out_matrix is actually
- * symmetric.
- * @n must-be-aligned
- * @param[out] out_vector the right side value of the simultaneous
+ * @param[out] out the right side value of the simultaneous
  * equations for least-square fitting. its length should be equal to
  * @a num_model_bases.
  * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(
-		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
-		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
-		 double out_matrix[/*num_model_bases*num_model_bases*/],
-		 double out_vector[/*num_model_bases*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
+   		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+   		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
+   		 double out[/*num_model_bases*/]);
 
 /**
  * @~japanese

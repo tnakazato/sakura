@@ -195,10 +195,10 @@ inline void GetBestFitBaseline(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	LIBSAKURA_SYMBOL(GetCoefficientsForLeastSquareFitting)(
-			num_data, data, mask,
-			context->num_bases, context->basis_data,
-			lsq_matrix0, lsq_vector0);
+	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
+			num_data, mask, context->num_bases, context->basis_data, lsq_matrix0);
+	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
+			num_data, data, mask, context->num_bases, context->basis_data, lsq_vector0);
 
 	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
 			context->num_bases,

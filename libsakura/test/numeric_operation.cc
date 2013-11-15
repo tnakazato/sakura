@@ -19,7 +19,7 @@ using namespace std;
 class NumericOperation : public ::testing::Test {
 protected:
 
-	NumericOperation() : verbose(false)
+	NumericOperation() : verbose(true)//(false)
 	{}
 
 	virtual void SetUp() {
@@ -92,21 +92,62 @@ protected:
 };
 
 /*
- * Test sakura_GetCoefficientsForLeastSquareFitting
+ * Test sakura_GetMatrixCoefficientsForLeastSquareFitting
  * RESULT:
  * out = []
  */
-TEST_F(NumericOperation, GetCoefficientsForLeastSquareFitting) {
+TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
+	size_t const num_mask(NUM_DATA);
+	SIMD_ALIGN bool in_mask[num_mask] = {true, true, true, false, true};
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN double out_matrix[num_model*num_model];
+	SIMD_ALIGN double model[num_model*ELEMENTSOF(in_mask)]
+	                        = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
+	float answer_matrix[num_model*num_model]
+	                    = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
+
+	if (verbose) {
+		PrintArray("in_mask", num_mask, in_mask);
+		PrintArray("model  ", num_model, num_mask, model);
+	}
+
+	double start, end;
+	size_t const num_repeat = 20000;
+	start = sakura_GetCurrentTime();
+	LIBSAKURA_SYMBOL(Status) status;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_GetMatrixCoefficientsForLeastSquareFitting(
+				num_mask, in_mask, num_model, model, out_matrix);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
+
+	if (verbose) {
+		PrintArray("out   ", num_model, num_model, out_matrix);
+		PrintArray("answer", num_model, num_model, answer_matrix);
+	}
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0 ; i < num_model*num_model; ++i){
+		ASSERT_EQ(out_matrix[i], answer_matrix[i]);
+	}
+}
+
+/*
+ * Test sakura_GetVectorCoefficientsForLeastSquareFitting
+ * RESULT:
+ * out = []
+ */
+TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
 	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {true, true, true, false, true};
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN double out_vector[num_model];
-	SIMD_ALIGN double out_matrix[ELEMENTSOF(out_vector)*ELEMENTSOF(out_vector)];
 	SIMD_ALIGN double model[ELEMENTSOF(out_vector)*ELEMENTSOF(in_data)]
 	                        = {1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 1.0, 4.0, 9.0, 16.0};
-	float answer_matrix[ELEMENTSOF(out_vector)*ELEMENTSOF(out_vector)]
-	                    = {4.0, 7.0, 21.0, 7.0, 21.0, 73.0, 21.0, 73.0, 273.0};
 	float answer_vector[ELEMENTSOF(out_vector)]
 	                    = {32.0, 101.0, 367.0};
 
@@ -116,23 +157,25 @@ TEST_F(NumericOperation, GetCoefficientsForLeastSquareFitting) {
 		PrintArray("model  ", num_model, num_data, model);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status =
-			sakura_GetCoefficientsForLeastSquareFitting(
-					num_data, in_data, in_mask,
-					num_model, model, out_matrix, out_vector);
+	double start, end;
+	size_t const num_repeat = 20000;
+	start = sakura_GetCurrentTime();
+	LIBSAKURA_SYMBOL(Status) status;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		status = sakura_GetVectorCoefficientsForLeastSquareFitting(
+				num_data, in_data, in_mask, num_model, model, out_vector);
+	}
+	end = sakura_GetCurrentTime();
+	cout << "Elapse time of actual operation: " << end - start << " sec"
+			<< endl;
 
 	if (verbose) {
-		PrintArray("out_matrix   ", num_model, num_model, out_matrix);
-		PrintArray("out_vector   ", num_model, out_vector);
-		PrintArray("answer_matrix", num_model, num_model, answer_matrix);
-		PrintArray("answer_vector", num_model, answer_vector);
+		PrintArray("out   ", num_model, out_vector);
+		PrintArray("answer", num_model, answer_vector);
 	}
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0 ; i < num_model*num_model; ++i){
-		ASSERT_EQ(out_matrix[i], answer_matrix[i]);
-	}
 	for (size_t i = 0 ; i < num_model; ++i){
 		ASSERT_EQ(out_vector[i], answer_vector[i]);
 	}

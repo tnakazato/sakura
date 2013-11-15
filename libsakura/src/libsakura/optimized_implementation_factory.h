@@ -210,12 +210,19 @@ class NumericOperation {
 public:
 	virtual ~NumericOperation() {
 	}
-	virtual void GetCoefficientsForLeastSquareFitting(size_t num_data,
-			float const data[/*num_data*/], bool const mask[/*num_data*/],
+	virtual void GetMatrixCoefficientsForLeastSquareFitting(
+			size_t num_mask,
+			bool const mask[/*num_data*/],
 			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
-			double out_matrix[/*num_model_bases*num_model_bases*/],
-			double out_vector[/*num_model_bases*/]) const = 0;
+			double out[/*num_model_bases*num_model_bases*/]) const = 0;
+	virtual void GetVectorCoefficientsForLeastSquareFitting(
+			size_t num_data,
+			float const data[/*num_data*/],
+			bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases*num_data*/],
+			double out[/*num_model_bases*/]) const = 0;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,
 			double const lsq_matrix0[/*num_equations*num_equations*/],
 			double const lsq_vector0[/*num_equations*/],
