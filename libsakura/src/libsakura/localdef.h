@@ -47,14 +47,19 @@ class ScopeGuard {
 	typedef std::function<void(void) noexcept> Func;
 public:
 	ScopeGuard() = delete;
-	explicit ScopeGuard(Func clean_up, bool engaged = true) :
-	clean_up_(clean_up), engaged_(engaged), called_(false) {
+	explicit ScopeGuard(Func clean_up, bool enabled = true) :
+	clean_up_(clean_up), engaged_(enabled), called_(false) {
 	}
 	ScopeGuard(ScopeGuard const &other) = delete;
 	ScopeGuard &operator =(ScopeGuard const &other) = delete;
 	ScopeGuard const &operator =(ScopeGuard const &other) const = delete;
 	void *operator new(std::size_t) = delete;
 
+	/**
+	 * @~
+	 * @brief Calls @ clean_up parameter provided to the constructor
+	 * if the ScopeGuard is enabled.
+	 */
 	~ScopeGuard() {
 		if (engaged_) {
 			assert(! called_);
@@ -62,14 +67,34 @@ public:
 			// called_ = true;
 		}
 	}
+	/**
+	 * @~
+	 * @brief Disables the ScopeGuard
+	 *
+	 * Destructor won't call @a clean_up parameter provided to the constructor
+	 * if the ScopeGuard is disabled.
+	 */
 	void Disable() {
 		engaged_ = false;
 	}
+	/**
+	 * @~
+	 * @brief Enables the ScopeGuard if it has not cleaned up yet
+	 *
+	 * Don't call @a Enable() after explicit call of @ref CleanUpNow().
+	 */
 	void Enable() {
 		assert(! called_);
 		engaged_ = true;
 	}
 
+	/**
+	 * @~
+	 * @brief Calls @a clean_up parameter provided to the constructor
+	 * if the ScopeGuard is enabled
+	 *
+	 * Calling this method more than once is not allowed.
+	 */
 	void CleanUpNow() {
 		if (engaged_) {
 			assert(! called_);
