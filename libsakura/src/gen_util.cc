@@ -90,6 +90,7 @@ extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() {
 }
 
 extern "C" bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) {
+	STATIC_ASSERT(sizeof(uint64_t) >= sizeof(void *));
 	uint64_t addr = (uint64_t) ptr;
 	return addr % LIBSAKURA_ALIGNMENT == 0;
 }
