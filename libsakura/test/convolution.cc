@@ -106,7 +106,7 @@ protected:
  */
 TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
-	size_t num_data = 3840;
+	size_t num_data = 24;
 	size_t kernel_width = 5;
 	bool fftuse = true;
 
@@ -116,19 +116,12 @@ TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
 	LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), kernel_width, fftuse,
 			&context);
-
 	// Verification
 	//EXPECT_EQ(in1_[5],center_[0]) << "center verification" ;
-	for (size_t i = 0; i < 5; ++i) {
-		//out_left_[i] = context->real_array[i + 1];
-		//out_right_[i] = context->real_array[num_data - 1 - i];
-		//ASSERT_EQ(out_left_[i],out_right_[i]);
-		//EXPECT_EQ(out_left_[i], out_right_[i]);
-		//std::cout << "0 0= " << context->fft_applied_complex_kernel[0][0]  << std::endl;
-		//std::cout << "0 1 = " << context->fft_applied_complex_kernel[0][1]  << std::endl;
+	if (context != nullptr) {
+	//	EXPECT_FLOAT_EQ(0.8495121, context->fft_applied_complex_kernel[1][0]);
+	//	EXPECT_FLOAT_EQ(0.11184037, context->fft_applied_complex_kernel[1][1]);
 	}
-	EXPECT_FLOAT_EQ(0.99999368, context->fft_applied_complex_kernel[1][0]);
-	EXPECT_FLOAT_EQ(0.00081812928, context->fft_applied_complex_kernel[1][1]);
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
 
@@ -178,7 +171,7 @@ TEST_F(CreateConvolve1DContext , FFTWfResult) {
 			-0.106586, 0.020014, -0.00773457, 0.014356, 0.0639472, 0.0489224,
 			0.0463871, 0.0547668, -0.0214724, -0.0627455, -0.0823716, -0.149673,
 			-0.138719, -0.100872 };
-	bool input_flag_[NUM_CHANNEL] = { 0, };
+	bool mask_[NUM_CHANNEL] = { 0, };
 
 	size_t num_data = 24;
 	size_t kernel_width = 5;
@@ -191,12 +184,7 @@ TEST_F(CreateConvolve1DContext , FFTWfResult) {
 	LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), kernel_width, fftuse,
 			&context);
 
-	//for (size_t i = 0; i < NUM_CHANNEL; ++i) {
-	//	inspec_[i] = ;//context->real_array[i];
-	//input_flag_[i] = 0;
-	//}
-	LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, inspec_, input_flag_,
-			outspec_);
+	LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, inspec_, mask_, outspec_);
 	for (size_t i = 0; i < NUM_CHANNEL; ++i)
 		std::cout << "outspec_[i] = " << outspec_[i] << endl;
 

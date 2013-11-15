@@ -1559,7 +1559,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data データの要素数。
  * @param[in] input_data 入力データ
  * 配列の長さは @a num_data と同じ。
- * @param[in] input_flag 入力フラグ
+ * @param[in] mask 入力データに対するマスク情報
  * 配列の長さは @a num_data と同じ。
  * @param[out] output_data 出力データ
  * 配列の長さは @a num_data と同じ。
@@ -1577,7 +1577,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data number of data
  * @param[in] input_data input data
  * Its length equals to channel number
- * @param[in] input_flag
+ * @param[in] mask
  * Its length equals to channel number
  * @param[out] output_data
  * Its length equals to channel number
@@ -1585,7 +1585,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 		size_t num_data,
-		float input_data[/*num_data*/], bool const input_flag[/*num_data*/],
+		float input_data[/*num_data*/], bool const mask[/*num_data*/],
 		float output_data[/*num_data*/]);
 /**
  * @~japanese
