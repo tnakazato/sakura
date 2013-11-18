@@ -3,28 +3,28 @@
 
 #include <string>
 #include <fstream>
+#include <map>
+
 namespace {
+
+typedef std::map<std::string, std::string> OptionList;
 
 class ConfigFileReader {
 public:
-	static void read(std::string const input_file) {
-		std::fstream f(input_file, std::fstream::in);
+	static void read(std::string const input_file, OptionList *options) {
+		// clear options
+		options->clear();
+
+		std::ifstream f(input_file);
+		if (!f.is_open())
+			return;
+
 		std::string s, key, value;
 		while (!f.eof()) {
 			std::getline(f, s);
-			if (s.size() == 0 || s.at(s.find_first_not_of(" \t")) == '#') {
-				//std::cout << "empty string or comment: " << s << std::endl;
-			} else {
-				//std::cout << "s=\"" << s << "\"" << std::endl;
+			if (s.size() > 0 && s.at(s.find_first_not_of(" \t")) != '#') {
 				SplitKeyAndValue(s, key, value);
-				std::cout << "key=\"" << key << "\", value=\"" << value << "\""
-						<< std::endl;
-				std::vector<std::string> key_list;
-				int n = SplitKey(key, key_list);
-				for (int i = 0; i < n; ++i) {
-					std::cout << "key_list[" << i << "]=" << key_list[i]
-							<< std::endl;
-				}
+				(*options)[key] = value;
 			}
 		}
 	}

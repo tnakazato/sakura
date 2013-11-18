@@ -52,9 +52,15 @@ add_custom_target(logConfig
 	DEPENDS "${PROJECT_SOURCE_DIR}/config.log4j" "${PROJECT_SOURCE_DIR}/libsakura.log4j"
 )
 
+add_custom_target(e2eConfig
+	COMMAND cp -f "${PROJECT_SOURCE_DIR}/e2etest.config" "${PROJECT_BINARY_DIR}" 
+	DEPENDS "${PROJECT_SOURCE_DIR}/e2etest.config"
+)
+
 add_dependencies(main logConfig)
+add_dependencies(main e2eConfig)
 
 target_link_libraries (main -L${PROJECT_BINARY_DIR}/bin -Wl,-rpath,${PROJECT_BINARY_DIR}/bin -lpthread)
 
 #add_custom_target(run      COMMAND ./main      DEPENDS main)
-add_custom_target(run COMMAND ./main --input-file=/nfsstore1/sakura_e2e/data/uid___A002_X70402d_X8db.PM01.asap DEPENDS main)
+add_custom_target(run COMMAND ./main DEPENDS main)

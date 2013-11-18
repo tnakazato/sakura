@@ -5,11 +5,12 @@
  *      Author: kohji
  */
 
-#include <getopt.h>
 #include <iostream>
 #include <unistd.h>
 #include <vector>
 #include <memory>
+#include <string>
+#include <map>
 #include <log4cxx/logger.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <xdispatch/dispatch>
@@ -27,8 +28,31 @@
 
 #include <libsakura/sakura.h>
 
+#include "config_file_reader.h"
+
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
+
+inline void ExecuteCalibration() {
+
+}
+
+inline void ExecuteBaseline() {
+
+}
+
+inline void ExecuteSmoothing() {
+
+}
+
+inline void ExecuteNanOrInfFlag(size_t num_data, float const data[],
+		bool result[]) {
+	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
+}
+
+inline void ExecuteChannelFlagging() {
+
+}
 
 void JobFinished(int i) {
 	std::cout << "Job ";
@@ -48,76 +72,56 @@ void ParallelJob(int job_id, unsigned int num_v, float const *v) {
 	});
 }
 
-void PrintUsage(char const *name) {
-	std::ostringstream oss;
-	oss << name << "\t-i|--input-file input_filename\n"
-			<< "\t[-o|--output-file output_filename]\n"
-			<< "\t-s|--sky-file skycal_table\n"
-			<< "\t[-t|--tsys-file tsyscal_table]\n";
-	std::cout << oss.str();
-}
-
-void AnalyseArguments(int argc, char const* const argv[],
-		casa::String *input_file, casa::String *output_file,
-		casa::String *calsky_file, casa::String *caltsys_file) {
-	// argument analysis
-	int opt = -1;
-	int option_index = -1;
-	struct option long_options[] = { { "help", no_argument, nullptr, 'h' }, {
-			"input-file", required_argument, nullptr, 'i' }, { "calsky-file",
-	required_argument, nullptr, 's' }, { "caltsys-file",
-	required_argument, nullptr, 't' }, { "output-file",
-	required_argument, nullptr, 'o' }, { 0, 0, 0, 0 } };
-
-	while ((opt = getopt_long(argc, const_cast<char * const *>(argv),
-			"hi:s:t:o:", long_options, &option_index)) != -1) {
-		switch (opt) {
-		case 'i':
-			*input_file = optarg;
-			break;
-		case 's':
-			*calsky_file = optarg;
-			break;
-		case 't':
-			*caltsys_file = optarg;
-			break;
-		case 'o':
-			*output_file = optarg;
-			break;
-		case 'h':
-			PrintUsage(argv[0]);
-			return;
-		case '?':
-			std::cout << "Invalid options were specified" << std::endl;
-			PrintUsage(argv[0]);
-			exit(1);
-		}
+void ParseE2e(OptionList const options, casa::String *input_file,
+		casa::String *output_file) {
+	// parse input file name
+	auto entry = options.find("sakura_e2e.input");
+	if (entry != options.end()) {
+		*input_file = entry->second;
+	}
+	else {
+		input_file->clear();
 	}
 
-	if (output_file->length() == 0) {
-		if (input_file->rfind("/") == input_file->length() - 1) {
-			std::cout << "match" << std::endl;
-		}
+	// parse output file name
+	entry = options.find("sakura_e2e.output");
+	if (entry != options.end()) {
+		*output_file = entry->second;
+	}
+	else {
+		// by default, output file name is "input file name"_out
 		*output_file = (
 				(input_file->rfind("/") == input_file->length() - 1) ?
 						input_file->substr(0, input_file->length() - 1) :
 						*input_file) + "_out";
+
 	}
-	LOG4CXX_INFO(logger,
-			"Input parameter summary:\n" << "\tinput-file=\"" << *input_file << "\"\n" << "\tcalsky-file=\"" << *calsky_file << "\"\n" << "\tcaltsys-file=\"" << *caltsys_file << "\"\n" << "\toutput-file=\"" << *output_file << "\"");
 }
 
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "Enter: E2eReduce");
 	bool const serialize = false;
 
+	// Read configuration file
+	// Default configuration file is "e2etest.config"
+	std::string configuration_file = "e2etest.config";
+	if (argc > 1) {
+		configuration_file = argv[1];
+	}
+	OptionList options;
+	::ConfigFileReader::read(configuration_file, &options);
+	for (auto i = options.begin(); i != options.end(); ++i) {
+		std::cout << i->first << ":" << i->second << std::endl;
+	}
+
 	casa::String input_file;
 	casa::String output_file;
-	casa::String calsky_file;
-	casa::String caltsys_file;
+	ParseE2e(options, &input_file, &output_file);
+//	casa::String calsky_file;
+//	casa::String caltsys_file;
 	double start_time = sakura_GetCurrentTime();
-	AnalyseArguments(argc, argv, &input_file, &output_file, &calsky_file,
-			&caltsys_file);
+	LOG4CXX_INFO(logger, "input filename:" << input_file
+			<< "\n\toutput_filename:" << output_file << "\n");
 	if (input_file.length() > 0) {
 		casa::Table table(input_file, casa::Table::Old);
 
@@ -163,6 +167,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 
 void main_(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "start");
+
 	sakura_Status result;
 	xdispatch::main_queue().sync([&] {
 		result = sakura_Initialize(nullptr, nullptr);
