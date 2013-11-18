@@ -45,8 +45,15 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline LIBSAKURA_SYMBOL(Status) Create1DGaussianKernel(size_t num_data,
-LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+inline void ReplaceMaskByZero(size_t num_data,bool const *mask,float *input_data)
+{
+   for (size_t i = 0; i < num_data; ++i) {
+      if (!mask[i]) input_data[i] = 0.0;
+   }
+}
+
+
+inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 		float* output_data) {
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ kernel_width; // sqrt(log(16))/ kernel_width
@@ -60,26 +67,21 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		output_data[middle + 1 + j] = output_data[middle - j] = height
 				* exp(-(value * value));
 	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-inline LIBSAKURA_SYMBOL(Status) Create1DKernel(size_t num_data,
+inline void Create1DKernel(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		float* output_data) {
 	if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) { // Gaussian
-		Create1DGaussianKernel(num_data, kernel_type, kernel_width,
-				output_data);
-		return LIBSAKURA_SYMBOL(Status_kOK);
+		Create1DGaussianKernel(num_data, kernel_width, output_data);
+		return;
 	} else if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar)) { // BoxCar
-		return LIBSAKURA_SYMBOL(Status_kOK);
+		return;
 	} else if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning)) { // Hanning
-		return LIBSAKURA_SYMBOL(Status_kOK);
+		return;
 	} else if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)) { // Hamming
-		return LIBSAKURA_SYMBOL(Status_kOK);
-	} else {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return;
 	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 inline LIBSAKURA_SYMBOL(Status) CreateConvolve1DContext(size_t num_data,
@@ -161,27 +163,23 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (work_context == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		if (Create1DKernel(num_data, kernel_type, kernel_width,
-				real_array_kernel.get()) != LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-			fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
-			work_context->fft_applied_complex_kernel = // fft applied kernel
-					fft_applied_complex_kernel.release();
-		} else {
-			return LIBSAKURA_SYMBOL(Status_kNG);
-		}
+		Create1DKernel(num_data, kernel_type, kernel_width,
+				real_array_kernel.get());
+		fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
+		work_context->fft_applied_complex_kernel = // fft applied kernel
+				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array.release(); // real_array
 		work_context->fft_applied_complex_input_data = // fft_applied_complex_input_data
 				fft_applied_complex_input_data.release();
 		work_context->multiplied_complex_data =
 				multiplied_complex_data.release(); // multiplied_complex_data
-		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
+		work_context->plan_real_to_complex_float = plan_real_to_complex_float; // plan for real to complex
 		guard_for_fft_plan.Disable();
-		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
+		work_context->plan_complex_to_real_float = plan_complex_to_real_float; // plan for complex to real
 		guard_for_ifft_plan.Disable();
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
-		if (work_context != nullptr)
-			*context = work_context.release(); // context
+		*context = work_context.release(); // context
 	} else {
 		// not implemented yet
 	}
@@ -194,31 +192,36 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
 	if (context->num_data != num_data) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	} else if (context != nullptr) {
+	} else {
+		ReplaceMaskByZero(num_data,mask,input_data); // applied mask
 		for (size_t i = 0; i < num_data; ++i) {
 			context->real_array[i] = input_data[i];
 		}
-		if (context->plan_real_to_complex_float != nullptr)
-			fftwf_execute(context->plan_real_to_complex_float);
-		float scale = 1.0 / num_data;
-		for (size_t i = 0; i < num_data / 2 + 1; ++i) {
-			context->multiplied_complex_data[i][0] =
-					(context->fft_applied_complex_kernel[i][0]
-							* context->fft_applied_complex_input_data[i][0]
-							- context->fft_applied_complex_kernel[i][1]
-									* context->fft_applied_complex_input_data[i][1])
-							* scale;
-			context->multiplied_complex_data[i][1] =
-					(context->fft_applied_complex_kernel[i][0]
-							* context->fft_applied_complex_input_data[i][1]
-							+ context->fft_applied_complex_kernel[i][1]
-									* context->fft_applied_complex_input_data[i][0])
-							* scale;
-		}
-		if (context->plan_complex_to_real_float != nullptr)
-			fftwf_execute(context->plan_complex_to_real_float);
-		for (size_t i = 0; i < num_data; ++i) {
-			output_data[i] = context->real_array[i];
+		if (context->use_fft) {
+			if (context->plan_real_to_complex_float != nullptr)
+				fftwf_execute(context->plan_real_to_complex_float);
+			float scale = 1.0 / num_data;
+			for (size_t i = 0; i < num_data / 2 + 1; ++i) {
+				context->multiplied_complex_data[i][0] =
+						(context->fft_applied_complex_kernel[i][0]
+								* context->fft_applied_complex_input_data[i][0]
+								- context->fft_applied_complex_kernel[i][1]
+										* context->fft_applied_complex_input_data[i][1])
+								* scale;
+				context->multiplied_complex_data[i][1] =
+						(context->fft_applied_complex_kernel[i][0]
+								* context->fft_applied_complex_input_data[i][1]
+								+ context->fft_applied_complex_kernel[i][1]
+										* context->fft_applied_complex_input_data[i][0])
+								* scale;
+			}
+			if (context->plan_complex_to_real_float != nullptr)
+				fftwf_execute(context->plan_complex_to_real_float);
+			for (size_t i = 0; i < num_data; ++i) {
+				output_data[i] = context->real_array[i];
+			}
+		} else {
+			// not implemented yet
 		}
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
