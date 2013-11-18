@@ -27,6 +27,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 
 namespace {
 
+inline void DestroyFFTPlan(fftwf_plan ptr) {
+        if (ptr != nullptr) {
+                fftwf_destroy_plan(ptr);
+                ptr = nullptr;
+        }
+}
+
 inline void FreeFFTArray(fftwf_complex *ptr) {
 	if (ptr != nullptr) {
 		fftwf_free(ptr);
@@ -110,8 +117,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 				fft_applied_complex_kernel.get(),
 				FFTW_ESTIMATE);
 		ScopeGuard guard_for_fft_plan_kernel([&]() {
-			fftwf_destroy_plan(plan_real_to_complex_float_kernel);
-			plan_real_to_complex_float_kernel = nullptr;
+			DestroyFFTPlan(plan_real_to_complex_float_kernel);
 		});
 		if (plan_real_to_complex_float_kernel == nullptr) {
 			guard_for_fft_plan_kernel.Disable();
@@ -122,8 +128,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 				real_array.get(), fft_applied_complex_input_data.get(),
 				FFTW_ESTIMATE);
 		ScopeGuard guard_for_fft_plan([&]() {
-			fftwf_destroy_plan(plan_real_to_complex_float);
-			plan_real_to_complex_float = nullptr;
+			DestroyFFTPlan(plan_real_to_complex_float);
 		});
 		if (plan_real_to_complex_float == nullptr) {
 			guard_for_fft_plan.Disable();
@@ -133,10 +138,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(num_data,
 				multiplied_complex_data.get(), real_array.get(), FFTW_ESTIMATE);
 		ScopeGuard guard_for_ifft_plan([&]() {
-			fftwf_destroy_plan(plan_complex_to_real_float);
-			plan_complex_to_real_float = nullptr;
+			DestroyFFTPlan(plan_complex_to_real_float);
 		});
-		plan_complex_to_real_float = nullptr;
 		if (plan_complex_to_real_float == nullptr) {
 			guard_for_ifft_plan.Disable();
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
