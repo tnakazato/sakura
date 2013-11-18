@@ -115,7 +115,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_real_to_complex_float_kernel == nullptr) {
 			guard_for_fft_plan_kernel.Disable();
-			return LIBSAKURA_SYMBOL(Status_kNG);
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
 		// create context
 		*context =
@@ -136,7 +136,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_fft_plan.Disable();
 			LIBSAKURA_PREFIX::Memory::Free(*context);
 			*context = nullptr;
-			return LIBSAKURA_SYMBOL(Status_kNG);
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
 		// plan of ifft for output data
 		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(num_data,
@@ -149,7 +149,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_ifft_plan.Disable();
 			LIBSAKURA_PREFIX::Memory::Free(*context);
 			*context = nullptr;
-			return LIBSAKURA_SYMBOL(Status_kNG);
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
 		(*context)->plan_real_to_complex_float = plan_real_to_complex_float;
 		guard_for_fft_plan.Disable();
