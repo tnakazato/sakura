@@ -79,17 +79,17 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		break;
 	}
 	if (use_fft) {
-		// fft applied array for kernel
-		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
-		if (fft_applied_complex_kernel == nullptr) {
-			return LIBSAKURA_SYMBOL(Status_kNoMemory);
-		}
 		// real array for input and output data
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
 						sizeof(float) * num_data)), LIBSAKURA_PREFIX::Memory());
 		if (real_array == nullptr) {
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
+		}
+		// fft applied array for kernel
+		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
+				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+		if (fft_applied_complex_kernel == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
 		// fft applied array foe input_data
@@ -117,13 +117,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_fft_plan_kernel.Disable();
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		// create context
-		*context =
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext) *>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(Convolve1DContext))));
-		if (*context == nullptr) {
-			return LIBSAKURA_SYMBOL(Status_kNoMemory);
-		}
 		// plan of fft for input data
 		fftwf_plan plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_data,
 				real_array.get(), fft_applied_complex_input_data.get(),
@@ -134,8 +127,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_real_to_complex_float == nullptr) {
 			guard_for_fft_plan.Disable();
-			LIBSAKURA_PREFIX::Memory::Free(*context);
-			*context = nullptr;
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
 		// plan of ifft for output data
@@ -145,20 +136,26 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			fftwf_destroy_plan(plan_complex_to_real_float);
 			plan_complex_to_real_float = nullptr;
 		});
+		plan_complex_to_real_float = nullptr;
 		if (plan_complex_to_real_float == nullptr) {
 			guard_for_ifft_plan.Disable();
-			LIBSAKURA_PREFIX::Memory::Free(*context);
-			*context = nullptr;
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		(*context)->plan_real_to_complex_float = plan_real_to_complex_float;
-		guard_for_fft_plan.Disable();
-		(*context)->plan_complex_to_real_float = plan_complex_to_real_float;
-		guard_for_ifft_plan.Disable();
+		// create context
+		*context =
+				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext) *>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(LIBSAKURA_SYMBOL(Convolve1DContext))));
+		if (*context == nullptr) {
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
+		}
 		(*context)->real_array = real_array.release(); // real_array
 		(*context)->fft_applied_complex_input_data = // fft_applied_complex_input_data
 				fft_applied_complex_input_data.release();
 		(*context)->multiplied_complex_data = multiplied_complex_data.release(); // multiplied_complex_data
+		(*context)->plan_real_to_complex_float = plan_real_to_complex_float;
+		guard_for_fft_plan.Disable();
+		(*context)->plan_complex_to_real_float = plan_complex_to_real_float;
+		guard_for_ifft_plan.Disable();
 		fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
 		(*context)->fft_applied_complex_kernel = // fft applied kernel
 				fft_applied_complex_kernel.release();
