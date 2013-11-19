@@ -45,11 +45,13 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline void ApplyMaskToInputData(size_t num_data, bool const *mask,
-		float *input_data) {
+inline void ApplyMaskToInputData(size_t num_data, float const *input_data,
+		bool const *mask, float *output_data) {
 	for (size_t i = 0; i < num_data; ++i) {
 		if (!mask[i])
-			input_data[i] = 0.0;
+			output_data[i] = 0.0;
+		else
+			output_data[i] = input_data[i];
 	}
 }
 
@@ -183,7 +185,21 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->use_fft = use_fft; // use_fft flag
 		*context = work_context.release(); // context
 	} else {
-		// not implemented yet
+		Create1DKernel(num_data, kernel_type, kernel_width,
+				real_array_kernel.get());
+		// work_context
+		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
+		LIBSAKURA_PREFIX::Memory> work_context(
+				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(LIBSAKURA_SYMBOL(Convolve1DContext)))),
+				LIBSAKURA_PREFIX::Memory());
+		if (work_context == nullptr) {
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
+		}
+		work_context->real_array = real_array_kernel.release(); // real_array
+		work_context->num_data = num_data; // number of data
+		work_context->use_fft = use_fft; // use_fft flag
+		*context = work_context.release(); // context
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
@@ -195,10 +211,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 	if (context->num_data != num_data) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} else {
-		for (size_t i = 0; i < num_data; ++i) {
-			context->real_array[i] = input_data[i];
-			ApplyMaskToInputData(num_data, mask,context->real_array); // applied mask
-		}
+		ApplyMaskToInputData(num_data, input_data, mask, context->real_array); // applied mask
 		if (context->use_fft) { // with fft
 			if (context->plan_real_to_complex_float == nullptr)
 				return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -229,7 +242,10 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 				}
 			}
 		} else { // without fft
-			// not implemented yet
+			for (size_t i = 0; i < num_data; ++i) {
+				//output_data[i] = context->real_array[i] * input_data[i];
+				// not implemented yet
+			}
 		}
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
