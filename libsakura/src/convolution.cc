@@ -46,7 +46,7 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 }
 
 inline void ApplyMaskToInputData(size_t num_data, float const *input_data,
-		bool const *mask, float *output_data) {
+bool const *mask, float *output_data) {
 	for (size_t i = 0; i < num_data; ++i) {
 		if (!mask[i])
 			output_data[i] = 0.0;
@@ -184,7 +184,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
 		*context = work_context.release(); // context
-	} else {
+	} else { // without fft
 		Create1DKernel(num_data, kernel_type, kernel_width,
 				real_array_kernel.get());
 		// work_context
@@ -196,6 +196,11 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (work_context == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
+		work_context->multiplied_complex_data = nullptr;
+		work_context->fft_applied_complex_kernel = nullptr;
+		work_context->fft_applied_complex_input_data = nullptr;
+		work_context->plan_complex_to_real_float = nullptr;
+		work_context->plan_real_to_complex_float = nullptr;
 		work_context->real_array = real_array_kernel.release(); // real_array
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
@@ -211,8 +216,9 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 	if (context->num_data != num_data) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} else {
-		ApplyMaskToInputData(num_data, input_data, mask, context->real_array); // applied mask
 		if (context->use_fft) { // with fft
+			ApplyMaskToInputData(num_data, input_data, mask,
+					context->real_array); // applied mask
 			if (context->plan_real_to_complex_float == nullptr)
 				return LIBSAKURA_SYMBOL(Status_kUnknownError);
 			else {
@@ -242,9 +248,29 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 				}
 			}
 		} else { // without fft
-			for (size_t i = 0; i < num_data; ++i) {
-				//output_data[i] = context->real_array[i] * input_data[i];
-				// not implemented yet
+			// masked_inputdata
+			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_inputdata(
+					static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+							sizeof(float) * num_data)),
+					LIBSAKURA_PREFIX::Memory());
+			if (masked_inputdata == nullptr) {
+				return LIBSAKURA_SYMBOL(Status_kNoMemory);
+			}
+			ApplyMaskToInputData(num_data, input_data, mask,
+					masked_inputdata.get()); // applied mask
+			float scale = 1.0 / num_data;
+			for (size_t j = 0; j < num_data; ++j) {
+				float cent = masked_inputdata[j] * context->real_array[0];
+				float right = 0.0, left = 0.0;
+				for (size_t i = 0; i < num_data / 2 - 1; ++i) {
+					left += masked_inputdata[j + 1 + i]
+							* context->real_array[num_data - 1 - i];
+				}
+				for (size_t k = 0; k < j; ++k) {
+					right += masked_inputdata[j - 1 - k]
+							* context->real_array[k + 1];
+				}
+				output_data[j] = (left + cent + right);
 			}
 		}
 	}

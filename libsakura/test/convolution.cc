@@ -185,7 +185,7 @@ TEST_F(Convolve1DOperation , AppliedMask) {
 /*
  * Test result of FFTWf for gaussian kernel by sakura_CreateConvolve1DContext
  * RESULT:
- * smoothing is done
+ * convolution with fft is done
  */
 TEST_F(Convolve1DOperation , FFTWfResult) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
@@ -202,10 +202,37 @@ TEST_F(Convolve1DOperation , FFTWfResult) {
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
 	status = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
-	//for (size_t i = 0; i < NUM_IN; ++i) {
+	for (size_t i = 0; i < NUM_IN; ++i) {
 		//std::cout << "outspec_[" << i << "] = " << output_data_[i] << std::endl;
-		//std::cout << output_data[i] << std::endl;
-		EXPECT_FLOAT_EQ(0.828858, output_data[0]);
-	//}
+		std::cout << output_data[i] << std::endl;
+		//EXPECT_FLOAT_EQ(0.828858, output_data[0]);
+	}
+	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+}
+/*
+ * Test result of FFTWf for gaussian kernel by sakura_CreateConvolve1DContext
+ * RESULT:
+ * convolution without fft is done
+ */
+TEST_F(Convolve1DOperation , ConvolutionResult) {
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+	float const input_data[NUM_IN] = {1,1,1,1,-1,-1,-1,-1,-1,1,1,1,1,1,1,-1,-1,-1,-1,-1,1,1,1,1};
+	size_t const num_data(ELEMENTSOF(input_data));
+	bool mask[num_data] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	size_t const kernel_width(NUM_WIDTH);
+	bool fftuse = false;
+	float output_data[num_data] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+	//if (verbose)
+	//	PrintInputs();
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,kernel_type, kernel_width, fftuse, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
+	status = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
+	for (size_t i = 0; i < NUM_IN; ++i) {
+		//std::cout << "outspec_[" << i << "] = " << output_data_[i] << std::endl;
+		std::cout << output_data[i] << std::endl;
+		//EXPECT_FLOAT_EQ(0.828858, output_data[0]);
+	}
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
