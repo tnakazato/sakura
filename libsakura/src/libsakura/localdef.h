@@ -41,6 +41,8 @@
 #include <cstddef>
 #include <functional>
 
+#define SIMD_ALIGN alignas(LIBSAKURA_ALIGNMENT)
+
 namespace {
 
 class ScopeGuard {
@@ -110,12 +112,32 @@ private:
 };
 
 #ifdef __GNUG__
+/**
+ * @~japanese
+ * @brief @a ptr がsakuraのアライメント要件を満たしていると見なし、そのアドレスを返す。
+ *
+ * コンパイラがサポートしていれば、
+ * コンパイラは、戻り値がsakuraのアライメント要件を満たしているものとして最適化を行う。
+ *
+ * @param ptr sakuraのアライメント要件を満たしているアドレス
+ * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
+ */
 template<typename T>
 inline T AssumeAligned(T ptr) {
 	return reinterpret_cast<T>(__builtin_assume_aligned(ptr,
 	LIBSAKURA_ALIGNMENT));
 }
 #else /* __GNUG__ */
+/**
+ * @~japanese
+ * @brief @a ptr がsakuraのアライメント要件を満たしていると見なし、そのアドレスを返す。
+ *
+ * コンパイラがサポートしていれば、
+ * コンパイラは、戻り値がsakuraのアライメント要件を満たしているものとして最適化を行う。
+ *
+ * @param ptr sakuraのアライメント要件を満たしているアドレス
+ * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
+ */
 template<typename T>
 inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr) {
 	return ptr;

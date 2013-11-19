@@ -38,7 +38,7 @@ inline float AddHorizontally(__m256 packed_values) {
 
 inline int32_t AddHorizontally(__m256i packed_values) {
 	__m128i count2 = _mm256_castsi256_si128(
-			_mm256_permute2f128_si256(packed_values, packed_values, 1) );
+	_mm256_permute2f128_si256(packed_values, packed_values, 1));
 	__m128i count4w = _mm_hadd_epi32(_mm256_castsi256_si128(packed_values),
 			count2);
 	count4w = _mm_hadd_epi32(count4w, count4w);
@@ -59,9 +59,9 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
 	static_assert(sizeof(m256) == sizeof(__m256 ), "m256 and __m256 must have a same size.");
 	__m256 sum = _mm256_setzero_ps();
-	__m256 const zero = _mm256_setzero_ps();
-	__m128i const zero128i = _mm_setzero_si128();
-	__m256 const nan = _mm256_set1_ps(NAN);
+	__m256   const zero = _mm256_setzero_ps();
+	__m128i   const zero128i = _mm_setzero_si128();
+	__m256   const nan = _mm256_set1_ps(NAN);
 	__m128i count = _mm_setzero_si128();
 	__m256 min = nan;
 	__m256 max = nan;
@@ -69,7 +69,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	__m256i index_of_max = _mm256_set1_epi32(-1);
 	__m256 square_sum = zero;
 	float const *mask_ = reinterpret_cast<float const *>(is_valid);
-	__m256    const *data_ = reinterpret_cast<__m256    const *>(data);
+	__m256      const *data_ = reinterpret_cast<__m256      const *>(data);
 	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
 		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
 		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
@@ -92,17 +92,15 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		min = _mm256_min_ps(min, _mm256_blendv_ps(value, min, maskf));
 		max = _mm256_max_ps(max, _mm256_blendv_ps(value, max, maskf));
 		value = _mm256_blendv_ps(value, nan, maskf);
-		__m256i  const index = _mm256_set1_epi32(i);
+		__m256i    const index = _mm256_set1_epi32(i);
 		index_of_min = _mm256_castps_si256(
-				_mm256_blendv_ps(
-						_mm256_castsi256_ps(index),
+				_mm256_blendv_ps(_mm256_castsi256_ps(index),
 						_mm256_castsi256_ps(index_of_min),
-						_mm256_cmp_ps(min, value, _CMP_NEQ_UQ) ));
+						_mm256_cmp_ps(min, value, _CMP_NEQ_UQ)));
 		index_of_max = _mm256_castps_si256(
-				_mm256_blendv_ps(
-						_mm256_castsi256_ps(index),
+				_mm256_blendv_ps(_mm256_castsi256_ps(index),
 						_mm256_castsi256_ps(index_of_max),
-						_mm256_cmp_ps(max, value, _CMP_NEQ_UQ) ));
+						_mm256_cmp_ps(max, value, _CMP_NEQ_UQ)));
 	}
 	{
 
@@ -152,7 +150,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	float total = AddHorizontally(square_sum);
 	int start = (elements / (sizeof(__m256 ) / sizeof(float)))
 			* (sizeof(__m256 ) / sizeof(float));
-	assert(elements <= INT32_MAX );
+	assert(elements <= INT32_MAX);
 	for (int32_t i = start; i < static_cast<int32_t>(elements); ++i) {
 		if (is_valid[i]) {
 			++result.count;
@@ -192,81 +190,83 @@ using ::Eigen::Aligned;
 
 namespace {
 
-	template<typename Scalar, typename ScararOther, typename Index>
-	class StatVisitor {
-	public:
-		StatVisitor() :
-		count(0), sum(0), min(NAN), max(NAN), square_sum(0), index_of_min(-1), index_of_max(-1) {
-		}
-// called for the first coefficient
-		inline bool Init(const Scalar& value, const ScararOther &is_valid, int i,
-				int j) {
-			assert(j == 0); //  support only 1 dimension array
-			if (!is_valid) {
-				return false;
-			}
-			count = 1;
-			sum = value;
-			min = max = value;
-			square_sum = value * value;
-			index_of_min = index_of_max = i;
-			return true;
-		}
-// called for all other coefficients
-		inline void operator()(const Scalar& value, const ScararOther & is_valid,
-				int i, int j) {
-			assert(j == 0); //  support only 1 dimension array
-			if (is_valid) {
-				++count;
-				assert(!isnanf(value));
-				sum += value;
-				square_sum += value * value;
-				if (value < min) {
-					min = value;
-					index_of_min = i;
-				}
-				if (value > max) {
-					max = value;
-					index_of_max = i;
-				}
-			}
-		}
-
-		size_t count;
-		Scalar sum;
-		Scalar min, max;
-		Scalar square_sum;
-		int index_of_min, index_of_max;
-	};
-
-	template<typename DataType>
-	inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid, size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
-		LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
-
-		assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-		Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
-				elements);
-
-		assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
-		Map<Array<bool, Dynamic, 1>, Aligned> is_valid_(
-				const_cast<bool *>(is_valid), elements);
-
-		StatVisitor<DataType, bool,
-		typename Map<Array<DataType, Dynamic, 1> >::Index> visitor;
-		data_.VisitWith(is_valid_, visitor);
-		result.count = visitor.count;
-		result.sum = visitor.sum;
-		result.mean = result.sum / result.count;
-		result.min = visitor.min;
-		result.index_of_min = visitor.index_of_min;
-		result.max = visitor.max;
-		result.index_of_max = visitor.index_of_max;
-		float rms2 = visitor.square_sum / result.count;
-		result.rms = std::sqrt(rms2);
-		result.stddev = std::sqrt(rms2 - result.mean * result.mean);
-		//printf("%f\n", result.mean);
+template<typename Scalar, typename ScararOther, typename Index>
+class StatVisitor {
+public:
+	StatVisitor() :
+			count(0), sum(0), min(NAN), max(NAN), square_sum(0), index_of_min(
+					-1), index_of_max(-1) {
 	}
+// called for the first coefficient
+	inline bool Init(const Scalar& value, const ScararOther &is_valid, int i,
+			int j) {
+		assert(j == 0); //  support only 1 dimension array
+		if (!is_valid) {
+			return false;
+		}
+		count = 1;
+		sum = value;
+		min = max = value;
+		square_sum = value * value;
+		index_of_min = index_of_max = i;
+		return true;
+	}
+// called for all other coefficients
+	inline void operator()(const Scalar& value, const ScararOther & is_valid,
+			int i, int j) {
+		assert(j == 0); //  support only 1 dimension array
+		if (is_valid) {
+			++count;
+			assert(!isnanf(value));
+			sum += value;
+			square_sum += value * value;
+			if (value < min) {
+				min = value;
+				index_of_min = i;
+			}
+			if (value > max) {
+				max = value;
+				index_of_max = i;
+			}
+		}
+	}
+
+	size_t count;
+	Scalar sum;
+	Scalar min, max;
+	Scalar square_sum;
+	int index_of_min, index_of_max;
+};
+
+template<typename DataType>
+inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid,
+		size_t elements,
+		LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
+	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
+			elements);
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+	Map<Array<bool, Dynamic, 1>, Aligned> is_valid_(
+			const_cast<bool *>(is_valid), elements);
+
+	StatVisitor<DataType, bool,
+			typename Map<Array<DataType, Dynamic, 1>, Aligned>::Index> visitor;
+	data_.VisitWith(is_valid_, visitor);
+	result.count = visitor.count;
+	result.sum = visitor.sum;
+	result.mean = result.sum / result.count;
+	result.min = visitor.min;
+	result.index_of_min = visitor.index_of_min;
+	result.max = visitor.max;
+	result.index_of_max = visitor.index_of_max;
+	float rms2 = visitor.square_sum / result.count;
+	result.rms = std::sqrt(rms2);
+	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
+	//printf("%f\n", result.mean);
+}
 
 } /* anonymous namespace */
 
@@ -274,8 +274,8 @@ namespace {
 
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Statistics, ARCH_SUFFIX)::ComputeStatistics(float const data[],
-		bool const is_valid[], size_t elements,
-		LIBSAKURA_SYMBOL(StatisticsResult) *result) const {
+bool const is_valid[], size_t elements,
+LIBSAKURA_SYMBOL(StatisticsResult) *result) const {
 #if defined( __AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
 	ComputeStatisticsSimd(data, is_valid, elements, result);
 #else

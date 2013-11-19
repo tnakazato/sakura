@@ -95,13 +95,15 @@ template<typename WeightFunc>
 struct ScalarImpl {
 	static inline void ChannelLoop(float convolution_factor,
 			integer const num_channels,
-			uint32_t const channel_map[/*num_channels*/],
-			float const weight[/*num_channels*/],
+			uint32_t const channel_map_arg[/*num_channels*/],
+			float const weight_arg[/*num_channels*/],
 			bool const mask[/*num_channels*/],
 			float const value[/*num_channels*/], integer num_channels_for_grid,
 			double weight_sum[/*num_channels_for_grid*/],
 			float grid[/*num_channels_for_grid*/],
 			float weight_of_grid[/*num_channels_for_grid*/]) {
+		auto weight = AssumeAligned(weight_arg);
+		auto channel_map = AssumeAligned(channel_map_arg);
 		for (integer ichan = 0; ichan < num_channels; ++ichan) {
 			if (mask[ichan]) {
 				integer out_chan = channel_map[ichan];
@@ -217,19 +219,27 @@ template<typename Impl>
 inline void Grid(integer locx, integer locy, integer const doubled_support,
 		integer const sampling, size_t const integral_radius[],
 		integer const num_polarization,
-		uint32_t const polarization_map[/*num_polarization*/],
+		uint32_t const polarization_map_arg[/*num_polarization*/],
 		integer const num_channels,
 		uint32_t const channel_map[/*num_channels*/],
-		bool const mask/*[num_polarization]*/[/*num_channels*/],
-		float const value/*[num_polarization]*/[/*num_channels*/],
+		bool const mask_arg/*[num_polarization]*/[/*num_channels*/],
+		float const value_arg/*[num_polarization]*/[/*num_channels*/],
 		float const weight[/*num_channels*/],
 		integer num_convolution_table/*= sqrt(2)*support*sampling + extra*/,
-		float const convolution_table[/*num_convolution_table*/],
+		float const convolution_table_arg[/*num_convolution_table*/],
 		integer num_polarization_for_grid, integer num_channels_for_grid,
 		integer const width, integer const height,
-		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) {
+		double weight_sum_arg/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
+		float weight_of_grid_arg/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
+		float grid_arg/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) {
+
+	auto polarization_map = AssumeAligned(polarization_map_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto value = AssumeAligned(value_arg);
+	auto convolution_table = AssumeAligned(convolution_table_arg);
+	auto weight_sum = AssumeAligned(weight_sum_arg);
+	auto weight_of_grid = AssumeAligned(weight_of_grid_arg);
+	auto grid = AssumeAligned(grid_arg);
 
 	size_t ir = 0;
 
@@ -269,8 +279,9 @@ template<typename OptimizedImpl>
 inline void InternalGrid(size_t num_spectra, size_t start_spectrum,
 		size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
-		double const x[/*num_spectra*/], double const y[/*num_spectra*/],
-		integer support, integer sampling, integer num_polarization,
+		double const x_arg[/*num_spectra*/],
+		double const y_arg[/*num_spectra*/], integer support, integer sampling,
+		integer num_polarization,
 		uint32_t const polarization_map[/*num_polarization*/],
 		integer num_channels, uint32_t const channel_map[/*num_channels*/],
 		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
@@ -283,6 +294,9 @@ inline void InternalGrid(size_t num_spectra, size_t start_spectrum,
 		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) {
+
+	auto x = AssumeAligned(x_arg);
+	auto y = AssumeAligned(y_arg);
 	integer const doubled_support = 2 * support + 1;
 	for (size_t spectrum = start_spectrum; spectrum < end_spectrum;
 			++spectrum) {
@@ -291,6 +305,7 @@ inline void InternalGrid(size_t num_spectra, size_t start_spectrum,
 			integer point[2], offset[2];
 			GridPosition(xy, sampling, point, offset);
 			if (OnGrid(width, height, point, support)) {
+				SIMD_ALIGN
 				size_t integral_radius[Square(doubled_support)];
 				{
 					float initial_relative_location_x = -(support + 1)
@@ -329,7 +344,7 @@ inline void InternalGrid(size_t num_spectra, size_t start_spectrum,
 }
 
 inline bool IsVectorOperationApplicable(size_t num_channels,
-		uint32_t const channel_map[/*num_channels*/]) {
+		uint32_t const channel_map_arg[/*num_channels*/]) {
 #if !defined(__AVX__) || defined(ARCH_SCALAR)
 	return false;
 #endif
@@ -339,6 +354,8 @@ inline bool IsVectorOperationApplicable(size_t num_channels,
 			|| num_channels < elements_in_packet) {
 		return false;
 	}
+
+	auto channel_map = AssumeAligned(channel_map_arg);
 	for (size_t i = 0; i < num_channels; ++i) {
 		if (static_cast<size_t>(channel_map[i]) != i) {
 			return false;
