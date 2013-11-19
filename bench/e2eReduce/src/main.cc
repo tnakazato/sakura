@@ -55,13 +55,19 @@ inline void ExecuteChannelFlagging() {
 
 }
 
+inline void CalculateStatistics() {
+
+}
+
 void JobFinished(int i) {
 	std::cout << "Job ";
 	std::cout << i;
 	std::cout << " have done.\n";
 }
 
-void ParallelJob(int job_id, unsigned int num_v, float const *v) {
+void ParallelJob(int job_id, unsigned int num_v, float const v[],
+		uint8_t const f[], int edge_channels, bool do_clipping,
+		float clipping_threshold, std::vector<uint64_t> const line_mask) {
 	float sum = 0.0;
 	for (unsigned int i = 0; i < num_v; ++i)
 		sum += v[i];
@@ -89,34 +95,43 @@ void E2eReduce(int argc, char const* const argv[]) {
 	std::string input_file;
 	std::string output_file;
 	OptionParser::ParseE2e(options, &input_file, &output_file);
-	LOG4CXX_INFO(logger,
-			"input filename=" << input_file << "\n\toutput filename=" << output_file << "\n");
 
 	std::string sky_table;
 	std::string tsys_table;
 	OptionParser::ParseCalibration(options, &sky_table, &tsys_table);
-	LOG4CXX_INFO(logger,
-			"sky filename=" << sky_table << "\n\ttsys filename=" << tsys_table << "\n");
 
 	int edge_channels;
 	float clipping_threshold;
 	bool do_clipping;
 	OptionParser::ParseFlagging(options, &edge_channels, &clipping_threshold,
 			&do_clipping);
-	LOG4CXX_INFO(logger,
-			"edge channels=" << edge_channels << "\n\tclipping_threshold=" << clipping_threshold << "\n\tdo_clipping=" << do_clipping);
 
 	std::vector<uint64_t> line_mask;
 	OptionParser::ParseBaseline(options, &line_mask);
-	std::ostringstream oss;
-	char separator = '[';
-	oss << "line_mask=";
-	for (auto i = line_mask.begin() ; i != line_mask.end() ; ++i) {
-		oss << separator << *i;
-		separator = ',';
+
+	// config file summary
+	{
+		std::ostringstream oss;
+		oss << "config file (" << configuration_file << ") summary:\n";
+		oss << "\tinput filename=" << input_file << "\n\toutput filename="
+				<< output_file << "\n";
+		oss << "\tsky filename=" << sky_table << "\n\ttsys filename="
+				<< tsys_table << "\n";
+		oss << "\tedge channels=" << edge_channels << "\n\tclipping threshold=";
+		if (do_clipping) {
+			oss << clipping_threshold << "\n";
+		} else {
+			oss << "\n";
+		}
+		char separator = '[';
+		oss << "\tline mask=";
+		for (auto i = line_mask.begin(); i != line_mask.end(); ++i) {
+			oss << separator << *i;
+			separator = ',';
+		}
+		oss << "]";
+		LOG4CXX_INFO(logger, oss.str());
 	}
-	oss << "]";
-	LOG4CXX_INFO(logger, oss.str());
 
 	double start_time = sakura_GetCurrentTime();
 	if (input_file.size() > 0) {
@@ -132,24 +147,43 @@ void E2eReduce(int argc, char const* const argv[]) {
 		casa::Table selected_table = table(table.col("IFNO") == ifno);
 
 		casa::ROArrayColumn<float> spectra_column(selected_table, "SPECTRA");
+		casa::ROArrayColumn<unsigned char> flagtra_column(selected_table,
+				"FLAGTRA");
 		unsigned int num_chan = spectra_column(0).nelements();
 		auto group = xdispatch::group();
 		size_t alignment = sakura_GetAlignment();
-		size_t num_arena = num_chan + ((alignment - 1) / sizeof(float) + 1);
-		std::vector<std::unique_ptr<float[]> > pointer_holder(20);
+		size_t num_arena_for_float = num_chan
+				+ ((alignment - 1) / sizeof(float) + 1);
+		size_t num_arena_for_uchar = (num_chan + alignment - 1)
+				* sizeof(unsigned char);
+		std::vector<std::unique_ptr<float[]> > pointer_holder_float(20);
+		std::vector<std::unique_ptr<void> > pointer_holder_uchar(20);
 		for (int i = 0; i < 20; ++i) {
-			pointer_holder[i].reset(new float[num_arena]);
-			float *spectrum = sakura_AlignFloat(num_arena,
-					pointer_holder[i].get(), num_chan);
+			pointer_holder_float[i].reset(
+					reinterpret_cast<float *>(malloc(
+							num_arena_for_float * sizeof(float))));
+			float *spectrum = sakura_AlignFloat(num_arena_for_float,
+					pointer_holder_float[i].get(), num_chan);
+			pointer_holder_uchar[i].reset(malloc(num_arena_for_uchar));
+			unsigned char *flag =
+					reinterpret_cast<unsigned char*>(sakura_AlignAny(
+							num_arena_for_uchar, pointer_holder_uchar[i].get(),
+							num_chan * sizeof(unsigned char)));
 			casa::Vector<float> spectrum_vector(casa::IPosition(1, num_chan),
 					spectrum, casa::SHARE);
+			casa::Vector<unsigned char> flag_vector(
+					casa::IPosition(1, num_chan), flag, casa::SHARE);
 			spectra_column.get(i, spectrum_vector);
+			flagtra_column.get(i, flag_vector);
 			float const *v = spectrum;
+			uint8_t const *f = reinterpret_cast<uint8_t const *>(flag);
 			if (serialize) {
-				ParallelJob(i, num_chan, v);
+				ParallelJob(i, num_chan, v, f, edge_channels, do_clipping,
+						clipping_threshold, line_mask);
 			} else {
 				group.async([=] {
-					ParallelJob(i, num_chan, v);
+					ParallelJob(i, num_chan, v, f, edge_channels, do_clipping,
+							clipping_threshold, line_mask);
 				});
 			}
 		}
