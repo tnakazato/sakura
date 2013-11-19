@@ -9,6 +9,17 @@ namespace {
 
 typedef std::map<std::string, std::string> OptionList;
 
+std::string Trim(std::string const s) {
+  std::string trimmed_string = "";
+  std::string const trim_char_list(" \t\n");
+  std::string::size_type left = s.find_first_not_of(trim_char_list);
+  if (left != std::string::npos) {
+    std::string::size_type right = s.find_last_not_of(trim_char_list);
+    trimmed_string = s.substr(left,right-left+1);
+  }
+  return trimmed_string;
+}
+
 class ConfigFileReader {
 public:
 	static void read(std::string const input_file, OptionList *options) {
@@ -29,19 +40,9 @@ public:
 		}
 	}
 
-	static std::string Trim(std::string const s) {
-	  std::string trimmed_string = "";
-	  std::string const trim_char_list(" \t\n");
-	  std::string::size_type left = s.find_first_not_of(trim_char_list);
-	  if (left != std::string::npos) {
-	    std::string::size_type right = s.find_last_not_of(trim_char_list);
-	    trimmed_string = s.substr(left,right-left+1);
-	  }
-	  return trimmed_string;
-	}
-
 	static void SplitKeyAndValue(std::string const &s, std::string &key, std::string &value) {
 	  std::string::size_type pos = s.find("=");
+	  // TODO: support inline comment
 	  if (pos == std::string::npos) {
 	    key = "";
 	    value = "";

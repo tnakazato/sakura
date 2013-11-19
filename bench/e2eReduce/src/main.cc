@@ -29,6 +29,7 @@
 #include <libsakura/sakura.h>
 
 #include "config_file_reader.h"
+#include "option_parser.h"
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
@@ -72,32 +73,6 @@ void ParallelJob(int job_id, unsigned int num_v, float const *v) {
 	});
 }
 
-void ParseE2e(OptionList const options, casa::String *input_file,
-		casa::String *output_file) {
-	// parse input file name
-	auto entry = options.find("sakura_e2e.input");
-	if (entry != options.end()) {
-		*input_file = entry->second;
-	}
-	else {
-		input_file->clear();
-	}
-
-	// parse output file name
-	entry = options.find("sakura_e2e.output");
-	if (entry != options.end()) {
-		*output_file = entry->second;
-	}
-	else {
-		// by default, output file name is "input file name"_out
-		*output_file = (
-				(input_file->rfind("/") == input_file->length() - 1) ?
-						input_file->substr(0, input_file->length() - 1) :
-						*input_file) + "_out";
-
-	}
-}
-
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "Enter: E2eReduce");
 	bool const serialize = false;
@@ -110,20 +85,42 @@ void E2eReduce(int argc, char const* const argv[]) {
 	}
 	OptionList options;
 	::ConfigFileReader::read(configuration_file, &options);
-	for (auto i = options.begin(); i != options.end(); ++i) {
-		std::cout << i->first << ":" << i->second << std::endl;
-	}
 
-	casa::String input_file;
-	casa::String output_file;
-	ParseE2e(options, &input_file, &output_file);
-//	casa::String calsky_file;
-//	casa::String caltsys_file;
+	std::string input_file;
+	std::string output_file;
+	OptionParser::ParseE2e(options, &input_file, &output_file);
+	LOG4CXX_INFO(logger,
+			"input filename=" << input_file << "\n\toutput filename=" << output_file << "\n");
+
+	std::string sky_table;
+	std::string tsys_table;
+	OptionParser::ParseCalibration(options, &sky_table, &tsys_table);
+	LOG4CXX_INFO(logger,
+			"sky filename=" << sky_table << "\n\ttsys filename=" << tsys_table << "\n");
+
+	int edge_channels;
+	float clipping_threshold;
+	bool do_clipping;
+	OptionParser::ParseFlagging(options, &edge_channels, &clipping_threshold,
+			&do_clipping);
+	LOG4CXX_INFO(logger,
+			"edge channels=" << edge_channels << "\n\tclipping_threshold=" << clipping_threshold << "\n\tdo_clipping=" << do_clipping);
+
+	std::vector<uint64_t> line_mask;
+	OptionParser::ParseBaseline(options, &line_mask);
+	std::ostringstream oss;
+	char separator = '[';
+	oss << "line_mask=";
+	for (auto i = line_mask.begin() ; i != line_mask.end() ; ++i) {
+		oss << separator << *i;
+		separator = ',';
+	}
+	oss << "]";
+	LOG4CXX_INFO(logger, oss.str());
+
 	double start_time = sakura_GetCurrentTime();
-	LOG4CXX_INFO(logger, "input filename:" << input_file
-			<< "\n\toutput_filename:" << output_file << "\n");
-	if (input_file.length() > 0) {
-		casa::Table table(input_file, casa::Table::Old);
+	if (input_file.size() > 0) {
+		casa::Table table(casa::String(input_file), casa::Table::Old);
 
 		casa::ROScalarColumn<unsigned int> ifno_column(table, "IFNO");
 		unsigned int ifno = ifno_column(0);
