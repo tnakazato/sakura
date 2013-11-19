@@ -45,7 +45,7 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline void ReplaceMaskByZero(size_t num_data, bool const *mask,
+inline void ApplyMaskToInputData(size_t num_data, bool const *mask,
 		float *input_data) {
 	for (size_t i = 0; i < num_data; ++i) {
 		if (!mask[i])
@@ -197,9 +197,9 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 	} else {
 		for (size_t i = 0; i < num_data; ++i) {
 			context->real_array[i] = input_data[i];
-			ReplaceMaskByZero(num_data, mask,context->real_array); // applied mask
+			ApplyMaskToInputData(num_data, mask,context->real_array); // applied mask
 		}
-		if (context->use_fft) {
+		if (context->use_fft) { // with fft
 			if (context->plan_real_to_complex_float == nullptr)
 				return LIBSAKURA_SYMBOL(Status_kUnknownError);
 			else {
@@ -228,7 +228,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 					output_data[i] = context->real_array[i];
 				}
 			}
-		} else {
+		} else { // without fft
 			// not implemented yet
 		}
 	}
