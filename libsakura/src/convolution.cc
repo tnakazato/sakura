@@ -45,13 +45,13 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline void ReplaceMaskByZero(size_t num_data,bool const *mask,float *input_data)
-{
-   for (size_t i = 0; i < num_data; ++i) {
-      if (!mask[i]) input_data[i] = 0.0;
-   }
+inline void ReplaceMaskByZero(size_t num_data, bool const *mask,
+		float *input_data) {
+	for (size_t i = 0; i < num_data; ++i) {
+		if (!mask[i])
+			input_data[i] = 0.0;
+	}
 }
-
 
 inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 		float* output_data) {
@@ -154,6 +154,11 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_ifft_plan.Disable();
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
+		Create1DKernel(num_data, kernel_type, kernel_width,
+				real_array_kernel.get());
+		fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
+		real_array_kernel.release();
+		guard_for_fft_plan_kernel.CleanUpNow();
 		// work_context
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
@@ -163,9 +168,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (work_context == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		Create1DKernel(num_data, kernel_type, kernel_width,
-				real_array_kernel.get());
-		fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
 		work_context->fft_applied_complex_kernel = // fft applied kernel
 				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array.release(); // real_array
@@ -188,37 +190,43 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 
 inline LIBSAKURA_SYMBOL(Status) Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
-		float input_data[/*num_data*/],
+		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
 	if (context->num_data != num_data) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} else {
-		ReplaceMaskByZero(num_data,mask,input_data); // applied mask
 		for (size_t i = 0; i < num_data; ++i) {
 			context->real_array[i] = input_data[i];
+			ReplaceMaskByZero(num_data, mask,context->real_array); // applied mask
 		}
 		if (context->use_fft) {
-			if (context->plan_real_to_complex_float != nullptr)
+			if (context->plan_real_to_complex_float == nullptr)
+				return LIBSAKURA_SYMBOL(Status_kUnknownError);
+			else {
 				fftwf_execute(context->plan_real_to_complex_float);
-			float scale = 1.0 / num_data;
-			for (size_t i = 0; i < num_data / 2 + 1; ++i) {
-				context->multiplied_complex_data[i][0] =
-						(context->fft_applied_complex_kernel[i][0]
-								* context->fft_applied_complex_input_data[i][0]
-								- context->fft_applied_complex_kernel[i][1]
-										* context->fft_applied_complex_input_data[i][1])
-								* scale;
-				context->multiplied_complex_data[i][1] =
-						(context->fft_applied_complex_kernel[i][0]
-								* context->fft_applied_complex_input_data[i][1]
-								+ context->fft_applied_complex_kernel[i][1]
-										* context->fft_applied_complex_input_data[i][0])
-								* scale;
+				float scale = 1.0 / num_data;
+				for (size_t i = 0; i < num_data / 2 + 1; ++i) {
+					context->multiplied_complex_data[i][0] =
+							(context->fft_applied_complex_kernel[i][0]
+									* context->fft_applied_complex_input_data[i][0]
+									- context->fft_applied_complex_kernel[i][1]
+											* context->fft_applied_complex_input_data[i][1])
+									* scale;
+					context->multiplied_complex_data[i][1] =
+							(context->fft_applied_complex_kernel[i][0]
+									* context->fft_applied_complex_input_data[i][1]
+									+ context->fft_applied_complex_kernel[i][1]
+											* context->fft_applied_complex_input_data[i][0])
+									* scale;
+				}
 			}
-			if (context->plan_complex_to_real_float != nullptr)
+			if (context->plan_complex_to_real_float == nullptr)
+				return LIBSAKURA_SYMBOL(Status_kUnknownError);
+			else {
 				fftwf_execute(context->plan_complex_to_real_float);
-			for (size_t i = 0; i < num_data; ++i) {
-				output_data[i] = context->real_array[i];
+				for (size_t i = 0; i < num_data; ++i) {
+					output_data[i] = context->real_array[i];
+				}
 			}
 		} else {
 			// not implemented yet
@@ -263,7 +271,7 @@ void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
-		float input_data[/*num_data*/],
+		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) const {
 	::Convolve1D(context, num_data, input_data, mask, output_data);
 

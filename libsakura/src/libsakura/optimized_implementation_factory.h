@@ -139,7 +139,7 @@ public:
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const = 0;
 	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
 			size_t num_data,
-			float input_data[/*num_data*/],
+			float const input_data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			float output_data[/*num_data*/]) const = 0;
 	virtual void DestroyConvolve1DContext(

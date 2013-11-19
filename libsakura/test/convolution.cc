@@ -38,42 +38,27 @@ using namespace std;
  *         -0.908632 ,0.882368,-0.853519 ,0.82239 ,-0.789304 ,0.754592 ,-0.71859 ]
  *
  */
-class CreateConvolve1DContext: public ::testing::Test {
+class Convolve1DOperation: public ::testing::Test {
 protected:
 
-	CreateConvolve1DContext() :
+	Convolve1DOperation() :
 			verbose(true) {
 	}
-
 	virtual void SetUp() {
 		in1_[0] = 0.000141569;
-		in1_[1] = 0.00226511;
-		in1_[2] = 0.0195716;
-		in1_[3] = 0.0913234;
-		in1_[4] = 0.230121;
-		in1_[5] = 0.313146; // center
-		in1_[6] = 0.230121;
-		in1_[7] = 0.0913234;
-		in1_[8] = 0.0195716;
-		in1_[9] = 0.00226511;
-		in1_[10] = 0.000141569;
-
 		// Initialize sakura
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 				nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
-
 	virtual void TearDown() {
 		// Clean-up sakura
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
-
 	void PrintInputs() {
 		PrintArray("in1", NUM_IN, in1_);
 		PrintArray("in2", NUM_IN, in2_);
 	}
-
 	void PrintArray(char const *name, size_t num_in, float *in) {
 		cout << name << " = [";
 		for (size_t i = 0; i < num_in - 1; i++)
@@ -81,19 +66,17 @@ protected:
 		cout << in[num_in - 1];
 		cout << " ]" << endl;
 	}
-
 	float in1_[NUM_IN];
 	float in2_[NUM_IN];
 	bool verbose;
-
 };
 
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContext
  * RESULT:
- * if num_data = 0, CreateConvolve1DContext will return Status_kInvalidArgument)
+ * if num_data = 0, Convolve1DOperation will return Status_kInvalidArgument)
  */
-TEST_F(CreateConvolve1DContext ,CreateContextWithInvalidNumData ) {
+TEST_F(Convolve1DOperation ,InvalidNumData ) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	size_t const num_data(0);
 	size_t const kernel_width(NUM_WIDTH);
@@ -107,7 +90,7 @@ TEST_F(CreateConvolve1DContext ,CreateContextWithInvalidNumData ) {
  * RESULT:
  * if  kernel_width = 0, CreateConvolve1DContext will return Status_kInvalidArgument)
  */
-TEST_F(CreateConvolve1DContext ,CreateContextWithInvalidKernelWidth ) {
+TEST_F(Convolve1DOperation ,InvalidKernelWidth ) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	size_t const num_data(NUM_IN);
 	size_t const kernel_width(0);
@@ -121,7 +104,7 @@ TEST_F(CreateConvolve1DContext ,CreateContextWithInvalidKernelWidth ) {
  * RESULT:
  * gaussian kernel is symmetric
  */
-TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
+TEST_F(Convolve1DOperation , GaussianKernelShape) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 
 	size_t const num_data(NUM_IN);
@@ -149,7 +132,7 @@ TEST_F(CreateConvolve1DContext , GaussianKernelShape) {
  * imaginary part is zero,
  * real part is plus and minus value
  */
-TEST_F(CreateConvolve1DContext , FFTappliedKernelValue) {
+TEST_F(Convolve1DOperation , FFTappliedKernelValue) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 
 	size_t const num_data(NUM_IN);
@@ -179,8 +162,9 @@ TEST_F(CreateConvolve1DContext , FFTappliedKernelValue) {
  * RESULT:
  * mask will be applied and then first/last 4 data of inputdata will be put 0
  */
-TEST_F(CreateConvolve1DContext , AppliedMask) {
+TEST_F(Convolve1DOperation , AppliedMask) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+	//float input_data_[NUM_IN] = { -0.0834709};
 	float input_data_[NUM_IN] = { -0.0834709, -0.11101, -0.0766486, 0.0074527,
 			0.10254, 0.137752, 0.100273, 0.0281713, -0.101949, -0.2157,
 			-0.106586, 0.020014, -0.00773457, 0.014356, 0.0639472, 0.0489224,
@@ -188,6 +172,7 @@ TEST_F(CreateConvolve1DContext , AppliedMask) {
 			-0.138719, -0.100872 };
 
 	size_t const num_data(NUM_IN);
+	//bool mask_[num_data] = {0};
 	bool mask_[num_data] = {0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0};
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
@@ -210,15 +195,16 @@ TEST_F(CreateConvolve1DContext , AppliedMask) {
  * RESULT:
  * smoothing is done
  */
-TEST_F(CreateConvolve1DContext , FFTWfResult) {
+TEST_F(Convolve1DOperation , FFTWfResult) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
-
+	//float input_data_[NUM_IN] = { -0.0834709};
 	float input_data_[NUM_IN] = { -0.0834709, -0.11101, -0.0766486, 0.0074527,
 			0.10254, 0.137752, 0.100273, 0.0281713, -0.101949, -0.2157,
 			-0.106586, 0.020014, -0.00773457, 0.014356, 0.0639472, 0.0489224,
 			0.0463871, 0.0547668, -0.0214724, -0.0627455, -0.0823716, -0.149673,
 			-0.138719, -0.100872 };
 	size_t const num_data(NUM_IN);
+	//bool mask_[num_data] = {1};
 	bool mask_[num_data] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
