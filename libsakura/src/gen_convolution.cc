@@ -26,7 +26,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		LOG4CXX_ERROR(logger, "ERROR: Invalid Kernel Tyep\n");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if (kernel_width <= 0) {
+	if (kernel_width < 1) {
 		LOG4CXX_ERROR(logger, "ERROR: kernel_width must be > 0\n");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
