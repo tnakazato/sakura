@@ -92,7 +92,7 @@ protected:
  * RESULT:
  * if  kernel_width = 0, CreateConvolve1DContext will return Status_kInvalidArgument)
  */
-TEST_F(Convolve1DOperation ,InvalidKernelWidth ) {
+/*TEST_F(Convolve1DOperation ,InvalidKernelWidth ) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	size_t const num_data(NUM_IN);
 	size_t const kernel_width(0);
@@ -101,13 +101,13 @@ TEST_F(Convolve1DOperation ,InvalidKernelWidth ) {
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 			num_data,kernel_type , kernel_width, fftuse, &context));
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-}
+}*/
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContext
  * RESULT:
  * if  LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = UnknownType, CreateConvolve1DContext will return Status_kInvalidArgument)
  */
-TEST_F(Convolve1DOperation ,InvalidKernelType ) {
+/*TEST_F(Convolve1DOperation ,InvalidKernelType ) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	size_t const num_data(NUM_IN);
 	size_t const kernel_width(NUM_WIDTH);
@@ -116,7 +116,7 @@ TEST_F(Convolve1DOperation ,InvalidKernelType ) {
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 			num_data,kernel_type, kernel_width, fftuse, &context));
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-}
+}*/
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContext
  * RESULT:
