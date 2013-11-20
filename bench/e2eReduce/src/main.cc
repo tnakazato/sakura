@@ -98,6 +98,12 @@ casa::Table GetSelectedTable(std::string table_name, unsigned int ifno) {
 	return tableCommand(taql);
 }
 
+template<class T>
+void GetCell(T *array, size_t row_index, casa::ROArrayColumn<T> const column, casa::IPosition const cell_shape) {
+	casa::Array<T> casa_array(cell_shape, array, casa::SHARE);
+	column.get(row_index, casa_array);
+}
+
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "Enter: E2eReduce");
 	bool const serialize = false;
@@ -158,6 +164,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 	if (input_file.size() > 0) {
 		std::vector<std::unique_ptr<void, Deleter> > pointer_holder(128);
 		size_t holder_index = 0;
+		void *p;
 
 		casa::Table table = GetSelectedTable(input_file, ifno);
 
@@ -166,7 +173,17 @@ void E2eReduce(int argc, char const* const argv[]) {
 		unsigned int num_chan = spectra_column(0).nelements();
 
 		// sky table
-		//casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
+//		casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
+//		size_t num_arena_for_float_sky = (num_chan * sky_table.nrow() + alignment - 1) * sizeof(float);
+//		size_t num_arena_for_double_sky = (sky_table.nrow() + alignment - 1) * sizeof(double);
+//		void *p = malloc(num_arena_for_float_sky);
+//		float *sky_spectra = reinterpret_cast<float *>(sakura_AlignAny(num_arenam_for_float_sky, p, num_chan * sky_table.nrow() * sizeof(float)));
+//		pointer_holder[holder_index++].reset(p);
+//		p = malloc(num_arena_for_double_sky);
+//		double *sky_time = reinterpret_cast<double *>(sakura_AlignAny(num_arena_for_double_sky, p, sky_table.nrow() * sizeof(double)));
+//		casa::ROArrayColumn<float> sky_spectra_column(sky_table, "SPECTRA");
+//		casa::ROArrayColumn<double> time_column(sky_table, "TIME");
+
 
 		// tsys table
 		//casa::Table tsys_table = GetSelectedTable(tsys_table_name, ifno);
@@ -178,7 +195,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 				* sizeof(unsigned char);
 		for (int i = 0; i < 20; ++i) {
 			// allocate and align
-			void *p = malloc(num_arena_for_float * sizeof(float));
+			p = malloc(num_arena_for_float);
 			float *spectrum = reinterpret_cast<float *>(sakura_AlignAny(
 					num_arena_for_float, p, num_chan * sizeof(float)));
 			pointer_holder[holder_index++].reset(p);
@@ -190,12 +207,8 @@ void E2eReduce(int argc, char const* const argv[]) {
 			pointer_holder[holder_index++].reset(p);
 
 			// get data from the table
-			casa::Vector<float> spectrum_vector(casa::IPosition(1, num_chan),
-					spectrum, casa::SHARE);
-			casa::Vector<unsigned char> flag_vector(
-					casa::IPosition(1, num_chan), flag, casa::SHARE);
-			spectra_column.get(i, spectrum_vector);
-			flagtra_column.get(i, flag_vector);
+			GetCell(spectrum, i, spectra_column, casa::IPosition(1, num_chan));
+			GetCell(flag, i, flagtra_column, casa::IPosition(1, num_chan));
 
 			// commit job
 			float const *v = spectrum;
