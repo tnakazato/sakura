@@ -111,10 +111,20 @@ template<typename DataType>
 inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
 	DataType const zero(static_cast<DataType>(0));
+	auto adata = AssumeAligned(data);
+	auto aresult = AssumeAligned(result);
 	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] - threshold) > zero;
+		aresult[i] = (adata[i] - threshold) > zero;
 	}
 }
+//template<typename DataType>
+//inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
+//		DataType threshold, bool *result) {
+//	DataType const zero(static_cast<DataType>(0));
+//	for (size_t i = 0; i < num_data; ++i) {
+//		result[i] = (data[i] - threshold) > zero;
+//	}
+//}
 
 template<typename DataType>
 inline void SetTrueGreaterThanOrEquals(size_t num_data, DataType const *data,
