@@ -220,7 +220,7 @@ TEST_F(Convolve1DOperation , ConvolutionResult) {
 	size_t const num_data(ELEMENTSOF(input_data));
 	bool mask[num_data] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	size_t const kernel_width(NUM_WIDTH);
-	bool fftuse = false;
+	bool fftuse = true;//false;
 	float output_data[num_data] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
 	//if (verbose)
