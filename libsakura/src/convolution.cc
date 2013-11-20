@@ -229,7 +229,7 @@ inline LIBSAKURA_SYMBOL(Status) Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
-	if (context->num_data != num_data) {
+	if (context == nullptr || context->num_data != num_data) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} else {
 		if (context->use_fft) { // with fft

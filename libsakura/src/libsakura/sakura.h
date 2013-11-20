@@ -1531,8 +1531,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * を返す。内部で利用するメモリの確保に失敗した場合は、
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * が返された場合、
- * 考えられる原因は以下の二つである。
+ * が返された場合、考えられる原因は以下の二つである。
  *     - @a num_data が正しくない
  *     - @a kernel_type が正しくない
  *     - @a kernel_width が正しくない
@@ -1556,7 +1555,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
  * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM.
- * @param[in] use_fft if use fft then true, if not, false.
+ * @param[in] use_fft true means use fft, false means don't use fft.
  * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
@@ -1568,10 +1567,24 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @brief コンボリューションを行う。
  * @details 入力データに対するコンボリューションを行う。
  * FFTを使用する場合：
- * 入力データに対しFFTを行った複素数配列と、事前に作った複素数のFFT済みカーネルとを
- * 掛け合せ一つの複素数配列を得る。それをIFFTし、実数配列である出力データを得る。
+ * 実数の入力データに対しFFTを行ってできた複素数配列と、事前に作った実数のカーネル配列に対しFFTを行って
+ * できた複素数配列とを掛け合せ一つの複素数配列を得る。それをIFFTし、実数配列である出力データを得る。
  * FFTを使用しない場合：
- * FFTを使用せず、実数配列のまま入力データとカーネルとでコンボリューションを行う。
+ * FFTを使用せず、実数の入力データと実数のカーネルとでコンボリューションを行う。
+ * @n
+ * 戻り値は終了ステータスである。正常終了の場合、
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
+ * を返す。
+ * 引数に不正がある場合には
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * を返す。内部で利用するメモリの確保に失敗した場合は、
+ * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * が返された場合、考えられる原因は以下の二つである。
+ *     - @a num_data が正しくない
+ * また、原因不明のエラーでは
+ * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * を返す。
  * @param[in,out] context コンテキスト
  * @param[in] num_data データの要素数。
  * @param[in] input_data 入力データ
@@ -1589,7 +1602,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * with input data by complex-complex multiplication and then
  * the multiplied complex array will be created. Finally IFFT will be
  * applied against it and then real output data will be created.
- * @param[in,out] context context which contain @a fftwf_plan, @a fftw_complex
+ * @param[in,out] context context
  * and @a num_data, @a input_real_array
  * @param[in] num_data number of data
  * @param[in] input_data input data
