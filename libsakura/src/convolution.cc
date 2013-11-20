@@ -229,53 +229,48 @@ inline LIBSAKURA_SYMBOL(Status) Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
-	if (context == nullptr || context->num_data != num_data) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	} else {
-		if (context->use_fft) { // with fft
-			ApplyMaskToInputData(num_data, input_data, mask,
-					context->real_array); // context->real_array is mask applied array
-			if (context->plan_real_to_complex_float == nullptr)
-				return LIBSAKURA_SYMBOL(Status_kUnknownError);
-			else {
-				fftwf_execute(context->plan_real_to_complex_float);
-				float scale = 1.0 / num_data;
-				for (size_t i = 0; i < num_data / 2 + 1; ++i) {
-					context->multiplied_complex_data[i][0] =
-							(context->fft_applied_complex_kernel[i][0]
-									* context->fft_applied_complex_input_data[i][0]
-									- context->fft_applied_complex_kernel[i][1]
-											* context->fft_applied_complex_input_data[i][1])
-									* scale;
-					context->multiplied_complex_data[i][1] =
-							(context->fft_applied_complex_kernel[i][0]
-									* context->fft_applied_complex_input_data[i][1]
-									+ context->fft_applied_complex_kernel[i][1]
-											* context->fft_applied_complex_input_data[i][0])
-									* scale;
-				}
+	if (context->use_fft) { // with fft
+		ApplyMaskToInputData(num_data, input_data, mask, context->real_array); // context->real_array is mask applied array
+		if (context->plan_real_to_complex_float == nullptr)
+			return LIBSAKURA_SYMBOL(Status_kUnknownError);
+		else {
+			fftwf_execute(context->plan_real_to_complex_float);
+			float scale = 1.0 / num_data;
+			for (size_t i = 0; i < num_data / 2 + 1; ++i) {
+				context->multiplied_complex_data[i][0] =
+						(context->fft_applied_complex_kernel[i][0]
+								* context->fft_applied_complex_input_data[i][0]
+								- context->fft_applied_complex_kernel[i][1]
+										* context->fft_applied_complex_input_data[i][1])
+								* scale;
+				context->multiplied_complex_data[i][1] =
+						(context->fft_applied_complex_kernel[i][0]
+								* context->fft_applied_complex_input_data[i][1]
+								+ context->fft_applied_complex_kernel[i][1]
+										* context->fft_applied_complex_input_data[i][0])
+								* scale;
 			}
-			if (context->plan_complex_to_real_float == nullptr)
-				return LIBSAKURA_SYMBOL(Status_kUnknownError);
-			else {
-				fftwf_execute(context->plan_complex_to_real_float);
-				for (size_t i = 0; i < num_data; ++i) {
-					output_data[i] = context->real_array[i];
-				}
-			}
-		} else { // without fft
-			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
-					static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-							sizeof(float) * num_data)),
-					LIBSAKURA_PREFIX::Memory());
-			if (masked_input_data == nullptr) {
-				return LIBSAKURA_SYMBOL(Status_kNoMemory);
-			}
-			ApplyMaskToInputData(num_data, input_data, mask,
-					masked_input_data.get()); // masked_input_data is mask applied array
-			CalculateConvolutionWithoutFFT(num_data, masked_input_data.get(),
-					context->real_array, output_data);
 		}
+		if (context->plan_complex_to_real_float == nullptr)
+			return LIBSAKURA_SYMBOL(Status_kUnknownError);
+		else {
+			fftwf_execute(context->plan_complex_to_real_float);
+			for (size_t i = 0; i < num_data; ++i) {
+				output_data[i] = context->real_array[i];
+			}
+		}
+	} else { // without fft
+		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
+				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(float) * num_data)),
+				LIBSAKURA_PREFIX::Memory());
+		if (masked_input_data == nullptr) {
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
+		}
+		ApplyMaskToInputData(num_data, input_data, mask,
+				masked_input_data.get()); // masked_input_data is mask applied array
+		CalculateConvolutionWithoutFFT(num_data, masked_input_data.get(),
+				context->real_array, output_data);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

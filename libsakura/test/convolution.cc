@@ -170,14 +170,16 @@ TEST_F(Convolve1DOperation , AppliedMask) {
 	bool mask[num_data] = {0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0};
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
-	float output_data[num_data] = {0};
-	if (verbose)
-		PrintArray("output_data",num_data,output_data);
+	float output_data[num_data];
+
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 			LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type, kernel_width, fftuse, &context));
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data));
+	verbose = false;
+	if (verbose)
+		PrintArray("output_data",num_data,output_data);
 	//for (size_t i = 0; i < NUM_IN; ++i) {
 		//EXPECT_FLOAT_EQ(-0.085498303,output_data[0]);
 	//}
@@ -195,19 +197,20 @@ TEST_F(Convolve1DOperation , FFTWfResult) {
 	bool mask[num_data] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
-	float output_data[num_data] = {0};
+	float output_data[num_data];
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-	if (verbose)
-		PrintArray("output_data",num_data,output_data);
+
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,kernel_type, kernel_width, fftuse, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
 
 	status = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
-
-	for (size_t i = 0; i < NUM_IN; ++i) {
+	verbose = false;
+	if (verbose)
+		PrintArray("output_data",num_data,output_data);
+	//for (size_t i = 0; i < NUM_IN; ++i) {
 		//EXPECT_FLOAT_EQ(0.828858, output_data[0]);
-	}
+	//}
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
 /*
@@ -222,16 +225,18 @@ TEST_F(Convolve1DOperation , ConvolutionResult) {
 	bool mask[num_data] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = false;
-	float output_data[num_data] = {0};
+	float output_data[num_data];
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-	if (verbose)
-		PrintArray("output_data",num_data,output_data);
+
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,kernel_type, kernel_width, fftuse, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
 	status = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
-	for (size_t i = 0; i < NUM_IN; ++i) {
+	verbose = false;
+	if (verbose)
+		PrintArray("output_data",num_data,output_data);
+	//for (size_t i = 0; i < NUM_IN; ++i) {
 		//EXPECT_FLOAT_EQ(0.828858, output_data[0]);
-	}
+	//}
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 }
