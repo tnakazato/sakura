@@ -57,6 +57,36 @@ inline void GetMatrixCoefficientsForLeastSquareFittingScalar(
 
 }
 
+#if 0
+inline void GetMatrixCoefficientsForLeastSquareFitting(
+		size_t num_mask, bool const *mask_arg,
+		size_t num_model_bases, double const *model_arg,
+		double *out_matrix_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_matrix_arg));
+
+	auto model = AssumeAligned(model_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto out_matrix = AssumeAligned(out_matrix_arg);
+
+	for (size_t i = 0; i < num_model_bases * num_model_bases; ++i) {
+		out_matrix[i] = 0;
+	}
+	for (size_t k = 0; k < num_mask; ++k) {
+		if (mask[k]) {
+			auto model_k = &model[k * num_model_bases];
+			for (size_t i = 0; i < num_model_bases; ++i) {
+				auto out_matrix_i = &out_matrix[num_model_bases * i];
+				auto model_i = model_k[i];
+				for (size_t j = 0; j < num_model_bases; ++j) {
+					out_matrix_i[j] += model_i * model_k[j];
+				}
+			}
+		}
+	}
+}
+#endif
 inline void GetMatrixCoefficientsForLeastSquareFitting(
 		size_t num_mask, bool const *mask,
 		size_t num_model_bases, double const *model, double *out) {
