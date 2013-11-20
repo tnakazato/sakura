@@ -15,6 +15,7 @@
 #include <log4cxx/propertyconfigurator.h>
 #include <xdispatch/dispatch>
 
+#include <casacore/casa/Exceptions/Error.h>
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/casa/Arrays/Array.h>
@@ -25,6 +26,7 @@
 #include <casacore/tables/Tables/ExprNode.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/TableParse.h>
 
 #include <libsakura/sakura.h>
 
@@ -33,6 +35,12 @@
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
+
+struct Deleter {
+	inline void operator()(void *ptr) const {
+		free(ptr);
+	}
+};
 
 inline void ExecuteCalibration() {
 
@@ -79,6 +87,17 @@ void ParallelJob(int job_id, unsigned int num_v, float const v[],
 	});
 }
 
+std::string GetTaqlString(std::string table_name, unsigned int ifno) {
+	std::ostringstream oss;
+	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno << " ORDER BY TIME";
+	return oss.str();
+}
+
+casa::Table GetSelectedTable(std::string table_name, unsigned int ifno) {
+	casa::String taql(GetTaqlString(table_name, ifno));
+	return tableCommand(taql);
+}
+
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "Enter: E2eReduce");
 	bool const serialize = false;
@@ -94,11 +113,13 @@ void E2eReduce(int argc, char const* const argv[]) {
 
 	std::string input_file;
 	std::string output_file;
-	OptionParser::ParseE2e(options, &input_file, &output_file);
+	unsigned int ifno;
+	OptionParser::ParseE2e(options, &input_file, &output_file, &ifno);
 
-	std::string sky_table;
-	std::string tsys_table;
-	OptionParser::ParseCalibration(options, &sky_table, &tsys_table);
+	std::string sky_table_name;
+	std::string tsys_table_name;
+	unsigned int tsys_ifno;
+	OptionParser::ParseCalibration(options, &sky_table_name, &tsys_table_name, &tsys_ifno);
 
 	int edge_channels;
 	float clipping_threshold;
@@ -114,9 +135,9 @@ void E2eReduce(int argc, char const* const argv[]) {
 		std::ostringstream oss;
 		oss << "config file (" << configuration_file << ") summary:\n";
 		oss << "\tinput filename=" << input_file << "\n\toutput filename="
-				<< output_file << "\n";
-		oss << "\tsky filename=" << sky_table << "\n\ttsys filename="
-				<< tsys_table << "\n";
+				<< output_file << "\n\tspw=" << ifno << "\n";
+		oss << "\tsky filename=" << sky_table_name << "\n\ttsys filename="
+				<< tsys_table_name << "\n\ttsys_spw=" << tsys_ifno << "\n";
 		oss << "\tedge channels=" << edge_channels << "\n\tclipping threshold=";
 		if (do_clipping) {
 			oss << clipping_threshold << "\n";
@@ -135,46 +156,48 @@ void E2eReduce(int argc, char const* const argv[]) {
 
 	double start_time = sakura_GetCurrentTime();
 	if (input_file.size() > 0) {
-		casa::Table table(casa::String(input_file), casa::Table::Old);
+		std::vector<std::unique_ptr<void, Deleter> > pointer_holder(128);
+		size_t holder_index = 0;
 
-		casa::ROScalarColumn<unsigned int> ifno_column(table, "IFNO");
-		unsigned int ifno = ifno_column(0);
-		{
-			std::ostringstream oss;
-			oss << "Processing IFNO " << ifno << std::endl;
-			LOG4CXX_INFO(logger, oss.str().c_str());
-		}
-		casa::Table selected_table = table(table.col("IFNO") == ifno);
+		casa::Table table = GetSelectedTable(input_file, ifno);
 
-		casa::ROArrayColumn<float> spectra_column(selected_table, "SPECTRA");
-		casa::ROArrayColumn<unsigned char> flagtra_column(selected_table,
-				"FLAGTRA");
+		casa::ROArrayColumn<float> spectra_column(table, "SPECTRA");
+		casa::ROArrayColumn<unsigned char> flagtra_column(table, "FLAGTRA");
 		unsigned int num_chan = spectra_column(0).nelements();
+
+		// sky table
+		//casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
+
+		// tsys table
+		//casa::Table tsys_table = GetSelectedTable(tsys_table_name, ifno);
+
 		auto group = xdispatch::group();
 		size_t alignment = sakura_GetAlignment();
-		size_t num_arena_for_float = num_chan
-				+ ((alignment - 1) / sizeof(float) + 1);
+		size_t num_arena_for_float = (num_chan + alignment - 1) * sizeof(float);
 		size_t num_arena_for_uchar = (num_chan + alignment - 1)
 				* sizeof(unsigned char);
-		std::vector<std::unique_ptr<float[]> > pointer_holder_float(20);
-		std::vector<std::unique_ptr<void> > pointer_holder_uchar(20);
 		for (int i = 0; i < 20; ++i) {
-			pointer_holder_float[i].reset(
-					reinterpret_cast<float *>(malloc(
-							num_arena_for_float * sizeof(float))));
-			float *spectrum = sakura_AlignFloat(num_arena_for_float,
-					pointer_holder_float[i].get(), num_chan);
-			pointer_holder_uchar[i].reset(malloc(num_arena_for_uchar));
+			// allocate and align
+			void *p = malloc(num_arena_for_float * sizeof(float));
+			float *spectrum = reinterpret_cast<float *>(sakura_AlignAny(
+					num_arena_for_float, p, num_chan * sizeof(float)));
+			pointer_holder[holder_index++].reset(p);
+			p = malloc(num_arena_for_uchar);
 			unsigned char *flag =
 					reinterpret_cast<unsigned char*>(sakura_AlignAny(
-							num_arena_for_uchar, pointer_holder_uchar[i].get(),
+							num_arena_for_uchar, p,
 							num_chan * sizeof(unsigned char)));
+			pointer_holder[holder_index++].reset(p);
+
+			// get data from the table
 			casa::Vector<float> spectrum_vector(casa::IPosition(1, num_chan),
 					spectrum, casa::SHARE);
 			casa::Vector<unsigned char> flag_vector(
 					casa::IPosition(1, num_chan), flag, casa::SHARE);
 			spectra_column.get(i, spectrum_vector);
 			flagtra_column.get(i, flag_vector);
+
+			// commit job
 			float const *v = spectrum;
 			uint8_t const *f = reinterpret_cast<uint8_t const *>(flag);
 			if (serialize) {
@@ -206,6 +229,8 @@ void main_(int argc, char const* const argv[]) {
 	if (result == sakura_Status_kOK) {
 		try {
 			E2eReduce(argc, argv);
+		} catch (casa::AipsError &e) {
+			LOG4CXX_ERROR(logger, "Exception raised: " << e.getMesg());
 		} catch (...) {
 			LOG4CXX_ERROR(logger, "Exception raised");
 		}

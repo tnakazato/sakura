@@ -12,7 +12,7 @@ namespace {
 class OptionParser {
 public:
 	static void ParseE2e(OptionList const options, std::string *input_file,
-			std::string *output_file) {
+			std::string *output_file, unsigned int *ifno) {
 		// parse input file name
 		*input_file = GetValue(options, GetKey("input"));
 
@@ -21,10 +21,13 @@ public:
 				((input_file->rfind("/") == input_file->length() - 1) ?
 						input_file->substr(0, input_file->length() - 1) :
 						*input_file) + "_out");
+
+		// parse IFNO
+		*ifno = std::atoi(GetValue(options, GetKey("spw")).c_str());
 	}
 
 	static void ParseCalibration(OptionList const options,
-			std::string *sky_table, std::string *tsys_table) {
+			std::string *sky_table, std::string *tsys_table, unsigned int *tsys_ifno) {
 		std::string const category = "calibration";
 
 		// parse sky table name
@@ -32,6 +35,9 @@ public:
 
 		// parse tsys table name
 		*tsys_table = GetValue(options, GetKey(category, "tsys"));
+
+		// parse IFNO for Tsys
+		*tsys_ifno = std::atoi(GetValue(options, GetKey(category, "tsys_spw")).c_str());
 	}
 
 	static void ParseFlagging(OptionList const options, int *edge_channels,
