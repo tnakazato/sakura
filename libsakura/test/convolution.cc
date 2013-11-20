@@ -204,7 +204,7 @@ TEST_F(Convolve1DOperation , FFTWfResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
 	for (size_t i = 0; i < NUM_IN; ++i) {
 		//std::cout << "outspec_[" << i << "] = " << output_data_[i] << std::endl;
-		std::cout << output_data[i] << std::endl;
+		//std::cout << output_data[i] << std::endl;
 		//EXPECT_FLOAT_EQ(0.828858, output_data[0]);
 	}
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -231,7 +231,7 @@ TEST_F(Convolve1DOperation , ConvolutionResult) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),status);
 	for (size_t i = 0; i < NUM_IN; ++i) {
 		//std::cout << "outspec_[" << i << "] = " << output_data_[i] << std::endl;
-		std::cout << output_data[i] << std::endl;
+		//std::cout << output_data[i] << std::endl;
 		//EXPECT_FLOAT_EQ(0.828858, output_data[0]);
 	}
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
