@@ -86,6 +86,22 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	}
 }
 
+inline void CalculateConvolutionWithoutFFT(size_t num_data,
+		float const *input_data, float const *input_kernel,
+		float *output_data) {
+	for (size_t j = 0; j < num_data; ++j) {
+		float center = input_data[j] * input_kernel[0];
+		float right = 0.0, left = 0.0;
+		for (size_t i = 0; i < num_data / 2 - 1; ++i) {
+			left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
+		}
+		for (size_t k = 0; k < j; ++k) {
+			right += input_data[j - 1 - k] * input_kernel[k + 1];
+		}
+		output_data[j] = (left + center + right);
+	}
+}
+
 inline LIBSAKURA_SYMBOL(Status) CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
@@ -196,9 +212,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (work_context == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		work_context->multiplied_complex_data = nullptr;
 		work_context->fft_applied_complex_kernel = nullptr;
 		work_context->fft_applied_complex_input_data = nullptr;
+		work_context->multiplied_complex_data = nullptr;
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
 		work_context->real_array = real_array_kernel.release(); // real_array
@@ -218,7 +234,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 	} else {
 		if (context->use_fft) { // with fft
 			ApplyMaskToInputData(num_data, input_data, mask,
-					context->real_array); // applied mask
+					context->real_array); // context->real_array was applied mask
 			if (context->plan_real_to_complex_float == nullptr)
 				return LIBSAKURA_SYMBOL(Status_kUnknownError);
 			else {
@@ -248,30 +264,18 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 				}
 			}
 		} else { // without fft
-			// masked_inputdata
-			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_inputdata(
+			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
 					static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
 							sizeof(float) * num_data)),
 					LIBSAKURA_PREFIX::Memory());
-			if (masked_inputdata == nullptr) {
+			if (masked_input_data == nullptr) {
 				return LIBSAKURA_SYMBOL(Status_kNoMemory);
 			}
 			ApplyMaskToInputData(num_data, input_data, mask,
-					masked_inputdata.get()); // applied mask
-			float scale = 1.0 / num_data;
-			for (size_t j = 0; j < num_data; ++j) {
-				float cent = masked_inputdata[j] * context->real_array[0];
-				float right = 0.0, left = 0.0;
-				for (size_t i = 0; i < num_data / 2 - 1; ++i) {
-					left += masked_inputdata[j + 1 + i]
-							* context->real_array[num_data - 1 - i];
-				}
-				for (size_t k = 0; k < j; ++k) {
-					right += masked_inputdata[j - 1 - k]
-							* context->real_array[k + 1];
-				}
-				output_data[j] = (left + cent + right);
-			}
+					masked_input_data.get()); // applied mask
+			CalculateConvolutionWithoutFFT(num_data, masked_input_data.get(),
+					context->real_array, output_data);
+			masked_input_data.release();
 		}
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
