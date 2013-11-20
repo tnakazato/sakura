@@ -77,7 +77,7 @@ protected:
  * RESULT:
  * if num_data = 0, CreateConvolve1DContext will return Status_kInvalidArgument)
  */
-TEST_F(Convolve1DOperation ,InvalidNumData) {
+/*TEST_F(Convolve1DOperation ,InvalidNumData) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	size_t const num_data(0);
 	size_t const kernel_width(NUM_WIDTH);
@@ -86,7 +86,7 @@ TEST_F(Convolve1DOperation ,InvalidNumData) {
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 				num_data,kernel_type , kernel_width, fftuse, &context));
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-}
+}*/
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContext
  * RESULT:
