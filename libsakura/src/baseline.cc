@@ -197,13 +197,8 @@ inline void DestroyBaselineContext(
 		LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (context->basis_data_storage != nullptr) {
 		LIBSAKURA_PREFIX::Memory::Free(context->basis_data_storage);
-		context->basis_data_storage = nullptr;
 	}
-
 	LIBSAKURA_PREFIX::Memory::Free(context);
-	if (context != nullptr) {
-		context = nullptr;
-	}
 }
 
 inline void OperateLogicalAnd(
