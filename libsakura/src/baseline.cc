@@ -166,7 +166,6 @@ inline void CreateBaselineContext(
 		num_bases = 2 * order + 1;
 		break;
 	default:
-		throw "Invalid baseline_type given.";
 		break;
 	}
 
