@@ -49,6 +49,7 @@ public:
 			float clipping_threshold_sigma,
 			uint16_t num_fitting_max,
 			bool get_residual,
+			bool final_mask[/*num_data*/],
 			float out[/*num_data*/]) const = 0;
 	virtual void SubtractBaselinePolynomial(
 			size_t num_data,
@@ -58,6 +59,7 @@ public:
 			float clipping_threshold_sigma,
 			uint16_t num_fitting_max,
 			bool get_residual,
+			bool final_mask[/*num_data*/],
 			float out[/*num_data*/]) const = 0;
 };
 

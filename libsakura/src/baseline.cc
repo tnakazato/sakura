@@ -285,7 +285,7 @@ inline void SubtractBaseline(
 		size_t num_data, float const *data, bool const *mask,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual, float *out) {
+		bool get_residual, bool *final_mask, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(baseline_context->basis_data));
@@ -343,14 +343,10 @@ inline void SubtractBaseline(
 		*/
 	}
 
-	if (get_residual) {
-		for (size_t i = 0; i < num_data; ++i) {
-			out[i] = residual_data[i];
-		}
-	} else {
-		for (size_t i = 0; i < num_data; ++i) {
-			out[i] = best_fit_model[i];
-		}
+	final_mask = (bool *)storage_for_composite_mask.release();
+
+	for (size_t i = 0; i < num_data; ++i) {
+		out[i] = get_residual ? residual_data[i] : best_fit_model[i];
 	}
 }
 
@@ -358,7 +354,7 @@ inline void SubtractBaselinePolynomial(
 		size_t num_data, float const *data, bool const *mask,
 		uint16_t order, float clipping_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		float *out) {
+		bool *final_mask, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -369,7 +365,7 @@ inline void SubtractBaselinePolynomial(
 			order, num_data, &context);
 	SubtractBaseline(num_data, data, mask, context,
 			clipping_threshold_sigma, num_fitting_max,
-			get_residual, out);
+			get_residual, final_mask, out);
 	DestroyBaselineContext(context);
 }
 
@@ -398,20 +394,26 @@ void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBestFitBaseline(
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaseline(
-		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual, float out[/*num_data*/]) const {
-	::SubtractBaseline(num_data, data, mask, baseline_context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, out);
+		bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/]) const {
+	::SubtractBaseline(num_data, data, mask, baseline_context,
+			clipping_threshold_sigma, num_fitting_max,
+			get_residual, final_mask, out);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
-		size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		uint16_t order, float clipping_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual, float out[/*num_data*/]) const {
+		bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/]) const {
 	::SubtractBaselinePolynomial(num_data, data, mask, order,
-			clipping_threshold_sigma, num_fitting_max, get_residual, out);
+			clipping_threshold_sigma, num_fitting_max,
+			get_residual, final_mask, out);
 }
 
 }

@@ -94,7 +94,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual, float out[]) {
+		bool get_residual, bool final_mask[], float out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (mask == nullptr)
@@ -115,7 +115,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 	try {
 		baselineop->SubtractBaseline(
 			num_data, data, mask, context,
-			clipping_threshold_sigma, num_fitting_max, get_residual, out);
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -128,7 +128,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_data, float const data[], bool const mask[],
 		uint16_t order, float clipping_threshold_sigma,
-		uint16_t num_fitting_max, bool get_residual, float out[]) {
+		uint16_t num_fitting_max,
+		bool get_residual, bool final_mask[], float out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (mask == nullptr)
@@ -148,7 +149,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		baselineop->SubtractBaselinePolynomial(
 				num_data, data, mask, order,
 				clipping_threshold_sigma, num_fitting_max,
-				get_residual, out);
+				get_residual, final_mask, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
