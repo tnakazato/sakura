@@ -169,9 +169,11 @@ inline void CreateBaselineContext(
 		break;
 	}
 
+/*
+	//old code------
 	*context = reinterpret_cast<LIBSAKURA_SYMBOL(BaselineContext) *>
-					(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(BaselineContext))));
+							(LIBSAKURA_PREFIX::Memory::Allocate(
+								sizeof(LIBSAKURA_SYMBOL(BaselineContext))));
 	if (*context == nullptr) {
 		throw std::bad_alloc();
 	}
@@ -184,13 +186,46 @@ inline void CreateBaselineContext(
 	size_t num_total_basis_data = num_bases * num_basis_data;
 
 	context_->basis_data_storage =
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*context_->basis_data) * num_total_basis_data,
-					&context_->basis_data);
+		LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+			sizeof(*context_->basis_data) * num_total_basis_data,
+			&context_->basis_data);
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context_->basis_data));
 
 	SetBasisData(context_);
+	//-------------------------------
+*/
+
+	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
+			LIBSAKURA_PREFIX::Memory> context_(
+				static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>
+					(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(LIBSAKURA_SYMBOL(BaselineContext)))),
+				LIBSAKURA_PREFIX::Memory());
+	if (context_ == nullptr) {
+		throw std::bad_alloc();
+	}
+
+	context_->baseline_type  = baseline_type;
+	context_->num_bases      = num_bases;
+	context_->num_basis_data = num_basis_data;
+
+	size_t num_total_basis_data = num_bases * num_basis_data;
+
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(context_->basis_data) * num_total_basis_data,
+					&context_->basis_data),
+					LIBSAKURA_PREFIX::Memory());
+	if (work_basis_data_storage == nullptr) {
+		throw std::bad_alloc();
+	}
+	context_->basis_data_storage = work_basis_data_storage.release();
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context_->basis_data));
+
+	SetBasisData(context_.get());
+
+	*context = (LIBSAKURA_SYMBOL(BaselineContext) *)context_.release();
 }
 
 inline void DestroyBaselineContext(
