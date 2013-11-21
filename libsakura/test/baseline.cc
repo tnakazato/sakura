@@ -130,9 +130,14 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
 			order, num_chan, &context);
+
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
 		out[i] = context->basis_data[i];
 	}
+	LIBSAKURA_SYMBOL(BaselineType) type = context->baseline_type;
+	size_t num_bases = context->num_bases;
+	size_t num_basis_data = context->num_basis_data;
+
 	sakura_DestroyBaselineContext(context);
 
 	/*
@@ -151,7 +156,10 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
 		EXPECT_EQ(out[i], answer[i]);
 	}
-}
+	EXPECT_EQ(type, LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
+	EXPECT_EQ(num_bases, num_model);
+	EXPECT_EQ(num_basis_data, num_chan);
+	}
 
 /*
  * Test sakura_GetBaselineModelChebyshev
@@ -198,6 +206,25 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
 		EXPECT_EQ(out[i], answer[i]);
 	}
+}
+
+/*
+ * Test sakura_DestroyBaselineContext
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, DestroyBaselineContext) {
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
+			order, num_chan, &context);
+	LIBSAKURA_SYMBOL(Status) status = sakura_DestroyBaselineContext(context);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
