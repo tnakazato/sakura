@@ -95,49 +95,32 @@ void E2eReduce(int argc, char const* const argv[]) {
 
 	double start_time = sakura_GetCurrentTime();
 	if (options.input_file.size() > 0) {
-		AligendArrayGenerator array_generator;
+		AlignedArrayGenerator array_generator;
 
-		casa::Table table = GetSelectedTable(options.input_file,
-				options.ifno);
+		casa::Table table = GetSelectedTable(options.input_file, options.ifno);
 
 		casa::ROArrayColumn<float> spectra_column(table, "SPECTRA");
 		casa::ROArrayColumn<unsigned char> flagtra_column(table, "FLAGTRA");
 		unsigned int num_chan = spectra_column(0).nelements();
 
 		// sky table
-		casa::Table sky_table = GetSelectedTable(
-				options.calibration.sky_table, options.ifno);
-		size_t num_row_sky = sky_table.nrow();
-		if (num_row_sky == 0) {
-			throw casa::AipsError("Selected sky table is empty.");
+		float *sky_spectra;
+		double *sky_time;
+		size_t num_chan_sky, num_row_sky;
+		GetFromCalTable(options.calibration.sky_table, options.ifno, "SPECTRA",
+				&array_generator, &sky_spectra, &sky_time, &num_chan_sky,
+				&num_row_sky);
+		if (num_chan != num_chan_sky) {
+			throw "";
 		}
-		casa::ROArrayColumn<float> caldata_column(sky_table, "SPECTRA");
-		casa::ROScalarColumn<double> time_column(sky_table, "TIME");
-		float *sky_spectra = array_generator.GetAlignedArray<float>(
-				num_chan * num_row_sky);
-		double *sky_time = array_generator.GetAlignedArray<double>(num_row_sky);
-		GetArrayColumn(sky_spectra, caldata_column,
-				casa::IPosition(2, num_chan, num_row_sky));
-		GetScalarColumn(sky_time, time_column, num_row_sky);
 
 		// tsys table
-		casa::Table tsys_table = GetSelectedTable(
-				options.calibration.tsys_table,
-				options.calibration.tsys_ifno);
-		size_t num_row_tsys = tsys_table.nrow();
-		if (num_row_tsys == 0) {
-			throw casa::AipsError("Selected tsys table is empty.");
-		}
-		caldata_column.attach(tsys_table, "TSYS");
-		time_column.attach(tsys_table, "TIME");
-		size_t num_chan_tsys = caldata_column(0).nelements();
-		float *tsys = array_generator.GetAlignedArray<float>(
-				num_chan_tsys * num_row_tsys);
-		double *tsys_time = array_generator.GetAlignedArray<double>(
-				num_row_tsys);
-		GetArrayColumn(tsys, caldata_column,
-				casa::IPosition(2, num_chan_tsys, num_row_tsys));
-		GetScalarColumn(tsys_time, time_column, num_row_tsys);
+		float *tsys;
+		double *tsys_time;
+		size_t num_chan_tsys, num_row_tsys;
+		GetFromCalTable(options.calibration.tsys_table,
+				options.calibration.tsys_ifno, "TSYS", &array_generator, &tsys,
+				&tsys_time, &num_chan_tsys, &num_row_tsys);
 
 		auto group = xdispatch::group();
 
