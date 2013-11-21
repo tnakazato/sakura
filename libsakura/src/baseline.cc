@@ -315,7 +315,9 @@ inline void SubtractBaseline(
 					sizeof(*residual_data) * num_data, &residual_data));
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
-		OperateLogicalAnd(num_data, mask, clip_mask, composite_mask);
+		if (i > 0) {
+			OperateLogicalAnd(num_data, mask, clip_mask, composite_mask);
+		}
 		GetBestFitBaseline(num_data, data, composite_mask, baseline_context, best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
