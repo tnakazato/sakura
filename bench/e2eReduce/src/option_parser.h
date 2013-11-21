@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include <utility>
 
 #include "config_file_reader.h"
 
@@ -27,7 +28,7 @@ struct BaselineOptions {
 
 struct SmoothingOptions {
 	std::string kernel_type;
-	float kernel_width;
+	size_t kernel_width;
 };
 
 struct E2EOptions {
@@ -52,7 +53,7 @@ public:
 		ParseCalibration(options, &(option_list->calibration));
 		ParseFlagging(options, &(option_list->flagging));
 		ParseBaseline(options, &(option_list->baseline));
-		// TODO: ParseSmoothing?
+		ParseSmoothing(options, &(option_list->smoothing));
 	}
 	static std::string GetSummary(E2EOptions const option_list) {
 		std::ostringstream oss;
@@ -77,7 +78,9 @@ public:
 			oss << separator << *i;
 			separator = ',';
 		}
-		oss << "]";
+		oss << "]\n";
+		oss << "\tkernel type=" << option_list.smoothing.kernel_type << "\n";
+		oss << "\tkernel width=" << option_list.smoothing.kernel_width << "\n";
 		return oss.str();
 	}
 private:
@@ -122,6 +125,7 @@ private:
 			option_list->do_clipping = true;
 			option_list->clipping_threshold = std::atof(s.c_str());
 		} else {
+			// no clipping by default
 			option_list->do_clipping = false;
 			option_list->clipping_threshold = 0.0;
 		}
@@ -136,6 +140,21 @@ private:
 			ToVector(s, &(option_list->line_mask));
 		} else {
 			option_list->line_mask.clear();
+		}
+	}
+	static void ParseSmoothing(OptionMap const options, SmoothingOptions *option_list) {
+		std::string const category = "smoothing";
+
+		// parse kernel type
+		option_list->kernel_type = GetValue(options, GetKey(category, "kernel"));
+
+		// parse kernel width
+		std::string s = GetValue(options, GetKey(category, "kernel_width"));
+		if (s.size() > 0) {
+			option_list->kernel_width = std::atoi(s.c_str());
+		}
+		else {
+			option_list->kernel_width = 5; // default is 5
 		}
 	}
 	static std::string GetKey(std::string const category,
@@ -195,9 +214,7 @@ private:
 				(*v)[0] = std::atoi(Trim(substring.substr(0, pos)).c_str());
 				(*v)[1] = std::atoi(Trim(substring.substr(pos + 1)).c_str());
 				if ((*v)[0] > (*v)[1]) {
-					uint64_t tmp = (*v)[0];
-					(*v)[0] = (*v)[1];
-					(*v)[1] = tmp;
+					std::swap((*v)[0], (*v)[1]);
 				}
 				return;
 			}
