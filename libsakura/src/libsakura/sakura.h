@@ -1639,7 +1639,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_mask * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_mask )でなければならない。
+ * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_mask * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_mask )でなければならない。
  * @n must-be-aligned
  * @param[out] out 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
  * @n must-be-aligned
@@ -1654,9 +1654,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in] num_model_bases number of basis functions of @a model.
  * @param[in] model a 1D array containing values of all its basis functions
- * concatenated. loop for data index must be inside of that for basis index,
+ * concatenated. loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_mask * @a (m-1) + @a (n-1) ]. its length must be equal
+ * @a model [ @a num_mask * @a (n-1) + @a (m-1) ]. its length must be equal
  * to ( @a num_model_bases * @a num_mask ).
  * @n must-be-aligned
  * @param[out] out a 1D array containing the values of a matrix
@@ -1685,7 +1685,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。データに対するループは関数に対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
  * @param[out] out 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
  * @n must-be-aligned
@@ -1702,9 +1702,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in] num_model_bases number of basis functions of @a model.
  * @param[in] model a 1D array containing values of all its basis functions
- * concatenated. loop for data index must be inside of that for basis index,
+ * concatenated. loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_data * @a (m-1) + @a (n-1) ]. its length must be equal
+ * @a model [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be equal
  * to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
  * @param[out] out the right side value of the simultaneous
@@ -1797,7 +1797,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief ベースラインモデル情報を格納するオブジェクトを生成する。
  * @details
  * @param[in] baseline_type ベースラインを表現する関数形。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。
  * @param[in] num_data フィットするデータ点の数。
  * @param[out] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned

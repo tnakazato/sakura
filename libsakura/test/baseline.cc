@@ -105,30 +105,99 @@ protected:
  * out = []
  */
 TEST_F(Baseline, GetBaselineModelPolynomial) {
-	uint16_t const order(5);
-	size_t const num_chan(1000);
-	double out[num_chan*(order+1)];
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+	size_t const num_model(order+1);
+	double out[num_chan*num_model];
+	double answer[ELEMENTSOF(out)];
 
-	LIBSAKURA_SYMBOL(Status) status;
+	// Setup answer----------------------------
+	size_t idx = 0;
+	for (size_t i = 0; i < num_chan; ++i) {
+		for (size_t j = 0; j < num_model; ++j) {
+			double value = 1.0;
+			for (size_t k = 0; k < j; ++k) {
+				value *= (double)i;
+			}
+
+			answer[idx] = value;
+			idx++;
+		}
+	}
+	//---------------------------------
+
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
-	status = LIBSAKURA_SYMBOL(CreateBaselineContext)(
-			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
-	for (size_t j = 0; j < num_chan*(order+1); ++j) {
-		out[j] = context->basis_data[j];
+	sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
+			order, num_chan, &context);
+	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
+		out[i] = context->basis_data[i];
 	}
 	sakura_DestroyBaselineContext(context);
 
+	/*
 	cout.precision(20);
 	cout << "-------------------------" << endl;
-	cout << "power0 : [" << out[0] << "], ..., [" << out[999] << "]" << endl;
-	cout << "power1 : [" << out[1000] << "], ..., [" << out[1999] << "]" << endl;
-	cout << "power2 : [" << out[2000] << "], ..., [" << out[2999] << "]" << endl;
-	cout << "power3 : [" << out[3000] << "], ..., [" << out[3999] << "]" << endl;
-	cout << "power4 : [" << out[4000] << "], ..., [" << out[4999] << "]" << endl;
-	cout << "power5 : [" << out[5000] << "], ..., [" << out[5999] << "]" << endl;
+	cout << "power0 : [" << out[0] << "], ..., [" << out[5994] << "]" << endl;
+	cout << "power1 : [" << out[1] << "], ..., [" << out[5995] << "]" << endl;
+	cout << "power2 : [" << out[2] << "], ..., [" << out[5996] << "]" << endl;
+	cout << "power3 : [" << out[3] << "], ..., [" << out[5997] << "]" << endl;
+	cout << "power4 : [" << out[4] << "], ..., [" << out[5998] << "]" << endl;
+	cout << "power5 : [" << out[5] << "], ..., [" << out[5999] << "]" << endl;
 	cout << "-------------------------" << endl;
+	*/
+
 	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
+		EXPECT_EQ(out[i], answer[i]);
+	}
+}
+
+/*
+ * Test sakura_GetBaselineModelChebyshev
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, GetBaselineModelChebyshev) {
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+	size_t const num_model(order+1);
+	double out[num_chan*num_model];
+	double answer[ELEMENTSOF(out)];
+
+	// Setup answer----------------------------
+	size_t idx = 0;
+	for (size_t i = 0; i < num_chan; ++i) {
+		for (size_t j = 0; j < num_model; ++j) {
+			double value = 1.0;
+			double x = 2.0*(double)i/(double)(num_chan-1)-1.0;
+			if (j == 0) {
+				value = 1.0;
+			} else if (j == 1) {
+				value = x;
+			} else {
+				value = 2.0 * x * answer[idx-1] - answer[idx-2];
+			}
+
+			answer[idx] = value;
+			idx++;
+		}
+	}
+	//---------------------------------
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
+			order, num_chan, &context);
+	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
+		out[i] = context->basis_data[i];
+	}
+	sakura_DestroyBaselineContext(context);
+
+	// Verification
+	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
+		EXPECT_EQ(out[i], answer[i]);
+	}
 }
 
 /*

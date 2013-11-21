@@ -17,6 +17,7 @@ inline void SetBasisDataPolynomial(
 		LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 
+/*
 	for (size_t i = 0; i < (context)->num_basis_data; ++i) {
 		double val = 1.0;
 		context->basis_data[i] = val;
@@ -25,23 +26,101 @@ inline void SetBasisDataPolynomial(
 			context->basis_data[context->num_basis_data * j + i] = val;
 		}
 	}
+*/
+	size_t idx = 0;
+	for (size_t i = 0; i < (context)->num_basis_data; ++i) {
+		double val = 1.0;
+		context->basis_data[idx] = val;
+		idx ++;
+		for (size_t j = 1; j < context->num_bases; ++j) {
+			val *= static_cast<double>(i);
+			context->basis_data[idx] = val;
+			idx ++;
+		}
+	}
+}
+
+inline void GetChebyshevPolynomial(
+		size_t const n, double const x, double *out) {
+	double out_ = 0.0;
+	if (n < 0) {
+		throw "the order must be zero or positive.";
+	} else if (n == 0) {
+		out_ = 1.0;
+	} else if (n == 1) {
+		out_ = x;
+	} else if ((x < -1.0)||(x > 1.0)) {
+		throw "out of definition range (-1 <= x <= 1).";
+	} else if (x == 1.0) {
+		out_ = 1.0;
+	} else if (x == 0.0) {
+		out_ = (n%2 == 0) ? ((n%4 == 0) ? 1.0 : -1.0) : 0.0;
+	} else if (x == -1.0) {
+		out_ = (n%2 == 0) ? 1.0 : -1.0;
+	} else {
+		double res = 0.0;
+
+		/*
+		double prev1 = 0.0;
+		GetChebyshevPolynomial(n-1, x, &prev1);
+		double prev2 = 0.0;
+		GetChebyshevPolynomial(n-2, x, &prev2);
+		res = 2.0 * x * prev1 - prev2;
+		*/
+
+		for (size_t m = 0; m <= n/2; ++m) {
+			double c = 1.0;
+			if (m > 0) {
+				for (size_t i = 1; i <= m; ++i) {
+					c *= (double)(n-2*m+i)/(double)i;
+				}
+			}
+			res += ((m%2 == 0) ? 1.0 : -1.0)*(double)n/(double)(n-m)*pow(2.0*x, (double)(n-2*m))/2.0*c;
+		}
+
+		if (fabs(res) > 1.0) {
+			throw "bad result: Chebyshev polynomial values must be [-1:1].";
+		}
+
+		out_ = res;
+	}
+
+	*out = out_;
 }
 
 inline void SetBasisDataChebyshev(
 		LIBSAKURA_SYMBOL(BaselineContext) *context) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	//
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
+
+	size_t idx = 0;
+	double xrange = (double)(context->num_basis_data - 1);
+	for (size_t i = 0; i < context->num_basis_data; ++i) {
+		double x = 2.0 * (double)i/xrange - 1.0;
+		for (size_t j = 0; j < context->num_bases; ++j) {
+			double val = 0.0;
+			//GetChebyshevPolynomial(j, x, &val);
+			if (j == 0) {
+				val = 1.0;
+			} else if (j == 1) {
+				val = x;
+			} else {
+				val = 2.0 * x * context->basis_data[idx-1] - context->basis_data[idx-2];
+			}
+			context->basis_data[idx] = val;
+			idx ++;
+		}
+	}
 }
 
 inline void SetBasisDataCubicSpline(
 		LIBSAKURA_SYMBOL(BaselineContext) *context) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	//
 }
 
 inline void SetBasisDataSinusoid(
 		LIBSAKURA_SYMBOL(BaselineContext) *context) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	//
 }
 
@@ -161,10 +240,11 @@ inline void DoGetBestFitBaseline(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	size_t num_data = context->num_basis_data;
+	size_t num_bases = context->num_bases;
 	for (size_t i = 0; i < num_data; ++i) {
 		out[i] = 0.0f;
-		for (size_t j = 0; j < context->num_bases; ++j) {
-			out[i] += coeff[j] * context->basis_data[num_data * j + i];
+		for (size_t j = 0; j < num_bases; ++j) {
+			out[i] += coeff[j] * context->basis_data[num_bases * i + j];
 		}
 	}
 }
