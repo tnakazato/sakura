@@ -34,12 +34,14 @@ inline fftwf_complex* AllocateFFTArray(size_t num_data) {
 inline void FreeFFTArray(fftwf_complex *ptr) {
 	if (ptr != nullptr) {
 		fftwf_free(ptr);
+	    ptr = nullptr;
 	}
 }
 
 inline void DestroyFFTPlan(fftwf_plan ptr) {
 	if (ptr != nullptr) {
 		fftwf_destroy_plan(ptr);
+		ptr = nullptr;
 	}
 }
 
@@ -227,6 +229,8 @@ inline LIBSAKURA_SYMBOL(Status) Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
+	if(context->num_data != num_data)
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	if (context->use_fft) { // with fft
 		ApplyMaskToInputData(num_data, input_data, mask, context->real_array); // context->real_array is mask applied array
 		if (context->plan_real_to_complex_float == nullptr)
