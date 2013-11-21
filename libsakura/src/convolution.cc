@@ -34,14 +34,12 @@ inline fftwf_complex* AllocateFFTArray(size_t num_data) {
 inline void FreeFFTArray(fftwf_complex *ptr) {
 	if (ptr != nullptr) {
 		fftwf_free(ptr);
-		ptr = nullptr;
 	}
 }
 
 inline void DestroyFFTPlan(fftwf_plan ptr) {
 	if (ptr != nullptr) {
 		fftwf_destroy_plan(ptr);
-		ptr = nullptr;
 	}
 }
 
@@ -217,7 +215,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->multiplied_complex_data = nullptr;
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
-		work_context->real_array = real_array_kernel.release(); // real_array
+		work_context->real_array = real_array_kernel.release(); // real_array for kernel
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
 		*context = work_context.release(); // context
@@ -280,18 +278,27 @@ LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 	if (context != nullptr) {
 		if (context->plan_real_to_complex_float != nullptr) {
 			DestroyFFTPlan(context->plan_real_to_complex_float);
+			context->plan_real_to_complex_float = nullptr;
 		}
 		if (context->plan_complex_to_real_float != nullptr) {
 			DestroyFFTPlan(context->plan_complex_to_real_float);
+			context->plan_complex_to_real_float = nullptr;
 		}
 		if (context->fft_applied_complex_kernel != nullptr) {
 			FreeFFTArray(context->fft_applied_complex_kernel);
+			context->fft_applied_complex_kernel = nullptr;
 		}
 		if (context->fft_applied_complex_input_data != nullptr) {
 			FreeFFTArray(context->fft_applied_complex_input_data);
+			context->fft_applied_complex_input_data = nullptr;
 		}
 		if (context->multiplied_complex_data != nullptr) {
 			FreeFFTArray(context->multiplied_complex_data);
+			context->multiplied_complex_data = nullptr;
+		}
+		if (context->real_array != nullptr) {
+			LIBSAKURA_PREFIX::Memory::Free(context->real_array);
+			context->real_array = nullptr;
 		}
 		LIBSAKURA_PREFIX::Memory::Free(context);
 		context = nullptr;
