@@ -42,6 +42,27 @@ struct Deleter {
 	}
 };
 
+class AligendArrayGenerator {
+public:
+	AligendArrayGenerator() :
+			alignment_(sakura_GetAlignment()), index_(0), pointer_holder_(128) {
+	}
+	template<class T> inline T *GetAlignedArray(size_t num_elements) {
+		size_t num_arena = (num_elements + alignment_ - 1) * sizeof(T);
+		if (index_ >= pointer_holder_.size()) {
+			pointer_holder_.resize(pointer_holder_.size() + 128);
+		}
+		void *ptr = malloc(num_arena);
+		pointer_holder_[index_++].reset(ptr);
+		return reinterpret_cast<T *>(sakura_AlignAny(num_arena, ptr,
+				num_elements * sizeof(T)));
+	}
+private:
+	size_t alignment_;
+	size_t index_;
+	std::vector<std::unique_ptr<void, Deleter> > pointer_holder_;
+};
+
 inline void ExecuteCalibration() {
 
 }
@@ -89,7 +110,8 @@ void ParallelJob(int job_id, unsigned int num_v, float const v[],
 
 std::string GetTaqlString(std::string table_name, unsigned int ifno) {
 	std::ostringstream oss;
-	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno << " ORDER BY TIME";
+	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno
+			<< " ORDER BY TIME";
 	return oss.str();
 }
 
@@ -99,9 +121,25 @@ casa::Table GetSelectedTable(std::string table_name, unsigned int ifno) {
 }
 
 template<class T>
-void GetCell(T *array, size_t row_index, casa::ROArrayColumn<T> const column, casa::IPosition const cell_shape) {
-	casa::Array<T> casa_array(cell_shape, array, casa::SHARE);
+void GetArrayCell(T *array, size_t row_index,
+		casa::ROArrayColumn<T> const column, casa::IPosition const cell_shape) {
+	casa::Array < T > casa_array(cell_shape, array, casa::SHARE);
 	column.get(row_index, casa_array);
+}
+
+template<class T>
+void GetArrayColumn(T *array, casa::ROArrayColumn<T> const column,
+		casa::IPosition const column_shape) {
+	casa::Array < T > casa_array(column_shape, array, casa::SHARE);
+	column.getColumn(casa_array);
+}
+
+template<class T>
+void GetScalarColumn(T *array, casa::ROScalarColumn<T> const column,
+		size_t num_rows) {
+	casa::Vector < T
+			> casa_array(casa::IPosition(1, num_rows), array, casa::SHARE);
+	column.getColumn(casa_array);
 }
 
 void E2eReduce(int argc, char const* const argv[]) {
@@ -125,7 +163,8 @@ void E2eReduce(int argc, char const* const argv[]) {
 	std::string sky_table_name;
 	std::string tsys_table_name;
 	unsigned int tsys_ifno;
-	OptionParser::ParseCalibration(options, &sky_table_name, &tsys_table_name, &tsys_ifno);
+	OptionParser::ParseCalibration(options, &sky_table_name, &tsys_table_name,
+			&tsys_ifno);
 
 	int edge_channels;
 	float clipping_threshold;
@@ -162,9 +201,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 
 	double start_time = sakura_GetCurrentTime();
 	if (input_file.size() > 0) {
-		std::vector<std::unique_ptr<void, Deleter> > pointer_holder(128);
-		size_t holder_index = 0;
-		void *p;
+		AligendArrayGenerator array_generator;
 
 		casa::Table table = GetSelectedTable(input_file, ifno);
 
@@ -173,42 +210,50 @@ void E2eReduce(int argc, char const* const argv[]) {
 		unsigned int num_chan = spectra_column(0).nelements();
 
 		// sky table
-//		casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
-//		size_t num_arena_for_float_sky = (num_chan * sky_table.nrow() + alignment - 1) * sizeof(float);
-//		size_t num_arena_for_double_sky = (sky_table.nrow() + alignment - 1) * sizeof(double);
-//		void *p = malloc(num_arena_for_float_sky);
-//		float *sky_spectra = reinterpret_cast<float *>(sakura_AlignAny(num_arenam_for_float_sky, p, num_chan * sky_table.nrow() * sizeof(float)));
-//		pointer_holder[holder_index++].reset(p);
-//		p = malloc(num_arena_for_double_sky);
-//		double *sky_time = reinterpret_cast<double *>(sakura_AlignAny(num_arena_for_double_sky, p, sky_table.nrow() * sizeof(double)));
-//		casa::ROArrayColumn<float> sky_spectra_column(sky_table, "SPECTRA");
-//		casa::ROArrayColumn<double> time_column(sky_table, "TIME");
-
+		casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
+		size_t num_row_sky = sky_table.nrow();
+		if (num_row_sky == 0) {
+			throw "";
+		}
+		casa::ROArrayColumn<float> caldata_column(sky_table, "SPECTRA");
+		casa::ROScalarColumn<double> time_column(sky_table, "TIME");
+		float *sky_spectra = array_generator.GetAlignedArray<float>(
+				num_chan * num_row_sky);
+		double *sky_time = array_generator.GetAlignedArray<double>(
+				num_row_sky);
+		GetArrayColumn(sky_spectra, caldata_column,
+				casa::IPosition(2, num_chan, num_row_sky));
+		GetScalarColumn(sky_time, time_column, num_row_sky);
 
 		// tsys table
-		//casa::Table tsys_table = GetSelectedTable(tsys_table_name, ifno);
+		casa::Table tsys_table = GetSelectedTable(tsys_table_name, tsys_ifno);
+		size_t num_row_tsys = tsys_table.nrow();
+		if (num_row_tsys == 0) {
+			throw "";
+		}
+		caldata_column.attach(tsys_table, "TSYS");
+		time_column.attach(tsys_table, "TIME");
+		size_t num_chan_tsys = caldata_column(0).nelements();
+		float *tsys = array_generator.GetAlignedArray<float>(
+				num_chan_tsys * num_row_tsys);
+		double *tsys_time = array_generator.GetAlignedArray<double>(
+				num_row_tsys);
+		GetArrayColumn(tsys, caldata_column,
+				casa::IPosition(2, num_chan_tsys, num_row_tsys));
+		GetScalarColumn(tsys_time, time_column, num_row_tsys);
 
 		auto group = xdispatch::group();
-		size_t alignment = sakura_GetAlignment();
-		size_t num_arena_for_float = (num_chan + alignment - 1) * sizeof(float);
-		size_t num_arena_for_uchar = (num_chan + alignment - 1)
-				* sizeof(unsigned char);
+
 		for (int i = 0; i < 20; ++i) {
 			// allocate and align
-			p = malloc(num_arena_for_float);
-			float *spectrum = reinterpret_cast<float *>(sakura_AlignAny(
-					num_arena_for_float, p, num_chan * sizeof(float)));
-			pointer_holder[holder_index++].reset(p);
-			p = malloc(num_arena_for_uchar);
+			float *spectrum = array_generator.GetAlignedArray<float>(num_chan);
 			unsigned char *flag =
-					reinterpret_cast<unsigned char*>(sakura_AlignAny(
-							num_arena_for_uchar, p,
-							num_chan * sizeof(unsigned char)));
-			pointer_holder[holder_index++].reset(p);
+					array_generator.GetAlignedArray<unsigned char>(num_chan);
 
 			// get data from the table
-			GetCell(spectrum, i, spectra_column, casa::IPosition(1, num_chan));
-			GetCell(flag, i, flagtra_column, casa::IPosition(1, num_chan));
+			GetArrayCell(spectrum, i, spectra_column,
+					casa::IPosition(1, num_chan));
+			GetArrayCell(flag, i, flagtra_column, casa::IPosition(1, num_chan));
 
 			// commit job
 			float const *v = spectrum;
