@@ -7,7 +7,7 @@
 
 namespace {
 
-typedef std::map<std::string, std::string> OptionList;
+typedef std::map<std::string, std::string> OptionMap;
 
 std::string Trim(std::string const s) {
 	std::string trimmed_string = "";
@@ -22,9 +22,12 @@ std::string Trim(std::string const s) {
 
 class ConfigFileReader {
 public:
-	static void read(std::string const input_file, OptionList *options) {
+	static void read(std::string const input_file, OptionMap *options) {
 		// clear options
 		options->clear();
+
+		// config file name
+		(*options)["sakura_e2e.config"] = input_file;
 
 		std::ifstream f(input_file);
 		if (!f.is_open())

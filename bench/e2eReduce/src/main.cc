@@ -26,7 +26,6 @@
 
 #include <libsakura/sakura.h>
 
-#include "config_file_reader.h"
 #include "option_parser.h"
 #include "utils.h"
 
@@ -65,8 +64,7 @@ void JobFinished(int i) {
 }
 
 void ParallelJob(int job_id, unsigned int num_v, float const v[],
-		uint8_t const f[], int edge_channels, bool do_clipping,
-		float clipping_threshold, std::vector<uint64_t> const line_mask) {
+		uint8_t const f[], E2EOptions const option_list) {
 	float sum = 0.0;
 	for (unsigned int i = 0; i < num_v; ++i)
 		sum += v[i];
@@ -88,65 +86,27 @@ void E2eReduce(int argc, char const* const argv[]) {
 	if (argc > 1) {
 		configuration_file = argv[1];
 	}
-	OptionList options;
-	::ConfigFileReader::read(configuration_file, &options);
 
-	std::string input_file;
-	std::string output_file;
-	unsigned int ifno;
-	OptionParser::ParseE2e(options, &input_file, &output_file, &ifno);
-
-	std::string sky_table_name;
-	std::string tsys_table_name;
-	unsigned int tsys_ifno;
-	OptionParser::ParseCalibration(options, &sky_table_name, &tsys_table_name,
-			&tsys_ifno);
-
-	int edge_channels;
-	float clipping_threshold;
-	bool do_clipping;
-	OptionParser::ParseFlagging(options, &edge_channels, &clipping_threshold,
-			&do_clipping);
-
-	std::vector<uint64_t> line_mask;
-	OptionParser::ParseBaseline(options, &line_mask);
+	E2EOptions options;
+	OptionParser::Parse(configuration_file, &options);
 
 	// config file summary
-	{
-		std::ostringstream oss;
-		oss << "config file (" << configuration_file << ") summary:\n";
-		oss << "\tinput filename=" << input_file << "\n\toutput filename="
-				<< output_file << "\n\tspw=" << ifno << "\n";
-		oss << "\tsky filename=" << sky_table_name << "\n\ttsys filename="
-				<< tsys_table_name << "\n\ttsys_spw=" << tsys_ifno << "\n";
-		oss << "\tedge channels=" << edge_channels << "\n\tclipping threshold=";
-		if (do_clipping) {
-			oss << clipping_threshold << "\n";
-		} else {
-			oss << "\n";
-		}
-		char separator = '[';
-		oss << "\tline mask=";
-		for (auto i = line_mask.begin(); i != line_mask.end(); ++i) {
-			oss << separator << *i;
-			separator = ',';
-		}
-		oss << "]";
-		LOG4CXX_INFO(logger, oss.str());
-	}
+	LOG4CXX_INFO(logger, OptionParser::GetSummary(options));
 
 	double start_time = sakura_GetCurrentTime();
-	if (input_file.size() > 0) {
+	if (options.input_file.size() > 0) {
 		AligendArrayGenerator array_generator;
 
-		casa::Table table = GetSelectedTable(input_file, ifno);
+		casa::Table table = GetSelectedTable(options.input_file,
+				options.ifno);
 
 		casa::ROArrayColumn<float> spectra_column(table, "SPECTRA");
 		casa::ROArrayColumn<unsigned char> flagtra_column(table, "FLAGTRA");
 		unsigned int num_chan = spectra_column(0).nelements();
 
 		// sky table
-		casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
+		casa::Table sky_table = GetSelectedTable(
+				options.calibration.sky_table, options.ifno);
 		size_t num_row_sky = sky_table.nrow();
 		if (num_row_sky == 0) {
 			throw casa::AipsError("Selected sky table is empty.");
@@ -155,14 +115,15 @@ void E2eReduce(int argc, char const* const argv[]) {
 		casa::ROScalarColumn<double> time_column(sky_table, "TIME");
 		float *sky_spectra = array_generator.GetAlignedArray<float>(
 				num_chan * num_row_sky);
-		double *sky_time = array_generator.GetAlignedArray<double>(
-				num_row_sky);
+		double *sky_time = array_generator.GetAlignedArray<double>(num_row_sky);
 		GetArrayColumn(sky_spectra, caldata_column,
 				casa::IPosition(2, num_chan, num_row_sky));
 		GetScalarColumn(sky_time, time_column, num_row_sky);
 
 		// tsys table
-		casa::Table tsys_table = GetSelectedTable(tsys_table_name, tsys_ifno);
+		casa::Table tsys_table = GetSelectedTable(
+				options.calibration.tsys_table,
+				options.calibration.tsys_ifno);
 		size_t num_row_tsys = tsys_table.nrow();
 		if (num_row_tsys == 0) {
 			throw casa::AipsError("Selected tsys table is empty.");
@@ -195,12 +156,10 @@ void E2eReduce(int argc, char const* const argv[]) {
 			float const *v = spectrum;
 			uint8_t const *f = reinterpret_cast<uint8_t const *>(flag);
 			if (serialize) {
-				ParallelJob(i, num_chan, v, f, edge_channels, do_clipping,
-						clipping_threshold, line_mask);
+				ParallelJob(i, num_chan, v, f, options);
 			} else {
 				group.async([=] {
-					ParallelJob(i, num_chan, v, f, edge_channels, do_clipping,
-							clipping_threshold, line_mask);
+					ParallelJob(i, num_chan, v, f, options);
 				});
 			}
 		}
