@@ -379,7 +379,6 @@ inline void SubtractBaseline(
 	}
 
 	final_mask = (bool *)storage_for_composite_mask.release();
-
 	for (size_t i = 0; i < num_data; ++i) {
 		out[i] = get_residual ? residual_data[i] : best_fit_model[i];
 	}
