@@ -284,7 +284,6 @@ inline void GetBestFitBaseline(
 		float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	assert(num_data == context->num_basis_data);
 
