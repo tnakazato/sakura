@@ -16,52 +16,22 @@
 #include <xdispatch/dispatch>
 
 #include <casacore/casa/Exceptions/Error.h>
-#include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/Arrays/Vector.h>
-#include <casacore/casa/Arrays/ArrayIO.h>
 
 #include <casacore/tables/Tables/Table.h>
-#include <casacore/tables/Tables/ExprNode.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
-#include <casacore/tables/Tables/TableParse.h>
 
 #include <libsakura/sakura.h>
 
 #include "config_file_reader.h"
 #include "option_parser.h"
+#include "utils.h"
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
-
-struct Deleter {
-	inline void operator()(void *ptr) const {
-		free(ptr);
-	}
-};
-
-class AligendArrayGenerator {
-public:
-	AligendArrayGenerator() :
-			alignment_(sakura_GetAlignment()), index_(0), pointer_holder_(128) {
-	}
-	template<class T> inline T *GetAlignedArray(size_t num_elements) {
-		size_t num_arena = (num_elements + alignment_ - 1) * sizeof(T);
-		if (index_ >= pointer_holder_.size()) {
-			pointer_holder_.resize(pointer_holder_.size() + 128);
-		}
-		void *ptr = malloc(num_arena);
-		pointer_holder_[index_++].reset(ptr);
-		return reinterpret_cast<T *>(sakura_AlignAny(num_arena, ptr,
-				num_elements * sizeof(T)));
-	}
-private:
-	size_t alignment_;
-	size_t index_;
-	std::vector<std::unique_ptr<void, Deleter> > pointer_holder_;
-};
 
 inline void ExecuteCalibration() {
 
@@ -106,40 +76,6 @@ void ParallelJob(int job_id, unsigned int num_v, float const v[],
 	xdispatch::main_queue().sync([=]() {
 		JobFinished(job_id);
 	});
-}
-
-std::string GetTaqlString(std::string table_name, unsigned int ifno) {
-	std::ostringstream oss;
-	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno
-			<< " ORDER BY TIME";
-	return oss.str();
-}
-
-casa::Table GetSelectedTable(std::string table_name, unsigned int ifno) {
-	casa::String taql(GetTaqlString(table_name, ifno));
-	return tableCommand(taql);
-}
-
-template<class T>
-void GetArrayCell(T *array, size_t row_index,
-		casa::ROArrayColumn<T> const column, casa::IPosition const cell_shape) {
-	casa::Array < T > casa_array(cell_shape, array, casa::SHARE);
-	column.get(row_index, casa_array);
-}
-
-template<class T>
-void GetArrayColumn(T *array, casa::ROArrayColumn<T> const column,
-		casa::IPosition const column_shape) {
-	casa::Array < T > casa_array(column_shape, array, casa::SHARE);
-	column.getColumn(casa_array);
-}
-
-template<class T>
-void GetScalarColumn(T *array, casa::ROScalarColumn<T> const column,
-		size_t num_rows) {
-	casa::Vector < T
-			> casa_array(casa::IPosition(1, num_rows), array, casa::SHARE);
-	column.getColumn(casa_array);
 }
 
 void E2eReduce(int argc, char const* const argv[]) {
@@ -213,7 +149,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 		casa::Table sky_table = GetSelectedTable(sky_table_name, ifno);
 		size_t num_row_sky = sky_table.nrow();
 		if (num_row_sky == 0) {
-			throw "";
+			throw casa::AipsError("Selected sky table is empty.");
 		}
 		casa::ROArrayColumn<float> caldata_column(sky_table, "SPECTRA");
 		casa::ROScalarColumn<double> time_column(sky_table, "TIME");
@@ -229,7 +165,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 		casa::Table tsys_table = GetSelectedTable(tsys_table_name, tsys_ifno);
 		size_t num_row_tsys = tsys_table.nrow();
 		if (num_row_tsys == 0) {
-			throw "";
+			throw casa::AipsError("Selected tsys table is empty.");
 		}
 		caldata_column.attach(tsys_table, "TSYS");
 		time_column.attach(tsys_table, "TIME");
