@@ -1881,8 +1881,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
- * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。あらかじめ領域を確保する必要はなく、ただポインタを渡せばよい。要素数 @a num_data の配列が返される。
- * @param[out] out 出力データ。あらかじめ領域を確保する必要はなく、ただポインタを渡せばよい。要素数が @a num_data の配列が返される。
+ * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[out] out 出力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Recursively fit a baseline and subtract it from input spectrum.
@@ -1905,10 +1907,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask the final mask data after recursive clipping
- * procedure. just a pointer should be given. an array with length of
- * @a num_data will be allocated and returned.
- * @param[out] out the output data. just a pointer should be given. an
- * array with length of @a num_data will be allocated and returned.
+ * procedure. its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] out the output data. its length must be @a num_data .
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
@@ -1933,8 +1935,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
- * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。あらかじめ領域を確保する必要はなく、ただポインタを渡せばよい。要素数 @a num_data の配列が返される。
- * @param[out] out 出力データ。あらかじめ領域を確保する必要はなく、ただポインタを渡せばよい。要素数が @a num_data の配列が返される。
+ * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[out] out 出力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
  * @~english
  * @brief Fit a baseline and subtract it from input data.
  * @details
@@ -1956,10 +1960,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask the final mask data after recursive clipping
- * procedure. just a pointer should be given. an array with length of
- * @a num_data will be allocated and returned.
- * @param[out] out the output data. just a pointer should be given. an
- * array with length of @a num_data will be allocated and returned.
+ * procedure. its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] out the output data. its length must be @a num_data .
+ * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe

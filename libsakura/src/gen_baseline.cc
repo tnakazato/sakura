@@ -101,14 +101,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	//if (out == nullptr)
-		//return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	//if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
-		//return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
@@ -134,14 +138,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	//if (out == nullptr)
-		//return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	//if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
-		//return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
