@@ -11,7 +11,7 @@
 /* the number of elements in input/output array to test */
 #define NUM_DATA 4096
 #define NUM_MODEL 20
-#define NUM_REPEAT 10000
+#define NUM_REPEAT 3000
 
 using namespace std;
 
@@ -206,11 +206,11 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 	}
 	end = sakura_GetCurrentTime();
 
-	//if (verbose) {
-		cout << "Elapse time of " << num_repeat << " repetition: " << end - start << " sec." << endl;
-		//PrintArray("out   ", num_model, num_model, out);
-		//PrintArray("answer", num_model, num_model, answer);
-	//}
+	cout << "Elapse time of " << num_repeat << " repetition: " << end - start << " sec." << endl;
+	if (verbose) {
+		PrintArray("out   ", num_model, num_model, out);
+		PrintArray("answer", num_model, num_model, answer);
+	}
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -296,11 +296,11 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	}
 	end = sakura_GetCurrentTime();
 
-	//if (verbose) {
-		cout << "Elapse time of " << num_repeat << " repetition: " << (end - start) << " sec." << endl;
-		//PrintArray("out   ", num_model, out);
-		//PrintArray("answer", num_model, answer);
-	//}
+	cout << "Elapse time of " << num_repeat << " repetition: " << (end - start) << " sec." << endl;
+	if (verbose) {
+		PrintArray("out   ", num_model, out);
+		PrintArray("answer", num_model, answer);
+	}
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
