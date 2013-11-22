@@ -245,16 +245,13 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	float input_data[NUM_IN_LARGE]; // 128
 	size_t const num_data(ELEMENTSOF(input_data));
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 32 && i < 98))
-			input_data[i] = 1.0;
-		else
-			input_data[i] = 0.0;
-	}
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
+		input_data[i] = 0.0;
+	for(size_t i=32; i < 98 ; ++i)
+		input_data[i] = 1.0;
 	bool mask[num_data];
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 		mask[i] = 1;
-	}
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
 	float output_data[num_data];
@@ -276,22 +273,16 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	float input_data[NUM_IN_LARGE]; // 128
 	size_t const num_data(ELEMENTSOF(input_data));
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 32 && i < 98))
-			input_data[i] = 1.0;
-		else
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			input_data[i] = 0.0;
-		//if( (i > 32 && i < 58) || (i > 72 && i < 98))
-					//input_data[i] = 1.0;
-		//std::cout << "" << input_data[i] << std::endl;
-	}
+	for(size_t i=32; i < 98 ; ++i)
+			input_data[i] = 1.0;
+
 	bool mask[num_data];
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if(i > 58 && i < 72)
-			mask[i] = 0;
-		else
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			mask[i] = 1;
-	}
+	for(size_t i=58; i < 72 ; ++i)
+			mask[i] = 0;
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
 	float output_data[num_data];
@@ -387,13 +378,9 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		PrintArray2("\n",num_data,output_data);
 		//PrintArray2("\n",num_data,context->real_array);
 	verbose = false;
-	for(size_t i=0; i < ELEMENTSOF(input_data)/2 ; ++i){
-		//std::cout << "context->real_array " << context->real_array[i] << std::endl;
-		//std::cout << "output_data " << output_data[num_data/2 -1 + i] << std::endl;
-		//EXPECT_FLOAT_EQ(context->real_array[num_data/2 + i],output_data[i]);
-		EXPECT_FLOAT_EQ(context->real_array[i],output_data[num_data/2 -1 + i]);
-		//EXPECT_EQ(context->real_array[i],output_data[num_data/2 +1+  i]);
-		//EXPECT_EQ(context->real_array[i],output_data[num_data/2 +1 + i]);
+	for(size_t i=0; i < ELEMENTSOF(input_data)/2 -1  ; ++i){
+		EXPECT_FLOAT_EQ(context->real_array[ELEMENTSOF(input_data)/2 + 1 + i],output_data[i]);
+		EXPECT_FLOAT_EQ(context->real_array[i],output_data[ELEMENTSOF(input_data)/2 -1 + i]);
 	}
 
 	LIBSAKURA_SYMBOL(Status) status_Destroy = LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -405,27 +392,25 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	size_t const num_data(ELEMENTSOF(input_data));
 	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
 			input_data[i] = 0.0;
-	//std::cout << "" << input_data[i] << std::endl;
 	}
 	for(size_t i=33; i < 92 ; ++i){
 			input_data[i] = 1.0;
-	//std::cout << "" << input_data[i] << std::endl;
 	}
 	bool mask[num_data];
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 44 && i < 56 ) || ( i > 68 && i < 80 ))
-			mask[i] = 0;
-		else
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			mask[i] = 1;
-	}
-
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 32 && i < 44) || (i > 56 && i < 68) || (i > 80 && i < 92))
-			input_data[i] = 1.0;
-		else
+	for(size_t i=44; i < 56 ; ++i)
+			mask[i] = 0;
+	for(size_t i=68; i < 80 ; ++i)
+			mask[i] = 0;
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			input_data[i] = 0.0;
-	//std::cout << "" << input_data[i] << std::endl;
-	}
+	for(size_t i=32; i < 44 ; ++i)
+			input_data[i] = 1.0;
+	for(size_t i=56; i < 68 ; ++i)
+			input_data[i] = 1.0;
+	for(size_t i=80; i < 92 ; ++i)
+			input_data[i] = 1.0;
 
 	size_t const kernel_width(20);//kernel_width(NUM_WIDTH);
 	bool fftuse = true;
@@ -446,16 +431,14 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	float input_data[NUM_IN_LARGE]; // 128
 	size_t const num_data(ELEMENTSOF(input_data));
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 58 && i < 72))
-		    input_data[i] = 1.0;
-		else
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			input_data[i] = 0.0;
-	}
+	for(size_t i=58; i < 72 ; ++i)
+		    input_data[i] = 1.0;
+
 	bool mask[num_data];
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 		mask[i] = 0;
-	}
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
 	float output_data[num_data];
@@ -477,16 +460,13 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	float input_data[NUM_IN_LARGE]; // 128
 	size_t const num_data(ELEMENTSOF(input_data));
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 58 && i < 72))
-		    input_data[i] = 1.0;
-		else
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			input_data[i] = 0.0;
-	}
+	for(size_t i=58; i < 72 ; ++i)
+		    input_data[i] = 1.0;
 	bool mask[num_data];
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 		mask[i] = 1;
-	}
 	size_t const kernel_width(NUM_WIDTH);
 	bool fftuse = true;
 	float output_data[num_data];
@@ -506,12 +486,11 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 	float input_data[NUM_IN_LARGE]; // 128
 	size_t const num_data(ELEMENTSOF(input_data));
-	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
-		if( (i > 32 && i < 98))
-			input_data[i] = 1.0;
-		else
+	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i)
 			input_data[i] = 0.0;
-	}
+	for(size_t i=32; i < 98 ; ++i)
+			input_data[i] = 1.0;
+
 	bool mask[num_data];
 	for(size_t i=0; i < ELEMENTSOF(input_data) ; ++i){
 		mask[i] = 1;
@@ -539,7 +518,6 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 			output_data_reuse[i] = 0.0;
 		else
 			output_data_reuse[i]=output_data[i];
-		//std::cout << "" << output_data_reuse[i] << std::endl;
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, output_data_reuse, mask, output_data));
