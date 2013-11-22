@@ -323,7 +323,7 @@ inline void SubtractBaseline(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(baseline_context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	//assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	bool *clip_mask = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clip_mask(
@@ -378,9 +378,12 @@ inline void SubtractBaseline(
 	}
 
 	final_mask = (bool *)storage_for_composite_mask.release();
-	for (size_t i = 0; i < num_data; ++i) {
-		out[i] = get_residual ? residual_data[i] : best_fit_model[i];
-	}
+	out = get_residual ? (float *)storage_for_residual_data.release() :
+							(float *)storage_for_best_fit_model.release();
+	//old code (#348)
+	//for (size_t i = 0; i < num_data; ++i) {
+		//out[i] = get_residual ? residual_data[i] : best_fit_model[i];
+	//}
 }
 
 inline void SubtractBaselinePolynomial(
@@ -390,7 +393,7 @@ inline void SubtractBaselinePolynomial(
 		bool *final_mask, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	//assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	CreateBaselineContext(
