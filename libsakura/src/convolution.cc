@@ -232,12 +232,12 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
 	if (context->num_data != num_data)
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	// for masked input_data (real)
+	std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
+			static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+					sizeof(float) * num_data)),
+			LIBSAKURA_PREFIX::Memory());
 	if (context->use_fft) { // with fft
-		// for masked working input_data (real)
-		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> work_input_data(
-				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(float) * num_data)),
-				LIBSAKURA_PREFIX::Memory());
 		// fft applied array for input_data (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
 				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
@@ -250,12 +250,12 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		if (multiplied_complex_data == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		ApplyMaskToInputData(num_data, input_data, mask, work_input_data.get()); // context->real_array is mask applied array
+		ApplyMaskToInputData(num_data, input_data, mask, masked_input_data.get()); // context->real_array is mask applied array
 		if (context->plan_real_to_complex_float == nullptr)
 			return LIBSAKURA_SYMBOL(Status_kUnknownError);
 		else {
 			fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
-					work_input_data.get(),
+					masked_input_data.get(),
 					fft_applied_complex_input_data.get());
 			float scale = 1.0 / num_data;
 			for (size_t i = 0; i < num_data / 2 + 1; ++i) {
@@ -280,10 +280,6 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 					multiplied_complex_data.get(), output_data);
 		}
 	} else { // without fft
-		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
-				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(float) * num_data)),
-				LIBSAKURA_PREFIX::Memory());
 		if (masked_input_data == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
