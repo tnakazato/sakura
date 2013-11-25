@@ -166,6 +166,7 @@ inline void CreateBaselineContext(
 		num_bases = 2 * order + 1;
 		break;
 	default:
+		assert(false);
 		break;
 	}
 
