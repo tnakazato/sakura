@@ -38,38 +38,29 @@ public:
 	virtual ~BaselineDefault() {
 	}
 	virtual void CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
-			uint16_t const order,
+	LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 			size_t const num_data,
 			LIBSAKURA_SYMBOL(BaselineContext) **context) const;
 	virtual void DestroyBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineContext) *context) const;
-	virtual void GetBestFitBaseline(
-			size_t num_data,
+	LIBSAKURA_SYMBOL(BaselineContext) *context) const;
+	virtual void GetBestFitBaseline(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			float out[/*num_data*/]) const;
-	virtual void SubtractBaseline(
-			size_t num_data,
+	virtual void SubtractBaseline(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineContext) const *context,
-			float clipping_threshold_sigma,
-			uint16_t num_fitting_max,
+			float clipping_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
-			bool final_mask[/*num_data*/],
-			float out[/*num_data*/]) const;
-	virtual void SubtractBaselinePolynomial(
-			size_t num_data,
+			bool final_mask[/*num_data*/], float out[/*num_data*/]) const;
+	virtual void SubtractBaselinePolynomial(size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/],
-			uint16_t order,
-			float clipping_threshold_sigma,
-			uint16_t num_fitting_max,
+			bool const mask[/*num_data*/], uint16_t order,
+			float clipping_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
-			bool final_mask[/*num_data*/],
-			float out[/*num_data*/]) const;
+			bool final_mask[/*num_data*/], float out[/*num_data*/]) const;
 };
 
 class BaselineAfterSandyBridge: public Baseline {
@@ -77,38 +68,29 @@ public:
 	virtual ~BaselineAfterSandyBridge() {
 	}
 	virtual void CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
-			uint16_t const order,
+	LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 			size_t const num_data,
 			LIBSAKURA_SYMBOL(BaselineContext) **context) const;
 	virtual void DestroyBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineContext) *context) const;
-	virtual void GetBestFitBaseline(
-			size_t num_data,
+	LIBSAKURA_SYMBOL(BaselineContext) *context) const;
+	virtual void GetBestFitBaseline(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			float out[/*num_data*/]) const;
-	virtual void SubtractBaseline(
-			size_t num_data,
+	virtual void SubtractBaseline(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineContext) const *context,
-			float clipping_threshold_sigma,
-			uint16_t num_fitting_max,
+			float clipping_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
-			bool final_mask[/*num_data*/],
-			float out[/*num_data*/]) const;
-	virtual void SubtractBaselinePolynomial(
-			size_t num_data,
+			bool final_mask[/*num_data*/], float out[/*num_data*/]) const;
+	virtual void SubtractBaselinePolynomial(size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/],
-			uint16_t order,
-			float clipping_threshold_sigma,
-			uint16_t num_fitting_max,
+			bool const mask[/*num_data*/], uint16_t order,
+			float clipping_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
-			bool final_mask[/*num_data*/],
-			float out[/*num_data*/]) const;
+			bool final_mask[/*num_data*/], float out[/*num_data*/]) const;
 };
 
 template<typename DataType>
@@ -124,8 +106,8 @@ public:
 			size_t num_data, DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
-	virtual void OperateBitsImplication(DataType bit_mask,
-			size_t num_data, DataType const data[/*num_data*/],
+	virtual void OperateBitsImplication(DataType bit_mask, size_t num_data,
+			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 	virtual void OperateBitsNot(size_t num_data,
@@ -155,8 +137,8 @@ public:
 			size_t num_data, DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
-	virtual void OperateBitsImplication(DataType bit_mask,
-			size_t num_data, DataType const data[/*num_data*/],
+	virtual void OperateBitsImplication(DataType bit_mask, size_t num_data,
+			DataType const data[/*num_data*/],
 			bool const edit_mask[/*num_data*/],
 			DataType result[/*num_data*/]) const;
 	virtual void OperateBitsNot(size_t num_data,
@@ -250,9 +232,8 @@ public:
 	virtual void CreateConvolve1DContext(size_t num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
-	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
-			size_t num_data,
-			float const input_data[/*num_data*/],
+	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
+			size_t num_data, float const input_data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			float output_data[/*num_data*/]) const;
 	virtual void DestroyConvolve1DContext(
@@ -266,9 +247,8 @@ public:
 	virtual void CreateConvolve1DContext(size_t num_data,
 	LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext) **context) const;
-	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) *context,
-			size_t num_data,
-			float const input_data[/*num_data*/],
+	virtual void Convolve1D(LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
+			size_t num_data, float const input_data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			float output_data[/*num_data*/]) const;
 	virtual void DestroyConvolve1DContext(
@@ -369,21 +349,16 @@ class NumericOperationDefault: public NumericOperation {
 public:
 	virtual ~NumericOperationDefault() {
 	}
-	virtual void GetMatrixCoefficientsForLeastSquareFitting(
-			size_t num_mask,
-			bool const mask[/*num_mask*/],
-			size_t num_model_bases,
+	virtual void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
+	bool const mask[/*num_mask*/], size_t num_model_bases,
 			double const model[/*num_model_bases*num_mask*/],
 			double out[/*num_model_bases*num_model_bases*/]) const;
-	virtual void GetVectorCoefficientsForLeastSquareFitting(
-			size_t num_data,
+	virtual void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/],
-			size_t num_model_bases,
+			bool const mask[/*num_data*/], size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const;
-	virtual void SolveSimultaneousEquationsByLU(
-			size_t num_equations,
+	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,
 			double const lsq_matrix0[/*num_equations*num_equations*/],
 			double const lsq_vector0[/*num_equations*/],
 			double out[/*num_equations*/]) const;
@@ -393,21 +368,16 @@ class NumericOperationAfterSandyBridge: public NumericOperation {
 public:
 	virtual ~NumericOperationAfterSandyBridge() {
 	}
-	virtual void GetMatrixCoefficientsForLeastSquareFitting(
-			size_t num_mask,
-			bool const mask[/*num_mask*/],
-			size_t num_model_bases,
+	virtual void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
+	bool const mask[/*num_mask*/], size_t num_model_bases,
 			double const model[/*num_model_bases*num_mask*/],
 			double out[/*num_model_bases*num_model_bases*/]) const;
-	virtual void GetVectorCoefficientsForLeastSquareFitting(
-			size_t num_data,
+	virtual void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/],
-			size_t num_model_bases,
+			bool const mask[/*num_data*/], size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const;
-	virtual void SolveSimultaneousEquationsByLU(
-			size_t num_equations,
+	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,
 			double const lsq_matrix0[/*num_equations*num_equations*/],
 			double const lsq_vector0[/*num_equations*/],
 			double out[/*num_equations*/]) const;

@@ -34,7 +34,7 @@ inline fftwf_complex* AllocateFFTArray(size_t num_data) {
 inline void FreeFFTArray(fftwf_complex *ptr) {
 	if (ptr != nullptr) {
 		fftwf_free(ptr);
-	    ptr = nullptr;
+		ptr = nullptr;
 	}
 }
 
@@ -92,7 +92,8 @@ inline void CalculateConvolutionWithoutFFT(size_t num_data,
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; ((j+1+i < num_data) && (i < num_data / 2 - 1)); ++i) {
+		for (size_t i = 0; ((j + 1 + i < num_data) && (i < num_data / 2 - 1));
+				++i) {
 			left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
 		}
 		for (size_t k = 0; k < j; ++k) {
@@ -226,40 +227,57 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 }
 
 inline LIBSAKURA_SYMBOL(Status) Convolve1D(
-LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
+LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
-	if(context->num_data != num_data)
+	if (context->num_data != num_data)
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	if (context->use_fft) { // with fft
-		ApplyMaskToInputData(num_data, input_data, mask, context->real_array); // context->real_array is mask applied array
+		// for masked working input_data (real)
+		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> work_input_data(
+				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(float) * num_data)),
+				LIBSAKURA_PREFIX::Memory());
+		// fft applied array for input_data (complex)
+		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
+				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+		if (fft_applied_complex_input_data == nullptr) {
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
+		}
+		// fft applied array for multiplied data (kernel * input_data) (complex)
+		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
+				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+		if (multiplied_complex_data == nullptr) {
+			return LIBSAKURA_SYMBOL(Status_kNoMemory);
+		}
+		ApplyMaskToInputData(num_data, input_data, mask, work_input_data.get()); // context->real_array is mask applied array
 		if (context->plan_real_to_complex_float == nullptr)
 			return LIBSAKURA_SYMBOL(Status_kUnknownError);
 		else {
-			fftwf_execute(context->plan_real_to_complex_float);
+			fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
+					work_input_data.get(),
+					fft_applied_complex_input_data.get());
 			float scale = 1.0 / num_data;
 			for (size_t i = 0; i < num_data / 2 + 1; ++i) {
-				context->multiplied_complex_data[i][0] =
+				multiplied_complex_data[i][0] =
 						(context->fft_applied_complex_kernel[i][0]
-								* context->fft_applied_complex_input_data[i][0]
+								* fft_applied_complex_input_data[i][0]
 								- context->fft_applied_complex_kernel[i][1]
-										* context->fft_applied_complex_input_data[i][1])
+										* fft_applied_complex_input_data[i][1])
 								* scale;
-				context->multiplied_complex_data[i][1] =
+				multiplied_complex_data[i][1] =
 						(context->fft_applied_complex_kernel[i][0]
-								* context->fft_applied_complex_input_data[i][1]
+								* fft_applied_complex_input_data[i][1]
 								+ context->fft_applied_complex_kernel[i][1]
-										* context->fft_applied_complex_input_data[i][0])
+										* fft_applied_complex_input_data[i][0])
 								* scale;
 			}
 		}
 		if (context->plan_complex_to_real_float == nullptr)
 			return LIBSAKURA_SYMBOL(Status_kUnknownError);
 		else {
-			fftwf_execute(context->plan_complex_to_real_float);
-			for (size_t i = 0; i < num_data; ++i) {
-				output_data[i] = context->real_array[i];
-			}
+			fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
+					multiplied_complex_data.get(), output_data);
 		}
 	} else { // without fft
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
@@ -321,7 +339,7 @@ void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
 }
 
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::Convolve1D(
-LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
+LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) const {
 	::Convolve1D(context, num_data, input_data, mask, output_data);

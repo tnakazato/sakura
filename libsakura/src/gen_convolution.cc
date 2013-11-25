@@ -43,14 +43,15 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
-LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
-	float const input_data[/*num_data*/],
-	bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
-	if ( num_data < 1) {
-		LOG4CXX_ERROR(logger, "num_data must be > 0, context->num_data == num_data");
+LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
+		float const input_data[/*num_data*/],
+		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
+	if (num_data < 1) {
+		LOG4CXX_ERROR(logger,
+				"num_data must be > 0, context->num_data == num_data");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if(context == nullptr){
+	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
@@ -67,13 +68,13 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context, size_t num_data,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
-try {
-	auto convolutionop =
-			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
-	convolutionop->DestroyConvolve1DContext(context);
-} catch (...) {
-	assert(false); // no exception should not be raised for the current implementation.
-	return LIBSAKURA_SYMBOL(Status_kUnknownError);
-}
-return LIBSAKURA_SYMBOL(Status_kOK);
+	try {
+		auto convolutionop =
+				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
+		convolutionop->DestroyConvolve1DContext(context);
+	} catch (...) {
+		assert(false); // no exception should not be raised for the current implementation.
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }

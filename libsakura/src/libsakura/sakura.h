@@ -371,82 +371,82 @@ typedef struct {
 		int const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Returns if the values in input array are in any of specified range (exclusive).
-  * @details Returns true if the corresponding element in the input array
-  * is in between upper and lower boundary pairs,
-  * @par
-  * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
-  *
-  * The function takes more than one upper and lower boundary pairs as arrays,
-  * @a lower_bounds and @a upper_bounds.@n
-  *
-  * @note
-  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
-  * All elements in @a result are set to false when no condition is given, i.e., @a num_condition = 0.
-  *
-  * @param[in] num_data The number of elements in the arrays, @a data
-  * and @a result
-  * @param[in] data An input array of size, @a num_data.
-  * Array elements should not contain Inf nor NaN.
-  * @n must-be-aligned
-  * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
-  * and @a upper_bounds.
-  * @param[in] lower_bounds The input array of size, @a num_condition.
-  * Array elements should not contain Inf nor NaN.
-  * @n must-be-aligned
-  * @param[in] upper_bounds The input array of size, @a num_condition.
-  * Array elements should not contain Inf nor NaN.
-  * @n must-be-aligned
-  * @param[out] result The output array of size, @a num_data.
-  * @n must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(exclusive).
-  * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
-  * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。@n
-  * すなわち、
-  * @par
-  * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
-  *
-  * を検定する。@n
-  *
-  * @note
-  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
-  * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての要素がfalseとなる。
-  *
-  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
-  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
-  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
-  * @n must-be-aligned
-  * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
-  * 下限値と上限値の組の数を表す。
-  * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
-  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
-  * @n must-be-aligned
-  * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
-  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
-  * @n must-be-aligned
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)(
- 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
- 		float const lower_bounds[/*num_condition*/],
- 		float const upper_bounds[/*num_condition*/],
- 		bool result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Returns if the values in input array are in any of specified range (exclusive).
+ * @details Returns true if the corresponding element in the input array
+ * is in between upper and lower boundary pairs,
+ * @par
+ * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
+ *
+ * The function takes more than one upper and lower boundary pairs as arrays,
+ * @a lower_bounds and @a upper_bounds.@n
+ *
+ * @note
+ * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+ * All elements in @a result are set to false when no condition is given, i.e., @a num_condition = 0.
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data An input array of size, @a num_data.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
+ * and @a upper_bounds.
+ * @param[in] lower_bounds The input array of size, @a num_condition.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[in] upper_bounds The input array of size, @a num_condition.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[out] result The output array of size, @a num_data.
+ * @n must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 入力配列の値が、与えられた下限値と上限値の組の範囲に入っているかを検定する。(exclusive).
+ * @details 複数の下限値( @a lower_bounds ) と上限値 ( @a upper_bounds ) の組を配列として取り、
+ * 入力配列の要素の値がそれらのいずれかの範囲に含まれていれば真を返す。@n
+ * すなわち、
+ * @par
+ * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
+ *
+ * を検定する。@n
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+ * 上限値と下限値が与えられなければ (@a num_condition = 0)、@a result は全ての要素がfalseとなる。
+ *
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
+ * 下限値と上限値の組の数を表す。
+ * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)(
+		size_t num_data, float const data[/*num_data*/], size_t num_condition,
+		float const lower_bounds[/*num_condition*/],
+		float const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]);
 
- /**
-  * @copybrief sakura_SetTrueFloatInRangesExclusive
-  * @copydetails sakura_SetTrueFloatInRangesExclusive
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)(
- 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
- 		int const lower_bounds[/*num_condition*/],
- 		int const upper_bounds[/*num_condition*/],
- 		bool result[/*num_data*/]);
+/**
+ * @copybrief sakura_SetTrueFloatInRangesExclusive
+ * @copydetails sakura_SetTrueFloatInRangesExclusive
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)(
+		size_t num_data, int const data[/*num_data*/], size_t num_condition,
+		int const lower_bounds[/*num_condition*/],
+		int const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]);
 
 /**
  * @~english
@@ -501,196 +501,197 @@ typedef struct {
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Returns if the values in input array are greater than or equal to a threshold.
-  * @details Returns true if the corresponding element in the input array
-  * is greater than or equals to a @a threshold,
-  * @par
-  * @a data[i] >= @a threshold .
-  *
-  * @note
-  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
-  *
-  * @param[in] num_data The number of elements in the arrays, @a data
-  * and @a result
-  * @param[in] data An input array of size, @a num_data.
-  * Array elements should not contain Inf nor NaN.
-  * @n must-be-aligned
-  * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
-  * @param[out] result The output array of size, @a num_data.
-  * @n must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief 入力配列の値が、与えられたしきい値以上かどうかを検定する。
-  * @details 入力配列の要素の値がしきい値( @a threshold )以上であれば真を返す。@n
-  * すなわち、
-  * @par
-  * @a data[i] >= @a threshold .
-  *
-  * を検定する。@n
-  *
-  * @note
-  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
-  *
-  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
-  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
-  * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
-  * @n must-be-aligned
-  * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThanOrEquals)(
- 		size_t num_data, float const data[/*num_data*/], float threshold,
- 		bool result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Returns if the values in input array are greater than or equal to a threshold.
+ * @details Returns true if the corresponding element in the input array
+ * is greater than or equals to a @a threshold,
+ * @par
+ * @a data[i] >= @a threshold .
+ *
+ * @note
+ * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data An input array of size, @a num_data.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[out] result The output array of size, @a num_data.
+ * @n must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 入力配列の値が、与えられたしきい値以上かどうかを検定する。
+ * @details 入力配列の要素の値がしきい値( @a threshold )以上であれば真を返す。@n
+ * すなわち、
+ * @par
+ * @a data[i] >= @a threshold .
+ *
+ * を検定する。@n
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+ *
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThanOrEquals)(
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]);
 
- /**
-  * @copybrief sakura_SetTrueFloatGreaterThanOrEquals
-  * @copydetails sakura_SetTrueFloatGreaterThanOrEquals
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThanOrEquals)(
- 		size_t num_data, int const data[/*num_data*/], int threshold,
- 		bool result[/*num_data*/]);
+/**
+ * @copybrief sakura_SetTrueFloatGreaterThanOrEquals
+ * @copydetails sakura_SetTrueFloatGreaterThanOrEquals
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThanOrEquals)(
+		size_t num_data, int const data[/*num_data*/], int threshold,
+		bool result[/*num_data*/]);
 
-  /**
-   * @~english
-   * @brief Returns if the values in input array are less than a threshold.
-   * @details Returns true if the corresponding element in the input array
-   * is less than a @a threshold,
-   * @par
-   * @a data[i] < @a threshold .
-   *
-   * @note
-   * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
-   *
-   * @param[in] num_data The number of elements in the arrays, @a data
-   * and @a result
-   * @param[in] data An input array of size, @a num_data.
-   * Array elements should not contain Inf nor NaN.
-   * @n must-be-aligned
-   * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
-   * @param[out] result The output array of size, @a num_data.
-   * @n must-be-aligned
-   * @return status code
-   * @~japanese
-   * @brief 入力配列の値が、与えられたしきい値より小さいかどうかを検定する。
-   * @details 入力配列の要素の値がしきい値( @a threshold )より小さければ真を返す。@n
-   * すなわち、
-   * @par
-   * @a data[i] < @a threshold .
-   *
-   * を検定する。@n
-   *
-   * @note
-   * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
-   *
-   * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
-   * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
-   * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
-   * @n must-be-aligned
-   * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
-   * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
-   * @n must-be-aligned
-   * @return 終了ステータス
-   *@~
-   * MT-safe
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThan)(
-  		size_t num_data, float const data[/*num_data*/], float threshold,
-  		bool result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Returns if the values in input array are less than a threshold.
+ * @details Returns true if the corresponding element in the input array
+ * is less than a @a threshold,
+ * @par
+ * @a data[i] < @a threshold .
+ *
+ * @note
+ * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data An input array of size, @a num_data.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[out] result The output array of size, @a num_data.
+ * @n must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 入力配列の値が、与えられたしきい値より小さいかどうかを検定する。
+ * @details 入力配列の要素の値がしきい値( @a threshold )より小さければ真を返す。@n
+ * すなわち、
+ * @par
+ * @a data[i] < @a threshold .
+ *
+ * を検定する。@n
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+ *
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThan)(
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]);
 
-  /**
-   * @copybrief sakura_SetTrueFloatLessThan
-   * @copydetails sakura_SetTrueFloatLessThan
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThan)(
-  		size_t num_data, int const data[/*num_data*/], int threshold,
-  		bool result[/*num_data*/]);
+/**
+ * @copybrief sakura_SetTrueFloatLessThan
+ * @copydetails sakura_SetTrueFloatLessThan
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThan)(size_t num_data,
+		int const data[/*num_data*/], int threshold,
+		bool result[/*num_data*/]);
 
-   /**
-    * @~english
-    * @brief Returns if the values in input array are less than or equal to a threshold.
-    * @details Returns true if the corresponding element in the input array
-    * is less than or equals to a @a threshold,
-    * @par
-    * @a data[i] <= @a threshold .
-    *
-    * @note
-    * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
-    *
-    * @param[in] num_data The number of elements in the arrays, @a data
-    * and @a result
-    * @param[in] data An input array of size, @a num_data.
-    * Array elements should not contain Inf nor NaN.
-    * @n must-be-aligned
-    * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
-    * @param[out] result The output array of size, @a num_data.
-    * @n must-be-aligned
-    * @return status code
-    * @~japanese
-    * @brief 入力配列の値が、与えられたしきい値以下かどうかを検定する。
-    * @details 入力配列の要素の値がしきい値( @a threshold )以下であれば真を返す。@n
-    * すなわち、
-    * @par
-    * @a data[i] <= @a threshold .
-    *
-    * を検定する。@n
-    *
-    * @note
-    * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
-    *
-    * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
-    * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
-    * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
-    * @n must-be-aligned
-    * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
-    * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
-    * @n must-be-aligned
-    * @return 終了ステータス
-    *@~
-    * MT-safe
-    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThanOrEquals)(
-   		size_t num_data, float const data[/*num_data*/], float threshold,
-   		bool result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Returns if the values in input array are less than or equal to a threshold.
+ * @details Returns true if the corresponding element in the input array
+ * is less than or equals to a @a threshold,
+ * @par
+ * @a data[i] <= @a threshold .
+ *
+ * @note
+ * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data An input array of size, @a num_data.
+ * Array elements should not contain Inf nor NaN.
+ * @n must-be-aligned
+ * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[out] result The output array of size, @a num_data.
+ * @n must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 入力配列の値が、与えられたしきい値以下かどうかを検定する。
+ * @details 入力配列の要素の値がしきい値( @a threshold )以下であれば真を返す。@n
+ * すなわち、
+ * @par
+ * @a data[i] <= @a threshold .
+ *
+ * を検定する。@n
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。@n
+ *
+ * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
+ * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
+ * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * @n must-be-aligned
+ * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThanOrEquals)(
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]);
 
-   /**
-    * @copybrief sakura_SetTrueFloatLessThanOrEquals
-    * @copydetails sakura_SetTrueFloatLessThanOrEquals
-    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThanOrEquals)(
-   		size_t num_data, int const data[/*num_data*/], int threshold,
-   		bool result[/*num_data*/]);
+/**
+ * @copybrief sakura_SetTrueFloatLessThanOrEquals
+ * @copydetails sakura_SetTrueFloatLessThanOrEquals
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThanOrEquals)(
+		size_t num_data, int const data[/*num_data*/], int threshold,
+		bool result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Returns if the values in input array are finite numbers.
-  * @details Returns false if the corresponding element in the input array
-  * is not a number (NaN) or infinity.
-  *
-  * @note No operation is done when the data array is zero length, i.e., @a num_data = 0.
-  *
-  * @param[in] num_data The number of elements in the arrays, @a data
-  * and @a result
-  * @param[in] data The input array of of size, @a num_data.
-  * @n must-be-aligned
-  * @param[out] result The output array of of size, @a num_data.
-  * @n must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief 入力配列の値が、有限の値かどうかを検定する。
-  * @details 入力配列の要素の値が非数（NaN）または無限大（Inf）ならば偽を返す。
-  *
-  * @note 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-  *
-  * @param[in] num_data @a data 及び@a result の要素の数。
-  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(size_t num_data,
- float const data[/*num_data*/], bool result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Returns if the values in input array are finite numbers.
+ * @details Returns false if the corresponding element in the input array
+ * is not a number (NaN) or infinity.
+ *
+ * @note No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data
+ * and @a result
+ * @param[in] data The input array of of size, @a num_data.
+ * @n must-be-aligned
+ * @param[out] result The output array of of size, @a num_data.
+ * @n must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 入力配列の値が、有限の値かどうかを検定する。
+ * @details 入力配列の要素の値が非数（NaN）または無限大（Inf）ならば偽を返す。
+ *
+ * @note 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @param[in] num_data @a data 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(
+		size_t num_data, float const data[/*num_data*/],
+		bool result[/*num_data*/]);
 
 /**
  * @~english
@@ -754,438 +755,438 @@ typedef struct {
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_data,
 bool const data[/*num_data*/], bool result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Invoke bit operation AND between a a bit mask and an array.
-  * @details Invokes the following bit operation to @a i- th element of @a result :
-  * @code
-  * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
-  * @endcode
-  *
-  * @note
-  * No operation is done when the data array is zero length, i.e., @a num_data = 0.
-  *
-  * @note
-  * The function can also be used to invoke material nonimplication of @a data and @a bit_mask .
-  * Input the complement of @a bit_mask (~@a bit_mask ) to invoke material nonimplication.
-  * For details of mateial nonimplication, see, e.g.,@n
-  * http://en.wikipedia.org/wiki/Truth_table
-  *
-  * @param[in] bit_mask A bit mask. The bit operation is invoked
-  * between this value and the array, @a data.
-  * @param[in] num_data The number of elements in the arrays, @a data,
-  * @a edit_mask, and @a result.
-  * @param[in] data An input array of size, @a num_data. The bit operation
-  * is invoked between this array and @a bit_mask.@n
-  * must-be-aligned
-  * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
-  * is skipped for the elements with the value, false.@n
-  * must-be-aligned
-  * @param[out] result The output array of size, @a num_data. It stores the result
-  * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
-  * and the value in array, @a data, is adopted for the elements where corresponding
-  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
-  * that of @a in (@a result == @a data), indicating in-place operation.@n
-  * must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief ビットマスクと一次元配列のビット積を取る。
-  * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
-  * @code
-  * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
-  * @endcode
-  *
-  * @note
-  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-  *
-  * @note
-  * この関数は、@a data と@a bit_mask の間の非含意のビット演算にも使用できる。
-  * 非含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
-  * ( ~@a bit_mask )を関数の入力として与える。非含意のビット演算についての詳細は、例えば次のページを参照:@n
-  * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
-  *
-  * @param[in] bit_mask ビットマスク
-  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
-  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
-  * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
-  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
-  * @n must-be-aligned
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  *
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
- 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
- /**
-  * @copybrief sakura_OperateBitsUint8And
-  * @copydetails sakura_OperateBitsUint8And
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
- 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Invoke bit operation AND between a a bit mask and an array.
+ * @details Invokes the following bit operation to @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @note
+ * The function can also be used to invoke material nonimplication of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke material nonimplication.
+ * For details of mateial nonimplication, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
+ *
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked between this array and @a bit_mask.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief ビットマスクと一次元配列のビット積を取る。
+ * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の非含意のビット演算にも使用できる。
+ * 非含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。非含意のビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
+ *
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8And
+ * @copydetails sakura_OperateBitsUint8And
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Invoke bit operation, Converse Nonimplication, between a bit mask and an array.
-  * @details Invokes the following bit operation to the @a i- th element of @a result :
-  * @code
-  * result [i] = edit_mask[i] ? (~data[i] & bit_maks) : data[i]
-  * @endcode
-  *
-  * @note
-  * No operation is done when the data array is zero length, i.e., @a num_data = 0.
-  *
-  * @note
-  * The function can also be used to invoke bitwise NOR operation of @a data and @a bit_mask .
-  * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise NOR operation.
-  * For details of bitwise NOR operation, see, e.g.,@n
-  * http://en.wikipedia.org/wiki/Truth_table
-  *
-  * @param[in] bit_mask A bit mask. The bit operation is invoked
-  * between this value and the array, @a data.
-  * @param[in] num_data The number of elements in the arrays, @a data,
-  * @a edit_mask, and @a result.
-  * @param[in] data An input array of size, @a num_data. The bit operation
-  * is invoked between this array and @a bit_mask.@n
-  * must-be-aligned
-  * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
-  * is skipped for the elements with the value, false.@n
-  * must-be-aligned
-  * @param[out] result The output array of size, @a num_data. It stores the result
-  * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
-  * and the value in array, @a data, is adopted for the elements where corresponding
-  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
-  * that of @a in (@a result == @a data), indicating in-place operation.@n
-  * must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief ビットマスクと一次元配列の非逆含意ビット演算を実行する。
-  * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
-  * @code
-  * result [i] = edit_mask[i] ? (~data[i] & bit_maks) : data[i]
-  * @endcode
-  *
-  * @note
-  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-  *
-  * @note
-  * この関数は、@a data と@a bit_mask の間の否定論理和ビット演算(NOR)にも使用できる。
-  * 否定論理和のビット演算を実行するときは、@a bit_mask をビット反転させたもの
-  * ( ~@a bit_mask )を関数の入力として与える。
-  * 否定論理和ビット演算についての詳細は、例えば次のページを参照:@n
-  * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
-  *
-  *
-  * @param[in] bit_mask ビットマスク
-  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
-  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
-  * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
-  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
-  * @n must-be-aligned
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  *
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication)(
- 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
- /**
-  * @copybrief sakura_OperateBitsUint8ConverseNonImplication
-  * @copydetails sakura_OperateBitsUint8ConverseNonImplication
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
- 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Invoke bit operation, Converse Nonimplication, between a bit mask and an array.
+ * @details Invokes the following bit operation to the @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? (~data[i] & bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @note
+ * The function can also be used to invoke bitwise NOR operation of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise NOR operation.
+ * For details of bitwise NOR operation, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
+ *
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked between this array and @a bit_mask.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief ビットマスクと一次元配列の非逆含意ビット演算を実行する。
+ * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? (~data[i] & bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の否定論理和ビット演算(NOR)にも使用できる。
+ * 否定論理和のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。
+ * 否定論理和ビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
+ *
+ *
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8ConverseNonImplication
+ * @copydetails sakura_OperateBitsUint8ConverseNonImplication
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
-  /**
-   * @~english
-   * @brief Invoke bit operation, Material Implication, between a bit mask and an array.
-   * @details Invokes the following bit operation to the @a i- th element of @a result :
-   * @code
-   * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
-   * @endcode
-   *
-   * @note
-   * No operation is done when the data array is zero length, i.e., @a num_data = 0.
-   *
-   * @note
-   * The function can also be used to invoke bitwise NAND operation of @a data and @a bit_mask .
-   * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise NAND operation.
-   * For details of bitwise NAND operation, see, e.g.,@n
-   * http://en.wikipedia.org/wiki/Truth_table
-   *
-   * @param[in] bit_mask A bit mask. The bit operation is invoked
-   * between this value and the array, @a data.
-   * @param[in] num_data The number of elements in the arrays, @a data,
-   * @a edit_mask, and @a result.
-   * @param[in] data An input array of size, @a num_data. The bit operation
-   * is invoked between this array and @a bit_mask.@n
-   * must-be-aligned
-   * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
-   * is skipped for the elements with the value, false.@n
-   * must-be-aligned
-   * @param[out] result The output array of size, @a num_data. It stores the result
-   * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
-   * and the value in array, @a data, is adopted for the elements where corresponding
-   * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
-   * that of @a in (@a result == @a data), indicating in-place operation.@n
-   * must-be-aligned
-   * @return status code
-   * @~japanese
-   * @brief ビットマスクと一次元配列の含意ビット演算を実行する。
-   * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
-   * @code
-   * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
-   * @endcode
-   *
-   * @note
-   * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-   *
-   * @note
-   * この関数は、@a data と@a bit_mask の間の否定論理積ビット演算(NAND)にも使用できる。
-   * 否定論理積のビット演算を実行するときは、@a bit_mask をビット反転させたもの
-   * ( ~@a bit_mask )を関数の入力として与える。
-   * 否定論理積ビット演算についての詳細は、例えば次のページを参照:@n
-   * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
-   *
-   *
-   * @param[in] bit_mask ビットマスク
-   * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
-   * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-   * @n must-be-aligned
-   * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
-   * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
-   * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
-   * @n must-be-aligned
-   * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
-   * @n must-be-aligned
-   * @return 終了ステータス
-   *@~
-   * MT-safe
-   *
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication)(
-  		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-  		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
-  /**
-   * @copybrief sakura_OperateBitsUint8Implication
-   * @copydetails sakura_OperateBitsUint8Implication
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implication)(
-  		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-  		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Invoke bit operation, Material Implication, between a bit mask and an array.
+ * @details Invokes the following bit operation to the @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @note
+ * The function can also be used to invoke bitwise NAND operation of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise NAND operation.
+ * For details of bitwise NAND operation, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
+ *
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked between this array and @a bit_mask.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief ビットマスクと一次元配列の含意ビット演算を実行する。
+ * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の否定論理積ビット演算(NAND)にも使用できる。
+ * 否定論理積のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。
+ * 否定論理積ビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
+ *
+ *
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8Implication
+ * @copydetails sakura_OperateBitsUint8Implication
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implication)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Invoke bitwise NOT operation of an array.
-  * @details Invokes the following bit operation to @a i- th element of @a result :
-  * @code
-  * result [i] = edit_mask[i] ? ~data[i] : data[i]
-  * @endcode
-  *
-  * @note
-  * No operation is done when the data array is zero length, i.e., @a num_data = 0.
-  *
-  * @param[in] num_data The number of elements in the arrays, @a data,
-  * @a edit_mask, and @a result.
-  * @param[in] data An input array of size, @a num_data. The bit operation
-  * is invoked to this array.@n
-  * must-be-aligned
-  * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
-  * is skipped for the elements with the value, false.@n
-  * must-be-aligned
-  * @param[out] result The output array of size, @a num_data. It stores the result
-  * of the bit operation to @a data. The bit operation is skipped
-  * and the value in array, @a data, is adopted for the elements where corresponding
-  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
-  * that of @a in (@a result == @a data), indicating in-place operation.@n
-  * must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief 一次元配列をビット反転する。
-  * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
-  * @code
-  * result [i] = edit_mask[i] ? ~data[i] : data[i]
-  * @endcode
-  *
-  * @note
-  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-  *
-  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
-  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
-  * この値が true だと、対応する入力配列@a data に対するビット反転が実行される。
-  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
-  * @n must-be-aligned
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  *
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(size_t num_data,
- 		uint8_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
- /**
-  * @copybrief sakura_OperateBitsUint8Not
-  * @copydetails sakura_OperateBitsUint8Not
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
- 		size_t num_data, uint32_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Invoke bitwise NOT operation of an array.
+ * @details Invokes the following bit operation to @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? ~data[i] : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked to this array.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation to @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief 一次元配列をビット反転する。
+ * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? ~data[i] : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data に対するビット反転が実行される。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(size_t num_data,
+		uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8Not
+ * @copydetails sakura_OperateBitsUint8Not
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
+		size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
- /**
-  * @~english
-  * @brief Invoke bit operation OR between a a bit mask and an array.
-  * @details Invokes the following bit operation to @a i- th element of @a result :
-  * @code
-  * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
-  * @endcode
-  *
-  * @note
-  * No operation is done when the data array is zero length, i.e., @a num_data = 0.
-  *
-  * @note
-  * The function can also be used to invoke converse implication of @a data and @a bit_mask .
-  * Input the complement of @a bit_mask (~@a bit_mask ) to invoke converse implication.
-  * For details of converse implication, see, e.g.,@n
-  * http://en.wikipedia.org/wiki/Truth_table
-  *
-  * @param[in] bit_mask A bit mask. The bit operation is invoked
-  * between this value and the array, @a data.
-  * @param[in] num_data The number of elements in the arrays, @a data,
-  * @a edit_mask, and @a result.
-  * @param[in] data An input array of size, @a num_data. The bit operation
-  * is invoked between this array and @a bit_mask.@n
-  * must-be-aligned
-  * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
-  * is skipped for the elements with the value, false.@n
-  * must-be-aligned
-  * @param[out] result The output array of size, @a num_data. It stores the result
-  * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
-  * and the value in array, @a data, is adopted for the elements where corresponding
-  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
-  * that of @a in (@a result == @a data), indicating in-place operation.@n
-  * must-be-aligned
-  * @return status code
-  * @~japanese
-  * @brief ビットマスクと一次元配列のビット和を取る。
-  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
-  * @code
-  * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
-  * @endcode
-  *
-  * @note
-  * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-  *
-  * @note
-  * この関数は、@a data と@a bit_mask の間の逆含意のビット演算にも使用できる。
-  * 逆含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
-  * ( ~@a bit_mask )を関数の入力として与える。逆含意のビット演算についての詳細は、例えば次のページを参照:@n
-  * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
-  *
-  * @param[in] bit_mask ビットマスク
-  * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
-  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-  * @n must-be-aligned
-  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
-  * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット和を計算する。
-  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
-  * @n must-be-aligned
-  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
-  * @n must-be-aligned
-  * @return 終了ステータス
-  *@~
-  * MT-safe
-  *
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(uint8_t bit_mask,
- 		size_t num_data, uint8_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
- /**
-  * @copybrief sakura_OperateBitsUint8Or
-  * @copydetails sakura_OperateBitsUint8Or
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
- 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
- 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Invoke bit operation OR between a a bit mask and an array.
+ * @details Invokes the following bit operation to @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @note
+ * The function can also be used to invoke converse implication of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke converse implication.
+ * For details of converse implication, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
+ *
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked between this array and @a bit_mask.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief ビットマスクと一次元配列のビット和を取る。
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の逆含意のビット演算にも使用できる。
+ * 逆含意のビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。逆含意のビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
+ *
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット和を計算する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(uint8_t bit_mask,
+		size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8Or
+ * @copydetails sakura_OperateBitsUint8Or
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
-  /**
-   * @~english
-   * @brief Invoke bit operation XOR between a bit mask and an array.
-   * @details Invokes the following bit operation to @a i- th element of @a result :
-   * @code
-   * result [i] = edit_mask[i] ? (data[i] ^ bit_maks) : data[i]
-   * @endcode
-   *
-   * @note
-   * No operation is done when the data array is zero length, i.e., @a num_data = 0.
-   *
-   * @note
-   * The function can also be used to invoke bitwise XNOR operation of @a data and @a bit_mask .
-   * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise XNOR operation.
-   * For details of bitwise XNOR operation, see, e.g.,@n
-   * http://en.wikipedia.org/wiki/Truth_table
-   *
-   * @param[in] bit_mask A bit mask. The bit operation is invoked
-   * between this value and the array, @a data.
-   * @param[in] num_data The number of elements in the arrays, @a data,
-   * @a edit_mask, and @a result.
-   * @param[in] data An input array of size, @a num_data. The bit operation
-   * is invoked between this array and @a bit_mask.@n
-   * must-be-aligned
-   * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
-   * is skipped for the elements with the value, false.@n
-   * must-be-aligned
-   * @param[out] result The output array of size, @a num_data. It stores the result
-   * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
-   * and the value in array, @a data, is adopted for the elements where corresponding
-   * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
-   * that of @a in (@a result == @a data), indicating in-place operation.@n
-   * must-be-aligned
-   * @return status code
-   * @~japanese
-   * @brief ビットマスクと一次元配列の排他論理和ビット演算(XOR)を実行する。
-   * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
-   * @code
-   * result [i] = edit_mask[i] ? (data[i] ^ bit_maks) : data[i]
-   * @endcode
-   *
-   * @note
-   * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
-   *
-   * @note
-   * この関数は、@a data と@a bit_mask の間の同値ビット演算(XNOR)にも使用できる。
-   * 同値ビット演算を実行するときは、@a bit_mask をビット反転させたもの
-   * ( ~@a bit_mask )を関数の入力として与える。同値ビット演算についての詳細は、例えば次のページを参照:@n
-   * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
-   *
-   * @param[in] bit_mask ビットマスク
-   * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
-   * @param[in] data 入力配列。要素数は@a num_data でなければならない。
-   * @n must-be-aligned
-   * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
-   * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks の排他論理和ビット演算を実行する。
-   * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
-   * @n must-be-aligned
-   * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
-   * @n must-be-aligned
-   * @return 終了ステータス
-   *@~
-   * MT-safe
-   *
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(uint8_t bit_mask,
-  		size_t num_data, uint8_t const data[/*num_data*/],
-  		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
-  /**
-   * @copybrief sakura_OperateBitsUint8Xor
-   * @copydetails sakura_OperateBitsUint8Xor
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
-  		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-  		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+/**
+ * @~english
+ * @brief Invoke bit operation XOR between a bit mask and an array.
+ * @details Invokes the following bit operation to @a i- th element of @a result :
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] ^ bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * No operation is done when the data array is zero length, i.e., @a num_data = 0.
+ *
+ * @note
+ * The function can also be used to invoke bitwise XNOR operation of @a data and @a bit_mask .
+ * Input the complement of @a bit_mask (~@a bit_mask ) to invoke bitwise XNOR operation.
+ * For details of bitwise XNOR operation, see, e.g.,@n
+ * http://en.wikipedia.org/wiki/Truth_table
+ *
+ * @param[in] bit_mask A bit mask. The bit operation is invoked
+ * between this value and the array, @a data.
+ * @param[in] num_data The number of elements in the arrays, @a data,
+ * @a edit_mask, and @a result.
+ * @param[in] data An input array of size, @a num_data. The bit operation
+ * is invoked between this array and @a bit_mask.@n
+ * must-be-aligned
+ * @param[in] edit_mask A boolean mask array of size, @a num_data. The bit operation
+ * is skipped for the elements with the value, false.@n
+ * must-be-aligned
+ * @param[out] result The output array of size, @a num_data. It stores the result
+ * of the bit operation between @a bit_mask and @a data. The bit operation is skipped
+ * and the value in array, @a data, is adopted for the elements where corresponding
+ * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.@n
+ * must-be-aligned
+ * @return status code
+ * @~japanese
+ * @brief ビットマスクと一次元配列の排他論理和ビット演算(XOR)を実行する。
+ * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
+ * @code
+ * result [i] = edit_mask[i] ? (data[i] ^ bit_maks) : data[i]
+ * @endcode
+ *
+ * @note
+ * 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
+ *
+ * @note
+ * この関数は、@a data と@a bit_mask の間の同値ビット演算(XNOR)にも使用できる。
+ * 同値ビット演算を実行するときは、@a bit_mask をビット反転させたもの
+ * ( ~@a bit_mask )を関数の入力として与える。同値ビット演算についての詳細は、例えば次のページを参照:@n
+ * http://ja.wikipedia.org/wiki/%E8%AB%96%E7%90%86%E6%BC%94%E7%AE%97
+ *
+ * @param[in] bit_mask ビットマスク
+ * @param[in] num_data @a data, @a edit_mask 及び@a result の要素の数。
+ * @param[in] data 入力配列。要素数は@a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks の排他論理和ビット演算を実行する。
+ * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
+ * @n must-be-aligned
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ *@~
+ * MT-safe
+ *
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+/**
+ * @copybrief sakura_OperateBitsUint8Xor
+ * @copydetails sakura_OperateBitsUint8Xor
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
 /**
  * @~japanese
@@ -1585,7 +1586,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * また、原因不明のエラーでは
  * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
  * を返す。
- * @param[in,out] context コンテキスト
+ * @param[in] context コンテキスト
  * @param[in] num_data データの要素数。
  * @param[in] input_data 入力データ
  * 配列の長さは @a num_data と同じ。
@@ -1602,7 +1603,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * with input data by complex-complex multiplication and then
  * the multiplied complex array will be created. Finally IFFT will be
  * applied against it and then real output data will be created.
- * @param[in,out] context context
+ * @param[in] context context
  * and @a num_data, @a input_real_array
  * @param[in] num_data number of data
  * @param[in] input_data input data
@@ -1613,10 +1614,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * Its length equals to channel number
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context,
-		size_t num_data,
-		float const input_data[/*num_data*/], bool const mask[/*num_data*/],
-		float output_data[/*num_data*/]);
+		struct LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
+		size_t num_data, float const input_data[/*num_data*/],
+		bool const mask[/*num_data*/], float output_data[/*num_data*/]);
 /**
  * @~japanese
  * @brief コンテキストを破棄する。
@@ -1671,9 +1671,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
-  		 size_t num_mask, bool const mask[/*num_mask*/],
-  		 size_t num_model_bases, double const model[/*num_model_bases*num_mask*/],
-  		 double out[/*num_model_bases*num_model_bases*/]);
+		size_t num_mask, bool const mask[/*num_mask*/], size_t num_model_bases,
+		double const model[/*num_model_bases*num_mask*/],
+		double out[/*num_model_bases*num_model_bases*/]);
 
 /**
  * @~japanese
@@ -1715,9 +1715,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
-   		 size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/],
-   		 size_t num_model_bases, double const model[/*num_model_bases*num_data*/],
-   		 double out[/*num_model_bases*/]);
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t num_model_bases,
+		double const model[/*num_model_bases*num_data*/],
+		double out[/*num_model_bases*/]);
 
 /**
  * @~japanese
@@ -1751,8 +1752,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-		 size_t num_equations, double const lsq_matrix0[/*num_equations*num_equations*/],
-		 double const lsq_vector0[/*num_equations*/], double out[/*num_equations*/]);
+		size_t num_equations,
+		double const lsq_matrix0[/*num_equations*num_equations*/],
+		double const lsq_vector0[/*num_equations*/],
+		double out[/*num_equations*/]);
 
 /**
  * @~japanese
@@ -1760,29 +1763,29 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief Enumerations to define baseline type.
  */
- typedef enum {
- 	/**
- 	 * @~japanese
- 	 * @brief 羃多項式
- 	 * @~english
- 	 * @brief Polynomial
- 	 */LIBSAKURA_SYMBOL(BaselineType_kPolynomial), /**
- 	 * @~japanese
- 	 * @brief チェビシェフ多項式
- 	 * @~english
- 	 * @brief Chebyshev Polynomial
- 	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev), /**
- 	 * @~japanese
- 	 * @brief 三次自然スプライン
- 	 * @~english
- 	 * @brief Cubic Spline
- 	 */LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), /**
- 	 * @~japanese
- 	 * @brief 三角多項式
- 	 * @~english
- 	 * @brief Sinusoids
- 	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid)
- }LIBSAKURA_SYMBOL(BaselineType);
+typedef enum {
+	/**
+	 * @~japanese
+	 * @brief 羃多項式
+	 * @~english
+	 * @brief Polynomial
+	 */LIBSAKURA_SYMBOL(BaselineType_kPolynomial), /**
+	 * @~japanese
+	 * @brief チェビシェフ多項式
+	 * @~english
+	 * @brief Chebyshev Polynomial
+	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev), /**
+	 * @~japanese
+	 * @brief 三次自然スプライン
+	 * @~english
+	 * @brief Cubic Spline
+	 */LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), /**
+	 * @~japanese
+	 * @brief 三角多項式
+	 * @~english
+	 * @brief Sinusoids
+	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid)
+}LIBSAKURA_SYMBOL(BaselineType);
 
 /**
  * @~japanese
@@ -1820,8 +1823,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
- 		LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
- 		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context);
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context);
 
 /**
  * @~japanese
@@ -1837,7 +1840,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
-		 LIBSAKURA_SYMBOL(BaselineContext) *context);
+LIBSAKURA_SYMBOL(BaselineContext) *context);
 
 /**
  * @~japanese
@@ -1869,11 +1872,11 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
-		 size_t num_data, float const data[/*num_data*/],
-		 bool const mask[/*num_data*/],
-		 LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		 float out[/*num_data*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
+		float const data[/*num_data*/],
+		bool const mask[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float out[/*num_data*/]);
 
 /**
  * @~japanese
@@ -1921,13 +1924,12 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
-		 size_t num_data,
-		 float const data[/*num_data*/], bool const mask[/*num_data*/],
-		 LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		 float clipping_threshold_sigma, uint16_t num_fitting_max,
-		 bool get_residual,
-		 bool final_mask[/*num_data*/], float out[/*num_data*/]);
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/]);
 
 /**
  * @~japanese
@@ -1976,12 +1978,11 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
- 		size_t num_data,
- 		float const data[/*num_data*/], bool const mask[/*num_data*/],
- 		uint16_t order,
- 		float clipping_threshold_sigma, uint16_t num_fitting_max,
- 		bool get_residual,
- 		bool final_mask[/*num_data*/], float out[/*num_data*/]);
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], uint16_t order,
+		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/]);
 
 #ifdef __cplusplus
 }
