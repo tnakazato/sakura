@@ -250,7 +250,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		if (multiplied_complex_data == nullptr) {
 			return LIBSAKURA_SYMBOL(Status_kNoMemory);
 		}
-		ApplyMaskToInputData(num_data, input_data, mask, masked_input_data.get()); // context->real_array is mask applied array
+		ApplyMaskToInputData(num_data, input_data, mask,
+				masked_input_data.get()); // context->real_array is mask applied array
 		if (context->plan_real_to_complex_float == nullptr)
 			return LIBSAKURA_SYMBOL(Status_kUnknownError);
 		else {
