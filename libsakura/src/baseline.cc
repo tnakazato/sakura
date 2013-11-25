@@ -140,7 +140,7 @@ inline void SetBasisData(
 		SetBasisDataSinusoid(context);
 		break;
 	default:
-		throw "Invalid baseline_type given.";
+		assert(false);
 		break;
 	}
 }
