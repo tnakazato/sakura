@@ -89,52 +89,6 @@ protected:
 		cout << " ]" << endl;
 	}
 
-	void GetChebyshevPolynomial(
-			size_t const n, double const x, double *out) {
-		double out_ = 0.0;
-		if (n < 0) {
-			throw "the order must be zero or positive.";
-		} else if (n == 0) {
-			out_ = 1.0;
-		} else if (n == 1) {
-			out_ = x;
-		} else if ((x < -1.0)||(x > 1.0)) {
-			throw "out of definition range (-1 <= x <= 1).";
-		} else if (x == 1.0) {
-			out_ = 1.0;
-		} else if (x == 0.0) {
-			out_ = (n%2 == 0) ? ((n%4 == 0) ? 1.0 : -1.0) : 0.0;
-		} else if (x == -1.0) {
-			out_ = (n%2 == 0) ? 1.0 : -1.0;
-		} else {
-			double res = 0.0;
-/*
-			double prev1 = 0.0;
-			GetChebyshevPolynomial(n-1, x, &prev1);
-			double prev2 = 0.0;
-			GetChebyshevPolynomial(n-2, x, &prev2);
-			res = 2.0 * x * prev1 - prev2;
-*/
-			for (size_t m = 0; m <= n/2; ++m) {
-				double c = 1.0;
-				if (m > 0) {
-					for (size_t i = 1; i <= m; ++i) {
-						c *= (double)(n-2*m+i)/(double)i;
-					}
-				}
-				res += ((m%2 == 0) ? 1.0 : -1.0)*(double)n/(double)(n-m)*pow(2.0*x, (double)(n-2*m))/2.0*c;
-			}
-
-			out_ = res;
-		}
-
-		if (fabs(out_) > 1.0) {
-			throw "bad result: Chebyshev polynomial values must be [-1:1].";
-		}
-
-		*out = out_;
-	}
-
 	bool verbose;
 
 };
