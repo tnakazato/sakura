@@ -169,6 +169,9 @@ inline void CreateBaselineContext(
 		assert(false);
 		break;
 	}
+	if (num_bases > num_basis_data) {
+		throw std::invalid_argument("num_bases exceeds num_basis_data!");
+	}
 
 	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
 			LIBSAKURA_PREFIX::Memory> work_context(

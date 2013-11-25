@@ -36,6 +36,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "ERROR: order must be smaller than num_data.\n");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -97,19 +100,21 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		bool get_residual, bool final_mask[], float out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (context == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (final_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (clipping_threshold_sigma <= 0.0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -136,17 +141,21 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		bool get_residual, bool final_mask[], float out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (final_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (order >= num_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (clipping_threshold_sigma <= 0.0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);

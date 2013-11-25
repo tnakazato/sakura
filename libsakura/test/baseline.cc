@@ -100,6 +100,48 @@ protected:
 };
 
 /*
+ * Test sakura_CreateBaselineContext
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, CreateBaselineContext) {
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_CreateBaselineContext(
+					LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
+					order, num_chan, &context);
+
+	sakura_DestroyBaselineContext(context);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+}
+
+/*
+ * Test sakura_CreateBaselineContext: failure case for too large order
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
+	uint16_t const order(20);
+	size_t const num_chan(10);
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_CreateBaselineContext(
+					LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
+					order, num_chan, &context);
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+
+	sakura_DestroyBaselineContext(context);
+
+}
+
+/*
  * Test sakura_GetBaselineModelPolynomial
  * RESULT:
  * out = []

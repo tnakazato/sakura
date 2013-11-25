@@ -1797,7 +1797,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief ベースラインモデル情報を格納するオブジェクトを生成する。
  * @details
  * @param[in] baseline_type ベースラインを表現する関数形。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。また、 @a num_data 以下の値でなければならない。
  * @param[in] num_data フィットするデータ点の数。
  * @param[out] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned
@@ -1806,7 +1806,12 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief Create an object containing baseline model data.
  * @details
  * @param[in] baseline_type type of basis function.
- * @param[in] order parameter for the specified function. actually it is the order (for polynomial and chebyshev), or number of subsections (for cubic spline), or maximum wave number (for sinusoid). must be positive for cubic spline, while other models accept zero value.
+ * @param[in] order parameter for the specified function.
+ * actually it is the order (for polynomial and chebyshev),
+ * or number of subsections (for cubic spline), or maximum
+ * wave number (for sinusoid). must be positive for cubic
+ * spline, while other models accept zero value. must not
+ * exceed @a num_data .
  * @param[in] num_data number of data to fit baseline.
  * @param[out] context an object containing baseline model data.
  * @return status code.
@@ -1931,7 +1936,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
- * @param[in] order 多項式モデルの次数。
+ * @param[in] order 多項式モデルの次数。 @a num_data-1 以下の値でなければならない。
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
@@ -1948,7 +1953,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] order order of polynomial model.
+ * @param[in] order order of polynomial model. must be equal or smaller
+ * than @a num_data-1 .
  * @param[in] clipping_threshold_sigma the threshold of clipping in unit
  * of sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
