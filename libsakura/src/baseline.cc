@@ -170,60 +170,33 @@ inline void CreateBaselineContext(
 		break;
 	}
 
-/*
-	//old code------
-	*context = reinterpret_cast<LIBSAKURA_SYMBOL(BaselineContext) *>
-							(LIBSAKURA_PREFIX::Memory::Allocate(
-								sizeof(LIBSAKURA_SYMBOL(BaselineContext))));
-	if (*context == nullptr) {
-		throw std::bad_alloc();
-	}
-	LIBSAKURA_SYMBOL(BaselineContext) *context_ = *context;
-
-	context_->baseline_type = baseline_type;
-	context_->num_bases = num_bases;
-	context_->num_basis_data = num_basis_data;
-
-	size_t num_total_basis_data = num_bases * num_basis_data;
-
-	context_->basis_data_storage =
-		LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-			sizeof(*context_->basis_data) * num_total_basis_data,
-			&context_->basis_data);
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context_->basis_data));
-
-	SetBasisData(context_);
-	//-------------------------------
-*/
-
 	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
-			LIBSAKURA_PREFIX::Memory> context_(
+			LIBSAKURA_PREFIX::Memory> work_context(
 				static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>
 					(LIBSAKURA_PREFIX::Memory::Allocate(
 						sizeof(LIBSAKURA_SYMBOL(BaselineContext)))),
 				LIBSAKURA_PREFIX::Memory());
-	if (context_ == nullptr) {
+	if (work_context == nullptr) {
 		throw std::bad_alloc();
 	}
 
-	context_->baseline_type  = baseline_type;
-	context_->num_bases      = num_bases;
-	context_->num_basis_data = num_basis_data;
+	work_context->baseline_type  = baseline_type;
+	work_context->num_bases      = num_bases;
+	work_context->num_basis_data = num_basis_data;
 
 	size_t num_total_basis_data = num_bases * num_basis_data;
 
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*context_->basis_data) * num_total_basis_data,
-					&context_->basis_data),
+					sizeof(*work_context->basis_data) * num_total_basis_data,
+					&work_context->basis_data),
 					LIBSAKURA_PREFIX::Memory());
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context_->basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(work_context->basis_data));
 
-	SetBasisData(context_.get());
+	SetBasisData(work_context.get());
 
-	context_->basis_data_storage = work_basis_data_storage.release();
-	*context = (LIBSAKURA_SYMBOL(BaselineContext) *)context_.release();
+	work_context->basis_data_storage = work_basis_data_storage.release();
+	*context = (LIBSAKURA_SYMBOL(BaselineContext) *)work_context.release();
 }
 
 inline void DestroyBaselineContext(
