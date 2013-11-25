@@ -218,9 +218,7 @@ inline void CreateBaselineContext(
 					sizeof(*context_->basis_data) * num_total_basis_data,
 					&context_->basis_data),
 					LIBSAKURA_PREFIX::Memory());
-	if (work_basis_data_storage == nullptr) {
-		throw std::bad_alloc();
-	}
+
 	context_->basis_data_storage = work_basis_data_storage.release();
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context_->basis_data));
 
