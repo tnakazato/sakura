@@ -214,7 +214,7 @@ inline void CreateBaselineContext(
 
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(context_->basis_data) * num_total_basis_data,
+					sizeof(*context_->basis_data) * num_total_basis_data,
 					&context_->basis_data),
 					LIBSAKURA_PREFIX::Memory());
 	if (work_basis_data_storage == nullptr) {
