@@ -1797,7 +1797,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief ベースラインモデル情報を格納するオブジェクトを生成する。
  * @details
  * @param[in] baseline_type ベースラインを表現する関数形。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。また、 @a num_data 以下の値でなければならない。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[in] num_data フィットするデータ点の数。
  * @param[out] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned
@@ -1810,8 +1810,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * actually it is the order (for polynomial and chebyshev),
  * or number of subsections (for cubic spline), or maximum
  * wave number (for sinusoid). must be positive for cubic
- * spline, while other models accept zero value. must not
- * exceed @a num_data .
+ * spline, while other models accept zero value. the number
+ * of model bases, which is @a order+1 for polynomials or
+ * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
+ * must not exceed @a num_data.
  * @param[in] num_data number of data to fit baseline.
  * @param[out] context an object containing baseline model data.
  * @return status code.
