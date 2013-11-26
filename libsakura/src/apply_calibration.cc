@@ -174,7 +174,7 @@ template<class DataType>
 inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 		DataType const *scaling_factor, size_t num_data, DataType const *target,
 		DataType const *reference, DataType *result) {
-	if (target == result && false) {
+	if (target == result) {
 #if defined(__AVX__)
 		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
 				num_data, target, reference, result);
