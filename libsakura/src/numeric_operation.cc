@@ -289,9 +289,6 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetMatrixCoefficientsForLeastSqua
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<100>
 	};
 
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
 	if (num_model_bases < ELEMENTSOF(funcs)) {
 		funcs[num_model_bases](
 				num_mask, mask, num_model_bases, model, out);
@@ -417,9 +414,6 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetVectorCoefficientsForLeastSqua
 			GetVectorCoefficientsForLeastSquareFittingUsingTemplate<99>,
 			GetVectorCoefficientsForLeastSquareFittingUsingTemplate<100>
 	};
-
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
 		funcs[num_model_bases](
