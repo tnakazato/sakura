@@ -18,6 +18,7 @@
 
 #include <new>
 #include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
 
 namespace LIBSAKURA_PREFIX {
 class Memory {
@@ -89,8 +90,9 @@ public:
 			*aligned_address = nullptr;
 			throw std::bad_alloc();
 		}
-		*aligned_address = reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(
-				size_of_arena, ptr, size_in_bytes));
+		*aligned_address = AssumeAligned(
+				reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(size_of_arena,
+						ptr, size_in_bytes)));
 		assert(*aligned_address != nullptr);
 		return ptr;
 	}
