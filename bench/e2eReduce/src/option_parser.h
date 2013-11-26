@@ -17,7 +17,7 @@ struct CalibrationOptions {
 };
 
 struct FlaggingOptions {
-	int edge_channels;
+	size_t edge_channels;
 	float clipping_threshold;
 	bool do_clipping;
 };

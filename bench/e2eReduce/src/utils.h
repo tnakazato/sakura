@@ -10,9 +10,11 @@
 #include <casacore/casa/Arrays/Vector.h>
 
 #include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableColumn.h>
 #include <casacore/tables/Tables/ArrayColumn.h>
 #include <casacore/tables/Tables/ScalarColumn.h>
 #include <casacore/tables/Tables/TableParse.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
 #include <libsakura/sakura.h>
 
@@ -62,6 +64,46 @@ casa::Table GetSelectedTable(std::string table_name, unsigned int ifno) {
 	return tableCommand(taql);
 }
 
+void GetFrequencyLabelFromScantable(casa::Table const table, unsigned int ifno,
+		size_t num_channel, double *frequency_label) {
+	// Get FREQ_ID
+	casa::Table const selected_table = table(table.col("IFNO") == ifno);
+	if (selected_table.nrow() == 0) {
+		return;
+	}
+	casa::TableColumn column(selected_table, "FREQ_ID");
+	unsigned int freq_id = column.asuInt(0);
+
+	// The table must have FREQUENCIES subtable
+	casa::String const subtable_name = "FREQUENCIES";
+	casa::TableRecord const header = selected_table.keywordSet();
+	if (!header.isDefined(subtable_name)) {
+		return;
+	}
+	casa::Table const frequencies_table = header.asTable(subtable_name);
+	casa::Table const target_row = frequencies_table(
+			frequencies_table.col("ID") == freq_id);
+	if (target_row.nrow() == 0) {
+		return;
+	}
+	auto GetValue = [&](casa::String const column_name) {
+		column.attach(target_row, column_name);
+		return column.asdouble(0);
+	};
+	double reference_pixel = GetValue("REFPIX");
+	double reference_value = GetValue("REFVAL");
+	double increment = GetValue("INCREMENT");
+	for (size_t i = 0; i < num_channel; ++i) {
+		frequency_label[i] = (static_cast<double>(i) - reference_pixel)
+				* increment + reference_value;
+	}
+}
+
+void GetFrequencyLabelFromScantable(std::string const table_name,
+		unsigned int ifno, size_t num_channel, double *frequency_label) {
+	GetFrequencyLabelFromScantable(casa::Table(table_name, casa::Table::Old), ifno,
+			num_channel, frequency_label);
+}
 template<class T>
 void GetArrayCell(T *array, size_t row_index,
 		casa::ROArrayColumn<T> const column, casa::IPosition const cell_shape) {

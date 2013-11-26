@@ -27,34 +27,52 @@
 #include <libsakura/sakura.h>
 
 #include "option_parser.h"
+#include "context_handler.h"
 #include "utils.h"
 
 namespace {
 auto logger = log4cxx::Logger::getLogger("app");
 
-inline void ExecuteCalibration() {
-
+inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
+		bool output_mask[]) {
+//	std::cout << "ExecuteBitMaskToFlag" << std::endl;
 }
 
-inline void ExecuteBaseline() {
-
+inline void ExecuteCalibration(size_t num_data, float const input_data[],
+		CalibrationContext const calibration_context, float out_data[]) {
+//	std::cout << "ExecuteCalibration" << std::endl;
 }
 
-inline void ExecuteSmoothing() {
-
+inline void ExecuteBaseline(sakura_BaselineContext const *context,
+		size_t num_data, float const input_data[], float output_data[],
+		bool mask[]) {
+//	std::cout << "ExecuteBaseline" << std::endl;
 }
 
-inline void ExecuteNanOrInfFlag(size_t num_data, float const data[],
-		bool result[]) {
+inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
+		size_t num_data, float const input_data[], float output_data[],
+		bool mask[]) {
+//	std::cout << "ExecuteSmoothing" << std::endl;
+}
+
+inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
+		bool output_mask[]) {
+//	std::cout << "ExecuteFlagNanOrInf" << std::endl;
 	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
 }
 
-inline void ExecuteChannelFlagging() {
-
+inline void ExecuteFlagEdge(size_t num_edge, size_t num_data, bool mask[]) {
+//	std::cout << "ExecuteFlagEdge" << std::endl;
 }
 
-inline void CalculateStatistics() {
+inline void ExecuteClipping(float threshold, size_t num_data,
+		float const input_data[], bool mask[]) {
+//	std::cout << "ExecuteClipping" << std::endl;
+}
 
+inline void CalculateStatistics(size_t num_data, float const input_data[],
+		bool const input_mask[]) {
+//	std::cout << "CalculateStatistics" << std::endl;
 }
 
 void JobFinished(int i) {
@@ -63,8 +81,41 @@ void JobFinished(int i) {
 	std::cout << " have done.\n";
 }
 
-void ParallelJob(int job_id, unsigned int num_v, float const v[],
-		uint8_t const f[], E2EOptions const option_list) {
+void ParallelJob(int job_id, size_t num_v, float const v[], uint8_t const f[],
+		E2EOptions const option_list,
+		CalibrationContext const calibration_context,
+		sakura_BaselineContext const *baseline_context,
+		sakura_Convolve1DContext const *convolve1d_context) {
+	// generate temporary storage
+	AlignedArrayGenerator generator;
+	float *out_data = generator.GetAlignedArray<float>(num_v);
+	bool *mask = generator.GetAlignedArray<bool>(num_v);
+
+	// Execute Convert bit flag to boolean mask
+	ExecuteBitFlagToMask(num_v, f, mask);
+
+	// Execute Calibration
+	ExecuteCalibration(num_v, v, calibration_context, out_data);
+
+	// Execute Flag NaN/Inf
+	ExecuteNanOrInfFlag(num_v, out_data, mask);
+
+	// Execute Flag edge
+	ExecuteFlagEdge(option_list.flagging.edge_channels, num_v, mask);
+
+	// Execute Baseline
+	ExecuteBaseline(baseline_context, num_v, out_data, out_data, mask);
+
+	// Execute Clipping
+	ExecuteClipping(option_list.flagging.clipping_threshold, num_v, out_data,
+			mask);
+
+	// Execute Smoothing
+	ExecuteSmoothing(convolve1d_context, num_v, out_data, out_data, mask);
+
+	// Calculate Statistics
+	CalculateStatistics(num_v, out_data, mask);
+
 	float sum = 0.0;
 	for (unsigned int i = 0; i < num_v; ++i)
 		sum += v[i];
@@ -122,6 +173,53 @@ void E2eReduce(int argc, char const* const argv[]) {
 				options.calibration.tsys_ifno, "TSYS", &array_generator, &tsys,
 				&tsys_time, &num_chan_tsys, &num_row_tsys);
 
+		// get frequency label from the table
+		// for spectral data
+		double *frequency_label_target =
+				array_generator.GetAlignedArray<double>(num_chan);
+		GetFrequencyLabelFromScantable(table, options.ifno, num_chan,
+				frequency_label_target);
+
+		// for Tsys
+		double *frequency_label_tsys = array_generator.GetAlignedArray<double>(
+				num_chan_tsys);
+		GetFrequencyLabelFromScantable(options.calibration.tsys_table,
+				options.calibration.tsys_ifno, num_chan_tsys,
+				frequency_label_tsys);
+
+		// Create Context and struct for calibration
+		// calibration context
+		CalibrationContext calibration_context;
+		calibration_context.num_channel_sky = num_chan;
+		calibration_context.num_channel_tsys = num_chan_tsys;
+		calibration_context.num_data_sky = num_row_sky;
+		calibration_context.num_data_tsys = num_row_tsys;
+		calibration_context.timestamp_sky = sky_time;
+		calibration_context.timestamp_tsys = tsys_time;
+		calibration_context.sky_spectra = sky_spectra;
+		calibration_context.tsys = tsys;
+
+		// baseline context
+		uint16_t order = 0;
+		sakura_BaselineContext *baseline_context;
+		if (sakura_CreateBaselineContext(sakura_BaselineType_kChebyshev, order,
+				num_chan, &baseline_context) != sakura_Status_kOK) {
+			throw "";
+		}
+		std::unique_ptr<sakura_BaselineContext, BaselineContextDeleter> baseline_context_holder(
+				baseline_context);
+
+		// convolve1d context
+		sakura_Convolve1DContext *convolve1d_context;
+		if (sakura_CreateConvolve1DContext(num_chan,
+				sakura_Convolve1DKernelType_kGaussian,
+				options.smoothing.kernel_width, true, &convolve1d_context)
+				!= sakura_Status_kOK) {
+			throw "";
+		}
+		std::unique_ptr<sakura_Convolve1DContext, Convolve1DContextDeleter> convolve1d_context_holder(
+				convolve1d_context);
+
 		auto group = xdispatch::group();
 
 		for (int i = 0; i < 20; ++i) {
@@ -139,10 +237,12 @@ void E2eReduce(int argc, char const* const argv[]) {
 			float const *v = spectrum;
 			uint8_t const *f = reinterpret_cast<uint8_t const *>(flag);
 			if (serialize) {
-				ParallelJob(i, num_chan, v, f, options);
+				ParallelJob(i, num_chan, v, f, options, calibration_context,
+						baseline_context, convolve1d_context);
 			} else {
 				group.async([=] {
-					ParallelJob(i, num_chan, v, f, options);
+					ParallelJob(i, num_chan, v, f, options, calibration_context,
+							baseline_context, convolve1d_context);
 				});
 			}
 		}
