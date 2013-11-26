@@ -23,151 +23,118 @@ namespace {
 
 template<size_t NUM_MODEL_BASES>
 inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
-		size_t num_mask, bool const *mask,
-		double const *model, double *out) {
-
-	size_t num_out = NUM_MODEL_BASES * NUM_MODEL_BASES;
-	for (size_t i = 0; i < num_out; ++i) {
-		out[i] = 0.0;
-	}
-
-	for (size_t k = 0; k < num_mask; ++k){
-		if (!mask[k]) continue;
-		size_t idx = 0;
-		size_t idx_i = NUM_MODEL_BASES * k;
-		for (size_t i = 0; i < NUM_MODEL_BASES; ++i) {
-			size_t idx_j = NUM_MODEL_BASES * k;
-			for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
-				out[idx] += model[idx_i] * model[idx_j];
-				idx ++;
-				idx_j ++;
-			}
-			idx_i ++;
-		}
-	}
-}
-
-#if 0
-inline void GetMatrixCoefficientsForLeastSquareFitting(
 		size_t num_mask, bool const *mask_arg,
 		size_t num_model_bases, double const *model_arg,
-		double *out_matrix_arg) {
+		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 
+	auto mask  = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto out_matrix = AssumeAligned(out_matrix_arg);
+	auto out   = AssumeAligned(out_arg);
 
-	for (size_t i = 0; i < num_model_bases * num_model_bases; ++i) {
-		out_matrix[i] = 0;
+	for (size_t i = 0; i < NUM_MODEL_BASES * NUM_MODEL_BASES; ++i) {
+		out[i] = 0;
 	}
-	for (size_t k = 0; k < num_mask; ++k) {
-		if (mask[k]) {
-			auto model_k = &model[k * num_model_bases];
-			for (size_t i = 0; i < num_model_bases; ++i) {
-				auto out_matrix_i = &out_matrix[num_model_bases * i];
-				auto model_i = model_k[i];
-				for (size_t j = 0; j < num_model_bases; ++j) {
-					out_matrix_i[j] += model_i * model_k[j];
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (mask[i]) {
+			auto model_h = &model[i * NUM_MODEL_BASES];
+			for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
+				auto out_matrix_i = &out[j * NUM_MODEL_BASES];
+				auto model_j = model_h[j];
+				for (size_t k = 0; k < NUM_MODEL_BASES; ++k) {
+					out_matrix_i[k] += model_j * model_h[k];
 				}
 			}
 		}
 	}
 }
-#endif
+
 inline void GetMatrixCoefficientsForLeastSquareFitting(
-		size_t num_mask, bool const *mask,
-		size_t num_model_bases, double const *model, double *out) {
+		size_t num_mask, bool const *mask_arg,
+		size_t num_model_bases, double const *model_arg,
+		double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 
-/*
-	// original algorithm
-	for (size_t i = 0; i < num_model_bases; ++i) {
-		for (size_t j = 0; j < num_model_bases; ++j) {
-			size_t idx = num_model_bases * i + j;
-			out[idx] = 0.0;
+	auto mask  = AssumeAligned(mask_arg);
+	auto model = AssumeAligned(model_arg);
+	auto out   = AssumeAligned(out_arg);
 
-			for (size_t k = 0; k < num_mask ; ++k){
-				if (!mask[k]) continue;
-
-				size_t idx_i = num_mask * i + k;
-				size_t idx_j = num_mask * j + k;
-				out[idx] += model[idx_i] * model[idx_j];
-			}
-		}
+	for (size_t i = 0; i < num_model_bases * num_model_bases; ++i) {
+		out[i] = 0;
 	}
-*/
-
-	size_t num_out = num_model_bases * num_model_bases;
-	for (size_t i = 0; i < num_out; ++i) {
-		out[i] = 0.0;
-	}
-
-	for (size_t k = 0; k < num_mask; ++k){
-		if (!mask[k]) continue;
-		size_t idx = 0;
-		size_t idx_i = num_model_bases * k;
-		for (size_t i = 0; i < num_model_bases; ++i) {
-			size_t idx_j = num_model_bases * k;
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (mask[i]) {
+			auto model_i = &model[i * num_model_bases];
 			for (size_t j = 0; j < num_model_bases; ++j) {
-				out[idx] += model[idx_i] * model[idx_j];
-				idx ++;
-				idx_j ++;
+				auto out_matrix_j = &out[j * num_model_bases];
+				auto model_j = model_i[j];
+				for (size_t k = 0; k < num_model_bases; ++k) {
+					out_matrix_j[k] += model_j * model_i[k];
+				}
 			}
-			idx_i ++;
 		}
 	}
 }
 
 template<size_t NUM_MODEL_BASES>
 inline void GetVectorCoefficientsForLeastSquareFittingUsingTemplate(
-		size_t num_data, float const *data, bool const *mask,
-		double const *model, double *out) {
+		size_t num_data, float const *data_arg, bool const *mask_arg,
+		size_t num_model_bases, double const *model_arg,
+		double *out_arg) {
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+
+	auto data  = AssumeAligned(data_arg);
+	auto mask  = AssumeAligned(mask_arg);
+	auto model = AssumeAligned(model_arg);
+	auto out   = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < NUM_MODEL_BASES; ++i) {
-		out[i] = 0.0;
+		out[i] = 0;
 	}
-
-	for (size_t j = 0; j < num_data; ++j){
-		if (!mask[j]) continue;
-
-		size_t idx_i = NUM_MODEL_BASES * j;
-		for (size_t i = 0; i < NUM_MODEL_BASES; ++i) {
-			out[i] += model[idx_i] * data[j];
-			idx_i ++;
+	for (size_t i = 0; i < num_data; ++i){
+		if (mask[i]) {
+			auto model_i = &model[i * NUM_MODEL_BASES];
+			auto data_i = data[i];
+			for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
+				out[j] += model_i[j] * data_i;
+			}
 		}
 	}
 }
 
 inline void GetVectorCoefficientsForLeastSquareFitting(
-		size_t num_data, float const *data, bool const *mask,
-		size_t num_model_bases, double const *model, double *out) {
+		size_t num_data, float const *data_arg, bool const *mask_arg,
+		size_t num_model_bases, double const *model_arg,
+		double *out_arg) {
 
-/*
-    // original algorithm
-	for (size_t i = 0; i < num_model_bases; ++i) {
-		out[i] = 0.0;
-		for (size_t k = 0; k < num_data; ++k) {
-			if (!mask[k]) continue;
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 
-			size_t idx = num_data * i + k;
-			out[i] += model[idx] * data[k];
-		}
-	}
-*/
+	auto data  = AssumeAligned(data_arg);
+	auto mask  = AssumeAligned(mask_arg);
+	auto model = AssumeAligned(model_arg);
+	auto out   = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_model_bases; ++i) {
-		out[i] = 0.0;
+		out[i] = 0;
 	}
-
-	for (size_t k = 0; k < num_data ; ++k){
-		if (!mask[k]) continue;
-
-		size_t idx_i = num_model_bases * k;
-		for (size_t i = 0; i < num_model_bases; ++i) {
-			out[i] += model[idx_i] * data[k];
-			idx_i ++;
+	for (size_t i = 0; i < num_data; ++i){
+		if (mask[i]) {
+			auto model_i = &model[i * num_model_bases];
+			auto data_i = data[i];
+			for (size_t j = 0; j < num_model_bases; ++j) {
+				out[j] += model_i[j] * data_i;
+			}
 		}
 	}
 }
@@ -215,7 +182,8 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetMatrixCoefficientsForLeastSqua
 
 	typedef void (*GetMatrixCoefficientsForLeastSquareFittingFunc)(
 			size_t num_mask, bool const *mask,
-			double const *model, double *out);
+			size_t num_model_bases, double const *model,
+			double *out);
 
 	static GetMatrixCoefficientsForLeastSquareFittingFunc const funcs[] = {
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<0>,
@@ -226,7 +194,7 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetMatrixCoefficientsForLeastSqua
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<5>,
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<6>,
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<7>,
-			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<8>,
+			::GetMatrixCoefficientsForLeastSquareFitting,		//non-template version faster for the case num_bases == 8.
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<9>,
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<10>,
 			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<11>,
@@ -324,9 +292,9 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetMatrixCoefficientsForLeastSqua
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 
-	//in case num_model_bases=8, non-template version works faster.
-	if ((num_model_bases < ELEMENTSOF(funcs)) && (num_model_bases != 8)) {
-		funcs[num_model_bases](num_mask, mask, model, out);
+	if (num_model_bases < ELEMENTSOF(funcs)) {
+		funcs[num_model_bases](
+				num_mask, mask, num_model_bases, model, out);
 	} else {
 		::GetMatrixCoefficientsForLeastSquareFitting(
 				num_mask, mask, num_model_bases, model, out);
@@ -345,7 +313,7 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetVectorCoefficientsForLeastSqua
 
 	typedef void (*GetVectorCoefficientsForLeastSquareFittingFunc)(
 			size_t num_data, float const *data, bool const *mask,
-			double const *model, double *out);
+			size_t num_model_bases, double const *model, double *out);
 	static GetVectorCoefficientsForLeastSquareFittingFunc const funcs[] = {
 			GetVectorCoefficientsForLeastSquareFittingUsingTemplate<0>,
 			GetVectorCoefficientsForLeastSquareFittingUsingTemplate<1>,
@@ -454,7 +422,8 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetVectorCoefficientsForLeastSqua
 	STATIC_ASSERT(false == 0);
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
-		funcs[num_model_bases](num_data, data, mask, model, out);
+		funcs[num_model_bases](
+				num_data, data, mask, num_model_bases, model, out);
 	} else {
 		::GetVectorCoefficientsForLeastSquareFitting(
 				num_data, data, mask, num_model_bases, model, out);

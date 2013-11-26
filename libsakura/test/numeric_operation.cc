@@ -250,7 +250,7 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	}
 	end = sakura_GetCurrentTime();
 
-	cout << "Elapse time of " << num_repeat << " repetition: " << (end - start) << " sec." << endl;
+	cout << "Elapse time of " << num_repeat << " repetition:                                     " << (end - start) << " sec." << endl;
 	if (verbose) {
 		PrintArray("out   ", num_model, out);
 		PrintArray("answer", num_model, answer);
