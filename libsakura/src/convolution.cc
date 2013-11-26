@@ -76,13 +76,9 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		float* output_data) {
 	if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) { // Gaussian
 		Create1DGaussianKernel(num_data, kernel_width, output_data);
-		return;
 	} else if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar)) { // BoxCar
-		return;
 	} else if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning)) { // Hanning
-		return;
 	} else if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)) { // Hamming
-		return;
 	}
 }
 
