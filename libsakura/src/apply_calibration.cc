@@ -82,8 +82,9 @@ inline void ApplyPositionSwitchCalibrationSimd<float>(size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) {
-	size_t num_packed_operation = num_data / 8;
-	size_t num_data_packed = num_packed_operation * 8;
+	size_t const kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
+	size_t num_packed_operation = num_data / kNumFloat;
+	size_t num_data_packed = num_packed_operation * kNumFloat;
 	if (num_scaling_factor == 1) {
 		__m256 s = _mm256_broadcast_ss(scaling_factor);
 //		__m256 s = _mm256_set1_ps(scaling_factor[0]);
@@ -95,7 +96,7 @@ inline void ApplyPositionSwitchCalibrationSimd<float>(size_t num_scaling_factor,
 					_mm256_mul_ps(s, _mm256_sub_ps(tar_m256[i], ref_m256[i])),
 					ref_m256[i]);
 		}
-		for (size_t i = num_packed_operation * 8; i < num_data; ++i) {
+		for (size_t i = num_data_packed; i < num_data; ++i) {
 			result[i] = scaling_factor[0] * (target[i] - reference[i])
 					/ reference[i];
 		}
