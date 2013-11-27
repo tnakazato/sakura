@@ -323,8 +323,8 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 	SIMD_ALIGN bool final_mask[ELEMENTSOF(in_data)];
 	LIBSAKURA_SYMBOL(Status) status =
 			LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
-					num_data, in_data, in_mask, order, 3.0, 1,
-					true, final_mask, out);
+					num_data, in_data, in_mask, order,
+					3.0, 1, true, final_mask, out);
 
 	if (verbose) {
 		PrintArray("out   ", num_data, out);
