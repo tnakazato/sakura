@@ -46,6 +46,12 @@ public:
 		return reinterpret_cast<T *>(sakura_AlignAny(num_arena, ptr,
 				num_elements * sizeof(T)));
 	}
+	inline size_t index() {
+		return index_;
+	}
+	inline void *release(size_t index) {
+		return pointer_holder_[index].release();
+	}
 private:
 	size_t alignment_;
 	size_t index_;
@@ -104,8 +110,8 @@ void GetFrequencyLabelFromScantable(casa::Table const table, unsigned int ifno,
 
 void GetFrequencyLabelFromScantable(std::string const table_name,
 		unsigned int ifno, size_t num_channel, double *frequency_label) {
-	GetFrequencyLabelFromScantable(casa::Table(table_name, casa::Table::Old), ifno,
-			num_channel, frequency_label);
+	GetFrequencyLabelFromScantable(casa::Table(table_name, casa::Table::Old),
+			ifno, num_channel, frequency_label);
 }
 template<class T>
 void GetArrayCell(T *array, size_t row_index,
