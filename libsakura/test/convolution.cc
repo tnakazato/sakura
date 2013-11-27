@@ -94,7 +94,7 @@ protected:
  */
 TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // num_data = 0
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(0);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
@@ -111,7 +111,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // kernel_width = 0
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(0);
 		bool fftuse = true;
@@ -127,7 +127,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // Convolve1DKernelType
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
@@ -142,7 +142,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // num_data is odd
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(NUM_IN_ODD);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
@@ -166,7 +166,8 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
  */
 TEST_F(Convolve1DOperation , InvalidNumdata) {
 	{ // num_data != context->num_data
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		;
 		float input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1,
 				1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
@@ -200,7 +201,7 @@ TEST_F(Convolve1DOperation , InvalidNumdata) {
  */
 TEST_F(Convolve1DOperation , GaussianKernel) {
 	{
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
@@ -214,7 +215,7 @@ TEST_F(Convolve1DOperation , GaussianKernel) {
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 	}
 	{
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
@@ -238,7 +239,7 @@ TEST_F(Convolve1DOperation , GaussianKernel) {
  */
 TEST_F(Convolve1DOperation , AppliedMask) {
 	{ // with mask
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1,
 				1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
@@ -266,7 +267,7 @@ TEST_F(Convolve1DOperation , AppliedMask) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // without mask
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float const input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1,
 				1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
@@ -303,7 +304,7 @@ TEST_F(Convolve1DOperation , AppliedMask) {
  */
 TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 	{ // without mask 128ch
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i)
@@ -333,7 +334,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // with mask 128ch
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i)
@@ -366,7 +367,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // input_data all 1, mask all 0
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
@@ -394,7 +395,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // input_data all 1, mask all 1 (with FFT)
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
@@ -422,7 +423,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // input_data 1 spike, mask all 1 then output_data should be equal to kernel (without FFT)
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
@@ -461,7 +462,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // input_data 32-92  delta, mask 44-56, 68-80
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
@@ -504,7 +505,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // with mask 128ch all zero against spike --> all 0
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i)
@@ -535,7 +536,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // with mask 128ch , spike( 58 < ch < 72)
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i)
@@ -564,7 +565,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // without mask 128ch , and then input this output again as input_data
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN_LARGE]; // 128
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i)
@@ -620,7 +621,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
  * convolution without fft is done
  */
 TEST_F(Convolve1DOperation , ConvolutionResultWithoutFFT) {
-	LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 	float const input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1,
 			1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 	size_t const num_data(ELEMENTSOF(input_data));
@@ -655,7 +656,7 @@ TEST_F(Convolve1DOperation , ConvolutionResultWithoutFFT) {
  */
 TEST_F(Convolve1DOperation , DestroyConvolve1DContext) {
 	{
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float const input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1,
 				1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
