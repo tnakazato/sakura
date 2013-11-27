@@ -94,7 +94,7 @@ void ParallelJob(int job_id, size_t num_v, float const v[], uint8_t const f[],
 	float *out_data = generator.GetAlignedArray<float>(num_v);
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
 
-	// Execute Convert bit flag to boolean mask
+	// Convert bit flag to boolean mask
 	ExecuteBitFlagToMask(num_v, f, mask);
 
 	// Execute Calibration
@@ -157,52 +157,17 @@ void E2eReduce(int argc, char const* const argv[]) {
 		casa::ROArrayColumn<unsigned char> flagtra_column(table, "FLAGTRA");
 		unsigned int num_chan = spectra_column(0).nelements();
 
-		// sky table
-		float *sky_spectra = nullptr;
-		double *sky_time = nullptr;
-		size_t num_chan_sky, num_row_sky;
-		GetFromCalTable(options.calibration.sky_table, options.ifno, "SPECTRA",
-				&array_generator, &sky_spectra, &sky_time, &num_chan_sky,
-				&num_row_sky);
-		if (num_chan != num_chan_sky) {
-			throw "";
-		}
-		assert(sky_spectra != nullptr && sky_time != nullptr);
-
-		// tsys table
-		float *tsys = nullptr;
-		double *tsys_time = nullptr;
-		size_t num_chan_tsys = 0, num_row_tsys = 0;
-		GetFromCalTable(options.calibration.tsys_table,
-				options.calibration.tsys_ifno, "TSYS", &array_generator, &tsys,
-				&tsys_time, &num_chan_tsys, &num_row_tsys);
-		assert(tsys != nullptr && tsys_time != nullptr);
-
-		// get frequency label from the table
-		// for spectral data
-		double *frequency_label_target =
-				array_generator.GetAlignedArray<double>(num_chan);
-		GetFrequencyLabelFromScantable(table, options.ifno, num_chan,
-				frequency_label_target);
-
-		// for Tsys
-		double *frequency_label_tsys = array_generator.GetAlignedArray<double>(
-				num_chan_tsys);
-		GetFrequencyLabelFromScantable(options.calibration.tsys_table,
-				options.calibration.tsys_ifno, num_chan_tsys,
-				frequency_label_tsys);
-
 		// Create Context and struct for calibration
 		// calibration context
 		CalibrationContext calibration_context;
-		calibration_context.num_channel_sky = num_chan;
-		calibration_context.num_channel_tsys = num_chan_tsys;
-		calibration_context.num_data_sky = num_row_sky;
-		calibration_context.num_data_tsys = num_row_tsys;
-		calibration_context.timestamp_sky = sky_time;
-		calibration_context.timestamp_tsys = tsys_time;
-		calibration_context.sky_spectra = sky_spectra;
-		calibration_context.tsys = tsys;
+		FillCalibrationContext(&calibration_context,
+				options.calibration.sky_table, options.calibration.tsys_table,
+				options.ifno, options.calibration.tsys_ifno,
+				&array_generator);
+
+		if (calibration_context.num_channel_sky != num_chan) {
+			throw "";
+		}
 
 		// baseline context
 		sakura_BaselineContext *baseline_context = nullptr;
@@ -219,7 +184,8 @@ void E2eReduce(int argc, char const* const argv[]) {
 		sakura_Convolve1DContext *convolve1d_context = nullptr;
 		if (sakura_CreateConvolve1DContext(num_chan,
 				options.smoothing.kernel_type, options.smoothing.kernel_width,
-				true, &convolve1d_context) != sakura_Status_kOK) {
+				options.smoothing.use_fft, &convolve1d_context)
+				!= sakura_Status_kOK) {
 			throw "";
 		}
 		assert(convolve1d_context != nullptr);
