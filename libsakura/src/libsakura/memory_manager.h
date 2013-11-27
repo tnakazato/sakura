@@ -88,8 +88,7 @@ public:
 		void *ptr = Allocate(size_of_arena);
 		if (ptr == nullptr) {
 			*aligned_address = nullptr;
-			static std::bad_alloc const ex_bad_alloc;
-			throw ex_bad_alloc;
+			throw std::bad_alloc();
 		}
 		*aligned_address = AssumeAligned(
 				reinterpret_cast<T *>(LIBSAKURA_SYMBOL(AlignAny)(size_of_arena,
