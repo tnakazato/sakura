@@ -110,9 +110,6 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
-	{ // num_data != context->num_data
-
-	}
 	{ // kernel_width = 0
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
 		size_t const num_data(NUM_IN);
@@ -155,6 +152,41 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+	}
+
+}
+
+/*
+ * Test Invalid Number of data
+ * RESULT:
+ * num_data = context->num_data in Convolve1D
+ */
+TEST_F(Convolve1DOperation , InvalidNumdata) {
+	{ // num_data != context->num_data
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context;
+		float input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1,
+				1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
+		size_t const num_data(ELEMENTSOF(input_data));
+		size_t const bad_num_data(NUM_IN_ODD);
+		//bool mask_[num_data] = {0};
+		bool mask[num_data] = { 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 0, 0, 0, 0 };
+		size_t const kernel_width(NUM_WIDTH);
+		bool fftuse = true;
+		float output_data[num_data];
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
+				kernel_width, fftuse, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
+		LIBSAKURA_SYMBOL(Convolve1D)(context, bad_num_data, input_data, mask,
+				output_data);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);

@@ -35,8 +35,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
 		convolutionop->CreateConvolve1DContext(num_data, kernel_type,
 				kernel_width, use_fft, context);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "num_data does't equal to context->num_data");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -59,8 +64,13 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
 		convolutionop->Convolve1D(context, num_data, input_data, mask,
 				output_data);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "num_data does't equal to context->num_data");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -73,7 +83,6 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
 		convolutionop->DestroyConvolve1DContext(context);
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
