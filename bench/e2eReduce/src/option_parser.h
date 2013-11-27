@@ -35,6 +35,7 @@ struct BaselineOptions {
 struct SmoothingOptions {
 	sakura_Convolve1DKernelType kernel_type;
 	size_t kernel_width;
+	bool use_fft;
 };
 
 struct E2EOptions {
@@ -90,6 +91,7 @@ public:
 		oss << "\torder=" << option_list.baseline.order << "\n";
 		oss << "\tkernel type=" << option_list.smoothing.kernel_type << "\n";
 		oss << "\tkernel width=" << option_list.smoothing.kernel_width << "\n";
+		oss << "\tuse_fft=" << option_list.smoothing.use_fft << "\n";
 		return oss.str();
 	}
 private:
@@ -179,6 +181,10 @@ private:
 		} else {
 			option_list->kernel_width = 5; // default is 5
 		}
+
+		// parse use_fft
+		s = ToUpper(GetValue(options, GetKey(category, "use_fft")));
+		option_list->use_fft = (s == "FALSE") ? false : true;
 	}
 	static std::string GetKey(std::string const category,
 			std::string const attribute = "") {
