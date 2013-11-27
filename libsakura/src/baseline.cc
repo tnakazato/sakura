@@ -324,6 +324,8 @@ inline void SubtractBaselinePolynomial(
 	SubtractBaseline(num_data, data, mask, context,
 			clipping_threshold_sigma, num_fitting_max,
 			get_residual, final_mask, out);
+
+	guard_for_baseline_context.Disable();
 }
 
 } /* anonymous namespace */
