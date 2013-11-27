@@ -5,6 +5,7 @@
  *      Author: kohji
  */
 
+#include <cassert>
 #include <iostream>
 #include <unistd.h>
 #include <vector>
@@ -40,7 +41,7 @@ inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
 }
 
 inline void ExecuteCalibration(size_t num_data, float const input_data[],
-		CalibrationContext const calibration_context, float out_data[]) {
+		CalibrationContext const &calibration_context, float out_data[]) {
 //	std::cout << "ExecuteCalibration" << std::endl;
 
 }
@@ -84,8 +85,8 @@ void JobFinished(int i) {
 }
 
 void ParallelJob(int job_id, size_t num_v, float const v[], uint8_t const f[],
-		E2EOptions const option_list,
-		CalibrationContext const calibration_context,
+		E2EOptions const &option_list,
+		CalibrationContext const &calibration_context,
 		sakura_BaselineContext const *baseline_context,
 		sakura_Convolve1DContext const *convolve1d_context) {
 	// generate temporary storage
@@ -157,8 +158,8 @@ void E2eReduce(int argc, char const* const argv[]) {
 		unsigned int num_chan = spectra_column(0).nelements();
 
 		// sky table
-		float *sky_spectra;
-		double *sky_time;
+		float *sky_spectra = nullptr;
+		double *sky_time = nullptr;
 		size_t num_chan_sky, num_row_sky;
 		GetFromCalTable(options.calibration.sky_table, options.ifno, "SPECTRA",
 				&array_generator, &sky_spectra, &sky_time, &num_chan_sky,
@@ -166,14 +167,16 @@ void E2eReduce(int argc, char const* const argv[]) {
 		if (num_chan != num_chan_sky) {
 			throw "";
 		}
+		assert(sky_spectra != nullptr && sky_time != nullptr);
 
 		// tsys table
-		float *tsys;
-		double *tsys_time;
-		size_t num_chan_tsys, num_row_tsys;
+		float *tsys = nullptr;
+		double *tsys_time = nullptr;
+		size_t num_chan_tsys = 0, num_row_tsys = 0;
 		GetFromCalTable(options.calibration.tsys_table,
 				options.calibration.tsys_ifno, "TSYS", &array_generator, &tsys,
 				&tsys_time, &num_chan_tsys, &num_row_tsys);
+		assert(tsys != nullptr && tsys_time != nullptr);
 
 		// get frequency label from the table
 		// for spectral data
@@ -202,22 +205,24 @@ void E2eReduce(int argc, char const* const argv[]) {
 		calibration_context.tsys = tsys;
 
 		// baseline context
-		sakura_BaselineContext *baseline_context;
+		sakura_BaselineContext *baseline_context = nullptr;
 		if (sakura_CreateBaselineContext(options.baseline.baseline_type,
 				options.baseline.order, num_chan, &baseline_context)
 				!= sakura_Status_kOK) {
 			throw "";
 		}
+		assert(baseline_context != nullptr);
 		std::unique_ptr<sakura_BaselineContext, BaselineContextDeleter> baseline_context_holder(
 				baseline_context);
 
 		// convolve1d context
-		sakura_Convolve1DContext *convolve1d_context;
+		sakura_Convolve1DContext *convolve1d_context = nullptr;
 		if (sakura_CreateConvolve1DContext(num_chan,
 				options.smoothing.kernel_type, options.smoothing.kernel_width,
 				true, &convolve1d_context) != sakura_Status_kOK) {
 			throw "";
 		}
+		assert(convolve1d_context != nullptr);
 		std::unique_ptr<sakura_Convolve1DContext, Convolve1DContextDeleter> convolve1d_context_holder(
 				convolve1d_context);
 

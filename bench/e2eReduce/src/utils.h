@@ -33,8 +33,11 @@ public:
 	AlignedArrayGenerator() :
 			alignment_(sakura_GetAlignment()), index_(0), pointer_holder_(128) {
 	}
+	/**
+	 * MT-unsafe
+	 */
 	template<class T> inline T *GetAlignedArray(size_t num_elements) {
-		size_t num_arena = (num_elements + alignment_ - 1) * sizeof(T);
+		size_t num_arena = num_elements * sizeof(T) + alignment_ - 1;
 		if (index_ >= pointer_holder_.size()) {
 			pointer_holder_.resize(pointer_holder_.size() + 128);
 		}
