@@ -318,7 +318,6 @@ inline void SubtractBaselinePolynomial(
 	});
 	if (context == nullptr) {
 		guard_for_baseline_context.Disable();
-		throw std::bad_alloc();
 	}
 
 	SubtractBaseline(num_data, data, mask, context,
