@@ -1635,6 +1635,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値（左辺側の行列成分）を計算する。
  * @details
+ * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
+ *
+ * @image html GetCoefficientsForLeastSquareFitting.png
+ *
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の左辺の行列成分を計算する。
+ * @par
  * @param[in] num_mask 配列 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
@@ -1647,6 +1653,20 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
+ * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
+ * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
+ * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
+ * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
+ * the coefficients to be solved, these values are connected via the following
+ * simultaneous equations:
+ *
+ * @image html GetCoefficientsForLeastSquareFitting.png
+ *
+ * Note that the summation means all the data points except masked ones
+ * are to be added.
+ * This function computes the components in the matrix at the left side
+ * of the above simultaneous equations.
+ * @par
  * @param[in] num_mask the number of elements in the arrays @a data
  * and @a mask, and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the total model.
@@ -1679,6 +1699,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値（右辺側のベクトル成分）を計算する。
  * @details
+ * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
+ *
+ * @image html GetCoefficientsForLeastSquareFitting.png
+ *
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の右辺のベクトル成分を計算する。
+ * @par
  * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -1693,6 +1719,20 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
+ * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
+ * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
+ * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
+ * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
+ * the coefficients to be solved, these values are connected via the following
+ * simultaneous equations:
+ *
+ * @image html GetCoefficientsForLeastSquareFitting.png
+ *
+ * Note that the summation means all the data points except masked ones
+ * are to be added.
+ * This function computes the components in the vector at the right side
+ * of the above simultaneous equations.
+ * @par
  * @param[in] num_data the number of elements in the arrays @a data
  * and @a mask, and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the total model.
