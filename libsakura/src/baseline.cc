@@ -14,30 +14,30 @@
 namespace {
 
 inline void SetBasisDataPolynomial(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 
 	size_t idx = 0;
 	for (size_t i = 0; i < (context)->num_basis_data; ++i) {
 		double val = 1.0;
 		context->basis_data[idx] = val;
-		idx ++;
+		idx++;
 		for (size_t j = 1; j < context->num_bases; ++j) {
 			val *= static_cast<double>(i);
 			context->basis_data[idx] = val;
-			idx ++;
+			idx++;
 		}
 	}
 }
 
 inline void SetBasisDataChebyshev(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 
 	size_t idx = 0;
-	double xrange = (double)(context->num_basis_data - 1);
+	double xrange = (double) (context->num_basis_data - 1);
 	for (size_t i = 0; i < context->num_basis_data; ++i) {
-		double x = 2.0 * (double)i/xrange - 1.0;
+		double x = 2.0 * (double) i / xrange - 1.0;
 		for (size_t j = 0; j < context->num_bases; ++j) {
 			double val = 0.0;
 			if (j == 0) {
@@ -45,28 +45,29 @@ inline void SetBasisDataChebyshev(
 			} else if (j == 1) {
 				val = x;
 			} else {
-				val = 2.0 * x * context->basis_data[idx-1] - context->basis_data[idx-2];
+				val = 2.0 * x * context->basis_data[idx - 1]
+						- context->basis_data[idx - 2];
 			}
 			context->basis_data[idx] = val;
-			idx ++;
+			idx++;
 		}
 	}
 }
 
 inline void SetBasisDataCubicSpline(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	//
 }
 
 inline void SetBasisDataSinusoid(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	//
 }
 
 inline void SetBasisData(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	switch (context->baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
 		SetBasisDataPolynomial(context);
@@ -87,8 +88,7 @@ inline void SetBasisData(
 }
 
 inline void CreateBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
-		uint16_t const order,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_basis_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
 	size_t num_bases = 0;
@@ -115,17 +115,16 @@ inline void CreateBaselineContext(
 	}
 
 	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
-			LIBSAKURA_PREFIX::Memory> work_context(
-				static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>
-					(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(BaselineContext)))),
-				LIBSAKURA_PREFIX::Memory());
+	LIBSAKURA_PREFIX::Memory> work_context(
+			static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>(LIBSAKURA_PREFIX::Memory::Allocate(
+					sizeof(LIBSAKURA_SYMBOL(BaselineContext)))),
+			LIBSAKURA_PREFIX::Memory());
 	if (work_context == nullptr) {
 		throw std::bad_alloc();
 	}
 
-	work_context->baseline_type  = baseline_type;
-	work_context->num_bases      = num_bases;
+	work_context->baseline_type = baseline_type;
+	work_context->num_bases = num_bases;
 	work_context->num_basis_data = num_basis_data;
 
 	size_t num_total_basis_data = num_bases * num_basis_data;
@@ -134,25 +133,25 @@ inline void CreateBaselineContext(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*work_context->basis_data) * num_total_basis_data,
 					&work_context->basis_data),
-					LIBSAKURA_PREFIX::Memory());
+			LIBSAKURA_PREFIX::Memory());
 	assert(LIBSAKURA_SYMBOL(IsAligned)(work_context->basis_data));
 
 	SetBasisData(work_context.get());
 
 	work_context->basis_data_storage = work_basis_data_storage.release();
-	*context = (LIBSAKURA_SYMBOL(BaselineContext) *)work_context.release();
+	*context = (LIBSAKURA_SYMBOL(BaselineContext) *) work_context.release();
 }
 
 inline void DestroyBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (context->basis_data_storage != nullptr) {
 		LIBSAKURA_PREFIX::Memory::Free(context->basis_data_storage);
 	}
 	LIBSAKURA_PREFIX::Memory::Free(context);
 }
 
-inline void OperateLogicalAnd(
-		size_t num_in, bool const *in1, bool const *in2, bool *out) {
+inline void OperateLogicalAnd(size_t num_in, bool const *in1, bool const *in2,
+		bool *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -164,8 +163,8 @@ inline void OperateLogicalAnd(
 	}
 }
 
-inline void OperateFloatSubtraction(
-		size_t num_in, float const *in1, float const *in2, float *out) {
+inline void OperateFloatSubtraction(size_t num_in, float const *in1,
+		float const *in2, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -176,8 +175,7 @@ inline void OperateFloatSubtraction(
 }
 
 inline void DoGetBestFitBaseline(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double const *coeff,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, double const *coeff,
 		float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -193,10 +191,9 @@ inline void DoGetBestFitBaseline(
 	}
 }
 
-inline void GetBestFitBaseline(
-		size_t num_data, float const *data, bool const *mask,
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float *out) {
+inline void GetBestFitBaseline(size_t num_data, float const *data,
+		bool const *mask,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -218,20 +215,19 @@ inline void GetBestFitBaseline(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
-			num_data, mask, context->num_bases, context->basis_data, lsq_matrix0);
-	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
-			num_data, data, mask, context->num_bases, context->basis_data, lsq_vector0);
+	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(num_data, mask,
+			context->num_bases, context->basis_data, lsq_matrix0);
+	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(num_data, data,
+			mask, context->num_bases, context->basis_data, lsq_vector0);
 
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-			context->num_bases,
+	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(context->num_bases,
 			lsq_matrix0, lsq_vector0, coeff);
 
 	DoGetBestFitBaseline(context, coeff, out);
 }
 
-inline void SubtractBaseline(
-		size_t num_data, float const *data, bool const *mask,
+inline void SubtractBaseline(size_t num_data, float const *data,
+		bool const *mask,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool *final_mask, float *out) {
@@ -268,29 +264,30 @@ inline void SubtractBaseline(
 		if (i > 0) {
 			OperateLogicalAnd(num_data, mask, clip_mask, composite_mask);
 		}
-		GetBestFitBaseline(num_data, data, composite_mask, baseline_context, best_fit_model);
+		GetBestFitBaseline(num_data, data, composite_mask, baseline_context,
+				best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		//GetRms(); // calculate rms
 		//LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(); //new_clip_mask generated based on rms and residual_data
 
 		/*
-		bool mask_changed_after_clipping = false;
-		for (size_t j = 0; j < num_data; ++j) {
-			if (new_clip_mask[j] != clip_mask[j]) {
-				mask_changed_after_clipping = true;
-				break;
-			}
-		}
+		 bool mask_changed_after_clipping = false;
+		 for (size_t j = 0; j < num_data; ++j) {
+		 if (new_clip_mask[j] != clip_mask[j]) {
+		 mask_changed_after_clipping = true;
+		 break;
+		 }
+		 }
 
-		if (mask_changed_after_clipping) {
-			for (size_t j = 0; j < num_data; ++j) {
-				clip_mask[j] = new_clip_mask[j];
-			}
-		} else {
-			break;
-		}
-		*/
+		 if (mask_changed_after_clipping) {
+		 for (size_t j = 0; j < num_data; ++j) {
+		 clip_mask[j] = new_clip_mask[j];
+		 }
+		 } else {
+		 break;
+		 }
+		 */
 	}
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -299,9 +296,8 @@ inline void SubtractBaseline(
 	}
 }
 
-inline void SubtractBaselinePolynomial(
-		size_t num_data, float const *data, bool const *mask,
-		uint16_t order, float clipping_threshold_sigma,
+inline void SubtractBaselinePolynomial(size_t num_data, float const *data,
+		bool const *mask, uint16_t order, float clipping_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool *final_mask, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -311,20 +307,15 @@ inline void SubtractBaselinePolynomial(
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
-			order, num_data, &context);
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
 	ScopeGuard guard_for_baseline_context([&]() {
 		DestroyBaselineContext(context);
 	});
-	if (context == nullptr) {
-		guard_for_baseline_context.Disable();
-	}
 
-	SubtractBaseline(num_data, data, mask, context,
-			clipping_threshold_sigma, num_fitting_max,
-			get_residual, final_mask, out);
+	SubtractBaseline(num_data, data, mask, context, clipping_threshold_sigma,
+			num_fitting_max, get_residual, final_mask, out);
 
-	guard_for_baseline_context.Disable();
+	guard_for_baseline_context.CleanUpNow();
 }
 
 } /* anonymous namespace */
@@ -332,46 +323,44 @@ inline void SubtractBaselinePolynomial(
 namespace LIBSAKURA_PREFIX {
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::CreateBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
-		uint16_t const order, size_t const num_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+		size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) const {
 	::CreateBaselineContext(baseline_type, order, num_data, context);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DestroyBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) const {
+LIBSAKURA_SYMBOL(BaselineContext) *context) const {
 	::DestroyBaselineContext(context);
 }
 
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBestFitBaseline(
-		size_t num_data,
+void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBestFitBaseline(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float out[/*num_data*/]) const {
 	::GetBestFitBaseline(num_data, data, mask, context, out);
 }
 
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaseline(
-		size_t num_data,
+void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaseline(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/]) const {
 	::SubtractBaseline(num_data, data, mask, baseline_context,
-			clipping_threshold_sigma, num_fitting_max,
-			get_residual, final_mask, out);
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
-		size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		uint16_t order, float clipping_threshold_sigma, uint16_t num_fitting_max,
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], uint16_t order,
+		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/]) const {
 	::SubtractBaselinePolynomial(num_data, data, mask, order,
-			clipping_threshold_sigma, num_fitting_max,
-			get_residual, final_mask, out);
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out);
 }
 
 }

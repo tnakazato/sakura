@@ -306,3 +306,34 @@ TEST_F(Baseline, GetBestFitBaseline) {
 		ASSERT_EQ(out[i], answer[i]);
 	}
 }
+
+TEST_F(Baseline, SubtractBaselinePolynomial) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN float in_data[num_data] = {1.0, 3.0, 7.0, 130.0, 21.0};
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {true, true, true, false, true};
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)] = {0.0, 0.0, 0.0, 117.0, 0.0};
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+	size_t order = num_model - 1;
+	SIMD_ALIGN bool final_mask[ELEMENTSOF(in_data)];
+	LIBSAKURA_SYMBOL(Status) status =
+			LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
+					num_data, in_data, in_mask, order, 3.0, 1,
+					true, final_mask, out);
+
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0 ; i < num_model; ++i){
+		//ASSERT_EQ(out[i], answer[i]);
+	}
+}
