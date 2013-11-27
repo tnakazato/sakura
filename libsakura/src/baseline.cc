@@ -313,10 +313,17 @@ inline void SubtractBaselinePolynomial(
 	CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
 			order, num_data, &context);
+	ScopeGuard guard_for_baseline_context([&]() {
+		DestroyBaselineContext(context);
+	});
+	if (context == nullptr) {
+		guard_for_baseline_context.Disable();
+		throw std::bad_alloc();
+	}
+
 	SubtractBaseline(num_data, data, mask, context,
 			clipping_threshold_sigma, num_fitting_max,
 			get_residual, final_mask, out);
-	DestroyBaselineContext(context);
 }
 
 } /* anonymous namespace */
