@@ -6,6 +6,10 @@
 #include <vector>
 #include <cstdlib>
 #include <utility>
+#include <locale>
+#include <map>
+
+#include <libsakura/sakura.h>
 
 #include "config_file_reader.h"
 
@@ -23,11 +27,13 @@ struct FlaggingOptions {
 };
 
 struct BaselineOptions {
+	sakura_BaselineType baseline_type;
+	uint16_t order;
 	std::vector<uint64_t> line_mask;
 };
 
 struct SmoothingOptions {
-	std::string kernel_type;
+	sakura_Convolve1DKernelType kernel_type;
 	size_t kernel_width;
 };
 
@@ -79,6 +85,9 @@ public:
 			separator = ',';
 		}
 		oss << "]\n";
+		oss << "\tbaseline function=" << option_list.baseline.baseline_type
+				<< "\n";
+		oss << "\torder=" << option_list.baseline.order << "\n";
 		oss << "\tkernel type=" << option_list.smoothing.kernel_type << "\n";
 		oss << "\tkernel width=" << option_list.smoothing.kernel_width << "\n";
 		return oss.str();
@@ -90,15 +99,18 @@ private:
 
 		// parse output file name
 		option_list->output_file = GetValue(options, GetKey("output"),
-				((option_list->input_file.rfind("/") == option_list->input_file.length() - 1) ?
-						option_list->input_file.substr(0, option_list->input_file.length() - 1) :
+				((option_list->input_file.rfind("/")
+						== option_list->input_file.length() - 1) ?
+						option_list->input_file.substr(0,
+								option_list->input_file.length() - 1) :
 						option_list->input_file) + "_out");
 
 		// parse IFNO
 		option_list->ifno = std::atoi(GetValue(options, GetKey("spw")).c_str());
 	}
 
-	static void ParseCalibration(OptionMap const options, CalibrationOptions *option_list) {
+	static void ParseCalibration(OptionMap const options,
+			CalibrationOptions *option_list) {
 		std::string const category = "calibration";
 
 		// parse sky table name
@@ -112,7 +124,8 @@ private:
 				GetValue(options, GetKey(category, "tsys_spw")).c_str());
 	}
 
-	static void ParseFlagging(OptionMap const options, FlaggingOptions *option_list) {
+	static void ParseFlagging(OptionMap const options,
+			FlaggingOptions *option_list) {
 		std::string const category = "flagging";
 
 		// parse edge channels
@@ -131,29 +144,39 @@ private:
 		}
 	}
 
-	static void ParseBaseline(OptionMap const options, BaselineOptions *option_list) {
+	static void ParseBaseline(OptionMap const options,
+			BaselineOptions *option_list) {
 		std::string const category = "baseline";
 
+		// parse baseline type
+		option_list->baseline_type = StringToBaselineType(
+				GetValue(options, GetKey(category, "fitfunc")));
+
+		// parse order
+		std::string s = GetValue(options, GetKey(category, "order"));
+		option_list->order = (s.size() > 0) ? std::atoi(s.c_str()) : 0;
+
 		// parse line mask
-		std::string s = GetValue(options, GetKey(category, "mask"));
+		s = GetValue(options, GetKey(category, "mask"));
 		if (s.size() > 0) {
 			ToVector(s, &(option_list->line_mask));
 		} else {
 			option_list->line_mask.clear();
 		}
 	}
-	static void ParseSmoothing(OptionMap const options, SmoothingOptions *option_list) {
+	static void ParseSmoothing(OptionMap const options,
+			SmoothingOptions *option_list) {
 		std::string const category = "smoothing";
 
 		// parse kernel type
-		option_list->kernel_type = GetValue(options, GetKey(category, "kernel"));
+		option_list->kernel_type = StringToKernelType(
+				GetValue(options, GetKey(category, "kernel")));
 
 		// parse kernel width
 		std::string s = GetValue(options, GetKey(category, "kernel_width"));
 		if (s.size() > 0) {
 			option_list->kernel_width = std::atoi(s.c_str());
-		}
-		else {
+		} else {
 			option_list->kernel_width = 5; // default is 5
 		}
 	}
@@ -222,6 +245,48 @@ private:
 			v->clear();
 			return;
 		}
+	}
+	static inline sakura_Convolve1DKernelType StringToKernelType(
+			std::string const type) {
+		std::string type_upper = ToUpper(type);
+		std::map<std::string, sakura_Convolve1DKernelType> typemap;
+		typemap["GAUSSIAN"] = sakura_Convolve1DKernelType_kGaussian;
+		typemap["BOXCAR"] = sakura_Convolve1DKernelType_kBoxcar;
+		typemap["HANNING"] = sakura_Convolve1DKernelType_kHanning;
+		typemap["HAMMING"] = sakura_Convolve1DKernelType_kHamming;
+		typemap["DEFAULT"] = sakura_Convolve1DKernelType_kGaussian;
+		std::map<std::string, sakura_Convolve1DKernelType>::iterator entry =
+				typemap.find(type_upper);
+		if (entry != typemap.end()) {
+			return entry->second;
+		} else {
+			return typemap["DEFAULT"];
+		}
+	}
+	static inline sakura_BaselineType StringToBaselineType(
+			std::string const type) {
+		std::string type_upper = ToUpper(type);
+		std::map<std::string, sakura_BaselineType> typemap;
+		typemap["POLYNOMIAL"] = sakura_BaselineType_kPolynomial;
+		typemap["CHEBYSHEV"] = sakura_BaselineType_kChebyshev;
+		typemap["CUBICSPLINE"] = sakura_BaselineType_kCubicSpline;
+		typemap["SINUSOID"] = sakura_BaselineType_kSinusoid;
+		typemap["DEFAULT"] = sakura_BaselineType_kChebyshev;
+		std::map<std::string, sakura_BaselineType>::iterator entry =
+				typemap.find(type_upper);
+		if (entry != typemap.end()) {
+			return entry->second;
+		} else {
+			return typemap["DEFAULT"];
+		}
+	}
+	static inline std::string ToUpper(std::string const str) {
+		std::locale loc;
+		std::string out(str);
+		for (std::string::iterator i = out.begin(); i != out.end(); ++i) {
+			*i = std::toupper(*i, loc);
+		}
+		return out;
 	}
 	static std::string const prefix;
 	static char const delimiter;

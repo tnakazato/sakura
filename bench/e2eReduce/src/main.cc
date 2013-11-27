@@ -36,11 +36,13 @@ auto logger = log4cxx::Logger::getLogger("app");
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
 		bool output_mask[]) {
 //	std::cout << "ExecuteBitMaskToFlag" << std::endl;
+	sakura_Uint8ToBool(num_data, input_flag, output_mask);
 }
 
 inline void ExecuteCalibration(size_t num_data, float const input_data[],
 		CalibrationContext const calibration_context, float out_data[]) {
 //	std::cout << "ExecuteCalibration" << std::endl;
+
 }
 
 inline void ExecuteBaseline(sakura_BaselineContext const *context,
@@ -116,11 +118,11 @@ void ParallelJob(int job_id, size_t num_v, float const v[], uint8_t const f[],
 	// Calculate Statistics
 	CalculateStatistics(num_v, out_data, mask);
 
-	float sum = 0.0;
-	for (unsigned int i = 0; i < num_v; ++i)
-		sum += v[i];
-	std::cout << "Job " << job_id << ": v[0]=" << v[0] << ", sum(v)=" << sum
-			<< std::endl;
+//	float sum = 0.0;
+//	for (unsigned int i = 0; i < num_v; ++i)
+//		sum += v[i];
+//	std::cout << "Job " << job_id << ": v[0]=" << v[0] << ", sum(v)=" << sum
+//			<< std::endl;
 	// sleep(job_id % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=]() {
 		JobFinished(job_id);
@@ -200,10 +202,10 @@ void E2eReduce(int argc, char const* const argv[]) {
 		calibration_context.tsys = tsys;
 
 		// baseline context
-		uint16_t order = 0;
 		sakura_BaselineContext *baseline_context;
-		if (sakura_CreateBaselineContext(sakura_BaselineType_kChebyshev, order,
-				num_chan, &baseline_context) != sakura_Status_kOK) {
+		if (sakura_CreateBaselineContext(options.baseline.baseline_type,
+				options.baseline.order, num_chan, &baseline_context)
+				!= sakura_Status_kOK) {
 			throw "";
 		}
 		std::unique_ptr<sakura_BaselineContext, BaselineContextDeleter> baseline_context_holder(
@@ -212,9 +214,8 @@ void E2eReduce(int argc, char const* const argv[]) {
 		// convolve1d context
 		sakura_Convolve1DContext *convolve1d_context;
 		if (sakura_CreateConvolve1DContext(num_chan,
-				sakura_Convolve1DKernelType_kGaussian,
-				options.smoothing.kernel_width, true, &convolve1d_context)
-				!= sakura_Status_kOK) {
+				options.smoothing.kernel_type, options.smoothing.kernel_width,
+				true, &convolve1d_context) != sakura_Status_kOK) {
 			throw "";
 		}
 		std::unique_ptr<sakura_Convolve1DContext, Convolve1DContextDeleter> convolve1d_context_holder(
