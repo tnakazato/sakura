@@ -23,7 +23,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 			&& kernel_type != LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar)
 			&& kernel_type != LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning)
 			&& kernel_type != LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)) {
-		LOG4CXX_ERROR(logger, "Invalid Kernel Tyep");
+		LOG4CXX_ERROR(logger, "Invalid Kernel Type");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (kernel_width < 1) {
@@ -42,6 +42,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		LOG4CXX_ERROR(logger, "num_data does't equal to context->num_data");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -71,6 +72,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		LOG4CXX_ERROR(logger, "num_data does't equal to context->num_data");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -83,6 +85,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
 		convolutionop->DestroyConvolve1DContext(context);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
