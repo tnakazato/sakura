@@ -80,6 +80,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	} catch (...) {
 		// any exception is thrown during interpolation
+		assert(false);
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
 			oss << "Aborted due to unknown error" << std::endl;
