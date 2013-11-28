@@ -10,7 +10,6 @@
 #include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/sakura.h>
 
-#define EIGEN_DENSEBASE_PLUGIN "eigen_binary_visitor_plugin.h"
 #include <Eigen/Core>
 #include <Eigen/LU>
 
