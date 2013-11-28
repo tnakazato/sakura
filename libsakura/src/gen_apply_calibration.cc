@@ -15,6 +15,7 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
 
 }
 
+// TODO: use log4cxx macro as much as possible
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
 		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
@@ -29,7 +30,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		// scaling factor must be given
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Empty scaling factor (num_scaling_factor == 0)" << std::endl;
+			oss << "Empty scaling factor (num_scaling_factor == 0)" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -39,7 +40,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		// scaling factor must be given
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Invalid number of scaling factor. num_scaling_factor must be 1 or >= num_data" << std::endl;
+			oss << "Invalid number of scaling factor. num_scaling_factor must be 1 or >= num_data" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -50,7 +51,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		// null pointer
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Input pointers are null" << std::endl;
+			oss << "Input pointers are null" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -63,7 +64,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		// array is not aligned
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Arrays are not aligned" << std::endl;
+			oss << "Arrays are not aligned" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -81,7 +82,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		// any exception is thrown during interpolation
 		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
 			std::ostringstream oss;
-			oss << "ERROR: Aborted due to unknown error" << std::endl;
+			oss << "Aborted due to unknown error" << std::endl;
 			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
 		}
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);

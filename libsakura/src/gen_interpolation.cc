@@ -38,7 +38,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 	// num_base must be non-zero
 	if (num_interpolation_axis == 0) {
-		LOG4CXX_ERROR(logger, "ERROR: num_base must be >0\n");
+		LOG4CXX_ERROR(logger, "num_base must be >0\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -56,7 +56,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(interpolated)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
-		LOG4CXX_ERROR(logger, "ERROR: input arrays are not aligned\n");
+		LOG4CXX_ERROR(logger, "input arrays are not aligned\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -64,7 +64,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// input arrays are null
 	if (base == nullptr || data_base == nullptr || interpolated == nullptr
 			|| data_interpolated == nullptr) {
-		LOG4CXX_ERROR(logger, "ERROR: input arrays are null\n");
+		LOG4CXX_ERROR(logger, "input arrays are null\n");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -99,12 +99,12 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				num_x_interpolated, x_interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
-		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);
-		LOG4CXX_ERROR(logger, "ERROR: Aborted due to unknown error\n");
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error\n");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return status;
@@ -136,12 +136,12 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				num_y_interpolated, y_interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
-		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);
-		LOG4CXX_ERROR(logger, "ERROR: Aborted due to unknown error\n");
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error\n");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return status;
