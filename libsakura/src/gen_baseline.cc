@@ -32,10 +32,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		baselineop->CreateBaselineContext(baseline_type, order, num_data,
 				context);
 	} catch (const std::bad_alloc &e) {
-		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (const std::invalid_argument &e) {
-		LOG4CXX_ERROR(logger, "ERROR: order must be smaller than num_data.\n");
+		LOG4CXX_ERROR(logger, "Order must be smaller than num_data.\n");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		assert(false);
@@ -84,7 +84,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 	try {
 		baselineop->GetBestFitBaseline(num_data, data, mask, context, out);
 	} catch (const std::bad_alloc &e) {
-		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		assert(false);
@@ -127,7 +127,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 				clipping_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, out);
 	} catch (const std::bad_alloc &e) {
-		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		assert(false);
@@ -168,7 +168,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 				clipping_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, out);
 	} catch (const std::bad_alloc &e) {
-		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (const std::invalid_argument &e) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
