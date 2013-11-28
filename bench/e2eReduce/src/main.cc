@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <stdexcept>
 #include <log4cxx/logger.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <xdispatch/dispatch>
@@ -78,7 +79,7 @@ bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data, input_mask, &result);
 	if (status != sakura_Status_kOK) {
-		throw std::runtime_error();
+		throw std::runtime_error("");
 	}
 }
 
@@ -90,6 +91,7 @@ void JobFinished(int i) {
 
 struct SharedWorkingSet {
 	size_t num_chan;
+	size_t num_data;
 	CalibrationContext calibration_context;
 	sakura_BaselineContext *baseline_context;
 	sakura_Convolve1DContext *convolve1d_context;
@@ -161,11 +163,12 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_INFO(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
-	SharedWorkingSet *shared = new SharedWorkingSet { 0, { }, nullptr, nullptr,
+	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr, nullptr,
 			GetSelectedTable(options.input_file, options.ifno) };
 	shared->spectra_column.attach(shared->table, "SPECTRA");
 	shared->flagtra_column.attach(shared->table, "FLAGTRA");
 	shared->num_chan = shared->spectra_column(0).nelements();
+	shared->num_data = shared->table.nrow();
 	try {
 		// Create Context and struct for calibration
 		// calibration context
@@ -236,7 +239,7 @@ void Reduce(E2EOptions const &options) {
 		shared->Release();
 	});
 
-	size_t num_threads = std::min(shared->num_chan, size_t(20));
+	size_t num_threads = std::min(shared->num_data, size_t(20));
 	std::unique_ptr<WorkingSet[]> working_sets(
 			InitializeWorkingSet(shared, num_threads, &array_generator));
 
