@@ -1638,7 +1638,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値（左辺側の行列成分）を計算する。
  * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
+ * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
@@ -1702,7 +1702,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値（右辺側のベクトル成分）を計算する。
  * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
+ * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
@@ -1767,37 +1767,47 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 連立方程式をLU分解によって解く。
  * @details
- * @param[in] num_equations 連立方程式の数。
- * @param[in] lsq_matrix0 連立方程式の左辺側の行列成分を格納する１次元配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix0 [ @a num_equations * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_equations * @a num_equations )となる。
+ * 連立方程式 A x = y を解き、ベクトル x の成分を求めることを考える。ここで、A は @a num_equations 行 @a num_equations 列の正方行列であり、x, y は長さ @a num_equations のベクトルである。本関数は与えられた A 及び y に対し、A の LU 分解を行うことによって x の値を求める。
+ * @par
+ * @param[in] num_equations 連立方程式の本数。
+ * @param[in] in_matrix 連立方程式の左辺の行列 (上の方程式の A に対応する) の成分を格納する１次元配列。列に対するループは行のループより内側でなければならない。即ち、 @a m 行 @a n 列目の成分値は、 @a in_matrix [ @a num_equations * ( @a m -1) + ( @a n -1)]に格納されなければならない。配列の長さは( @a num_equations * @a num_equations )となる。
  * @n must-be-aligned
- * @param[in] lsq_vector0 連立方程式の右辺値を格納する配列。配列の長さは @a num_equations でなければならない。
+ * @param[in] in_vector 連立方程式の右辺のベクトル (上の方程式の y に対応する) の成分を格納する配列。配列の長さは @a num_equations でなければならない。
  * @n must-be-aligned
- * @param[out] out 連立方程式の解を格納する配列。配列の長さは @a num_equations でなければならない。 @a out を指すポインタは @a lsq_vector0 と同じでもよい。
+ * @param[out] out 連立方程式の解 (上の方程式の x に対応する) を格納する配列。配列の長さは @a num_equations でなければならない。 @a out を指すポインタは @a in_vector と同じでもよい。
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Solve simultaneous equations via LU decomposition.
  * @details
+ * Suppose solving simultaneous equations A x = y to derive x, where A
+ * is a square matrix of @a num_equations rows and columns, and x and y
+ * are vectors with length of @a num_equations . Given A and y values,
+ * this function computes x values using LU decomposition of A.
+ * @par
  * @param[in] num_equations number of equations.
- * @param[in] lsq_matrix0 a 1D array containing values of the matrix in the
- * left side of simultaneous equations. loop for columns comes inside that
- * for rows, i.e., the value at the @a m -th row and @a n -th column is
- * stored at @a lsq_matrix0 [ @a num_equations * ( @a m -1) + ( @a n -1)].
+ * @param[in] in_matrix a 1D array containing values of the matrix A in
+ * the left side of the above simultaneous equations. loop for columns
+ * comes inside that for rows, i.e., the value at the @a m -th row and
+ * @a n -th column is stored at
+ * @a in_matrix [ @a num_equations * ( @a m -1) + ( @a n -1)].
  * its length must be (@a num_equations * @a num_equations).
  * @n must-be-aligned
- * @param[in] lsq_vector0 the right side value of simultaneous equations.
- * its length must be @a num_equations .
+ * @param[in] in_vector a 1D array containing values of the vector y in
+ * the right side of the above simultaneous equations. its length must be
+ * @a num_equations .
  * @n must-be-aligned
- * @param[out] out the solution. its length must be @a num_equations . the
- * pointer of @a out can be identical with that of @a lsq_vector0 .
+ * @param[out] out the solution (x in the above equations). its length
+ * must be @a num_equations . the pointer of @a out can be identical with
+ * that of @a in_vector .
  * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
 		size_t num_equations,
-		double const lsq_matrix0[/*num_equations*num_equations*/],
-		double const lsq_vector0[/*num_equations*/],
+		double const in_matrix[/*num_equations*num_equations*/],
+		double const in_vector[/*num_equations*/],
 		double out[/*num_equations*/]);
 
 /**

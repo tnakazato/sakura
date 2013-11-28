@@ -80,7 +80,7 @@ protected:
 		cout << name << " = [";
 		for (size_t i = 0; i < num_row; ++i) {
 			PrintArray(name, num_column, data, num_column*i, false, false);
-			if (i < num_row-1) cout << ", ";
+			if (i < num_row-1) cout << ", " << endl;
 		}
 		cout << " ]" << endl;
 	}
@@ -90,7 +90,7 @@ protected:
 		cout << name << " = [";
 		for (size_t i = 0; i < num_row; ++i) {
 			PrintArray(name, num_column, data, num_column*i, false, false);
-			if (i < num_row-1) cout << ", ";
+			if (i < num_row-1) cout << ", " << endl;
 		}
 		cout << " ]" << endl;
 	}
@@ -319,6 +319,7 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 		PrintArray("in_data", num_data, in_data);
 		PrintArray("in_mask", num_data, in_mask);
 	}
+
 	size_t order = num_model - 1;
 	SIMD_ALIGN bool final_mask[ELEMENTSOF(in_data)];
 	LIBSAKURA_SYMBOL(Status) status =
@@ -334,6 +335,6 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0 ; i < num_model; ++i){
-		//ASSERT_EQ(out[i], answer[i]);
+		ASSERT_EQ(out[i], answer[i]);
 	}
 }

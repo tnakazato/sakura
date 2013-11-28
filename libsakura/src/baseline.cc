@@ -224,6 +224,19 @@ inline void GetBestFitBaseline(size_t num_data, float const *data,
 			lsq_matrix0, lsq_vector0, coeff);
 
 	DoGetBestFitBaseline(context, coeff, out);
+
+	std::cout << "********** coeff [";
+	for (size_t i = 0; i < num_coeff; ++i) {
+		std::cout << coeff[i];
+		if (i < num_coeff-1) std::cout << ", ";
+	}
+	std::cout << "]" << std::endl;
+	std::cout << "********** out [";
+	for (size_t i = 0; i < num_data; ++i) {
+		std::cout << out[i];
+		if (i < num_data-1) std::cout << ", ";
+	}
+	std::cout << "]" << std::endl;
 }
 
 inline void SubtractBaseline(size_t num_data, float const *data,
@@ -261,7 +274,11 @@ inline void SubtractBaseline(size_t num_data, float const *data,
 					sizeof(*residual_data) * num_data, &residual_data));
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
-		if (i > 0) {
+		if (i == 0) {
+			for (size_t j = 0; j < num_data; ++j) {
+				composite_mask[j] = mask[j];
+			}
+		} else {
 			OperateLogicalAnd(num_data, mask, clip_mask, composite_mask);
 		}
 		GetBestFitBaseline(num_data, data, composite_mask, baseline_context,
@@ -314,8 +331,6 @@ inline void SubtractBaselinePolynomial(size_t num_data, float const *data,
 
 	SubtractBaseline(num_data, data, mask, context, clipping_threshold_sigma,
 			num_fitting_max, get_residual, final_mask, out);
-
-	guard_for_baseline_context.CleanUpNow();
 }
 
 } /* anonymous namespace */

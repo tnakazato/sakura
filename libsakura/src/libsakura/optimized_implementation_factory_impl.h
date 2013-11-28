@@ -359,8 +359,8 @@ public:
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,
-			double const lsq_matrix0[/*num_equations*num_equations*/],
-			double const lsq_vector0[/*num_equations*/],
+			double const in_matrix[/*num_equations*num_equations*/],
+			double const in_vector[/*num_equations*/],
 			double out[/*num_equations*/]) const;
 };
 
@@ -378,8 +378,8 @@ public:
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,
-			double const lsq_matrix0[/*num_equations*num_equations*/],
-			double const lsq_vector0[/*num_equations*/],
+			double const in_matrix[/*num_equations*num_equations*/],
+			double const in_vector[/*num_equations*/],
 			double out[/*num_equations*/]) const;
 };
 

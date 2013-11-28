@@ -140,29 +140,41 @@ inline void GetVectorCoefficientsForLeastSquareFitting(
 }
 
 inline void SolveSimultaneousEquationsByLU(size_t num_equations,
-		double const *lsq_matrix0, double const *lsq_vector0, double *out) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix0));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector0));
+		double const *in_matrix, double const *in_vector, double *out) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<double, Dynamic, 1>, Aligned> lsq_matrix0_array(const_cast<double *>(lsq_matrix0),
+	Map<Array<double, Dynamic, 1>, Aligned> in_matrix_array(const_cast<double *>(in_matrix),
 			num_equations*num_equations);
-	Map<Array<double, Dynamic, 1>, Aligned> lsq_vector0_array(const_cast<double *>(lsq_vector0),
+	Map<Array<double, Dynamic, 1>, Aligned> in_vector_array(const_cast<double *>(in_vector),
 			num_equations);
 	Map<Array<double, Dynamic, 1>, Aligned> out_array(const_cast<double *>(out),
 			num_equations);
 
 	::Eigen::MatrixXd lsq_matrix(num_equations, num_equations);
 	::Eigen::VectorXd lsq_vector(num_equations);
+
+	std::cout << "^^^^^^^^^^^^^^^^^^^ LU matrix ^^^^^^^^" << std::endl;
 	for (size_t i = 0; i < num_equations; ++i) {
 		for (size_t j = 0; j < num_equations; ++j) {
-			lsq_matrix(i, j) = lsq_matrix0_array[num_equations*i+j];
+			//lsq_matrix(i, j) = in_matrix_array[num_equations*i+j];
+			lsq_matrix(i, j) = in_matrix[num_equations*i+j];
+			std::cout << in_matrix[num_equations*i+j] << ", ";
 		}
-		lsq_vector(i) = lsq_vector0_array[i];
+		std::cout << std::endl;
 	}
+	std::cout << "^^^^^^^^^^^^^^^^^^^ LU vector ^^^^^^^^" << std::endl;
+	for (size_t i = 0; i < num_equations; ++i) {
+		//lsq_vector(i) = in_vector_array[i];
+		lsq_vector(i) = in_vector[i];
+		std::cout << in_vector[i] << ", ";
+	}
+	std::cout << std::endl;
 
 	::Eigen::VectorXd lu_result = lsq_matrix.fullPivLu().solve(lsq_vector);
 	for (size_t i = 0; i < num_equations; ++i) {
-		out_array[i] = lu_result(i);
+		//out_array[i] = lu_result(i);
+		out[i] = lu_result(i);
 	}
 }
 
@@ -267,10 +279,10 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetVectorCoefficientsForLeastSqua
 
 void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::SolveSimultaneousEquationsByLU(
 		size_t num_equations,
-		double const lsq_matrix0[/*num_equations*num_equations*/],
-		double const lsq_vector0[/*num_equations*/],
+		double const in_matrix[/*num_equations*num_equations*/],
+		double const in_vector[/*num_equations*/],
 		double out[/*num_equations*/]) const {
-	::SolveSimultaneousEquationsByLU(num_equations, lsq_matrix0, lsq_vector0, out);
+	::SolveSimultaneousEquationsByLU(num_equations, in_matrix, in_vector, out);
 }
 
 }

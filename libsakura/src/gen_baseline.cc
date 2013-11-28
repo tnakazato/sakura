@@ -38,6 +38,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		LOG4CXX_ERROR(logger, "ERROR: order must be smaller than num_data.\n");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -54,6 +55,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	try {
 		baselineop->DestroyBaselineContext(context);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -85,6 +87,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 
@@ -127,6 +130,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		LOG4CXX_ERROR(logger, "ERROR: Memory allocation failed.\n");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -169,6 +173,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 	} catch (const std::invalid_argument &e) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 

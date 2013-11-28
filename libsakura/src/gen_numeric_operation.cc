@@ -69,16 +69,16 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetVectorCoefficientsForLea
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-		size_t num_equations, double const lsq_matrix0[], double const lsq_vector0[], double out[]) {
-	if (lsq_matrix0 == nullptr)
+		size_t num_equations, double const in_matrix[], double const in_vector[], double out[]) {
+	if (in_matrix == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_vector0 == nullptr)
+	if (in_vector == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix0)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_matrix)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_vector0)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_vector)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -86,7 +86,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->SolveSimultaneousEquationsByLU(num_equations, lsq_matrix0, lsq_vector0, out);
+		numop->SolveSimultaneousEquationsByLU(num_equations, in_matrix, in_vector, out);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
