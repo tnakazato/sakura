@@ -22,24 +22,10 @@ struct CalibrationContext {
 	double *frequency_label_tsys;
 };
 
-// Deleter for baseline context
-struct BaselineContextDeleter {
-	inline void operator()(sakura_BaselineContext *context) const noexcept {
-		sakura_DestroyBaselineContext(context);
-	}
-};
-
-// Deleter for convolve1d context
-struct Convolve1DContextDeleter {
-	inline void operator()(sakura_Convolve1DContext *context) const noexcept {
-		sakura_DestroyConvolve1DContext(context);
-	}
-};
-
-void FillCalibrationContext(CalibrationContext *calibration_context,
+void FillCalibrationContext(
 		std::string const sky_table, std::string const tsys_table,
 		unsigned int sky_ifno, unsigned int tsys_ifno,
-		AlignedArrayGenerator *array_generator) {
+		AlignedArrayGenerator *array_generator, CalibrationContext *calibration_context) {
 	// sky table
 	float *sky_spectra = nullptr;
 	double *sky_time = nullptr;
