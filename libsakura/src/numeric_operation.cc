@@ -140,11 +140,11 @@ inline void GetVectorCoefficientsForLeastSquareFitting(
 
 inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 		double const *in_matrix_arg, double const *in_vector_arg,
-		double *out_arg) {
+		double *out) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
 	Map<MatrixXd, Aligned> in_matrix(
 			const_cast<double *>(in_matrix_arg),
 			num_equations,
@@ -153,7 +153,7 @@ inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 			const_cast<double *>(in_vector_arg),
 			num_equations);
 
-	Map<VectorXd>(out_arg, num_equations) =
+	Map<VectorXd>(out, num_equations) =
 			in_matrix.fullPivLu().solve(in_vector);
 }
 
