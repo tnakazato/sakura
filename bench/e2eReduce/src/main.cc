@@ -77,14 +77,15 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 inline void CalculateStatistics(size_t num_data, float const input_data[],
 bool const input_mask[]) {
 	sakura_StatisticsResult result;
-	sakura_Status status = sakura_ComputeStatistics(num_data, input_data, input_mask, &result);
+	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
+			input_mask, &result);
 	if (status != sakura_Status_kOK) {
-		throw std::runtime_error("");
+		throw std::runtime_error("statistics");
 	}
 }
 
-void JobFinished(int i) {
-	std::cout << "Job ";
+void JobFinished(size_t i) {
+	std::cout << "Row ";
 	std::cout << i;
 	std::cout << " have done.\n";
 }
@@ -113,8 +114,9 @@ struct SharedWorkingSet {
 	}
 };
 
-void ParallelJob(int job_id, size_t num_v, float const v[], uint8_t const f[],
-		E2EOptions const &option_list, SharedWorkingSet const *shared) {
+void ParallelJob(size_t job_id, size_t num_v, float const v[],
+		uint8_t const f[], E2EOptions const &option_list,
+		SharedWorkingSet const *shared) {
 	// generate temporary storage
 	AlignedArrayGenerator generator;
 	float *out_data = generator.GetAlignedArray<float>(num_v);
@@ -146,16 +148,11 @@ void ParallelJob(int job_id, size_t num_v, float const v[], uint8_t const f[],
 	// Calculate Statistics
 	CalculateStatistics(num_v, out_data, mask);
 
-//	float sum = 0.0;
-//	for (unsigned int i = 0; i < num_v; ++i)
-//		sum += v[i];
-//	std::cout << "Job " << job_id << ": v[0]=" << v[0] << ", sum(v)=" << sum
-//			<< std::endl;
 	// sleep(job_id % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=]() {
 		// run casa operations in main_queue.
-		JobFinished(job_id);
-	});
+			JobFinished(job_id);
+		});
 }
 
 SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
@@ -163,8 +160,8 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_INFO(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
-	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr, nullptr,
-			GetSelectedTable(options.input_file, options.ifno) };
+	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
+			nullptr, GetSelectedTable(options.input_file, options.ifno) };
 	shared->spectra_column.attach(shared->table, "SPECTRA");
 	shared->flagtra_column.attach(shared->table, "FLAGTRA");
 	shared->num_chan = shared->spectra_column(0).nelements();
@@ -177,13 +174,13 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 				options.calibration.tsys_ifno, array_generator,
 				&shared->calibration_context);
 		if (shared->calibration_context.num_channel_sky != shared->num_chan) {
-			throw "";
+			throw std::runtime_error("calibration");
 		}
 		// baseline context
 		if (sakura_CreateBaselineContext(options.baseline.baseline_type,
 				options.baseline.order, shared->num_chan,
 				&shared->baseline_context) != sakura_Status_kOK) {
-			throw "";
+			throw std::runtime_error("baseline");
 		}
 		assert(shared->baseline_context != nullptr);
 		// convolve1d context
@@ -191,7 +188,7 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 				options.smoothing.kernel_type, options.smoothing.kernel_width,
 				options.smoothing.use_fft, &shared->convolve1d_context)
 				!= sakura_Status_kOK) {
-			throw "";
+			throw std::runtime_error("convolve");
 		}
 		assert(shared->convolve1d_context != nullptr);
 	} catch (...) {
@@ -251,12 +248,11 @@ void Reduce(E2EOptions const &options) {
 	LOG4CXX_INFO(logger, "Initialized");
 
 	bool const serialize = false;
-	xdispatch::queue serial_queue("serial");
+	xdispatch::queue serial_queue("my serial queue");
 	xdispatch::semaphore semaphore(num_threads);
-	size_t rows = shared->spectra_column.nrow();
 
 	auto group = xdispatch::group();
-	for (size_t i = 0; i < rows; ++i) {
+	for (size_t i = 0; i < shared->num_data; ++i) {
 		semaphore.acquire();
 		size_t working_set_id = 0;
 		serial_queue.sync([&working_set_id, &available_workers] {
@@ -267,7 +263,7 @@ void Reduce(E2EOptions const &options) {
 		// get data from the table
 		xdispatch::main_queue().sync([=, &working_sets] {
 			// run casa operations in main_queue.
-			LOG4CXX_INFO(logger, "Reading record " << i);
+				LOG4CXX_INFO(logger, "Reading record " << i);
 				GetArrayCell(working_sets[working_set_id].spectrum, i, shared->spectra_column,
 						casa::IPosition(1, shared->num_chan));
 				GetArrayCell(working_sets[working_set_id].flag, i, shared->flagtra_column,
