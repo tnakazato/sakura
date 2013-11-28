@@ -103,6 +103,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
+		assert(false);
 		LOG4CXX_ERROR(logger, "ERROR: Aborted due to unknown error\n");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -139,6 +140,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
+		assert(false);
 		LOG4CXX_ERROR(logger, "ERROR: Aborted due to unknown error\n");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
