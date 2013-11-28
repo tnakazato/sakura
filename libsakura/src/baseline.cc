@@ -224,19 +224,6 @@ inline void GetBestFitBaseline(size_t num_data, float const *data,
 			lsq_matrix0, lsq_vector0, coeff);
 
 	DoGetBestFitBaseline(context, coeff, out);
-
-	std::cout << "********** coeff [";
-	for (size_t i = 0; i < num_coeff; ++i) {
-		std::cout << coeff[i];
-		if (i < num_coeff-1) std::cout << ", ";
-	}
-	std::cout << "]" << std::endl;
-	std::cout << "********** out [";
-	for (size_t i = 0; i < num_data; ++i) {
-		std::cout << out[i];
-		if (i < num_data-1) std::cout << ", ";
-	}
-	std::cout << "]" << std::endl;
 }
 
 inline void SubtractBaseline(size_t num_data, float const *data,

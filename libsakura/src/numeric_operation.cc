@@ -15,8 +15,8 @@
 #include <Eigen/LU>
 
 using ::Eigen::Map;
-using ::Eigen::Array;
-using ::Eigen::Dynamic;
+using ::Eigen::MatrixXd;
+using ::Eigen::VectorXd;
 using ::Eigen::Aligned;
 
 namespace {
@@ -140,42 +140,22 @@ inline void GetVectorCoefficientsForLeastSquareFitting(
 }
 
 inline void SolveSimultaneousEquationsByLU(size_t num_equations,
-		double const *in_matrix, double const *in_vector, double *out) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<Array<double, Dynamic, 1>, Aligned> in_matrix_array(const_cast<double *>(in_matrix),
-			num_equations*num_equations);
-	Map<Array<double, Dynamic, 1>, Aligned> in_vector_array(const_cast<double *>(in_vector),
+		double const *in_matrix_arg, double const *in_vector_arg,
+		double *out_arg) {
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	Map<MatrixXd, Aligned> in_matrix(
+			const_cast<double *>(in_matrix_arg),
+			num_equations,
 			num_equations);
-	Map<Array<double, Dynamic, 1>, Aligned> out_array(const_cast<double *>(out),
+	Map<VectorXd, Aligned> in_vector(
+			const_cast<double *>(in_vector_arg),
 			num_equations);
 
-	::Eigen::MatrixXd lsq_matrix(num_equations, num_equations);
-	::Eigen::VectorXd lsq_vector(num_equations);
-
-	std::cout << "^^^^^^^^^^^^^^^^^^^ LU matrix ^^^^^^^^" << std::endl;
-	for (size_t i = 0; i < num_equations; ++i) {
-		for (size_t j = 0; j < num_equations; ++j) {
-			//lsq_matrix(i, j) = in_matrix_array[num_equations*i+j];
-			lsq_matrix(i, j) = in_matrix[num_equations*i+j];
-			std::cout << in_matrix[num_equations*i+j] << ", ";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << "^^^^^^^^^^^^^^^^^^^ LU vector ^^^^^^^^" << std::endl;
-	for (size_t i = 0; i < num_equations; ++i) {
-		//lsq_vector(i) = in_vector_array[i];
-		lsq_vector(i) = in_vector[i];
-		std::cout << in_vector[i] << ", ";
-	}
-	std::cout << std::endl;
-
-	::Eigen::VectorXd lu_result = lsq_matrix.fullPivLu().solve(lsq_vector);
-	for (size_t i = 0; i < num_equations; ++i) {
-		//out_array[i] = lu_result(i);
-		out[i] = lu_result(i);
-	}
+	Map<VectorXd>(out_arg, num_equations) =
+			in_matrix.fullPivLu().solve(in_vector);
 }
 
 } /* anonymous namespace */
