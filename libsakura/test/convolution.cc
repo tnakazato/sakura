@@ -101,11 +101,11 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // kernel_width = 0
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -118,10 +118,10 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // KernelType = undefined
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -134,10 +134,10 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 }
 
@@ -167,15 +167,15 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, bad_num_data, input_data, mask,
 				output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 }
 
@@ -202,15 +202,15 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve1d); // Status_kOK
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve1d); // Status_kOK
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 }
 
@@ -242,11 +242,11 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		LIBSAKURA_SYMBOL(Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
@@ -260,7 +260,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // [odd],withFFT, Gaussian Kernel Shape,input only 1 spike at center
 		LIBSAKURA_SYMBOL(Convolve1DContext)*context = nullptr;
@@ -285,11 +285,11 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(
 				Convolve1D)(context, num_data, input_data, mask, output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
@@ -307,7 +307,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(
 				DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // [even],without FFT, Gaussian Kernel Shape,input only 1 spike at center
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -330,11 +330,11 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		LIBSAKURA_SYMBOL(Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
@@ -348,7 +348,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // [odd],without FFT, Gaussian Kernel Shape,input only 1 spike at center
 		LIBSAKURA_SYMBOL(Convolve1DContext)*context = nullptr;
@@ -373,11 +373,11 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(
 				Convolve1D)(context, num_data, input_data, mask, output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
@@ -395,7 +395,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(
 				DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 }
 
@@ -429,11 +429,11 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 				Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(
 				Convolve1D)(context, num_data, input_data, mask, output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			if (i > (num_data / 2 - 5) && i < (num_data / 2 + 5)) {
 				EXPECT_FLOAT_EQ(1, output_data[i]); // delta will remain, but its convolved
@@ -446,7 +446,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // with mask against input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -471,11 +471,11 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 				Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(
 				Convolve1D)(context, num_data, input_data, mask, output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			EXPECT_FLOAT_EQ(0, output_data[i]); // delta will remain, but its convolved
@@ -487,7 +487,7 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // input_data all 1, mask all 0 (with FFT)
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -503,16 +503,16 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 				LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type, kernel_width, fftuse, &context));
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 				LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			EXPECT_FLOAT_EQ(0, output_data[i]);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 	{ // input data all 1, mask all 1 (with FFT)
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -528,16 +528,16 @@ TEST_F(Convolve1DOperation ,ConvolutionWithMaskOnOff) {
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 				LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type, kernel_width, fftuse, &context));
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 				LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask, output_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			EXPECT_FLOAT_EQ(1, output_data[i]);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 }
 /*
@@ -562,18 +562,18 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 	float output_data[num_data];
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 			num_data, kernel_type, kernel_width, fftuse, &context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	LIBSAKURA_SYMBOL(Status) status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(
 			context, num_data, input_data, mask, output_data);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 	fftuse = true; // with fft
 	float output_data_fft[num_data];
 	status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 			kernel_width, fftuse, &context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data,
 			input_data, mask, output_data_fft);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 	//verbose = true;
 	if (verbose) {
 		PrintArray2("", num_data, output_data_fft);
@@ -588,7 +588,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 	}
 	LIBSAKURA_SYMBOL(Status) status_Destroy =
 	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 }
 
 /*
@@ -612,16 +612,16 @@ TEST_F(Convolve1DOperation , DestroyConvolve1DContext) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		status = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				mask, output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		//verbose = true;
 		if (verbose)
 			PrintArray("output_data", num_data, output_data);
 		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
 }
