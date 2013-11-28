@@ -43,13 +43,82 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline void ApplyMaskToInputData(size_t num_data, float const *input_data,
+inline void ApplyMaskToInputDataByZero(size_t num_data, float const *input_data,
 bool const *mask, float *output_data) {
 	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
 			output_data[i] = input_data[i];
 		} else {
 			output_data[i] = 0.0;
+		}
+	}
+}
+
+inline bool FindFalseToGetStart(size_t num_data, float const input_data,
+bool const mask, size_t* X1, float* Y1, size_t count) {
+	if (!mask) {
+		X1[count] = num_data; //- 1;
+		Y1[count] = input_data;
+		return true;
+	}
+	return false;
+}
+inline bool FindTrueToGetEnd(size_t num_data, float const input_data,
+bool const mask, size_t* X2, float* Y2, size_t count) {
+	if (mask) {
+		X2[count] = num_data;
+		Y2[count] = input_data;
+		return true;
+	}
+	return false;
+}
+
+inline void ApplyMaskWithLinearInterpolation(size_t num_data,
+		float const *input_data,
+		bool const *mask, float *output_data) {
+	size_t X1[num_data], X2[num_data];
+	float Y1[num_data], Y2[num_data];
+	bool find_zero = true;
+	if (!mask[0]) {
+		bool find_zero = false;
+	}
+	size_t count = 0;
+	for (size_t i = 1; i < num_data; ++i) { // finding (x1,y1),(x2,y2)
+		if (find_zero) {
+			if (FindFalseToGetStart(i - 1, input_data[i - 1], mask[i], X1, Y1,
+					count)) {
+				//std::cout << " X1 = " << X1[i]<< std::endl;
+				find_zero = false;
+			}
+		} else {
+			if (FindTrueToGetEnd(i, input_data[i], mask[i], X2, Y2, count)) {
+				//std::cout << " X2 = " << X2[i]<< std::endl;
+				find_zero = true;
+				count++;
+			}
+		}
+	}
+	size_t count_max = count;
+	size_t n = 0;
+	bool hit = false;
+	for (size_t i = 0; i < num_data; ++i) { // calculate interpolation
+		if (!hit) {
+			output_data[i] = input_data[i];
+			if (i == X1[n]) {
+				hit = true;
+			}
+		} else if (hit && i < X2[n]) {
+			if (Y2[n] != Y1[n]) {
+				output_data[i] = i * (Y2[n] - Y1[n]) / (X2[n] - X1[n])
+						+ (X1[n] * Y2[n] - X2[n] * Y1[n]) / (1 - X2[n]);
+			} else {
+				output_data[i] = Y1[n];
+			}
+		} else if (hit && i == X2[n]) {
+			hit = false;
+			if (n <= count_max)
+				n++;
+			output_data[i] = input_data[i];
 		}
 	}
 }
@@ -254,7 +323,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		ApplyMaskToInputData(num_data, input_data, mask,
+		ApplyMaskToInputDataByZero(num_data, input_data, mask,
 				masked_input_data.get()); // context->real_array is mask applied array
 		fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
 				masked_input_data.get(), fft_applied_complex_input_data.get());
@@ -279,7 +348,9 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		if (masked_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		ApplyMaskToInputData(num_data, input_data, mask,
+		//ApplyMaskToInputDataByZero(num_data, input_data, mask,
+		//		masked_input_data.get()); // masked_input_data is mask applied array
+		ApplyMaskWithLinearInterpolation(num_data, input_data, mask,
 				masked_input_data.get()); // masked_input_data is mask applied array
 		CalculateConvolutionWithoutFFT(num_data, masked_input_data.get(),
 				context->real_array, output_data);
