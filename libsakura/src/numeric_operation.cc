@@ -36,6 +36,7 @@ inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
 	for (size_t i = 0; i < NUM_MODEL_BASES * NUM_MODEL_BASES; ++i) {
 		out[i] = 0;
 	}
+	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (mask[i]) {
 			auto model_i = &model[i * NUM_MODEL_BASES];
@@ -46,8 +47,10 @@ inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
 					out_matrix_i[k] += model_j * model_i[k];
 				}
 			}
+			num_unmasked_data ++;
 		}
 	}
+	assert(NUM_MODEL_BASES <= num_unmasked_data);
 }
 
 inline void GetMatrixCoefficientsForLeastSquareFitting(
@@ -65,6 +68,7 @@ inline void GetMatrixCoefficientsForLeastSquareFitting(
 	for (size_t i = 0; i < num_model_bases * num_model_bases; ++i) {
 		out[i] = 0;
 	}
+	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (mask[i]) {
 			auto model_i = &model[i * num_model_bases];
@@ -75,8 +79,10 @@ inline void GetMatrixCoefficientsForLeastSquareFitting(
 					out_matrix_j[k] += model_j * model_i[k];
 				}
 			}
+			num_unmasked_data ++;
 		}
 	}
+	assert(num_model_bases <= num_unmasked_data);
 }
 
 template<size_t NUM_MODEL_BASES>

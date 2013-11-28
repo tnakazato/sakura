@@ -151,7 +151,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 }
 
 inline void OperateLogicalAnd(size_t num_in, bool const *in1, bool const *in2,
-		bool *out) {
+bool *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -192,8 +192,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, double const *coeff,
 }
 
 inline void GetBestFitBaseline(size_t num_data, float const *data,
-		bool const *mask,
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, float *out) {
+bool const *mask,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
@@ -227,8 +227,8 @@ inline void GetBestFitBaseline(size_t num_data, float const *data,
 }
 
 inline void SubtractBaseline(size_t num_data, float const *data,
-		bool const *mask,
-		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
+bool const *mask,
+LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool *final_mask, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -260,6 +260,24 @@ inline void SubtractBaseline(size_t num_data, float const *data,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*residual_data) * num_data, &residual_data));
 
+	size_t const num_clip_bound = 1;
+	float *clip_lower_bound = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clip_lower_bound(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*clip_lower_bound) * num_clip_bound,
+					&clip_lower_bound));
+
+	float *clip_upper_bound = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clip_upper_bound(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*clip_upper_bound) * num_clip_bound,
+					&clip_upper_bound));
+
+	bool *new_clip_mask = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_new_clip_mask(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*new_clip_mask) * num_data, &new_clip_mask));
+
 	for (size_t i = 0; i < num_fitting_max; ++i) {
 		if (i == 0) {
 			for (size_t j = 0; j < num_data; ++j) {
@@ -272,26 +290,32 @@ inline void SubtractBaseline(size_t num_data, float const *data,
 				best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
-		//GetRms(); // calculate rms
-		//LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(); //new_clip_mask generated based on rms and residual_data
+		LIBSAKURA_SYMBOL(StatisticsResult) result;
+		LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
+				composite_mask, &result);
+		float clipping_threshold = clipping_threshold_sigma * result.stddev;
+		clip_lower_bound[0] = result.mean - clipping_threshold;
+		clip_upper_bound[0] = result.mean + clipping_threshold;
+		LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(num_data, residual_data,
+				num_clip_bound, clip_lower_bound, clip_upper_bound,
+				new_clip_mask);
 
-		/*
-		 bool mask_changed_after_clipping = false;
-		 for (size_t j = 0; j < num_data; ++j) {
-		 if (new_clip_mask[j] != clip_mask[j]) {
-		 mask_changed_after_clipping = true;
-		 break;
-		 }
-		 }
+		bool mask_changed_after_clipping = false;
+		for (size_t j = 0; j < num_data; ++j) {
+			if (new_clip_mask[j] != clip_mask[j]) {
+				mask_changed_after_clipping = true;
+				break;
+			}
+		}
 
-		 if (mask_changed_after_clipping) {
-		 for (size_t j = 0; j < num_data; ++j) {
-		 clip_mask[j] = new_clip_mask[j];
-		 }
-		 } else {
-		 break;
-		 }
-		 */
+		if (mask_changed_after_clipping) {
+			for (size_t j = 0; j < num_data; ++j) {
+				clip_mask[j] = new_clip_mask[j];
+			}
+		} else {
+			break;
+		}
+
 	}
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -301,7 +325,7 @@ inline void SubtractBaseline(size_t num_data, float const *data,
 }
 
 inline void SubtractBaselinePolynomial(size_t num_data, float const *data,
-		bool const *mask, uint16_t order, float clipping_threshold_sigma,
+bool const *mask, uint16_t order, float clipping_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool *final_mask, float *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
