@@ -33,6 +33,13 @@
 #include "utils.h"
 
 namespace {
+struct StaticInitializer {
+	StaticInitializer() {
+		::log4cxx::PropertyConfigurator::configure("config.log4j");
+	}
+};
+static StaticInitializer initializer;
+
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
@@ -350,7 +357,6 @@ void main_(int argc, char const* const argv[]) {
 }
 
 int main(int argc, char const* const argv[]) {
-	::log4cxx::PropertyConfigurator::configure("config.log4j");
 	xdispatch::global_queue().async([=] {
 		main_(argc, argv);
 	});
