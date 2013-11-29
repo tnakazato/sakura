@@ -258,14 +258,10 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg, bool const 
 					sizeof(*residual_data) * num_data, &residual_data));
 
 	size_t const num_clip_bound = 1;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_clip_bound + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_clip_lower_bound(new float[num_clip_bound]);
-	float *clip_lower_bound = LIBSAKURA_SYMBOL(AlignFloat)(num_arena,
-			storage_for_clip_lower_bound.get(), num_clip_bound);
-	std::unique_ptr<float[]> storage_for_clip_upper_bound(new float[num_clip_bound]);
-	float *clip_upper_bound = LIBSAKURA_SYMBOL(AlignFloat)(num_arena,
-			storage_for_clip_upper_bound.get(), num_clip_bound);
+	SIMD_ALIGN
+	float clip_lower_bound[num_clip_bound];
+	SIMD_ALIGN
+	float clip_upper_bound[num_clip_bound];
 
 	bool *new_clip_mask = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_new_clip_mask(
