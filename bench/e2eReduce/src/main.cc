@@ -267,11 +267,13 @@ void Reduce(E2EOptions const &options) {
 		const uint8_t *f =
 				reinterpret_cast<const uint8_t*>(working_sets[working_set_id].flag);
 		if (serialize) {
+			ScopeGuard cleanup([=,&available_workers, &serial_queue, &semaphore] {
+						serial_queue.sync([=,&working_set_id, &available_workers] {
+									available_workers.push_back(working_set_id);
+								});
+						semaphore.release();
+					});
 			ParallelJob(i, shared->num_chan, v, f, options, shared);
-			serial_queue.sync([&working_set_id, &available_workers] {
-				available_workers.push_back(working_set_id);
-			});
-			semaphore.release();
 		} else {
 			group.async(
 					[=, &available_workers, &serial_queue, &semaphore, &options] {
