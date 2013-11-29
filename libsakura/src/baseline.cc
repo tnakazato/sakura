@@ -179,8 +179,8 @@ inline void DoGetBestFitBaseline(
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double const *coeff_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(context->basis_data);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
@@ -198,8 +198,8 @@ inline void DoGetBestFitBaseline(
 inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
 		bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
@@ -241,7 +241,7 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
@@ -289,8 +289,13 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		LIBSAKURA_SYMBOL(StatisticsResult) result;
-		LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
+		LIBSAKURA_SYMBOL(Status) stat_status =
+				LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
 				final_mask, &result);
+		if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			throw std::runtime_error("SubtractBaseline: ComputeStatistics failed.");
+		}
+
 		float clipping_threshold = clipping_threshold_sigma * result.stddev;
 		SIMD_ALIGN
 		float clip_lower_bound[] = { result.mean - clipping_threshold };
