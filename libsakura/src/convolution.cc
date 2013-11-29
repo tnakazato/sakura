@@ -43,7 +43,7 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline void ApplyMaskToInputDataByZero(size_t num_data, float const *input_data,
+inline void ApplyMaskByZero(size_t num_data, float const *input_data,
 bool const *mask, float *output_data) {
 	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
@@ -73,14 +73,14 @@ bool const mask, size_t* X2, float* Y2, size_t count) {
 	return false;
 }
 
-inline void ApplyMaskWithLinearInterpolation(size_t num_data,
+inline void ApplyMaskByLinearInterpolation(size_t num_data,
 		float const *input_data,
 		bool const *mask, float *output_data) {
 	size_t X1[num_data], X2[num_data];
 	float Y1[num_data], Y2[num_data];
 	bool find_zero = true;
 	if (!mask[0]) {
-		bool find_zero = false;
+		find_zero = false;
 	}
 	size_t count = 0;
 	for (size_t i = 1; i < num_data; ++i) { // finding (x1,y1),(x2,y2)
@@ -106,8 +106,8 @@ inline void ApplyMaskWithLinearInterpolation(size_t num_data,
 				hit = true;
 			}
 		} else if (hit && i < X2[n]) {
-				output_data[i] = i * (Y2[n] - Y1[n]) / (X2[n] - X1[n])
-						+ ( X2[n] * Y1[n] - X1[n] * Y2[n]) / (X2[n] - X1[n]);
+			output_data[i] = i * (Y2[n] - Y1[n]) / (X2[n] - X1[n])
+					+ (X2[n] * Y1[n] - X1[n] * Y2[n]) / (X2[n] - X1[n]);
 		} else if (hit && i == X2[n]) {
 			hit = false;
 			if (n < count_max)
@@ -210,7 +210,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		fftwf_plan plan_real_to_complex_float_kernel = fftwf_plan_dft_r2c_1d(
 				num_data, real_array_kernel.get(),
 				fft_applied_complex_kernel.get(),
-				FFTW_ESTIMATE);
+				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT); // added FFTW_PRESERVE_INPUT
 		ScopeGuard guard_for_fft_plan_kernel([&]() {
 			DestroyFFTPlan(plan_real_to_complex_float_kernel);
 		});
@@ -221,7 +221,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		// create fft plan for input data
 		fftwf_plan plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_data,
 				real_array.get(), fft_applied_complex_input_data.get(),
-				FFTW_ESTIMATE);
+				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT); // added FFTW_PRESERVE_INPUT
 		ScopeGuard guard_for_fft_plan([&]() {
 			DestroyFFTPlan(plan_real_to_complex_float);
 		});
@@ -231,7 +231,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		}
 		// create ifft plan for output data
 		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(num_data,
-				multiplied_complex_data.get(), real_array.get(), FFTW_ESTIMATE);
+				multiplied_complex_data.get(), real_array.get(),
+				FFTW_ESTIMATE | FFTW_DESTROY_INPUT); // added FFTW_DESTROY_INPUT
 		ScopeGuard guard_for_ifft_plan([&]() {
 			DestroyFFTPlan(plan_complex_to_real_float);
 		});
@@ -299,11 +300,6 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		throw std::invalid_argument(
 				"num_data doesn't equal to context->num_data");
 	}
-	// for masked input_data (real)
-	std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> masked_input_data(
-			static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-					sizeof(float) * num_data)),
-			LIBSAKURA_PREFIX::Memory());
 	if (context->use_fft) { // with fft
 		// fft applied array for input_data (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
@@ -317,10 +313,9 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		ApplyMaskToInputDataByZero(num_data, input_data, mask,
-				masked_input_data.get()); // context->real_array is mask applied array
 		fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
-				masked_input_data.get(), fft_applied_complex_input_data.get());
+				const_cast<float*>(input_data),
+				fft_applied_complex_input_data.get());
 		float scale = 1.0 / num_data;
 		for (size_t i = 0; i < num_data / 2 + 1; ++i) {
 			multiplied_complex_data[i][0] =
@@ -339,14 +334,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else { // without fft
-		if (masked_input_data == nullptr) {
-			throw std::bad_alloc();
-		}
-		//ApplyMaskToInputDataByZero(num_data, input_data, mask,
-		//		masked_input_data.get()); // masked_input_data is mask applied array
-		ApplyMaskWithLinearInterpolation(num_data, input_data, mask,
-				masked_input_data.get()); // masked_input_data is mask applied array
-		CalculateConvolutionWithoutFFT(num_data, masked_input_data.get(),
+		CalculateConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
 				context->real_array, output_data);
 	}
 }
