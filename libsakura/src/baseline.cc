@@ -255,11 +255,6 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		clip_mask[i] = true;
 	}
 
-	bool *composite_mask = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_composite_mask(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*composite_mask) * num_data, &composite_mask));
-
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -278,18 +273,18 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 	for (size_t i = 0; i < num_fitting_max; ++i) {
 		if (i == 0) {
 			for (size_t j = 0; j < num_data; ++j) {
-				composite_mask[j] = mask[j];
+				final_mask[j] = mask[j];
 			}
 		} else {
-			OperateLogicalAnd(num_data, mask, clip_mask, composite_mask);
+			OperateLogicalAnd(num_data, mask, clip_mask, final_mask);
 		}
-		GetBestFitBaseline(num_data, data, composite_mask, baseline_context,
+		GetBestFitBaseline(num_data, data, final_mask, baseline_context,
 				best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
-				composite_mask, &result);
+				final_mask, &result);
 		float clipping_threshold = clipping_threshold_sigma * result.stddev;
 		SIMD_ALIGN
 		float clip_lower_bound[] = { result.mean - clipping_threshold };
@@ -320,7 +315,6 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 	}
 
 	for (size_t i = 0; i < num_data; ++i) {
-		final_mask[i] = composite_mask[i];
 		out[i] = get_residual ? residual_data[i] : best_fit_model[i];
 	}
 }
