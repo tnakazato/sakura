@@ -249,6 +249,7 @@ void Reduce(E2EOptions const &options) {
 		semaphore.acquire();
 		size_t working_set_id = 0;
 		serial_queue.sync([&working_set_id, &available_workers] {
+			assert(available_workers.size() > 0);
 			working_set_id = available_workers.back();
 			available_workers.pop_back();
 		});
