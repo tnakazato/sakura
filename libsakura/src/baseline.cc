@@ -152,6 +152,8 @@ inline void OperateLogicalAnd(size_t num_in, bool const *in1_arg,
 	auto in1 = AssumeAligned(reinterpret_cast<uint8_t const *>(in1_arg));
 	auto in2 = AssumeAligned(reinterpret_cast<uint8_t const *>(in2_arg));
 	auto out = AssumeAligned(out_arg);
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
 
 	for (size_t i = 0; i < num_in; ++i) {
 		out[i] = static_cast<bool>(in1[i] & in2[i]);
