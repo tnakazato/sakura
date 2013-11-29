@@ -87,12 +87,10 @@ inline void ApplyMaskWithLinearInterpolation(size_t num_data,
 		if (find_zero) {
 			if (FindFalseToGetStart(i - 1, input_data[i - 1], mask[i], X1, Y1,
 					count)) {
-				//std::cout << " X1 = " << X1[i]<< std::endl;
 				find_zero = false;
 			}
 		} else {
 			if (FindTrueToGetEnd(i, input_data[i], mask[i], X2, Y2, count)) {
-				//std::cout << " X2 = " << X2[i]<< std::endl;
 				find_zero = true;
 				count++;
 			}
@@ -108,12 +106,8 @@ inline void ApplyMaskWithLinearInterpolation(size_t num_data,
 				hit = true;
 			}
 		} else if (hit && i < X2[n]) {
-			if (Y2[n] != Y1[n]) {
 				output_data[i] = i * (Y2[n] - Y1[n]) / (X2[n] - X1[n])
-						+ (X1[n] * Y2[n] - X2[n] * Y1[n]) / (1 - X2[n]);
-			} else {
-				output_data[i] = Y1[n];
-			}
+						+ ( X2[n] * Y1[n] - X1[n] * Y2[n]) / (X2[n] - X1[n]);
 		} else if (hit && i == X2[n]) {
 			hit = false;
 			if (n <= count_max)
