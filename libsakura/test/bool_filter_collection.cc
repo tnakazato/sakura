@@ -5,6 +5,7 @@
 
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
+#include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
@@ -4054,8 +4055,8 @@ TEST_F(BoolFilterInt, LessThanNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
-			data, threshold_, result_shift);
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data, data,
+			threshold_, result_shift);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);

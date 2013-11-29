@@ -52,8 +52,6 @@ void DefaultFree(void *ptr) {
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
 LIBSAKURA_SYMBOL(UserAllocator) allocator,
 LIBSAKURA_SYMBOL(UserDeallocator) deallocator) {
-	::log4cxx::PropertyConfigurator::configure("libsakura.log4j");
-
 	LIBSAKURA_PREFIX::Memory::allocator_ =
 			allocator == nullptr ? DefaultAllocator : allocator;
 	LIBSAKURA_PREFIX::Memory::deallocator_ =

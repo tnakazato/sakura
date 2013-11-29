@@ -17,11 +17,11 @@
 #include <libsakura/sakura.h>
 
 #include <libsakura/localdef.h>
+#include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
 namespace {
-
 float Rms2(size_t elements, float const data[], bool const is_valid[]) {
 	float result = 0;
 	for (size_t i = 0; i < elements; ++i) {

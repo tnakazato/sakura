@@ -10,6 +10,7 @@
 #include <complex>
 
 #include <libsakura/sakura.h>
+#include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 

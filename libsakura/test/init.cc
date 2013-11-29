@@ -6,6 +6,7 @@
  */
 
 #include <libsakura/sakura.h>
+#include "loginit.h"
 #include "gtest/gtest.h"
 
 TEST(Global, Init) {
@@ -29,27 +30,27 @@ TEST(Global, Align) {
 		uint64_t offset = 0;
 		uint64_t base = 0x10000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uint64_t offset = 1;
 		uint64_t base = 0x10000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uint64_t offset = sakura_GetAlignment() - 1;
 		uint64_t base = 0x10000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 
@@ -57,27 +58,27 @@ TEST(Global, Align) {
 		uint64_t offset = 0;
 		uint64_t base = 0xf000000010000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uint64_t offset = 1;
 		uint64_t base = 0xf000000010000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uint64_t offset = sakura_GetAlignment() - 1;
 		uint64_t base = 0xf000000010000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 
@@ -98,16 +99,16 @@ TEST(Global, AlignShort) {
 		uint64_t offset = 0;
 		uint64_t base = 0x10000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uint64_t offset = 1;
 		uint64_t base = 0x10000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
 		EXPECT_EQ(nullptr, aptr);
 	}
@@ -115,7 +116,7 @@ TEST(Global, AlignShort) {
 		uint64_t offset = sakura_GetAlignment() - 1;
 		uint64_t base = 0x10000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
 		EXPECT_EQ(nullptr, aptr);
 	}
@@ -124,16 +125,16 @@ TEST(Global, AlignShort) {
 		uint64_t offset = 0;
 		uint64_t base = 0xf000000010000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
-		auto aaddr = (uint64_t)aptr;
+		auto aaddr = (uint64_t) aptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uint64_t offset = 1;
 		uint64_t base = 0xf000000010000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
 		EXPECT_EQ(nullptr, aptr);
 	}
@@ -141,7 +142,7 @@ TEST(Global, AlignShort) {
 		uint64_t offset = sakura_GetAlignment() - 1;
 		uint64_t base = 0xf000000010000000ull;
 		uint64_t addr = base - offset;
-		auto ptr = (void *)addr;
+		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
 		EXPECT_EQ(nullptr, aptr);
 	}

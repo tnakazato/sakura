@@ -6,6 +6,7 @@
 
 #include <libsakura/sakura.h>
 
+#include "loginit.h"
 #include "gtest/gtest.h"
 #include "interpolation.h"
 
@@ -17,12 +18,12 @@ protected:
 		InterpolateFloatTestBase::AllocateMemory(num_base, num_interpolated, 1);
 	}
 
-	virtual void RunInterpolate1D(sakura_InterpolationMethod interpolation_method,
-			size_t num_base, size_t num_interpolated, sakura_Status expected_status,
+	virtual void RunInterpolate1D(
+			sakura_InterpolationMethod interpolation_method, size_t num_base,
+			size_t num_interpolated, sakura_Status expected_status,
 			bool check_result) {
 		// sakura must be properly initialized
-		ASSERT_EQ(sakura_Status_kOK, initialize_result_)
-		<< "sakura must be properly initialized!";
+		ASSERT_EQ(sakura_Status_kOK, initialize_result_)<< "sakura must be properly initialized!";
 
 		// execute interpolation
 		double start = sakura_GetCurrentTime();
@@ -79,8 +80,8 @@ TEST_F(Interpolate1DFloatTest, ZeroLengthBaseArray) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolate1D(sakura_InterpolationMethod_kNearest, 0,
-			num_interpolated, sakura_Status_kInvalidArgument, false);
+	RunInterpolate1D(sakura_InterpolationMethod_kNearest, 0, num_interpolated,
+			sakura_Status_kInvalidArgument, false);
 }
 
 TEST_F(Interpolate1DFloatTest, ZeroLengthInterpolatedArray) {
@@ -91,8 +92,8 @@ TEST_F(Interpolate1DFloatTest, ZeroLengthInterpolatedArray) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolate1D(sakura_InterpolationMethod_kNearest, num_base,
-			0, sakura_Status_kOK, false);
+	RunInterpolate1D(sakura_InterpolationMethod_kNearest, num_base, 0,
+			sakura_Status_kOK, false);
 }
 
 TEST_F(Interpolate1DFloatTest, InputArrayNotAligned) {

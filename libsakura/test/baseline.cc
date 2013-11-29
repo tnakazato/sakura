@@ -11,6 +11,7 @@
 
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
+#include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 #include "baseline.h"
@@ -358,8 +359,8 @@ TEST_F(Baseline, SubtractBaseline) {
 
 	LIBSAKURA_SYMBOL(Status) status =
 	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
-			clipping_threshold_sigma, num_fitting_max,
-			get_residual, final_mask, out);
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out);
 
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);

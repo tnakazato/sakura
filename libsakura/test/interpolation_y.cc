@@ -6,6 +6,7 @@
 
 #include <libsakura/sakura.h>
 
+#include "loginit.h"
 #include "gtest/gtest.h"
 #include "interpolation.h"
 
@@ -71,8 +72,8 @@ TEST_F(InterpolateArray1DFloatTest, ZeroLengthInterpolatedArray) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
-			0, num_array, sakura_Status_kOK, false);
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base, 0,
+			num_array, sakura_Status_kOK, false);
 }
 
 TEST_F(InterpolateArray1DFloatTest, InputArrayNotAligned) {

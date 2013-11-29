@@ -6,8 +6,10 @@
 #include <algorithm>
 #include <iostream>
 #include <fftw3.h>
+
 #include <libsakura/localdef.h>
 #include <libsakura/sakura.h>
+#include "loginit.h"
 #include "gtest/gtest.h"
 #include "aligned_memory.h"
 
@@ -257,7 +259,7 @@ TEST_F(Convolve1DOperation , LinearInterpolation) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 
 		//for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			//EXPECT_FLOAT_EQ(0, output_data[i]); // delta will remain, but its convolved
+		//EXPECT_FLOAT_EQ(0, output_data[i]); // delta will remain, but its convolved
 		//}
 		//verbose = true;
 		if (verbose) {

@@ -8,6 +8,7 @@
 
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
+#include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
