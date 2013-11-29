@@ -29,6 +29,8 @@ struct FlaggingOptions {
 struct BaselineOptions {
 	sakura_BaselineType baseline_type;
 	uint16_t order;
+	float clipping_threshold;
+	uint16_t num_fitting_max;
 	std::vector<uint64_t> line_mask;
 };
 
@@ -89,6 +91,8 @@ public:
 		oss << "\tbaseline function=" << option_list.baseline.baseline_type
 				<< "\n";
 		oss << "\torder=" << option_list.baseline.order << "\n";
+		oss << "\tclipping_threshold=" << option_list.baseline.clipping_threshold << "\n";
+		oss << "\tnum_fitting_max=" << option_list.baseline.num_fitting_max << "\n";
 		oss << "\tkernel type=" << option_list.smoothing.kernel_type << "\n";
 		oss << "\tkernel width=" << option_list.smoothing.kernel_width << "\n";
 		oss << "\tuse_fft=" << option_list.smoothing.use_fft << "\n";
@@ -157,6 +161,14 @@ private:
 		// parse order
 		std::string s = GetValue(options, GetKey(category, "order"));
 		option_list->order = (s.size() > 0) ? std::atoi(s.c_str()) : 0;
+
+		// parse clipping threshold
+		s = GetValue(options, GetKey(category, "clipping_threshold"));
+		option_list->clipping_threshold = (s.size() > 0) ? std::atof(s.c_str()) : 0.0;
+
+		// parse num_fitting_max
+		s = GetValue(options, GetKey(category, "num_fitting_max"));
+		option_list->num_fitting_max = (s.size() > 0) ? std::atoi(s.c_str()) : 0.0;
 
 		// parse line mask
 		s = GetValue(options, GetKey(category, "mask"));
