@@ -11,9 +11,9 @@
 //#include <libsakura/logger.h>
 #include <libsakura/memory_manager.h>
 
-#include "locator.h"
-#include "interpolation_utils.h"
-#include "interpolation.h"
+#include "locator.tcc"
+#include "interpolation_utils.tcc"
+#include "interpolation.tcc"
 
 namespace {
 // a logger for this module

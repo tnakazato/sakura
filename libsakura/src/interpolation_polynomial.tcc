@@ -1,7 +1,7 @@
-#ifndef _LIBSAKURA_INTERPOLATION_POLYNOMIAL_H_
-#define _LIBSAKURA_INTERPOLATION_POLYNOMIAL_H_
+#ifndef _LIBSAKURA_INTERPOLATION_POLYNOMIAL_TCC_
+#define _LIBSAKURA_INTERPOLATION_POLYNOMIAL_TCC_
 
-#include "interpolation_utils.h"
+#include "interpolation_utils.tcc"
 
 namespace {
 
@@ -183,4 +183,4 @@ private:
 
 }
 
-#endif /* _LIBSAKURA_INTERPOLATION_POLYNOMIAL_H_ */
+#endif /* _LIBSAKURA_INTERPOLATION_POLYNOMIAL_TCC_ */

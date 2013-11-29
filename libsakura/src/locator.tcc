@@ -1,5 +1,5 @@
-#ifndef _LIBSAKURA_LOCATOR_H_
-#define _LIBSAKURA_LOCATOR_H_
+#ifndef _LIBSAKURA_LOCATOR_TCC_
+#define _LIBSAKURA_LOCATOR_TCC_
 
 namespace {
 
@@ -85,4 +85,4 @@ size_t Locate(size_t num_base, size_t num_located,
 
 }
 
-#endif /* _LIBSAKURA_LOCATOR_H_ */
+#endif /* _LIBSAKURA_LOCATOR_TCC_ */

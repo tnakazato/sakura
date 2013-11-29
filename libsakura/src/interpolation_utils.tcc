@@ -1,5 +1,5 @@
-#ifndef _LIBSAKURA_INTERPOLATION_UTILS_H_
-#define _LIBSAKURA_INTERPOLATION_UTILS_H_
+#ifndef _LIBSAKURA_INTERPOLATION_UTILS_TCC_
+#define _LIBSAKURA_INTERPOLATION_UTILS_TCC_
 
 #include <libsakura/memory_manager.h>
 
@@ -29,4 +29,4 @@ inline void AllocateAndAlign(size_t num_array,
 
 }
 
-#endif /* _LIBSAKURA_INTERPOLATION_UTILS_H_ */
+#endif /* _LIBSAKURA_INTERPOLATION_UTILS_TCC_ */

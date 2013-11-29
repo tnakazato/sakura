@@ -1,11 +1,11 @@
-#ifndef _LIBSAKURA_INTERPOLATION_H_
-#define _LIBSAKURA_INTERPOLATION_H_
+#ifndef _LIBSAKURA_INTERPOLATION_TCC_
+#define _LIBSAKURA_INTERPOLATION_TCC_
 
-#include <interpolation_utils.h>
-#include "interpolation_nearest.h"
-#include "interpolation_linear.h"
-#include "interpolation_polynomial.h"
-#include "interpolation_spline.h"
+#include "interpolation_utils.tcc"
+#include "interpolation_nearest.tcc"
+#include "interpolation_linear.tcc"
+#include "interpolation_polynomial.tcc"
+#include "interpolation_spline.tcc"
 
 namespace {
 
@@ -169,4 +169,4 @@ struct YInterpolatorSet {
 
 }
 
-#endif /* _LIBSAKURA_INTERPOLATION_H_ */
+#endif /* _LIBSAKURA_INTERPOLATION_TCC_ */
