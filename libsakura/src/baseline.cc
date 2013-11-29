@@ -152,6 +152,7 @@ inline void OperateLogicalAnd(size_t num_in, bool const *in1_arg,
 	auto in1 = AssumeAligned(reinterpret_cast<uint8_t const *>(in1_arg));
 	auto in2 = AssumeAligned(reinterpret_cast<uint8_t const *>(in2_arg));
 	auto out = AssumeAligned(out_arg);
+	STATIC_ASSERT(sizeof(bool) == sizeof(uint8_t));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 
@@ -236,7 +237,7 @@ inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clipping_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -269,6 +270,11 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_new_clip_mask(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*new_clip_mask) * num_data, &new_clip_mask));
+
+	uint16_t num_fitting_max = num_fitting_max_arg;
+	if (num_fitting_max_arg < 1) {
+		num_fitting_max = 1;
+	}
 
 	for (size_t i = 0; i < num_fitting_max; ++i) {
 		if (i == 0) {

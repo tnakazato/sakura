@@ -1938,11 +1938,17 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @param[in] num_data 配列 @a data 、 @a mask 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。
+ * 値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
- * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
+ * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、
+ * 残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma
+ * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
+ * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * もし 0 が渡された場合は、自動的に 1 に変更される。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
  * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -1966,7 +1972,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
  * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied)
+ * clipping applied). In case zero is given, @a num_fitting_max will be
+ * automatically changed to 1.
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask the final mask data after recursive clipping
@@ -1995,7 +2002,12 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @n must-be-aligned
  * @param[in] order 多項式モデルの次数。 @a num_data-1 以下の値でなければならない。
  * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
- * @param[in] num_fitting_max 再帰的フィッティングを行う最大回数。値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
+ * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、
+ * 残差がその値の± @a clipping_threshold_sigma
+ * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
+ * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * もし 0 が渡された場合は、自動的に 1 に変更される。
  * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
  * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -2019,7 +2031,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
  * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied)
+ * clipping applied). In case zero is given, @a num_fitting_max will be
+ * automatically changed to 1.
  * @param[in] get_residual set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask the final mask data after recursive clipping
