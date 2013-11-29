@@ -31,14 +31,14 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 					!= LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
 			&& interpolation_method
 					!= LIBSAKURA_SYMBOL(InterpolationMethod_kSpline)) {
-		LOG4CXX_ERROR(logger, "Invalid interpolation method\n");
+		LOG4CXX_ERROR(logger, "Invalid interpolation method");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
 
 	// num_base must be non-zero
 	if (num_interpolation_axis == 0) {
-		LOG4CXX_ERROR(logger, "num_base must be >0\n");
+		LOG4CXX_ERROR(logger, "num_base must be >0");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -46,7 +46,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// no interpolation will be done
 	if (num_interpolated == 0 || num_array == 0) {
 		// Nothing to do
-		LOG4CXX_INFO(logger, "Nothing has been done since num_interpolated is 0\n");
+		LOG4CXX_INFO(logger, "Nothing has been done since num_interpolated is 0");
 		*status = LIBSAKURA_SYMBOL(Status_kOK);
 		process_data = false;
 	}
@@ -56,7 +56,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(interpolated)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
-		LOG4CXX_ERROR(logger, "input arrays are not aligned\n");
+		LOG4CXX_ERROR(logger, "input arrays are not aligned");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -64,7 +64,7 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// input arrays are null
 	if (base == nullptr || data_base == nullptr || interpolated == nullptr
 			|| data_interpolated == nullptr) {
-		LOG4CXX_ERROR(logger, "input arrays are null\n");
+		LOG4CXX_ERROR(logger, "input arrays are null");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
 	}
@@ -99,12 +99,12 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				num_x_interpolated, x_interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
-		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);
-		LOG4CXX_ERROR(logger, "Aborted due to unknown error\n");
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return status;
@@ -136,12 +136,12 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				num_y_interpolated, y_interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
-		LOG4CXX_ERROR(logger, "Memory allocation failed.\n");
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);
-		LOG4CXX_ERROR(logger, "Aborted due to unknown error\n");
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return status;

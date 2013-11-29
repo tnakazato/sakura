@@ -15,7 +15,6 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
 
 }
 
-// TODO: use log4cxx macro as much as possible
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
 		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
@@ -28,32 +27,21 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 
 	if (num_scaling_factor == 0) {
 		// scaling factor must be given
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Empty scaling factor (num_scaling_factor == 0)" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "Empty scaling factor (num_scaling_factor == 0)");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	if (num_scaling_factor > 1 && num_scaling_factor < num_data) {
 		// scaling factor must be given
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Invalid number of scaling factor. num_scaling_factor must be 1 or >= num_data" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger,
+				"Invalid number of scaling factor. num_scaling_factor must be 1 or >= num_data");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	if (scaling_factor == nullptr || target == nullptr || reference == nullptr
 			|| result == nullptr) {
 		// null pointer
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Input pointers are null" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "Input pointers are null");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -62,11 +50,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 			|| !LIBSAKURA_SYMBOL(IsAligned)(reference)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(result)) {
 		// array is not aligned
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Arrays are not aligned" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "Arrays are not aligned");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -81,11 +65,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);
-		if (LIBSAKURA_PREFIX::Logger::IsErrorEnabled(logger)) {
-			std::ostringstream oss;
-			oss << "Aborted due to unknown error" << std::endl;
-			LIBSAKURA_PREFIX::Logger::Error(logger, oss.str().c_str());
-		}
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 }
