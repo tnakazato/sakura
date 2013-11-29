@@ -274,7 +274,7 @@ TEST_F(Baseline, DestroyBaselineContext) {
 }
 
 /*
- * Test sakura_GetBestFitBaselineModel
+ * Test sakura_GetBestFitBaseline
  * RESULT:
  * out = []
  */
@@ -317,7 +317,67 @@ TEST_F(Baseline, GetBestFitBaseline) {
 
 #define NUM_DATA2 15
 /*
- * Test sakura_GetBestFitBaselinePolynomialWithClipping
+ * Test sakura_SubtractBaseline
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaseline) {
+	size_t const num_data(NUM_DATA2);
+	SIMD_ALIGN
+	float in_data[num_data] = { 1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
+			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)] = {
+	true, true, true, true, true,
+	true, true, true, true, true,
+	true, true, true, true, true };
+
+	size_t const num_model(NUM_MODEL);
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 3;
+	bool get_residual = true;
+
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	float answer[ELEMENTSOF(in_data)] = { 0.0, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0,
+			0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max,
+			get_residual, final_mask, out);
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	sakura_DestroyBaselineContext(context);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_model; ++i) {
+		ASSERT_EQ(out[i], answer[i]);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithClipping
  * RESULT:
  * out = []
  */
