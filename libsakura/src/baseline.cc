@@ -145,14 +145,12 @@ inline void OperateLogicalAnd(size_t num_in, bool const *in1_arg, bool const *in
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto in1 = AssumeAligned(in1_arg);
-	auto in2 = AssumeAligned(in2_arg);
+	auto in1 = AssumeAligned(reinterpret_cast<uint8_t const *>(in1_arg));
+	auto in2 = AssumeAligned(reinterpret_cast<uint8_t const *>(in2_arg));
 	auto out = AssumeAligned(out_arg);
 
-	auto src1 = reinterpret_cast<uint8_t const *>(in1);
-	auto src2 = reinterpret_cast<uint8_t const *>(in2);
 	for (size_t i = 0; i < num_in; ++i) {
-		out[i] = static_cast<bool>(src1[i] & src2[i]);
+		out[i] = static_cast<bool>(in1[i] & in2[i]);
 	}
 }
 
