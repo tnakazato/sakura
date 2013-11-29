@@ -168,7 +168,7 @@ private:
 
 		// parse num_fitting_max
 		s = GetValue(options, GetKey(category, "num_fitting_max"));
-		option_list->num_fitting_max = (s.size() > 0) ? std::atoi(s.c_str()) : 0.0;
+		option_list->num_fitting_max = (s.size() > 0) ? std::atoi(s.c_str()) : 1;
 
 		// parse line mask
 		s = GetValue(options, GetKey(category, "mask"));

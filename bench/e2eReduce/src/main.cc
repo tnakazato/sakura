@@ -54,10 +54,17 @@ inline void ExecuteCalibration(size_t num_data, float const input_data[],
 
 }
 
-inline void ExecuteBaseline(sakura_BaselineContext const *context,
+inline void ExecuteBaseline(float clipping_threshold_sigma,
+		uint16_t num_fitting_max, bool mask_after_clipping[],
+		sakura_BaselineContext const *context,
 		size_t num_data, float const input_data[], float output_data[],
 		bool mask[]) {
-//	std::cout << "ExecuteBaseline" << std::endl;
+	sakura_Status status = sakura_SubtractBaseline(num_data, input_data,
+			mask, context, clipping_threshold_sigma, num_fitting_max,
+			true, mask_after_clipping, output_data);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("baseline");
+	}
 }
 
 inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
@@ -126,6 +133,7 @@ void ParallelJob(size_t job_id, size_t num_v, float const v[],
 	AlignedArrayGenerator generator;
 	float *out_data = generator.GetAlignedArray<float>(num_v);
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
+	bool *baseline_after_mask = generator.GetAlignedArray<bool>(num_v);
 
 	// Convert bit flag to boolean mask
 	ExecuteBitFlagToMask(num_v, f, mask);
@@ -140,7 +148,9 @@ void ParallelJob(size_t job_id, size_t num_v, float const v[],
 	ExecuteFlagEdge(option_list.flagging.edge_channels, num_v, mask);
 
 	// Execute Baseline
-	ExecuteBaseline(shared->baseline_context, num_v, out_data, out_data, mask);
+	ExecuteBaseline(option_list.baseline.clipping_threshold,
+			option_list.baseline.num_fitting_max, baseline_after_mask,
+			shared->baseline_context, num_v, out_data, out_data, mask);
 
 	// Execute Clipping
 	ExecuteClipping(option_list.flagging.clipping_threshold, num_v, out_data,
