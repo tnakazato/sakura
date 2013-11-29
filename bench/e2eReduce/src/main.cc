@@ -101,15 +101,13 @@ struct SharedWorkingSet {
 	casa::ROArrayColumn<float> spectra_column;
 	casa::ROArrayColumn<unsigned char> flagtra_column;
 
-	void Release() {
-		LOG4CXX_INFO(logger, "Releasing SharedWorkingSet");
+	~SharedWorkingSet() {
+		LOG4CXX_INFO(logger, "Destructing SharedWorkingSet");
 		if (baseline_context != nullptr) {
 			sakura_DestroyBaselineContext(baseline_context);
-			baseline_context = nullptr;
 		}
 		if (convolve1d_context != nullptr) {
 			sakura_DestroyConvolve1DContext(convolve1d_context);
-			convolve1d_context = nullptr;
 		}
 	}
 };
@@ -162,11 +160,11 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 
 	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
 			nullptr, GetSelectedTable(options.input_file, options.ifno) };
-	shared->spectra_column.attach(shared->table, "SPECTRA");
-	shared->flagtra_column.attach(shared->table, "FLAGTRA");
-	shared->num_chan = shared->spectra_column(0).nelements();
-	shared->num_data = shared->table.nrow();
 	try {
+		shared->spectra_column.attach(shared->table, "SPECTRA");
+		shared->flagtra_column.attach(shared->table, "FLAGTRA");
+		shared->num_chan = shared->spectra_column(0).nelements();
+		shared->num_data = shared->table.nrow();
 		// Create Context and struct for calibration
 		// calibration context
 		FillCalibrationContext(options.calibration.sky_table,
@@ -192,10 +190,8 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 		}
 		assert(shared->convolve1d_context != nullptr);
 	} catch (...) {
-		ScopeGuard guard_for_shared([shared] {
-			delete shared;
-		});
-		shared->Release();
+		delete shared;
+		LOG4CXX_INFO(logger, "Leave: InitializeSharedWorkingSet");
 		throw;
 	}
 	LOG4CXX_INFO(logger, "Leave: InitializeSharedWorkingSet");
@@ -230,10 +226,7 @@ void Reduce(E2EOptions const &options) {
 			shared = InitializeSharedWorkingSet(options, &array_generator);
 		});
 	ScopeGuard guard_for_shared([shared] {
-		ScopeGuard guard_for_shared([shared] {
-					delete shared;
-				});
-		shared->Release();
+		delete shared;
 	});
 
 	size_t num_threads = std::min(shared->num_data, size_t(20));
