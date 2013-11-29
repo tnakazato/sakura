@@ -57,11 +57,11 @@ inline int32_t AddHorizontally128(__m128i packed_values) {
 void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		size_t elements, LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
 	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
-	static_assert(sizeof(m256) == sizeof(__m256 ), "m256 and __m256 must have a same size.");
+	STATIC_ASSERT(sizeof(m256) == sizeof(__m256 ));
 	__m256 sum = _mm256_setzero_ps();
-	__m256   const zero = _mm256_setzero_ps();
-	__m128i   const zero128i = _mm_setzero_si128();
-	__m256   const nan = _mm256_set1_ps(NAN);
+	__m256 const zero = _mm256_setzero_ps();
+	__m128i const zero128i = _mm_setzero_si128();
+	__m256 const nan = _mm256_set1_ps(NAN);
 	__m128i count = _mm_setzero_si128();
 	__m256 min = nan;
 	__m256 max = nan;
@@ -69,7 +69,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	__m256i index_of_max = _mm256_set1_epi32(-1);
 	__m256 square_sum = zero;
 	float const *mask_ = reinterpret_cast<float const *>(is_valid);
-	__m256      const *data_ = reinterpret_cast<__m256      const *>(data);
+	__m256 const *data_ = reinterpret_cast<__m256 const *>(data);
 	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
 		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
 		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
@@ -92,7 +92,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		min = _mm256_min_ps(min, _mm256_blendv_ps(value, min, maskf));
 		max = _mm256_max_ps(max, _mm256_blendv_ps(value, max, maskf));
 		value = _mm256_blendv_ps(value, nan, maskf);
-		__m256i    const index = _mm256_set1_epi32(i);
+		__m256i const index = _mm256_set1_epi32(i);
 		index_of_min = _mm256_castps_si256(
 				_mm256_blendv_ps(_mm256_castsi256_ps(index),
 						_mm256_castsi256_ps(index_of_min),
@@ -169,9 +169,14 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		}
 	}
 	float float_count = static_cast<float>(result.count);
-	result.mean = result.count == 0 ? NAN : result.sum / float_count;
+	float rms2 = NAN;
+	if (result.count == 0) {
+		result.mean = NAN;
+	} else {
+		result.mean = result.sum / float_count;
+		rms2 = total / float_count;
+	}
 
-	float rms2 = result.count == 0 ? NAN : total / float_count;
 	result.rms = std::sqrt(rms2);
 	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
 }
@@ -257,15 +262,19 @@ inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid,
 	data_.VisitWith(is_valid_, visitor);
 	result.count = visitor.count;
 	result.sum = visitor.sum;
-	result.mean = result.sum / result.count;
 	result.min = visitor.min;
 	result.index_of_min = visitor.index_of_min;
 	result.max = visitor.max;
 	result.index_of_max = visitor.index_of_max;
-	float rms2 = visitor.square_sum / result.count;
+	float rms2 = NAN;
+	if (visitor.count == 0) {
+		result.mean = NAN;
+	} else {
+		result.mean = result.sum / result.count;
+		rms2 = visitor.square_sum / result.count;
+	}
 	result.rms = std::sqrt(rms2);
 	result.stddev = std::sqrt(rms2 - result.mean * result.mean);
-	//printf("%f\n", result.mean);
 }
 
 } /* anonymous namespace */

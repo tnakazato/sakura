@@ -200,7 +200,7 @@ typedef struct {
 	float sum; /**< 合計 */
 	float mean; /**< 平均 */
 	float rms; /**< 二乗平均平方根 */
-	float stddev; /**< 分散 */
+	float stddev; /**< 標準偏差 */
 	float min; /**< 最小値 */
 	float max; /**< 最大値 */
 	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
