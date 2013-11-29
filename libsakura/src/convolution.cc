@@ -110,7 +110,7 @@ inline void ApplyMaskWithLinearInterpolation(size_t num_data,
 						+ ( X2[n] * Y1[n] - X1[n] * Y2[n]) / (X2[n] - X1[n]);
 		} else if (hit && i == X2[n]) {
 			hit = false;
-			if (n <= count_max)
+			if (n < count_max)
 				n++;
 			output_data[i] = input_data[i];
 		}
