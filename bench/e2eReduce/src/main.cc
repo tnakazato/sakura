@@ -127,46 +127,57 @@ struct SharedWorkingSet {
 	}
 };
 
-void ParallelJob(size_t job_id, size_t num_v, float const v[],
-		uint8_t const f[], E2EOptions const &option_list,
-		SharedWorkingSet const *shared) {
+size_t const rows_per_processing = 8;
+
+void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
+		float const *const varray[rows_per_processing],
+		uint8_t const * const farray[rows_per_processing],
+		E2EOptions const &option_list, SharedWorkingSet const *shared) {
 	// generate temporary storage
 	AlignedArrayGenerator generator;
-	float *out_data = generator.GetAlignedArray<float>(num_v);
+	float *out_data[rows_per_processing];
+	for (size_t i = 0; i < rows_per_processing; ++i) {
+		out_data[i] = generator.GetAlignedArray<float>(num_v);
+	}
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
 	bool *baseline_after_mask = generator.GetAlignedArray<bool>(num_v);
 
-	// Convert bit flag to boolean mask
-	ExecuteBitFlagToMask(num_v, f, mask);
+	for (size_t i = 0; i < jobs; ++i) {
+		auto const v = varray[i];
+		auto const f = farray[i];
+		// Convert bit flag to boolean mask
+		ExecuteBitFlagToMask(num_v, f, mask);
 
-	// Execute Calibration
-	ExecuteCalibration(num_v, v, shared->calibration_context, out_data);
+		// Execute Calibration
+		ExecuteCalibration(num_v, v, shared->calibration_context, out_data[i]);
 
-	// Execute Flag NaN/Inf
-	ExecuteNanOrInfFlag(num_v, out_data, mask);
+		// Execute Flag NaN/Inf
+		ExecuteNanOrInfFlag(num_v, out_data[i], mask);
 
-	// Execute Flag edge
-	ExecuteFlagEdge(option_list.flagging.edge_channels, num_v, mask);
+		// Execute Flag edge
+		ExecuteFlagEdge(option_list.flagging.edge_channels, num_v, mask);
 
-	// Execute Baseline
-	ExecuteBaseline(option_list.baseline.clipping_threshold,
-			option_list.baseline.num_fitting_max, baseline_after_mask,
-			shared->baseline_context, num_v, out_data, out_data, mask);
+		// Execute Baseline
+		ExecuteBaseline(option_list.baseline.clipping_threshold,
+				option_list.baseline.num_fitting_max, baseline_after_mask,
+				shared->baseline_context, num_v, out_data[i], out_data[i], mask);
 
-	// Execute Clipping
-	ExecuteClipping(option_list.flagging.clipping_threshold, num_v, out_data,
-			mask);
+		// Execute Clipping
+		ExecuteClipping(option_list.flagging.clipping_threshold, num_v,
+				out_data[i], mask);
 
-	// Execute Smoothing
-	ExecuteSmoothing(shared->convolve1d_context, num_v, out_data, out_data,
-			mask);
+		// Execute Smoothing
+		ExecuteSmoothing(shared->convolve1d_context, num_v, out_data[i], out_data[i],
+				mask);
 
-	// Calculate Statistics
-	CalculateStatistics(num_v, out_data, mask);
+		// Calculate Statistics
+		CalculateStatistics(num_v, out_data[i], mask);
 
+	}
 	// sleep(job_id % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=]() {
 		// run casa operations in main_queue.
+			// write out_data[job_id + i] where i = 0 .. jobs-1
 			JobFinished(job_id);
 		});
 }
@@ -218,8 +229,8 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 
 struct WorkingSet {
 	SharedWorkingSet *shared;
-	float *spectrum;
-	unsigned char *flag;
+	float *spectrum[rows_per_processing];
+	unsigned char *flag[rows_per_processing];
 };
 
 WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
@@ -227,10 +238,12 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
 	std::unique_ptr<WorkingSet[]> result(new WorkingSet[elements]);
 	for (size_t i = 0; i < elements; ++i) {
 		result[i].shared = shared;
-		result[i].spectrum = array_generator->GetAlignedArray<float>(
-				shared->num_chan);
-		result[i].flag = array_generator->GetAlignedArray<unsigned char>(
-				shared->num_chan);
+		for (size_t j = 0; j < rows_per_processing; ++j) {
+			result[i].spectrum[j] = array_generator->GetAlignedArray<float>(
+					shared->num_chan);
+			result[i].flag[j] = array_generator->GetAlignedArray<unsigned char>(
+					shared->num_chan);
+		}
 	}
 	return result.release();
 }
@@ -264,7 +277,8 @@ void Reduce(E2EOptions const &options) {
 	xdispatch::semaphore semaphore(num_threads);
 
 	auto group = xdispatch::group();
-	for (size_t i = 0; i < shared->num_data; ++i) {
+	for (size_t i = 0; i < shared->num_data; i += rows_per_processing) {
+		size_t rows = std::min(rows_per_processing, shared->num_data - i);
 		semaphore.acquire();
 		size_t working_set_id = 0;
 		serial_queue.sync([&working_set_id, &available_workers] {
@@ -277,15 +291,19 @@ void Reduce(E2EOptions const &options) {
 		xdispatch::main_queue().sync([=, &working_sets] {
 			// run casa operations in main_queue.
 				LOG4CXX_INFO(logger, "Reading record " << i);
-				GetArrayCell(working_sets[working_set_id].spectrum, i, shared->spectra_column,
-						casa::IPosition(1, shared->num_chan));
-				GetArrayCell(working_sets[working_set_id].flag, i, shared->flagtra_column,
-						casa::IPosition(1, shared->num_chan));
+				for (size_t j = 0; j < rows; ++j) {
+					GetArrayCell(working_sets[working_set_id].spectrum[j], i+j, shared->spectra_column,
+							casa::IPosition(1, shared->num_chan));
+				}
+				for (size_t j = 0; j < rows; ++j) {
+					GetArrayCell(working_sets[working_set_id].flag[j], i+j, shared->flagtra_column,
+							casa::IPosition(1, shared->num_chan));
+				}
 			});
 
-		const float *v = working_sets[working_set_id].spectrum;
-		const uint8_t *f =
-				reinterpret_cast<const uint8_t*>(working_sets[working_set_id].flag);
+		auto v = reinterpret_cast<float const *const*>(working_sets[working_set_id].spectrum);
+		auto f =
+				reinterpret_cast<uint8_t const *const*>(&working_sets[working_set_id].flag);
 		if (serialize) {
 			ScopeGuard cleanup(
 					[=,&available_workers, &serial_queue, &semaphore] {
@@ -294,7 +312,7 @@ void Reduce(E2EOptions const &options) {
 								});
 						semaphore.release();
 					});
-			ParallelJob(i, shared->num_chan, v, f, options, shared);
+			ParallelJob(i, rows, shared->num_chan, v, f, options, shared);
 		} else {
 			group.async(
 					[=, &available_workers, &serial_queue, &semaphore, &options] {
@@ -304,7 +322,7 @@ void Reduce(E2EOptions const &options) {
 											});
 									semaphore.release();
 								});
-						ParallelJob(i, shared->num_chan, v, f, options, shared);
+						ParallelJob(i, rows, shared->num_chan, v, f, options, shared);
 					});
 		}
 	}
