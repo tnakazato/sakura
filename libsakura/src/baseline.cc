@@ -188,10 +188,11 @@ inline void DoGetBestFitBaseline(
 	size_t num_data = context->num_basis_data;
 	size_t num_bases = context->num_bases;
 	for (size_t i = 0; i < num_data; ++i) {
-		out[i] = 0.0f;
+		double out_double = 0.0;
 		for (size_t j = 0; j < num_bases; ++j) {
-			out[i] += coeff[j] * data[num_bases * i + j];
+			out_double += coeff[j] * data[num_bases * i + j];
 		}
+		out[i] = out_double;
 	}
 }
 
