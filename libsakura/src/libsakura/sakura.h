@@ -211,7 +211,7 @@ typedef struct {
  * @brief 統計値を計算する。どのような統計値を算出するかは
  * @ref sakura_StatisticsResult を参照
  *
- * @param[in] num_data @a data 及び@a is_valid の要素の数
+ * @param[in] num_data @a data 及び@a is_valid の要素の数。@a num_data <= INT32_MAX
  * @param[in] data 対象となるデータ。対応する@a is_valid がtrueの場合、Inf/NaNであってはならない。
  * <br/>must-be-aligned
  * @param[in] is_valid データのマスク。この値が false だと、
