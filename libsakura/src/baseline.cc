@@ -176,29 +176,48 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 }
 
 inline void DoGetBestFitBaseline(
+		size_t num_data, float const *data_arg, bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double const *coeff_arg, float *out_arg) {
+		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
+		float *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(context->basis_data);
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto basis = AssumeAligned(context->basis_data);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
 
-	size_t num_data = context->num_basis_data;
 	size_t num_bases = context->num_bases;
+
+	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
+			num_data, mask, num_bases, basis, lsq_matrix);
+	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
+			num_data, data, mask, num_bases, basis, lsq_vector);
+	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+			num_bases, lsq_matrix, lsq_vector, coeff);
+
 	for (size_t i = 0; i < num_data; ++i) {
 		double out_double = 0.0;
 		for (size_t j = 0; j < num_bases; ++j) {
-			out_double += coeff[j] * data[num_bases * i + j];
+			out_double += coeff[j] * basis[num_bases * i + j];
 		}
 		out[i] = out_double;
 	}
 }
 
-inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
-		bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
+inline void GetBestFitBaseline(
+		size_t num_data, float const *data_arg, bool const *mask_arg,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float *out_arg) {
+	assert(num_data == context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -206,37 +225,52 @@ inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
 	auto mask = AssumeAligned(mask_arg);
 	auto out = AssumeAligned(out_arg);
 
-	assert(num_data == context->num_basis_data);
-
-	size_t num_lsq_matrix0 = context->num_bases * context->num_bases;
-	double *lsq_matrix0 = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix0(
+	size_t num_lsq_matrix = context->num_bases * context->num_bases;
+	double *lsq_matrix = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*lsq_matrix0) * num_lsq_matrix0, &lsq_matrix0));
-	size_t num_lsq_vector0 = context->num_bases;
-	double *lsq_vector0 = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector0(
+					sizeof(*lsq_matrix) * num_lsq_matrix, &lsq_matrix));
+	size_t num_lsq_vector = context->num_bases;
+	double *lsq_vector = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*lsq_vector0) * num_lsq_vector0, &lsq_vector0));
+					sizeof(*lsq_vector) * num_lsq_vector, &lsq_vector));
 	size_t num_coeff = context->num_bases;
 	double *coeff = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(num_data, mask,
-			context->num_bases, context->basis_data, lsq_matrix0);
-	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(num_data, data,
-			mask, context->num_bases, context->basis_data, lsq_vector0);
-
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(context->num_bases,
-			lsq_matrix0, lsq_vector0, coeff);
-
-	DoGetBestFitBaseline(context, coeff, out);
+	DoGetBestFitBaseline(
+			num_data, data, mask, context,
+			lsq_matrix, lsq_vector, coeff, out);
 }
 
-inline void SubtractBaseline(size_t num_data, float const *data_arg,
-		bool const *mask_arg,
+inline void GetBestFitBaseline(
+		size_t num_data, float const *data_arg, bool const *mask_arg,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
+		float *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
+	auto coeff = AssumeAligned(coeff_arg);
+	auto out = AssumeAligned(out_arg);
+
+	DoGetBestFitBaseline(
+			num_data, data, mask, context,
+			lsq_matrix, lsq_vector, coeff, out);
+}
+
+inline void SubtractBaseline(
+		size_t num_data, float const *data_arg, bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg) {
@@ -272,6 +306,23 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*new_clip_mask) * num_data, &new_clip_mask));
 
+	size_t num_bases = baseline_context->num_bases;
+	size_t num_lsq_matrix = num_bases * num_bases;
+	double *lsq_matrix = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*lsq_matrix) * num_lsq_matrix, &lsq_matrix));
+	size_t num_lsq_vector = num_bases;
+	double *lsq_vector = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*lsq_vector) * num_lsq_vector, &lsq_vector));
+	size_t num_coeff = num_bases;
+	double *coeff = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*coeff) * num_coeff, &coeff));
+
 	uint16_t num_fitting_max = num_fitting_max_arg;
 	if (num_fitting_max_arg < 1) {
 		num_fitting_max = 1;
@@ -285,7 +336,9 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		} else {
 			OperateLogicalAnd(num_data, mask, clip_mask, final_mask);
 		}
+
 		GetBestFitBaseline(num_data, data, final_mask, baseline_context,
+				lsq_matrix, lsq_vector, coeff,
 				best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
