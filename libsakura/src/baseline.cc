@@ -246,29 +246,6 @@ inline void GetBestFitBaseline(
 			lsq_matrix, lsq_vector, coeff, out);
 }
 
-inline void GetBestFitBaseline(
-		size_t num_data, float const *data_arg, bool const *mask_arg,
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
-		float *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto out = AssumeAligned(out_arg);
-
-	DoGetBestFitBaseline(
-			num_data, data, mask, context,
-			lsq_matrix, lsq_vector, coeff, out);
-}
-
 inline void SubtractBaseline(
 		size_t num_data, float const *data_arg, bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
@@ -337,9 +314,10 @@ inline void SubtractBaseline(
 			OperateLogicalAnd(num_data, mask, clip_mask, final_mask);
 		}
 
-		GetBestFitBaseline(num_data, data, final_mask, baseline_context,
-				lsq_matrix, lsq_vector, coeff,
-				best_fit_model);
+		DoGetBestFitBaseline(
+				num_data, data, final_mask, baseline_context,
+				lsq_matrix, lsq_vector, coeff, best_fit_model);
+
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		LIBSAKURA_SYMBOL(StatisticsResult) result;
