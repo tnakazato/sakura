@@ -43,7 +43,7 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-		bool output_mask[]) {
+bool output_mask[]) {
 //	std::cout << "ExecuteBitMaskToFlag" << std::endl;
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
@@ -77,7 +77,7 @@ inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 }
 
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-		bool output_mask[]) {
+bool output_mask[]) {
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
 	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
 }
@@ -92,7 +92,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-		bool const input_mask[]) {
+bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
@@ -130,13 +130,13 @@ struct SharedWorkingSet {
 size_t const rows_per_processing = 8;
 
 void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
-		float const *const varray[rows_per_processing],
+		float const * const varray[rows_per_processing],
 		uint8_t const * const farray[rows_per_processing],
 		E2EOptions const &option_list, SharedWorkingSet const *shared) {
 	// generate temporary storage
 	AlignedArrayGenerator generator;
 	float *out_data[rows_per_processing];
-	for (size_t i = 0; i < rows_per_processing; ++i) {
+	for (size_t i = 0; i < jobs; ++i) {
 		out_data[i] = generator.GetAlignedArray<float>(num_v);
 	}
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
@@ -160,15 +160,16 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		// Execute Baseline
 		ExecuteBaseline(option_list.baseline.clipping_threshold,
 				option_list.baseline.num_fitting_max, baseline_after_mask,
-				shared->baseline_context, num_v, out_data[i], out_data[i], mask);
+				shared->baseline_context, num_v, out_data[i], out_data[i],
+				mask);
 
 		// Execute Clipping
 		ExecuteClipping(option_list.flagging.clipping_threshold, num_v,
 				out_data[i], mask);
 
 		// Execute Smoothing
-		ExecuteSmoothing(shared->convolve1d_context, num_v, out_data[i], out_data[i],
-				mask);
+		ExecuteSmoothing(shared->convolve1d_context, num_v, out_data[i],
+				out_data[i], mask);
 
 		// Calculate Statistics
 		CalculateStatistics(num_v, out_data[i], mask);
@@ -177,7 +178,7 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 	// sleep(job_id % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=]() {
 		// run casa operations in main_queue.
-			// write out_data[job_id + i] where i = 0 .. jobs-1
+		// write out_data[job_id + i] where i = 0 .. jobs-1
 			JobFinished(job_id);
 		});
 }
@@ -261,7 +262,8 @@ void Reduce(E2EOptions const &options) {
 		delete shared;
 	});
 
-	size_t num_threads = std::min(shared->num_data, size_t(number_of_logical_cores + 1));
+	size_t num_threads = std::min(shared->num_data,
+			size_t(number_of_logical_cores + 1));
 	std::unique_ptr<WorkingSet[]> working_sets(
 			InitializeWorkingSet(shared, num_threads, &array_generator));
 
@@ -301,9 +303,10 @@ void Reduce(E2EOptions const &options) {
 				}
 			});
 
-		auto v = reinterpret_cast<float const *const*>(working_sets[working_set_id].spectrum);
+		auto v =
+				reinterpret_cast<float const * const *>(working_sets[working_set_id].spectrum);
 		auto f =
-				reinterpret_cast<uint8_t const *const*>(&working_sets[working_set_id].flag);
+				reinterpret_cast<uint8_t const * const *>(&working_sets[working_set_id].flag);
 		if (serialize) {
 			ScopeGuard cleanup(
 					[=,&available_workers, &serial_queue, &semaphore] {
