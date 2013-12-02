@@ -199,6 +199,64 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 }
 
 /*
+ * Test sakura_GetMatrixCoefficientsForLeastSquareFitting:
+ *    failure case of too many mask
+ * RESULT:
+ * out = []
+ */
+TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFittingWithTooManyMask) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	double out[num_model * num_model];
+	SIMD_ALIGN
+	double model[num_model * ELEMENTSOF(in_mask)];
+
+	// Setup in_mask--------------------------
+	for (size_t i = 0; i < num_data; ++i) {
+		in_mask[i] = false;
+	}
+	for (size_t i = 0; i < num_model / 2; ++i) {
+		in_mask[i] = true;
+	}
+	// Setup model----------------------------
+	size_t idx = 0;
+	for (size_t j = 0; j < num_data; ++j) {
+		for (size_t i = 0; i < num_model; ++i) {
+			double value = 1.0;
+			//poly----
+			//for (size_t k = 0; k < i; ++k) { value *= (double)j; }
+			//chebyshev----
+			double x = 2.0 * (double) j / (double) (num_data - 1) - 1.0;
+			if (i == 0) {
+				value = 1.0;
+			} else if (i == 1) {
+				value = x;
+			} else {
+				value = 2.0 * x * model[idx - 1] - model[idx - 2];
+			}
+			//----------
+			model[idx] = value;
+			idx++;
+		}
+	}
+
+	if (verbose) {
+		PrintArray("in_mask", num_data, in_mask);
+		PrintArray("model  ", num_data, num_model, model);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+			sakura_GetMatrixCoefficientsForLeastSquareFitting(
+					num_data, in_mask, num_model, model, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
+}
+
+/*
  * Test sakura_GetVectorCoefficientsForLeastSquareFitting
  * RESULT:
  * out = []
