@@ -102,9 +102,7 @@ inline void CalculateStatistics(size_t num_data, float const input_data[],
 }
 
 void JobFinished(size_t i) {
-	std::cout << "Row ";
-	std::cout << i;
-	std::cout << " have done.\n";
+	LOG4CXX_INFO(logger, "Row " << i << " have done.");
 }
 
 struct SharedWorkingSet {
@@ -238,6 +236,7 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
 }
 
 void Reduce(E2EOptions const &options) {
+	static size_t const number_of_logical_cores = 12;
 	LOG4CXX_INFO(logger, "Enter: Reduce");
 	AlignedArrayGenerator array_generator;
 	SharedWorkingSet *shared = nullptr;
@@ -249,7 +248,7 @@ void Reduce(E2EOptions const &options) {
 		delete shared;
 	});
 
-	size_t num_threads = std::min(shared->num_data, size_t(20));
+	size_t num_threads = std::min(shared->num_data, size_t(number_of_logical_cores + 1));
 	std::unique_ptr<WorkingSet[]> working_sets(
 			InitializeWorkingSet(shared, num_threads, &array_generator));
 
