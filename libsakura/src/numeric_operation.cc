@@ -50,7 +50,10 @@ inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
 			num_unmasked_data ++;
 		}
 	}
-	assert(NUM_MODEL_BASES <= num_unmasked_data);
+
+	if (num_unmasked_data < NUM_MODEL_BASES) {
+		throw std::runtime_error("GetMatrixCoefficientsForLeastSquareFittingUsingTemplate: too many data are masked.");
+	}
 }
 
 inline void GetMatrixCoefficientsForLeastSquareFitting(
@@ -82,7 +85,10 @@ inline void GetMatrixCoefficientsForLeastSquareFitting(
 			num_unmasked_data ++;
 		}
 	}
-	assert(num_model_bases <= num_unmasked_data);
+
+	if (num_unmasked_data < num_model_bases) {
+		throw std::runtime_error("GetMatrixCoefficientsForLeastSquareFitting: too many data are masked.");
+	}
 }
 
 template<size_t NUM_MODEL_BASES>

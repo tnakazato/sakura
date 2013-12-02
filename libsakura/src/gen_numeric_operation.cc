@@ -2,9 +2,14 @@
 #include <cstdlib>
 #include <climits>
 
-#include "libsakura/sakura.h"
-#include "libsakura/optimized_implementation_factory.h"
 #include "libsakura/localdef.h"
+#include "libsakura/logger.h"
+#include "libsakura/optimized_implementation_factory.h"
+#include "libsakura/sakura.h"
+
+namespace {
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("numeric_operation");
+}
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
 		size_t num_mask, bool const mask[],
@@ -28,6 +33,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLea
 	try {
 		numop->GetMatrixCoefficientsForLeastSquareFitting(
 				num_mask, mask, num_model_bases, model, out);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
