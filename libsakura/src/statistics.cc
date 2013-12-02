@@ -54,6 +54,56 @@ inline int32_t AddHorizontally128(__m128i packed_values) {
 	return total;
 }
 
+#if 0
+inline void ComputeStatisticsSimple(float const data_arg[], bool const is_valid_arg[],
+		size_t elements, LIBSAKURA_SYMBOL(StatisticsResult) *result) {
+	auto data = AssumeAligned(data_arg);
+	auto is_valid = AssumeAligned(is_valid_arg);
+	float sum = 0;
+	float square_sum = 0;
+	size_t count = 0;
+	float min = NAN, max = NAN;
+	int32_t index_of_min = -1;
+	int32_t index_of_max = -1;
+
+	for (int32_t i = 0; i < static_cast<int32_t>(elements); ++i) {
+		if (is_valid[i]) {
+			++count;
+			auto value = data[i];
+			sum += value;
+			if (isnanf(min)
+					|| (!isnanf(value) && value < min)) {
+				min = value;
+				index_of_min = i;
+			}
+			if (isnanf(max)
+					|| (!isnanf(value) && value > max)) {
+				max = value;
+				index_of_max = i;
+			}
+			square_sum += value * value;
+		}
+	}
+	result->sum = sum;
+	result->count = count;
+	float float_count = static_cast<float>(count);
+	result->max = max;
+	result->index_of_max = index_of_max;
+	result->min = min;
+	result->index_of_min = index_of_min;
+	float rms2 = NAN;
+	if (count == 0) {
+		result->mean = NAN;
+	} else {
+		result->mean = sum / float_count;
+		rms2 = square_sum / float_count;
+	}
+
+	result->rms = std::sqrt(rms2);
+	result->stddev = std::sqrt(rms2 - result->mean * result->mean);
+}
+#endif
+
 void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		size_t elements, LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
 	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
@@ -68,8 +118,8 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	__m256i index_of_min = _mm256_set1_epi32(-1);
 	__m256i index_of_max = _mm256_set1_epi32(-1);
 	__m256 square_sum = zero;
-	float const *mask_ = reinterpret_cast<float const *>(is_valid);
-	__m256 const *data_ = reinterpret_cast<__m256 const *>(data);
+	float const *mask_ = AssumeAligned(reinterpret_cast<float const *>(is_valid));
+	__m256 const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
 		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
 		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
