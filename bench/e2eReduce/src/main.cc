@@ -43,9 +43,13 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-bool output_mask[]) {
+		bool output_mask[]) {
 //	std::cout << "ExecuteBitMaskToFlag" << std::endl;
-	sakura_Uint8ToBool(num_data, input_flag, output_mask);
+	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
+			output_mask);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("bitflag_to_bool");
+	}
 }
 
 inline void ExecuteCalibration(size_t num_data, float const input_data[],
@@ -56,12 +60,11 @@ inline void ExecuteCalibration(size_t num_data, float const input_data[],
 
 inline void ExecuteBaseline(float clipping_threshold_sigma,
 		uint16_t num_fitting_max, bool mask_after_clipping[],
-		sakura_BaselineContext const *context,
-		size_t num_data, float const input_data[], float output_data[],
-		bool mask[]) {
-	sakura_Status status = sakura_SubtractBaseline(num_data, input_data,
-			mask, context, clipping_threshold_sigma, num_fitting_max,
-			true, mask_after_clipping, output_data);
+		sakura_BaselineContext const *context, size_t num_data,
+		float const input_data[], float output_data[], bool mask[]) {
+	sakura_Status status = sakura_SubtractBaseline(num_data, input_data, mask,
+			context, clipping_threshold_sigma, num_fitting_max, true,
+			mask_after_clipping, output_data);
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("baseline");
 	}
@@ -74,7 +77,7 @@ inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 }
 
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-bool output_mask[]) {
+		bool output_mask[]) {
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
 	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
 }
@@ -89,7 +92,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-bool const input_mask[]) {
+		bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
@@ -285,7 +288,8 @@ void Reduce(E2EOptions const &options) {
 		const uint8_t *f =
 				reinterpret_cast<const uint8_t*>(working_sets[working_set_id].flag);
 		if (serialize) {
-			ScopeGuard cleanup([=,&available_workers, &serial_queue, &semaphore] {
+			ScopeGuard cleanup(
+					[=,&available_workers, &serial_queue, &semaphore] {
 						serial_queue.sync([=,&working_set_id, &available_workers] {
 									available_workers.push_back(working_set_id);
 								});
