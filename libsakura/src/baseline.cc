@@ -276,7 +276,7 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		num_fitting_max = 1;
 	}
 
-	for (size_t i = 0; i < num_fitting_max; ++i) {
+	for (uint16_t i = 0; i < num_fitting_max; ++i) {
 		if (i == 0) {
 			for (size_t j = 0; j < num_data; ++j) {
 				final_mask[j] = mask[j];
