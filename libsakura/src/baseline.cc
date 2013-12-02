@@ -197,8 +197,12 @@ inline void DoGetBestFitBaseline(
 
 	size_t num_bases = context->num_bases;
 
-	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
+	LIBSAKURA_SYMBOL(Status) get_coeff_status =
+		LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
 			num_data, mask, num_bases, basis, lsq_matrix);
+	if (get_coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error("DoGetBestFitsBaseline: too many masked data.");
+	}
 	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
 			num_data, data, mask, num_bases, basis, lsq_vector);
 	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(

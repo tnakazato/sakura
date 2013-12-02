@@ -200,11 +200,11 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 
 /*
  * Test sakura_GetMatrixCoefficientsForLeastSquareFitting:
- *    failure case of too many mask
+ *    failure case of too many masked data
  * RESULT:
  * out = []
  */
-TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFittingWithTooManyMask) {
+TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFittingWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN
 	bool in_mask[num_data];

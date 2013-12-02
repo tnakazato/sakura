@@ -316,6 +316,39 @@ TEST_F(Baseline, GetBestFitBaseline) {
 	}
 }
 
+/*
+ * Test sakura_GetBestFitBaseline: failure case of too many masked data
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data] = { 1.0, 3.0, 7.0, 130.0, 21.0 };
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)] = { true, false, false, false, true };
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out);
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
+}
+
 #define NUM_DATA2 15
 /*
  * Test sakura_SubtractBaseline
@@ -378,6 +411,54 @@ TEST_F(Baseline, SubtractBaseline) {
 }
 
 /*
+ * Test sakura_SubtractBaseline: failure case of too many masked data
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
+	size_t const num_data(NUM_DATA2);
+	SIMD_ALIGN
+	float in_data[num_data] = { 1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
+			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)] = {
+			true,  false, false, false, false,
+			false, false, false, false, false,
+			false, false, false, false, true };
+
+	size_t const num_model(NUM_MODEL);
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 3;
+	bool get_residual = true;
+
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out);
+
+	sakura_DestroyBaselineContext(context);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
+}
+
+/*
  * Test sakura_SubtractBaselinePolynomialWithClipping
  * RESULT:
  * out = []
@@ -421,4 +502,39 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 	for (size_t i = 0; i < num_model; ++i) {
 		ASSERT_EQ(out[i], answer[i]);
 	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomial: failure case of too many masked data
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
+	size_t const num_data(NUM_DATA2);
+	SIMD_ALIGN
+	float in_data[num_data] = { 1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
+			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)] = {
+			true,  false, false, false, false,
+			true,  false, false, false, false,
+			false, false, false, false, false };
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 3, true, final_mask, out);
+
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 }

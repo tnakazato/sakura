@@ -52,7 +52,7 @@ inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
 	}
 
 	if (num_unmasked_data < NUM_MODEL_BASES) {
-		throw std::runtime_error("GetMatrixCoefficientsForLeastSquareFittingUsingTemplate: too many data are masked.");
+		throw std::runtime_error("GetMatrixCoefficientsForLeastSquareFittingUsingTemplate: too many masked data.");
 	}
 }
 
