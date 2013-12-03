@@ -44,12 +44,15 @@ auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
 bool output_mask[]) {
-//	std::cout << "ExecuteBitMaskToFlag" << std::endl;
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("bitflag_to_bool");
 	}
+    status = sakura_InvertBool(num_data, output_mask, output_mask);
+    if (status != sakura_Status_kOK) {
+            throw std::runtime_error("bitflag_to_bool");
+    }
 }
 
 inline void ExecuteCalibration(size_t num_data, float const input_data[],
