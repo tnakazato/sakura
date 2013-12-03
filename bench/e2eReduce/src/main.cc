@@ -373,7 +373,7 @@ void Reduce(E2EOptions const &options) {
 
 		LOG4CXX_INFO(logger, "Initialized");
 
-		bool const serialize = false;
+		bool const serialize = options.serialize;
 		xdispatch::queue serial_queue("my serial queue");
 		xdispatch::semaphore semaphore(num_threads);
 

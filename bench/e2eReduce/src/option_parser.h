@@ -44,6 +44,7 @@ struct E2EOptions {
 	std::string config_file;
 	std::string input_file;
 	std::string output_file;
+	bool serialize;
 	unsigned int ifno;
 	CalibrationOptions calibration;
 	FlaggingOptions flagging;
@@ -69,7 +70,8 @@ public:
 		oss << "config file (" << option_list.config_file << ") summary:\n";
 		oss << "\tinput filename=" << option_list.input_file
 				<< "\n\toutput filename=" << option_list.output_file
-				<< "\n\tspw=" << option_list.ifno << "\n";
+				<< "\n\tspw=" << option_list.ifno << "\n\tserialize="
+				<< option_list.serialize << "\n";
 		oss << "\tsky filename=" << option_list.calibration.sky_table
 				<< "\n\ttsys filename=" << option_list.calibration.tsys_table
 				<< "\n\ttsys_spw=" << option_list.calibration.tsys_ifno << "\n";
@@ -113,6 +115,9 @@ private:
 
 		// parse IFNO
 		option_list->ifno = std::atoi(GetValue(options, GetKey("spw")).c_str());
+		option_list->serialize =
+				"TRUE" == ToUpper(GetValue(options, GetKey("serialize"))) ?
+						true : false;
 	}
 
 	static void ParseCalibration(OptionMap const options,
