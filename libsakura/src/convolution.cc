@@ -158,12 +158,20 @@ inline void CalculateConvolutionWithoutFFT(size_t num_data,
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; ((j + 1 + i < num_data) && (i < num_data / 2 - 1));
-				++i) {
-			left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
+		for (size_t i = 0; (i < num_data / 2 - 1); ++i) {
+			if (j + 1 + i < num_data) {
+				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
+			} else {
+				left += input_data[j + 1 + i - num_data]
+						* input_kernel[num_data - 1 - i];
+			}
 		}
-		for (size_t k = 0; k < j; ++k) {
-			right += input_data[j - 1 - k] * input_kernel[k + 1];
+		for (size_t k = 1; k < num_data / 2 + 1; ++k) {
+			if (j < k) {
+				right += input_data[num_data + j - k] * input_kernel[k];
+			} else {
+				right += input_data[j - k] * input_kernel[k];
+			}
 		}
 		output_data[j] = (left + center + right);
 	}
