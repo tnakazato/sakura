@@ -160,6 +160,16 @@ inline void ExecuteFlagEdge(size_t num_edge, size_t num_data, bool mask[]) {
 inline void ExecuteClipping(float threshold, size_t num_data,
 		float const input_data[], bool mask[]) {
 //	std::cout << "ExecuteClipping" << std::endl;
+	AlignedArrayGenerator generator;
+	bool *mask_local = generator.GetAlignedArray<bool>(num_data);
+	sakura_Status status = sakura_SetTrueFloatLessThan(num_data, input_data, threshold, mask_local);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("Clip Flag");
+	}
+	// Merging mask
+	for (size_t i = 0; i < num_data; ++i) {
+		mask[i] = mask[i] && mask_local[i];
+	}
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
