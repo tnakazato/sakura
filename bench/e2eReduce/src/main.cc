@@ -43,7 +43,7 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-bool output_mask[]) {
+		bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
@@ -112,13 +112,49 @@ inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 }
 
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-bool output_mask[]) {
+		bool mask[]) {
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
-	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
+	AlignedArrayGenerator generator;
+	bool *mask_local = generator.GetAlignedArray<bool>(num_data);
+	sakura_Status status = sakura_SetFalseFloatIfNanOrInf(num_data, input_data,
+			mask_local);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("NaN and Inf flag");
+	}
+	// Merging mask
+	for (size_t i = 0; i < num_data; ++i) {
+		mask[i] = mask[i] && mask_local[i];
+	}
 }
 
 inline void ExecuteFlagEdge(size_t num_edge, size_t num_data, bool mask[]) {
 //	std::cout << "ExecuteFlagEdge" << std::endl;
+	AlignedArrayGenerator generator;
+	int *lower = generator.GetAlignedArray<int>(1);
+	int *upper = generator.GetAlignedArray<int>(1);
+	lower[0] = static_cast<int>(num_edge - 1); // it's ok to be larger than num_data
+	upper[0] = static_cast<int>(num_data - num_edge); // it's ok to be negative
+	size_t num_condition(1);
+	if (lower[0] > upper[0]) {
+		// All channels should be False (False)
+		num_condition = 0;
+		lower[0] = -1;
+		upper[0] = -1;
+	}
+	bool *mask_local = generator.GetAlignedArray<bool>(num_data);
+	int *channel_id = generator.GetAlignedArray<int>(num_data);
+	for (size_t i = 0; i < num_data; ++i) {
+		channel_id[i] = static_cast<int>(i);
+	}
+	sakura_Status status = sakura_SetTrueIntInRangesExclusive(num_data,
+			channel_id, num_condition, lower, upper, mask_local);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("Flag Edge");
+	}
+	// Merging mask
+	for (size_t i = 0; i < num_data; ++i) {
+		mask[i] = mask[i] && mask_local[i];
+	}
 }
 
 inline void ExecuteClipping(float threshold, size_t num_data,
@@ -127,7 +163,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-bool const input_mask[]) {
+		bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
