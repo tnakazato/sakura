@@ -43,22 +43,54 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-bool output_mask[]) {
+		bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("bitflag_to_bool");
 	}
-    status = sakura_InvertBool(num_data, output_mask, output_mask);
-    if (status != sakura_Status_kOK) {
-            throw std::runtime_error("bitflag_to_bool");
-    }
+	status = sakura_InvertBool(num_data, output_mask, output_mask);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("bitflag_to_bool");
+	}
 }
 
-inline void ExecuteCalibration(size_t num_data, float const input_data[],
-		CalibrationContext const &calibration_context, float out_data[]) {
-//	std::cout << "ExecuteCalibration" << std::endl;
+inline void ExecuteCalibration(double timestamp, size_t num_data,
+		float const input_data[], CalibrationContext const &calibration_context,
+		float out_data[]) {
+	// interpolate Tsys to timestamp
+	size_t num_channel = calibration_context.num_channel_sky;
+	float *tsys = calibration_context.tsys_work;
+	double *t = calibration_context.timestamp_work;
+	t[0] = timestamp;
+	sakura_Status status = sakura_InterpolateYAxisFloat(
+			sakura_InterpolationMethod_kLinear, 0,
+			calibration_context.num_data_tsys,
+			calibration_context.timestamp_tsys, num_channel,
+			calibration_context.tsys, 1, t, tsys);
 
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("calibration");
+	}
+
+	// interpolated sky spectrum to timestamp
+	auto *sky = calibration_context.sky_work;
+	status = sakura_InterpolateYAxisFloat(sakura_InterpolationMethod_kLinear, 0,
+			calibration_context.num_data_sky, calibration_context.timestamp_sky,
+			num_channel, calibration_context.sky_spectra, 1, t, sky);
+
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("calibration");
+	}
+
+	// apply calibration
+	// TODO: allow reference == result?
+	status = sakura_ApplyPositionSwitchCalibration(num_channel, tsys,
+			num_channel, input_data, sky, out_data);
+
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("calibration");
+	}
 }
 
 inline void ExecuteBaseline(float clipping_threshold_sigma,
@@ -80,7 +112,7 @@ inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 }
 
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-bool output_mask[]) {
+		bool output_mask[]) {
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
 	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
 }
@@ -95,7 +127,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-bool const input_mask[]) {
+		bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
@@ -118,6 +150,7 @@ struct SharedWorkingSet {
 	casa::Table table;
 	casa::ROArrayColumn<float> spectra_column;
 	casa::ROArrayColumn<unsigned char> flagtra_column;
+	casa::ROScalarColumn<double> time_column;
 
 	~SharedWorkingSet() {
 		LOG4CXX_INFO(logger, "Destructing SharedWorkingSet");
@@ -133,6 +166,7 @@ struct SharedWorkingSet {
 size_t const rows_per_processing = 8;
 
 void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
+		double const tarray[/*jobs*/],
 		float const * const varray[rows_per_processing],
 		uint8_t const * const farray[rows_per_processing],
 		E2EOptions const &option_list, SharedWorkingSet const *shared) {
@@ -148,11 +182,13 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 	for (size_t i = 0; i < jobs; ++i) {
 		auto const v = varray[i];
 		auto const f = farray[i];
+		double const t = tarray[i];
 		// Convert bit flag to boolean mask
 		ExecuteBitFlagToMask(num_v, f, mask);
 
 		// Execute Calibration
-		ExecuteCalibration(num_v, v, shared->calibration_context, out_data[i]);
+		ExecuteCalibration(t, num_v, v, shared->calibration_context,
+				out_data[i]);
 
 		// Execute Flag NaN/Inf
 		ExecuteNanOrInfFlag(num_v, out_data[i], mask);
@@ -191,11 +227,13 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_INFO(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
+	// TODO: need loop on POLNO
 	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
-			nullptr, GetSelectedTable(options.input_file, options.ifno) };
+			nullptr, GetSelectedTable(options.input_file, options.ifno, 0) };
 	try {
 		shared->spectra_column.attach(shared->table, "SPECTRA");
 		shared->flagtra_column.attach(shared->table, "FLAGTRA");
+		shared->time_column.attach(shared->table, "TIME");
 		shared->num_chan = shared->spectra_column(0).nelements();
 		shared->num_data = shared->table.nrow();
 		// Create Context and struct for calibration
@@ -235,6 +273,7 @@ struct WorkingSet {
 	SharedWorkingSet *shared;
 	float *spectrum[rows_per_processing];
 	unsigned char *flag[rows_per_processing];
+	double timestamp[rows_per_processing];
 };
 
 WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
@@ -304,12 +343,15 @@ void Reduce(E2EOptions const &options) {
 					GetArrayCell(working_sets[working_set_id].flag[j], i+j, shared->flagtra_column,
 							casa::IPosition(1, shared->num_chan));
 				}
+				GetScalarCells(working_sets[working_set_id].timestamp, i, rows, shared->time_column);
 			});
 
 		auto v =
 				reinterpret_cast<float const * const *>(working_sets[working_set_id].spectrum);
 		auto f =
 				reinterpret_cast<uint8_t const * const *>(&working_sets[working_set_id].flag);
+		auto t =
+				reinterpret_cast<double const *>(working_sets[working_set_id].timestamp);
 		if (serialize) {
 			ScopeGuard cleanup(
 					[=,&available_workers, &serial_queue, &semaphore] {
@@ -318,7 +360,7 @@ void Reduce(E2EOptions const &options) {
 								});
 						semaphore.release();
 					});
-			ParallelJob(i, rows, shared->num_chan, v, f, options, shared);
+			ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared);
 		} else {
 			group.async(
 					[=, &available_workers, &serial_queue, &semaphore, &options] {
@@ -328,7 +370,7 @@ void Reduce(E2EOptions const &options) {
 											});
 									semaphore.release();
 								});
-						ParallelJob(i, rows, shared->num_chan, v, f, options, shared);
+						ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared);
 					});
 		}
 	}

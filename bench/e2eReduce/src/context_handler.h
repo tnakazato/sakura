@@ -13,19 +13,22 @@ struct CalibrationContext {
 	size_t num_data_sky;
 	size_t num_data_tsys;
 	size_t num_channel_sky;
-	size_t num_channel_tsys;
 	float *sky_spectra;
 	float *tsys;
 	double *timestamp_sky;
 	double *timestamp_tsys;
-	double *frequency_label_sky;
-	double *frequency_label_tsys;
+	float *sky_work;
+	float *tsys_work;
+	double *timestamp_work;
 };
 
-void FillCalibrationContext(
-		std::string const sky_table, std::string const tsys_table,
-		unsigned int sky_ifno, unsigned int tsys_ifno,
-		AlignedArrayGenerator *array_generator, CalibrationContext *calibration_context) {
+void FillCalibrationContext(std::string const sky_table,
+		std::string const tsys_table, unsigned int sky_ifno,
+		unsigned int tsys_ifno, AlignedArrayGenerator *array_generator,
+		CalibrationContext *calibration_context) {
+	// local AlignedArrayGenerator
+	AlignedArrayGenerator local_array_generator;
+
 	// sky table
 	float *sky_spectra = nullptr;
 	double *sky_time = nullptr;
@@ -38,35 +41,49 @@ void FillCalibrationContext(
 	float *tsys = nullptr;
 	double *tsys_time = nullptr;
 	size_t num_chan_tsys, num_row_tsys;
-	GetFromCalTable(tsys_table, tsys_ifno, "TSYS", array_generator, &tsys,
+	GetFromCalTable(tsys_table, tsys_ifno, "TSYS", &local_array_generator, &tsys,
 			&tsys_time, &num_chan_tsys, &num_row_tsys);
 	assert(tsys != nullptr && tsys_time != nullptr);
+	array_generator->Transfer(local_array_generator.index() - 2,
+			&local_array_generator);
+	array_generator->Transfer(local_array_generator.index() - 1,
+			&local_array_generator);
 
 	// get frequency label from the table
 	// for spectral data
-	double *frequency_label_target = array_generator->GetAlignedArray<double>(
-			num_chan_sky);
+	double *frequency_label_target = local_array_generator.GetAlignedArray<
+			double>(num_chan_sky);
 	GetFrequencyLabelFromScantable(sky_table, sky_ifno, num_chan_sky,
 			frequency_label_target);
 
 	// for Tsys
-	double *frequency_label_tsys = array_generator->GetAlignedArray<double>(
-			num_chan_tsys);
+	double *frequency_label_tsys =
+			local_array_generator.GetAlignedArray<double>(num_chan_tsys);
 	GetFrequencyLabelFromScantable(tsys_table, tsys_ifno, num_chan_tsys,
 			frequency_label_tsys);
+
+	float *interpolated_tsys = array_generator->GetAlignedArray<float>(
+			num_chan_sky * num_row_tsys);
+	sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kLinear, 0,
+			num_chan_tsys, frequency_label_tsys, num_row_tsys, tsys,
+			num_chan_sky, frequency_label_target, interpolated_tsys);
+
+	float *sky_work = array_generator->GetAlignedArray<float>(num_chan_sky);
+	float *tsys_work = array_generator->GetAlignedArray<float>(num_chan_sky);
+	double *timestamp_work = array_generator->GetAlignedArray<double>(1);
 
 	// Create Context and struct for calibration
 	// calibration context
 	calibration_context->num_channel_sky = num_chan_sky;
-	calibration_context->num_channel_tsys = num_chan_tsys;
 	calibration_context->num_data_sky = num_row_sky;
 	calibration_context->num_data_tsys = num_row_tsys;
 	calibration_context->timestamp_sky = sky_time;
 	calibration_context->timestamp_tsys = tsys_time;
 	calibration_context->sky_spectra = sky_spectra;
-	calibration_context->tsys = tsys;
-	calibration_context->frequency_label_sky = frequency_label_target;
-	calibration_context->frequency_label_tsys = frequency_label_tsys;
+	calibration_context->tsys = interpolated_tsys;
+	calibration_context->sky_work = sky_work;
+	calibration_context->tsys_work = tsys_work;
+	calibration_context->timestamp_work = timestamp_work;
 }
 
 } /* anonymous namespace */

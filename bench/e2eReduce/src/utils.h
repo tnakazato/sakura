@@ -6,6 +6,7 @@
 #include <casacore/casa/Exceptions/Error.h>
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/Arrays/Vector.h>
 
@@ -103,7 +104,8 @@ public:
 	/**
 	 * MT-unsafe
 	 */
-	template<class T> inline T *GetAlignedArray(size_t num_elements) throw (std::bad_alloc) {
+	template<class T> inline T *GetAlignedArray(size_t num_elements)
+			throw (std::bad_alloc) {
 		size_t num_arena = num_elements * sizeof(T) + alignment_ - 1;
 		if (index_ >= pointer_holder_.size()) {
 			pointer_holder_.resize(pointer_holder_.size() + 128);
@@ -119,8 +121,14 @@ public:
 	inline size_t index() {
 		return index_;
 	}
-	inline void *release(size_t index) {
+	inline void *Release(size_t index) {
 		return pointer_holder_[index].release();
+	}
+	inline void Transfer(size_t index, AlignedArrayGenerator *other) {
+		if (index_ >= pointer_holder_.size()) {
+			pointer_holder_.resize(pointer_holder_.size() + 128);
+		}
+		pointer_holder_[index_++].reset(other->Release(index));
 	}
 private:
 	size_t alignment_;
@@ -131,10 +139,10 @@ private:
 /**
  * CASA related utility functions
  */
-std::string GetTaqlString(std::string table_name, unsigned int ifno) {
+std::string GetTaqlString(std::string table_name, unsigned int ifno, unsigned int polno) {
 	std::ostringstream oss;
 	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno
-			<< " ORDER BY TIME";
+			<< " && POLNO == " << polno << " ORDER BY TIME";
 	return oss.str();
 }
 
@@ -183,6 +191,16 @@ void GetFrequencyLabelFromScantable(std::string const table_name,
 	GetFrequencyLabelFromScantable(casa::Table(table_name, casa::Table::Old),
 			ifno, num_channel, frequency_label);
 }
+
+template<class T>
+void GetScalarCells(T *array, size_t start_row, size_t nrow,
+		casa::ROScalarColumn<T> const column) {
+	casa::Vector < T > casa_array(casa::IPosition(1, nrow), array, casa::SHARE);
+	casa::Slicer slice(casa::IPosition(1, start_row), casa::IPosition(1, nrow),
+			casa::Slicer::endIsLength);
+	column.getColumnRange(slice, casa_array);
+}
+
 template<class T>
 void GetArrayCell(T *array, size_t row_index,
 		casa::ROArrayColumn<T> const column, casa::IPosition const cell_shape) {
