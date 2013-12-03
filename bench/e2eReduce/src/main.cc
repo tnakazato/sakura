@@ -43,7 +43,7 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-		bool output_mask[]) {
+bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
@@ -112,7 +112,7 @@ inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 }
 
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-		bool output_mask[]) {
+bool output_mask[]) {
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
 	//sakura_SetFalseFloatIfNanOrInf(num_data, data, result);
 }
@@ -127,7 +127,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-		bool const input_mask[]) {
+bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
@@ -223,43 +223,46 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 }
 
 SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
-		AlignedArrayGenerator *array_generator) {
+		unsigned int polno, AlignedArrayGenerator *array_generator) {
 	LOG4CXX_INFO(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
 	// TODO: need loop on POLNO
 	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
-			nullptr, GetSelectedTable(options.input_file, options.ifno, 0) };
+			nullptr, GetSelectedTable(options.input_file, options.ifno, polno) };
 	try {
-		shared->spectra_column.attach(shared->table, "SPECTRA");
-		shared->flagtra_column.attach(shared->table, "FLAGTRA");
-		shared->time_column.attach(shared->table, "TIME");
-		shared->num_chan = shared->spectra_column(0).nelements();
 		shared->num_data = shared->table.nrow();
-		// Create Context and struct for calibration
-		// calibration context
-		FillCalibrationContext(options.calibration.sky_table,
-				options.calibration.tsys_table, options.ifno,
-				options.calibration.tsys_ifno, 0, array_generator,
-				&shared->calibration_context);
-		if (shared->calibration_context.num_channel_sky != shared->num_chan) {
-			throw std::runtime_error("calibration");
+		if (shared->num_data > 0) {
+			shared->spectra_column.attach(shared->table, "SPECTRA");
+			shared->flagtra_column.attach(shared->table, "FLAGTRA");
+			shared->time_column.attach(shared->table, "TIME");
+			shared->num_chan = shared->spectra_column(0).nelements();
+			// Create Context and struct for calibration
+			// calibration context
+			FillCalibrationContext(options.calibration.sky_table,
+					options.calibration.tsys_table, options.ifno,
+					options.calibration.tsys_ifno, polno, array_generator,
+					&shared->calibration_context);
+			if (shared->calibration_context.num_channel_sky
+					!= shared->num_chan) {
+				throw std::runtime_error("calibration");
+			}
+			// baseline context
+			if (sakura_CreateBaselineContext(options.baseline.baseline_type,
+					options.baseline.order, shared->num_chan,
+					&shared->baseline_context) != sakura_Status_kOK) {
+				throw std::runtime_error("baseline");
+			}
+			assert(shared->baseline_context != nullptr);
+			// convolve1d context
+			if (sakura_CreateConvolve1DContext(shared->num_chan,
+					options.smoothing.kernel_type,
+					options.smoothing.kernel_width, options.smoothing.use_fft,
+					&shared->convolve1d_context) != sakura_Status_kOK) {
+				throw std::runtime_error("convolve");
+			}
+			assert(shared->convolve1d_context != nullptr);
 		}
-		// baseline context
-		if (sakura_CreateBaselineContext(options.baseline.baseline_type,
-				options.baseline.order, shared->num_chan,
-				&shared->baseline_context) != sakura_Status_kOK) {
-			throw std::runtime_error("baseline");
-		}
-		assert(shared->baseline_context != nullptr);
-		// convolve1d context
-		if (sakura_CreateConvolve1DContext(shared->num_chan,
-				options.smoothing.kernel_type, options.smoothing.kernel_width,
-				options.smoothing.use_fft, &shared->convolve1d_context)
-				!= sakura_Status_kOK) {
-			throw std::runtime_error("convolve");
-		}
-		assert(shared->convolve1d_context != nullptr);
 	} catch (...) {
 		delete shared;
 		LOG4CXX_INFO(logger, "Leave: InitializeSharedWorkingSet");
@@ -294,87 +297,97 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
 void Reduce(E2EOptions const &options) {
 	static size_t const number_of_logical_cores = 12;
 	LOG4CXX_INFO(logger, "Enter: Reduce");
-	AlignedArrayGenerator array_generator;
-	SharedWorkingSet *shared = nullptr;
-	xdispatch::main_queue().sync([&shared, &options, &array_generator] {
-		// run casa operations in main_queue.
-			shared = InitializeSharedWorkingSet(options, &array_generator);
+	unsigned int const num_polarizations = 4;
+	for (unsigned int polno = 0; polno < num_polarizations; polno++) {
+		LOG4CXX_INFO(logger, "Processing POLNO " << polno);
+		AlignedArrayGenerator array_generator;
+		SharedWorkingSet *shared = nullptr;
+		xdispatch::main_queue().sync(
+				[&shared, &options, &polno, &array_generator] {
+					// run casa operations in main_queue.
+					shared = InitializeSharedWorkingSet(options, polno, &array_generator);
+				});
+		ScopeGuard guard_for_shared([shared] {
+			delete shared;
 		});
-	ScopeGuard guard_for_shared([shared] {
-		delete shared;
-	});
 
-	size_t num_threads = std::min(shared->num_data,
-			size_t(number_of_logical_cores + 1));
-	std::unique_ptr<WorkingSet[]> working_sets(
-			InitializeWorkingSet(shared, num_threads, &array_generator));
-
-	std::vector<size_t> available_workers(num_threads);
-	for (size_t i = 0; i < num_threads; ++i) {
-		available_workers[i] = i;
-	}
-
-	LOG4CXX_INFO(logger, "Initialized");
-
-	bool const serialize = false;
-	xdispatch::queue serial_queue("my serial queue");
-	xdispatch::semaphore semaphore(num_threads);
-
-	auto group = xdispatch::group();
-	for (size_t i = 0; i < shared->num_data; i += rows_per_processing) {
-		size_t rows = std::min(rows_per_processing, shared->num_data - i);
-		semaphore.acquire();
-		size_t working_set_id = 0;
-		serial_queue.sync([&working_set_id, &available_workers] {
-			assert(available_workers.size() > 0);
-			working_set_id = available_workers.back();
-			available_workers.pop_back();
-		});
-		LOG4CXX_INFO(logger, "working_set_id: " << working_set_id);
-		// get data from the table
-		xdispatch::main_queue().sync([=, &working_sets] {
-			// run casa operations in main_queue.
-				LOG4CXX_INFO(logger, "Reading record " << i);
-				for (size_t j = 0; j < rows; ++j) {
-					GetArrayCell(working_sets[working_set_id].spectrum[j], i+j, shared->spectra_column,
-							casa::IPosition(1, shared->num_chan));
-				}
-				for (size_t j = 0; j < rows; ++j) {
-					GetArrayCell(working_sets[working_set_id].flag[j], i+j, shared->flagtra_column,
-							casa::IPosition(1, shared->num_chan));
-				}
-				GetScalarCells(working_sets[working_set_id].timestamp, i, rows, shared->time_column);
-			});
-
-		auto v =
-				reinterpret_cast<float const * const *>(working_sets[working_set_id].spectrum);
-		auto f =
-				reinterpret_cast<uint8_t const * const *>(&working_sets[working_set_id].flag);
-		auto t =
-				reinterpret_cast<double const *>(working_sets[working_set_id].timestamp);
-		if (serialize) {
-			ScopeGuard cleanup(
-					[=,&available_workers, &serial_queue, &semaphore] {
-						serial_queue.sync([=,&working_set_id, &available_workers] {
-									available_workers.push_back(working_set_id);
-								});
-						semaphore.release();
-					});
-			ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared);
-		} else {
-			group.async(
-					[=, &available_workers, &serial_queue, &semaphore, &options] {
-						ScopeGuard cleanup([=,&available_workers, &serial_queue, &semaphore] {
-									serial_queue.sync([=,&working_set_id, &available_workers] {
-												available_workers.push_back(working_set_id);
-											});
-									semaphore.release();
-								});
-						ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared);
-					});
+		if (shared->num_data == 0) {
+			continue;
 		}
+
+		size_t num_threads = std::min(shared->num_data,
+				size_t(number_of_logical_cores + 1));
+		std::unique_ptr<WorkingSet[]> working_sets(
+				InitializeWorkingSet(shared, num_threads, &array_generator));
+
+		std::vector<size_t> available_workers(num_threads);
+		for (size_t i = 0; i < num_threads; ++i) {
+			available_workers[i] = i;
+		}
+
+		LOG4CXX_INFO(logger, "Initialized");
+
+		bool const serialize = false;
+		xdispatch::queue serial_queue("my serial queue");
+		xdispatch::semaphore semaphore(num_threads);
+
+		auto group = xdispatch::group();
+		for (size_t i = 0; i < shared->num_data; i += rows_per_processing) {
+			size_t rows = std::min(rows_per_processing, shared->num_data - i);
+			semaphore.acquire();
+			size_t working_set_id = 0;
+			serial_queue.sync([&working_set_id, &available_workers] {
+				assert(available_workers.size() > 0);
+				working_set_id = available_workers.back();
+				available_workers.pop_back();
+			});
+			LOG4CXX_INFO(logger, "working_set_id: " << working_set_id);
+			// get data from the table
+			xdispatch::main_queue().sync([=, &working_sets] {
+				// run casa operations in main_queue.
+					LOG4CXX_INFO(logger, "Reading record " << i);
+					for (size_t j = 0; j < rows; ++j) {
+						GetArrayCell(working_sets[working_set_id].spectrum[j], i+j, shared->spectra_column,
+								casa::IPosition(1, shared->num_chan));
+					}
+					for (size_t j = 0; j < rows; ++j) {
+						GetArrayCell(working_sets[working_set_id].flag[j], i+j, shared->flagtra_column,
+								casa::IPosition(1, shared->num_chan));
+					}
+					GetScalarCells(working_sets[working_set_id].timestamp, i, rows, shared->time_column);
+				});
+
+			auto v =
+					reinterpret_cast<float const * const *>(working_sets[working_set_id].spectrum);
+			auto f =
+					reinterpret_cast<uint8_t const * const *>(&working_sets[working_set_id].flag);
+			auto t =
+					reinterpret_cast<double const *>(working_sets[working_set_id].timestamp);
+			if (serialize) {
+				ScopeGuard cleanup(
+						[=,&available_workers, &serial_queue, &semaphore] {
+							serial_queue.sync([=,&working_set_id, &available_workers] {
+										available_workers.push_back(working_set_id);
+									});
+							semaphore.release();
+						});
+				ParallelJob(i, rows, shared->num_chan, t, v, f, options,
+						shared);
+			} else {
+				group.async(
+						[=, &available_workers, &serial_queue, &semaphore, &options] {
+							ScopeGuard cleanup([=,&available_workers, &serial_queue, &semaphore] {
+										serial_queue.sync([=,&working_set_id, &available_workers] {
+													available_workers.push_back(working_set_id);
+												});
+										semaphore.release();
+									});
+							ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared);
+						});
+			}
+		}
+		group.wait(xdispatch::time_forever);
 	}
-	group.wait(xdispatch::time_forever);
 	LOG4CXX_INFO(logger, "Leave: Reduce");
 }
 
