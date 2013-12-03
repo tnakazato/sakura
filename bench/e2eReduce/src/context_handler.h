@@ -24,7 +24,8 @@ struct CalibrationContext {
 
 void FillCalibrationContext(std::string const sky_table,
 		std::string const tsys_table, unsigned int sky_ifno,
-		unsigned int tsys_ifno, AlignedArrayGenerator *array_generator,
+		unsigned int tsys_ifno, unsigned int polno,
+		AlignedArrayGenerator *array_generator,
 		CalibrationContext *calibration_context) {
 	// local AlignedArrayGenerator
 	AlignedArrayGenerator local_array_generator;
@@ -33,7 +34,7 @@ void FillCalibrationContext(std::string const sky_table,
 	float *sky_spectra = nullptr;
 	double *sky_time = nullptr;
 	size_t num_chan_sky, num_row_sky;
-	GetFromCalTable(sky_table, sky_ifno, "SPECTRA", array_generator,
+	GetFromCalTable(sky_table, sky_ifno, polno, "SPECTRA", array_generator,
 			&sky_spectra, &sky_time, &num_chan_sky, &num_row_sky);
 	assert(sky_spectra != nullptr && sky_time != nullptr);
 
@@ -41,8 +42,9 @@ void FillCalibrationContext(std::string const sky_table,
 	float *tsys = nullptr;
 	double *tsys_time = nullptr;
 	size_t num_chan_tsys, num_row_tsys;
-	GetFromCalTable(tsys_table, tsys_ifno, "TSYS", &local_array_generator, &tsys,
-			&tsys_time, &num_chan_tsys, &num_row_tsys);
+	GetFromCalTable(tsys_table, tsys_ifno, polno, "TSYS",
+			&local_array_generator, &tsys, &tsys_time, &num_chan_tsys,
+			&num_row_tsys);
 	assert(tsys != nullptr && tsys_time != nullptr);
 	array_generator->Transfer(local_array_generator.index() - 2,
 			&local_array_generator);

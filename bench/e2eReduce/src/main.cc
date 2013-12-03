@@ -240,7 +240,7 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 		// calibration context
 		FillCalibrationContext(options.calibration.sky_table,
 				options.calibration.tsys_table, options.ifno,
-				options.calibration.tsys_ifno, array_generator,
+				options.calibration.tsys_ifno, 0, array_generator,
 				&shared->calibration_context);
 		if (shared->calibration_context.num_channel_sky != shared->num_chan) {
 			throw std::runtime_error("calibration");

@@ -139,15 +139,17 @@ private:
 /**
  * CASA related utility functions
  */
-std::string GetTaqlString(std::string table_name, unsigned int ifno, unsigned int polno) {
+std::string GetTaqlString(std::string table_name, unsigned int ifno,
+		unsigned int polno) {
 	std::ostringstream oss;
 	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno
 			<< " && POLNO == " << polno << " ORDER BY TIME";
 	return oss.str();
 }
 
-casa::Table GetSelectedTable(std::string table_name, unsigned int ifno) {
-	casa::String taql(GetTaqlString(table_name, ifno));
+casa::Table GetSelectedTable(std::string table_name, unsigned int ifno,
+		unsigned int polno) {
+	casa::String taql(GetTaqlString(table_name, ifno, polno));
 	return tableCommand(taql);
 }
 
@@ -224,9 +226,10 @@ void GetScalarColumn(T *array, casa::ROScalarColumn<T> const column,
 }
 
 void GetFromCalTable(std::string const table_name, unsigned int ifno,
-		std::string const data_name, AlignedArrayGenerator *array_generator,
-		float **data, double **timestamp, size_t *num_data, size_t *num_row) {
-	casa::Table table = GetSelectedTable(table_name, ifno);
+		unsigned int polno, std::string const data_name,
+		AlignedArrayGenerator *array_generator, float **data,
+		double **timestamp, size_t *num_data, size_t *num_row) {
+	casa::Table table = GetSelectedTable(table_name, ifno, polno);
 	*num_row = table.nrow();
 	if (*num_row == 0) {
 		throw casa::AipsError("Selected sky table is empty.");
