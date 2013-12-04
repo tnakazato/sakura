@@ -19,7 +19,42 @@
 
 #include <libsakura/sakura.h>
 
+#define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
+#define STATIC_ASSERT(x) static_assert((x), # x)
+
 namespace {
+#ifdef __GNUG__
+/**
+ * @~japanese
+ * @brief @a ptr がsakuraのアライメント要件を満たしていると見なし、そのアドレスを返す。
+ *
+ * コンパイラがサポートしていれば、
+ * コンパイラは、戻り値がsakuraのアライメント要件を満たしているものとして最適化を行う。
+ *
+ * @param ptr sakuraのアライメント要件を満たしているアドレス
+ * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
+ */
+template<typename T>
+inline T AssumeAligned(T ptr) {
+	return reinterpret_cast<T>(__builtin_assume_aligned(ptr,
+	32));
+}
+#else /* __GNUG__ */
+/**
+ * @~japanese
+ * @brief @a ptr がsakuraのアライメント要件を満たしていると見なし、そのアドレスを返す。
+ *
+ * コンパイラがサポートしていれば、
+ * コンパイラは、戻り値がsakuraのアライメント要件を満たしているものとして最適化を行う。
+ *
+ * @param ptr sakuraのアライメント要件を満たしているアドレス
+ * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
+ */
+template<typename T>
+inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr) {
+	return ptr;
+}
+#endif /* __GNUG__ */
 
 class ScopeGuard {
 	typedef std::function<void(void) noexcept> Func;
@@ -115,8 +150,9 @@ public:
 			throw std::bad_alloc();
 		}
 		pointer_holder_[index_++].reset(ptr);
-		return reinterpret_cast<T *>(sakura_AlignAny(num_arena, ptr,
-				num_elements * sizeof(T)));
+		return AssumeAligned(
+				reinterpret_cast<T *>(sakura_AlignAny(num_arena, ptr,
+						num_elements * sizeof(T))));
 	}
 	inline size_t index() {
 		return index_;
