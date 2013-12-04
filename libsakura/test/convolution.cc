@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fftw3.h>
+#include <omp.h>
 
 #include <libsakura/localdef.h>
 #include <libsakura/sakura.h>
@@ -26,9 +27,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	size_t num_data;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
-	fftwf_complex *fft_applied_complex_input_data;
-	fftwf_complex *multiplied_complex_data;
-	fftwf_complex *fft_applied_complex_kernel;
+	//fftwf_complex *fft_applied_complex_input_data;
+	//fftwf_complex *multiplied_complex_data;
+	//fftwf_complex *fft_applied_complex_kernel;
 	float *real_array;
 };
 }
@@ -533,7 +534,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
-	{ // [even],withFFT, Gaussian Kernel Shape,input only 2 spike at 0, num_data - 1
+	{ // [even],withFFT, Gaussian Kernel Shape,input only 2 spike at 0, num_data - 1 , multi
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
@@ -542,8 +543,10 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 			input_data[i] = 0.0;
 			mask[i] = true; // no mask
 		}
-		input_data[0] = 1.0;
-		input_data[num_data - 1] = 1.0;
+		input_data[0] = 1.0; // first ch
+		input_data[num_data - 1] = 1.0; // final ch
+		//input_data[1][0] = 1.0;
+		//input_data[1][num_data - 1] = 1.0;
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
 		float output_data[num_data];
@@ -573,13 +576,13 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 			mask[i] = true; // no mask
 		}
-		input_data[0] = 1.0;
-		input_data[num_data - 1] = 1.0;
-		//mask[i] = true; // no mask
+		input_data[0] = 1.0; // first ch
+		input_data[num_data - 1] = 1.0; // final ch
 
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = false; // without FFT

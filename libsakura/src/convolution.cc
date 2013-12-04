@@ -18,8 +18,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	size_t num_data;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
-	fftwf_complex *fft_applied_complex_input_data;
-	fftwf_complex *multiplied_complex_data;
 	fftwf_complex *fft_applied_complex_kernel;
 	float *real_array;
 };
@@ -93,7 +91,8 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 			if (FindTrueToGetEnd(i, input_data[i], mask[i], X2, Y2, count)) {
 				find_zero = true;
 				count++;
-			}
+			} else if (i == (num_data - 1)) // achived final ch
+				FindTrueToGetEnd(i, Y1[count], true, X2, Y2, count);
 		}
 	}
 	size_t count_max = count;
@@ -265,10 +264,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->fft_applied_complex_kernel = // fft applied kernel
 				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array.release(); // real_array
-		work_context->fft_applied_complex_input_data = // fft_applied_complex_input_data
-				fft_applied_complex_input_data.release();
-		work_context->multiplied_complex_data =
-				multiplied_complex_data.release(); // multiplied_complex_data
 		work_context->plan_real_to_complex_float = plan_real_to_complex_float; // plan for real to complex
 		guard_for_fft_plan.Disable();
 		work_context->plan_complex_to_real_float = plan_complex_to_real_float; // plan for complex to real
@@ -289,8 +284,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			throw std::bad_alloc();
 		}
 		work_context->fft_applied_complex_kernel = nullptr;
-		work_context->fft_applied_complex_input_data = nullptr;
-		work_context->multiplied_complex_data = nullptr;
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
 		work_context->real_array = real_array_kernel.release(); // real_array for kernel
@@ -358,12 +351,6 @@ LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 		}
 		if (context->fft_applied_complex_kernel != nullptr) {
 			FreeFFTArray(context->fft_applied_complex_kernel);
-		}
-		if (context->fft_applied_complex_input_data != nullptr) {
-			FreeFFTArray(context->fft_applied_complex_input_data);
-		}
-		if (context->multiplied_complex_data != nullptr) {
-			FreeFFTArray(context->multiplied_complex_data);
 		}
 		if (context->real_array != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->real_array);
