@@ -44,7 +44,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		static float data[] = { 2.f, -2.f, 3.f, 0.f, -2.f, -1.f };
 		SIMD_ALIGN
 		static bool const is_valid[] = { true, true, true, true, true, true };
-		ASSERT_EQ(ELEMENTSOF(data), ELEMENTSOF(is_valid));
+		STATIC_ASSERT(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
 		size_t new_elements = static_cast<size_t>(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDensely)(ELEMENTSOF(data),
 				is_valid, data, &new_elements);
@@ -68,7 +68,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		static float data[] = { 2.f, -2.f, 3.f, 0.f, -2.f, -1.f };
 		SIMD_ALIGN
 		static bool const is_valid[] = { true, false, true, false, true, true };
-		assert(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
+		STATIC_ASSERT(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
 		size_t new_elements = static_cast<size_t>(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDensely)(ELEMENTSOF(data),
 				is_valid, data, &new_elements);
@@ -85,7 +85,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		SIMD_ALIGN
 		static bool const is_valid[] = { false, false, false, false, false,
 		false };
-		assert(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
+		STATIC_ASSERT(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
 		size_t new_elements = static_cast<size_t>(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDensely)(ELEMENTSOF(data),
 				is_valid, data, &new_elements);
