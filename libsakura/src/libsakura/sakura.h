@@ -17,6 +17,12 @@
 
 #include <libsakura/config.h>
 
+#if defined(__GNUC__) || defined(__GNUG__)
+#	define LIBSAKURA_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#	define LIBSAKURA_WARN_UNUSED_RESULT /* Don't ignore result value */
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -86,7 +92,7 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
 LIBSAKURA_SYMBOL(UserAllocator) allocator,
-LIBSAKURA_SYMBOL(UserDeallocator) deallocator);
+LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -224,7 +230,8 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data,
 		float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResult) *result);
+		LIBSAKURA_SYMBOL(StatisticsResult) *result)
+				LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~japanese
  * @brief validな値のみを先頭に詰めて昇順にソートする
@@ -240,7 +247,7 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
 		size_t num_data, bool const is_valid[], float data[],
-		size_t *new_num_data);
+		size_t *new_num_data) LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~japanese
  * @brief 畳み込みしながらグリッドする
@@ -292,7 +299,8 @@ typedef struct {
 		size_t width, size_t height,
 		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]);
+		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/])
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -1566,7 +1574,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
-		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context);
+		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context)
+				LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~japanese
  * @brief コンボリューションを行う。
@@ -1880,7 +1889,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context);
+		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context)
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
