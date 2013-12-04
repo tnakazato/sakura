@@ -52,12 +52,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
+	if (context == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 	if (num_data < 1) {
 		LOG4CXX_ERROR(logger,
 				"num_data must be > 0, context->num_data == num_data");
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
