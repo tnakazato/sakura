@@ -1562,6 +1562,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] use_fft true means use fft, false means don't use fft.
  * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
@@ -1616,6 +1617,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[out] output_data
  * Its length equals to channel number
  * @return status code.
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
@@ -1631,6 +1633,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] context context.
  * @return status code.
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
 
