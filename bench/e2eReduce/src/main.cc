@@ -191,7 +191,7 @@ bool const input_mask[]) {
 }
 
 void JobFinished(size_t i) {
-	LOG4CXX_INFO(logger, "Row " << i << " have done.");
+	LOG4CXX_DEBUG(logger, "Row " << i << " have done.");
 }
 
 struct SharedWorkingSet {
@@ -207,7 +207,7 @@ struct SharedWorkingSet {
 	casa::ROScalarColumn<double> time_column;
 
 	~SharedWorkingSet() {
-		LOG4CXX_INFO(logger, "Destructing SharedWorkingSet");
+		LOG4CXX_DEBUG(logger, "Destructing SharedWorkingSet");
 		if (baseline_context != nullptr) {
 			sakura_DestroyBaselineContext(baseline_context);
 		}
@@ -278,7 +278,7 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 
 SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 		unsigned int polno, AlignedArrayGenerator *array_generator) {
-	LOG4CXX_INFO(logger, "Enter: InitializeSharedWorkingSet");
+	LOG4CXX_DEBUG(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
 	// TODO: need loop on POLNO
@@ -319,10 +319,10 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 		}
 	} catch (...) {
 		delete shared;
-		LOG4CXX_INFO(logger, "Leave: InitializeSharedWorkingSet");
+		LOG4CXX_DEBUG(logger, "Leave: InitializeSharedWorkingSet");
 		throw;
 	}
-	LOG4CXX_INFO(logger, "Leave: InitializeSharedWorkingSet");
+	LOG4CXX_DEBUG(logger, "Leave: InitializeSharedWorkingSet");
 	return shared;
 }
 
@@ -349,8 +349,7 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
 }
 
 void Reduce(E2EOptions const &options) {
-	static size_t const number_of_logical_cores = 12;
-	LOG4CXX_INFO(logger, "Enter: Reduce");
+	LOG4CXX_DEBUG(logger, "Enter: Reduce");
 	unsigned int const num_polarizations = 4;
 	for (unsigned int polno = 0; polno < num_polarizations; polno++) {
 		LOG4CXX_INFO(logger, "Processing POLNO " << polno);
@@ -370,7 +369,7 @@ void Reduce(E2EOptions const &options) {
 		}
 
 		size_t num_threads = std::min(shared->num_data,
-				size_t(number_of_logical_cores + 1));
+				size_t(options.max_threads));
 		std::unique_ptr<WorkingSet[]> working_sets(
 				InitializeWorkingSet(shared, num_threads, &array_generator));
 
@@ -395,11 +394,11 @@ void Reduce(E2EOptions const &options) {
 				working_set_id = available_workers.back();
 				available_workers.pop_back();
 			});
-			LOG4CXX_INFO(logger, "working_set_id: " << working_set_id);
+			LOG4CXX_DEBUG(logger, "working_set_id: " << working_set_id);
 			// get data from the table
 			xdispatch::main_queue().sync([=, &working_sets] {
 				// run casa operations in main_queue.
-					LOG4CXX_INFO(logger, "Reading record " << i);
+					LOG4CXX_DEBUG(logger, "Reading record " << i);
 					for (size_t j = 0; j < rows; ++j) {
 						GetArrayCell(working_sets[working_set_id].spectrum[j], i+j, shared->spectra_column,
 								casa::IPosition(1, shared->num_chan));
@@ -442,11 +441,11 @@ void Reduce(E2EOptions const &options) {
 		}
 		group.wait(xdispatch::time_forever);
 	}
-	LOG4CXX_INFO(logger, "Leave: Reduce");
+	LOG4CXX_DEBUG(logger, "Leave: Reduce");
 }
 
 void E2eReduce(int argc, char const* const argv[]) {
-	LOG4CXX_INFO(logger, "Enter: E2eReduce");
+	LOG4CXX_DEBUG(logger, "Enter: E2eReduce");
 
 	// Read configuration file
 	// Default configuration file is "e2etest.config"
@@ -469,7 +468,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 		double end_time = sakura_GetCurrentTime();
 		std::cout << "finished " << end_time - start_time << "secs\n";
 	});
-	LOG4CXX_INFO(logger, "Leave: E2eReduce");
+	LOG4CXX_DEBUG(logger, "Leave: E2eReduce");
 }
 
 void main_(int argc, char const* const argv[]) {
