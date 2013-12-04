@@ -105,10 +105,10 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-
+		std::cout << "context =  " << context << std::endl;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
 	{ // kernel_width = 0
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -124,7 +124,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
 	{ // KernelType = undefined
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -140,7 +140,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
 }
 
@@ -251,7 +251,7 @@ TEST_F(Convolve1DOperation , FailedMalloc) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
 }
 

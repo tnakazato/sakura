@@ -1553,10 +1553,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとにコンボリューションの結果は異なる。
  * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。
  * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
- * @param[out] context コンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
+ * @param[out] context ンボリューションのための情報を格納しているコンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
  * により解放されなければならない。終了ステータスが
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink の場合はcontextには
- * コンボリューションに必要な情報のアドレスが格納されている。それ以外の終了ステータスの場合、contextの値はnullptrである。
+ * コンボリューションに必要な情報が格納されている。終了ステータスが@link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
+ * または@link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlinkの場合、contextの値はnullptrである。
  *
  * @return 終了ステータス。
  * @~english
