@@ -378,7 +378,7 @@ void Reduce(E2EOptions const &options) {
 			available_workers[i] = i;
 		}
 
-		LOG4CXX_INFO(logger, "Initialized");
+		LOG4CXX_DEBUG(logger, "Initialized");
 
 		bool const serialize = options.serialize;
 		xdispatch::queue serial_queue("my serial queue");
