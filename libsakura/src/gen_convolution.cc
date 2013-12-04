@@ -15,6 +15,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
+	*context = nullptr;
 	if (num_data < 1) {
 		LOG4CXX_ERROR(logger, "num_data must be > 0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -38,9 +39,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const std::invalid_argument &e) {
-		LOG4CXX_ERROR(logger, "num_data does't equal to context->num_data");
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -80,6 +78,9 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
+	if (context == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 	try {
 		auto convolutionop =
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
