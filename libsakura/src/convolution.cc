@@ -16,6 +16,7 @@ extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	bool use_fft;
 	size_t num_data;
+	size_t kernel_width;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
@@ -157,20 +158,12 @@ inline void CalculateConvolutionWithoutFFT(size_t num_data,
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; (i < num_data / 2 - 1); ++i) {
-			if (j + 1 + i < num_data) {
-				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
-			} else {
-				left += input_data[j + 1 + i - num_data]
-						* input_kernel[num_data - 1 - i];
-			}
+		for (size_t i = 0; ((j + 1 + i < num_data) && (i < num_data / 2 - 1));
+				++i) {
+			left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
 		}
-		for (size_t k = 1; k < num_data / 2 + 1; ++k) {
-			if (j < k) {
-				right += input_data[num_data + j - k] * input_kernel[k];
-			} else {
-				right += input_data[j - k] * input_kernel[k];
-			}
+		for (size_t k = 0; k < j && (k < num_data / 2); ++k) {
+			right += input_data[j - 1 - k] * input_kernel[k + 1];
 		}
 		output_data[j] = (left + center + right);
 	}
@@ -180,42 +173,47 @@ inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	*context = nullptr;
-	// real array for kernel
-	std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
-			static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-					sizeof(float) * num_data)), LIBSAKURA_PREFIX::Memory());
-	if (real_array_kernel == nullptr) {
-		throw std::bad_alloc();
-	}
 	if (use_fft) {
+		// real array for kernel
+		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
+				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(float) * (num_data + (2 * kernel_width)))),
+				LIBSAKURA_PREFIX::Memory());
+		if (real_array_kernel == nullptr) {
+			throw std::bad_alloc();
+		}
 		// real array for input and output data
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(float) * num_data)), LIBSAKURA_PREFIX::Memory());
+						sizeof(float) * (num_data + (2 * kernel_width)))),
+				LIBSAKURA_PREFIX::Memory());
 		if (real_array == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for kernel
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray((num_data + (2 * kernel_width)) / 2 + 1),
+				FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for input_data
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray((num_data + (2 * kernel_width)) / 2 + 1),
+				FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for multiplied data
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray((num_data + (2 * kernel_width)) / 2 + 1),
+				FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		// create fft plan for kernel
 		fftwf_plan plan_real_to_complex_float_kernel = fftwf_plan_dft_r2c_1d(
-				num_data, real_array_kernel.get(),
+				num_data + (2 * kernel_width), real_array_kernel.get(),
 				fft_applied_complex_kernel.get(),
 				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT); // added FFTW_PRESERVE_INPUT
 		ScopeGuard guard_for_fft_plan_kernel([&]() {
@@ -226,8 +224,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			throw std::bad_alloc();
 		}
 		// create fft plan for input data
-		fftwf_plan plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(num_data,
-				real_array.get(), fft_applied_complex_input_data.get(),
+		fftwf_plan plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(
+				num_data + (2 * kernel_width), real_array.get(),
+				fft_applied_complex_input_data.get(),
 				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT); // added FFTW_PRESERVE_INPUT
 		ScopeGuard guard_for_fft_plan([&]() {
 			DestroyFFTPlan(plan_real_to_complex_float);
@@ -237,8 +236,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			throw std::bad_alloc();
 		}
 		// create ifft plan for output data
-		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(num_data,
-				multiplied_complex_data.get(), real_array.get(),
+		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(
+				num_data + (2 * kernel_width), multiplied_complex_data.get(),
+				real_array.get(),
 				FFTW_ESTIMATE | FFTW_DESTROY_INPUT); // added FFTW_DESTROY_INPUT
 		ScopeGuard guard_for_ifft_plan([&]() {
 			DestroyFFTPlan(plan_complex_to_real_float);
@@ -247,7 +247,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_ifft_plan.Disable();
 			throw std::bad_alloc();
 		}
-		Create1DKernel(num_data, kernel_type, kernel_width,
+		Create1DKernel(num_data + (2 * kernel_width), kernel_type, kernel_width,
 				real_array_kernel.get());
 		fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
 		real_array_kernel.reset(nullptr);
@@ -270,8 +270,16 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		guard_for_ifft_plan.Disable();
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
+		work_context->kernel_width = kernel_width;
 		*context = work_context.release(); // context
 	} else { // without fft
+		// real array for kernel
+		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
+				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(float) * num_data)), LIBSAKURA_PREFIX::Memory());
+		if (real_array_kernel == nullptr) {
+			throw std::bad_alloc();
+		}
 		Create1DKernel(num_data, kernel_type, kernel_width,
 				real_array_kernel.get());
 		// work_context
@@ -289,6 +297,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_array = real_array_kernel.release(); // real_array for kernel
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
+		work_context->kernel_width = kernel_width;
 		*context = work_context.release(); // context
 	}
 }
@@ -301,24 +310,43 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		throw std::invalid_argument(
 				"num_data doesn't equal to context->num_data");
 	}
+	// real array for kernel
+	std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
+			static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+					sizeof(float) * (num_data + (2 * context->kernel_width)))),
+			LIBSAKURA_PREFIX::Memory());
+	if (real_array == nullptr) {
+		throw std::bad_alloc();
+	}
 	if (context->use_fft) { // with fft
 		// fft applied array for input_data (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(
+						(num_data + (2 * context->kernel_width)) / 2 + 1),
+				FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for multiplied data (kernel * input_data) (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(
+						(num_data + (2 * context->kernel_width)) / 2 + 1),
+				FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
+		for (size_t i = 0; i < (num_data + (2 * context->kernel_width)); ++i) {
+			real_array[i] = input_data[i];
+		}
+		for (size_t i = 0; i < 2 * context->kernel_width; ++i) {
+			real_array[num_data + i] = 0.0; // zero padding to avoid polution
+		}
 		fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
-				const_cast<float*>(input_data),
+				real_array.get(), //const_cast<float*>(input_data),
 				fft_applied_complex_input_data.get());
-		float scale = 1.0 / num_data;
-		for (size_t i = 0; i < num_data / 2 + 1; ++i) {
+		float scale = 1.0 / (num_data + (2 * context->kernel_width));
+		for (size_t i = 0; i < (num_data + (2 * context->kernel_width)) / 2 + 1;
+				++i) {
 			multiplied_complex_data[i][0] =
 					(context->fft_applied_complex_kernel[i][0]
 							* fft_applied_complex_input_data[i][0]
