@@ -172,7 +172,8 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		float output_data[num_data];
-		//EXPECT_TRUE(num_data != bad_num_data) << "num_data != bad_num_data"; // assert
+		EXPECT_TRUE(num_data != bad_num_data)
+				<< "In this test, num_data != bad_num_data is expected"; // assert
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, bad_num_data, input_data, mask,
 				output_data);
@@ -212,6 +213,42 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve1d); // Status_kOK
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+	}
+}
+
+/*
+ * Test Failed malloc
+ * RESULT:
+ * Convolve1D will return Status_kInvalidArgument
+ */
+TEST_F(Convolve1DOperation , FailedMalloc) {
+	{ // num_data is odd
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		float input_data[NUM_IN_ODD];
+		size_t const num_data(ELEMENTSOF(input_data));
+		bool mask[num_data];
+		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
+			mask[i] = true; // no mask
+			input_data[i] = 0.0; // all zero except 1 spike
+		}
+		input_data[num_data / 2] = 1.0; // one spike
+		size_t const kernel_width(NUM_WIDTH);
+		bool fftuse = true; // with FFT
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
+				kernel_width, fftuse, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		float output_data[num_data];
+		context = nullptr; // intend to return Status_kInvalidArgument
+		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+				output_data);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
