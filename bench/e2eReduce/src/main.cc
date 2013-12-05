@@ -175,12 +175,43 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 //	std::cout << "ExecuteClipping" << std::endl;
 	AlignedArrayGenerator generator;
 	bool *mask_local = generator.GetAlignedArray<bool>(num_data);
-	sakura_Status status = sakura_SetTrueFloatLessThan(num_data, input_data,
-			threshold, mask_local);
-	if (status != sakura_Status_kOK) {
-		throw std::runtime_error("Clip Flag");
+	if (false) {
+		// Simple flag for data[] > threshold
+		sakura_Status status = sakura_SetTrueFloatLessThan(num_data, input_data,
+				threshold, mask_local);
+		if (status != sakura_Status_kOK) {
+			throw std::runtime_error("Clip Flag");
+		}
+	} else {
+		size_t num_condition(1);
+		float *lower = generator.GetAlignedArray<float>(num_condition);
+		float *upper = generator.GetAlignedArray<float>(num_condition);
+		if (true) {
+			// nsigma clipping [mean-sigma, mean+sigma]
+//			std::cout << "N signma clipping: input threshold = " << threshold
+//					<< std::endl;
+			sakura_StatisticsResult result;
+			sakura_Status status = sakura_ComputeStatistics(num_data,
+					input_data, mask, &result);
+			float sigma = result.stddev;
+			float mean = result.mean;
+			lower[0] = mean - sigma;
+			upper[0] = mean + sigma;
+//			std::cout << "stddev of spectra = " << sigma
+//					<< ", n sigma threshold = [" << lower[0] << ", " << upper[0]
+//					<< " ]" << std::endl;
+		} else {
+			// simple [-threshold, threshold] clipping
+			lower[0] = -abs(threshold);
+			upper[0] = abs(threshold);
+		}
+		sakura_Status status = sakura_SetTrueFloatInRangesExclusive(num_data,
+				input_data, num_condition, lower, upper, mask_local);
+		if (status != sakura_Status_kOK) {
+			throw std::runtime_error("Clip Flag");
+		}
 	}
-	// Merging mask
+// Merging mask
 	AlignedBoolAnd(num_data, mask_local, mask);
 }
 
@@ -228,7 +259,7 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		float const * const varray[rows_per_processing],
 		uint8_t const * const farray[rows_per_processing],
 		E2EOptions const &option_list, SharedWorkingSet const *shared) {
-	// generate temporary storage
+// generate temporary storage
 	AlignedArrayGenerator generator;
 	float *out_data[rows_per_processing];
 	for (size_t i = 0; i < jobs; ++i) {
@@ -272,7 +303,7 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		CalculateStatistics(num_v, out_data[i], mask);
 
 	}
-	// sleep(job_id % 3); // my job is sleeping.
+// sleep(job_id % 3); // my job is sleeping.
 	xdispatch::main_queue().sync([=]() {
 		// run casa operations in main_queue.
 		// write out_data[job_id + i] where i = 0 .. jobs-1
@@ -285,7 +316,7 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_DEBUG(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
-	// TODO: need loop on POLNO
+// TODO: need loop on POLNO
 	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
 			nullptr, GetSelectedTable(options.input_file, options.ifno, polno) };
 	try {
@@ -451,8 +482,8 @@ void Reduce(E2EOptions const &options) {
 void E2eReduce(int argc, char const* const argv[]) {
 	LOG4CXX_DEBUG(logger, "Enter: E2eReduce");
 
-	// Read configuration file
-	// Default configuration file is "e2etest.config"
+// Read configuration file
+// Default configuration file is "e2etest.config"
 	std::string configuration_file = "e2etest.config";
 	if (argc > 1) {
 		configuration_file = argv[1];
@@ -461,7 +492,7 @@ void E2eReduce(int argc, char const* const argv[]) {
 	E2EOptions options;
 	OptionParser::Parse(configuration_file, &options);
 
-	// config file summary
+// config file summary
 	LOG4CXX_INFO(logger, OptionParser::GetSummary(options));
 
 	double start_time = sakura_GetCurrentTime();
