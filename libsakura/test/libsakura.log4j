@@ -6,4 +6,4 @@ log4j.appender.A1.layout=org.apache.log4j.PatternLayout
 log4j.appender.A1.layout.ConversionPattern=%d %-5p %c - %m%n
 
 # module specific configuratioins
-log4j.logger.sakura.optimized_implementation_factory=DEBUG
+log4j.logger.sakura.optimized_implementation_factory=INFO
