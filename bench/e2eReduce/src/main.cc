@@ -317,7 +317,7 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 					options.smoothing.kernel_type,
 					options.smoothing.kernel_width, options.smoothing.use_fft,
 					&shared->convolve1d_context) != sakura_Status_kOK) {
-				throw std::runtime_error("convolve");
+				throw std::runtime_error("convolution");
 			}
 			assert(shared->convolve1d_context != nullptr);
 		}
