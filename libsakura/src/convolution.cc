@@ -174,7 +174,7 @@ inline void CalculateConvolutionWithoutFFTWithPollution(size_t num_data,
 				right += input_data[j - k] * input_kernel[k];
 			}
 		}
-		output_data[j] = (left + center + right);
+		output_data[j] = left + center + right;
 	}
 }
 
@@ -191,7 +191,7 @@ inline void CalculateConvolutionWithoutFFT(size_t num_data,
 		for (size_t k = 0; k < j && (k < num_data / 2); ++k) {
 			right += input_data[j - 1 - k] * input_kernel[k + 1];
 		}
-		output_data[j] = (left + center + right);
+		output_data[j] = left + center + right;
 	}
 }
 
