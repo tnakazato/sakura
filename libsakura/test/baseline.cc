@@ -126,10 +126,9 @@ TEST_F(Baseline, CreateBaselineContextForPolynomial) {
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 
-	size_t const num_repeat = NUM_REPEAT;
-	LIBSAKURA_SYMBOL(Status) create_status;
+	size_t const num_repeat(NUM_REPEAT);
 	for (size_t i = 0; i < num_repeat; ++i) {
-		create_status = sakura_CreateBaselineContext(
+		LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
 		LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
@@ -149,10 +148,9 @@ TEST_F(Baseline, CreateBaselineContextForChebyshevPolynomial) {
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 
-	size_t const num_repeat = NUM_REPEAT;
-	LIBSAKURA_SYMBOL(Status) create_status;
+	size_t const num_repeat(NUM_REPEAT);
 	for (size_t i = 0; i < num_repeat; ++i) {
-		create_status = sakura_CreateBaselineContext(
+		LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
 		LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
@@ -422,18 +420,16 @@ TEST_F(Baseline, SubtractBaseline) {
 		PrintArray("in_mask", num_data, in_mask);
 	}
 
-	double start, end;
 	size_t const num_repeat = NUM_REPEAT2;
-	LIBSAKURA_SYMBOL(Status) subbl_status;
-	start = sakura_GetCurrentTime();
+	double start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		subbl_status =
+		LIBSAKURA_SYMBOL(Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
 				clipping_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
-	end = sakura_GetCurrentTime();
+	double end = sakura_GetCurrentTime();
 
 	for (size_t i = 0; i < num_model; ++i) {
 		EXPECT_EQ(out[i], answer[i]);

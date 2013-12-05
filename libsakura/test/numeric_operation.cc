@@ -171,16 +171,15 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 		PrintArray("model  ", num_data, num_model, model);
 	}
 
-	double start, end;
-	size_t const num_repeat = NUM_REPEAT;
-	LIBSAKURA_SYMBOL(Status) status;
-	start = sakura_GetCurrentTime();
+	size_t const num_repeat(NUM_REPEAT);
+	double start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_GetMatrixCoefficientsForLeastSquareFitting(num_data,
-				in_mask, num_model, model, out);
+		LIBSAKURA_SYMBOL(Status) status =
+			sakura_GetMatrixCoefficientsForLeastSquareFitting(
+					num_data, in_mask, num_model, model, out);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
-	end = sakura_GetCurrentTime();
+	double end = sakura_GetCurrentTime();
 
 	for (size_t i = 0; i < num_model * num_model; ++i) {
 		double deviation;
@@ -311,16 +310,15 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 		PrintArray("model  ", num_data, num_model, model);
 	}
 
-	double start, end;
-	size_t const num_repeat = NUM_REPEAT2;
-	LIBSAKURA_SYMBOL(Status) status;
-	start = sakura_GetCurrentTime();
+	size_t const num_repeat(NUM_REPEAT2);
+	double start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_GetVectorCoefficientsForLeastSquareFitting(num_data,
-				in_data, in_mask, num_model, model, out);
+		LIBSAKURA_SYMBOL(Status) status =
+			sakura_GetVectorCoefficientsForLeastSquareFitting(
+					num_data, in_data, in_mask, num_model, model, out);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
-	end = sakura_GetCurrentTime();
+	double end = sakura_GetCurrentTime();
 
 	for (size_t i = 0; i < num_model; ++i) {
 		double deviation;
@@ -399,9 +397,9 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	}
 
 	size_t const num_repeat = NUM_REPEAT3;
-	LIBSAKURA_SYMBOL(Status) solve_status;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		solve_status = sakura_SolveSimultaneousEquationsByLU(
+		LIBSAKURA_SYMBOL(Status) solve_status =
+			sakura_SolveSimultaneousEquationsByLU(
 				num_model, lsq_matrix, lsq_vector, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
 	}
