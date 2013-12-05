@@ -42,6 +42,7 @@ typedef enum {
 	 */LIBSAKURA_SYMBOL(Status_kNG) = 1, /**
 	 * @~japanese
 	 * @brief 引数が不正だった
+	 * @a must-be-aligned 制約に違反している場合も含む。
 	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2, /**
 	 * @~japanese
 	 * @brief メモリーが足りない
