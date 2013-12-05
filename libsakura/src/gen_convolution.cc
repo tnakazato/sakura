@@ -16,7 +16,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
 	*context = nullptr;
-	if (num_data < 1) {
+	if (!(num_data > 0)) {
 		LOG4CXX_ERROR(logger, "num_data must be > 0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -27,7 +27,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		LOG4CXX_ERROR(logger, "Invalid Kernel Type");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if (kernel_width < 1) {
+	if (!(kernel_width > 0)) {
 		LOG4CXX_ERROR(logger, "kernel_width must be > 0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -53,9 +53,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if (num_data < 1) {
-		LOG4CXX_ERROR(logger,
-				"num_data must be > 0, context->num_data == num_data");
+	if (!(num_data > 0)) {
+		LOG4CXX_ERROR(logger, "num_data must be > 0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
@@ -67,7 +66,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (const std::invalid_argument &e) {
-		LOG4CXX_ERROR(logger, "num_data does't equal to context->num_data");
+		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		assert(false);

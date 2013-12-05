@@ -1536,17 +1536,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
  * を返す。
- * 引数に不正がある場合には
+ * 失敗した場合には
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * を返す。内部で利用するメモリの確保に失敗した場合は、
- * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * が返された場合、考えられる原因は以下の二つである。
- *     - @a num_data が正しくない
- *     - @a kernel_type が正しくない
- *     - @a kernel_width が正しくない
- * また、原因不明のエラーでは
- * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * を返す。
  * @par
  * @param[in] num_data データの要素数。
@@ -1591,15 +1583,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
  * を返す。
- * 引数に不正がある場合には
+ * 失敗した場合には
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * を返す。内部で利用するメモリの確保に失敗した場合は、
- * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * が返された場合、考えられる原因は以下の二つである。
- *     - @a num_data が正しくない
- * また、原因不明のエラーでは
- * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * を返す。
  * @param[in] context コンテキスト
  * @param[in] num_data データの要素数。
