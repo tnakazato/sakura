@@ -684,10 +684,10 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 }
 
 /*
- * Test remove polution from edge spectrum
+ * Test remove pollution from edge spectrum
  * RESULT: same result between with/without FFT
  */
-TEST_F(Convolve1DOperation , Polution) {
+TEST_F(Convolve1DOperation , Pollution) {
 	{ // [even],withFFT, Gaussian Kernel Shape,input only 2 spike at 0, num_data - 1 , multi
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
@@ -717,7 +717,7 @@ TEST_F(Convolve1DOperation , Polution) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
 		}
@@ -757,7 +757,7 @@ TEST_F(Convolve1DOperation , Polution) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
 		}
@@ -866,7 +866,7 @@ TEST_F(Convolve1DOperation , DestroyConvolve1DContext) {
  * Test [with FFT] Performance of Convolve1D
  * RESULT: elapsed time will be output
  */
-TEST_F(Convolve1DOperation , FFTPerformanceTestWithFFT) {
+TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 	{ // [even],withFFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
