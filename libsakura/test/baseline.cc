@@ -124,11 +124,11 @@ TEST_F(Baseline, CreateBaselineContext) {
 
 	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
 	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	assert(create_status == LIBSAKURA_SYMBOL(Status_kOK));
 
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	assert(destroy_status == LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
