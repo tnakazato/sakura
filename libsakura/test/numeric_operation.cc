@@ -176,7 +176,7 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		status = sakura_GetMatrixCoefficientsForLeastSquareFitting(num_data,
 				in_mask, num_model, model, out);
-		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 	end = sakura_GetCurrentTime();
 
@@ -316,7 +316,7 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		status = sakura_GetVectorCoefficientsForLeastSquareFitting(num_data,
 				in_data, in_mask, num_model, model, out);
-		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 	end = sakura_GetCurrentTime();
 
@@ -385,11 +385,11 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	LIBSAKURA_SYMBOL(Status) getmtx_status =
 			sakura_GetMatrixCoefficientsForLeastSquareFitting(num_data, in_mask,
 					num_model, model, lsq_matrix);
-	assert(getmtx_status == LIBSAKURA_SYMBOL(Status_kOK));
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getmtx_status);
 	LIBSAKURA_SYMBOL(Status) getvec_status =
 			sakura_GetVectorCoefficientsForLeastSquareFitting(num_data, in_data,
 					in_mask, num_model, model, lsq_vector);
-	assert(getvec_status == LIBSAKURA_SYMBOL(Status_kOK));
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getvec_status);
 
 	if (verbose) {
 		PrintArray("lsq_matrix", num_model, num_model, lsq_matrix);
