@@ -18,7 +18,11 @@
 
 /* the number of elements in input/output array to test */
 #define NUM_DATA 5
+#define NUM_DATA2 15
+#define NUM_DATA3 4096
 #define NUM_MODEL 3
+#define NUM_REPEAT 4000
+#define NUM_REPEAT2 20000
 
 using namespace std;
 
@@ -116,15 +120,43 @@ protected:
  * RESULT:
  * out = []
  */
-TEST_F(Baseline, CreateBaselineContext) {
+TEST_F(Baseline, CreateBaselineContextForPolynomial) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
-	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
-	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	size_t const num_repeat = NUM_REPEAT;
+	LIBSAKURA_SYMBOL(Status) create_status;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		create_status = sakura_CreateBaselineContext(
+		LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_CreateBaselineContext
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, CreateBaselineContextForChebyshevPolynomial) {
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+
+	size_t const num_repeat = NUM_REPEAT;
+	LIBSAKURA_SYMBOL(Status) create_status;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		create_status = sakura_CreateBaselineContext(
+		LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	}
 
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
@@ -352,26 +384,33 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
 
-#define NUM_DATA2 15
-#define NUM_REPEAT 300000
 /*
  * Test sakura_SubtractBaseline
  * RESULT:
  * out = []
  */
 TEST_F(Baseline, SubtractBaseline) {
-	size_t const num_data(NUM_DATA2);
-	SIMD_ALIGN float in_data[num_data] = {
-			1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
-			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
-	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {
-	true, true, true, true, true,
-	true, true, true, true, true,
-	true, true, true, true, true };
+	size_t const num_data(NUM_DATA3);
 	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float)(1.0 + x + x * x);
+	}
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
-
 	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
 	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -379,11 +418,6 @@ TEST_F(Baseline, SubtractBaseline) {
 	float clipping_threshold_sigma = 3.0;
 	uint16_t num_fitting_max = 3;
 	bool get_residual = true;
-	SIMD_ALIGN bool final_mask[ELEMENTSOF(in_data)];
-	SIMD_ALIGN float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)] = {
-			0.0, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0,
-			0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -391,7 +425,7 @@ TEST_F(Baseline, SubtractBaseline) {
 	}
 
 	double start, end;
-	size_t const num_repeat = NUM_REPEAT;
+	size_t const num_repeat = NUM_REPEAT2;
 	LIBSAKURA_SYMBOL(Status) subbl_status;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
@@ -427,17 +461,22 @@ TEST_F(Baseline, SubtractBaseline) {
  */
 TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA2);
-	SIMD_ALIGN float in_data[num_data] = {
-			1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
-			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
-	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {
-	true, false, false, false, false,
-	false, false, false, false, false,
-	false, false, false, false, true };
 	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float)(1.0 + x + x * x);
+		if (i == 3) in_data[i] += 1000.0f;
+		if (i == 8) in_data[i] += 100.0f;
+	}
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = ((i == 0) || (i == ELEMENTSOF(in_data)-1));
+	}
+
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
-
 	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
 	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -471,17 +510,26 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
  */
 TEST_F(Baseline, SubtractBaselinePolynomial) {
 	size_t const num_data(NUM_DATA2);
-	SIMD_ALIGN float in_data[num_data] = {
-			1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
-			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
-	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)] = {
-	true, true, true, true, true,
-	true, true, true, true, true,
-	true, true, true, true, true };
 	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float)(1.0 + x + x * x);
+		if (i == 3) in_data[i] += 1000.0f;
+		if (i == 8) in_data[i] += 100.0f;
+	}
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
 	SIMD_ALIGN float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)] = { 0.0, 0.0, 0.0, 1000.0, 0.0, 0.0, 0.0,
-			0.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+		if (i == 3) answer[i] += 1000.0f;
+		if (i == 8) answer[i] += 100.0f;
+	}
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);

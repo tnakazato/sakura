@@ -20,6 +20,8 @@
 #define NUM_DATA 4096
 #define NUM_MODEL 20
 #define NUM_REPEAT 3000
+#define NUM_REPEAT2 40000
+#define NUM_REPEAT3 1500000
 
 using namespace std;
 
@@ -310,7 +312,7 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	}
 
 	double start, end;
-	size_t const num_repeat = NUM_REPEAT;
+	size_t const num_repeat = NUM_REPEAT2;
 	LIBSAKURA_SYMBOL(Status) status;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
@@ -396,10 +398,13 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 		PrintArray("lsq_vector", num_model, lsq_vector);
 	}
 
-	LIBSAKURA_SYMBOL(Status) solve_status =
-			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
-					lsq_vector, out);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
+	size_t const num_repeat = NUM_REPEAT3;
+	LIBSAKURA_SYMBOL(Status) solve_status;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		solve_status = sakura_SolveSimultaneousEquationsByLU(
+				num_model, lsq_matrix, lsq_vector, out);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
+	}
 
 	for (size_t i = 0; i < num_model; ++i) {
 		float deviation = (out[i] - answer[i]) / answer[i];
