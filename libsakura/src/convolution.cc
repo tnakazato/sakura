@@ -209,12 +209,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	}
 	if (use_fft) {
 		// real array for kernel
-		float *real_array_k;
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
-				static_cast<float*>(LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * expanded_num_data),&real_array_k),
+				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(float) * expanded_num_data)),
 				LIBSAKURA_PREFIX::Memory());
-
 		if (real_array_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
