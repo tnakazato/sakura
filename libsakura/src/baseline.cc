@@ -1,3 +1,10 @@
+/*
+ * baseline.cc
+ *
+ *  Created on: 2013/11/11
+ *      Author: wataru
+ */
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -54,7 +61,7 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 }
 
 inline void SetBasisDataCubicSpline(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	//
 }
 
@@ -83,8 +90,8 @@ inline void SetBasisData(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 }
 
 inline void CreateBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
-		uint16_t const order, size_t const num_basis_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+		size_t const num_basis_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
 	size_t num_bases = 0;
 	switch (baseline_type) {
@@ -145,7 +152,7 @@ inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 }
 
 inline void OperateLogicalAnd(size_t num_in, bool const *in1_arg,
-		bool const *in2_arg, bool *out_arg) {
+bool const *in2_arg, bool *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -175,8 +182,8 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
-inline void DoGetBestFitBaseline(
-		size_t num_data, float const *data_arg, bool const *mask_arg,
+inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
+		bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
 		float *out_arg) {
@@ -197,16 +204,27 @@ inline void DoGetBestFitBaseline(
 
 	size_t num_bases = context->num_bases;
 
-	LIBSAKURA_SYMBOL(Status) get_coeff_status =
-		LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
-			num_data, mask, num_bases, basis, lsq_matrix);
-	if (get_coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error("DoGetBestFitsBaseline: too many masked data.");
+	LIBSAKURA_SYMBOL(Status) get_matrix_status =
+	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(num_data, mask,
+			num_bases, basis, lsq_matrix);
+	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error(
+				"DoGetBestFitsBaseline: too many masked data.");
 	}
-	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
-			num_data, data, mask, num_bases, basis, lsq_vector);
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-			num_bases, lsq_matrix, lsq_vector, coeff);
+	LIBSAKURA_SYMBOL(Status) get_vector_status =
+	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(num_data, data,
+			mask, num_bases, basis, lsq_vector);
+	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error(
+				"DoGetBestFitsBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
+	}
+	LIBSAKURA_SYMBOL(Status) solve_status =
+	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
+			lsq_vector, coeff);
+	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error(
+				"DoGetBestFitsBaseline: failed in SolveSimultaneousEquationsByLU.");
+	}
 
 	for (size_t i = 0; i < num_data; ++i) {
 		double out_double = 0.0;
@@ -217,10 +235,9 @@ inline void DoGetBestFitBaseline(
 	}
 }
 
-inline void GetBestFitBaseline(
-		size_t num_data, float const *data_arg, bool const *mask_arg,
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float *out_arg) {
+inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
+		bool const *mask_arg,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, float *out_arg) {
 	assert(num_data == context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -245,13 +262,12 @@ inline void GetBestFitBaseline(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	DoGetBestFitBaseline(
-			num_data, data, mask, context,
-			lsq_matrix, lsq_vector, coeff, out);
+	DoGetBestFitBaseline(num_data, data, mask, context, lsq_matrix, lsq_vector,
+			coeff, out);
 }
 
-inline void SubtractBaseline(
-		size_t num_data, float const *data_arg, bool const *mask_arg,
+inline void SubtractBaseline(size_t num_data, float const *data_arg,
+		bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg) {
@@ -318,18 +334,18 @@ inline void SubtractBaseline(
 			OperateLogicalAnd(num_data, mask, clip_mask, final_mask);
 		}
 
-		DoGetBestFitBaseline(
-				num_data, data, final_mask, baseline_context,
+		DoGetBestFitBaseline(num_data, data, final_mask, baseline_context,
 				lsq_matrix, lsq_vector, coeff, best_fit_model);
 
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		LIBSAKURA_SYMBOL(StatisticsResult) result;
 		LIBSAKURA_SYMBOL(Status) stat_status =
-				LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
-				final_mask, &result);
+		LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data, final_mask,
+				&result);
 		if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-			throw std::runtime_error("SubtractBaseline: ComputeStatistics failed.");
+			throw std::runtime_error(
+					"SubtractBaseline: ComputeStatistics failed.");
 		}
 
 		float clipping_threshold = clipping_threshold_sigma * result.stddev;
@@ -339,9 +355,14 @@ inline void SubtractBaseline(
 		float clip_upper_bound[] = { result.mean + clipping_threshold };
 		STATIC_ASSERT(
 				ELEMENTSOF(clip_lower_bound) == ELEMENTSOF(clip_upper_bound));
+		LIBSAKURA_SYMBOL(Status) clip_status =
 		LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(num_data, residual_data,
 		ELEMENTSOF(clip_lower_bound), clip_lower_bound, clip_upper_bound,
 				new_clip_mask);
+		if (clip_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			throw std::runtime_error(
+					"SubtractBaseline: SetTrueFloatInRangesInclusive failed.");
+		}
 
 		bool mask_changed_after_clipping = false;
 		for (size_t j = 0; j < num_data; ++j) {

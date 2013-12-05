@@ -119,15 +119,11 @@ protected:
  */
 TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 	size_t const num_data(NUM_DATA);
-	SIMD_ALIGN
-	bool in_mask[num_data];
+	SIMD_ALIGN bool in_mask[num_data];
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN
-	double out[num_model * num_model];
-	SIMD_ALIGN
-	double model[num_model * ELEMENTSOF(in_mask)];
-	SIMD_ALIGN
-	double answer[num_model * num_model];
+	SIMD_ALIGN double out[num_model * num_model];
+	SIMD_ALIGN double model[num_model * ELEMENTSOF(in_mask)];
+	SIMD_ALIGN double answer[num_model * num_model];
 
 	// Setup in_mask--------------------------
 	for (size_t i = 0; i < num_data; ++i) {
@@ -180,18 +176,10 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		status = sakura_GetMatrixCoefficientsForLeastSquareFitting(num_data,
 				in_mask, num_model, model, out);
+		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	end = sakura_GetCurrentTime();
 
-	if (verbose) {
-		cout << "Elapse time of " << num_repeat << " repetition: "
-				<< end - start << " sec." << endl;
-		PrintArray("out   ", num_model, num_model, out);
-		PrintArray("answer", num_model, num_model, answer);
-	}
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_model * num_model; ++i) {
 		double deviation;
 		if (answer[i] != 0.0) {
@@ -203,6 +191,13 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 		}
 		ASSERT_LE(deviation, 1e-7);
 	}
+
+	if (verbose) {
+		cout << "Elapse time of " << num_repeat << " repetition: "
+				<< end - start << " sec." << endl;
+		PrintArray("out   ", num_model, num_model, out);
+		PrintArray("answer", num_model, num_model, answer);
+	}
 }
 
 /*
@@ -213,13 +208,10 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
  */
 TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFittingWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA);
-	SIMD_ALIGN
-	bool in_mask[num_data];
+	SIMD_ALIGN bool in_mask[num_data];
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN
-	double out[num_model * num_model];
-	SIMD_ALIGN
-	double model[num_model * ELEMENTSOF(in_mask)];
+	SIMD_ALIGN double out[num_model * num_model];
+	SIMD_ALIGN double model[num_model * ELEMENTSOF(in_mask)];
 
 	// Setup in_mask--------------------------
 	for (size_t i = 0; i < num_data; ++i) {
@@ -258,8 +250,6 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFittingWithTooManyMa
 	LIBSAKURA_SYMBOL(Status) status =
 			sakura_GetMatrixCoefficientsForLeastSquareFitting(num_data, in_mask,
 					num_model, model, out);
-
-	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 }
 
@@ -270,15 +260,11 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFittingWithTooManyMa
  */
 TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	size_t const num_data(NUM_DATA);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN float in_data[num_data];
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN
-	double out[num_model];
-	SIMD_ALIGN
-	double model[ELEMENTSOF(out) * ELEMENTSOF(in_data)];
+	SIMD_ALIGN double out[num_model];
+	SIMD_ALIGN double model[ELEMENTSOF(out) * ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(out)];
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -330,18 +316,10 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		status = sakura_GetVectorCoefficientsForLeastSquareFitting(num_data,
 				in_data, in_mask, num_model, model, out);
+		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	end = sakura_GetCurrentTime();
 
-	if (verbose) {
-		cout << "Elapse time of " << num_repeat << " repetition:                                     "
-				<< (end - start) << " sec." << endl;
-		PrintArray("out   ", num_model, out);
-		PrintArray("answer", num_model, answer);
-	}
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_model; ++i) {
 		double deviation;
 		if (answer[i] != 0.0) {
@@ -352,6 +330,13 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 			deviation = fabs(out[i] - answer[i]);
 		}
 		ASSERT_LE(deviation, 1e-7);
+	}
+
+	if (verbose) {
+		cout << "Elapse time of " << num_repeat << " repetition:                                     "
+				<< (end - start) << " sec." << endl;
+		PrintArray("out   ", num_model, out);
+		PrintArray("answer", num_model, answer);
 	}
 }
 
@@ -364,21 +349,14 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	size_t const num_data(NUM_DATA_TESTLU);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN float in_data[num_data];
+	SIMD_ALIGN bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL_TESTLU);
-	SIMD_ALIGN
-	double lsq_vector[num_model];
-	SIMD_ALIGN
-	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
-	SIMD_ALIGN
-	double out[ELEMENTSOF(lsq_vector)];
-	SIMD_ALIGN
-	float answer[ELEMENTSOF(lsq_vector)] = { 1.0, 1.0, 1.0, 1.0, 1.0 };
+	SIMD_ALIGN double lsq_vector[num_model];
+	SIMD_ALIGN double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
+	SIMD_ALIGN double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
+	SIMD_ALIGN double out[ELEMENTSOF(lsq_vector)];
+	SIMD_ALIGN float answer[ELEMENTSOF(lsq_vector)] = { 1.0, 1.0, 1.0, 1.0, 1.0 };
 
 	for (size_t i = 0; i < num_data; ++i) {
 		double x = (double) i;
@@ -407,11 +385,11 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	LIBSAKURA_SYMBOL(Status) getmtx_status =
 			sakura_GetMatrixCoefficientsForLeastSquareFitting(num_data, in_mask,
 					num_model, model, lsq_matrix);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getmtx_status);
+	assert(getmtx_status == LIBSAKURA_SYMBOL(Status_kOK));
 	LIBSAKURA_SYMBOL(Status) getvec_status =
 			sakura_GetVectorCoefficientsForLeastSquareFitting(num_data, in_data,
 					in_mask, num_model, model, lsq_vector);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getvec_status);
+	assert(getvec_status == LIBSAKURA_SYMBOL(Status_kOK));
 
 	if (verbose) {
 		PrintArray("lsq_matrix", num_model, num_model, lsq_matrix);
@@ -421,16 +399,15 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	LIBSAKURA_SYMBOL(Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
 					lsq_vector, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		float deviation = (out[i] - answer[i]) / answer[i];
+		ASSERT_LE(deviation, 1e-7);
+	}
 
 	if (verbose) {
 		PrintArray("out   ", num_model, out);
 		PrintArray("answer", num_model, answer);
-	}
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
-	for (size_t i = 0; i < num_model; ++i) {
-		float deviation = (out[i] - answer[i]) / answer[i];
-		ASSERT_LE(deviation, 1e-7);
 	}
 }
