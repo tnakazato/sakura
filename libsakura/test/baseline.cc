@@ -368,6 +368,7 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 }
 
 #define NUM_DATA2 15
+#define NUM_REPEAT 300000
 /*
  * Test sakura_SubtractBaseline
  * RESULT:
@@ -408,12 +409,21 @@ TEST_F(Baseline, SubtractBaseline) {
 		PrintArray("in_mask", num_data, in_mask);
 	}
 
-	LIBSAKURA_SYMBOL(Status) subbl_status =
-	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
-			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
-			out);
+	double start, end;
+	size_t const num_repeat = NUM_REPEAT;
+	LIBSAKURA_SYMBOL(Status) subbl_status;
+	start = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		subbl_status =
+		LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+				clipping_threshold_sigma, num_fitting_max, get_residual,
+				final_mask, out);
+	}
+	end = sakura_GetCurrentTime();
 
 	if (verbose) {
+		cout << "Elapse time of " << num_repeat << " repetition: "
+				<< end - start << " sec." << endl;
 		PrintArray("fmask ", num_data, final_mask);
 		PrintArray("out   ", num_data, out);
 		PrintArray("answer", num_data, answer);

@@ -1,3 +1,10 @@
+/*
+ * numeric_operation.cc
+ *
+ *  Created on: 2013/11/11
+ *      Author: wataru
+ */
+
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -176,9 +183,9 @@ TEST_F(NumericOperation, GetMatrixCoefficientsForLeastSquareFitting) {
 	}
 	end = sakura_GetCurrentTime();
 
-	cout << "Elapse time of " << num_repeat << " repetition: " << end - start
-			<< " sec." << endl;
 	if (verbose) {
+		cout << "Elapse time of " << num_repeat << " repetition: "
+				<< end - start << " sec." << endl;
 		PrintArray("out   ", num_model, num_model, out);
 		PrintArray("answer", num_model, num_model, answer);
 	}
@@ -326,10 +333,9 @@ TEST_F(NumericOperation, GetVectorCoefficientsForLeastSquareFitting) {
 	}
 	end = sakura_GetCurrentTime();
 
-	cout << "Elapse time of " << num_repeat
-			<< " repetition:                                     "
-			<< (end - start) << " sec." << endl;
 	if (verbose) {
+		cout << "Elapse time of " << num_repeat << " repetition:                                     "
+				<< (end - start) << " sec." << endl;
 		PrintArray("out   ", num_model, out);
 		PrintArray("answer", num_model, answer);
 	}
