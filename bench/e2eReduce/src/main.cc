@@ -43,7 +43,7 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-bool output_mask[]) {
+		bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
@@ -108,7 +108,11 @@ inline void ExecuteBaseline(float clipping_threshold_sigma,
 inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 		size_t num_data, float const input_data[], float output_data[],
 		bool mask[]) {
-//	std::cout << "ExecuteSmoothing" << std::endl;
+	sakura_Status status = sakura_Convolve1D(context, num_data, input_data,
+			mask, output_data);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("convolution");
+	}
 }
 
 inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
@@ -122,7 +126,7 @@ inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
 	}
 }
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-bool mask_arg[]) {
+		bool mask_arg[]) {
 	auto mask = AssumeAligned(mask_arg);
 
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
@@ -181,7 +185,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-bool const input_mask[]) {
+		bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
