@@ -21,7 +21,7 @@
 #define NUM_DATA2 15
 #define NUM_DATA3 4096
 #define NUM_MODEL 3
-#define NUM_REPEAT 4000
+#define NUM_REPEAT 15000
 #define NUM_REPEAT2 20000
 
 using namespace std;
@@ -132,11 +132,10 @@ TEST_F(Baseline, CreateBaselineContextForPolynomial) {
 		create_status = sakura_CreateBaselineContext(
 		LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-	}
 
-	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
 
 /*
@@ -156,11 +155,10 @@ TEST_F(Baseline, CreateBaselineContextForChebyshevPolynomial) {
 		create_status = sakura_CreateBaselineContext(
 		LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-	}
 
-	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
 
 /*
