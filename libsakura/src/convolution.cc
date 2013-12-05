@@ -14,7 +14,8 @@
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
-	bool use_fft;bool use_pollution;
+	bool use_fft;
+	bool use_pollution;
 	size_t num_data;
 	size_t expanded_num_data;
 	fftwf_plan plan_real_to_complex_float;
@@ -208,36 +209,38 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	}
 	if (use_fft) {
 		// real array for kernel
+		float *real_array_k;
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
-				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(float) * (expanded_num_data))),
+				static_cast<float*>(LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+						sizeof(float) * expanded_num_data),&real_array_k),
 				LIBSAKURA_PREFIX::Memory());
+
 		if (real_array_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
 		// real array for input and output data
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(float) * (expanded_num_data))),
+						sizeof(float) * expanded_num_data)),
 				LIBSAKURA_PREFIX::Memory());
 		if (real_array == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for kernel
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
-				AllocateFFTArray((expanded_num_data) / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for input_data
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
-				AllocateFFTArray((expanded_num_data) / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for multiplied data
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
-				AllocateFFTArray((expanded_num_data) / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
