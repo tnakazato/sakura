@@ -97,7 +97,7 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 				FindTrueToGetEnd(i, Y1[count], true, X2, Y2, count);
 		}
 	}
-	size_t count_max = count;
+	const size_t count_max = count;
 	size_t n = 0;
 	bool hit = false;
 	for (size_t i = 0; i < num_data; ++i) { // calculate interpolation
@@ -345,14 +345,14 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (context->use_fft) { // with fft
 		// fft applied array for input_data (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
-				AllocateFFTArray((context->expanded_num_data) / 2 + 1),
+				AllocateFFTArray(context->expanded_num_data / 2 + 1),
 				FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		// fft applied array for multiplied data (kernel * input_data) (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
-				AllocateFFTArray((context->expanded_num_data) / 2 + 1),
+				AllocateFFTArray(context->expanded_num_data / 2 + 1),
 				FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
@@ -361,12 +361,12 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 			// real array for removing pollution
 			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 					static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
-							sizeof(float) * (context->expanded_num_data))),
+							sizeof(float) * context->expanded_num_data)),
 					LIBSAKURA_PREFIX::Memory());
 			if (real_array == nullptr) {
 				throw std::bad_alloc();
 			}
-			for (size_t i = 0; i < (context->expanded_num_data); ++i) {
+			for (size_t i = 0; i < context->expanded_num_data; ++i) {
 				real_array[i] = input_data[i];
 			}
 			for (size_t i = 0; i < context->expanded_num_data - num_data; ++i) { // expanded_num_data - num_data == 2*kernel_width
@@ -379,8 +379,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 					const_cast<float*>(input_data),
 					fft_applied_complex_input_data.get());
 		}
-		float scale = 1.0 / (context->expanded_num_data);
-		for (size_t i = 0; i < (context->expanded_num_data) / 2 + 1; ++i) {
+		float scale = 1.0 / context->expanded_num_data;
+		for (size_t i = 0; i < context->expanded_num_data / 2 + 1; ++i) {
 			multiplied_complex_data[i][0] =
 					(context->fft_applied_complex_kernel[i][0]
 							* fft_applied_complex_input_data[i][0]
