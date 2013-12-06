@@ -365,10 +365,10 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
-			//EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-			//		output_data[(num_data / 2) + i]);
-			//EXPECT_FLOAT_EQ(gaussian_kernel[5 + (i + 1)],
-			//		output_data[(num_data / 2) + (i + 1)]);
+			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
+					output_data[(num_data / 2) + i]);
+			EXPECT_FLOAT_EQ(gaussian_kernel[5 + (i + 1)],
+					output_data[(num_data / 2) + (i + 1)]);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -458,10 +458,10 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
-			//EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-			//		output_data[(num_data / 2) + i]);
-			//EXPECT_FLOAT_EQ(gaussian_kernel[5 + (i + 1)],
-			//		output_data[(num_data / 2) + (i + 1)]);
+			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
+					output_data[(num_data / 2) + i]);
+			EXPECT_FLOAT_EQ(gaussian_kernel[5 + (i + 1)],
+					output_data[(num_data / 2) + (i + 1)]);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -889,14 +889,14 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		const size_t loop_max = 10000;
-		double start_time = sakura_GetCurrentTime();
+		//double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < loop_max; ++i) {
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		}
-		double end_time = sakura_GetCurrentTime();
+		//double end_time = sakura_GetCurrentTime();
 		//std::cout << "withFFT without Pollution  ch = " << num_data << ", elapsed time = "
 		//					<< end_time - start_time << "secs\n";
 
