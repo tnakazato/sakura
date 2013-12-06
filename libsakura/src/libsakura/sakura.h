@@ -1638,7 +1638,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値（左辺側の行列成分）を計算する。
  * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
+ * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
@@ -1661,7 +1661,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
  * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
  * the coefficients to be solved, these values are connected via the following
- * simultaneous equations:
+ * simultaneous equations known as normal equation:
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
@@ -1696,13 +1696,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
 		size_t num_mask, bool const mask[/*num_mask*/], size_t num_model_bases,
 		double const model[/*num_model_bases*num_mask*/],
-		double out[/*num_model_bases*num_model_bases*/]);
+		double out[/*num_model_bases*num_model_bases*/])
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値（右辺側のベクトル成分）を計算する。
  * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式が成り立つ。
+ * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
@@ -1727,7 +1728,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
  * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
  * the coefficients to be solved, these values are connected via the following
- * simultaneous equations:
+ * simultaneous equations known as normal equation:
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
@@ -1761,7 +1762,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t num_model_bases,
 		double const model[/*num_model_bases*num_data*/],
-		double out[/*num_model_bases*/]);
+		double out[/*num_model_bases*/])
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1808,7 +1810,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		size_t num_equations,
 		double const in_matrix[/*num_equations*num_equations*/],
 		double const in_vector[/*num_equations*/],
-		double out[/*num_equations*/]);
+		double out[/*num_equations*/])
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1930,7 +1933,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float out[/*num_data*/]);
+		float out[/*num_data*/])
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1990,7 +1994,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/]);
+		bool final_mask[/*num_data*/], float out[/*num_data*/])
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2049,7 +2054,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		bool const mask[/*num_data*/], uint16_t order,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/]);
+		bool final_mask[/*num_data*/], float out[/*num_data*/])
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 #ifdef __cplusplus
 }
