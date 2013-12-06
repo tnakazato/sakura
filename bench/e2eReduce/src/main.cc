@@ -108,11 +108,11 @@ inline void ExecuteBaseline(float clipping_threshold_sigma,
 inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 		size_t num_data, float const input_data[], float output_data[],
 		bool mask[]) {
-	sakura_Status status = sakura_Convolve1D(context, num_data, input_data,
-			mask, output_data);
-	if (status != sakura_Status_kOK) {
-		throw std::runtime_error("convolution");
-	}
+	//sakura_Status status = sakura_Convolve1D(context, num_data, input_data,
+	//		mask, output_data);
+	//if (status != sakura_Status_kOK) {
+	//	throw std::runtime_error("convolution");
+	//}
 }
 
 inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
