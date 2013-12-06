@@ -108,7 +108,15 @@ inline void ExecuteBaseline(float clipping_threshold_sigma,
 inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 		size_t num_data, float const input_data[], float output_data[],
 		bool mask[]) {
-	sakura_Status status = sakura_Convolve1D(context, num_data, input_data,
+
+	for (size_t i = 0; i < num_data; ++i) { // apply mask by zero like CASA
+		if (mask[i]) {
+			output_data[i] = input_data[i];
+		} else {
+			output_data[i] = 0.0; // mask by zero
+		}
+	}
+	sakura_Status status = sakura_Convolve1D(context, num_data, output_data,
 			mask, output_data);
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("convolution");
