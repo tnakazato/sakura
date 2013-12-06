@@ -175,43 +175,18 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 //	std::cout << "ExecuteClipping" << std::endl;
 	AlignedArrayGenerator generator;
 	bool *mask_local = generator.GetAlignedArray<bool>(num_data);
-	if (false) {
-		// Simple flag for data[] > threshold
-		sakura_Status status = sakura_SetTrueFloatLessThan(num_data, input_data,
-				threshold, mask_local);
-		if (status != sakura_Status_kOK) {
-			throw std::runtime_error("Clip Flag");
-		}
-	} else {
-		size_t num_condition(1);
-		float *lower = generator.GetAlignedArray<float>(num_condition);
-		float *upper = generator.GetAlignedArray<float>(num_condition);
-		if (true) {
-			// nsigma clipping [mean-sigma, mean+sigma]
-//			std::cout << "N signma clipping: input threshold = " << threshold
-//					<< std::endl;
-			sakura_StatisticsResult result;
-			sakura_Status status = sakura_ComputeStatistics(num_data,
-					input_data, mask, &result);
-			float sigma = result.stddev;
-			float mean = result.mean;
-			lower[0] = mean - sigma;
-			upper[0] = mean + sigma;
-//			std::cout << "stddev of spectra = " << sigma
-//					<< ", n sigma threshold = [" << lower[0] << ", " << upper[0]
-//					<< " ]" << std::endl;
-		} else {
-			// simple [-threshold, threshold] clipping
-			lower[0] = -abs(threshold);
-			upper[0] = abs(threshold);
-		}
-		sakura_Status status = sakura_SetTrueFloatInRangesExclusive(num_data,
-				input_data, num_condition, lower, upper, mask_local);
-		if (status != sakura_Status_kOK) {
-			throw std::runtime_error("Clip Flag");
-		}
+	size_t num_condition(1);
+	float *lower = generator.GetAlignedArray<float>(num_condition);
+	float *upper = generator.GetAlignedArray<float>(num_condition);
+	// simple [-threshold, threshold] clipping
+	lower[0] = -abs(threshold);
+	upper[0] = abs(threshold);
+	sakura_Status status = sakura_SetTrueFloatInRangesExclusive(num_data,
+			input_data, num_condition, lower, upper, mask_local);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("Clip Flag");
 	}
-// Merging mask
+	// Merging mask
 	AlignedBoolAnd(num_data, mask_local, mask);
 }
 
