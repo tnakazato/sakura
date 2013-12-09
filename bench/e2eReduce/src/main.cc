@@ -223,10 +223,19 @@ struct SharedWorkingSet {
 	sakura_BaselineContext *baseline_context;
 	sakura_Convolve1DContext *convolve1d_context;
 
-	casa::Table table;
-	casa::ROArrayColumn<float> spectra_column;
-	casa::ROArrayColumn<unsigned char> flagtra_column;
-	casa::ROScalarColumn<double> time_column;
+	// tables
+	casa::Table input_table;
+	casa::Table output_table;
+
+	// input columns
+	casa::ROArrayColumn<float> input_spectra_column;
+	casa::ROArrayColumn<unsigned char> input_flagtra_column;
+	casa::ROScalarColumn<double> input_time_column;
+
+	// output columns
+	casa::ArrayColumn<float> output_spectra_column;
+	casa::ArrayColumn<unsigned char> output_flagtra_column;
+	casa::ArrayColumn<float> output_tsys_column;
 
 	~SharedWorkingSet() {
 		LOG4CXX_DEBUG(logger, "Destructing SharedWorkingSet");
@@ -239,6 +248,22 @@ struct SharedWorkingSet {
 	}
 };
 
+void PutResult(SharedWorkingSet *shared, size_t row, size_t num_channels,
+		float out_data[], unsigned char out_flag[], float out_tsys[]) {
+	LOG4CXX_DEBUG(logger, "Writing result to row " << row);
+	size_t row_number = shared->input_table.rowNumbers()[row];
+	LOG4CXX_DEBUG(logger, "Row number of original table is " << row_number);
+	shared->output_spectra_column.put(row_number,
+			casa::Array<float>(casa::IPosition(1, num_channels), out_data,
+					casa::SHARE));
+	shared->output_flagtra_column.put(row_number,
+			casa::Array<unsigned char>(casa::IPosition(1, num_channels),
+					out_flag, casa::SHARE));
+	shared->output_tsys_column.put(row_number,
+			casa::Array<float>(casa::IPosition(1, num_channels), out_tsys,
+					casa::SHARE));
+}
+
 size_t const rows_per_processing = 8;
 
 void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
@@ -249,8 +274,12 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 // generate temporary storage
 	AlignedArrayGenerator generator;
 	float *out_data[rows_per_processing];
+	unsigned char *out_flag[rows_per_processing];
+	float *out_tsys[rows_per_processing];
 	for (size_t i = 0; i < jobs; ++i) {
 		out_data[i] = generator.GetAlignedArray<float>(num_v);
+		out_flag[i] = generator.GetAlignedArray<unsigned char>(num_v);
+		out_tsys[i] = generator.GetAlignedArray<float>(num_v);
 	}
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
 	bool *baseline_after_mask = generator.GetAlignedArray<bool>(num_v);
@@ -290,10 +319,12 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		CalculateStatistics(num_v, out_data[i], mask);
 
 	}
-// sleep(job_id % 3); // my job is sleeping.
-	xdispatch::main_queue().sync([=]() {
+	xdispatch::main_queue().sync([&]() {
 		// run casa operations in main_queue.
-		// write out_data[job_id + i] where i = 0 .. jobs-1
+			for (size_t i = 0; i < jobs; ++i) {
+				PutResult(const_cast<SharedWorkingSet *>(shared), job_id + i, num_v,
+						out_data[i], out_flag[i], out_tsys[i]);
+			}
 			JobFinished(job_id);
 		});
 }
@@ -303,16 +334,24 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_DEBUG(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
-// TODO: need loop on POLNO
 	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
-			nullptr, GetSelectedTable(options.input_file, options.ifno, polno) };
+			nullptr, GetSelectedTable(options.input_file, options.ifno, polno,
+			true), casa::Table(options.output_file, casa::Table::Update) /*GetSelectedTable(options.output_file, options.ifno, polno,
+	 true)*/};
 	try {
-		shared->num_data = shared->table.nrow();
+		shared->num_data = shared->input_table.nrow();
 		if (shared->num_data > 0) {
-			shared->spectra_column.attach(shared->table, "SPECTRA");
-			shared->flagtra_column.attach(shared->table, "FLAGTRA");
-			shared->time_column.attach(shared->table, "TIME");
-			shared->num_chan = shared->spectra_column(0).nelements();
+			// attach input columns
+			shared->input_spectra_column.attach(shared->input_table, "SPECTRA");
+			shared->input_flagtra_column.attach(shared->input_table, "FLAGTRA");
+			shared->input_time_column.attach(shared->input_table, "TIME");
+			shared->num_chan = shared->input_spectra_column(0).nelements();
+			// attach output columns
+			shared->output_spectra_column.attach(shared->output_table,
+					"SPECTRA");
+			shared->output_flagtra_column.attach(shared->output_table,
+					"FLAGTRA");
+			shared->output_tsys_column.attach(shared->output_table, "TSYS");
 			// Create Context and struct for calibration
 			// calibration context
 			FillCalibrationContext(options.calibration.sky_table,
@@ -373,6 +412,10 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
 void Reduce(E2EOptions const &options) {
 	LOG4CXX_DEBUG(logger, "Enter: Reduce");
 	unsigned int const num_polarizations = 4;
+	xdispatch::main_queue().sync([&options] {
+			// create output table by copying input table
+			CreateOutputTable(options.input_file, options.output_file);
+		});
 	for (unsigned int polno = 0; polno < num_polarizations; polno++) {
 		LOG4CXX_INFO(logger, "Processing POLNO " << polno);
 		AlignedArrayGenerator array_generator;
@@ -422,14 +465,14 @@ void Reduce(E2EOptions const &options) {
 				// run casa operations in main_queue.
 					LOG4CXX_DEBUG(logger, "Reading record " << i);
 					for (size_t j = 0; j < rows; ++j) {
-						GetArrayCell(working_sets[working_set_id].spectrum[j], i+j, shared->spectra_column,
+						GetArrayCell(working_sets[working_set_id].spectrum[j], i+j, shared->input_spectra_column,
 								casa::IPosition(1, shared->num_chan));
 					}
 					for (size_t j = 0; j < rows; ++j) {
-						GetArrayCell(working_sets[working_set_id].flag[j], i+j, shared->flagtra_column,
+						GetArrayCell(working_sets[working_set_id].flag[j], i+j, shared->input_flagtra_column,
 								casa::IPosition(1, shared->num_chan));
 					}
-					GetScalarCells(working_sets[working_set_id].timestamp, i, rows, shared->time_column);
+					GetScalarCells(working_sets[working_set_id].timestamp, i, rows, shared->input_time_column);
 				});
 
 			auto v =

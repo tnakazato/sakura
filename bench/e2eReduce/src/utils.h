@@ -16,6 +16,8 @@
 #include <casacore/tables/Tables/ScalarColumn.h>
 #include <casacore/tables/Tables/TableParse.h>
 #include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableCopy.h>
+#include <casacore/tables/Tables/TableRow.h>
 
 #include <libsakura/sakura.h>
 
@@ -175,17 +177,55 @@ private:
 /**
  * CASA related utility functions
  */
+void CreateOutputTable(std::string const input_table,
+		std::string const output_table) {
+	casa::Table in(casa::String(input_table), casa::Table::Old);
+
+	// create empty output table
+	in.deepCopy(casa::String(output_table), casa::Table::New, casa::True,
+			in.endianFormat(), casa::False);
+
+	// copy subtables
+	casa::Table out(casa::String(output_table), casa::Table::Update);
+	casa::TableRecord const keyword_set = in.keywordSet();
+	casa::TableRecord rw_keyword_set = out.rwKeywordSet();
+	for (casa::uInt i = 0; i < keyword_set.nfields(); ++i) {
+		if (keyword_set.type(i) == casa::DataType::TpTable) {
+			casa::Table in_subtable = keyword_set.asTable(i);
+			casa::Table out_subtable = rw_keyword_set.asTable(keyword_set.name(i));
+			casa::TableCopy::copyRows(out_subtable, in_subtable);
+		}
+	}
+
+	// copy main table except SPECTRA, FLAGTRA, and TSYS
+	out.addRow(in.nrow());
+	casa::Vector<casa::String> excludes(3);
+	excludes[0] = "SPECTRA";
+	excludes[1] = "FLAGTRA";
+	excludes[2] = "TSYS";
+	casa::ROTableRow input_row(in, excludes, casa::True);
+	casa::TableRow output_row(out, excludes, casa::True);
+	for (casa::uInt i = 0; i < in.nrow(); ++i) {
+		input_row.get(i);
+		output_row.putMatchingFields(i, input_row.record());
+	}
+}
+
 std::string GetTaqlString(std::string table_name, unsigned int ifno,
-		unsigned int polno) {
+		unsigned int polno, bool on_source_only) {
 	std::ostringstream oss;
 	oss << "SELECT FROM \"" << table_name << "\" WHERE IFNO == " << ifno
-			<< " && POLNO == " << polno << " ORDER BY TIME";
+			<< " && POLNO == " << polno;
+	if (on_source_only) {
+		oss << " && SRCTYPE == 0";
+	}
+	oss << " ORDER BY TIME";
 	return oss.str();
 }
 
 casa::Table GetSelectedTable(std::string table_name, unsigned int ifno,
-		unsigned int polno) {
-	casa::String taql(GetTaqlString(table_name, ifno, polno));
+		unsigned int polno, bool on_source_only) {
+	casa::String taql(GetTaqlString(table_name, ifno, polno, on_source_only));
 	return tableCommand(taql);
 }
 
@@ -265,7 +305,7 @@ void GetFromCalTable(std::string const table_name, unsigned int ifno,
 		unsigned int polno, std::string const data_name,
 		AlignedArrayGenerator *array_generator, float **data,
 		double **timestamp, size_t *num_data, size_t *num_row) {
-	casa::Table table = GetSelectedTable(table_name, ifno, polno);
+	casa::Table table = GetSelectedTable(table_name, ifno, polno, false);
 	*num_row = table.nrow();
 	if (*num_row == 0) {
 		throw casa::AipsError("Selected sky table is empty.");
