@@ -106,14 +106,18 @@ inline void ExecuteBaseline(float clipping_threshold_sigma,
 }
 
 inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
-		size_t num_data, float const input_data[], float output_data[],
-		bool mask[]) {
+		size_t num_data, float const input_data_arg[], float output_data_arg[],
+		bool mask_arg[]) {
+	auto input_data = AssumeAligned(input_data_arg);
+	auto output_data = AssumeAligned(output_data_arg);
+	auto mask = AssumeAligned(mask_arg);
 
-	for (size_t i = 0; i < num_data; ++i) { // apply mask by zero like CASA
+	// apply mask by filling zero like CASA
+	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
 			output_data[i] = input_data[i];
 		} else {
-			output_data[i] = 0.0; // mask by zero
+			output_data[i] = 0.0f;
 		}
 	}
 	sakura_Status status = sakura_Convolve1D(context, num_data, output_data,
