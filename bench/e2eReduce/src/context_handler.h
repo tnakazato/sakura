@@ -66,7 +66,7 @@ void FillCalibrationContext(std::string const sky_table,
 
 	float *interpolated_tsys = array_generator->GetAlignedArray<float>(
 			num_chan_sky * num_row_tsys);
-	sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kLinear, 0,
+	sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kSpline, 0,
 			num_chan_tsys, frequency_label_tsys, num_row_tsys, tsys,
 			num_chan_sky, frequency_label_target, interpolated_tsys);
 
