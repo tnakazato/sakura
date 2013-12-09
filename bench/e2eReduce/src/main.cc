@@ -43,7 +43,7 @@ static StaticInitializer initializer;
 auto logger = log4cxx::Logger::getLogger("app");
 
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-		bool output_mask[]) {
+bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
@@ -138,7 +138,7 @@ inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
 	}
 }
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-		bool mask_arg[]) {
+bool mask_arg[]) {
 	auto mask = AssumeAligned(mask_arg);
 
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
@@ -187,14 +187,14 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 //	std::cout << "ExecuteClipping" << std::endl;
 	AlignedArrayGenerator generator;
 	bool *mask_local = generator.GetAlignedArray<bool>(num_data);
-	size_t num_condition(1);
-	float *lower = generator.GetAlignedArray<float>(num_condition);
-	float *upper = generator.GetAlignedArray<float>(num_condition);
+	alignas(32)
+	float lower[] = { -std::abs(threshold) };
+	alignas(32)
+	float upper[] = { std::abs(threshold) };
+	STATIC_ASSERT(ELEMENTSOF(lower) == ELEMENTSOF(upper));
 	// simple [-threshold, threshold] clipping
-	lower[0] = -abs(threshold);
-	upper[0] = abs(threshold);
 	sakura_Status status = sakura_SetTrueFloatInRangesExclusive(num_data,
-			input_data, num_condition, lower, upper, mask_local);
+			input_data, ELEMENTSOF(lower), lower, upper, mask_local);
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("Clip Flag");
 	}
@@ -203,7 +203,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-		bool const input_mask[]) {
+bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
