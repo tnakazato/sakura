@@ -38,8 +38,7 @@ namespace {
  */
 template<typename T>
 inline T AssumeAligned(T ptr) {
-	return reinterpret_cast<T>(__builtin_assume_aligned(ptr,
-	32));
+	return reinterpret_cast<T>(__builtin_assume_aligned(ptr, 32));
 }
 #else /* __GNUG__ */
 /**
@@ -186,7 +185,7 @@ void CreateOutputTable(std::string const input_table,
 	{
 		auto start = sakura_GetCurrentTime();
 		// create empty output table
-		in.deepCopy(casa::String(output_table), casa::Table::New, casa::True,
+		in.deepCopy(casa::String(output_table), casa::Table::New, casa::False, //casa::True,
 				in.endianFormat(), casa::False);
 		auto end = sakura_GetCurrentTime();
 		LOG4CXX_INFO(logger, "CreateOutputTable: deep copied: " << end - start);
@@ -201,19 +200,21 @@ void CreateOutputTable(std::string const input_table,
 		for (casa::uInt i = 0; i < keyword_set.nfields(); ++i) {
 			if (keyword_set.type(i) == casa::DataType::TpTable) {
 				casa::Table in_subtable = keyword_set.asTable(i);
-				casa::Table out_subtable = rw_keyword_set.asTable(keyword_set.name(i));
+				casa::Table out_subtable = rw_keyword_set.asTable(
+						keyword_set.name(i));
 				casa::TableCopy::copyRows(out_subtable, in_subtable);
 			}
 		}
 		auto end = sakura_GetCurrentTime();
-		LOG4CXX_INFO(logger, "CreateOutputTable: sub-tables copied: " << end - start);
+		LOG4CXX_INFO(logger,
+				"CreateOutputTable: sub-tables copied: " << end - start);
 	}
 
 	// copy main table except SPECTRA, FLAGTRA, and TSYS
 	{
 		auto start = sakura_GetCurrentTime();
 		out.addRow(in.nrow());
-		casa::Vector<casa::String> excludes(3);
+		casa::Vector < casa::String > excludes(3);
 		excludes[0] = "SPECTRA";
 		excludes[1] = "FLAGTRA";
 		excludes[2] = "TSYS";
@@ -224,7 +225,8 @@ void CreateOutputTable(std::string const input_table,
 			output_row.putMatchingFields(i, input_row.record());
 		}
 		auto end = sakura_GetCurrentTime();
-		LOG4CXX_INFO(logger, "CreateOutputTable: main table copied: " << end - start);
+		LOG4CXX_INFO(logger,
+				"CreateOutputTable: main table copied: " << end - start);
 	}
 	auto func_end = sakura_GetCurrentTime();
 	LOG4CXX_INFO(logger, "CreateOutputTable: Leave: " << func_end - func_start);
