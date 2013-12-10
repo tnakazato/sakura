@@ -28,10 +28,6 @@
 
 #include <libsakura/sakura.h>
 
-#include "option_parser.h"
-#include "context_handler.h"
-#include "utils.h"
-
 namespace {
 struct StaticInitializer {
 	StaticInitializer() {
@@ -41,7 +37,13 @@ struct StaticInitializer {
 static StaticInitializer initializer;
 
 auto logger = log4cxx::Logger::getLogger("app");
+}
 
+#include "option_parser.h"
+#include "context_handler.h"
+#include "utils.h"
+
+namespace {
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
 bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
@@ -212,10 +214,6 @@ bool const input_mask[]) {
 	}
 }
 
-void JobFinished(size_t i) {
-	LOG4CXX_DEBUG(logger, "Row " << i << " have done.");
-}
-
 struct SharedWorkingSet {
 	size_t num_chan;
 	size_t num_data;
@@ -264,7 +262,7 @@ void PutResult(SharedWorkingSet *shared, size_t row, size_t num_channels,
 					casa::SHARE));
 }
 
-size_t const rows_per_processing = 8;
+size_t const rows_per_processing = 64;
 
 void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		double const tarray[/*jobs*/],
@@ -324,8 +322,8 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 			for (size_t i = 0; i < jobs; ++i) {
 				PutResult(const_cast<SharedWorkingSet *>(shared), job_id + i, num_v,
 						out_data[i], out_flag[i], out_tsys[i]);
+				LOG4CXX_DEBUG(logger, "Row " << job_id + i << " have done.");
 			}
-			JobFinished(job_id);
 		});
 }
 
@@ -413,7 +411,7 @@ void Reduce(E2EOptions const &options) {
 	LOG4CXX_DEBUG(logger, "Enter: Reduce");
 	unsigned int const num_polarizations = 4;
 	xdispatch::main_queue().sync([&options] {
-			// create output table by copying input table
+		// create output table by copying input table
 			CreateOutputTable(options.input_file, options.output_file);
 		});
 	for (unsigned int polno = 0; polno < num_polarizations; polno++) {
