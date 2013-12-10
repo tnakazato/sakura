@@ -233,6 +233,7 @@ struct SharedWorkingSet {
 	CalibrationContext calibration_context;
 	sakura_BaselineContext *baseline_context;
 	sakura_Convolve1DContext *convolve1d_context;
+	bool *line_mask;
 
 	// tables
 	casa::Table input_table;
@@ -293,6 +294,7 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		out_tsys[i] = generator.GetAlignedArray<float>(num_v);
 	}
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
+	bool *baseline_mask = generator.GetAlignedArray<bool>(num_v);
 	bool *baseline_after_mask = generator.GetAlignedArray<bool>(num_v);
 
 	for (size_t i = 0; i < jobs; ++i) {
@@ -313,10 +315,14 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		ExecuteFlagEdge(option_list.flagging.edge_channels, num_v, mask);
 
 		// Execute Baseline
+		for (size_t ichan = 0; ichan < num_v; ++ichan) {
+			baseline_mask[ichan] = mask[ichan];
+		}
+		AlignedBoolAnd(num_v, shared->line_mask, baseline_mask);
 		ExecuteBaseline(option_list.baseline.clipping_threshold,
 				option_list.baseline.num_fitting_max, baseline_after_mask,
 				shared->baseline_context, num_v, out_data[i], out_data[i],
-				mask);
+				baseline_mask);
 
 		// Execute Clipping
 		ExecuteClipping(option_list.flagging.clipping_threshold, num_v,
@@ -349,10 +355,10 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_DEBUG(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
-	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
-			nullptr, GetSelectedTable(options.input_file, options.ifno, polno,
-			true), casa::Table(options.output_file, casa::Table::Update) /*GetSelectedTable(options.output_file, options.ifno, polno,
-	 true)*/};
+	SharedWorkingSet *shared =
+			new SharedWorkingSet { 0, 0, { }, nullptr, nullptr, nullptr,
+					GetSelectedTable(options.input_file, options.ifno, polno,
+					true), casa::Table(options.output_file, casa::Table::Update) };
 	try {
 		shared->num_data = shared->input_table.nrow();
 		if (shared->num_data > 0) {
@@ -367,6 +373,19 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 			shared->output_flagtra_column.attach(shared->output_table,
 					"FLAGTRA");
 			shared->output_tsys_column.attach(shared->output_table, "TSYS");
+			// line mask for baseline fitting
+			bool *mask = array_generator->GetAlignedArray<bool>(shared->num_chan);
+			for (size_t i = 0; i < shared->num_chan; ++i) {
+				mask[i] = false;
+			}
+			for (size_t i = 0; i < options.baseline.line_mask.size(); i += 2) {
+				size_t start = options.baseline.line_mask[i];
+				size_t end = std::min(options.baseline.line_mask[i+1], shared->num_chan);
+				for (size_t j = start; j <= end; ++j) {
+					mask[j] = true;
+				}
+			}
+			shared->line_mask = mask;
 			// Create Context and struct for calibration
 			// calibration context
 			FillCalibrationContext(options.calibration.sky_table,

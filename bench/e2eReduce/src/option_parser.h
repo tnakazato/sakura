@@ -31,7 +31,7 @@ struct BaselineOptions {
 	uint16_t order;
 	float clipping_threshold;
 	uint16_t num_fitting_max;
-	std::vector<uint64_t> line_mask;
+	std::vector<size_t> line_mask;
 };
 
 struct SmoothingOptions {
@@ -228,7 +228,7 @@ private:
 			return default_value;
 		}
 	}
-	static void ToVector(std::string const s, std::vector<uint64_t> *v) {
+	static void ToVector(std::string const s, std::vector<size_t> *v) {
 		// convert [0,0] or [[0,0],[1,1]] type string to vector
 		char const separator = ',';
 		char const left_bracket = '[';
@@ -249,7 +249,7 @@ private:
 				size_t pos1 = substring.find_first_of(left_bracket);
 				size_t pos2 = substring.find_first_of(right_bracket, pos1);
 				while (pos1 != std::string::npos && pos2 != std::string::npos) {
-					std::vector<uint64_t> temporary_vector;
+					std::vector<size_t> temporary_vector;
 					ToVector(substring.substr(pos1, pos2 - pos1 + 1),
 							&temporary_vector);
 					v->insert(v->end(), temporary_vector.begin(),
