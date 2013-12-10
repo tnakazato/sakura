@@ -53,7 +53,7 @@ add_custom_target(logConfig
 )
 
 add_custom_target(e2eConfig
-	COMMAND cp -f "${PROJECT_SOURCE_DIR}/e2etest.config" "${PROJECT_BINARY_DIR}" 
+	COMMAND cp -f "${PROJECT_SOURCE_DIR}/e2etest.config" "${PROJECT_SOURCE_DIR}/e2eana.config" "${PROJECT_BINARY_DIR}" 
 	DEPENDS "${PROJECT_SOURCE_DIR}/e2etest.config"
 )
 
@@ -64,3 +64,4 @@ target_link_libraries (main -L${PROJECT_BINARY_DIR}/bin -Wl,-rpath,${PROJECT_BIN
 
 #add_custom_target(run      COMMAND ./main      DEPENDS main)
 add_custom_target(run COMMAND ./main DEPENDS main)
+add_custom_target(runana COMMAND ./main e2eana.config DEPENDS main)
