@@ -57,6 +57,20 @@ bool output_mask[]) {
 	}
 }
 
+inline void ExecuteMaskToBitFlag(size_t num_data, bool input_mask[],
+		uint8_t output_flag[]) {
+	sakura_Status status = sakura_InvertBool(num_data, input_mask, input_mask);
+	if (status != sakura_Status_kOK) {
+		throw std::runtime_error("bool_to_bitflag");
+	}
+	for (size_t i = 0; i < num_data; ++i) {
+		output_flag[i] = 0;
+	}
+	uint8_t bit_mask = 1 << 7;
+	status = sakura_OperateBitsUint8Or(bit_mask, num_data, output_flag,
+			input_mask, output_flag);
+}
+
 inline void ExecuteCalibration(double timestamp, size_t num_data,
 		float const input_data[], CalibrationContext const &calibration_context,
 		float out_data[], float out_tsys[]) {
@@ -314,6 +328,10 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 
 		// Calculate Statistics
 		CalculateStatistics(num_v, out_data[i], mask);
+
+		// Convert boolean mask back to bit flag
+		uint8_t *uint8_flag = reinterpret_cast<uint8_t *>(out_flag[i]);
+		ExecuteMaskToBitFlag(num_v, mask, uint8_flag);
 
 	}
 	xdispatch::main_queue().sync([&]() {
