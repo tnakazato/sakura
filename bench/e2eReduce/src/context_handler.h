@@ -12,13 +12,12 @@ namespace {
 struct CalibrationContext {
 	size_t num_data_sky;
 	size_t num_data_tsys;
-	size_t num_channel_sky;
+	size_t num_channel;
 	float *sky_spectra;
 	float *tsys;
 	double *timestamp_sky;
 	double *timestamp_tsys;
 	float *sky_work;
-	float *tsys_work;
 	double *timestamp_work;
 };
 
@@ -66,17 +65,16 @@ void FillCalibrationContext(std::string const sky_table,
 
 	float *interpolated_tsys = array_generator->GetAlignedArray<float>(
 			num_chan_sky * num_row_tsys);
-	sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kSpline, 0,
+	sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kLinear, 0,
 			num_chan_tsys, frequency_label_tsys, num_row_tsys, tsys,
 			num_chan_sky, frequency_label_target, interpolated_tsys);
 
 	float *sky_work = array_generator->GetAlignedArray<float>(num_chan_sky);
-	float *tsys_work = array_generator->GetAlignedArray<float>(num_chan_sky);
 	double *timestamp_work = array_generator->GetAlignedArray<double>(1);
 
 	// Create Context and struct for calibration
 	// calibration context
-	calibration_context->num_channel_sky = num_chan_sky;
+	calibration_context->num_channel = num_chan_sky;
 	calibration_context->num_data_sky = num_row_sky;
 	calibration_context->num_data_tsys = num_row_tsys;
 	calibration_context->timestamp_sky = sky_time;
@@ -84,7 +82,6 @@ void FillCalibrationContext(std::string const sky_table,
 	calibration_context->sky_spectra = sky_spectra;
 	calibration_context->tsys = interpolated_tsys;
 	calibration_context->sky_work = sky_work;
-	calibration_context->tsys_work = tsys_work;
 	calibration_context->timestamp_work = timestamp_work;
 }
 

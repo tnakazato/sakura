@@ -59,17 +59,16 @@ bool output_mask[]) {
 
 inline void ExecuteCalibration(double timestamp, size_t num_data,
 		float const input_data[], CalibrationContext const &calibration_context,
-		float out_data[]) {
+		float out_data[], float out_tsys[]) {
 	// interpolate Tsys to timestamp
-	size_t num_channel = calibration_context.num_channel_sky;
-	float *tsys = calibration_context.tsys_work;
+	size_t num_channel = calibration_context.num_channel;
 	double *t = calibration_context.timestamp_work;
 	t[0] = timestamp;
 	sakura_Status status = sakura_InterpolateYAxisFloat(
 			sakura_InterpolationMethod_kLinear, 0,
 			calibration_context.num_data_tsys,
 			calibration_context.timestamp_tsys, num_channel,
-			calibration_context.tsys, 1, t, tsys);
+			calibration_context.tsys, 1, t, out_tsys);
 
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("calibration");
@@ -87,7 +86,7 @@ inline void ExecuteCalibration(double timestamp, size_t num_data,
 
 	// apply calibration
 	// TODO: allow reference == result?
-	status = sakura_ApplyPositionSwitchCalibration(num_channel, tsys,
+	status = sakura_ApplyPositionSwitchCalibration(num_channel, out_tsys,
 			num_channel, input_data, sky, out_data);
 
 	if (status != sakura_Status_kOK) {
@@ -291,7 +290,7 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 
 		// Execute Calibration
 		ExecuteCalibration(t, num_v, v, shared->calibration_context,
-				out_data[i]);
+				out_data[i], out_tsys[i]);
 
 		// Execute Flag NaN/Inf
 		ExecuteNanOrInfFlag(num_v, out_data[i], mask);
@@ -356,8 +355,7 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 					options.calibration.tsys_table, options.ifno,
 					options.calibration.tsys_ifno, polno, array_generator,
 					&shared->calibration_context);
-			if (shared->calibration_context.num_channel_sky
-					!= shared->num_chan) {
+			if (shared->calibration_context.num_channel != shared->num_chan) {
 				throw std::runtime_error("calibration");
 			}
 			// baseline context
@@ -415,7 +413,6 @@ void Reduce(E2EOptions const &options) {
 			CreateOutputTable(options.input_file, options.output_file);
 		});
 	for (unsigned int polno = 0; polno < num_polarizations; polno++) {
-		LOG4CXX_INFO(logger, "Processing POLNO " << polno);
 		AlignedArrayGenerator array_generator;
 		SharedWorkingSet *shared = nullptr;
 		xdispatch::main_queue().sync(
@@ -428,8 +425,11 @@ void Reduce(E2EOptions const &options) {
 		});
 
 		if (shared->num_data == 0) {
+			LOG4CXX_DEBUG(logger, "Skip POLNO " << polno);
 			continue;
 		}
+
+		LOG4CXX_INFO(logger, "Processing POLNO " << polno);
 
 		size_t num_threads = std::min(shared->num_data,
 				size_t(options.max_threads));
