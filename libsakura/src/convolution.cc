@@ -14,8 +14,7 @@
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
-	bool use_fft;
-	bool use_pollution;
+	bool use_fft;bool remove_pollution;
 	size_t num_data;
 	size_t expanded_num_data;
 	fftwf_plan plan_real_to_complex_float;
@@ -99,18 +98,18 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 	}
 	const size_t count_max = count;
 	size_t n = 0;
-	bool hit = false;
+	bool found = false;
 	for (size_t i = 0; i < num_data; ++i) { // calculate interpolation
-		if (!hit) {
+		if (!found) {
 			output_data[i] = input_data[i];
 			if (i == X1[n]) {
-				hit = true;
+				found = true;
 			}
-		} else if (hit && i < X2[n]) {
+		} else if (found && i < X2[n]) {
 			output_data[i] = i * (Y2[n] - Y1[n]) / (X2[n] - X1[n])
 					+ (X2[n] * Y1[n] - X1[n] * Y2[n]) / (X2[n] - X1[n]);
-		} else if (hit && i == X2[n]) {
-			hit = false;
+		} else if (found && i == X2[n]) {
+			found = false;
 			if (n < count_max)
 				n++;
 			output_data[i] = input_data[i];
@@ -199,10 +198,9 @@ inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	assert(*context == nullptr);
-	bool use_pollution = true; // default, use pollution.
-	//bool use_pollution = false; // dont use pollution.
+	bool remove_pollution = true; // default, don't remove pollution.
 	size_t expanded_num_data = 0;
-	if (!use_pollution) {
+	if (remove_pollution) {
 		expanded_num_data = num_data + (2 * kernel_width); // expanded zero-padding region
 	} else {
 		expanded_num_data = num_data; // don't expand, expanded_num_data == num_data
@@ -301,7 +299,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		guard_for_ifft_plan.Disable();
 		work_context->num_data = num_data; // number of data
 		work_context->expanded_num_data = expanded_num_data; // expanded num_data for zero-padding to remove pollution
-		work_context->use_pollution = use_pollution; // use pollution
+		work_context->remove_pollution = remove_pollution; // use pollution
 		work_context->use_fft = use_fft; // use_fft flag
 		*context = work_context.release(); // context
 	} else { // without fft
@@ -330,7 +328,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->expanded_num_data = num_data; // expande_num_data won't be used in this case
 		work_context->num_data = num_data; // number of data
 		work_context->use_fft = use_fft; // use_fft flag
-		work_context->use_pollution = use_pollution; // use pollution
+		work_context->remove_pollution = remove_pollution; // use pollution
 		*context = work_context.release(); // context
 	}
 }
@@ -357,7 +355,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		if (!context->use_pollution) { // this case, don't use pollution
+		if (context->remove_pollution) { // this case, remove pollution
 			// real array for removing pollution
 			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 					static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -374,7 +372,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 			}
 			fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
 					real_array.get(), fft_applied_complex_input_data.get());
-		} else { // use pollution
+		} else { // don't remove pollution
 			fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
 					const_cast<float*>(input_data),
 					fft_applied_complex_input_data.get());
@@ -397,11 +395,11 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else { // without fft
-		if (!context->use_pollution) { // this case, don't use pollution
+		if (context->remove_pollution) { // this case, remove pollution
 			CalculateConvolutionWithoutFFT(num_data,
 					const_cast<float*>(input_data), context->real_array,
 					output_data);
-		} else { // use pollution
+		} else { // don't remove pollution
 			CalculateConvolutionWithoutFFTWithPollution(num_data,
 					const_cast<float*>(input_data), context->real_array,
 					output_data);
