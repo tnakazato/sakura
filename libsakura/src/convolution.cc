@@ -82,7 +82,7 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 		find_zero = false;
 	}
 	size_t count = 0;
-	for (size_t i = 1; i < num_data; ++i) { // finding (x1,y1),(x2,y2)
+	for (size_t i = 1; i < num_data; ++i) { // finding pair (x1,y1),(x2,y2)
 		if (find_zero) {
 			if (FindFalseToGetStart(i - 1, input_data[i - 1], mask[i], X1, Y1,
 					count)) {
@@ -92,20 +92,20 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 			if (FindTrueToGetEnd(i, input_data[i], mask[i], X2, Y2, count)) {
 				find_zero = true;
 				count++;
-			} else if (i == (num_data - 1)) // achived final ch
+			} else if (i == (num_data - 1)) // achieved final ch
 				FindTrueToGetEnd(i, Y1[count], true, X2, Y2, count);
 		}
 	}
 	const size_t count_max = count;
 	size_t n = 0;
 	bool found = false;
-	for (size_t i = 0; i < num_data; ++i) { // calculate interpolation
+	for (size_t i = 0; i < num_data; ++i) {
 		if (!found) {
 			output_data[i] = input_data[i];
 			if (i == X1[n]) {
 				found = true;
 			}
-		} else if (found && i < X2[n]) {
+		} else if (found && i < X2[n]) { // calculate linear interpolation
 			output_data[i] = i * (Y2[n] - Y1[n]) / (X2[n] - X1[n])
 					+ (X2[n] * Y1[n] - X1[n] * Y2[n]) / (X2[n] - X1[n]);
 		} else if (found && i == X2[n]) {
@@ -152,9 +152,8 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	}
 }
 
-inline void CalculateConvolutionWithoutFFTWithPollution(size_t num_data,
-		float const *input_data, float const *input_kernel,
-		float *output_data) {
+inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data,
+		float const *input_kernel, float *output_data) {
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
@@ -177,7 +176,7 @@ inline void CalculateConvolutionWithoutFFTWithPollution(size_t num_data,
 	}
 }
 
-inline void CalculateConvolutionWithoutFFT(size_t num_data,
+inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
 		float const *input_data, float const *input_kernel,
 		float *output_data) {
 	for (size_t j = 0; j < num_data; ++j) {
@@ -198,15 +197,14 @@ inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	assert(*context == nullptr);
-	bool remove_pollution = true; // default, don't remove pollution.
+	bool remove_pollution = false;
 	size_t expanded_num_data = 0;
 	if (remove_pollution) {
-		expanded_num_data = num_data + (2 * kernel_width); // expanded zero-padding region
+		expanded_num_data = num_data + (2 * kernel_width); // added zero-padding region
 	} else {
-		expanded_num_data = num_data; // don't expand, expanded_num_data == num_data
+		expanded_num_data = num_data;
 	}
 	if (use_fft) {
-		// real array for kernel
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
 				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
 						sizeof(float) * expanded_num_data)),
@@ -214,7 +212,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (real_array_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
-		// real array for input and output data
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
 						sizeof(float) * expanded_num_data)),
@@ -222,29 +219,25 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (real_array == nullptr) {
 			throw std::bad_alloc();
 		}
-		// fft applied array for kernel
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
 				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
-		// fft applied array for input_data
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
 				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		// fft applied array for multiplied data
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
 				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		// create fft plan for kernel
 		fftwf_plan plan_real_to_complex_float_kernel = fftwf_plan_dft_r2c_1d(
 				expanded_num_data, real_array_kernel.get(),
 				fft_applied_complex_kernel.get(),
-				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT); // added FFTW_PRESERVE_INPUT
+				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
 		ScopeGuard guard_for_fft_plan_kernel([&]() {
 			DestroyFFTPlan(plan_real_to_complex_float_kernel);
 		});
@@ -252,11 +245,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_fft_plan_kernel.Disable();
 			throw std::bad_alloc();
 		}
-		// create fft plan for input data
 		fftwf_plan plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(
 				expanded_num_data, real_array.get(),
 				fft_applied_complex_input_data.get(),
-				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT); // added FFTW_PRESERVE_INPUT
+				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
 		ScopeGuard guard_for_fft_plan([&]() {
 			DestroyFFTPlan(plan_real_to_complex_float);
 		});
@@ -264,11 +256,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_fft_plan.Disable();
 			throw std::bad_alloc();
 		}
-		// create ifft plan for output data
 		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(
 				expanded_num_data, multiplied_complex_data.get(),
 				real_array.get(),
-				FFTW_ESTIMATE | FFTW_DESTROY_INPUT); // added FFTW_DESTROY_INPUT
+				FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
 		ScopeGuard guard_for_ifft_plan([&]() {
 			DestroyFFTPlan(plan_complex_to_real_float);
 		});
@@ -278,10 +269,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		}
 		Create1DKernel(expanded_num_data, kernel_type, kernel_width,
 				real_array_kernel.get());
-		fftwf_execute(plan_real_to_complex_float_kernel); // execute fft for kernel
+		fftwf_execute(plan_real_to_complex_float_kernel);
 		real_array_kernel.reset(nullptr);
 		guard_for_fft_plan_kernel.CleanUpNow();
-		// work_context
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -290,20 +280,19 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
 		}
-		work_context->fft_applied_complex_kernel = // fft applied kernel
+		work_context->fft_applied_complex_kernel =
 				fft_applied_complex_kernel.release();
-		work_context->real_array = real_array.release(); // real_array
-		work_context->plan_real_to_complex_float = plan_real_to_complex_float; // plan for real to complex
+		work_context->real_array = real_array.release();
+		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
 		guard_for_fft_plan.Disable();
-		work_context->plan_complex_to_real_float = plan_complex_to_real_float; // plan for complex to real
+		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
 		guard_for_ifft_plan.Disable();
-		work_context->num_data = num_data; // number of data
-		work_context->expanded_num_data = expanded_num_data; // expanded num_data for zero-padding to remove pollution
-		work_context->remove_pollution = remove_pollution; // use pollution
-		work_context->use_fft = use_fft; // use_fft flag
-		*context = work_context.release(); // context
-	} else { // without fft
-		// real array for kernel
+		work_context->num_data = num_data;
+		work_context->expanded_num_data = expanded_num_data;
+		work_context->remove_pollution = remove_pollution;
+		work_context->use_fft = use_fft;
+		*context = work_context.release();
+	} else {
 		std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array_kernel(
 				static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
 						sizeof(float) * num_data)), LIBSAKURA_PREFIX::Memory());
@@ -312,7 +301,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		}
 		Create1DKernel(num_data, kernel_type, kernel_width,
 				real_array_kernel.get());
-		// work_context
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -324,12 +312,12 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->fft_applied_complex_kernel = nullptr;
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
-		work_context->real_array = real_array_kernel.release(); // real_array for kernel
-		work_context->expanded_num_data = num_data; // expande_num_data won't be used in this case
-		work_context->num_data = num_data; // number of data
-		work_context->use_fft = use_fft; // use_fft flag
-		work_context->remove_pollution = remove_pollution; // use pollution
-		*context = work_context.release(); // context
+		work_context->real_array = real_array_kernel.release();
+		work_context->expanded_num_data = num_data;
+		work_context->num_data = num_data;
+		work_context->use_fft = use_fft;
+		work_context->remove_pollution = remove_pollution;
+		*context = work_context.release();
 	}
 }
 
@@ -340,23 +328,20 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (!(context->num_data == num_data)) {
 		throw std::invalid_argument("num_data must equal to context->num_data");
 	}
-	if (context->use_fft) { // with fft
-		// fft applied array for input_data (complex)
+	if (context->use_fft) {
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
 				AllocateFFTArray(context->expanded_num_data / 2 + 1),
 				FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		// fft applied array for multiplied data (kernel * input_data) (complex)
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
 				AllocateFFTArray(context->expanded_num_data / 2 + 1),
 				FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
-		if (context->remove_pollution) { // this case, remove pollution
-			// real array for removing pollution
+		if (context->remove_pollution) {
 			std::unique_ptr<float[], LIBSAKURA_PREFIX::Memory> real_array(
 					static_cast<float*>(LIBSAKURA_PREFIX::Memory::Allocate(
 							sizeof(float) * context->expanded_num_data)),
@@ -367,8 +352,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 			for (size_t i = 0; i < context->expanded_num_data; ++i) {
 				real_array[i] = input_data[i];
 			}
-			for (size_t i = 0; i < context->expanded_num_data - num_data; ++i) { // expanded_num_data - num_data == 2*kernel_width
-				real_array[num_data + i] = 0.0; // zero padding to avoid pollution
+			for (size_t i = 0; i < context->expanded_num_data - num_data; ++i) {
+				real_array[num_data + i] = 0.0; // zero padding
 			}
 			fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
 					real_array.get(), fft_applied_complex_input_data.get());
@@ -394,15 +379,14 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		}
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
-	} else { // without fft
-		if (context->remove_pollution) { // this case, remove pollution
-			CalculateConvolutionWithoutFFT(num_data,
+	} else {
+		if (context->remove_pollution) {
+			ConvolutionWithoutFFTRemovePollution(num_data,
 					const_cast<float*>(input_data), context->real_array,
 					output_data);
-		} else { // don't remove pollution
-			CalculateConvolutionWithoutFFTWithPollution(num_data,
-					const_cast<float*>(input_data), context->real_array,
-					output_data);
+		} else {
+			ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
+					context->real_array, output_data);
 		}
 	}
 }
