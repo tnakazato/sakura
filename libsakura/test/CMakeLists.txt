@@ -89,13 +89,13 @@ add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY --gt
 add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testStatistics
-#	COMMAND ./testBitOperation
-#	COMMAND ./testBoolFilterCollection
-#	COMMAND ./testNumericOperation
-#	COMMAND ./testBaseline
-#	COMMAND ./testGridding
-#	COMMAND ./testInterpolationX
-#	COMMAND ./testInterpolationY
-#	COMMAND ./testApplyCalibration
+	COMMAND ./testBitOperation
+	COMMAND ./testBoolFilterCollection
+	COMMAND ./testNumericOperation
+	COMMAND ./testBaseline
+	COMMAND ./testGridding
+	COMMAND ./testInterpolationX
+	COMMAND ./testInterpolationY
+	COMMAND ./testApplyCalibration
 	COMMAND ./testConvolution
 	)
