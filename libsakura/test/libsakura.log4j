@@ -7,3 +7,4 @@ log4j.appender.A1.layout.ConversionPattern=%d %-5p %c - %m%n
 
 # module specific configuratioins
 log4j.logger.sakura.optimized_implementation_factory=INFO
+log4j.logger.sakura.memory=INFO

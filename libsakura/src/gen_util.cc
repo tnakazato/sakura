@@ -21,6 +21,20 @@
 #include "libsakura/memory_manager.h"
 #include "libsakura/optimized_implementation_factory.h"
 
+namespace {
+
+auto memory_logger = LIBSAKURA_PREFIX::Logger::GetLogger("memory");
+
+void *DefaultAllocator(size_t size) {
+	return malloc(std::max(static_cast<size_t>(1), size));
+}
+
+void DefaultFree(void *ptr) {
+	free(ptr);
+}
+
+} /* namespace */
+
 namespace LIBSAKURA_PREFIX {
 
 ::log4cxx::LoggerPtr Logger::GetLogger(char const *suffix) {
@@ -35,19 +49,19 @@ namespace LIBSAKURA_PREFIX {
 LIBSAKURA_SYMBOL(UserAllocator) Memory::allocator_;
 LIBSAKURA_SYMBOL(UserDeallocator) Memory::deallocator_;
 
+void * Memory::Allocate(size_t size) noexcept {
+	void *ptr = allocator_(size);
+	LOG4CXX_DEBUG(memory_logger, "Memory::Allocate: " << ptr);
+	return ptr;
+}
+
+void Memory::Free(void *ptr) noexcept {
+	LOG4CXX_DEBUG(memory_logger, "Memory::Free: " << ptr);
+	deallocator_(ptr);
+}
+
 } /* namespace LIBSAKURA_PREFIX */
 
-namespace {
-
-void *DefaultAllocator(size_t size) {
-	return malloc(std::max(static_cast<size_t>(1), size));
-}
-
-void DefaultFree(void *ptr) {
-	free(ptr);
-}
-
-} /* namespace */
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
 LIBSAKURA_SYMBOL(UserAllocator) allocator,

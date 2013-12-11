@@ -219,11 +219,7 @@ void OptimizedImplementationFactory::InitializeFactory(char const *simd_spec) {
 	} else {
 		factory_ = &default_factory;
 	}
-	if (::LIBSAKURA_PREFIX::Logger::IsDebugEnabled(logger)) {
-		std::ostringstream os;
-		os << "SIMD implementation: " << factory_->GetName() << std::endl;
-		Logger::Debug(logger, os.str().c_str());
-	}
+	LOG4CXX_DEBUG(logger, "SIMD implementation: " << factory_->GetName());
 }
 
 void OptimizedImplementationFactory::CleanUpFactory() {

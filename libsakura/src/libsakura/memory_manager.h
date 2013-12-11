@@ -34,11 +34,8 @@ public:
 	 *
 	 * @param[in] size 0 is acceptable and a valid address for the area with size 0 would be returned.
 	 */
-	static inline void * Allocate(size_t size) noexcept {
-		void *ptr = allocator_(size);
-		// printf("Memory::Allocate: %p\n", ptr);
-		return ptr;
-	}
+	static void * Allocate(size_t size) noexcept;
+
 	/**
 	 * @~
 	 * @brief
@@ -48,10 +45,7 @@ public:
 	 *
 	 * @param[in] ptr nullptr is acceptable.
 	 */
-	static inline void Free(void *ptr) noexcept {
-		// printf("Memory::Free: %p\n", ptr);
-		deallocator_(ptr);
-	}
+	static void Free(void *ptr) noexcept;
 
 	/**
 	 * @~
