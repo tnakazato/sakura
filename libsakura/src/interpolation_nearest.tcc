@@ -31,13 +31,16 @@ public:
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
-			size_t const location[]) {
+			size_t const location[], size_t offset) {
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			XDataType middle_point = 0.5
-					* (base_position[k + 1] + base_position[k]);
+			size_t left_index = k + offset;
+			XDataType middle_point =
+					0.5
+							* (base_position[left_index + 1]
+									+ base_position[left_index]);
 			for (size_t j = 0; j < num_array; ++j) {
-				YDataType left_value = base_data[j * num_base + k];
-				YDataType right_value = base_data[j * num_base + k + 1];
+				YDataType left_value = base_data[j * num_base + left_index];
+				YDataType right_value = base_data[j * num_base + left_index + 1];
 				YDataType *work = &interpolated_data[j * num_interpolated];
 				for (size_t i = location[k]; i < location[k + 1]; ++i) {
 					if ((interpolated_position[i] != middle_point)
@@ -63,10 +66,13 @@ public:
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
-			size_t const location[]) {
+			size_t const location[], size_t offset) {
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			XDataType middle_point = 0.5
-					* (base_position[k + 1] + base_position[k]);
+			size_t left_index = k + offset;
+			XDataType middle_point =
+					0.5
+							* (base_position[left_index + 1]
+									+ base_position[left_index]);
 			for (size_t i = location[k]; i < location[k + 1]; ++i) {
 				size_t offset_index = 0;
 				if ((interpolated_position[i] != middle_point)
@@ -75,7 +81,7 @@ public:
 				}
 				YDataType *work = &interpolated_data[num_array * i];
 				YDataType const *nearest = &base_data[num_array
-						* (k + offset_index)];
+						* (left_index + offset_index)];
 				for (size_t j = 0; j < num_array; ++j) {
 					work[j] = nearest[j];
 				}

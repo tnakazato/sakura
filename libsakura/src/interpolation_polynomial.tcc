@@ -19,16 +19,16 @@ public:
 				(polynomial_order + 1u >= num_base) ?
 						static_cast<uint8_t>(num_base - 1) : polynomial_order;
 		num_elements_ = polynomial_order_ + 1;
-		AllocateAndAlign<XDataType>(num_elements_, &holder_[0]);
-		AllocateAndAlign<XDataType>(num_elements_, &holder_[1]);
+		AllocateAndAlign < XDataType > (num_elements_, &holder_[0]);
+		AllocateAndAlign < XDataType > (num_elements_, &holder_[1]);
 	}
 	void Interpolate1D(size_t num_base, XDataType const base_position[],
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
-			size_t const location[]) {
+			size_t const location[], size_t offset) {
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			int left_edge1 = k - polynomial_order_ / 2;
+			int left_edge1 = k + offset - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);
@@ -111,9 +111,9 @@ public:
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
-			size_t const location[]) {
+			size_t const location[], size_t offset) {
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			int left_edge1 = k - polynomial_order_ / 2;
+			int left_edge1 = k + offset - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);

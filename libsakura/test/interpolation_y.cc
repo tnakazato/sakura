@@ -124,6 +124,25 @@ TEST_F(InterpolateArray1DFloatTest, Nearest) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
+TEST_F(InterpolateArray1DFloatTest, NearestOffset) {
+	// initial setup
+	size_t const num_base = 4;
+	size_t const num_interpolated = 5;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.1, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 3.0, -2.0, 2.0, -1.0,
+			1.0, -0.5, -1.0, 0.2);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.1, 0.5,
+			0.9, 1.2);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, -0.5,
+			1.0, -0.5, 1.0, -0.5, -1.0, 0.2, -1.0, 0.2);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
 TEST_F(InterpolateArray1DFloatTest, NearestDescending) {
 	// initial setup
 	size_t const num_base = 2;
@@ -184,6 +203,48 @@ TEST_F(InterpolateArray1DFloatTest, Linear) {
 	}
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] < x_base_[1]) ? 0 : 1;
+		size_t right_index = left_index + 1;
+		double fraction = (x_interpolated_[i] - x_base_[left_index])
+				/ (x_base_[right_index] - x_base_[left_index]);
+		for (size_t j = 0; j < num_array; ++j) {
+			y_expected_[i * num_array + j] = y_base_[left_index * num_array + j]
+					+ fraction
+							* (y_base_[right_index * num_array + j]
+									- y_base_[left_index * num_array + j]);
+		}
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, LinearOffset) {
+	// initial setup
+	size_t const num_base = 5;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.0, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 3.0, -2.0, 2.0, -1.0,
+			1.0, 0.0, -1.0, 0.5, 0.0, -0.2);
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	y_expected_[0] = 1.5;
+	y_expected_[1] = -0.5;
+	for (size_t i = 0; i < num_array; ++i) {
+		//y_expected_[i] = y_base_[i];
+		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
+				- 1) * num_array + i];
+	}
+	size_t const num_segments = num_interpolated - 3;
+	double dx = x_base_[num_base - 1] - x_base_[2];
+	double increment = dx / static_cast<double>(num_segments);
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
+	}
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		size_t left_index = (x_interpolated_[i] < x_base_[3]) ? 2 : 3;
 		size_t right_index = left_index + 1;
 		double fraction = (x_interpolated_[i] - x_base_[left_index])
 				/ (x_base_[right_index] - x_base_[left_index]);
@@ -343,6 +404,49 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
 		for (size_t i = 0; i < num_array; ++i) {
 			y_expected_[start + i] = y_base_[i]
 					+ fraction * (y_base_[i + num_array] - y_base_[i]);
+		}
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Offset) {
+	// initial setup
+	polynomial_order_ = 1;
+	size_t const num_base = 5;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.0, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 3.0, -2.0, 2.0, -1.0,
+			1.0, 0.0, -1.0, 0.5, 0.0, -0.2);
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	y_expected_[0] = 1.5;
+	y_expected_[1] = -0.5;
+	for (size_t i = 0; i < num_array; ++i) {
+		//y_expected_[i] = y_base_[i];
+		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
+				- 1) * num_array + i];
+	}
+	size_t const num_segments = num_interpolated - 3;
+	double dx = x_base_[num_base - 1] - x_base_[2];
+	double increment = dx / static_cast<double>(num_segments);
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
+	}
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		size_t left_index = (x_interpolated_[i] < x_base_[3]) ? 2 : 3;
+		size_t right_index = left_index + 1;
+		double fraction = (x_interpolated_[i] - x_base_[left_index])
+				/ (x_base_[right_index] - x_base_[left_index]);
+		for (size_t j = 0; j < num_array; ++j) {
+			y_expected_[i * num_array + j] = y_base_[left_index * num_array + j]
+					+ fraction
+							* (y_base_[right_index * num_array + j]
+									- y_base_[left_index * num_array + j]);
 		}
 	}
 
@@ -532,6 +636,48 @@ TEST_F(InterpolateArray1DFloatTest, Spline) {
 			1.0, 5.0, 0.456, 5.08, -0.052, 5.19, -0.488, 5.36, -0.816, 5.62,
 			-1.0, 6.0, -1.016, 6.52, -0.888, 7.16, -0.652, 7.89, -0.344, 8.68,
 			0.0, 9.5, 0.0, 9.5);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, SplineOffset) {
+	// initial setup
+	size_t const num_base = 5;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.0, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 4.0, -2.0, 3.0, -1.0,
+			1.0, 1.0, 0.0, 2.0, -1.0, 3.0);
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	y_expected_[0] = 2.0;
+	y_expected_[1] = 0.0;
+	for (size_t i = 0; i < num_array; ++i) {
+		//y_expected_[i] = y_base_[i];
+		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
+				- 1) * num_array + i];
+	}
+	size_t const num_segments = num_interpolated - 3;
+	double dx = x_base_[num_base - 1] - x_base_[2];
+	double increment = dx / static_cast<double>(num_segments);
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
+	}
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		size_t left_index = (x_interpolated_[i] < x_base_[3]) ? 2 : 3;
+		size_t right_index = left_index + 1;
+		double fraction = (x_interpolated_[i] - x_base_[left_index])
+				/ (x_base_[right_index] - x_base_[left_index]);
+		for (size_t j = 0; j < num_array; ++j) {
+			y_expected_[i * num_array + j] = y_base_[left_index * num_array + j]
+					+ fraction
+							* (y_base_[right_index * num_array + j]
+									- y_base_[left_index * num_array + j]);
+		}
+	}
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,

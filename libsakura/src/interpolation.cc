@@ -81,9 +81,20 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			num_interpolated, base_data_work, interpolated_data);
 
 	// Between x_base[0] and x_base[num_x_base-1]
+	size_t offset = 0;
+	if (base_position_work[0] < interpolated_position_work[0]) {
+		for (size_t i = 0; i < num_base - 1; ++i) {
+			if (base_position_work[offset + 1]
+					< interpolated_position_work[0]) {
+				offset++;
+			} else {
+				break;
+			}
+		}
+	}
 	interpolator.Interpolate1D(num_base, base_position_work, num_array,
 			base_data_work, num_interpolated, interpolated_position_work,
-			interpolated_data, num_location_base, location_base);
+			interpolated_data, num_location_base, location_base, offset);
 
 	// Outside of x_base[num_x_base-1]
 	Interpolator::SubstituteRightMostData(location_base[num_location_base - 1],

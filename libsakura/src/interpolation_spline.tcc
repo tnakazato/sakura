@@ -16,8 +16,8 @@ public:
 			size_t num_array, XDataType const base_position[],
 			YDataType const base_data[]) {
 		// Derive second derivative at x_base
-		AllocateAndAlign<YDataType>(num_base * num_array, &holder_[0]);
-		AllocateAndAlign<YDataType>(num_base, &holder_[1]);
+		AllocateAndAlign < YDataType > (num_base * num_array, &holder_[0]);
+		AllocateAndAlign < YDataType > (num_base, &holder_[1]);
 		for (size_t i = 0; i < num_array; ++i) {
 			size_t start_position = i * num_base;
 			YDataType const *base_data_work = &(base_data[start_position]);
@@ -30,17 +30,19 @@ public:
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
-			size_t const location[]) {
+			size_t const location[], size_t offset) {
 		YDataType *d2ydx2 = holder_[0].pointer;
 		assert(d2ydx2 != nullptr);
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			XDataType dx = base_position[k + 1] - base_position[k];
+			size_t left_index = k + offset;
+			XDataType dx = base_position[left_index + 1]
+					- base_position[left_index];
 			XDataType dx_factor = dx * dx / 6.0;
 			for (size_t j = 0; j < num_array; ++j) {
-				size_t offset_index_left = j * num_base + k;
+				size_t offset_index_left = j * num_base + left_index;
 				YDataType *work = &interpolated_data[j * num_interpolated];
 				for (size_t i = location[k]; i < location[k + 1]; ++i) {
-					XDataType a = (base_position[k + 1]
+					XDataType a = (base_position[left_index + 1]
 							- interpolated_position[i]) / dx;
 					XDataType b = 1.0 - a;
 					work[i] = static_cast<YDataType>(a
@@ -101,7 +103,7 @@ public:
 			size_t num_array, XDataType const base_position[],
 			YDataType const base_data[]) {
 		// Derive second derivative at x_base
-		AllocateAndAlign<YDataType>(num_base * num_array, &holder_);
+		AllocateAndAlign < YDataType > (num_base * num_array, &holder_);
 		DeriveSplineCorrectionTerm(num_base, base_position, num_array,
 				base_data, holder_.pointer);
 	}
@@ -109,18 +111,22 @@ public:
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
-			size_t const location[]) {
+			size_t const location[], size_t offset) {
 		YDataType *d2ydx2 = holder_.pointer;
 		assert(d2ydx2 != nullptr);
 		for (size_t k = 0; k < num_location - 1; ++k) {
-			XDataType dx = base_position[k + 1] - base_position[k];
-			YDataType const *left_value = &base_data[k * num_array];
-			YDataType const *right_value = &base_data[(k + 1) * num_array];
-			YDataType const *d2ydx2_left = &d2ydx2[k * num_array];
-			YDataType const *d2ydx2_right = &d2ydx2[(k + 1) * num_array];
+			size_t left_index = k + offset;
+			XDataType dx = base_position[left_index + 1]
+					- base_position[left_index];
+			YDataType const *left_value = &base_data[left_index * num_array];
+			YDataType const *right_value = &base_data[(left_index + 1)
+					* num_array];
+			YDataType const *d2ydx2_left = &d2ydx2[left_index * num_array];
+			YDataType const *d2ydx2_right =
+					&d2ydx2[(left_index + 1) * num_array];
 			for (size_t i = location[k]; i < location[k + 1]; ++i) {
-				XDataType a = (base_position[k + 1] - interpolated_position[i])
-						/ dx;
+				XDataType a = (base_position[left_index + 1]
+						- interpolated_position[i]) / dx;
 				XDataType b = 1.0 - a;
 				YDataType *work = &interpolated_data[i * num_array];
 				XDataType aaa = (a * a * a - a) * dx * dx / 6.0;
@@ -138,7 +144,7 @@ private:
 			XDataType const base_position[], size_t num_array,
 			YDataType const base_data[], YDataType d2ydx2[]) {
 		StorageAndAlignedPointer<YDataType> holder_for_u;
-		AllocateAndAlign<YDataType>(num_base * num_array, &holder_for_u);
+		AllocateAndAlign < YDataType > (num_base * num_array, &holder_for_u);
 		YDataType *upper_triangular = holder_for_u.pointer;
 
 		// This is a condition of natural cubic spline

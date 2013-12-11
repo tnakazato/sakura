@@ -10,7 +10,7 @@
 #include "gtest/gtest.h"
 #include "interpolation.h"
 
-//#include "asap/CubicSplineInterpolator1D.h"
+#include "asap/CubicSplineInterpolator1D.h"
 
 class InterpolateArray1DFloatTest: public InterpolateFloatTestBase {
 protected:
@@ -106,6 +106,40 @@ TEST_F(InterpolateArray1DFloatTest, SingleBase) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
+TEST_F(InterpolateArray1DFloatTest, OutOfRangeLeft) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -2.0, -1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 0.0, 3.0, 0.0);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			3.0, 3.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, OutOfRangeRight) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 2;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 2.0, 3.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 0.0, 1.0, 0.0, 3.0);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			3.0, 3.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
 TEST_F(InterpolateArray1DFloatTest, Nearest) {
 	// initial setup
 	size_t const num_base = 2;
@@ -114,6 +148,25 @@ TEST_F(InterpolateArray1DFloatTest, Nearest) {
 	AllocateMemory(num_base, num_interpolated, num_array);
 	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
 	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, -0.5, 0.2);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.1, 0.5,
+			0.9, 1.2);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			1.0, -1.0, -1.0, -0.5, -0.5, -0.5, 0.2, 0.2);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, NearestOffset) {
+	// initial setup
+	size_t const num_base = 4;
+	size_t const num_interpolated = 5;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.1, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 3.0, 2.0, 1.0, -1.0,
+			-2.0, -1.0, -0.5, 0.2);
 	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.1, 0.5,
 			0.9, 1.2);
 	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
@@ -203,6 +256,44 @@ TEST_F(InterpolateArray1DFloatTest, Linear) {
 			double fraction = (x_interpolated_[j] - x_base_[0]) / dx;
 			size_t start_position = i * num_base;
 			size_t end_position = start_position + num_base - 1;
+			size_t index = i * num_interpolated + j;
+			y_expected_[index] = y_base_[start_position]
+					+ fraction
+							* (y_base_[end_position] - y_base_[start_position]);
+		}
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, LinearOffset) {
+	// initial setup
+	size_t const num_base = 4;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.0, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 3.0, 2.0, 1.0, -1.0,
+			-2.0, -1.0, 0.0, 0.5);
+	x_interpolated_[0] = -1.0;
+	y_expected_[0] = 1.5;
+	y_expected_[num_interpolated] = -0.5;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	y_expected_[num_interpolated - 1] = -1.0;
+	y_expected_[num_interpolated * num_array - 1] = 0.5;
+	size_t const num_segments = num_interpolated - 3;
+	double dx = x_base_[num_base - 1] - x_base_[2];
+	double increment = dx / static_cast<double>(num_segments);
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
+	}
+	for (size_t i = 0; i < num_array; ++i) {
+		for (size_t j = 1; j < num_interpolated - 1; ++j) {
+			double fraction = (x_interpolated_[j] - x_base_[2]) / dx;
+			size_t start_position = i * num_base + 2;
+			size_t end_position = start_position + num_base - 3;
 			size_t index = i * num_interpolated + j;
 			y_expected_[index] = y_base_[start_position]
 					+ fraction
@@ -371,6 +462,45 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
 			double fraction = (x_interpolated_[j] - x_base_[0]) / dx;
 			size_t start_position = i * num_base;
 			size_t end_position = start_position + num_base - 1;
+			size_t index = i * num_interpolated + j;
+			y_expected_[index] = y_base_[start_position]
+					+ fraction
+							* (y_base_[end_position] - y_base_[start_position]);
+		}
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Offset) {
+	// initial setup
+	polynomial_order_ = 1;
+	size_t const num_base = 4;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, -3.0, -2.0, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 3.0, 2.0, 1.0, -1.0,
+			-2.0, -1.0, 0.0, 0.5);
+	x_interpolated_[0] = -1.0;
+	y_expected_[0] = 1.5;
+	y_expected_[num_interpolated] = -0.5;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	y_expected_[num_interpolated - 1] = -1.0;
+	y_expected_[num_interpolated * num_array - 1] = 0.5;
+	size_t const num_segments = num_interpolated - 3;
+	double dx = x_base_[num_base - 1] - x_base_[2];
+	double increment = dx / static_cast<double>(num_segments);
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
+	}
+	for (size_t i = 0; i < num_array; ++i) {
+		for (size_t j = 1; j < num_interpolated - 1; ++j) {
+			double fraction = (x_interpolated_[j] - x_base_[2]) / dx;
+			size_t start_position = i * num_base + 2;
+			size_t end_position = start_position + num_base - 3;
 			size_t index = i * num_interpolated + j;
 			y_expected_[index] = y_base_[start_position]
 					+ fraction
@@ -613,8 +743,8 @@ TEST_F(InterpolateArray1DFloatTest, Spline1D) {
 	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, 0.0);
 	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
 			0.5, 0.7, 1.5);
-	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0, 0.72575,
-			-0.28125, -0.66775, -0.78125);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			0.72575, -0.28125, -0.66775, -0.78125);
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
@@ -1084,25 +1214,79 @@ TEST_F(InterpolateArray1DFloatTest, SplineOppositePerformance) {
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
-// AasapSplinePerformance
-// Test performance of asap spline interpolator.
-// To enable this test, you have to follow the procedure below:
-//
-// 1. Uncomment the line at the top of this file that includes
-//    "CubicSplineInterpolator1D.h".
-//
-// 2. Copy the following files to test/asap directory from asap/src:
-//        - Interpolator1D.h, Interpolator1D.tcc
-//        - CubicSplineInterpolator1D.h, CubicSplineInterpolator1D.tcc
-//        - Locator.h, Locator.tcc
-//        - BisectionLocator.h, BisectionLocator.tcc
-//    These files should be located at test directory.
-//
-// 3. Comment out all casa related lines from these files.
-//
-// 4. Change Interpolator1D::createLocator() so that it always uses
-//    BisectionLocator.
-//
+TEST_F(InterpolateArray1DFloatTest, SplineComparisonWithAsap) {
+	// initial setup
+	size_t const num_base = 128;
+	size_t const num_interpolated = 500;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	double refpix_base = 64.0;
+	double refval_base = 115.0e9;
+	double increment_base = 14.0625e6;
+	for (size_t i = 0; i < num_base; ++i) {
+		x_base_[i] = (static_cast<double>(i) - refpix_base) * increment_base
+				+ refval_base;
+	}
+	float y_base[num_base] = { -0.30260521, -0.27442384, -0.24624248,
+			-0.21806112, -0.18987976, -0.1616984, -0.13351703, -0.10533567,
+			-0.07715431, -0.04897295, -0.02079158, 0.00738978, 0.03557114,
+			0.0637525, 0.09193387, 0.12011523, 0.14829659, 0.17647795,
+			0.20465931, 0.23284069, 0.26102203, 0.28920341, 0.31738478,
+			0.34556612, 0.3737475, 0.40192887, 0.43011022, 0.45829159,
+			0.48647293, 0.51465434, 0.54283565, 0.57101703, 0.5991984,
+			0.62737978, 0.65556115, 0.68374246, 0.71192384, 0.74010521,
+			0.76828659, 0.79646796, 0.82464927, 0.85283065, 0.88101202,
+			0.9091934, 0.93737477, 0.96555609, 0.99373746, 1.02191889,
+			1.05010021, 1.07828152, 1.10646296, 1.13464427, 1.1628257,
+			1.19100702, 1.21918833, 1.24736977, 1.27555108, 1.30373251,
+			1.33191383, 1.36009514, 1.38827658, 1.41645789, 1.44463933,
+			1.47282064, 1.50100195, 1.52918339, 1.5573647, 1.58554614,
+			1.61372745, 1.64190876, 1.6700902, 1.69827151, 1.72645295,
+			1.75463426, 1.78281558, 1.81099701, 1.83917832, 1.86735976,
+			1.89554107, 1.92372239, 1.95190382, 1.98008513, 2.00826645,
+			2.036448, 2.06462932, 2.09281063, 2.12099195, 2.14917326,
+			2.17735481, 2.20553613, 2.23371744, 2.26189876, 2.29008007,
+			2.31826162, 2.34644294, 2.37462425, 2.40280557, 2.43098688,
+			2.45916843, 2.48734975, 2.51553106, 2.54371238, 2.57189369,
+			2.60007524, 2.62825656, 2.65643787, 2.68461919, 2.7128005,
+			2.74098206, 2.76916337, 2.79734468, 2.825526, 2.85370731,
+			2.88188887, 2.91007018, 2.9382515, 2.96643281, 2.99461412,
+			3.02279568, 3.05097699, 3.07915831, 3.10733962, 3.13552094,
+			3.16370249, 3.1918838, 3.22006512, 3.24824643, 3.27642775 };
+	for (size_t i = 0; i < num_base * num_array; ++i) {
+		y_base_[i] = y_base[i];
+	}
+	double refpix = 250.0;
+	double refval = 115.0e9;
+	double increment = 1.0e6;
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = (static_cast<double>(i) - refpix) * increment
+				+ refval;
+	}
+
+	// execute asap interpolation
+	std::unique_ptr<asap::CubicSplineInterpolator1D<double, float> > interpolator(
+			new asap::CubicSplineInterpolator1D<double, float>());
+	interpolator->setX(x_base_, num_base);
+	for (size_t j = 0; j < num_array; ++j) {
+		float *y_base_work = &(y_base_[j * num_base]);
+		float *y_interpolated_work = &(y_interpolated_[j * num_interpolated]);
+		interpolator->setY(y_base_work, num_base);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			y_interpolated_work[i] = interpolator->interpolate(
+					x_interpolated_[i]);
+		}
+	}
+
+	for (size_t i = 0; i < num_interpolated * num_array; ++i) {
+		y_expected_[i] = y_interpolated_[i];
+	}
+
+	// execute sakura interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
 //TEST_F(InterpolateArray1DFloatTest, AsapSplinePerformance) {
 //	// initial setup
 //	size_t const num_base = 3;
