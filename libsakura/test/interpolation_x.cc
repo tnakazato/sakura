@@ -124,6 +124,24 @@ TEST_F(InterpolateArray1DFloatTest, Nearest) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
+TEST_F(InterpolateArray1DFloatTest, Nearest1D) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 6;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			1.0, 1.0, -1.0, -1.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
 TEST_F(InterpolateArray1DFloatTest, NearestDescending) {
 	// initial setup
 	size_t const num_base = 2;
@@ -191,6 +209,24 @@ TEST_F(InterpolateArray1DFloatTest, Linear) {
 							* (y_base_[end_position] - y_base_[start_position]);
 		}
 	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, Linear1D) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 6;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			0.8, 0.0, -0.4, -1.0);
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
@@ -341,6 +377,44 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
 							* (y_base_[end_position] - y_base_[start_position]);
 		}
 	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, Polynomial1DOrder0) {
+	// initial setup
+	polynomial_order_ = 0;
+	size_t const num_base = 2;
+	size_t const num_interpolated = 6;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			1.0, 1.0, -1.0, -1.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, Polynomial1DOrder1) {
+	// initial setup
+	polynomial_order_ = 1;
+	size_t const num_base = 2;
+	size_t const num_interpolated = 6;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0,
+			0.8, 0.0, -0.4, -1.0);
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
@@ -529,6 +603,62 @@ TEST_F(InterpolateArray1DFloatTest, Spline) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
+TEST_F(InterpolateArray1DFloatTest, Spline1D) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 6;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.0, 0.1,
+			0.5, 0.7, 1.5);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 1.0, 0.72575,
+			-0.28125, -0.66775, -0.78125);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_F(InterpolateArray1DFloatTest, SplineForLinear) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 0.0, -1.0, 0.0,
+			0.25, 0.5);
+	x_interpolated_[0] = -1.0;
+	y_expected_[0] = 1.0;
+	y_expected_[num_interpolated] = 0.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	y_expected_[num_interpolated - 1] = -1.0;
+	y_expected_[num_interpolated * num_array - 1] = 0.5;
+	size_t const num_segments = num_interpolated - 3;
+	double dx = x_base_[num_base - 1] - x_base_[0];
+	double increment = dx / static_cast<double>(num_segments);
+	for (size_t i = 1; i < num_interpolated - 1; ++i) {
+		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
+	}
+	for (size_t i = 0; i < num_array; ++i) {
+		for (size_t j = 1; j < num_interpolated - 1; ++j) {
+			double fraction = (x_interpolated_[j] - x_base_[0]) / dx;
+			size_t start_position = i * num_base;
+			size_t end_position = start_position + num_base - 1;
+			size_t index = i * num_interpolated + j;
+			y_expected_[index] = y_base_[start_position]
+					+ fraction
+							* (y_base_[end_position] - y_base_[start_position]);
+		}
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
 TEST_F(InterpolateArray1DFloatTest, SplineDescending) {
 	// initial setup
 	size_t const num_base = 3;
@@ -604,6 +734,24 @@ TEST_F(InterpolateArray1DFloatTest, SingleBasePerformance) {
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
+TEST_F(InterpolateArray1DFloatTest, SingleBase1DPerformance) {
+	// initial setup
+	size_t const num_base = 1;
+	size_t const num_interpolated = 200000000;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0);
+	double dx = 1.0 / static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = -0.5 + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false);
+}
+
 TEST_F(InterpolateArray1DFloatTest, NearestPerformance) {
 	// initial setup
 	size_t const num_base = 2;
@@ -614,6 +762,25 @@ TEST_F(InterpolateArray1DFloatTest, NearestPerformance) {
 	for (size_t i = 0; i < num_base * num_array; ++i) {
 		y_base_[i] = static_cast<float>(i);
 	}
+	double dx = fabs(x_base_[1] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false);
+}
+
+TEST_F(InterpolateArray1DFloatTest, Nearest1DPerformance) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 200000000;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 0.0);
 	double dx = fabs(x_base_[1] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -677,6 +844,25 @@ TEST_F(InterpolateArray1DFloatTest, LinearPerformance) {
 	for (size_t i = 0; i < num_base * num_array; ++i) {
 		y_base_[i] = static_cast<float>(i);
 	}
+	double dx = fabs(x_base_[1] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false);
+}
+
+TEST_F(InterpolateArray1DFloatTest, Linear1DPerformance) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 200000000;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 0.0);
 	double dx = fabs(x_base_[1] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
@@ -752,6 +938,26 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullPerformance) {
 			num_interpolated, num_array, sakura_Status_kOK, false);
 }
 
+TEST_F(InterpolateArray1DFloatTest, Polynomial1DOrder2FullPerformance) {
+	// initial setup
+	polynomial_order_ = 2;
+	size_t const num_base = 3;
+	size_t const num_interpolated = 100000000; // 1/2 of Nearest and Linear
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0, 200.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, 0.0);
+	double dx = fabs(x_base_[2] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false);
+}
+
 TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullDescendingPerformance) {
 	// initial setup
 	polynomial_order_ = 2;
@@ -806,6 +1012,25 @@ TEST_F(InterpolateArray1DFloatTest, SplinePerformance) {
 	for (size_t i = 0; i < num_base * num_array; ++i) {
 		y_base_[i] = static_cast<float>(i);
 	}
+	double dx = fabs(x_base_[2] - x_base_[0])
+			/ static_cast<double>(num_interpolated - 1);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = x_base_[0] + dx * static_cast<double>(i);
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false);
+}
+
+TEST_F(InterpolateArray1DFloatTest, Spline1DPerformance) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 200000000;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 100.0, 200.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, 0.0);
 	double dx = fabs(x_base_[2] - x_base_[0])
 			/ static_cast<double>(num_interpolated - 1);
 	for (size_t i = 0; i < num_interpolated; ++i) {
