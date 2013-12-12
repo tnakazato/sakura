@@ -52,6 +52,7 @@ template<class XDataType>
 size_t Locate(size_t num_base, size_t num_located,
 		XDataType const base_position[], XDataType const located_position[],
 		size_t location_list[]) {
+	// input arrays must be sorted in ascending order
 	size_t num_location_list = 0;
 	if (num_base == 1) {
 		if (located_position[num_located - 1] <= base_position[0]) {
@@ -65,11 +66,19 @@ size_t Locate(size_t num_base, size_t num_located,
 			location_list[0] = 0;
 			location_list[1] = 1;
 		}
+	} else if (located_position[num_located - 1] <= base_position[0]) {
+		// all located_position's are on the left (lower) side of base_position
+		num_location_list = 1;
+		location_list[0] = 0;
+	} else if (located_position[0] >= base_position[num_base - 1]) {
+		// all located_position's are on the right (upper) side of base_position
+		num_location_list = 1;
+		location_list[0] = num_base;
 	} else {
 		size_t start_position = 0;
 		size_t end_position = num_base - 1;
 		size_t previous_location = num_base + 1;
-		for (size_t i = 0; i < num_located; ++i) {
+		for (size_t i = 0; i < num_located && start_position <= end_position; ++i) {
 			size_t location = LocateData(start_position, end_position, num_base,
 					base_position, located_position[i]);
 			if (location != previous_location) {
