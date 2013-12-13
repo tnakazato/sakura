@@ -565,6 +565,8 @@ void E2eReduce(int argc, char const* const argv[]) {
 		Reduce(options);
 	}
 	xdispatch::main_queue().async([=] {
+		LOG4CXX_INFO(logger, "Sync-ing...");
+		sync();
 		double end_time = sakura_GetCurrentTime();
 		std::cout << "finished " << end_time - start_time << "secs\n";
 	});
