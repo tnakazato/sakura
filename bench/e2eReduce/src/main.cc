@@ -560,24 +560,19 @@ void E2eReduce(int argc, char const* const argv[]) {
 // config file summary
 	LOG4CXX_INFO(logger, OptionParser::GetSummary(options));
 
-	double start_time = sakura_GetCurrentTime();
 	if (options.input_file.size() > 0) {
 		Reduce(options);
 	}
-	xdispatch::main_queue().async([=] {
-		LOG4CXX_INFO(logger, "Sync-ing...");
-		sync();
-		double end_time = sakura_GetCurrentTime();
-		std::cout << "finished " << end_time - start_time << "secs\n";
-	});
 	LOG4CXX_DEBUG(logger, "Leave: E2eReduce");
 }
 
 void main_(int argc, char const* const argv[]) {
 	LOG4CXX_INFO(logger, "start");
+	double start_time = sakura_GetCurrentTime();
 
 	sakura_Status result;
 	xdispatch::main_queue().sync([&] {
+		LOG4CXX_DEBUG(logger, "Initializing libsakura");
 		result = sakura_Initialize(nullptr, nullptr);
 	});
 	if (result == sakura_Status_kOK) {
@@ -588,9 +583,13 @@ void main_(int argc, char const* const argv[]) {
 		} catch (...) {
 			LOG4CXX_ERROR(logger, "Exception raised");
 		}
-		xdispatch::main_queue().sync([] {
-			LOG4CXX_INFO(logger, "Cleaning up libsakura");
+		xdispatch::main_queue().sync([start_time] {
+			LOG4CXX_DEBUG(logger, "Cleaning up libsakura");
 			sakura_CleanUp();
+			LOG4CXX_INFO(logger, "Sync-ing...");
+			sync();
+			double end_time = sakura_GetCurrentTime();
+			std::cout << "finished " << end_time - start_time << "secs\n";
 			exit(0);
 		});
 	} else {
