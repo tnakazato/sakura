@@ -452,7 +452,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
 		}
