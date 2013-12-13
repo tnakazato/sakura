@@ -123,14 +123,26 @@ inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ kernel_width; // sqrt(log(16))/ kernel_width
 	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-	size_t loop_max = num_data / 2;
+	float center = (num_data) / 2.f;
+	if (num_data % 2 != 0) {
+		center = (num_data - 1) / 2.f;
+	}
+	size_t middle = (num_data) / 2;
+	size_t loop_max = middle;
 	output_data[0] = height;
-	float center = (num_data - 1) / 2.f;
-	size_t middle = (num_data - 1) / 2;
-	for (size_t j = 0; j < loop_max; ++j) {
+	output_data[middle] = height
+			* exp(
+					-(center * reciprocal_of_denominator)
+							* (center * reciprocal_of_denominator));
+	size_t plus_one_for_odd = 0;
+	if (num_data % 2 != 0) {
+		plus_one_for_odd = 1;
+		output_data[middle + 1] = output_data[middle];
+	}
+	for (size_t j = 1; j < loop_max; ++j) {
 		float value = (j - center) * reciprocal_of_denominator;
-		output_data[middle + 1 + j] = output_data[middle - j] = height
-				* exp(-(value * value));
+		output_data[middle + j + plus_one_for_odd] = output_data[middle - j] =
+				height * exp(-(value * value));
 	}
 }
 
