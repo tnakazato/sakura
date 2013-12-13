@@ -119,8 +119,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
 	LIBSAKURA_PREFIX::Memory> work_context(
 			static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>(LIBSAKURA_PREFIX::Memory::Allocate(
-					sizeof(LIBSAKURA_SYMBOL(BaselineContext)))),
-			LIBSAKURA_PREFIX::Memory());
+					sizeof(LIBSAKURA_SYMBOL(BaselineContext)))));
 	if (work_context == nullptr) {
 		throw std::bad_alloc();
 	}
@@ -134,8 +133,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*work_context->basis_data) * num_total_basis_data,
-					&work_context->basis_data),
-			LIBSAKURA_PREFIX::Memory());
+					&work_context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(work_context->basis_data));
 
 	SetBasisData(work_context.get());
