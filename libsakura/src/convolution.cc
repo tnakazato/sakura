@@ -17,6 +17,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	bool use_fft;bool remove_pollution;
 	size_t num_data;
 	size_t expanded_num_data;
+	size_t kernel_width;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
@@ -118,6 +119,31 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 	}
 }
 
+inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
+		size_t kernel_width, float* output_data) {
+	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
+			/ kernel_width; // sqrt(log(16))/ kernel_width
+	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
+	float center = (num_data) / 2.f;
+	if (num_data % 2 != 0) {
+		center = (num_data - 1) / 2.f;
+	}
+	size_t middle = (num_data) / 2;
+	size_t loop_max = middle;
+	size_t plus_one_for_odd = 1;
+	if (num_data % 2 == 0) {
+		plus_one_for_odd = 0;
+		float value = (-center) * reciprocal_of_denominator;
+		output_data[0] = height * exp(-(value * value));
+	}
+	output_data[middle] = height;
+	for (size_t j = 1; j < loop_max; ++j) {
+		float value = (j - center) * reciprocal_of_denominator;
+		output_data[num_data - j + plus_one_for_odd] = output_data[j
+				- plus_one_for_odd] = height * exp(-(value * value));
+	}
+}
+
 inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 		float* output_data) {
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
@@ -166,11 +192,14 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 }
 
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data,
-		float const *input_kernel, float *output_data) {
+		size_t kernel_width, float const *input_kernel, float *output_data) {
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; (i < num_data / 2 - 1); ++i) {
+		//for (size_t i = 0; (i < num_data / 2 - 1); ++i) {
+		for (size_t i = 0;
+				i < (6 * kernel_width / 2.35482004503094938202313865291938) // 6 sigma
+				&& (kernel_width < num_data); ++i) {
 			if (j + 1 + i < num_data) {
 				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
 			} else {
@@ -178,7 +207,10 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data,
 						* input_kernel[num_data - 1 - i];
 			}
 		}
-		for (size_t k = 1; k < num_data / 2 + 1; ++k) {
+		//for (size_t k = 1; k < num_data / 2 + 1; ++k) {
+		for (size_t k = 1;
+				k < (6 * kernel_width / 2.35482004503094938202313865291938) // 6 sigma
+				&& (kernel_width < num_data); ++k) {
 			if (j < k) {
 				right += input_data[num_data + j - k] * input_kernel[k];
 			} else {
@@ -190,7 +222,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data,
 }
 
 inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
-		float const *input_data, float const *input_kernel,
+		float const *input_data, size_t kernel_width, float const *input_kernel,
 		float *output_data) {
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
@@ -300,6 +332,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		guard_for_ifft_plan.Disable();
 		work_context->num_data = num_data;
 		work_context->expanded_num_data = expanded_num_data;
+		work_context->kernel_width = kernel_width;
 		work_context->remove_pollution = remove_pollution;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
@@ -324,8 +357,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
 		work_context->real_array = real_array_kernel.release();
-		work_context->expanded_num_data = num_data;
 		work_context->num_data = num_data;
+		work_context->expanded_num_data = num_data;
+		work_context->kernel_width = kernel_width;
 		work_context->use_fft = use_fft;
 		work_context->remove_pollution = remove_pollution;
 		*context = work_context.release();
@@ -408,11 +442,11 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	} else {
 		if (context->remove_pollution) {
 			ConvolutionWithoutFFTRemovePollution(num_data,
-					const_cast<float*>(input_data), context->real_array,
-					output_data);
+					const_cast<float*>(input_data), context->kernel_width,
+					context->real_array, output_data);
 		} else {
 			ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
-					context->real_array, output_data);
+					context->kernel_width, context->real_array, output_data);
 		}
 	}
 }

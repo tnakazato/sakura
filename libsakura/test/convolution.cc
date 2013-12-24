@@ -914,44 +914,51 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
  */
 TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 	{ // [even],without FFT, Gaussian Kernel Shape,input delta
-		/*		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-		 size_t const kernel_width(NUM_WIDTH);
-		 bool fftuse = false; // without FFT
-		 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		 LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		 SIMD_ALIGN
-		 size_t num_data_set[7] = {128, 256, 512, 1024, 2048, 4096, 8192};
-		 size_t loop_max = 10000;
-		 for (size_t j = 0; j < 7; ++j) {
-		 SIMD_ALIGN
-		 std::unique_ptr<float[]> input_data(new float[num_data_set[j]]);
-		 SIMD_ALIGN
-		 bool mask[num_data_set[j]];
-		 for (size_t i = 0; i < num_data_set[j]; ++i) {
-		 input_data[i] = 1.0; // all data are 1
-		 mask[i] = true; // no mask
-		 }
-		 LIBSAKURA_SYMBOL(Status) status_Create =
-		 LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data_set[j], kernel_type,
-		 kernel_width, fftuse, &context);
-		 ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
-		 std::unique_ptr<float[]> output_data(new float[num_data_set[j]]);
-
-		 double start_time = sakura_GetCurrentTime();
-		 for (size_t i = 0; i < loop_max; ++i) {
-		 LIBSAKURA_SYMBOL(Convolve1D)(context, num_data_set[j],
-		 input_data.get(), mask, output_data.get());
-		 }
-		 double end_time = sakura_GetCurrentTime();
-		 input_data.reset(nullptr);
-		 output_data.reset(nullptr);
-		 std::cout << "ch = " << num_data_set[j] << ", elapsed time = "
-		 << end_time - start_time << "secs\n";
-
-		 LIBSAKURA_SYMBOL(Status) status_Destroy =
-		 LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		 ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
-		 }*/
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		size_t const kernel_width(NUM_WIDTH);
+		bool fftuse = false; // without FFT
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+		SIMD_ALIGN
+		size_t num_data;
+		size_t num_data_set[7] = { 128, 256, 512, 1024, 2048, 4096, 8192 };
+		size_t loop_max = 10000;
+		for (size_t j = 0; j < 7; ++j) {
+			//size_t j  = 0;{
+			SIMD_ALIGN
+			std::unique_ptr<float[]> input_data(new float[num_data_set[j]]);
+			SIMD_ALIGN
+			bool mask[num_data_set[j]];
+			for (size_t i = 0; i < num_data_set[j]; ++i) {
+				input_data[i] = 0.0; // all data are 1
+				mask[i] = true; // no mask
+			}
+			input_data[num_data_set[j] / 2] = 1.0; // center of kernel
+			LIBSAKURA_SYMBOL(Status) status_Create =
+			LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data_set[j],
+					kernel_type, kernel_width, fftuse, &context);
+			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+			std::unique_ptr<float[]> output_data(new float[num_data_set[j]]);
+			num_data = num_data_set[j];
+			double start_time = sakura_GetCurrentTime();
+			for (size_t i = 0; i < loop_max; ++i) {
+				LIBSAKURA_SYMBOL(Convolve1D)(context, num_data_set[j],
+						input_data.get(), mask, output_data.get());
+			}
+			double end_time = sakura_GetCurrentTime();
+			//verbose = true;
+			if (verbose) {
+				PrintArray2("\n", num_data, output_data.get());
+			}
+			verbose = false;
+			input_data.reset(nullptr);
+			output_data.reset(nullptr);
+			std::cout << "ch = " << num_data_set[j] << ", elapsed time = "
+					<< end_time - start_time << "secs\n";
+			LIBSAKURA_SYMBOL(Status) status_Destroy =
+			LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		}
 	}
 }
 
