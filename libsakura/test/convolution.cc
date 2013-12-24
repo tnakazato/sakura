@@ -361,10 +361,11 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
+			std::cout << " even with FFT" << std::endl;
 			PrintArray2("\n", num_data, output_data);
 		}
 		verbose = false;
-		for (size_t i = 0; i < kernel_width; ++i) {
+		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
 			EXPECT_FLOAT_EQ(gaussian_kernel[kernel_width + (i + 1)],
@@ -410,7 +411,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 			PrintArray2("\n", num_data, output_data);
 		}
 		//verbose = false;
-		for (size_t i = 0; i < kernel_width; ++i) {
+		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
 			EXPECT_FLOAT_EQ(gaussian_kernel[kernel_width + (i + 1)],
@@ -454,6 +455,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
+			std::cout << " even without FFT" << std::endl;
 			PrintArray2("\n", num_data, output_data);
 		}
 		verbose = false;
