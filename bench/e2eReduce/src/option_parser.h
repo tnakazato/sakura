@@ -45,6 +45,7 @@ struct E2EOptions {
 	std::string input_file;
 	std::string output_file;
 	bool serialize;
+	bool batch;
 	unsigned int max_threads;
 	unsigned int ifno;
 	CalibrationOptions calibration;
@@ -72,7 +73,8 @@ public:
 		oss << "\tinput filename=" << option_list.input_file
 				<< "\n\toutput filename=" << option_list.output_file
 				<< "\n\tspw=" << option_list.ifno << "\n\tserialize="
-				<< option_list.serialize << "\n\tmax_threads="
+				<< option_list.serialize << "\n\tbatch="
+				<< option_list.batch << "\n\tmax_threads="
 				<< option_list.max_threads << "\n";
 		oss << "\tsky filename=" << option_list.calibration.sky_table
 				<< "\n\ttsys filename=" << option_list.calibration.tsys_table
@@ -119,6 +121,9 @@ private:
 		option_list->ifno = std::atoi(GetValue(options, GetKey("spw")).c_str());
 		option_list->serialize =
 				"TRUE" == ToUpper(GetValue(options, GetKey("serialize"))) ?
+						true : false;
+		option_list->batch =
+				"TRUE" == ToUpper(GetValue(options, GetKey("batch"))) ?
 						true : false;
 		option_list->max_threads = std::max(1,
 				std::atoi(GetValue(options, GetKey("max_threads")).c_str()));
