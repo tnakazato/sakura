@@ -283,16 +283,17 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		float const * const varray[rows_per_processing],
 		uint8_t const * const farray[rows_per_processing],
 		E2EOptions const &option_list, SharedWorkingSet const *shared) {
-// generate temporary storage
-	AlignedArrayGenerator generator;
-	float *out_data[rows_per_processing];
-	unsigned char *out_flag[rows_per_processing];
-	float *out_tsys[rows_per_processing];
+	std::unique_ptr<AlignedArrayGenerator> generator4out(new AlignedArrayGenerator());
+	float **out_data = generator4out->GetAlignedArray<float*>(rows_per_processing);
+	uint8_t **out_flag = generator4out->GetAlignedArray<uint8_t *>(rows_per_processing);
+	float **out_tsys = generator4out->GetAlignedArray<float*>(rows_per_processing);
 	for (size_t i = 0; i < jobs; ++i) {
-		out_data[i] = generator.GetAlignedArray<float>(num_v);
-		out_flag[i] = generator.GetAlignedArray<unsigned char>(num_v);
-		out_tsys[i] = generator.GetAlignedArray<float>(num_v);
+		out_data[i] = generator4out->GetAlignedArray<float>(num_v);
+		out_flag[i] = generator4out->GetAlignedArray<unsigned char>(num_v);
+		out_tsys[i] = generator4out->GetAlignedArray<float>(num_v);
 	}
+
+	AlignedArrayGenerator generator;
 	bool *mask = generator.GetAlignedArray<bool>(num_v);
 	bool *baseline_mask = generator.GetAlignedArray<bool>(num_v);
 	bool *baseline_after_mask = generator.GetAlignedArray<bool>(num_v);
@@ -340,14 +341,24 @@ void ParallelJob(size_t job_id, size_t jobs, size_t num_v,
 		ExecuteMaskToBitFlag(num_v, mask, uint8_flag);
 
 	}
-	xdispatch::main_queue().sync([&]() {
-		// run casa operations in main_queue.
-			for (size_t i = 0; i < jobs; ++i) {
-				PutResult(const_cast<SharedWorkingSet *>(shared), job_id + i, num_v,
-						out_data[i], out_flag[i], out_tsys[i]);
-				LOG4CXX_DEBUG(logger, "Row " << job_id + i << " have done.");
-			}
-		});
+	if (option_list.serialize) {
+		for (size_t i = 0; i < jobs; ++i) {
+			PutResult(const_cast<SharedWorkingSet *>(shared), job_id + i, num_v,
+					out_data[i], out_flag[i], out_tsys[i]);
+			LOG4CXX_DEBUG(logger, "Row " << job_id + i << " have done.");
+		}
+	} else {
+		auto const gen4out = generator4out.release();
+		xdispatch::main_queue().async([=]() {
+			std::unique_ptr<AlignedArrayGenerator> gen4outReleaser(gen4out);
+			// run casa operations in main_queue.
+				for (size_t i = 0; i < jobs; ++i) {
+					PutResult(const_cast<SharedWorkingSet *>(shared), job_id + i, num_v,
+							out_data[i], out_flag[i], out_tsys[i]);
+					LOG4CXX_DEBUG(logger, "Row " << job_id + i << " have done.");
+				}
+			});
+	}
 }
 
 SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
@@ -538,9 +549,12 @@ void Reduce(E2EOptions const &options) {
 							ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared);
 						});
 			}
+		} // i
+		if (!serialize) {
+			group.wait(xdispatch::time_forever);
+			xdispatch::main_queue().sync([] {}); // to ensure other jobs submitted to main_queue finished
 		}
-		group.wait(xdispatch::time_forever);
-	}
+	} // polno
 	LOG4CXX_DEBUG(logger, "Leave: Reduce");
 }
 
