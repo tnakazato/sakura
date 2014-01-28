@@ -17,8 +17,6 @@ struct CalibrationContext {
 	float *tsys;
 	double *timestamp_sky;
 	double *timestamp_tsys;
-	float *sky_work;
-	double *timestamp_work;
 };
 
 void FillCalibrationContext(std::string const sky_table,
@@ -69,9 +67,6 @@ void FillCalibrationContext(std::string const sky_table,
 			num_chan_tsys, frequency_label_tsys, num_row_tsys, tsys,
 			num_chan_sky, frequency_label_target, interpolated_tsys);
 
-	float *sky_work = array_generator->GetAlignedArray<float>(num_chan_sky);
-	double *timestamp_work = array_generator->GetAlignedArray<double>(1);
-
 	// Create Context and struct for calibration
 	// calibration context
 	calibration_context->num_channel = num_chan_sky;
@@ -81,8 +76,6 @@ void FillCalibrationContext(std::string const sky_table,
 	calibration_context->timestamp_tsys = tsys_time;
 	calibration_context->sky_spectra = sky_spectra;
 	calibration_context->tsys = interpolated_tsys;
-	calibration_context->sky_work = sky_work;
-	calibration_context->timestamp_work = timestamp_work;
 }
 
 } /* anonymous namespace */

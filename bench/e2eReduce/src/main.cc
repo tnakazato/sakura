@@ -75,28 +75,26 @@ inline void ExecuteMaskToBitFlag(size_t num_data, bool input_mask[],
 	}
 }
 
-inline void ExecuteCalibration(double timestamp, size_t num_data,
+inline void ExecuteCalibration(size_t num_row, double const timestamp[], size_t num_data,
 		float const input_data[], CalibrationContext const &calibration_context,
-		float out_data[], float out_tsys[]) {
+		float sky[], float out_data[], float out_tsys[]) {
+	assert(num_data == calibration_context.num_channel);
+
 	// interpolate Tsys to timestamp
-	size_t num_channel = calibration_context.num_channel;
-	double *t = calibration_context.timestamp_work;
-	t[0] = timestamp;
 	sakura_Status status = sakura_InterpolateYAxisFloat(
 			sakura_InterpolationMethod_kLinear, 0,
 			calibration_context.num_data_tsys,
-			calibration_context.timestamp_tsys, num_channel,
-			calibration_context.tsys, 1, t, out_tsys);
+			calibration_context.timestamp_tsys, num_data,
+			calibration_context.tsys, num_row, timestamp, out_tsys);
 
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("calibration");
 	}
 
 	// interpolated sky spectrum to timestamp
-	auto *sky = calibration_context.sky_work;
 	status = sakura_InterpolateYAxisFloat(sakura_InterpolationMethod_kLinear, 0,
 			calibration_context.num_data_sky, calibration_context.timestamp_sky,
-			num_channel, calibration_context.sky_spectra, 1, t, sky);
+			num_data, calibration_context.sky_spectra, num_row, timestamp, sky);
 
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("calibration");
@@ -104,8 +102,8 @@ inline void ExecuteCalibration(double timestamp, size_t num_data,
 
 	// apply calibration
 	// TODO: allow reference == result?
-	status = sakura_ApplyPositionSwitchCalibration(num_channel, out_tsys,
-			num_channel, input_data, sky, out_data);
+	status = sakura_ApplyPositionSwitchCalibration(num_data * num_row, out_tsys,
+			num_data * num_row, input_data, sky, out_data);
 
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("calibration");
@@ -115,7 +113,8 @@ inline void ExecuteCalibration(double timestamp, size_t num_data,
 inline void ExecuteBaseline(float clipping_threshold_sigma,
 		uint16_t num_fitting_max, bool const mask[],
 		sakura_BaselineContext const *context, size_t num_data,
-		float const input_data[], float output_data[], bool mask_after_clipping[]) {
+		float const input_data[], float output_data[],
+		bool mask_after_clipping[]) {
 	sakura_Status status = sakura_SubtractBaseline(num_data, input_data, mask,
 			context, clipping_threshold_sigma, num_fitting_max, true,
 			mask_after_clipping, output_data);
@@ -285,6 +284,8 @@ struct WorkArea {
 	bool *mask;
 	bool *baseline_mask;
 	bool *baseline_after_mask;
+	double *timestamp;
+	float *sky;
 };
 
 void ParallelJob(size_t row_id, size_t rows, size_t num_v,
@@ -294,6 +295,9 @@ void ParallelJob(size_t row_id, size_t rows, size_t num_v,
 		E2EOptions const &option_list, SharedWorkingSet const *shared,
 		WorkArea *work_area, float **out_data, uint8_t **out_flag,
 		float **out_tsys) {
+
+	float *sky = AssumeAligned(work_area->sky);
+	double *timestamp = AssumeAligned(work_area->timestamp);
 
 	bool *mask = AssumeAligned(work_area->mask);
 	bool *baseline_mask = AssumeAligned(work_area->baseline_mask);
@@ -307,8 +311,9 @@ void ParallelJob(size_t row_id, size_t rows, size_t num_v,
 		ExecuteBitFlagToMask(num_v, f, mask);
 
 		// Execute Calibration
-		ExecuteCalibration(t, num_v, v, shared->calibration_context,
-				out_data[i], out_tsys[i]);
+		timestamp[0] = t;
+		ExecuteCalibration(1, timestamp, num_v, v, shared->calibration_context,
+				sky, out_data[i], out_tsys[i]);
 
 		// Execute Flag NaN/Inf
 		ExecuteNanOrInfFlag(num_v, out_data[i], mask);
@@ -368,13 +373,15 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 					"FLAGTRA");
 			shared->output_tsys_column.attach(shared->output_table, "TSYS");
 			// line mask for baseline fitting
-			bool *mask = array_generator->GetAlignedArray<bool>(shared->num_chan);
+			bool *mask = array_generator->GetAlignedArray<bool>(
+					shared->num_chan);
 			for (size_t i = 0; i < shared->num_chan; ++i) {
 				mask[i] = false;
 			}
 			for (size_t i = 0; i < options.baseline.line_mask.size(); i += 2) {
 				size_t start = options.baseline.line_mask[i];
-				size_t end = std::min(options.baseline.line_mask[i+1], shared->num_chan);
+				size_t end = std::min(options.baseline.line_mask[i + 1],
+						shared->num_chan);
 				for (size_t j = start; j <= end; ++j) {
 					mask[j] = true;
 				}
@@ -427,8 +434,8 @@ struct WorkingSet {
 	WorkArea work_area;
 };
 
-WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements, size_t num_chan,
-		AlignedArrayGenerator *array_generator) {
+WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
+		size_t num_chan, AlignedArrayGenerator *array_generator) {
 	std::unique_ptr<WorkingSet[]> result(new WorkingSet[elements]);
 	for (size_t i = 0; i < elements; ++i) {
 		result[i].shared = shared;
@@ -437,13 +444,21 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements, size
 					num_chan);
 			result[i].flag[j] = array_generator->GetAlignedArray<unsigned char>(
 					num_chan);
-			result[i].out_data[j] = array_generator->GetAlignedArray<float>(num_chan);
-			result[i].out_flag[j] = array_generator->GetAlignedArray<unsigned char>(num_chan);
-			result[i].out_tsys[j] = array_generator->GetAlignedArray<float>(num_chan);
+			result[i].out_data[j] = array_generator->GetAlignedArray<float>(
+					num_chan);
+			result[i].out_flag[j] = array_generator->GetAlignedArray<
+					unsigned char>(num_chan);
+			result[i].out_tsys[j] = array_generator->GetAlignedArray<float>(
+					num_chan);
 		}
-		result[i].work_area.mask = array_generator->GetAlignedArray<bool>(num_chan);
-		result[i].work_area.baseline_mask = array_generator->GetAlignedArray<bool>(num_chan);
-		result[i].work_area.baseline_after_mask = array_generator->GetAlignedArray<bool>(num_chan);
+		result[i].work_area.mask = array_generator->GetAlignedArray<bool>(
+				num_chan);
+		result[i].work_area.baseline_mask = array_generator->GetAlignedArray<
+		bool>(num_chan);
+		result[i].work_area.baseline_after_mask =
+				array_generator->GetAlignedArray<bool>(num_chan);
+		result[i].work_area.timestamp = array_generator->GetAlignedArray<double>(1);
+		result[i].work_area.sky = array_generator->GetAlignedArray<float>(num_chan);
 	}
 	return result.release();
 }
@@ -477,7 +492,8 @@ void Reduce(E2EOptions const &options) {
 		size_t num_threads = std::min(shared->num_data,
 				size_t(options.max_threads));
 		std::unique_ptr<WorkingSet[]> working_sets(
-				InitializeWorkingSet(shared, num_threads, shared->num_chan, &array_generator));
+				InitializeWorkingSet(shared, num_threads, shared->num_chan,
+						&array_generator));
 
 		std::vector<size_t> available_workers(num_threads);
 		for (size_t i = 0; i < num_threads; ++i) {
