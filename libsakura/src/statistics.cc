@@ -28,12 +28,9 @@ union m256 {
 inline float AddHorizontally(__m256 packed_values) {
 	packed_values = _mm256_hadd_ps(packed_values, packed_values);
 	packed_values = _mm256_hadd_ps(packed_values, packed_values);
-	__m256 sum2 = _mm256_permute2f128_ps(packed_values, packed_values, 1);
-	float total;
-	_mm_store_ss(&total,
-			_mm_add_ss(_mm256_castps256_ps128(packed_values),
-					_mm256_castps256_ps128(sum2)));
-	return total;
+	__m128 sum2 = _mm256_extractf128_ps(packed_values, 1);
+	return _mm_cvtss_f32(
+			_mm_add_ss(_mm256_castps256_ps128(packed_values), sum2));
 }
 
 inline int32_t AddHorizontally(__m256i packed_values) {
