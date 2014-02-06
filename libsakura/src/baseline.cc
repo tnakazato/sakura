@@ -149,23 +149,6 @@ inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	LIBSAKURA_PREFIX::Memory::Free(context);
 }
 
-inline void OperateLogicalAnd(size_t num_in, bool const *in1_arg,
-bool const *in2_arg, bool *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto in1 = AssumeAligned(reinterpret_cast<uint8_t const *>(in1_arg));
-	auto in2 = AssumeAligned(reinterpret_cast<uint8_t const *>(in2_arg));
-	auto out = AssumeAligned(out_arg);
-	STATIC_ASSERT(sizeof(bool) == sizeof(uint8_t));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
-	for (size_t i = 0; i < num_in; ++i) {
-		out[i] = static_cast<bool>(in1[i] & in2[i]);
-	}
-}
-
 inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 		float const *in2_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
@@ -264,6 +247,34 @@ inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
 			coeff, out);
 }
 
+inline uint16_t ExecuteClipping(size_t num_data,
+		float const *data_arg, bool const *in_mask_arg,
+		float const lower_bound, float const upper_bound,
+		bool *out_mask_arg, uint16_t *clipped_indices_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	auto data = AssumeAligned(data_arg);
+	auto in_mask = AssumeAligned(in_mask_arg);
+	auto out_mask = AssumeAligned(out_mask_arg);
+	auto clipped_indices = AssumeAligned(clipped_indices_arg);
+
+	uint16_t num_clipped = 0;
+
+	for (uint16_t i = 0; i < num_data; ++i) {
+		if ((data[i] - lower_bound) * (upper_bound - data[i]) >= 0.0f) {
+			out_mask[i] = in_mask[i];
+		} else {
+			out_mask[i] = false;
+			clipped_indices[num_clipped] = i;
+			num_clipped++;
+		}
+	}
+
+	return num_clipped;
+}
+
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
@@ -278,14 +289,6 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
-	bool *clip_mask = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clip_mask(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*clip_mask) * num_data, &clip_mask));
-	for (size_t i = 0; i < num_data; ++i) {
-		clip_mask[i] = true;
-	}
-
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -296,10 +299,10 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*residual_data) * num_data, &residual_data));
 
-	bool *new_clip_mask = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_new_clip_mask(
+	uint16_t *clipped_indices = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*new_clip_mask) * num_data, &new_clip_mask));
+					sizeof(*clipped_indices) * num_data, &clipped_indices));
 
 	size_t num_bases = baseline_context->num_bases;
 	size_t num_lsq_matrix = num_bases * num_bases;
@@ -323,15 +326,11 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		num_fitting_max = 1;
 	}
 
-	for (uint16_t i = 0; i < num_fitting_max; ++i) {
-		if (i == 0) {
-			for (size_t j = 0; j < num_data; ++j) {
-				final_mask[j] = mask[j];
-			}
-		} else {
-			OperateLogicalAnd(num_data, mask, clip_mask, final_mask);
-		}
+	for (size_t i = 0; i < num_data; ++i) {
+		final_mask[i] = mask[i];
+	}
 
+	for (uint16_t i = 0; i < num_fitting_max; ++i) {
 		DoGetBestFitBaseline(num_data, data, final_mask, baseline_context,
 				lsq_matrix, lsq_vector, coeff, best_fit_model);
 
@@ -347,37 +346,15 @@ inline void SubtractBaseline(size_t num_data, float const *data_arg,
 		}
 
 		float clipping_threshold = clipping_threshold_sigma * result.stddev;
-		SIMD_ALIGN
-		float clip_lower_bound[] = { result.mean - clipping_threshold };
-		SIMD_ALIGN
-		float clip_upper_bound[] = { result.mean + clipping_threshold };
-		STATIC_ASSERT(
-				ELEMENTSOF(clip_lower_bound) == ELEMENTSOF(clip_upper_bound));
-		LIBSAKURA_SYMBOL(Status) clip_status =
-		LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(num_data, residual_data,
-		ELEMENTSOF(clip_lower_bound), clip_lower_bound, clip_upper_bound,
-				new_clip_mask);
-		if (clip_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-			throw std::runtime_error(
-					"SubtractBaseline: SetTrueFloatInRangesInclusive failed.");
-		}
+		float clip_lower_bound = result.mean - clipping_threshold;
+		float clip_upper_bound = result.mean + clipping_threshold;
+		uint16_t num_clipped = ExecuteClipping(num_data, residual_data,
+				final_mask, clip_lower_bound, clip_upper_bound,
+				final_mask, clipped_indices);
 
-		bool mask_changed_after_clipping = false;
-		for (size_t j = 0; j < num_data; ++j) {
-			if (new_clip_mask[j] != clip_mask[j]) {
-				mask_changed_after_clipping = true;
-				break;
-			}
-		}
-
-		if (mask_changed_after_clipping) {
-			for (size_t j = 0; j < num_data; ++j) {
-				clip_mask[j] = new_clip_mask[j];
-			}
-		} else {
+		if (num_clipped == 0) {
 			break;
 		}
-
 	}
 
 	for (size_t i = 0; i < num_data; ++i) {
