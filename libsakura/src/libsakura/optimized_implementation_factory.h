@@ -206,9 +206,22 @@ public:
 	bool const mask[/*num_data*/], size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*num_model_bases*/]) const = 0;
+	virtual void UpdateMatrixCoefficientsForLeastSquareFitting(
+			double const in[/*num_model_bases*num_model_bases*/],
+			uint16_t num_clipped, uint16_t const clipped_indices[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases*num_data*/],
+			double out[/*num_model_bases*num_model_bases*/]) const = 0;
 	virtual void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/], size_t num_model_bases,
+			double const model[/*num_model_bases*num_data*/],
+			double out[/*num_model_bases*/]) const = 0;
+	virtual void UpdateVectorCoefficientsForLeastSquareFitting(
+			double const in[/*num_model_bases*/],
+			float const data[/*num_data*/], uint16_t num_clipped,
+			uint16_t const clipped_indices[/*num_data*/],
+			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const = 0;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,

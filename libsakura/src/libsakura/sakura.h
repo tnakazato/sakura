@@ -1697,7 +1697,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		size_t num_mask, bool const mask[/*num_mask*/], size_t num_model_bases,
 		double const model[/*num_model_bases*num_mask*/],
 		double out[/*num_model_bases*num_model_bases*/])
-		LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_WARN_UNUSED_RESULT;
+
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateMatrixCoefficientsForLeastSquareFitting)(
+		double const in[/*num_model_bases*num_model_bases*/],
+		uint16_t num_clipped, uint16_t const clipped_indices[/*num_mask*/],
+		size_t num_model_bases,
+		double const model[/*num_model_bases*num_mask*/],
+		double out[/*num_model_bases*num_model_bases*/])
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1762,8 +1770,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t num_model_bases,
 		double const model[/*num_model_bases*num_data*/],
-		double out[/*num_model_bases*/])
-		LIBSAKURA_WARN_UNUSED_RESULT;
+		double out[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateVectorCoefficientsForLeastSquareFitting)(
+		double const in[/*num_model_bases*/], float const data[/*num_data*/],
+		uint16_t num_clipped, uint16_t const clipped_indices[/*num_data*/],
+		size_t num_model_bases,
+		double const model[/*num_model_bases*num_data*/],
+		double out[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1810,8 +1824,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		size_t num_equations,
 		double const in_matrix[/*num_equations*num_equations*/],
 		double const in_vector[/*num_equations*/],
-		double out[/*num_equations*/])
-		LIBSAKURA_WARN_UNUSED_RESULT;
+		double out[/*num_equations*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1933,8 +1946,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float out[/*num_data*/])
-		LIBSAKURA_WARN_UNUSED_RESULT;
+		float out[/*num_data*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1995,7 +2007,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/])
-		LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2055,7 +2067,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/])
-		LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 #ifdef __cplusplus
 }
