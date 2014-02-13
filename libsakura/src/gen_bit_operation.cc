@@ -31,6 +31,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 		bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -60,6 +62,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 		bitop->OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -91,6 +95,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNon
 				edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -121,6 +127,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNo
 				edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -148,10 +156,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication
 	auto bitop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint8();
 	try {
-		bitop->OperateBitsImplication(bit_mask, num_data, data,
-				edit_mask, result);
+		bitop->OperateBitsImplication(bit_mask, num_data, data, edit_mask,
+				result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -178,10 +188,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implicatio
 	auto bitop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBitOperationImplUint32();
 	try {
-		bitop->OperateBitsImplication(bit_mask, num_data, data,
-				edit_mask, result);
+		bitop->OperateBitsImplication(bit_mask, num_data, data, edit_mask,
+				result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -212,13 +224,16 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(
 		bitop->OperateBitsNot(num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
-		size_t num_data, uint32_t const data[],	bool const edit_mask[], uint32_t result[]) {
+		size_t num_data, uint32_t const data[], bool const edit_mask[],
+		uint32_t result[]) {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -240,6 +255,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
 		bitop->OperateBitsNot(num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -270,6 +287,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
 		bitop->OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -299,6 +318,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
 		bitop->OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -329,6 +350,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
 		bitop->OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -358,6 +381,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
 		bitop->OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);

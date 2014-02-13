@@ -38,6 +38,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusi
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -77,6 +79,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -116,6 +120,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusi
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -155,6 +161,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -180,6 +188,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThan)(
 		bfc->SetTrueGreaterThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -205,6 +215,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThan)(
 		bfc->SetTrueGreaterThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -230,6 +242,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThanOrEq
 		bfc->SetTrueGreaterThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -255,6 +269,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThanOrEqua
 		bfc->SetTrueGreaterThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -280,6 +296,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThan)(
 		bfc->SetTrueLessThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -305,6 +323,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThan)(
 		bfc->SetTrueLessThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -330,6 +350,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThanOrEqual
 		bfc->SetTrueLessThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -355,6 +377,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThanOrEquals)
 		bfc->SetTrueLessThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -380,6 +404,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(
 		bfc->SetFalseIfNanOrInf(num_data, data, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -404,6 +430,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		bfc->ToBool(num_data, data, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -428,6 +456,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		bfc->ToBool(num_data, data, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -453,6 +483,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
 		bfc->InvertBool(num_data, data, result);
 	} catch (...) {
 		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
