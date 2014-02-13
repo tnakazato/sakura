@@ -164,63 +164,13 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 }
 
 inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
-bool const *mask_arg,
-LIBSAKURA_SYMBOL(BaselineContext) const *context, double *lsq_matrix_arg,
-		double *lsq_vector_arg, double *coeff_arg, float *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto basis = AssumeAligned(context->basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto out = AssumeAligned(out_arg);
-
-	size_t num_bases = context->num_bases;
-
-	LIBSAKURA_SYMBOL(Status) get_matrix_status =
-	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(num_data, mask,
-			num_bases, basis, lsq_matrix);
-	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitsBaseline: too many masked data.");
-	}
-	LIBSAKURA_SYMBOL(Status) get_vector_status =
-	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(num_data, data,
-			mask, num_bases, basis, lsq_vector);
-	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitsBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
-	}
-	LIBSAKURA_SYMBOL(Status) solve_status =
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
-			lsq_vector, coeff);
-	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitsBaseline: failed in SolveSimultaneousEquationsByLU.");
-	}
-
-	for (size_t i = 0; i < num_data; ++i) {
-		double out_double = 0.0;
-		for (size_t j = 0; j < num_bases; ++j) {
-			out_double += coeff[j] * basis[num_bases * i + j];
-		}
-		out[i] = out_double;
-	}
-}
-
-inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
-		uint16_t num_clipped, uint16_t const *clipped_indices_arg,
+bool const update_on_incremental_clipping, bool const *mask_arg,
+		size_t num_clipped, size_t const *clipped_indices_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
 		float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
@@ -228,6 +178,7 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto basis = AssumeAligned(context->basis_data);
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
@@ -238,19 +189,22 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 	size_t num_bases = context->num_bases;
 
 	LIBSAKURA_SYMBOL(Status) get_matrix_status =
-	LIBSAKURA_SYMBOL(UpdateMatrixCoefficientsForLeastSquareFitting)(lsq_matrix,
-			num_clipped, clipped_indices, num_bases, basis, lsq_matrix);
+	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
+			update_on_incremental_clipping, num_data, mask, num_clipped,
+			clipped_indices, num_bases, lsq_matrix, basis, lsq_matrix);
 	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
 				"DoGetBestFitsBaseline: too many masked data.");
 	}
 	LIBSAKURA_SYMBOL(Status) get_vector_status =
-	LIBSAKURA_SYMBOL(UpdateVectorCoefficientsForLeastSquareFitting)(lsq_vector,
-			data, num_clipped, clipped_indices, num_bases, basis, lsq_vector);
+	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
+			update_on_incremental_clipping, num_data, data, mask, num_clipped,
+			clipped_indices, num_bases, lsq_vector, basis, lsq_vector);
 	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
 				"DoGetBestFitsBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
 	}
+
 	LIBSAKURA_SYMBOL(Status) solve_status =
 	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
 			lsq_vector, coeff);
@@ -269,8 +223,8 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 }
 
 inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
-bool const *mask_arg,
-LIBSAKURA_SYMBOL(BaselineContext) const *context, float *out_arg) {
+bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float *out_arg) {
 	assert(num_data == context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -294,14 +248,19 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, float *out_arg) {
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
+	size_t num_clipped = 0; //dummy
+	size_t *clipped_indices = nullptr; //dummy
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*clipped_indices) * num_clipped, &clipped_indices));
 
-	DoGetBestFitBaseline(num_data, data, mask, context, lsq_matrix, lsq_vector,
-			coeff, out);
+	DoGetBestFitBaseline(num_data, data, false, mask, num_clipped,
+			clipped_indices, context, lsq_matrix, lsq_vector, coeff, out);
 }
 
-inline uint16_t ExecuteClipping(size_t num_data, float const *data_arg,
+inline size_t ExecuteClipping(size_t num_data, float const *data_arg,
 bool const *in_mask_arg, float const lower_bound, float const upper_bound,
-bool *out_mask_arg, uint16_t *clipped_indices_arg) {
+bool *out_mask_arg, size_t *clipped_indices_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
@@ -311,9 +270,9 @@ bool *out_mask_arg, uint16_t *clipped_indices_arg) {
 	auto out_mask = AssumeAligned(out_mask_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 
-	uint16_t num_clipped = 0;
+	size_t num_clipped = 0;
 
-	for (uint16_t i = 0; i < num_data; ++i) {
+	for (size_t i = 0; i < num_data; ++i) {
 		out_mask[i] = in_mask[i];
 		if (in_mask[i]) {
 			if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
@@ -328,8 +287,7 @@ bool *out_mask_arg, uint16_t *clipped_indices_arg) {
 }
 
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
-bool const *mask_arg,
-LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
+bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -351,7 +309,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*residual_data) * num_data, &residual_data));
 
-	uint16_t *clipped_indices = nullptr;
+	size_t *clipped_indices = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*clipped_indices) * num_data, &clipped_indices));
@@ -378,22 +336,16 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		num_fitting_max = 1;
 	}
 
-	uint16_t num_clipped = 0;
+	size_t num_clipped = 0;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		final_mask[i] = mask[i];
 	}
 
 	for (uint16_t i = 0; i < num_fitting_max; ++i) {
-		if (i == 0) {
-			DoGetBestFitBaseline(num_data, data, final_mask, baseline_context,
-					lsq_matrix, lsq_vector, coeff, best_fit_model);
-		} else {
-			DoGetBestFitBaseline(num_data, data, num_clipped, clipped_indices,
-					baseline_context, lsq_matrix, lsq_vector, coeff,
-					best_fit_model);
-		}
-
+		DoGetBestFitBaseline(num_data, data, (i > 0), final_mask, num_clipped,
+				clipped_indices, baseline_context, lsq_matrix, lsq_vector,
+				coeff, best_fit_model);
 		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 
 		LIBSAKURA_SYMBOL(StatisticsResult) result;

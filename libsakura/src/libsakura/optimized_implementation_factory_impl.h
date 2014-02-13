@@ -349,26 +349,19 @@ class NumericOperationDefault: public NumericOperation {
 public:
 	virtual ~NumericOperationDefault() {
 	}
-	virtual void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
-	bool const mask[/*num_mask*/], size_t num_model_bases,
-			double const model[/*num_model_bases*num_mask*/],
-			double out[/*num_model_bases*num_model_bases*/]) const;
-	virtual void UpdateMatrixCoefficientsForLeastSquareFitting(
+	virtual void GetMatrixCoefficientsForLeastSquareFitting(
+	bool const update_on_incremental_clipping, size_t num_mask,
+	bool const mask[/*num_mask*/], size_t num_clipped,
+			size_t const clipped_indices[/*num_mask*/], size_t num_model_bases,
 			double const in[/*num_model_bases*num_model_bases*/],
-			uint16_t num_clipped, uint16_t const clipped_indices[/*num_mask*/],
-			size_t num_model_bases,
 			double const model[/*num_model_bases*num_mask*/],
 			double out[/*num_model_bases*num_model_bases*/]) const;
-	virtual void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
+	virtual void GetVectorCoefficientsForLeastSquareFitting(
+	bool const update_on_incremental_clipping, size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_model_bases,
-			double const model[/*num_model_bases*num_data*/],
-			double out[/*num_model_bases*/]) const;
-	virtual void UpdateVectorCoefficientsForLeastSquareFitting(
+			bool const mask[/*num_data*/], size_t num_clipped,
+			size_t const clipped_indices[/*num_data*/], size_t num_model_bases,
 			double const in[/*num_model_bases*/],
-			float const data[/*num_data*/], uint16_t num_clipped,
-			uint16_t const clipped_indices[/*num_data*/],
-			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,
@@ -381,26 +374,19 @@ class NumericOperationAfterSandyBridge: public NumericOperation {
 public:
 	virtual ~NumericOperationAfterSandyBridge() {
 	}
-	virtual void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
-	bool const mask[/*num_mask*/], size_t num_model_bases,
-			double const model[/*num_model_bases*num_mask*/],
-			double out[/*num_model_bases*num_model_bases*/]) const;
-	virtual void UpdateMatrixCoefficientsForLeastSquareFitting(
+	virtual void GetMatrixCoefficientsForLeastSquareFitting(
+	bool const update_on_incremental_clipping, size_t num_mask,
+	bool const mask[/*num_mask*/], size_t num_clipped,
+			size_t const clipped_indices[/*num_mask*/], size_t num_model_bases,
 			double const in[/*num_model_bases*num_model_bases*/],
-			uint16_t num_clipped, uint16_t const clipped_indices[/*num_mask*/],
-			size_t num_model_bases,
 			double const model[/*num_model_bases*num_mask*/],
 			double out[/*num_model_bases*num_model_bases*/]) const;
-	virtual void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
+	virtual void GetVectorCoefficientsForLeastSquareFitting(
+	bool const update_on_incremental_clipping, size_t num_data,
 			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_model_bases,
-			double const model[/*num_model_bases*num_data*/],
-			double out[/*num_model_bases*/]) const;
-	virtual void UpdateVectorCoefficientsForLeastSquareFitting(
+			bool const mask[/*num_data*/], size_t num_clipped,
+			size_t const clipped_indices[/*num_data*/], size_t num_model_bases,
 			double const in[/*num_model_bases*/],
-			float const data[/*num_data*/], uint16_t num_clipped,
-			uint16_t const clipped_indices[/*num_data*/],
-			size_t num_model_bases,
 			double const model[/*num_model_bases*num_data*/],
 			double out[/*num_model_bases*/]) const;
 	virtual void SolveSimultaneousEquationsByLU(size_t num_equations,

@@ -21,8 +21,7 @@
 #define NUM_DATA2 15
 #define NUM_DATA3 4096
 #define NUM_MODEL 3
-#define NUM_REPEAT 15000
-#define NUM_REPEAT2 20000
+#define NUM_REPEAT 20000
 
 using namespace std;
 
@@ -432,7 +431,7 @@ TEST_F(Baseline, SubtractBaseline) {
 		PrintArray("in_mask", num_data, in_mask);
 	}
 
-	size_t const num_repeat = NUM_REPEAT2;
+	size_t const num_repeat = NUM_REPEAT;
 	double start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) subbl_status =
@@ -559,7 +558,7 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 
-	size_t const num_repeat = NUM_REPEAT2;
+	size_t const num_repeat = NUM_REPEAT;
 	double start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) status =
