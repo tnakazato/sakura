@@ -61,12 +61,14 @@ inline void ExecuteMaskToBitFlag(size_t num_data, bool input_mask[],
 		uint8_t output_flag_arg[]) {
 	auto output_flag = AssumeAligned(output_flag_arg);
 	sakura_Status status = sakura_InvertBool(num_data, input_mask, input_mask);
+	// Now input_mask[i]=T if i-th channel should be flagged.
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("sakura_InvertBool");
 	}
 	for (size_t i = 0; i < num_data; ++i) {
 		output_flag[i] = 0;
 	}
+	// Now all elements in output_flag is false.
 	uint8_t bit_mask = 1 << 7;
 	status = sakura_OperateBitsUint8Or(bit_mask, num_data, output_flag,
 			input_mask, output_flag);
