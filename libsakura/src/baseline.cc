@@ -12,6 +12,10 @@
 #include <iostream>
 #include <memory>
 
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+#	include <immintrin.h>
+#endif
+
 #include <libsakura/localdef.h>
 #include <libsakura/memory_manager.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
@@ -163,6 +167,41 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
+inline void MulMatrix(size_t num_bases, double const *coeff_arg, size_t num_out,
+		double const *basis_arg, float *out_arg) {
+	auto coeff = AssumeAligned(coeff_arg);
+	auto basis = AssumeAligned(basis_arg);
+	auto out = AssumeAligned(out_arg);
+	size_t i = 0;
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
+	size_t const end = (num_out / pack_elements) * pack_elements;
+	__m256d const zero = _mm256_set1_pd(0.);
+	size_t const offset1 = num_bases * 1;
+	size_t const offset2 = num_bases * 2;
+	size_t const offset3 = num_bases * 3;
+	for (i = 0; i < end; i += pack_elements) {
+		__m256d total = zero;
+		auto bases_row = &basis[num_bases * i];
+		for (size_t j = 0; j < num_bases; ++j) {
+			__m256d ce = _mm256_set1_pd(coeff[j]);
+			__m256d bs = _mm256_set_pd(bases_row[j + offset3],
+					bases_row[j + offset2], bases_row[j + offset1],
+					bases_row[j]);
+			total += ce * bs;
+		}
+		_mm_store_ps(&out[i], _mm256_cvtpd_ps(total));
+	}
+#endif
+	for (; i < num_out; ++i) {
+		double out_double = 0.0;
+		for (size_t j = 0; j < num_bases; ++j) {
+			out_double += coeff[j] * basis[num_bases * i + j];
+		}
+		out[i] = out_double;
+	}
+}
+
 inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 bool const update_on_incremental_clipping, bool const *mask_arg,
 		size_t num_clipped, size_t const *clipped_indices_arg,
@@ -213,13 +252,7 @@ bool const update_on_incremental_clipping, bool const *mask_arg,
 				"DoGetBestFitsBaseline: failed in SolveSimultaneousEquationsByLU.");
 	}
 
-	for (size_t i = 0; i < num_data; ++i) {
-		double out_double = 0.0;
-		for (size_t j = 0; j < num_bases; ++j) {
-			out_double += coeff[j] * basis[num_bases * i + j];
-		}
-		out[i] = out_double;
-	}
+	MulMatrix(num_bases, coeff, num_data, basis, out);
 }
 
 inline void GetBestFitBaseline(size_t num_data, float const *data_arg,

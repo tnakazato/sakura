@@ -5,6 +5,10 @@
 #include <iostream>
 #include <memory>
 
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+#	include <immintrin.h>
+#endif
+
 #include <libsakura/localdef.h>
 #include <libsakura/memory_manager.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
@@ -19,6 +23,74 @@ using ::Eigen::VectorXd;
 using ::Eigen::Aligned;
 
 namespace {
+
+template<size_t NUM_MODEL_BASES>
+void AddMulVectorTemplate(double k, double const *vec, double *out) {
+	size_t i = 0;
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
+	size_t const end = (NUM_MODEL_BASES / pack_elements) * pack_elements;
+	__m256d coeff = _mm256_set1_pd(k);
+	for (i = 0; i < end; i += pack_elements) {
+		__m256d v = _mm256_loadu_pd(&vec[i]);
+		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) + coeff * v);
+	}
+#endif
+	for (; i < NUM_MODEL_BASES; ++i) {
+		out[i] += k * vec[i];
+	}
+}
+
+template<size_t NUM_MODEL_BASES>
+void SubMulVectorTemplate(double k, double const *vec, double *out) {
+	size_t i = 0;
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
+	size_t const end = (NUM_MODEL_BASES / pack_elements) * pack_elements;
+	__m256d coeff = _mm256_set1_pd(k);
+	for (i = 0; i < end; i += pack_elements) {
+		__m256d v = _mm256_loadu_pd(&vec[i]);
+		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) - coeff * v);
+	}
+#endif
+	for (; i < NUM_MODEL_BASES; ++i) {
+		out[i] -= k * vec[i];
+	}
+}
+
+inline void AddMulVector(size_t const num_model_bases, double k,
+		double const *vec, double *out) {
+	size_t i = 0;
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
+	size_t const end = (num_model_bases / pack_elements) * pack_elements;
+	__m256d coeff = _mm256_set1_pd(k);
+	for (i = 0; i < end; i += pack_elements) {
+		__m256d v = _mm256_loadu_pd(&vec[i]);
+		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) + coeff * v);
+	}
+#endif
+	for (; i < num_model_bases; ++i) {
+		out[i] += k * vec[i];
+	}
+}
+
+inline void SubMulVector(size_t const num_model_bases, double k,
+		double const *vec, double *out) {
+	size_t i = 0;
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
+	size_t const end = (num_model_bases / pack_elements) * pack_elements;
+	__m256d coeff = _mm256_set1_pd(k);
+	for (i = 0; i < end; i += pack_elements) {
+		__m256d v = _mm256_loadu_pd(&vec[i]);
+		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) - coeff * v);
+	}
+#endif
+	for (; i < num_model_bases; ++i) {
+		out[i] -= k * vec[i];
+	}
+}
 
 template<size_t NUM_MODEL_BASES>
 inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
@@ -46,10 +118,8 @@ bool const *mask_arg, size_t num_clipped, size_t const *clipped_indices_arg,
 			auto model_i = &model[clipped_indices[i] * NUM_MODEL_BASES];
 			for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
 				auto out_matrix_i = &out[j * NUM_MODEL_BASES];
-				auto model_j = model_i[j];
-				for (size_t k = 0; k < NUM_MODEL_BASES; ++k) {
-					out_matrix_i[k] -= model_j * model_i[k];
-				}
+				SubMulVectorTemplate<NUM_MODEL_BASES>(model_i[j], model_i,
+						out_matrix_i);
 			}
 		}
 	} else {
@@ -62,10 +132,8 @@ bool const *mask_arg, size_t num_clipped, size_t const *clipped_indices_arg,
 				auto model_i = &model[i * NUM_MODEL_BASES];
 				for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
 					auto out_matrix_i = &out[j * NUM_MODEL_BASES];
-					auto model_j = model_i[j];
-					for (size_t k = 0; k < NUM_MODEL_BASES; ++k) {
-						out_matrix_i[k] += model_j * model_i[k];
-					}
+					AddMulVectorTemplate<NUM_MODEL_BASES>(model_i[j], model_i,
+							out_matrix_i);
 				}
 				num_unmasked_data++;
 			}
@@ -104,10 +172,8 @@ bool const *mask_arg, size_t num_clipped, size_t const *clipped_indices_arg,
 			auto model_i = &model[clipped_indices[i] * num_model_bases];
 			for (size_t j = 0; j < num_model_bases; ++j) {
 				auto out_matrix_j = &out[j * num_model_bases];
-				auto model_j = model_i[j];
-				for (size_t k = 0; k < num_model_bases; ++k) {
-					out_matrix_j[k] -= model_j * model_i[k];
-				}
+				SubMulVector(num_model_bases, model_i[j], model_i,
+						out_matrix_j);
 			}
 		}
 	} else {
@@ -120,10 +186,8 @@ bool const *mask_arg, size_t num_clipped, size_t const *clipped_indices_arg,
 				auto model_i = &model[i * num_model_bases];
 				for (size_t j = 0; j < num_model_bases; ++j) {
 					auto out_matrix_j = &out[j * num_model_bases];
-					auto model_j = model_i[j];
-					for (size_t k = 0; k < num_model_bases; ++k) {
-						out_matrix_j[k] += model_j * model_i[k];
-					}
+					AddMulVector(num_model_bases, model_i[j], model_i,
+							out_matrix_j);
 				}
 				num_unmasked_data++;
 			}
@@ -237,14 +301,12 @@ inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map < MatrixXd, Aligned
-			> in_matrix(const_cast<double *>(in_matrix_arg), num_equations,
-					num_equations);
-	Map < VectorXd, Aligned
-			> in_vector(const_cast<double *>(in_vector_arg), num_equations);
+	Map<MatrixXd, Aligned> in_matrix(const_cast<double *>(in_matrix_arg),
+			num_equations, num_equations);
+	Map<VectorXd, Aligned> in_vector(const_cast<double *>(in_vector_arg),
+			num_equations);
 
-	Map < VectorXd > (out, num_equations) = in_matrix.fullPivLu().solve(
-			in_vector);
+	Map<VectorXd>(out, num_equations) = in_matrix.fullPivLu().solve(in_vector);
 }
 
 } /* anonymous namespace */
