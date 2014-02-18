@@ -176,7 +176,7 @@ inline void MulMatrix(size_t num_bases, double const *coeff_arg, size_t num_out,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d const zero = _mm256_set1_pd(0.);
+	__m256d  const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -227,32 +227,84 @@ bool const update_on_incremental_clipping, bool const *mask_arg,
 
 	size_t num_bases = context->num_bases;
 
-	LIBSAKURA_SYMBOL(Status) get_matrix_status =
-	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
-			update_on_incremental_clipping, num_data, mask, num_clipped,
-			clipped_indices, num_bases, lsq_matrix, basis, lsq_matrix);
-	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitsBaseline: too many masked data.");
+	//---
+	size_t num_repeat = 1;
+	double timemtx0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	for (size_t j = 0; j < num_repeat; ++j) {
+		//---
+		LIBSAKURA_SYMBOL(Status) get_matrix_status =
+		LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
+				update_on_incremental_clipping, num_data, mask, num_clipped,
+				clipped_indices, num_bases, lsq_matrix, basis, lsq_matrix);
+		//---
 	}
-	LIBSAKURA_SYMBOL(Status) get_vector_status =
-	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
-			update_on_incremental_clipping, num_data, data, mask, num_clipped,
-			clipped_indices, num_bases, lsq_vector, basis, lsq_vector);
-	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitsBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
+	double timemtx1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	//---
+	/*
+	 if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	 throw std::runtime_error(
+	 "DoGetBestFitsBaseline: too many masked data.");
+	 }
+	 */
+	//---
+	double timevec0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	for (size_t j = 0; j < num_repeat; ++j) {
+		//---
+		LIBSAKURA_SYMBOL(Status) get_vector_status =
+		LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
+				update_on_incremental_clipping, num_data, data, mask,
+				num_clipped, clipped_indices, num_bases, lsq_vector, basis,
+				lsq_vector);
+		//---
 	}
+	double timevec1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	//---
+	/*
+	 if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	 throw std::runtime_error(
+	 "DoGetBestFitsBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
+	 }
+	 */
 
-	LIBSAKURA_SYMBOL(Status) solve_status =
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
-			lsq_vector, coeff);
-	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitsBaseline: failed in SolveSimultaneousEquationsByLU.");
+	//---
+	double timesol0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	for (size_t j = 0; j < num_repeat; ++j) {
+		//---
+		LIBSAKURA_SYMBOL(Status) solve_status =
+		LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
+				lsq_vector, coeff);
+		//---
 	}
+	double timesol1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	//---
+	/*
+	 if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	 throw std::runtime_error(
+	 "DoGetBestFitsBaseline: failed in SolveSimultaneousEquationsByLU.");
+	 }
+	 */
 
-	MulMatrix(num_bases, coeff, num_data, basis, out);
+	//---
+	double timemmd0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	for (size_t k = 0; k < num_repeat; ++k) {
+		//---
+		MulMatrix(num_bases, coeff, num_data, basis, out);
+		/*
+		 for (size_t i = 0; i < num_data; ++i) {
+		 double out_double = 0.0;
+		 for (size_t j = 0; j < num_bases; ++j) {
+		 out_double += coeff[j] * basis[num_bases * i + j];
+		 }
+		 out[i] = out_double;
+		 }
+		 */
+		//---
+	}
+	double timemmd1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	std::cout << "mat:vec:sol = " << (timemtx1 - timemtx0) << ", "
+			<< (timevec1 - timevec0) << ", " << (timesol1 - timesol0) << ", "
+			<< (timemmd1 - timemmd0) << ", " << std::endl;
+	//---
 }
 
 inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
