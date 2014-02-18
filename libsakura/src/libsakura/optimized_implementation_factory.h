@@ -202,17 +202,23 @@ class NumericOperation {
 public:
 	virtual ~NumericOperation() {
 	}
-	virtual void GetMatrixCoefficientsForLeastSquareFitting(
-	bool const update_on_incremental_clipping, size_t num_mask,
-	bool const mask[/*num_mask*/], size_t num_clipped,
-			size_t const clipped_indices[/*num_mask*/], size_t num_model_bases,
+	virtual void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
+	bool const mask[/*num_mask*/], size_t num_model_bases,
+			double const model[/*num_model_bases*num_mask*/],
+			double out[/*num_model_bases*num_model_bases*/]) const = 0;
+	virtual void UpdateMatrixCoefficientsForLeastSquareFitting(
+			size_t num_clipped, size_t const clipped_indices[/*num_mask*/],
+			size_t num_model_bases,
 			double const in[/*num_model_bases*num_model_bases*/],
 			double const model[/*num_model_bases*num_mask*/],
 			double out[/*num_model_bases*num_model_bases*/]) const = 0;
-	virtual void GetVectorCoefficientsForLeastSquareFitting(
-	bool const update_on_incremental_clipping, size_t num_data,
-			float const data[/*num_data*/],
-			bool const mask[/*num_data*/], size_t num_clipped,
+	virtual void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
+			float const data[/*num_data*/], bool const mask[/*num_data*/],
+			size_t num_model_bases,
+			double const model[/*num_model_bases*num_data*/],
+			double out[/*num_model_bases*/]) const = 0;
+	virtual void UpdateVectorCoefficientsForLeastSquareFitting(
+			float const data[/*num_data*/], size_t num_clipped,
 			size_t const clipped_indices[/*num_data*/], size_t num_model_bases,
 			double const in[/*num_model_bases*/],
 			double const model[/*num_model_bases*num_data*/],

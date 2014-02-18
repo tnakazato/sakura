@@ -12,12 +12,40 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("numeric_operation");
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
-bool const update_on_incremental_clipping, size_t num_mask,
-bool const mask[], size_t num_clipped, size_t const clipped_indices[],
-		size_t num_model_bases, double const in[], double const model[],
-		double out[]) {
+		size_t num_mask, bool const mask[], size_t num_model_bases,
+		double const model[], double out[]) {
 	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (model == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	auto numop =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
+	try {
+		numop->GetMatrixCoefficientsForLeastSquareFitting(num_mask, mask,
+				num_model_bases, model, out);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateMatrixCoefficientsForLeastSquareFitting)(
+		size_t num_clipped, size_t const clipped_indices[],
+		size_t num_model_bases, double const in[], double const model[],
+		double out[]) {
 	if (clipped_indices == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (in == nullptr)
@@ -25,8 +53,6 @@ bool const mask[], size_t num_clipped, size_t const clipped_indices[],
 	if (model == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(clipped_indices)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -40,8 +66,7 @@ bool const mask[], size_t num_clipped, size_t const clipped_indices[],
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->GetMatrixCoefficientsForLeastSquareFitting(
-				update_on_incremental_clipping, num_mask, mask, num_clipped,
+		numop->UpdateMatrixCoefficientsForLeastSquareFitting(num_clipped,
 				clipped_indices, num_model_bases, in, model, out);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
@@ -54,13 +79,42 @@ bool const mask[], size_t num_clipped, size_t const clipped_indices[],
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
-bool const update_on_incremental_clipping, size_t num_data, float const data[],
-bool const mask[], size_t num_clipped, size_t const clipped_indices[],
-		size_t num_model_bases, double const in[], double const model[],
-		double out[]) {
+		size_t num_data, float const data[], bool const mask[],
+		size_t num_model_bases, double const model[], double out[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (model == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(model)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	auto numop =
+			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
+	try {
+		numop->GetVectorCoefficientsForLeastSquareFitting(num_data, data, mask,
+				num_model_bases, model, out);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateVectorCoefficientsForLeastSquareFitting)(
+		float const data[], size_t num_clipped, size_t const clipped_indices[],
+		size_t num_model_bases, double const in[], double const model[],
+		double out[]) {
+	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (clipped_indices == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -71,8 +125,6 @@ bool const mask[], size_t num_clipped, size_t const clipped_indices[],
 	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(clipped_indices)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -86,9 +138,8 @@ bool const mask[], size_t num_clipped, size_t const clipped_indices[],
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->GetVectorCoefficientsForLeastSquareFitting(
-				update_on_incremental_clipping, num_data, data, mask,
-				num_clipped, clipped_indices, num_model_bases, in, model, out);
+		numop->UpdateVectorCoefficientsForLeastSquareFitting(data, num_clipped,
+				clipped_indices, num_model_bases, in, model, out);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

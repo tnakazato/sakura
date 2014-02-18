@@ -669,10 +669,22 @@ TEST_F(Baseline, SubtractBaselineOfAnE2eTestData) {
 	}
 	double end = sakura_GetCurrentTime();
 
-	float limit_residual = 0.04f;
+	float limit_residual = 0.014f;
+	//float max_residual = out[0];
+	//float min_residual = out[0];
 	for (size_t i = 0; i < num_model; ++i) {
-		EXPECT_TRUE(out[i] < limit_residual);
+		EXPECT_TRUE((out[i] > -limit_residual)&&(out[i] < limit_residual));
+		/*
+		if (out[i] > max_residual) {
+			max_residual = out[i];
+		}
+		if (out[i] < min_residual) {
+			min_residual = out[i];
+		}
+		*/
 	}
+	//cout << "******************" << endl;
+	//cout << "{residual: max = " << max_residual << ", min = " << min_residual << "}" << endl;
 
 	if (verbose) {
 		cout << "Elapse time of " << num_repeat << " repetition: "
