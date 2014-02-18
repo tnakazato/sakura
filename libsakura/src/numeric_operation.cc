@@ -35,6 +35,9 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) + coeff * v);
 	}
+	if (NUM_MODEL_BASES % pack_elements == 0) {
+		return;
+	}
 #endif
 	for (; i < NUM_MODEL_BASES; ++i) {
 		out[i] += k * vec[i];
@@ -51,6 +54,9 @@ void SubMulVectorTemplate(double k, double const *vec, double *out) {
 	for (i = 0; i < end; i += pack_elements) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) - coeff * v);
+	}
+	if (NUM_MODEL_BASES % pack_elements == 0) {
+		return;
 	}
 #endif
 	for (; i < NUM_MODEL_BASES; ++i) {
@@ -355,7 +361,7 @@ bool const mask[/*num_mask*/], size_t num_clipped,
 					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<5>,
 					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<6>,
 					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<7>,
-					::GetMatrixCoefficientsForLeastSquareFitting, //non-template version faster for the case num_bases == 8.
+					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<8>,
 					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<9>,
 					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
 					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
