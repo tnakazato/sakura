@@ -1546,6 +1546,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとにコンボリューションの結果は異なる。
  * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。
  * @param[in] use_fft FFTを行うか否かのフラグ。true=行う。false=行わない。
+ * FFTを行う場合：
+ * 離散畳み込み定理に基づきFFTを利用した離散コンボリューションを行う。
+ * 具体的には実数の入力データに対しFFTを行ってできた複素数配列と、事前に作った実数のカーネル配列に対しFFTを行って
+ * できた複素数配列とを掛け合せ一つの複素数配列を得る。それを逆FFTし、実数配列である出力データを得る。
+ * FFTを行わない場合：
+ * 実数の入力データに対して実数のカーネルによる離散コンボリューションを行う。
  * @param[out] context ンボリューションのための情報を格納しているコンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
  * により解放されなければならない。終了ステータスが
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink の場合はcontextには
@@ -1561,7 +1567,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
  * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM.
- * @param[in] use_fft true means use fft, false means don't use fft.
+ * @param[in] use_fft true means using fft, false means not using fft.
+ * If using fft, fft applied kernel which is already included context
+ * by CreateConvolve1DContext is multiplied with input data
+ * by complex-complex multiplication and then the multiplied complex
+ * array is created. Finally inverse FFT is applied against it
+ * and then real output data will be created.
+ * If not using fft, discrete convolution is performed against real input data by real kernel
  * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
  * MT-safe
@@ -1573,12 +1585,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 /**
  * @~japanese
  * @brief コンボリューションを行う。
- * @details 入力データに対するコンボリューションを行う。
- * FFTを使用する場合：
- * 実数の入力データに対しFFTを行ってできた複素数配列と、事前に作った実数のカーネル配列に対しFFTを行って
- * できた複素数配列とを掛け合せ一つの複素数配列を得る。それをIFFTし、実数配列である出力データを得る。
- * FFTを使用しない場合：
- * FFTを使用せず、実数の入力データと実数のカーネルとでコンボリューションを行う。
+ * @details 入力データに対してカーネルによる離散コンボリューションを行う。
+ * 具体的には、離散コンボリューションを行う、または、離散畳込み定理に従って離散FFTを利用した離散コンボリューションを行う。
  * @n
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1597,13 +1605,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * 配列の長さは @a num_data と同じ。
  * @return 終了ステータス。
  * @~english
- * @brief Do Convolution
- * @details It can do convolution input data
- * with using fft or not. If using fft, fft applied kernel which is
- * already included context by CreateConvolve1DContext will be multiplied
- * with input data by complex-complex multiplication and then
- * the multiplied complex array will be created. Finally IFFT will be
- * applied against it and then real output data will be created.
+ * @brief Convolution is performed
+ * @details discrete convolution is performed, or is performed with discrete FFT
+ * according to discrete convolution theorem against input data by a kernel
  * @param[in] context context
  * and @a num_data, @a input_real_array
  * @param[in] num_data number of data
