@@ -57,6 +57,10 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		LOG4CXX_ERROR(logger, "num_data must be > 0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(input_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(output_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	try {
 		auto convolutionop =
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
