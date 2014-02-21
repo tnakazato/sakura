@@ -55,6 +55,12 @@ struct SIMD_FLAGS {
 		&SimdFeature::avx }, { 0x10000000, 0, 0x00000020, &SimdFeature::avx2 } };
 
 void GetCpuFeature(SimdFeature &simd_feature) {
+	// refer to http://www.wdic.org/w/SCI/cpuid%20%28x86%29
+	CPURegister reg0;
+	reg0.eax = 0; // Highest Function Parameter
+	reg0.ecx = 0; // dummy to avoid warning
+	GetCpuId(reg0);
+
 	CPURegister reg;
 	reg.eax = 1; // Processor Info and Feature Bits
 	reg.ecx = 0; // dummy to avoid warning
@@ -63,7 +69,10 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 	CPURegister regExt;
 	regExt.eax = 7; // Extended Features
 	regExt.ecx = 0;
-	GetCpuId(regExt);
+	regExt.ebx = 0; // default result
+	if (reg0.eax >= 7) {
+		GetCpuId(regExt);
+	}
 #if 0
 	printf("eax: %08x\n", reg.eax);
 	printf("ebx: %08x\n", reg.ebx);
