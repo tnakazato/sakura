@@ -1968,6 +1968,26 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 
 /**
  * @~japanese
+ * @brief ベースラインフィッティング固有のエラーコードを格納する列挙型。
+ * @~english
+ * @brief Enumerations to define baseline-specific error code.
+ */
+typedef enum {
+	/**
+	 * @~japanese
+ 	 * @brief 成功または正常
+ 	 * @~english
+ 	 * @brief OK
+ 	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
+ 	 * @~japanese
+ 	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
+ 	 * @~english
+ 	 * @brief not enough data for baseline fitting
+ 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 1
+}LIBSAKURA_SYMBOL(BaselineStatus);
+
+/**
+ * @~japanese
  * @brief ベースラインの関数形を格納する列挙型。
  * @~english
  * @brief Enumerations to define baseline type.
@@ -2064,6 +2084,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @param[out] out 出力される配列。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
  * @n must-be-aligned
+ * @param[out] baseline_status ベースライン固有のエラーコード。
  * @return 終了ステータス。
  * @~english
  * @brief Compute the best-fit model by least-square fitting.
@@ -2079,6 +2100,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @param[out] out the best-fit model with length of @a num_data . the
  * pointer of @a out can be identical with that of @a data .
  * @n must-be-aligned
+ * @param[out] baseline_status baseline-specific error code.
  * @return status code.
  * @~
  * MT-safe
@@ -2086,7 +2108,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float out[/*num_data*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		float out[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2111,6 +2134,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @n must-be-aligned
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
+ * @param[out] baseline_status ベースライン固有のエラーコード。
  * @return 終了ステータス。
  * @~english
  * @brief Recursively fit a baseline and subtract it from input spectrum.
@@ -2138,6 +2162,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @n must-be-aligned
  * @param[out] out the output data. its length must be @a num_data .
  * @n must-be-aligned
+ * @param[out] baseline_status baseline-specific error code.
  * @return status code.
  * @~
  * MT-safe
@@ -2146,7 +2171,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/])
+		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -2171,6 +2197,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @n must-be-aligned
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
+ * @param[out] baseline_status ベースライン固有のエラーコード。
  * @~english
  * @brief Fit a baseline and subtract it from input data.
  * @details
@@ -2198,6 +2225,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @n must-be-aligned
  * @param[out] out the output data. its length must be @a num_data .
  * @n must-be-aligned
+ * @param[out] baseline_status baseline-specific error code.
  * @return status code.
  * @~
  * MT-safe
@@ -2206,7 +2234,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		bool const mask[/*num_data*/], uint16_t order,
 		float clipping_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/])
+		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 #ifdef __cplusplus
