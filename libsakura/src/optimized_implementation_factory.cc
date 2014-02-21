@@ -41,33 +41,41 @@ void GetCpuId(CPURegister &reg) {
 }
 
 struct SimdFeature {
-	bool mmx, sse, sse2, sse3, ssse3, sse4_1, sse4_2, avx;
+	bool mmx, sse, sse2, sse3, ssse3, sse4_1, sse4_2, avx, avx2;
 };
 
 struct SIMD_FLAGS {
-	uint32_t ecx, edx;bool SimdFeature::*flag;
-} simd_flags[] = { { 0, 0x0800000, &SimdFeature::mmx }, { 0, 0x2000000,
-		&SimdFeature::sse }, { 0, 0x4000000, &SimdFeature::sse2 }, { 0x00000001,
-		0, &SimdFeature::sse3 }, { 0x00000200, 0, &SimdFeature::ssse3 }, {
-		0x00080000, 0, &SimdFeature::sse4_1 }, { 0x00100000, 0,
-		&SimdFeature::sse4_2 }, { 0x10000000, 0, &SimdFeature::avx }, };
+	uint32_t ecx, edx, ebx;bool SimdFeature::*flag;
+} simd_flags[] = { { 0, 0x0800000, 0, &SimdFeature::mmx }, { 0, 0x2000000, 0,
+		&SimdFeature::sse }, { 0, 0x4000000, 0, &SimdFeature::sse2 }, {
+		0x00000001, 0, 0, &SimdFeature::sse3 }, { 0x00000200, 0, 0,
+		&SimdFeature::ssse3 }, { 0x00080000, 0, 0, &SimdFeature::sse4_1 }, {
+		0x00100000, 0, 0, &SimdFeature::sse4_2 }, { 0x10000000, 0, 0,
+		&SimdFeature::avx }, { 0x10000000, 0, 0x00000020, &SimdFeature::avx2 } };
 
 void GetCpuFeature(SimdFeature &simd_feature) {
 	CPURegister reg;
-	reg.eax = 1;
+	reg.eax = 1; // Processor Info and Feature Bits
 	GetCpuId(reg);
+
+	CPURegister regExt;
+	regExt.eax = 7; // Extended Features
+	GetCpuId(regExt);
 #if 0
 	printf("eax: %08x\n", reg.eax);
 	printf("ebx: %08x\n", reg.ebx);
 	printf("ecx: %08x\n", reg.ecx);
 	printf("edx: %08x\n", reg.edx);
+
+	printf("ebx: %08x\n", regExt.ebx);
 #endif
 
 	static SimdFeature const simd_all_false = { };
 	simd_feature = simd_all_false;
 	for (size_t i = 0; i < ELEMENTSOF(simd_flags); ++i) {
 		if ((reg.ecx & simd_flags[i].ecx) == simd_flags[i].ecx
-				&& (reg.edx & simd_flags[i].edx) == simd_flags[i].edx) {
+				&& (reg.edx & simd_flags[i].edx) == simd_flags[i].edx
+				&& (regExt.ebx & simd_flags[i].ebx) == simd_flags[i].ebx) {
 			simd_feature.*simd_flags[i].flag = true;
 		}
 	}
