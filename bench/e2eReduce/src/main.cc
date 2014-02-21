@@ -507,9 +507,10 @@ void Reduce(E2EOptions const &options) {
 		bool const serialize = options.serialize;
 		xdispatch::queue serial_queue("my serial queue");
 		xdispatch::semaphore semaphore(num_threads);
+		volatile bool ok = true;
 
 		auto group = xdispatch::group();
-		for (size_t i = 0; i < shared->num_data; i += rows_per_processing) {
+		for (size_t i = 0; ok && i < shared->num_data; i += rows_per_processing) {
 			size_t rows = std::min(rows_per_processing, shared->num_data - i);
 			semaphore.acquire();
 			size_t working_set_id = 0;
@@ -563,35 +564,46 @@ void Reduce(E2EOptions const &options) {
 				}
 			} else {
 				group.async(
-						[=, &working_sets, &available_workers, &serial_queue, &semaphore, &options] {
+						[=, &ok, &working_sets, &available_workers, &serial_queue, &semaphore, &options] {
 							ScopeGuard cleanup([=,&available_workers, &serial_queue, &semaphore] {
 										serial_queue.sync([=, &available_workers] {
 													available_workers.push_back(working_set_id);
 												});
 										semaphore.release();
 									});
-							ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared,
-									&working_sets[working_set_id].work_area,
-									working_sets[working_set_id].out_data,
-									working_sets[working_set_id].out_flag,
-									working_sets[working_set_id].out_tsys);
+							do {
+								try {
+									ParallelJob(i, rows, shared->num_chan, t, v, f, options, shared,
+											&working_sets[working_set_id].work_area,
+											working_sets[working_set_id].out_data,
+											working_sets[working_set_id].out_flag,
+											working_sets[working_set_id].out_tsys);
+								} catch (std::runtime_error &e) {
+									LOG4CXX_ERROR(logger, "Exception was thrown:" << e.what());
+									ok = false;
+									break;
+								}
 
-							xdispatch::main_queue().sync([=, &shared, &working_sets]() {
-										// run casa operations in main_queue.
-										for (size_t j = 0; j < rows; ++j) {
-											PutResult(const_cast<SharedWorkingSet *>(shared), i + j, shared->num_chan,
-													working_sets[working_set_id].out_data[j],
-													working_sets[working_set_id].out_flag[j],
-													working_sets[working_set_id].out_tsys[j]);
-											LOG4CXX_DEBUG(logger, "Row " << i + j << " have done.");
-										}
-									});
+								xdispatch::main_queue().sync([=, &shared, &working_sets]() {
+											// run casa operations in main_queue.
+											for (size_t j = 0; j < rows; ++j) {
+												PutResult(const_cast<SharedWorkingSet *>(shared), i + j, shared->num_chan,
+														working_sets[working_set_id].out_data[j],
+														working_sets[working_set_id].out_flag[j],
+														working_sets[working_set_id].out_tsys[j]);
+												LOG4CXX_DEBUG(logger, "Row " << i + j << " have done.");
+											}
+										});
+							}while (false);
 						});
 			}
 		} // i
 		if (!serialize) {
 			group.wait(xdispatch::time_forever);
 			xdispatch::main_queue().sync([] {}); // to ensure other jobs submitted to main_queue finished
+		}
+		if (!ok) {
+			throw std::runtime_error("Failed");
 		}
 	} // polno
 	LOG4CXX_DEBUG(logger, "Leave: Reduce");
@@ -695,7 +707,8 @@ void BatchReduce(E2EOptions const &options) {
 	xdispatch::semaphore semaphore(num_threads);
 	auto group = xdispatch::group();
 
-	for (unsigned int polno = 0; polno < num_polarizations; polno++) {
+	volatile bool ok = true;
+	for (unsigned int polno = 0; ok && polno < num_polarizations; polno++) {
 
 		if (input_data[polno].num_rows > 0) {
 			LOG4CXX_INFO(logger, "Processing POLNO " << polno);
@@ -705,7 +718,7 @@ void BatchReduce(E2EOptions const &options) {
 			working_sets[i].shared = shared[polno].get();
 		}
 
-		for (size_t i = 0; i < input_data[polno].num_rows; i +=
+		for (size_t i = 0; ok && i < input_data[polno].num_rows; i +=
 				rows_per_processing) {
 			size_t rows = std::min(rows_per_processing,
 					input_data[polno].num_rows - i);
@@ -754,25 +767,32 @@ void BatchReduce(E2EOptions const &options) {
 						&output_data[polno].tsys[i]);
 			} else {
 				group.async(
-						[=, &shared, &input_data, &output_data, &working_sets, &available_workers, &serial_queue, &semaphore, &options] {
+						[=, &ok, &shared, &input_data, &output_data, &working_sets, &available_workers, &serial_queue, &semaphore, &options] {
 							ScopeGuard cleanup([=,&available_workers, &serial_queue, &semaphore] {
 										serial_queue.sync([working_set_id, &available_workers, &semaphore] {
 													available_workers.push_back(working_set_id);
 												});
 										semaphore.release();
 									});
+							try {
 							ParallelJob(i, rows, input_data[polno].num_channels, t, v, f, options, shared[polno].get(),
 									&working_sets[working_set_id].work_area,
 									&output_data[polno].spectrum[i],
 									&output_data[polno].flag[i],
 									&output_data[polno].tsys[i]);
-
+							} catch (std::runtime_error &e) {
+								LOG4CXX_ERROR(logger, "Exception was thrown:" << e.what());
+								ok = false;
+							}
 						});
 			}
 		} // i
 	} // polno
 	if (!serialize) {
 		group.wait(xdispatch::time_forever);
+	}
+	if (!ok) {
+		throw std::runtime_error("Failed");
 	}
 	LOG4CXX_INFO(logger,
 			"Analyzed within " << sakura_GetCurrentTime() - start << " sec");
@@ -837,6 +857,8 @@ void main_(int argc, char const* const argv[]) {
 			E2eReduce(argc, argv);
 		} catch (casa::AipsError &e) {
 			LOG4CXX_ERROR(logger, "Exception raised: " << e.getMesg());
+		} catch (std::runtime_error &e) {
+			LOG4CXX_ERROR(logger, "Exception raised: " << e.what());
 		} catch (...) {
 			LOG4CXX_ERROR(logger, "Exception raised");
 		}
