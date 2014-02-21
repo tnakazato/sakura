@@ -36,7 +36,8 @@ void GetCpuId(CPURegister &reg) {
 			"=b" (reg.ebx),
 			"=c" (reg.ecx),
 			"=d" (reg.edx)
-			: "a" (reg.eax)
+			: "a" (reg.eax),
+			"c" (reg.ecx)
 	);
 }
 
@@ -56,10 +57,12 @@ struct SIMD_FLAGS {
 void GetCpuFeature(SimdFeature &simd_feature) {
 	CPURegister reg;
 	reg.eax = 1; // Processor Info and Feature Bits
+	reg.ecx = 0; // dummy to avoid warning
 	GetCpuId(reg);
 
 	CPURegister regExt;
 	regExt.eax = 7; // Extended Features
+	regExt.ecx = 0;
 	GetCpuId(regExt);
 #if 0
 	printf("eax: %08x\n", reg.eax);
