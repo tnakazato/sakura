@@ -622,7 +622,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialNotEnoughDataByClipping) {
 			173.5, 90.5, 111.5, 132.5, 157.0, 182.5, 211.5 };
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)] = { true, true, true, true, true, true,
-			true, true, true, true, true, true, true, true, true };
+	true, true, true, true, true, true, true, true, true };
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 

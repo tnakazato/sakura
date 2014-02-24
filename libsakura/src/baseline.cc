@@ -177,7 +177,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                      const zero = _mm256_set1_pd(0.);
+	__m256d                                    const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -484,11 +484,11 @@ inline std::string GetNotEnoughDataMessage(
 	ss << idx_erroneous_fitting;
 	ss << " ";
 	/*
-	std::string mesg = "";
-	mesg += "SubtractBaseline: Not enough data for baseline fitting in ";
-	mesg += idx_erroneous_fitting;
-	mesg += " ";
-	*/
+	 std::string mesg = "";
+	 mesg += "SubtractBaseline: Not enough data for baseline fitting in ";
+	 mesg += idx_erroneous_fitting;
+	 mesg += " ";
+	 */
 	uint16_t imod10 = idx_erroneous_fitting % 10;
 	std::string isuffix;
 	if (imod10 == 3) {
@@ -501,11 +501,11 @@ inline std::string GetNotEnoughDataMessage(
 		isuffix = "th";
 	}
 	/*
-	mesg += isuffix;
-	mesg += " fitting.";
+	 mesg += isuffix;
+	 mesg += " fitting.";
 
-	return mesg;
-	*/
+	 return mesg;
+	 */
 	ss << isuffix << " fitting.";
 
 	return ss.str();
@@ -577,7 +577,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	for (uint16_t i = 0; i < num_fitting_max; ++i) {
 		if (num_unmasked_data < baseline_context->num_bases) {
 			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
-			throw std::runtime_error(GetNotEnoughDataMessage(i+1));
+			throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
 		}
 
 		if ((i == 0) || (num_unmasked_data < num_clipped)) {
@@ -599,7 +599,6 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			throw std::runtime_error(
 					"SubtractBaseline: ComputeStatistics failed.");
 		}
-
 		float clipping_threshold = clipping_threshold_sigma * result.stddev;
 		float clip_lower_bound = result.mean - clipping_threshold;
 		float clip_upper_bound = result.mean + clipping_threshold;
