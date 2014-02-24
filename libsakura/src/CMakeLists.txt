@@ -33,13 +33,13 @@ set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
+set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
-#set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -Ofast -fno-finite-math-only -DNDEBUG ${VECT_VERB}")
-set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB}")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -funroll-all-loops -O3 -DNDEBUG ${VECT_VERB}")
+set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
 #set(ADDITIONAL_CXXFLAGS_Default "-mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
@@ -94,7 +94,7 @@ foreach(_file ${MULTI_SOURCE})
 		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}Default${_ext}"
 	)
 	set_property(SOURCE ${_base}Default${_ext} PROPERTY
-		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_Default} \${VECT_VERB}"
+		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_Default} \${VECT_VERB} ${PROF_MODE}"
 	)
 	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}Default${_ext})
 
@@ -104,7 +104,7 @@ foreach(_file ${MULTI_SOURCE})
 		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}AfterSandyBridge${_ext}"
 	)
 	set_property(SOURCE ${_base}AfterSandyBridge${_ext} PROPERTY
-		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterSandyBridge} \${VECT_VERB}"
+		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterSandyBridge} \${VECT_VERB} ${PROF_MODE}"
 	)
 	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}AfterSandyBridge${_ext})
 endforeach()
