@@ -197,12 +197,8 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 		size_t kernel_width, float const *input_kernel,
 		float *output_data_arg) {
-	if (!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg))) {
-		throw std::invalid_argument("input_data_arg is not aligned");
-	}
-	if (!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg))) {
-		throw std::invalid_argument("output_data_arg is not aligned");
-	}
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	for (size_t j = 0; j < num_data; ++j) {
@@ -236,12 +232,8 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
 		float const *input_data_arg, size_t kernel_width,
 		float const *input_kernel, float *output_data_arg) {
-	if (!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg))) {
-		throw std::invalid_argument("input_data_arg is not aligned");
-	}
-	if (!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg))) {
-		throw std::invalid_argument("output_data_arg is not aligned");
-	}
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	for (size_t j = 0; j < num_data; ++j) {
@@ -261,9 +253,7 @@ inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
 inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
-	if (!(*context == nullptr)) {
-		throw std::invalid_argument("context must be == nullptr");
-	}
+	assert(*context == nullptr);
 	bool remove_pollution = false;
 	size_t expanded_num_data = num_data;
 	if (remove_pollution) {
@@ -428,12 +418,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (!(context->num_data == num_data)) {
 		throw std::invalid_argument("num_data must equal to context->num_data");
 	}
-	if (!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg))) {
-		throw std::invalid_argument("input_data_arg is not aligned");
-	}
-	if (!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg))) {
-		throw std::invalid_argument("output_data_arg is not aligned");
-	}
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	if (context->use_fft) {
