@@ -197,8 +197,12 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 		size_t kernel_width, float const *input_kernel,
 		float *output_data_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
+	if (!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg))) {
+		throw std::invalid_argument("input_data_arg is not aligned");
+	}
+	if (!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg))) {
+		throw std::invalid_argument("output_data_arg is not aligned");
+	}
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	for (size_t j = 0; j < num_data; ++j) {
@@ -232,8 +236,12 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
 		float const *input_data_arg, size_t kernel_width,
 		float const *input_kernel, float *output_data_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
+	if (!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg))) {
+		throw std::invalid_argument("input_data_arg is not aligned");
+	}
+	if (!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg))) {
+		throw std::invalid_argument("output_data_arg is not aligned");
+	}
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	for (size_t j = 0; j < num_data; ++j) {
@@ -253,7 +261,9 @@ inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
 inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
-	assert(*context == nullptr);
+	if (!(*context == nullptr)) {
+		throw std::invalid_argument("context must be == nullptr");
+	}
 	bool remove_pollution = false;
 	size_t expanded_num_data = num_data;
 	if (remove_pollution) {
@@ -261,21 +271,25 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	}
 	if (use_fft) {
 		float *real_array_kernel = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_work_real_array_kernel(
+		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array_kernel(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * expanded_num_data, &real_array_kernel));
-		if (work_work_real_array_kernel == nullptr) {
+		if (work_real_array_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
-		assert(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel));
+		if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel))) {
+			throw std::runtime_error("real_array_kernel is not aligned");
+		}
 		float *real_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_work_real_array(
+		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * expanded_num_data, &real_array));
-		if (work_work_real_array == nullptr) {
+		if (work_real_array == nullptr) {
 			throw std::bad_alloc();
 		}
-		assert(LIBSAKURA_SYMBOL(IsAligned)(real_array));
+		if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array))) {
+			throw std::runtime_error("real_array is not aligned");
+		}
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
 				AllocateFFTArray(expanded_num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
@@ -300,10 +314,11 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_real_to_complex_float_kernel == nullptr) {
 			guard_for_fft_plan_kernel.Disable();
-			if (!remove_pollution && expanded_num_data <= 0) {
-				throw std::invalid_argument("num_data must be > 0");
-			} else if (remove_pollution && expanded_num_data <= 0) {
-				throw std::runtime_error("expanded_num_data must be > 0");
+			if (expanded_num_data <= 0) {
+				throw std::invalid_argument("expanded_num_data must be > 0");
+			} else if (remove_pollution && !(kernel_width > 0)
+					&& num_data / 2 <= kernel_width) {
+				throw std::invalid_argument("kernel_width must be > 0");
 			}
 			throw std::bad_alloc();
 		}
@@ -316,10 +331,11 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_real_to_complex_float == nullptr) {
 			guard_for_fft_plan.Disable();
-			if (!remove_pollution && expanded_num_data <= 0) {
-				throw std::invalid_argument("num_data must be > 0");
-			} else if (remove_pollution && expanded_num_data <= 0) {
-				throw std::runtime_error("expanded_num_data must be > 0");
+			if (expanded_num_data <= 0) {
+				throw std::invalid_argument("expanded_num_data must be > 0");
+			} else if (remove_pollution && !(kernel_width > 0)
+					&& num_data / 2 <= kernel_width) {
+				throw std::invalid_argument("kernel_width must be > 0");
 			}
 			throw std::bad_alloc();
 		}
@@ -331,10 +347,11 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_complex_to_real_float == nullptr) {
 			guard_for_ifft_plan.Disable();
-			if (!remove_pollution && expanded_num_data <= 0) {
-				throw std::invalid_argument("num_data must be > 0");
-			} else if (remove_pollution && expanded_num_data <= 0) {
-				throw std::runtime_error("expanded_num_data must be > 0");
+			if (expanded_num_data <= 0) {
+				throw std::invalid_argument("expanded_num_data must be > 0");
+			} else if (remove_pollution && !(kernel_width > 0)
+					&& num_data / 2 <= kernel_width) {
+				throw std::invalid_argument("kernel_width must be > 0");
 			}
 			throw std::bad_alloc();
 		}
@@ -354,9 +371,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array;
 		work_context->real_array_kernel = nullptr;
-		work_context->work_real_array = work_work_real_array.release();
-		work_context->work_real_array_kernel =
-				work_work_real_array_kernel.release();
+		work_context->work_real_array = work_real_array.release();
+		work_context->work_real_array_kernel = work_real_array_kernel.release();
 		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
 		guard_for_fft_plan.Disable();
 		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
@@ -369,15 +385,16 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		*context = work_context.release();
 	} else {
 		float *real_array_kernel = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_work_real_array_kernel(
+		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array_kernel(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_array_kernel));
-		if (work_work_real_array_kernel == nullptr) {
+		if (work_real_array_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
-		assert(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel));
+		if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel))) {
+			throw std::runtime_error("real_array_kernel is not aligned");
+		}
 		Create1DKernel(num_data, kernel_type, kernel_width, real_array_kernel);
-
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -393,8 +410,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_array = nullptr;
 		work_context->real_array_kernel = real_array_kernel;
 		work_context->work_real_array = nullptr;
-		work_context->work_real_array_kernel =
-				work_work_real_array_kernel.release();
+		work_context->work_real_array_kernel = work_real_array_kernel.release();
 		work_context->num_data = num_data;
 		work_context->expanded_num_data = num_data;
 		work_context->kernel_width = kernel_width;
@@ -412,8 +428,12 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (!(context->num_data == num_data)) {
 		throw std::invalid_argument("num_data must equal to context->num_data");
 	}
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
+	if (!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg))) {
+		throw std::invalid_argument("input_data_arg is not aligned");
+	}
+	if (!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg))) {
+		throw std::invalid_argument("output_data_arg is not aligned");
+	}
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	if (context->use_fft) {
@@ -431,14 +451,16 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		}
 		if (context->remove_pollution) {
 			float *real_array = nullptr;
-			std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_work_real_array(
+			std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array(
 					LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 							sizeof(float) * context->expanded_num_data,
 							&real_array));
-			if (work_work_real_array == nullptr) {
+			if (work_real_array == nullptr) {
 				throw std::bad_alloc();
 			}
-			assert(LIBSAKURA_SYMBOL(IsAligned)(real_array));
+			if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array))) {
+				throw std::invalid_argument("real_array is not aligned");
+			}
 			for (size_t i = 0; i < context->expanded_num_data; ++i) {
 				real_array[i] = input_data[i];
 			}
@@ -469,14 +491,16 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		}
 		if (context->remove_pollution) {
 			float *real_array_out = nullptr;
-			std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_work_real_array(
+			std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array(
 					LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 							sizeof(float) * context->expanded_num_data,
 							&real_array_out));
-			if (work_work_real_array == nullptr) {
+			if (work_real_array == nullptr) {
 				throw std::bad_alloc();
 			}
-			assert(LIBSAKURA_SYMBOL(IsAligned)(real_array_out));
+			if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array_out))) {
+				throw std::invalid_argument("real_array_out is not aligned");
+			}
 			fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 					multiplied_complex_data.get(), real_array_out);
 			for (size_t i = 0; i < context->num_data; ++i) {
