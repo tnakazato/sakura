@@ -21,7 +21,7 @@
 #define NUM_IN_ODD 25
 #define NUM_IN_LARGE 128
 #define NUM_IN_MAX 4096
-#define LOOP_MAX 10000
+#define LOOP_MAX 1000
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
@@ -75,7 +75,7 @@ protected:
 	}
 	void PrintArray2(char const *name, size_t num_in, float *in) {
 		cout << name << "";
-		for (size_t i = 0; i < num_in; ++i) {
+		for (size_t i = num_in/2 - 15; i < num_in/2 + 15; ++i) {
 			cout << setprecision(10) << in[i] << "\n";
 		}
 		//cout << in[num_in - 1] << endl;
@@ -978,6 +978,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 	{ // [even],with FFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+
 		SIMD_ALIGN
 		float input_data[NUM_IN_MAX];
 		size_t const num_data(ELEMENTSOF(input_data));
@@ -1013,7 +1014,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+	    //verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
 		}

@@ -16,7 +16,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
 	*context = nullptr;
-	if (!(num_data > 0)) {
+	if (!(num_data > 0) || !(num_data <= INT_MAX)) {
 		LOG4CXX_ERROR(logger, "num_data must be > 0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -39,7 +39,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (...) {
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	}
+	catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

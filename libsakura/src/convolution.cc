@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fftw3.h>
 #include <memory>
+#include <climits>
 
 #include <libsakura/sakura.h>
 #include <libsakura/optimized_implementation_factory_impl.h>
@@ -258,6 +259,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	size_t expanded_num_data = num_data;
 	if (remove_pollution) {
 		expanded_num_data += 2 * kernel_width; // added zero-padding region
+		if(!(expanded_num_data <= INT_MAX)){
+			throw std::runtime_error("expanded_num_data must be <= INT_MAX");
+		}
 	}
 	if (use_fft) {
 		float *real_array_kernel = nullptr;
@@ -304,12 +308,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_real_to_complex_float_kernel == nullptr) {
 			guard_for_fft_plan_kernel.Disable();
-			if (expanded_num_data <= 0) {
-				throw std::invalid_argument("expanded_num_data must be > 0");
-			} else if (remove_pollution && !(kernel_width > 0)
-					&& num_data / 2 <= kernel_width) {
-				throw std::invalid_argument("kernel_width must be > 0");
-			}
 			throw std::bad_alloc();
 		}
 		fftwf_plan plan_real_to_complex_float = fftwf_plan_dft_r2c_1d(
@@ -321,12 +319,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_real_to_complex_float == nullptr) {
 			guard_for_fft_plan.Disable();
-			if (expanded_num_data <= 0) {
-				throw std::invalid_argument("expanded_num_data must be > 0");
-			} else if (remove_pollution && !(kernel_width > 0)
-					&& num_data / 2 <= kernel_width) {
-				throw std::invalid_argument("kernel_width must be > 0");
-			}
 			throw std::bad_alloc();
 		}
 		fftwf_plan plan_complex_to_real_float = fftwf_plan_dft_c2r_1d(
@@ -337,12 +329,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		});
 		if (plan_complex_to_real_float == nullptr) {
 			guard_for_ifft_plan.Disable();
-			if (expanded_num_data <= 0) {
-				throw std::invalid_argument("expanded_num_data must be > 0");
-			} else if (remove_pollution && !(kernel_width > 0)
-					&& num_data / 2 <= kernel_width) {
-				throw std::invalid_argument("kernel_width must be > 0");
-			}
 			throw std::bad_alloc();
 		}
 		Create1DKernel(expanded_num_data, kernel_type, kernel_width,
