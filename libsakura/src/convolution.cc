@@ -259,7 +259,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	size_t expanded_num_data = num_data;
 	if (remove_pollution) {
 		expanded_num_data += 2 * kernel_width; // added zero-padding region
-		if(!(expanded_num_data <= INT_MAX)){
+		if (!(expanded_num_data <= INT_MAX)) {
 			throw std::runtime_error("expanded_num_data must be <= INT_MAX");
 		}
 	}

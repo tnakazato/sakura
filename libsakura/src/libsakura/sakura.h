@@ -1541,10 +1541,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * を返す。
  * @par
- * @param[in] num_data データの要素数。
+ * @param[in] num_data データの要素数。0 < num_data <= INT_MAX
  * @param[in] kernel_type カーネルタイプ
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとに離散コンボリューションの結果は異なる。
- * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。
+ * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。0 < kernel_width <= INT_MAX
  * @param[in] use_fft 離散コンボリューションの演算のためにFFTを行うか否かのフラグ。カーネルタイプには無間係。true=行う。false=行わない。
  * FFTを行う場合：
  * 離散畳み込み定理に従い離散FFTを利用した演算を行う。
@@ -1563,7 +1563,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @brief create context for discrete convolution
  * @details
  * @param[in] num_data number of data. @num_data must
- * be positive.
+ * be positive.  0 < num_data < INT32_MAX
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
  * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM.
@@ -1595,7 +1595,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * を返す。
  * @param[in] context コンテキスト
- * @param[in] num_data データの要素数。
+ * @param[in] num_data データの要素数。0 < num_data <= INT_MAX
  * @param[in] input_data 入力データ
  * 配列の長さは @a num_data と同じ。
  * @n must-be-aligned
@@ -1975,15 +1975,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 typedef enum {
 	/**
 	 * @~japanese
- 	 * @brief 成功または正常
- 	 * @~english
- 	 * @brief OK
- 	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
- 	 * @~japanese
- 	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
- 	 * @~english
- 	 * @brief not enough data for baseline fitting
- 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 1
+	 * @brief 成功または正常
+	 * @~english
+	 * @brief OK
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
+	 * @~japanese
+	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
+	 * @~english
+	 * @brief not enough data for baseline fitting
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 1
 }LIBSAKURA_SYMBOL(BaselineStatus);
 
 /**
@@ -2109,7 +2109,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float out[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) LIBSAKURA_WARN_UNUSED_RESULT;
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese

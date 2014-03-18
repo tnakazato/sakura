@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fftw3.h>
+#include <climits>
 #include <memory>
 
 #include <libsakura/localdef.h>
@@ -75,7 +76,7 @@ protected:
 	}
 	void PrintArray2(char const *name, size_t num_in, float *in) {
 		cout << name << "";
-		for (size_t i = num_in/2 - 15; i < num_in/2 + 15; ++i) {
+		for (size_t i = num_in / 2 - 15; i < num_in / 2 + 15; ++i) {
 			cout << setprecision(10) << in[i] << "\n";
 		}
 		//cout << in[num_in - 1] << endl;
@@ -98,7 +99,22 @@ protected:
  * CreateConvolve1DContext will return Status_kInvalidArgument)
  */
 TEST_F(Convolve1DOperation ,InvalidArguments) {
-	{ // num_data = 0
+	{ // num_data > INT32_MAX
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		size_t const num_data(INT_MAX + 1);
+		size_t const kernel_width(NUM_WIDTH);
+		bool fftuse = true;
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
+				kernel_width, fftuse, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+	}
+	{ // num_data == 0
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(0);
 		size_t const kernel_width(NUM_WIDTH);
@@ -113,7 +129,23 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
-	{ // kernel_width = 0
+	{ // kernel_width > INT32_MAX
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		size_t const num_data(NUM_IN);
+		size_t const kernel_width(INT_MAX + 1);
+		bool fftuse = true;
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
+				kernel_width, fftuse, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+	}
+	{ // kernel_width == 0
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(0);
@@ -868,50 +900,6 @@ TEST_F(Convolve1DOperation , DestroyConvolve1DContext) {
 }
 
 /*
- * Test [with FFT] Performance of Convolve1D
- * RESULT: elapsed time will be output
- */
-/*TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
- { // [even],withFFT, Gaussian Kernel Shape,input delta
- LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
- SIMD_ALIGN
- float input_data[NUM_IN];
- size_t const num_data(ELEMENTSOF(input_data));
- SIMD_ALIGN
- bool mask[num_data];
- for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
- input_data[i] = 1.0;
- mask[i] = true; // no mask
- }
- size_t const kernel_width(NUM_WIDTH);
- bool fftuse = true; // with FFT
- SIMD_ALIGN
- float output_data[num_data];
- LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
- LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
- LIBSAKURA_SYMBOL(Status) status_Create =
- LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
- kernel_width, fftuse, &context);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
- const size_t loop_max = 10000;
- //double start_time = sakura_GetCurrentTime();
- for (size_t i = 0; i < loop_max; ++i) {
- LIBSAKURA_SYMBOL(Status) status_Convolve =
- LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
- output_data);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
- }
- //double end_time = sakura_GetCurrentTime();
- //std::cout << "withFFT without Pollution  ch = " << num_data << ", elapsed time = "
- //					<< end_time - start_time << "secs\n";
-
- LIBSAKURA_SYMBOL(Status) status_Destroy =
- LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
- }
- }*/
-
-/*
  * Test [Without FFT] Performance of Convolve1D
  * RESULT: elapsed time will be output
  */
@@ -940,8 +928,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 
 		LIBSAKURA_SYMBOL(Status) status_Create;
 		double start = sakura_GetCurrentTime();
-			status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
-					kernel_type, kernel_width, fftuse, &context);
+		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
+				kernel_type, kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		double end = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL(Status) status_Convolve;
@@ -1001,8 +989,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 
 		LIBSAKURA_SYMBOL(Status) status_Create;
 		double start = sakura_GetCurrentTime();
-			status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
-					kernel_type, kernel_width, fftuse, &context);
+		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
+				kernel_type, kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		double end = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL(Status) status_Convolve;
@@ -1014,7 +1002,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-	    //verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
 		}
@@ -1033,7 +1021,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 	{ // [odd],with FFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN_MAX-1];
+		float input_data[NUM_IN_MAX - 1];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
 		bool mask[num_data];
@@ -1054,8 +1042,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 
 		LIBSAKURA_SYMBOL(Status) status_Create;
 		double start = sakura_GetCurrentTime();
-			status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
-					kernel_type, kernel_width, fftuse, &context);
+		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
+				kernel_type, kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		double end = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL(Status) status_Convolve;
