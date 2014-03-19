@@ -259,22 +259,12 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array_kernel(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_array_kernel));
-		if (work_real_array_kernel == nullptr) {
-			throw std::bad_alloc();
-		}
-		if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel))) {
-			throw std::runtime_error("real_array_kernel is not aligned");
-		}
+		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel)));
 		float *real_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_array));
-		if (work_real_array == nullptr) {
-			throw std::bad_alloc();
-		}
-		if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array))) {
-			throw std::runtime_error("real_array is not aligned");
-		}
+		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array)));
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
 				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
@@ -350,12 +340,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array_kernel(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_array_kernel));
-		if (work_real_array_kernel == nullptr) {
-			throw std::bad_alloc();
-		}
-		if (!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel))) {
-			throw std::runtime_error("real_array_kernel is not aligned");
-		}
+		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel)));
 		Create1DKernel(num_data, kernel_type, kernel_width, real_array_kernel);
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
