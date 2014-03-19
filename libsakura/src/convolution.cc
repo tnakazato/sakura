@@ -194,6 +194,11 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	}
 }
 
+inline size_t GetSigmaFromKernelWidth(size_t num_sigma, size_t kernel_width) {
+	const float ln2 = 0.6931471805599453094172321;
+	return num_sigma * kernel_width / sqrt(float(8.0) * ln2);
+}
+
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 		size_t kernel_width, float const *input_kernel,
 		float *output_data_arg) {
@@ -201,13 +206,11 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
+	const size_t sigma = GetSigmaFromKernelWidth(6, kernel_width);
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		//for (size_t i = 0; (i < num_data / 2 - 1); ++i) {
-		for (size_t i = 0;
-				i < (6 * kernel_width / 2.35482004503094938202313865291938) // 6 sigma
-				&& (kernel_width < num_data); ++i) {
+		for (size_t i = 0; i < sigma && (kernel_width < num_data); ++i) {
 			if (j + 1 + i < num_data) {
 				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
 			} else {
@@ -215,10 +218,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 						* input_kernel[num_data - 1 - i];
 			}
 		}
-		//for (size_t k = 1; k < num_data / 2 + 1; ++k) {
-		for (size_t k = 1;
-				k < (6 * kernel_width / 2.35482004503094938202313865291938) // 6 sigma
-				&& (kernel_width < num_data); ++k) {
+		for (size_t k = 1; k < sigma && (kernel_width < num_data); ++k) {
 			if (j < k) {
 				right += input_data[num_data + j - k] * input_kernel[k];
 			} else {
