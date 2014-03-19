@@ -17,7 +17,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
 	*context = nullptr;
 	if (!(0 < num_data && num_data <= INT_MAX)) {
-		LOG4CXX_ERROR(logger, "num_data must be >0 and <= INT_MAX");
+		LOG4CXX_ERROR(logger, "num_data must be '0 < num_data <= INT_MAX'");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (kernel_type != LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)
@@ -27,8 +27,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		LOG4CXX_ERROR(logger, "Invalid Kernel Type");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if (!(0 < kernel_width && kernel_width <= INT_MAX)) {
-		LOG4CXX_ERROR(logger, "kernel_width must be >0 and <= INT_MAX");
+	if (!(0 < kernel_width)) {
+		LOG4CXX_ERROR(logger, "kernel_width must be >0");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
@@ -60,7 +60,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (!(0 < num_data && num_data <= INT_MAX)) {
-		LOG4CXX_ERROR(logger, "num_data must be >0 and <= INT_MAX");
+		LOG4CXX_ERROR(logger, "num_data must be '0 < num_data <= INT_MAX'");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(input_data)))

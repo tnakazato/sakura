@@ -1544,7 +1544,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data データの要素数。0 < num_data <= INT_MAX
  * @param[in] kernel_type カーネルタイプ
  * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとに離散コンボリューションの結果は異なる。
- * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。0 < kernel_width <= INT_MAX
+ * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。0 < kernel_width
  * @param[in] use_fft 離散コンボリューションの演算のためにFFTを行うか否かのフラグ。カーネルタイプには無間係。true=行う。false=行わない。
  * FFTを行う場合：
  * 離散畳み込み定理に従い離散FFTを利用した演算を行う。
@@ -1566,7 +1566,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * be positive.  0 < num_data < INT32_MAX
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
- * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM.
+ * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM. 0 < kernel_width
  * @param[in] use_fft true means using FFT, false means not using FFT when discrete convolution is performed. And Independent of the type of kernel.
  * If using FFT, discrete FFT applied kernel which is already included context
  * by CreateConvolve1DContext is multiplied with input data
