@@ -206,7 +206,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; i < sigma_threshold && (kernel_width < num_data);
+		for (size_t i = 0; i < sigma_threshold && (i < (num_data/2 - 1));//(kernel_width < num_data);
 				++i) {
 			if (j + 1 + i < num_data) {
 				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
@@ -215,12 +215,12 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 						* input_kernel[num_data - 1 - i];
 			}
 		}
-		for (size_t k = 1; k < sigma_threshold && (kernel_width < num_data);
+		for (size_t k = 0; k < sigma_threshold && (k < (num_data/2));//(kernel_width < num_data);
 				++k) {
-			if (j < k) {
-				right += input_data[num_data + j - k] * input_kernel[k];
+			if (j < k + 1) {
+				right += input_data[num_data + j - k - 1] * input_kernel[k + 1];
 			} else {
-				right += input_data[j - k] * input_kernel[k];
+				right += input_data[j - k - 1] * input_kernel[k + 1];
 			}
 		}
 		output_data[j] = left + center + right;
