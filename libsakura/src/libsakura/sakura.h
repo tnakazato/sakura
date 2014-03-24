@@ -1599,9 +1599,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] input_data 入力データ
  * 配列の長さは @a num_data と同じ。
  * @n must-be-aligned
- * @param[in] mask 入力データに対するマスク情報
- * 配列の長さは @a num_data と同じ。
- * @n must-be-aligned
  * @param[out] output_data 出力データ
  * 配列の長さは @a num_data と同じ。
  * @n must-be-aligned
@@ -1615,9 +1612,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] input_data input data
  * Its length equals to channel number
  * @n must-be-aligned
- * @param[in] mask
- * Its length equals to channel number
- * @n must-be-aligned
  * @param[out] output_data
  * Its length equals to channel number
  * @n must-be-aligned
@@ -1626,7 +1620,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
-		bool const mask[/*num_data*/], float output_data[/*num_data*/]);
+		float output_data[/*num_data*/]);
 /**
  * @~japanese
  * @brief コンテキストを破棄する。

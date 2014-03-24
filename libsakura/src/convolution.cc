@@ -22,9 +22,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
 	float *real_array;
-	float *real_array_kernel;
-	void *work_real_array;
-	void *work_real_array_kernel;
+	void *real_array_work;
+	float *real_kernel_array;
+	void *real_kernel_array_work;
 };
 }
 
@@ -206,7 +206,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; i < sigma_threshold && (i < (num_data/2 - 1));//(kernel_width < num_data);
+		for (size_t i = 0; i < sigma_threshold && (i < (num_data / 2 - 1)); //(kernel_width < num_data);
 				++i) {
 			if (j + 1 + i < num_data) {
 				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
@@ -215,7 +215,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 						* input_kernel[num_data - 1 - i];
 			}
 		}
-		for (size_t k = 0; k < sigma_threshold && (k < (num_data/2));//(kernel_width < num_data);
+		for (size_t k = 0; k < sigma_threshold && (k < (num_data / 2)); //(kernel_width < num_data);
 				++k) {
 			if (j < k + 1) {
 				right += input_data[num_data + j - k - 1] * input_kernel[k + 1];
@@ -253,13 +253,13 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	assert(*context == nullptr);
 	if (use_fft) {
-		float *real_array_kernel = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array_kernel(
+		float *real_kernel_array = nullptr;
+		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_data, &real_array_kernel));
-		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel)));
+						sizeof(float) * num_data, &real_kernel_array));
+		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
 		float *real_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array(
+		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_array));
 		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array)));
@@ -279,7 +279,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			throw std::bad_alloc();
 		}
 		fftwf_plan plan_real_to_complex_float_kernel = fftwf_plan_dft_r2c_1d(
-				num_data, real_array_kernel, fft_applied_complex_kernel.get(),
+				num_data, real_kernel_array, fft_applied_complex_kernel.get(),
 				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
 		ScopeGuard guard_for_fft_plan_kernel([&]() {
 			DestroyFFTPlan(plan_real_to_complex_float_kernel);
@@ -308,7 +308,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_ifft_plan.Disable();
 			throw std::bad_alloc();
 		}
-		Create1DKernel(num_data, kernel_type, kernel_width, real_array_kernel);
+		Create1DKernel(num_data, kernel_type, kernel_width, real_kernel_array);
 		fftwf_execute(plan_real_to_complex_float_kernel);
 		guard_for_fft_plan_kernel.CleanUpNow();
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
@@ -322,9 +322,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->fft_applied_complex_kernel =
 				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array;
-		work_context->real_array_kernel = nullptr;
-		work_context->work_real_array = work_real_array.release();
-		work_context->work_real_array_kernel = nullptr;
+		work_context->real_array_work = real_array_work.release();
+		work_context->real_kernel_array = nullptr;
+		work_context->real_kernel_array_work = nullptr;
 		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
 		guard_for_fft_plan.Disable();
 		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
@@ -334,12 +334,12 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	} else {
-		float *real_array_kernel = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_real_array_kernel(
+		float *real_kernel_array = nullptr;
+		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_data, &real_array_kernel));
-		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array_kernel)));
-		Create1DKernel(num_data, kernel_type, kernel_width, real_array_kernel);
+						sizeof(float) * num_data, &real_kernel_array));
+		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
+		Create1DKernel(num_data, kernel_type, kernel_width, real_kernel_array);
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -352,9 +352,9 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
 		work_context->real_array = nullptr;
-		work_context->real_array_kernel = real_array_kernel;
-		work_context->work_real_array = nullptr;
-		work_context->work_real_array_kernel = work_real_array_kernel.release();
+		work_context->real_array_work = nullptr;
+		work_context->real_kernel_array = real_kernel_array;
+		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->num_data = num_data;
 		work_context->kernel_width = kernel_width;
 		work_context->use_fft = use_fft;
@@ -365,7 +365,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 inline void Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
-		bool const mask_arg[/*num_data*/],
 		float output_data_arg[/*num_data*/]) {
 	if (!(context->num_data == num_data)) {
 		throw std::invalid_argument("num_data must equal to context->num_data");
@@ -407,7 +406,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 				multiplied_complex_data.get(), output_data);
 	} else {
 		ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
-				context->kernel_width, context->real_array_kernel, output_data);
+				context->kernel_width, context->real_kernel_array, output_data);
 	}
 }
 
@@ -423,11 +422,11 @@ LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 		if (context->fft_applied_complex_kernel != nullptr) {
 			FreeFFTArray(context->fft_applied_complex_kernel);
 		}
-		if (context->work_real_array_kernel != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(context->work_real_array_kernel);
+		if (context->real_kernel_array_work != nullptr) {
+			LIBSAKURA_PREFIX::Memory::Free(context->real_kernel_array_work);
 		}
-		if (context->work_real_array != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(context->work_real_array);
+		if (context->real_array_work != nullptr) {
+			LIBSAKURA_PREFIX::Memory::Free(context->real_array_work);
 		}
 		LIBSAKURA_PREFIX::Memory::Free(context);
 	}
@@ -447,8 +446,8 @@ void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::Convolve1D(
 LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data[/*num_data*/],
-		bool const mask[/*num_data*/], float output_data[/*num_data*/]) const {
-	::Convolve1D(context, num_data, input_data, mask, output_data);
+		float output_data[/*num_data*/]) const {
+	::Convolve1D(context, num_data, input_data, output_data);
 
 }
 

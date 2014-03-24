@@ -26,17 +26,16 @@
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContext) {
-	bool use_fft;bool remove_pollution;
+	bool use_fft;
 	size_t num_data;
-	size_t expanded_num_data;
 	size_t kernel_width;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
 	float *real_array;
+	void *real_array_work;
 	float *real_array_kernel;
-	void *work_real_array;
-	void *work_real_array_kernel;
+	void *real_kernel_array_work;
 };
 }
 namespace {
@@ -107,9 +106,9 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			mask[i] = true; // no mask data
+
 			input_data[i] = 0.0;
 		}
 		input_data[NUM_IN / 2] = 1.0; // one spike
@@ -127,7 +126,7 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 		SIMD_ALIGN
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
@@ -195,10 +194,10 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center ch
 		size_t const kernel_width(NUM_WIDTH);
@@ -213,7 +212,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve;
 		status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -230,10 +229,10 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center ch
 		size_t const kernel_width(NUM_WIDTH);
@@ -248,7 +247,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve;
 		status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -291,9 +290,8 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		size_t const num_data(ELEMENTSOF(input_data));
 		size_t const bad_num_data(NUM_IN_ODD);
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			mask[i] = true; // no mask data
 			input_data[i] = 0.0;
 		}
 		input_data[NUM_IN / 2] = 1.0; // one spike
@@ -310,7 +308,7 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		EXPECT_TRUE(num_data != bad_num_data)
 				<< "In this test, num_data != bad_num_data is expected"; // assert
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, bad_num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, bad_num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
@@ -331,9 +329,9 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			mask[i] = true;
+
 			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // one spike
@@ -348,7 +346,7 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		SIMD_ALIGN
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve1d); // Status_kOK
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
@@ -369,9 +367,9 @@ TEST_F(Convolve1DOperation , FailedMallocContext) {
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			mask[i] = true; // no mask
+
 			input_data[i] = 0.0; // all zero except 1 spike
 		}
 		input_data[num_data / 2] = 1.0; // one spike
@@ -389,7 +387,7 @@ TEST_F(Convolve1DOperation , FailedMallocContext) {
 		SIMD_ALIGN
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
@@ -414,10 +412,10 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -431,7 +429,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -459,10 +457,10 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -479,7 +477,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(
-				Convolve1D)(context, num_data, input_data, mask, output_data);
+				Convolve1D)(context, num_data, input_data, output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
@@ -508,10 +506,10 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -525,7 +523,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -553,10 +551,10 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -573,7 +571,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
 		LIBSAKURA_SYMBOL(
-				Convolve1D)(context, num_data, input_data, mask, output_data);
+				Convolve1D)(context, num_data, input_data, output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
@@ -606,13 +604,13 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 1.0;
 			if (i > 7 && i < 15) {
 				input_data[i] = -1.0;
 			}
-			mask[i] = true; // no mask
+
 		}
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
@@ -625,7 +623,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -645,13 +643,13 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 1.0;
 			if (i > 7 && i < 15) {
 				input_data[i] = -1.0;
 			}
-			mask[i] = true; // no mask
+
 		}
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = false; // without FFT
@@ -664,7 +662,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -684,10 +682,10 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[0] = 1.0; // first ch
 		input_data[num_data - 1] = 1.0; // final ch
@@ -704,7 +702,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -724,11 +722,10 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
 
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[0] = 1.0; // first ch
 		input_data[num_data - 1] = 1.0; // final ch
@@ -744,7 +741,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
@@ -773,10 +770,10 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		input_data[num_data / 2] = 1.0; // center
 		size_t const kernel_width(NUM_WIDTH);
@@ -790,7 +787,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		LIBSAKURA_SYMBOL(Status) status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(
-				context, num_data, input_data, mask, output_data);
+				context, num_data, input_data, output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
@@ -802,7 +799,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 				kernel_type, kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data,
-				input_data, mask, output_data_fft);
+				input_data, output_data_fft);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
@@ -826,9 +823,9 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 				1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			mask[i] = true; // no mask
+
 		}
 		size_t const kernel_width(NUM_WIDTH);
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
@@ -841,7 +838,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		LIBSAKURA_SYMBOL(Status) status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(
-				context, num_data, input_data, mask, output_data);
+				context, num_data, input_data, output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		fftuse = true; // with fft
 		float output_data_fft[num_data];
@@ -849,7 +846,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 				kernel_type, kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data,
-				input_data, mask, output_data_fft);
+				input_data, output_data_fft);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
@@ -882,8 +879,6 @@ TEST_F(Convolve1DOperation , DestroyConvolve1DContext) {
 				1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1 };
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with fft
 		SIMD_ALIGN
@@ -895,7 +890,7 @@ TEST_F(Convolve1DOperation , DestroyConvolve1DContext) {
 				kernel_width, fftuse, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		status = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
-				mask, output_data);
+				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		//verbose = true;
 		if (verbose)
@@ -918,10 +913,10 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
@@ -944,7 +939,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < LOOP_MAX; ++i) {
 			status_Convolve =
-			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 					output_data);
 		}
 		double end_time = sakura_GetCurrentTime();
@@ -979,10 +974,10 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		float input_data[NUM_IN_MAX];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
+
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
+
 		}
 		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
@@ -1005,7 +1000,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < LOOP_MAX; ++i) {
 			status_Convolve =
-			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 					output_data);
 		}
 		double end_time = sakura_GetCurrentTime();
@@ -1032,10 +1027,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		float input_data[NUM_IN_MAX - 1];
 		size_t const num_data(ELEMENTSOF(input_data));
 		SIMD_ALIGN
-		bool mask[num_data];
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-			mask[i] = true; // no mask
 		}
 		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
@@ -1058,7 +1051,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < LOOP_MAX; ++i) {
 			status_Convolve =
-			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data, mask,
+			LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 					output_data);
 		}
 		double end_time = sakura_GetCurrentTime();
@@ -1099,9 +1092,9 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
  float input_data[NUM_IN_LARGE]; // 128
  size_t const num_data(ELEMENTSOF(input_data));
  SIMD_ALIGN
- bool mask[num_data];
+
  for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
- mask[i] = true;
+
  input_data[i] = 0.3;
  if (i >= 48 && i <= 84) {
  input_data[i] = 0.3 + i * 0.0175;
@@ -1128,7 +1121,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
  ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
  LIBSAKURA_SYMBOL(Status) status_Convolve =
  LIBSAKURA_SYMBOL(
- Convolve1D)(context, num_data, input_data, mask, output_data);
+ Convolve1D)(context, num_data, input_data,   output_data);
  ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 
  //for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {

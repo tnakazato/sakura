@@ -54,8 +54,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
-		float const input_data[/*num_data*/],
-		bool const mask[/*num_data*/], float output_data[/*num_data*/]) {
+		float const input_data[/*num_data*/], float output_data[/*num_data*/]) {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -70,8 +69,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	try {
 		auto convolutionop =
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetConvolutionImpl();
-		convolutionop->Convolve1D(context, num_data, input_data, mask,
-				output_data);
+		convolutionop->Convolve1D(context, num_data, input_data, output_data);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
