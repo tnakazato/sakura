@@ -105,10 +105,7 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-
 			input_data[i] = 0.0;
 		}
 		input_data[NUM_IN / 2] = 1.0; // one spike
@@ -193,14 +190,11 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width(NUM_WIDTH);
+		size_t const kernel_width( NUM_IN_LARGE + 10);
 		bool fftuse = true; // FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
@@ -228,14 +222,11 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width(NUM_WIDTH);
+		size_t const kernel_width( NUM_IN_LARGE + 10);
 		bool fftuse = false; // without FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
@@ -289,8 +280,6 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		size_t const bad_num_data(NUM_IN_ODD);
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
@@ -328,10 +317,7 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-
 			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // one spike
@@ -366,11 +352,8 @@ TEST_F(Convolve1DOperation , FailedMallocContext) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-
-			input_data[i] = 0.0; // all zero except 1 spike
+			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // one spike
 		size_t const kernel_width(NUM_WIDTH);
@@ -411,11 +394,8 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -456,11 +436,8 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -505,11 +482,8 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -550,11 +524,8 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_ODD];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center of kernel
 		size_t const kernel_width(NUM_WIDTH);
@@ -603,8 +574,6 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 1.0;
 			if (i > 7 && i < 15) {
@@ -642,8 +611,6 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 1.0;
 			if (i > 7 && i < 15) {
@@ -681,11 +648,8 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[0] = 1.0; // first ch
 		input_data[num_data - 1] = 1.0; // final ch
@@ -721,11 +685,8 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[0] = 1.0; // first ch
 		input_data[num_data - 1] = 1.0; // final ch
@@ -769,11 +730,8 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		SIMD_ALIGN
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		input_data[num_data / 2] = 1.0; // center
 		size_t const kernel_width(NUM_WIDTH);
@@ -822,10 +780,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		float const input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1,
 				1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-
 		}
 		size_t const kernel_width(NUM_WIDTH);
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
@@ -910,13 +865,10 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 	{ // [even],without FFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN_LARGE];
+		float input_data[NUM_IN_MAX];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
@@ -969,15 +921,11 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 	{ // [even],with FFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-
 		SIMD_ALIGN
 		float input_data[NUM_IN_MAX];
 		size_t const num_data(ELEMENTSOF(input_data));
-		SIMD_ALIGN
-
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
-
 		}
 		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
