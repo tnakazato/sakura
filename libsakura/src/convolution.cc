@@ -206,42 +206,12 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	for (size_t j = 0; j < num_data; ++j) {
 		float center = input_data[j] * input_kernel[0];
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; i < sigma_threshold && (i < (num_data / 2 - 1));
-				++i) {
-			if (j + 1 + i < num_data) {
-				left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
-			} else {
-				left += input_data[j + 1 + i - num_data]
-						* input_kernel[num_data - 1 - i];
-			}
-		}
-		for (size_t k = 0; k < sigma_threshold && (k < (num_data / 2)); ++k) {
-			if (j < k + 1) {
-				right += input_data[num_data + j - k - 1] * input_kernel[k + 1];
-			} else {
-				right += input_data[j - k - 1] * input_kernel[k + 1];
-			}
-		}
-		output_data[j] = left + center + right;
-	}
-}
-
-inline void ConvolutionWithoutFFTRemovePollution(size_t num_data,
-		float const *input_data_arg, size_t kernel_width,
-		float const *input_kernel, float *output_data_arg) {
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
-	auto input_data = AssumeAligned(input_data_arg);
-	auto output_data = AssumeAligned(output_data_arg);
-	for (size_t j = 0; j < num_data; ++j) {
-		float center = input_data[j] * input_kernel[0];
-		float right = 0.0, left = 0.0;
-		for (size_t i = 0; ((j + 1 + i < num_data) && (i < num_data / 2 - 1));
+		for (size_t i = 0; i < sigma_threshold && ((j + 1 + i < num_data) && (i < num_data / 2 - 1));
 				++i) {
 			left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
 		}
-		for (size_t k = 0; k < j && (k < num_data / 2); ++k) {
-			right += input_data[j - 1 - k] * input_kernel[k + 1];
+		for (size_t k = 0; k < sigma_threshold && k < j && (k < num_data / 2); ++k) {
+			right += input_data[j - k - 1] * input_kernel[k + 1];
 		}
 		output_data[j] = left + center + right;
 	}

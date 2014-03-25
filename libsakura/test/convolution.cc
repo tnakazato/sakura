@@ -81,7 +81,7 @@ protected:
 	}
 	void PrintArray2(char const *name, size_t num_in, float *in) {
 		cout << name << "";
-		for (size_t i = num_in / 2 - 15; i < num_in / 2 + 15; ++i) {
+		for (size_t i = num_in / 2 - 10; i < num_in / 2 + 10; ++i) {
 			cout << setprecision(10) << in[i] << "\n";
 		}
 		//cout << in[num_in - 1] << endl;
@@ -185,7 +185,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
-	{ // kernel_width > num_data
+	{ // (FFT) kernel_width > num_data
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[NUM_IN_LARGE];
@@ -209,7 +209,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray2("\n", num_data, output_data);
 		}
@@ -774,51 +774,6 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
 	}
-	{
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-		SIMD_ALIGN
-		float const input_data[NUM_IN] = { 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1,
-				1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1 };
-		size_t const num_data(ELEMENTSOF(input_data));
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-		}
-		size_t const kernel_width(NUM_WIDTH);
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		bool fftuse = false; // without fft
-		SIMD_ALIGN
-		float output_data[num_data];
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
-				kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		LIBSAKURA_SYMBOL(Status) status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(
-				context, num_data, input_data, output_data);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		fftuse = true; // with fft
-		float output_data_fft[num_data];
-		status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
-				kernel_type, kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data,
-				input_data, output_data_fft);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
-		if (verbose) {
-			PrintArray2("", num_data, output_data_fft);
-			PrintArray2("", num_data, output_data);
-		}
-		verbose = false;
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			if ((i > num_data / 2 - kernel_width / 2)
-					&& (i < num_data / 2 + kernel_width / 2)) {
-				EXPECT_FLOAT_EQ(output_data_fft[i], output_data[i]); // compare
-			}
-		}
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
-	}
 }
 
 /*
@@ -919,7 +874,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
  * RESULT: elapsed time will be output
  */
 TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
-	{ // [even],with FFT, Gaussian Kernel Shape,input delta
+	{ // [even], FFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[NUM_IN_MAX];
@@ -969,7 +924,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		std::cout << "with FFT convolve= " << num_data << ", elapsed time = "
 				<< end_time - start_time << "secs\n";
 	}
-	{ // [odd],with FFT, Gaussian Kernel Shape,input delta
+	{ // [odd], FFT, Gaussian Kernel Shape,input delta
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[NUM_IN_MAX - 1];
