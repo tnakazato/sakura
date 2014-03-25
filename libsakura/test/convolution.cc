@@ -69,29 +69,16 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 	void PrintInputs() {
-		//PrintArray("in1", NUM_IN, in1_);
 		//PrintArray("in2", NUM_IN, in2_);
 	}
 	void PrintArray(char const *name, size_t num_in, float *in) {
-		cout << name << " = [";
-		for (size_t i = 0; i < num_in - 1; ++i)
-			cout << in[i] << ", ";
-		cout << in[num_in - 1];
-		cout << " ]" << endl;
-	}
-	void PrintArray2(char const *name, size_t num_in, float *in) {
 		cout << name << "";
 		for (size_t i = num_in / 2 - 10; i < num_in / 2 + 10; ++i) {
 			cout << setprecision(10) << in[i] << "\n";
 		}
 		//cout << in[num_in - 1] << endl;
 	}
-	void PrintArrayBool(char const *name, size_t num_in, bool *in) {
-		cout << name << "";
-		for (size_t i = 0; i < num_in - 1; ++i)
-			cout << in[i] << "\n";
-		cout << in[num_in - 1] << endl;
-	}
+
 	bool verbose;
 };
 /*
@@ -209,9 +196,9 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -243,7 +230,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("without FFT\n", num_data, output_data);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -346,22 +333,21 @@ TEST_F(Convolve1DOperation , OddNumdata) {
  * RESULT:
  * Convolve1D will return Status_kInvalidArgument
  */
-TEST_F(Convolve1DOperation , FailedMallocContext) {
-	{ // num_data is odd
+TEST(Convolve1DOperationFailed , FailedMallocContext) {
+	{
+		LIBSAKURA_SYMBOL(Status) status_Init = LIBSAKURA_SYMBOL(Initialize)(
+				DummyAlloc, nullptr);
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN_ODD];
+		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
-		input_data[num_data / 2] = 1.0; // one spike
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		LIBSAKURA_SYMBOL(Status) status_Init = LIBSAKURA_SYMBOL(Initialize)(
-				DummyAlloc, nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Init);
 		LIBSAKURA_SYMBOL(Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
@@ -372,11 +358,13 @@ TEST_F(Convolve1DOperation , FailedMallocContext) {
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d); // Status_kInvalidArgument
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+		LIBSAKURA_SYMBOL(CleanUp)();
 	}
+
 }
 
 /*
@@ -415,7 +403,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		//verbose = true;
 		if (verbose) {
 			std::cout << " even with FFT" << std::endl;
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -458,7 +446,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		//verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -503,7 +491,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		//verbose = true;
 		if (verbose) {
 			std::cout << " even without FFT" << std::endl;
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width; ++i) {
@@ -546,7 +534,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width; ++i) {
@@ -597,7 +585,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -634,7 +622,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -671,7 +659,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -707,7 +695,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -749,7 +737,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("output_data\n", num_data, output_data);
+			PrintArray("output_data\n", num_data, output_data);
 		}
 		fftuse = true; // with fft
 		float output_data_fft[num_data];
@@ -761,7 +749,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("output_data_fft\n", num_data, output_data_fft);
+			PrintArray("output_data_fft\n", num_data, output_data_fft);
 		}
 		verbose = false;
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
@@ -853,7 +841,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -910,7 +898,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -961,7 +949,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray2("\n", num_data, output_data);
+			PrintArray("\n", num_data, output_data);
 		}
 		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
@@ -983,61 +971,3 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
  */
 //TEST_F(Convolve1DOperation , dummy) {
 //}
-/*
- * Test Original Mask by Linear Interpolation
- * RESULT:
- * Interpolate instead of zero.
-
- TEST_F(Convolve1DOperation , LinearInterpolation) {
- { // with mask against input delta
- LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
- SIMD_ALIGN
- float input_data[NUM_IN_LARGE]; // 128
- size_t const num_data(ELEMENTSOF(input_data));
- SIMD_ALIGN
-
- for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-
- input_data[i] = 0.3;
- if (i >= 48 && i <= 84) {
- input_data[i] = 0.3 + i * 0.0175;
- } else if (i > 84) {
- input_data[i] = 1.0;
- }
- if (i >= 20 && i <= 30) {
- mask[i] = false; // mask on against delta
- }
- if (i >= 50 && i <= 70) {
- mask[i] = false; // mask on against delta
- }
- }
- size_t const kernel_width(NUM_WIDTH);
- bool fftuse = false; // without FFT
- SIMD_ALIGN
- float output_data[num_data];
- LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
- LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
- LIBSAKURA_SYMBOL(
- Status) status_Create =
- LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
- kernel_width, fftuse, &context);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
- LIBSAKURA_SYMBOL(Status) status_Convolve =
- LIBSAKURA_SYMBOL(
- Convolve1D)(context, num_data, input_data,   output_data);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-
- //for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
- //EXPECT_FLOAT_EQ(0, output_data[i]); // delta will remain, but its convolved
- //}
- //verbose = true;
- if (verbose) {
- //PrintArray2("\n", num_data, input_data);
- PrintArray2("\n", num_data, output_data);
- }
- verbose = false;
- LIBSAKURA_SYMBOL(Status) status_Destroy =
- LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
- }
- }*/
