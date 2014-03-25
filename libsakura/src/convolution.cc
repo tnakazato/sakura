@@ -175,12 +175,17 @@ inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 	}
 }
 
-inline void Create1DKernel(size_t num_data,
+inline void Create1DKernel(size_t num_data, size_t use_fft,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		float* output_data) {
 	switch (kernel_type) {
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
-		Create1DGaussianKernel(num_data, kernel_width, output_data);
+		if (use_fft) {
+			Create1DGaussianKernel(num_data, kernel_width, output_data);
+		} else {
+			Create1DGaussianKernelForWithoutFFT(num_data, kernel_width,
+					output_data);
+		}
 		break;
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar):
 		break;
@@ -203,20 +208,21 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	auto output_data = AssumeAligned(output_data_arg);
 	const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
 	const size_t sigma_threshold = six_sigma * kernel_width;
-	for (size_t j = 0; j < num_data; ++j) {
-		float center = input_data[j] * input_kernel[0];
-		float right = 0.0, left = 0.0;
-		for (size_t i = 0;
-				i < sigma_threshold
-						&& ((j + 1 + i < num_data) && (i < num_data / 2 - 1));
-				++i) {
-			left += input_data[j + 1 + i] * input_kernel[num_data - 1 - i];
+	const size_t kernel_array_center = num_data;
+	if (sigma_threshold <= kernel_array_center) {
+		for (size_t j = 0; j < num_data; ++j) {
+			float convolved_sum = 0.0;
+			for (size_t i = 0; i < num_data; ++i) {
+				if (kernel_array_center + j - i
+						< kernel_array_center + sigma_threshold
+						&& kernel_array_center + j - i
+								> kernel_array_center - sigma_threshold) {
+					convolved_sum += input_kernel[kernel_array_center + j - i]
+							* input_data[i];
+				}
+			}
+			output_data[j] = convolved_sum;
 		}
-		for (size_t k = 0; k < sigma_threshold && k < j && (k < num_data / 2);
-				++k) {
-			right += input_data[j - k - 1] * input_kernel[k + 1];
-		}
-		output_data[j] = left + center + right;
 	}
 }
 
@@ -280,7 +286,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			guard_for_ifft_plan.Disable();
 			throw std::bad_alloc();
 		}
-		Create1DKernel(num_data, kernel_type, kernel_width, real_kernel_array);
+		Create1DKernel(num_data, use_fft, kernel_type, kernel_width,
+				real_kernel_array);
 		fftwf_execute(plan_real_to_complex_float_kernel);
 		guard_for_fft_plan_kernel.CleanUpNow();
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
@@ -309,9 +316,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_data, &real_kernel_array));
+						sizeof(float) * 2 * num_data, &real_kernel_array));
 		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
-		Create1DKernel(num_data, kernel_type, kernel_width, real_kernel_array);
+		Create1DKernel(2 * num_data, use_fft, kernel_type, kernel_width,
+				real_kernel_array);
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(

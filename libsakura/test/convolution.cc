@@ -175,13 +175,13 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // (FFT) kernel_width > num_data
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN_LARGE];
+		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width( NUM_IN_LARGE + 10);
+		size_t const kernel_width( NUM_IN + 10);
 		bool fftuse = true; // FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
@@ -207,16 +207,19 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // (Without FFT) kernel_width > num_data
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN_LARGE];
+		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width( NUM_IN_LARGE + 10);
+		size_t const kernel_width(NUM_IN + 10);
 		bool fftuse = false; // without FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
+		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
+			output_data[i] = 0.0;
+		}
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
 		LIBSAKURA_SYMBOL(Status) status_Create;
@@ -813,17 +816,13 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
-		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
-		//input_data[1][0] = 1.0;
-		//input_data[1][num_data - 1] = 1.0;
 		size_t const kernel_width(NUM_WIDTH);
-		bool fftuse = false; // with FFT
+		bool fftuse = false; // without FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-
 		LIBSAKURA_SYMBOL(Status) status_Create;
 		double start = sakura_GetCurrentTime();
 		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
@@ -839,13 +838,11 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
-			PrintArray("\n", num_data, output_data);
+			PrintArray("without FFT\n", num_data, output_data);
 		}
 		verbose = false;
-		for (size_t i = 0; i < kernel_width - 1; ++i) {
-		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
@@ -870,17 +867,13 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
-		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
-		//input_data[1][0] = 1.0;
-		//input_data[1][num_data - 1] = 1.0;
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-
 		LIBSAKURA_SYMBOL(Status) status_Create;
 		double start = sakura_GetCurrentTime();
 		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
@@ -921,17 +914,13 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
-		//input_data[0] = 1.0; // first ch
 		input_data[num_data / 2] = 1.0; // center ch
-		//input_data[1][0] = 1.0;
-		//input_data[1][num_data - 1] = 1.0;
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-
 		LIBSAKURA_SYMBOL(Status) status_Create;
 		double start = sakura_GetCurrentTime();
 		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
