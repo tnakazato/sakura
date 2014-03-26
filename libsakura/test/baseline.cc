@@ -352,7 +352,8 @@ TEST_F(Baseline, GetBestFitBaseline) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline: failure case of too many masked data
+ * Test sakura_GetBestFitBaseline: failure case of too many masked
+ * input data.
  * RESULT:
  * out = []
  */
@@ -457,7 +458,8 @@ TEST_F(Baseline, SubtractBaseline) {
 }
 
 /*
- * Test sakura_SubtractBaseline: failure case of too many masked data
+ * Test sakura_SubtractBaseline: failure case of too many masked
+ * input data.
  * RESULT:
  * out = []
  */
@@ -574,7 +576,8 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 }
 
 /*
- * Test sakura_SubtractBaselinePolynomial: failure case of too many masked data
+ * Test sakura_SubtractBaselinePolynomial: failure case of too many
+ * masked input data.
  * RESULT:
  * out = []
  */
@@ -609,9 +612,11 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 }
 
 /*
- * Test sakura_SubtractBaselinePolynomial: failure case of too many data clipped at runtime.
- * for this case, unmasked data should be less than the minimum needed for fitting with
- * the given baseline model just before the sixth fitting.
+ * Test sakura_SubtractBaselinePolynomial: failure case of too many data
+ * clipped in the process of recursive baseline fitting.
+ * for this case, unmasked data should be less than the minimum needed
+ * for fitting with the given baseline model just before the sixth
+ * recursive baseline fitting.
  * RESULT:
  * out = []
  */
@@ -653,7 +658,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialNotEnoughDataByClipping) {
  * RESULT:
  * out = []
  */
-TEST_F(Baseline, SubtractBaselineOfAnE2eTestData) {
+TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	size_t const num_data(3840);
 	size_t const num_model(400);
 	float in_data_orig[3840] = { 8.12075996399, 8.14013004303, 8.16000080109,

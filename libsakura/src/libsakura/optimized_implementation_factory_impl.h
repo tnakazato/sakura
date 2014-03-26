@@ -53,14 +53,14 @@ public:
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineContext) const *context,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
+			float clip_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
 			bool final_mask[/*num_data*/], float out[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const;
 	virtual void SubtractBaselinePolynomial(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/], uint16_t order,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
+			float clip_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
 			bool final_mask[/*num_data*/], float out[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const;
@@ -86,14 +86,14 @@ public:
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineContext) const *context,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
+			float clip_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
 			bool final_mask[/*num_data*/], float out[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const;
 	virtual void SubtractBaselinePolynomial(size_t num_data,
 			float const data[/*num_data*/],
 			bool const mask[/*num_data*/], uint16_t order,
-			float clipping_threshold_sigma, uint16_t num_fitting_max,
+			float clip_threshold_sigma, uint16_t num_fitting_max,
 			bool get_residual,
 			bool final_mask[/*num_data*/], float out[/*num_data*/],
 			LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const;

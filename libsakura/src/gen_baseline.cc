@@ -38,6 +38,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	} catch (const std::invalid_argument &e) {
 		LOG4CXX_ERROR(logger, "Order must be smaller than num_data.");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -55,6 +58,9 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->DestroyBaselineContext(context);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -66,19 +72,19 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, float out[],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	if (num_data < context->num_bases)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (context == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data < context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -91,6 +97,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -98,18 +106,15 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool final_mask[], float out[],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	if (num_data < context->num_bases)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
@@ -120,7 +125,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (clipping_threshold_sigma <= 0.0)
+	if (num_data < context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (clip_threshold_sigma <= 0.0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (final_mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -135,11 +142,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->SubtractBaseline(num_data, data, mask, context,
-				clipping_threshold_sigma, num_fitting_max, get_residual,
+				clip_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -152,7 +161,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_data, float const data[], bool const mask[], uint16_t order,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool final_mask[], float out[],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	if (num_data <= order)
@@ -165,9 +174,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (order >= num_data)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (clipping_threshold_sigma <= 0.0)
+	if (clip_threshold_sigma <= 0.0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (final_mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -182,7 +189,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->SubtractBaselinePolynomial(num_data, data, mask, order,
-				clipping_threshold_sigma, num_fitting_max, get_residual,
+				clip_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -196,6 +203,5 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }

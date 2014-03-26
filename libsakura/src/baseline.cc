@@ -177,7 +177,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                                    const zero = _mm256_set1_pd(0.);
+	__m256d                                                  const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -207,7 +207,14 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
 		float *out_arg) {
-	assert(num_data >= context->num_bases);
+	if (num_data != context->num_basis_data) {
+		throw std::runtime_error(
+				"DoGetBestFitBaseline: num_data and the model data in baseline context does not conform.");
+	}
+	if (num_data < context->num_bases) {
+		throw std::runtime_error(
+				"DoGetBestFitBaseline: Not enough data for baseline fitting.");
+	}
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
@@ -243,7 +250,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 	 */
 	//---1to
 	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error("DoGetBestFitBaseline: too many masked data.");
+		throw std::runtime_error(
+				"DoGetBestFitBaseline: failed in GetMatrixCoefficientsForLeastSquareFitting.");
 	}
 
 	LIBSAKURA_SYMBOL(Status) get_vector_status;
@@ -311,7 +319,14 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
 		float *out_arg) {
-	assert(num_data >= context->num_bases);
+	if (num_data != context->num_basis_data) {
+		throw std::runtime_error(
+				"DoGetBestFitBaseline: num_data and the model data in baseline context does not conform.");
+	}
+	if (num_data < context->num_bases) {
+		throw std::runtime_error(
+				"DoGetBestFitBaseline: Not enough data for baseline fitting.");
+	}
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
@@ -347,7 +362,8 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 	 */
 	//---1to
 	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error("DoGetBestFitBaseline: too many masked data.");
+		throw std::runtime_error(
+				"DoGetBestFitBaseline: failed in UpdateMatrixCoefficientsForLeastSquareFitting.");
 	}
 
 	LIBSAKURA_SYMBOL(Status) get_vector_status;
@@ -369,7 +385,7 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 	//---3to
 	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
+				"DoGetBestFitBaseline: failed in UpdateVectorCoefficientsForLeastSquareFitting.");
 	}
 
 	LIBSAKURA_SYMBOL(Status) solve_status;
@@ -414,14 +430,6 @@ inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
 inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float *out_arg, LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
-	if (num_data < context->num_bases) {
-		*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
-		throw std::runtime_error(
-				"GetBestFitBaseline: Not enough data for baseline fitting.");
-	}
-
-	assert(num_data == context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -480,32 +488,21 @@ bool *out_mask_arg, size_t *clipped_indices_arg) {
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
 	std::stringstream ss;
-	ss << "SubtractBaseline: Not enough data for baseline fitting in ";
+	ss << "SubtractBaseline: Available data became too few in the ";
 	ss << idx_erroneous_fitting;
 	ss << " ";
-	/*
-	 std::string mesg = "";
-	 mesg += "SubtractBaseline: Not enough data for baseline fitting in ";
-	 mesg += idx_erroneous_fitting;
-	 mesg += " ";
-	 */
+
 	uint16_t imod10 = idx_erroneous_fitting % 10;
 	std::string isuffix;
-	if (imod10 == 3) {
-		isuffix = "rd";
+	if (imod10 == 1) {
+		isuffix = "st";
 	} else if (imod10 == 2) {
 		isuffix = "nd";
-	} else if (imod10 == 1) {
-		isuffix = "st";
+	} else if (imod10 == 3) {
+		isuffix = "rd";
 	} else {
 		isuffix = "th";
 	}
-	/*
-	 mesg += isuffix;
-	 mesg += " fitting.";
-
-	 return mesg;
-	 */
 	ss << isuffix << " fitting.";
 
 	return ss.str();
@@ -513,11 +510,9 @@ inline std::string GetNotEnoughDataMessage(
 
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
-		float clipping_threshold_sigma, uint16_t num_fitting_max_arg,
+		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
-
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
@@ -560,67 +555,74 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 					sizeof(*coeff) * num_coeff, &coeff));
 
 	uint16_t num_fitting_max = num_fitting_max_arg;
-	if (num_fitting_max_arg < 1) {
+	if (num_fitting_max < 1) {
 		num_fitting_max = 1;
 	}
 
 	size_t num_unmasked_data = 0;
-	size_t num_clipped = 0;
+	size_t num_clipped = num_data;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		final_mask[i] = mask[i];
-		if (mask[i]) {
-			num_unmasked_data++;
-		}
 	}
 
-	for (uint16_t i = 0; i < num_fitting_max; ++i) {
-		if (num_unmasked_data < baseline_context->num_bases) {
-			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
-			throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+
+	try {
+		for (uint16_t i = 0; i < num_fitting_max; ++i) {
+			if ((i > 0) && (num_unmasked_data < baseline_context->num_bases)) {
+				*baseline_status =
+				LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
+				throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
+			}
+
+			if (num_unmasked_data < num_clipped) {
+				DoGetBestFitBaseline(num_data, data, final_mask,
+						baseline_context, lsq_matrix, lsq_vector, coeff,
+						best_fit_model);
+			} else {
+				DoGetBestFitBaseline(num_data, data, num_clipped,
+						clipped_indices, baseline_context, lsq_matrix,
+						lsq_vector, coeff, best_fit_model);
+			}
+
+			OperateFloatSubtraction(num_data, data, best_fit_model,
+					residual_data);
+
+			LIBSAKURA_SYMBOL(StatisticsResult) result;
+			LIBSAKURA_SYMBOL(Status) stat_status =
+			LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
+					final_mask, &result);
+			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+				throw std::runtime_error(
+						"SubtractBaseline: ComputeStatistics failed.");
+			}
+			float clip_threshold = clip_threshold_sigma * result.stddev;
+			float clip_lower_bound = result.mean - clip_threshold;
+			float clip_upper_bound = result.mean + clip_threshold;
+
+			num_clipped = ClipData(num_data, residual_data, final_mask,
+					clip_lower_bound, clip_upper_bound, final_mask,
+					clipped_indices);
+			if (num_clipped == 0) {
+				break;
+			}
+			num_unmasked_data = result.count - num_clipped;
 		}
 
-		if ((i == 0) || (num_unmasked_data < num_clipped)) {
-			DoGetBestFitBaseline(num_data, data, final_mask, baseline_context,
-					lsq_matrix, lsq_vector, coeff, best_fit_model);
-		} else {
-			DoGetBestFitBaseline(num_data, data, num_clipped, clipped_indices,
-					baseline_context, lsq_matrix, lsq_vector, coeff,
-					best_fit_model);
+		for (size_t i = 0; i < num_data; ++i) {
+			out[i] = get_residual ? residual_data[i] : best_fit_model[i];
 		}
-
-		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
-
-		LIBSAKURA_SYMBOL(StatisticsResult) result;
-		LIBSAKURA_SYMBOL(Status) stat_status =
-		LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data, final_mask,
-				&result);
-		if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-			throw std::runtime_error(
-					"SubtractBaseline: ComputeStatistics failed.");
+	} catch (...) {
+		if (*baseline_status == LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
+			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 		}
-		float clipping_threshold = clipping_threshold_sigma * result.stddev;
-		float clip_lower_bound = result.mean - clipping_threshold;
-		float clip_upper_bound = result.mean + clipping_threshold;
-
-		num_clipped = ClipData(num_data, residual_data, final_mask,
-				clip_lower_bound, clip_upper_bound, final_mask,
-				clipped_indices);
-
-		if (num_clipped == 0) {
-			break;
-		}
-
-		num_unmasked_data -= num_clipped;
-	}
-
-	for (size_t i = 0; i < num_data; ++i) {
-		out[i] = get_residual ? residual_data[i] : best_fit_model[i];
+		throw;
 	}
 }
 
 inline void SubtractBaselinePolynomial(size_t num_data, float const *data_arg,
-bool const *mask_arg, uint16_t order, float clipping_threshold_sigma,
+bool const *mask_arg, uint16_t order, float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool *final_mask_arg, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
@@ -640,8 +642,13 @@ bool const *mask_arg, uint16_t order, float clipping_threshold_sigma,
 		DestroyBaselineContext(context);
 	});
 
-	SubtractBaseline(num_data, data, mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, baseline_status);
+	try {
+		SubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
+				num_fitting_max, get_residual, final_mask, out,
+				baseline_status);
+	} catch (...) {
+		throw;
+	}
 }
 
 } /* anonymous namespace */
@@ -671,24 +678,24 @@ void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBestFitBaseline(size_t num_data,
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaseline(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const {
 	::SubtractBaseline(num_data, data, mask, baseline_context,
-			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
 			out, baseline_status);
 }
 
 void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], uint16_t order,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const {
 	::SubtractBaselinePolynomial(num_data, data, mask, order,
-			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
 			out, baseline_status);
 }
 

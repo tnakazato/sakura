@@ -1969,15 +1969,20 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 typedef enum {
 	/**
 	 * @~japanese
-	 * @brief 成功または正常
-	 * @~english
-	 * @brief OK
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
+ 	 * @brief 成功または正常
+ 	 * @~english
+ 	 * @brief OK
+ 	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
 	 * @~japanese
-	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
+	 * @brief 失敗または異常
 	 * @~english
-	 * @brief not enough data for baseline fitting
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 1
+	 * @brief NG
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kNG) = 1, /**
+ 	 * @~japanese
+ 	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
+ 	 * @~english
+ 	 * @brief not enough data for baseline fitting
+ 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2
 }LIBSAKURA_SYMBOL(BaselineStatus);
 
 /**
@@ -2117,10 +2122,10 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * 値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
+ * @param[in] clip_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
  * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、
- * 残差データのσを計算し、残差がその値の± @a clipping_threshold_sigma
+ * 残差データのσを計算し、残差がその値の± @a clip_threshold_sigma
  * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
  * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * もし 0 が渡された場合は、自動的に 1 に変更される。
@@ -2141,7 +2146,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] context an object containing baseline model data.
- * @param[in] clipping_threshold_sigma the threshold of clipping in unit of
+ * @param[in] clip_threshold_sigma the threshold of clipping in unit of
  * sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
@@ -2164,7 +2169,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
@@ -2180,10 +2185,10 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] order 多項式モデルの次数。 @a num_data-1 以下の値でなければならない。
- * @param[in] clipping_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
+ * @param[in] clip_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
  * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、
- * 残差がその値の± @a clipping_threshold_sigma
+ * 残差がその値の± @a clip_threshold_sigma
  * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
  * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * もし 0 が渡された場合は、自動的に 1 に変更される。
@@ -2204,7 +2209,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @n must-be-aligned
  * @param[in] order order of polynomial model. must be equal or smaller
  * than @a num_data-1 .
- * @param[in] clipping_threshold_sigma the threshold of clipping in unit
+ * @param[in] clip_threshold_sigma the threshold of clipping in unit
  * of sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
@@ -2227,7 +2232,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], uint16_t order,
-		float clipping_threshold_sigma, uint16_t num_fitting_max,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
