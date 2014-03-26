@@ -510,7 +510,7 @@ inline std::string GetNotEnoughDataMessage(
 
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
-		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
+		float clip_threshold_sigma_arg, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -554,6 +554,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
+	float clip_threshold_sigma = fabs((double)clip_threshold_sigma_arg);
 	uint16_t num_fitting_max = num_fitting_max_arg;
 	if (num_fitting_max < 1) {
 		num_fitting_max = 1;
@@ -597,12 +598,11 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				throw std::runtime_error(
 						"SubtractBaseline: ComputeStatistics failed.");
 			}
-			float clip_threshold = clip_threshold_sigma * result.stddev;
-			float clip_lower_bound = result.mean - clip_threshold;
-			float clip_upper_bound = result.mean + clip_threshold;
-
+			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
+			float clip_threshold_lower = result.mean - clip_threshold_abs;
+			float clip_threshold_upper = result.mean + clip_threshold_abs;
 			num_clipped = ClipData(num_data, residual_data, final_mask,
-					clip_lower_bound, clip_upper_bound, final_mask,
+					clip_threshold_lower, clip_threshold_upper, final_mask,
 					clipped_indices);
 			if (num_clipped == 0) {
 				break;

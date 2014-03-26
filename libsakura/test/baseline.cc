@@ -391,12 +391,16 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 }
 
 /*
- * Test sakura_SubtractBaseline
+ * Test sakura_SubtractBaselineFromNormalDataWithoutClipping
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_SubtractBaseline is executed without doing recursive
+ * clipping.
+ * the baseline-subtracted data should be zero throughout.
  * RESULT:
  * out = []
  */
-TEST_F(Baseline, SubtractBaseline) {
-	size_t const num_data(NUM_DATA3);
+TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
+	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 
 	SIMD_ALIGN
@@ -419,6 +423,11 @@ TEST_F(Baseline, SubtractBaseline) {
 		answer[i] = 0.0f;
 	}
 
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
@@ -429,10 +438,78 @@ TEST_F(Baseline, SubtractBaseline) {
 	uint16_t num_fitting_max = 3;
 	bool get_residual = true;
 
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineFromSmoothDataWithClipping
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaseline where recursive baseline fitting,
+ * 10 times at maximum, with clipping data outside 3 sigma level.
+ * since the input data haven't any outliers the baseline-subtracted
+ * data should be identical with those in case without clipping,
+ * namely, zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
 		PrintArray("in_mask", num_data, in_mask);
 	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 10;
+	bool get_residual = true;
 
 	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
 
@@ -443,7 +520,379 @@ TEST_F(Baseline, SubtractBaseline) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	for (size_t i = 0; i < num_model; ++i) {
-		EXPECT_EQ(out[i], answer[i]);
+		EXPECT_EQ(answer[i], out[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineFromSpikyDataWithClipping
+ * the input data have three outliers.
+ * execute sakura_SubtractBaseline where recursive
+ * baseline fitting, 5 times at maximum, with clipping data
+ * outside 3 sigma level.
+ * in the process of recursive clipping, the outliers will be
+ * removed from baseline fitting procedure and the final result
+ * should be zero throughout except for the outliers.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+		if (i == 3)
+			in_data[i] += 1000.0f;
+		if (i == 6)
+			in_data[i] -= 200.0f;
+		if (i == 8)
+			in_data[i] += 100.0f;
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+		if (i == 3)
+			answer[i] += 1000.0f;
+		if (i == 6)
+			answer[i] -= 200.0f;
+		if (i == 8)
+			answer[i] += 100.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithZeroNumFittingMax
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaseline with negative value of
+ * num_fitting_max specifying the maximum number of fitting
+ * procedure inside SubtractBaseline.
+ * in case zero or negative value is given, num_fitting_max should
+ * be changed to 1 inside SubtractBaseline so that baseline
+ * subtraction IS executed.
+ * hence the resulting data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 0;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithNegativeNumFittingMax
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaseline with negative value
+ * of num_fitting_max specifying the maximum number of fitting
+ * procedure inside SubtractBaseline.
+ * in case zero or negative value is given, num_fitting_max should
+ * be changed to 1 inside SubtractBaseline so that baseline
+ * subtraction IS executed.
+ * hence the resulting data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = -5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithZeroClipThreshold
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaseline with zero value of
+ * clip_threshold_sigma.
+ * in case zero is given for clipping threshold, SubtractBaseline()
+ * should fail and return Status_kInvalidArgument.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 0.0;
+	uint16_t num_fitting_max = -5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithNegativeClipThreshold
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaseline with negative value
+ * of clip_threshold_sigma.
+ * even if negative value is given for clipping threshold, there
+ * should be no problem because the absolute value will be internally
+ * used. hence the resulting data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = -3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
 	}
 
 	if (verbose) {
@@ -515,11 +964,185 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 }
 
 /*
- * Test sakura_SubtractBaselinePolynomialWithClipping
+ * Test sakura_SubtractBaseline: failure case of too many data
+ * clipped in the process of recursive baseline fitting.
+ * for this case, unmasked data should be less than the minimum needed
+ * for fitting with the given baseline model just before the sixth
+ * recursive baseline fitting.
  * RESULT:
  * out = []
  */
-TEST_F(Baseline, SubtractBaselinePolynomial) {
+TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
+	size_t const num_data(NUM_DATA2);
+	SIMD_ALIGN
+	float in_data[num_data] = { 1.0, 2.5, 8.0, 1013.0, 21.5, 31.5, 42.5, 57.5,
+			173.5, 90.5, 111.5, 132.5, 157.0, 182.5, 211.5 };
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)] = { true, true, true, true, true, true,
+	true, true, true, true, true, true, true, true, true };
+
+	size_t order = 3;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 1.0;
+	uint16_t num_fitting_max = 10;
+	bool get_residual = true;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData), subbl_blstatus);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialFromSmoothDataWithoutClipping
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_SubtractBaselinePolynomial is executed without doing
+ * recursive clipping.
+ * the baseline-subtracted data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 0, true, final_mask, out, &baseline_status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialFromSmoothDataWithClipping
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaselinePolynomial where recursive
+ * baseline fitting, 10 times at maximum, with clipping data
+ * outside 3 sigma level.
+ * since the input data haven't any outliers the baseline-subtracted
+ * data should be identical with those in case without clipping,
+ * namely, zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 10, true, final_mask, out, &baseline_status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialFromSpikyDataWithClipping
+ * the input data have three outliers.
+ * execute sakura_SubtractBaselinePolynomial where recursive
+ * baseline fitting, 5 times at maximum, with clipping data
+ * outside 3 sigma level.
+ * in the process of recursive clipping, the outliers will be
+ * removed from baseline fitting procedure and the final result
+ * should be zero throughout except for the outliers.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 
@@ -530,6 +1153,8 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 		in_data[i] = (float) (1.0 + x + x * x);
 		if (i == 3)
 			in_data[i] += 1000.0f;
+		if (i == 6)
+			in_data[i] -= 200.0f;
 		if (i == 8)
 			in_data[i] += 100.0f;
 	}
@@ -545,6 +1170,8 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 		answer[i] = 0.0f;
 		if (i == 3)
 			answer[i] += 1000.0f;
+		if (i == 6)
+			answer[i] -= 200.0f;
 		if (i == 8)
 			answer[i] += 100.0f;
 	}
@@ -562,11 +1189,243 @@ TEST_F(Baseline, SubtractBaselinePolynomial) {
 
 	LIBSAKURA_SYMBOL(Status) status =
 	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 3, true, final_mask, out, &baseline_status);
+			order, 3.0, 5, true, final_mask, out, &baseline_status);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_model; ++i) {
-		EXPECT_EQ(out[i], answer[i]);
+		EXPECT_EQ(answer[i], out[i]);
+	}
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithZeroNumFittingMax
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaselinePolynomial with negative value
+ * of num_fitting_max specifying the maximum number of fitting
+ * procedure inside SubtractBaselinePolynomial.
+ * in case zero or negative value is given, num_fitting_max should
+ * be changed to 1 inside SubtractBaseline so that baseline
+ * subtraction IS executed.
+ * hence the resulting data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 0, true, final_mask, out, &baseline_status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithNegativeNumFittingMax
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaselinePolynomial with negative value
+ * of num_fitting_max specifying the maximum number of fitting
+ * procedure inside SubtractBaselinePolynomial.
+ * in case zero or negative value is given, num_fitting_max should
+ * be changed to 1 inside SubtractBaseline so that baseline
+ * subtraction IS executed.
+ * hence the resulting data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, -5, true, final_mask, out, &baseline_status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithZeroClipThreshold
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaselinePolynomial with zero value
+ * of clip_threshold_sigma.
+ * in case zero is given for clipping threshold,
+ * SubtractBaselinePolynomial() should fail and return
+ * Status_kInvalidArgument.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 0.0, 5, true, final_mask, out, &baseline_status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithNegativeClipThreshold
+ * the input data have smooth shape and no spiky feature, and
+ * execute sakura_SubtractBaselinePolynomial with negative value
+ * of clip_threshold_sigma.
+ * even if negative value is given for clipping threshold, there
+ * should be no problem because the absolute value will be internally
+ * used. hence the resulting data should be zero throughout.
+ * RESULT:
+ * out = []
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		double x = (double) i;
+		in_data[i] = (float) (1.0 + x + x * x);
+	}
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
+		in_mask[i] = true;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < num_data; ++i) {
+		answer[i] = 0.0f;
+	}
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, -3.0, 5, true, final_mask, out, &baseline_status);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
@@ -620,7 +1479,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
  * RESULT:
  * out = []
  */
-TEST_F(Baseline, SubtractBaselinePolynomialNotEnoughDataByClipping) {
+TEST_F(Baseline, SubtractBaselinePolynomialTooManyDataClipped) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data] = { 1.0, 2.5, 8.0, 1013.0, 21.5, 31.5, 42.5, 57.5,
