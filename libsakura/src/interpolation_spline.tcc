@@ -75,16 +75,16 @@ private:
 
 		// x_base is ascending order
 		XDataType a1 = base_position[1] - base_position[0];
-		for (size_t i = 1; i < num_base - 1; ++i) {
-			XDataType a2 = base_position[i + 1] - base_position[i];
-			XDataType b1 = 1.0 / (base_position[i + 1] - base_position[i - 1]);
-			d2ydx2[i] = 3.0 * b1
-					* ((base_data[i + 1] - base_data[i]) / a2
-							- (base_data[i] - base_data[i - 1]) / a1
-							- d2ydx2[i - 1] * 0.5 * a1);
-			a1 = 1.0 / (1.0 - upper_triangular[i - 1] * 0.5 * a1 * b1);
-			d2ydx2[i] *= a1;
-			upper_triangular[i] = 0.5 * a2 * b1 * a1;
+		for (size_t i = 2; i < num_base; ++i) {
+			XDataType a2 = base_position[i] - base_position[i - 1];
+			XDataType b1 = 1.0 / (base_position[i] - base_position[i - 2]);
+			d2ydx2[i - 1] = 3.0 * b1
+					* ((base_data[i] - base_data[i - 1]) / a2
+							- (base_data[i - 1] - base_data[i - 2]) / a1
+							- d2ydx2[i - 2] * 0.5 * a1);
+			a1 = 1.0 / (1.0 - upper_triangular[i - 2] * 0.5 * a1 * b1);
+			d2ydx2[i - 1] *= a1;
+			upper_triangular[i - 1] = 0.5 * a2 * b1 * a1;
 			a1 = a2;
 		}
 
@@ -162,23 +162,23 @@ private:
 
 		// x_base is ascending order
 		XDataType a1 = base_position[1] - base_position[0];
-		for (size_t i = 1; i < num_base - 1; ++i) {
-			XDataType a2 = base_position[i + 1] - base_position[i];
-			XDataType b1 = 1.0 / (base_position[i + 1] - base_position[i - 1]);
+		for (size_t i = 2; i < num_base; ++i) {
+			XDataType a2 = base_position[i] - base_position[i - 1];
+			XDataType b1 = 1.0 / (base_position[i] - base_position[i - 2]);
 			for (size_t j = 0; j < num_array; ++j) {
-				d2ydx2[num_array * i + j] = 3.0 * b1
-						* ((base_data[num_array * (i + 1) + j]
-								- base_data[num_array * i + j]) / a2
-								- (base_data[num_array * i + j]
-										- base_data[num_array * (i - 1) + j])
+				d2ydx2[num_array * (i - 1) + j] = 3.0 * b1
+						* ((base_data[num_array * (i) + j]
+								- base_data[num_array * (i - 1) + j]) / a2
+								- (base_data[num_array * (i - 1) + j]
+										- base_data[num_array * (i - 2) + j])
 										/ a1
-								- d2ydx2[num_array * (i - 1) + j] * 0.5 * a1);
+								- d2ydx2[num_array * (i - 2) + j] * 0.5 * a1);
 				XDataType a3 = 1.0
 						/ (1.0
-								- upper_triangular[num_array * (i - 1) + j]
+								- upper_triangular[num_array * (i - 2) + j]
 										* 0.5 * a1 * b1);
-				d2ydx2[num_array * i + j] *= a3;
-				upper_triangular[num_array * i + j] = 0.5 * a2 * b1 * a3;
+				d2ydx2[num_array * (i - 1) + j] *= a3;
+				upper_triangular[num_array * (i - 1) + j] = 0.5 * a2 * b1 * a3;
 			}
 			a1 = a2;
 		}
