@@ -89,8 +89,8 @@ private:
 		}
 
 		// Solve the system by backsubstitution and store solution to d2ydx2_
-		for (size_t k = num_base - 2; k >= 1; --k) {
-			d2ydx2[k] -= upper_triangular[k] * d2ydx2[k + 1];
+		for (size_t k = num_base; k >= 3; --k) {
+			d2ydx2[k - 2] -= upper_triangular[k - 2] * d2ydx2[k - 1];
 		}
 	}
 	std::vector<StorageAndAlignedPointer<YDataType> > holder_;
@@ -184,10 +184,10 @@ private:
 		}
 
 		// Solve the system by backsubstitution and store solution to d2ydx2_
-		for (size_t k = num_base - 2; k >= 1; --k) {
+		for (size_t k = num_base; k >= 3; --k) {
 			for (size_t j = 0; j < num_array; ++j) {
-				d2ydx2[k * num_array + j] -= upper_triangular[k * num_array + j]
-						* d2ydx2[(k + 1) * num_array + j];
+				d2ydx2[(k - 2) * num_array + j] -= upper_triangular[(k - 2)
+						* num_array + j] * d2ydx2[(k - 1) * num_array + j];
 			}
 		}
 	}
