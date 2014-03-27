@@ -58,7 +58,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->DestroyBaselineContext(context);
-\	} catch (...) {
+	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -94,8 +94,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const std::invalid_argument &e) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -144,8 +142,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const std::invalid_argument &e) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -191,8 +187,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const std::invalid_argument &e) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
