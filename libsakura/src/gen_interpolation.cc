@@ -101,6 +101,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const LIBSAKURA_SYMBOL(Status) &LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		// failed to allocate memory
+		LOG4CXX_ERROR(logger, "Invalid interpolation type.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);
@@ -138,6 +142,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const LIBSAKURA_SYMBOL(Status) &LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		// failed to allocate memory
+		LOG4CXX_ERROR(logger, "Invalid interpolation type.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		// any exception is thrown during interpolation
 		assert(false);

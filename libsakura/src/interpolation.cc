@@ -119,7 +119,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		YDataType interpolated_data[]) {
 	typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
 			size_t, YDataType const *, size_t, XDataType const *, YDataType *);
-	Interpolate1DFunc func = nullptr;
+	Interpolate1DFunc func = [](uint8_t, size_t, XDataType const *,
+			size_t, YDataType const *, size_t, XDataType const *, YDataType *) {
+		throw LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	};
 	switch (interpolation_method) {
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
 		func = Interpolate1D<typename InterpolatorSet::NearestInterpolator,
@@ -149,10 +152,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		// invalid interpolation method type
 		break;
 	}
-	if (func != nullptr) {
-		(*func)(polynomial_order, num_base, base_position, num_array, base_data,
-				num_interpolated, interpolated_position, interpolated_data);
-	}
+	(*func)(polynomial_order, num_base, base_position, num_array, base_data,
+			num_interpolated, interpolated_position, interpolated_data);
 }
 
 } /* anonymous namespace */
