@@ -58,10 +58,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->DestroyBaselineContext(context);
-	} catch (const std::runtime_error &e) {
-		LOG4CXX_ERROR(logger, e.what());
-		return LIBSAKURA_SYMBOL(Status_kNG);
-	} catch (...) {
+\	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
