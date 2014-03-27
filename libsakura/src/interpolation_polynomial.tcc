@@ -67,13 +67,13 @@ private:
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 			// d[n-m-1].
-			for (size_t i = 0; i < num_elements_ - m; ++i) {
-				XDataType cd = c[i + 1] - d[i];
-				XDataType dx = x_ptr[i] - x_ptr[i + m];
+			for (size_t i = m; i < num_elements_; ++i) {
+				XDataType cd = c[i + 1 - m] - d[i - m];
+				XDataType dx = x_ptr[i - m] - x_ptr[i];
 				assert(dx != 0);
 				cd /= dx;
-				c[i] = (x_ptr[i] - interpolated_position) * cd;
-				d[i] = (x_ptr[i + m] - interpolated_position) * cd;
+				c[i - m] = (x_ptr[i - m] - interpolated_position) * cd;
+				d[i - m] = (x_ptr[i] - interpolated_position) * cd;
 			}
 
 			// In each step, c[0] holds Cm1 which is a correction between
@@ -151,15 +151,15 @@ private:
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 			// d[n-m-1].
-			for (size_t i = 0; i < num_elements_ - m; ++i) {
-				XDataType dx = x_ptr[i] - x_ptr[i + m];
+			for (size_t i = m; i < num_elements_; ++i) {
+				XDataType dx = x_ptr[i - m] - x_ptr[i];
 				assert(dx != 0);
-				size_t offset = i * num_array;
+				size_t offset = (i - m) * num_array;
 				for (size_t j = 0; j < num_array; ++j) {
 					XDataType cd = (c[offset + num_array + j] - d[offset + j])
 							/ dx;
-					c[offset + j] = (x_ptr[i] - interpolated_position) * cd;
-					d[offset + j] = (x_ptr[i + m] - interpolated_position) * cd;
+					c[offset + j] = (x_ptr[i - m] - interpolated_position) * cd;
+					d[offset + j] = (x_ptr[i] - interpolated_position) * cd;
 				}
 			}
 
