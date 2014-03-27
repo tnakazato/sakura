@@ -45,7 +45,7 @@ auto logger = log4cxx::Logger::getLogger("app");
 
 namespace {
 inline void ExecuteBitFlagToMask(size_t num_data, uint8_t const input_flag[],
-bool output_mask[]) {
+		bool output_mask[]) {
 	sakura_Status status = sakura_Uint8ToBool(num_data, input_flag,
 			output_mask);
 	if (status != sakura_Status_kOK) {
@@ -77,9 +77,10 @@ inline void ExecuteMaskToBitFlag(size_t num_data, bool input_mask[],
 	}
 }
 
-inline void ExecuteCalibration(size_t num_row, double const timestamp[], size_t num_data,
-		float const input_data[], CalibrationContext const &calibration_context,
-		float sky[], float out_data[], float out_tsys[]) {
+inline void ExecuteCalibration(size_t num_row, double const timestamp[],
+		size_t num_data, float const input_data[],
+		CalibrationContext const &calibration_context, float sky[],
+		float out_data[], float out_tsys[]) {
 	assert(num_data == calibration_context.num_channel);
 
 	// interpolate Tsys to timestamp
@@ -146,7 +147,7 @@ inline void ExecuteSmoothing(sakura_Convolve1DContext const *context,
 		}
 	}
 	sakura_Status status = sakura_Convolve1D(context, num_data, output_data,
-			mask, output_data);
+			output_data);
 	if (status != sakura_Status_kOK) {
 		throw std::runtime_error("convolution");
 	}
@@ -163,7 +164,7 @@ inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
 	}
 }
 inline void ExecuteNanOrInfFlag(size_t num_data, float const input_data[],
-bool mask_arg[]) {
+		bool mask_arg[]) {
 	auto mask = AssumeAligned(mask_arg);
 
 //	std::cout << "ExecuteFlagNanOrInf" << std::endl;
@@ -228,7 +229,7 @@ inline void ExecuteClipping(float threshold, size_t num_data,
 }
 
 inline void CalculateStatistics(size_t num_data, float const input_data[],
-bool const input_mask[]) {
+		bool const input_mask[]) {
 	sakura_StatisticsResult result;
 	sakura_Status status = sakura_ComputeStatistics(num_data, input_data,
 			input_mask, &result);
@@ -361,10 +362,10 @@ SharedWorkingSet *InitializeSharedWorkingSet(E2EOptions const &options,
 	LOG4CXX_DEBUG(logger, "Enter: InitializeSharedWorkingSet");
 	assert(array_generator != nullptr);
 
-	SharedWorkingSet *shared =
-			new SharedWorkingSet { 0, 0, { }, nullptr, nullptr, nullptr,
-					GetSelectedTable(options.input_file, options.ifno, polno,
-					true), casa::Table(options.output_file, casa::Table::Update) };
+	SharedWorkingSet *shared = new SharedWorkingSet { 0, 0, { }, nullptr,
+			nullptr, nullptr, GetSelectedTable(options.input_file, options.ifno,
+					polno, true), casa::Table(options.output_file,
+					casa::Table::Update) };
 	try {
 		shared->num_data = shared->input_table.nrow();
 		if (shared->num_data > 0) {
@@ -461,11 +462,13 @@ WorkingSet *InitializeWorkingSet(SharedWorkingSet *shared, size_t elements,
 		result[i].work_area.mask = array_generator->GetAlignedArray<bool>(
 				num_chan);
 		result[i].work_area.baseline_mask = array_generator->GetAlignedArray<
-		bool>(num_chan);
+				bool>(num_chan);
 		result[i].work_area.baseline_after_mask =
 				array_generator->GetAlignedArray<bool>(num_chan);
-		result[i].work_area.timestamp = array_generator->GetAlignedArray<double>(1);
-		result[i].work_area.sky = array_generator->GetAlignedArray<float>(num_chan);
+		result[i].work_area.timestamp =
+				array_generator->GetAlignedArray<double>(1);
+		result[i].work_area.sky = array_generator->GetAlignedArray<float>(
+				num_chan);
 	}
 	return result.release();
 }
@@ -515,7 +518,8 @@ void Reduce(E2EOptions const &options) {
 		volatile bool ok = true;
 
 		auto group = xdispatch::group();
-		for (size_t i = 0; ok && i < shared->num_data; i += rows_per_processing) {
+		for (size_t i = 0; ok && i < shared->num_data; i +=
+				rows_per_processing) {
 			size_t rows = std::min(rows_per_processing, shared->num_data - i);
 			semaphore.acquire();
 			size_t working_set_id = 0;
@@ -780,11 +784,11 @@ void BatchReduce(E2EOptions const &options) {
 										semaphore.release();
 									});
 							try {
-							ParallelJob(i, rows, input_data[polno].num_channels, t, v, f, options, shared[polno].get(),
-									&working_sets[working_set_id].work_area,
-									&output_data[polno].spectrum[i],
-									&output_data[polno].flag[i],
-									&output_data[polno].tsys[i]);
+								ParallelJob(i, rows, input_data[polno].num_channels, t, v, f, options, shared[polno].get(),
+										&working_sets[working_set_id].work_area,
+										&output_data[polno].spectrum[i],
+										&output_data[polno].flag[i],
+										&output_data[polno].tsys[i]);
 							} catch (std::runtime_error &e) {
 								LOG4CXX_ERROR(logger, "Exception was thrown:" << e.what());
 								ok = false;
