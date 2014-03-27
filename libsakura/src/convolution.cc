@@ -18,7 +18,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	bool use_fft;
 	size_t num_data;
 	size_t kernel_width;
-	size_t sigma_threshold;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
@@ -125,9 +124,11 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 
 inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
 		size_t kernel_width, float* output_data) {
+	const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+	float const fwhm = kernel_width / six_sigma;
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ kernel_width; // sqrt(log(16))/ kernel_width
-	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
+			/ fwhm; // sqrt(log(16)) / fwhm
+	float const height = .939437278699651333772340328410 / fwhm; // sqrt(8*log(2)/(2*M_PI)) / fwhm
 	float center = (num_data) / 2.f;
 	if (num_data % 2 != 0) {
 		center = (num_data - 1) / 2.f;
@@ -150,9 +151,11 @@ inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
 
 inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 		float* output_data) {
+	const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+	float const fwhm = kernel_width / six_sigma;
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ kernel_width; // sqrt(log(16))/ kernel_width
-	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
+			/ fwhm; // sqrt(log(16)) / fwhm
+	float const height = .939437278699651333772340328410 / fwhm; // sqrt(8*log(2)/(2*M_PI)) / fwhm
 	float center = (num_data) / 2.f;
 	if (num_data % 2 != 0) {
 		center = (num_data - 1) / 2.f;
@@ -200,47 +203,43 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	}
 }
 
-inline void ConvolutionWithoutFFTLowSigma(size_t num_data,
+inline void ConvolutionWithoutFFTLowKernelWidth(size_t num_data,
 		float const *input_data_arg, size_t kernel_width,
-		size_t sigma_threshold, float const *input_kernel,
-		float *output_data_arg) {
+		float const *input_kernel, float *output_data_arg) {
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	for (size_t j = 0; j < num_data; ++j) {
 		float convolved_sum = 0.0;
-		if (j <= sigma_threshold) {
-			for (size_t i = 0;
-					i < 2 * sigma_threshold && sigma_threshold + j - i > 0;
+		if (j <= kernel_width) {
+			for (size_t i = 0; i < 2 * kernel_width && kernel_width + j - i > 0;
 					++i) {
-				convolved_sum += input_kernel[sigma_threshold + j - i]
+				convolved_sum += input_kernel[kernel_width + j - i]
 						* input_data[i];
 			}
 		}
-		if (j > sigma_threshold && sigma_threshold + j <= num_data) {
-			for (size_t i = 0; i < 2 * sigma_threshold; ++i) {
-				convolved_sum += input_kernel[2 * sigma_threshold - i]
-						* input_data[j - sigma_threshold + i];
+		if (j > kernel_width && kernel_width + j <= num_data) {
+			for (size_t i = 0; i < 2 * kernel_width; ++i) {
+				convolved_sum += input_kernel[2 * kernel_width - i]
+						* input_data[j - kernel_width + i];
 			}
 		}
-		if (sigma_threshold + j > num_data) {
+		if (kernel_width + j > num_data) {
 			for (size_t i = 0;
-					i < 2 * sigma_threshold
-							&& sigma_threshold + j + i - num_data > 0; ++i) {
-				convolved_sum +=
-						input_kernel[sigma_threshold + j + i - num_data]
-								* input_data[num_data - i];
+					i < 2 * kernel_width && kernel_width + j + i - num_data > 0;
+					++i) {
+				convolved_sum += input_kernel[kernel_width + j + i - num_data]
+						* input_data[num_data - i];
 			}
 		}
 		output_data[j] = convolved_sum;
 	}
 }
 
-inline void ConvolutionWithoutFFTHighSigma(size_t num_data,
+inline void ConvolutionWithoutFFTHighKernelWidth(size_t num_data,
 		float const *input_data_arg, size_t kernel_width,
-		size_t sigma_threshold, float const *input_kernel,
-		float *output_data_arg) {
+		float const *input_kernel, float *output_data_arg) {
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
@@ -338,15 +337,12 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		guard_for_ifft_plan.Disable();
 		work_context->num_data = num_data;
 		work_context->kernel_width = kernel_width;
-		work_context->sigma_threshold = 0;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	} else {
-		const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
-		const size_t sigma_threshold = six_sigma * kernel_width;
 		size_t tuned_num_data;
-		if (2 * sigma_threshold <= num_data) {
-			tuned_num_data = 2 * sigma_threshold;
+		if (2 * kernel_width <= num_data) {
+			tuned_num_data = 2 * kernel_width;
 		} else {
 			tuned_num_data = 2 * num_data;
 		}
@@ -374,7 +370,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->num_data = num_data;
 		work_context->kernel_width = kernel_width;
-		work_context->sigma_threshold = sigma_threshold;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	}
@@ -423,16 +418,14 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
-		if (2 * context->sigma_threshold <= num_data) {
-			ConvolutionWithoutFFTLowSigma(num_data,
+		if (2 * context->kernel_width <= num_data) {
+			ConvolutionWithoutFFTLowKernelWidth(num_data,
 					const_cast<float*>(input_data), context->kernel_width,
-					context->sigma_threshold, context->real_kernel_array,
-					output_data);
+					context->real_kernel_array, output_data);
 		} else {
-			ConvolutionWithoutFFTHighSigma(num_data,
+			ConvolutionWithoutFFTHighKernelWidth(num_data,
 					const_cast<float*>(input_data), context->kernel_width,
-					context->sigma_threshold, context->real_kernel_array,
-					output_data);
+					context->real_kernel_array, output_data);
 		}
 	}
 }
