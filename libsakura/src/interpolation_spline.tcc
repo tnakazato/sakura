@@ -33,15 +33,15 @@ public:
 			size_t const location[], size_t offset) {
 		YDataType *d2ydx2 = holder_[0].pointer;
 		assert(d2ydx2 != nullptr);
-		for (size_t k = 0; k < num_location - 1; ++k) {
-			size_t left_index = k + offset;
+		for (size_t k = 1; k < num_location; ++k) {
+			size_t left_index = k + offset - 1;
 			XDataType dx = base_position[left_index + 1]
 					- base_position[left_index];
 			XDataType dx_factor = dx * dx / 6.0;
 			for (size_t j = 0; j < num_array; ++j) {
 				size_t offset_index_left = j * num_base + left_index;
 				YDataType *work = &interpolated_data[j * num_interpolated];
-				for (size_t i = location[k]; i < location[k + 1]; ++i) {
+				for (size_t i = location[k - 1]; i < location[k]; ++i) {
 					XDataType a = (base_position[left_index + 1]
 							- interpolated_position[i]) / dx;
 					XDataType b = 1.0 - a;
@@ -114,8 +114,8 @@ public:
 			size_t const location[], size_t offset) {
 		YDataType *d2ydx2 = holder_.pointer;
 		assert(d2ydx2 != nullptr);
-		for (size_t k = 0; k < num_location - 1; ++k) {
-			size_t left_index = k + offset;
+		for (size_t k = 1; k < num_location; ++k) {
+			size_t left_index = k + offset - 1;
 			XDataType dx = base_position[left_index + 1]
 					- base_position[left_index];
 			YDataType const *left_value = &base_data[left_index * num_array];
@@ -124,7 +124,7 @@ public:
 			YDataType const *d2ydx2_left = &d2ydx2[left_index * num_array];
 			YDataType const *d2ydx2_right =
 					&d2ydx2[(left_index + 1) * num_array];
-			for (size_t i = location[k]; i < location[k + 1]; ++i) {
+			for (size_t i = location[k - 1]; i < location[k]; ++i) {
 				XDataType a = (base_position[left_index + 1]
 						- interpolated_position[i]) / dx;
 				XDataType b = 1.0 - a;

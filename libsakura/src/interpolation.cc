@@ -83,7 +83,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	// Between x_base[0] and x_base[num_x_base-1]
 	size_t offset = 0;
 	if (base_position_work[0] < interpolated_position_work[0]) {
-		for (size_t i = 0; i < num_base - 1; ++i) {
+		for (size_t i = 1; i < num_base; ++i) {
 			if (base_position_work[offset + 1]
 					< interpolated_position_work[0]) {
 				offset++;

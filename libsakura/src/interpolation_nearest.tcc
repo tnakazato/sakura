@@ -32,8 +32,8 @@ public:
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
-		for (size_t k = 0; k < num_location - 1; ++k) {
-			size_t left_index = k + offset;
+		for (size_t k = 1; k < num_location; ++k) {
+			size_t left_index = k + offset - 1;
 			XDataType middle_point =
 					0.5
 							* (base_position[left_index + 1]
@@ -42,7 +42,7 @@ public:
 				YDataType left_value = base_data[j * num_base + left_index];
 				YDataType right_value = base_data[j * num_base + left_index + 1];
 				YDataType *work = &interpolated_data[j * num_interpolated];
-				for (size_t i = location[k]; i < location[k + 1]; ++i) {
+				for (size_t i = location[k - 1]; i < location[k]; ++i) {
 					if ((interpolated_position[i] != middle_point)
 							& ((interpolated_position[i] > middle_point))) {
 						work[i] = right_value;
@@ -67,13 +67,13 @@ public:
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
-		for (size_t k = 0; k < num_location - 1; ++k) {
-			size_t left_index = k + offset;
+		for (size_t k = 1; k < num_location; ++k) {
+			size_t left_index = k + offset - 1;
 			XDataType middle_point =
 					0.5
 							* (base_position[left_index + 1]
 									+ base_position[left_index]);
-			for (size_t i = location[k]; i < location[k + 1]; ++i) {
+			for (size_t i = location[k - 1]; i < location[k]; ++i) {
 				size_t offset_index = 0;
 				if ((interpolated_position[i] != middle_point)
 						& ((interpolated_position[i] > middle_point))) {

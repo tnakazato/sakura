@@ -27,14 +27,14 @@ public:
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
-		for (size_t k = 0; k < num_location - 1; ++k) {
-			int left_edge1 = k + offset - polynomial_order_ / 2;
+		for (size_t k = 1; k < num_location; ++k) {
+			int left_edge1 = k + offset - 1 - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);
 			left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
 			for (size_t j = 0; j < num_array; ++j) {
-				for (size_t i = location[k]; i < location[k + 1]; ++i) {
+				for (size_t i = location[k - 1]; i < location[k]; ++i) {
 					PerformNevilleAlgorithm(num_base, base_position, base_data,
 							left_edge, j, interpolated_position[i],
 							&interpolated_data[j * num_interpolated + i]);
@@ -112,13 +112,13 @@ public:
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
-		for (size_t k = 0; k < num_location - 1; ++k) {
-			int left_edge1 = k + offset - polynomial_order_ / 2;
+		for (size_t k = 1; k < num_location; ++k) {
+			int left_edge1 = k + offset - 1 - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);
 			left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
-			for (size_t i = location[k]; i < location[k + 1]; ++i) {
+			for (size_t i = location[k - 1]; i < location[k]; ++i) {
 				PerformNevilleAlgorithm(num_array, base_position, base_data,
 						left_edge, interpolated_position[i],
 						&interpolated_data[num_array * i]);
