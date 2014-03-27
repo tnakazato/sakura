@@ -18,6 +18,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	bool use_fft;
 	size_t num_data;
 	size_t kernel_width;
+	size_t sigma_threshold;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
@@ -199,30 +200,57 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	}
 }
 
-inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
-		size_t kernel_width, float const *input_kernel,
+inline void ConvolutionWithoutFFTLowSigma(size_t num_data,
+		float const *input_data_arg, size_t kernel_width,
+		size_t sigma_threshold, float const *input_kernel,
 		float *output_data_arg) {
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
-	const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
-	const size_t sigma_threshold = six_sigma * kernel_width;
-	const size_t kernel_array_center = num_data;
-	if (sigma_threshold <= kernel_array_center) {
-		for (size_t j = 0; j < num_data; ++j) {
-			float convolved_sum = 0.0;
-			for (size_t i = 0; i < num_data; ++i) {
-				if (kernel_array_center + j - i
-						< kernel_array_center + sigma_threshold
-						&& kernel_array_center + j - i
-								> kernel_array_center - sigma_threshold) {
-					convolved_sum += input_kernel[kernel_array_center + j - i]
-							* input_data[i];
-				}
+	for (size_t j = 0; j < num_data; ++j) {
+		float convolved_sum = 0.0;
+		if (j <= sigma_threshold) {
+			for (size_t i = 0;
+					i < 2 * sigma_threshold && sigma_threshold + j - i > 0;
+					++i) {
+				convolved_sum += input_kernel[sigma_threshold + j - i]
+						* input_data[i];
 			}
-			output_data[j] = convolved_sum;
 		}
+		if (j > sigma_threshold && sigma_threshold + j <= num_data) {
+			for (size_t i = 0; i < 2 * sigma_threshold; ++i) {
+				convolved_sum += input_kernel[2 * sigma_threshold - i]
+						* input_data[j - sigma_threshold + i];
+			}
+		}
+		if (sigma_threshold + j > num_data) {
+			for (size_t i = 0;
+					i < 2 * sigma_threshold
+							&& sigma_threshold + j + i - num_data > 0; ++i) {
+				convolved_sum +=
+						input_kernel[sigma_threshold + j + i - num_data]
+								* input_data[num_data - i];
+			}
+		}
+		output_data[j] = convolved_sum;
+	}
+}
+
+inline void ConvolutionWithoutFFTHighSigma(size_t num_data,
+		float const *input_data_arg, size_t kernel_width,
+		size_t sigma_threshold, float const *input_kernel,
+		float *output_data_arg) {
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
+	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
+	auto input_data = AssumeAligned(input_data_arg);
+	auto output_data = AssumeAligned(output_data_arg);
+	for (size_t j = 0; j < num_data; ++j) {
+		float convolved_sum = 0.0;
+		for (size_t i = 0; i < num_data; ++i) {
+			convolved_sum += input_kernel[num_data + j - i] * input_data[i];
+		}
+		output_data[j] = convolved_sum;
 	}
 }
 
@@ -310,15 +338,24 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		guard_for_ifft_plan.Disable();
 		work_context->num_data = num_data;
 		work_context->kernel_width = kernel_width;
+		work_context->sigma_threshold = 0;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	} else {
+		const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+		const size_t sigma_threshold = six_sigma * kernel_width;
+		size_t tuned_num_data;
+		if (2 * sigma_threshold <= num_data) {
+			tuned_num_data = 2 * sigma_threshold;
+		} else {
+			tuned_num_data = 2 * num_data;
+		}
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * 2 * num_data, &real_kernel_array));
+						sizeof(float) * tuned_num_data, &real_kernel_array));
 		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
-		Create1DKernel(2 * num_data, use_fft, kernel_type, kernel_width,
+		Create1DKernel(tuned_num_data, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
@@ -337,6 +374,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->num_data = num_data;
 		work_context->kernel_width = kernel_width;
+		work_context->sigma_threshold = sigma_threshold;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	}
@@ -385,8 +423,17 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
-		ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
-				context->kernel_width, context->real_kernel_array, output_data);
+		if (2 * context->sigma_threshold <= num_data) {
+			ConvolutionWithoutFFTLowSigma(num_data,
+					const_cast<float*>(input_data), context->kernel_width,
+					context->sigma_threshold, context->real_kernel_array,
+					output_data);
+		} else {
+			ConvolutionWithoutFFTHighSigma(num_data,
+					const_cast<float*>(input_data), context->kernel_width,
+					context->sigma_threshold, context->real_kernel_array,
+					output_data);
+		}
 	}
 }
 
@@ -416,8 +463,9 @@ LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 
 namespace LIBSAKURA_PREFIX {
 void ADDSUFFIX(Convolution, ARCH_SUFFIX)::CreateConvolve1DContext(
-		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-		size_t kernel_width, bool use_fft,
+		size_t num_data,
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
+		bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) const {
 	::CreateConvolve1DContext(num_data, kernel_type, kernel_width, use_fft,
 			context);

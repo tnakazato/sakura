@@ -20,8 +20,8 @@
 #define NUM_WIDTH_THIN 2
 #define NUM_IN 24
 #define NUM_IN_ODD 25
-#define NUM_IN_LARGE 128
-#define NUM_IN_MAX 4096
+#define NUM_IN_LARGE 64
+#define NUM_IN_MAX 8192
 #define LOOP_MAX 1000
 
 extern "C" {
@@ -29,6 +29,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext) {
 	bool use_fft;
 	size_t num_data;
 	size_t kernel_width;
+	size_t sigma_threshold;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
 	fftwf_complex *fft_applied_complex_kernel;
@@ -175,13 +176,13 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // (FFT) kernel_width > num_data
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN];
+		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width( NUM_IN + 10);
+		size_t const kernel_width( NUM_IN_LARGE + 1);
 		bool fftuse = true; // FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
@@ -207,13 +208,13 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // (Without FFT) kernel_width > num_data
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN];
+		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
 		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width(NUM_IN + 10);
+		size_t const kernel_width( NUM_IN_LARGE + 1);
 		bool fftuse = false; // without FFT
 		SIMD_ALIGN
 		float output_data[ELEMENTSOF(input_data)];
@@ -234,6 +235,41 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		//verbose = true;
 		if (verbose) {
 			PrintArray("without FFT\n", num_data, output_data);
+		}
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+	}
+	{ // (Without FFT) 2*sigma_threshold <= num_data
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		SIMD_ALIGN
+		float input_data[NUM_IN_LARGE];
+		size_t const num_data(ELEMENTSOF(input_data));
+		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
+			input_data[i] = 0.0;
+		}
+		input_data[num_data / 2] = 1.0; // center ch
+		size_t const kernel_width( NUM_WIDTH );
+		bool fftuse = false; // without FFT
+		SIMD_ALIGN
+		float output_data[ELEMENTSOF(input_data)];
+		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
+			output_data[i] = 0.0;
+		}
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
+		LIBSAKURA_SYMBOL(Status) status_Create;
+		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
+				kernel_type, kernel_width, fftuse, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
+		LIBSAKURA_SYMBOL(Status) status_Convolve;
+		status_Convolve =
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
+				output_data);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
+		//verbose = true;
+		if (verbose) {
+			PrintArray("without FFT \n", num_data, output_data);
 		}
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
@@ -480,7 +516,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = false; // without FFT
 		SIMD_ALIGN
-		float output_data[num_data];
+		float output_data[ELEMENTSOF(input_data)];
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
 		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
 		LIBSAKURA_SYMBOL(Status) status_Create =
@@ -491,7 +527,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+	    //verbose = true;
 		if (verbose) {
 			std::cout << " even without FFT" << std::endl;
 			PrintArray("\n", num_data, output_data);
@@ -570,7 +606,6 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 			if (i > 7 && i < 15) {
 				input_data[i] = -1.0;
 			}
-
 		}
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
@@ -607,7 +642,6 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 			if (i > 7 && i < 15) {
 				input_data[i] = -1.0;
 			}
-
 		}
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = false; // without FFT
@@ -644,8 +678,6 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		}
 		input_data[0] = 1.0; // first ch
 		input_data[num_data - 1] = 1.0; // final ch
-		//input_data[1][0] = 1.0;
-		//input_data[1][num_data - 1] = 1.0;
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true; // with FFT
 		SIMD_ALIGN
@@ -838,7 +870,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray("without FFT\n", num_data, output_data);
 		}
