@@ -33,7 +33,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t left_index = k + offset - 1;
+			size_t left_index = offset + k - 1;
 			XDataType middle_point =
 					0.5
 							* (base_position[left_index + 1]
@@ -68,7 +68,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t left_index = k + offset - 1;
+			size_t left_index = offset + k - 1;
 			XDataType middle_point =
 					0.5
 							* (base_position[left_index + 1]

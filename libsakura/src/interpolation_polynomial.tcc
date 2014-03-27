@@ -28,7 +28,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
 		for (size_t k = 1; k < num_location; ++k) {
-			int left_edge1 = k + offset - 1 - polynomial_order_ / 2;
+			int left_edge1 = offset + k - 1 - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);
@@ -113,7 +113,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
 		for (size_t k = 1; k < num_location; ++k) {
-			int left_edge1 = k + offset - 1 - polynomial_order_ / 2;
+			int left_edge1 = offset + k - 1 - polynomial_order_ / 2;
 			size_t left_edge2 = num_base - num_elements_;
 			size_t left_edge = static_cast<size_t>(
 					(left_edge1 > 0) ? left_edge1 : 0);

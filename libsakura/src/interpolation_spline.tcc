@@ -34,7 +34,7 @@ public:
 		YDataType *d2ydx2 = holder_[0].pointer;
 		assert(d2ydx2 != nullptr);
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t left_index = k + offset - 1;
+			size_t left_index = offset + k - 1;
 			XDataType dx = base_position[left_index + 1]
 					- base_position[left_index];
 			XDataType dx_factor = dx * dx / 6.0;
@@ -115,7 +115,7 @@ public:
 		YDataType *d2ydx2 = holder_.pointer;
 		assert(d2ydx2 != nullptr);
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t left_index = k + offset - 1;
+			size_t left_index = offset + k - 1;
 			XDataType dx = base_position[left_index + 1]
 					- base_position[left_index];
 			YDataType const *left_value = &base_data[left_index * num_array];

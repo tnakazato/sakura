@@ -17,7 +17,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t left_index = k + offset - 1;
+			size_t left_index = offset + k - 1;
 			for (size_t j = 0; j < num_array; ++j) {
 				size_t offset_index_left = j * num_base + left_index;
 				XDataType dydx =
@@ -51,7 +51,7 @@ public:
 			YDataType interpolated_data[], size_t num_location,
 			size_t const location[], size_t offset) {
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t left_index = k + offset - 1;
+			size_t left_index = offset + k - 1;
 			for (size_t i = location[k - 1]; i < location[k]; ++i) {
 				YDataType fraction =
 						static_cast<YDataType>((interpolated_position[i]
