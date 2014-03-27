@@ -99,9 +99,9 @@ inline void SubMulVector(size_t const num_model_bases, double k,
 }
 
 template<size_t NUM_MODEL_BASES>
-inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
-		size_t num_mask, bool const *mask_arg, size_t num_model_bases,
-		double const *model_arg, double *out_arg) {
+inline void GetMatrixCoefficientsForLeastSquareFittingTemplate(size_t num_mask,
+bool const *mask_arg, size_t num_model_bases, double const *model_arg,
+		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -127,7 +127,7 @@ inline void GetMatrixCoefficientsForLeastSquareFittingUsingTemplate(
 
 	if (num_unmasked_data < NUM_MODEL_BASES) {
 		throw std::runtime_error(
-				"GetMatrixCoefficientsForLeastSquareFittingUsingTemplate: too many masked data.");
+				"GetMatrixCoefficientsForLeastSquareFittingTemplate: too many masked data.");
 	}
 }
 
@@ -164,7 +164,7 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 }
 
 template<size_t NUM_MODEL_BASES>
-inline void UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate(
+inline void UpdateMatrixCoefficientsForLeastSquareFittingTemplate(
 		size_t num_clipped, size_t const *clipped_indices_arg,
 		size_t num_model_bases, double const *in_arg, double const *model_arg,
 		double *out_arg) {
@@ -215,9 +215,9 @@ inline void UpdateMatrixCoefficientsForLeastSquareFitting(size_t num_clipped,
 }
 
 template<size_t NUM_MODEL_BASES>
-inline void GetVectorCoefficientsForLeastSquareFittingUsingTemplate(
-		size_t num_data, float const *data_arg, bool const *mask_arg,
-		size_t num_model_bases, double const *model_arg, double *out_arg) {
+inline void GetVectorCoefficientsForLeastSquareFittingTemplate(size_t num_data,
+		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
+		double const *model_arg, double *out_arg) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -266,7 +266,7 @@ inline void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 }
 
 template<size_t NUM_MODEL_BASES>
-inline void UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate(
+inline void UpdateVectorCoefficientsForLeastSquareFittingTemplate(
 		float const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
@@ -318,6 +318,96 @@ inline void UpdateVectorCoefficientsForLeastSquareFitting(float const *data_arg,
 	}
 }
 
+template<size_t NUM_MODEL_BASES>
+inline void GetLeastSquareFittingCoefficientsTemplate(size_t num_data,
+		float const *data_arg, bool const *mask_arg,
+		size_t const num_model_bases, double const *basis_data,
+		double *lsq_matrix_arg, double *lsq_vector_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto basis = AssumeAligned(basis_data);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
+
+	GetMatrixCoefficientsForLeastSquareFittingTemplate<NUM_MODEL_BASES>(
+			num_data, mask, num_model_bases, basis, lsq_matrix);
+	GetVectorCoefficientsForLeastSquareFittingTemplate<NUM_MODEL_BASES>(
+			num_data, data, mask, num_model_bases, basis, lsq_vector);
+}
+
+inline void GetLeastSquareFittingCoefficients(size_t num_data,
+		float const *data_arg, bool const *mask_arg,
+		size_t const num_model_bases, double const *basis_data,
+		double *lsq_matrix_arg, double *lsq_vector_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto basis = AssumeAligned(basis_data);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
+
+	GetMatrixCoefficientsForLeastSquareFitting(num_data, mask, num_model_bases,
+			basis, lsq_matrix);
+	GetVectorCoefficientsForLeastSquareFitting(num_data, data, mask,
+			num_model_bases, basis, lsq_vector);
+}
+
+template<size_t NUM_MODEL_BASES>
+inline void UpdateLeastSquareFittingCoefficientsTemplate(size_t const num_data,
+		float const *data_arg, size_t const num_clipped,
+		size_t const *clipped_indices_arg, size_t const num_model_bases,
+		double const *basis_data, double *lsq_matrix_arg,
+		double *lsq_vector_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
+	auto data = AssumeAligned(data_arg);
+	auto clipped_indices = AssumeAligned(clipped_indices_arg);
+	auto basis = AssumeAligned(basis_data);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
+
+	UpdateMatrixCoefficientsForLeastSquareFittingTemplate<NUM_MODEL_BASES>(
+			num_clipped, clipped_indices, num_model_bases, lsq_matrix, basis,
+			lsq_matrix);
+	UpdateVectorCoefficientsForLeastSquareFittingTemplate<NUM_MODEL_BASES>(data,
+			num_clipped, clipped_indices, num_model_bases, lsq_vector, basis,
+			lsq_vector);
+}
+
+inline void UpdateLeastSquareFittingCoefficients(size_t const num_data,
+		float const *data_arg, size_t const num_clipped,
+		size_t const *clipped_indices_arg, size_t const num_model_bases,
+		double const *basis_data, double *lsq_matrix_arg,
+		double *lsq_vector_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
+	auto data = AssumeAligned(data_arg);
+	auto clipped_indices = AssumeAligned(clipped_indices_arg);
+	auto basis = AssumeAligned(basis_data);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
+
+	UpdateMatrixCoefficientsForLeastSquareFitting(num_clipped, clipped_indices,
+			num_model_bases, lsq_matrix, basis, lsq_matrix);
+	UpdateVectorCoefficientsForLeastSquareFitting(data, num_clipped,
+			clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
+}
+
 inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 		double const *in_matrix_arg, double const *in_vector_arg, double *out) {
 
@@ -350,153 +440,81 @@ inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 
 namespace LIBSAKURA_PREFIX {
 
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetMatrixCoefficientsForLeastSquareFitting(
-		size_t num_mask, bool const mask[/*num_mask*/], size_t num_model_bases,
-		double const model[/*num_model_bases*num_mask*/],
-		double out[/*num_model_bases*num_model_bases*/]) const {
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	assert(num_model_bases > 0);
-
-	typedef void (*GetMatrixCoefficientsForLeastSquareFittingFunc)(
-			size_t num_mask, bool const *mask, size_t num_model_bases,
-			double const *model, double *out);
-
-	static GetMatrixCoefficientsForLeastSquareFittingFunc const funcs[] = {
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 0),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 30),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 40),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 50),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 60),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 70),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 80),
-	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 90),
-			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<100> };
-
-	if (num_model_bases < ELEMENTSOF(funcs)) {
-		funcs[num_model_bases](num_mask, mask, num_model_bases, model, out);
-	} else {
-		::GetMatrixCoefficientsForLeastSquareFitting(num_mask, mask,
-				num_model_bases, model, out);
-	}
-}
-
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::UpdateMatrixCoefficientsForLeastSquareFitting(
-		size_t num_clipped, size_t const clipped_indices[/*num_mask*/],
-		size_t num_model_bases,
-		double const in[/*num_model_bases*num_model_bases*/],
-		double const model[/*num_model_bases*num_mask*/],
-		double out[/*num_model_bases*num_model_bases*/]) const {
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	assert(num_model_bases > 0);
-
-	typedef void (*UpdateMatrixCoefficientsForLeastSquareFittingFunc)(
-			size_t num_clipped, size_t const *clipped_indices,
-			size_t num_model_bases, double const *in, double const *model,
-			double *out);
-
-	static UpdateMatrixCoefficientsForLeastSquareFittingFunc const funcs[] = {
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 0),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 30),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 40),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 50),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 60),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 70),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 80),
-	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 90),
-			UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<100> };
-
-	if (num_model_bases < ELEMENTSOF(funcs)) {
-		funcs[num_model_bases](num_clipped, clipped_indices, num_model_bases,
-				in, model, out);
-	} else {
-		::UpdateMatrixCoefficientsForLeastSquareFitting(num_clipped,
-				clipped_indices, num_model_bases, in, model, out);
-	}
-}
-
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetVectorCoefficientsForLeastSquareFitting(
-		size_t num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/], size_t num_model_bases,
-		double const model[/*num_model_bases*num_data*/],
-		double out[/*num_model_bases*/]) const {
-
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetLeastSquareFittingCoefficients(
+		size_t const num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t const num_model_bases,
+		double const basis_data[/*num_model_bases*num_data*/],
+		double lsq_matrix[/*num_model_bases*num_model_bases*/],
+		double lsq_vector[/*num_model_bases*/]) const {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
-	typedef void (*GetVectorCoefficientsForLeastSquareFittingFunc)(
-			size_t num_data, float const *data, bool const *mask,
-			size_t num_model_bases, double const *model, double *out);
-	static GetVectorCoefficientsForLeastSquareFittingFunc const funcs[] = {
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 0),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 10),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 20),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 30),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 40),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 50),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 60),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 70),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 80),
-	RepeatTen(GetVectorCoefficientsForLeastSquareFittingUsingTemplate, 90),
-			GetVectorCoefficientsForLeastSquareFittingUsingTemplate<100> };
+	typedef void (*GetLeastSquareFittingCoefficientsFunc)(size_t const num_data,
+			float const *data, bool const *mask, size_t const num_model_bases,
+			double const *basis_data, double *lsq_matrix, double *lsq_vector);
+
+	static GetLeastSquareFittingCoefficientsFunc const funcs[] = {
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 0),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 10),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 20),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 30),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 40),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 50),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 60),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 70),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 80),
+	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 90),
+			GetLeastSquareFittingCoefficientsTemplate<100> };
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
-		funcs[num_model_bases](num_data, data, mask, num_model_bases, model,
-				out);
+		funcs[num_model_bases](num_data, data, mask, num_model_bases,
+				basis_data, lsq_matrix, lsq_vector);
 	} else {
-		::GetVectorCoefficientsForLeastSquareFitting(num_data, data, mask,
-				num_model_bases, model, out);
+		::GetLeastSquareFittingCoefficients(num_data, data, mask,
+				num_model_bases, basis_data, lsq_matrix, lsq_vector);
 	}
 }
-
-void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::UpdateVectorCoefficientsForLeastSquareFitting(
-		float const data[/*num_data*/], size_t num_clipped,
-		size_t const clipped_indices[/*num_data*/], size_t num_model_bases,
-		double const in[/*num_model_bases*/],
-		double const model[/*num_model_bases*num_data*/],
-		double out[/*num_model_bases*/]) const {
-
+void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::UpdateLeastSquareFittingCoefficients(
+		size_t const num_data, float const data[/*num_data*/],
+		size_t const num_clipped, size_t const clipped_indices[/*num_data*/],
+		size_t const num_model_bases,
+		double const basis_data[/*num_model_bases*num_data*/],
+		double lsq_matrix[/*num_model_bases*num_model_bases*/],
+		double lsq_vector[/*num_model_bases*/]) const {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
-	typedef void (*UpdateVectorCoefficientsForLeastSquareFittingFunc)(
-			float const *data, size_t num_clipped,
-			size_t const *clipped_indices, size_t num_model_bases,
-			double const *in, double const *model, double *out);
-	static UpdateVectorCoefficientsForLeastSquareFittingFunc const funcs[] = {
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 0),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 10),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 20),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 30),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 40),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 50),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 60),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 70),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 80),
-	RepeatTen(UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate, 90),
-			UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate<100> };
+	typedef void (*UpdateLeastSquareFittingCoefficientsFunc)(
+			size_t const num_data, float const *data, size_t const num_clipped,
+			size_t const *clipped_indices, size_t const num_model_bases,
+			double const *basis_data, double *lsq_matrix, double *lsq_vector);
+
+	static UpdateLeastSquareFittingCoefficientsFunc const funcs[] = {
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 0),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 10),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 20),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 30),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 40),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 50),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 60),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 70),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 80),
+	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 90),
+			UpdateLeastSquareFittingCoefficientsTemplate<100> };
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
-		funcs[num_model_bases](data, num_clipped, clipped_indices,
-				num_model_bases, in, model, out);
+		funcs[num_model_bases](num_data, data, num_clipped, clipped_indices,
+				num_model_bases, basis_data, lsq_matrix, lsq_vector);
 	} else {
-		::UpdateVectorCoefficientsForLeastSquareFitting(data, num_clipped,
-				clipped_indices, num_model_bases, in, model, out);
+		::UpdateLeastSquareFittingCoefficients(num_data, data, num_clipped,
+				clipped_indices, num_model_bases, basis_data, lsq_matrix,
+				lsq_vector);
 	}
 }
 

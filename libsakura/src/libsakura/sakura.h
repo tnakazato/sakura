@@ -1638,170 +1638,33 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 
 /**
  * @~japanese
- * @brief 最小二乗フィットを解くための連立方程式の係数値（左辺側の行列成分）を計算する。
+ * @brief 最小二乗フィットを解くための連立方程式の係数値を計算する。
  * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、各々が同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
+ * ( @a num_data ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_data ) を、各々が同じく ( @a num_data ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の左辺の行列成分を計算する。
- * @par
- * @param[in] num_mask 配列 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
- * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
- * @n must-be-aligned
- * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_mask * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_mask )でなければならない。
- * @n must-be-aligned
- * @param[out] out 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
- * @n must-be-aligned
- * @return 終了ステータス。
- * @~english
- * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
- * @details
- * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
- * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
- * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
- * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
- * the coefficients to be solved, these values are connected via the following
- * simultaneous equations known as normal equation:
- *
- * @image html GetCoefficientsForLeastSquareFitting.png
- *
- * Note that the summation means all the data points except masked ones
- * are to be added.
- * This function computes the elements in the matrix at the left side of the
- * above simultaneous equations.
- * @par
- * @param[in] num_mask the number of elements in the arrays @a data
- * and @a mask, and also the number of elements in each model data
- * (i.e., discrete values of basis function) consisting the total model.
- * @param[in] mask input mask data with length of @a num_mask .
- * @n must-be-aligned
- * @param[in] num_model_bases number of basis functions of @a model.
- * @param[in] model a 1D array containing values of all its basis functions
- * concatenated. loop for basis index must be inside of that for data index,
- * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_mask * @a (n-1) + @a (m-1) ]. its length must be equal
- * to ( @a num_model_bases * @a num_mask ).
- * @n must-be-aligned
- * @param[out] out a 1D array containing the values of a matrix
- * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
- * loop for columns comes inside that for rows, i.e., the value at the
- * @a m -th row and @a n -th column is stored at @a out [ @a
- * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
- * symmetric.
- * @n must-be-aligned
- * @return status code.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(
-		size_t num_mask, bool const mask[/*num_mask*/], size_t num_model_bases,
-		double const model[/*num_model_bases*num_mask*/],
-		double out[/*num_model_bases*num_model_bases*/])
-				LIBSAKURA_WARN_UNUSED_RESULT;
-
-/**
- * @~japanese
- * @brief 最小二乗フィットを解くための連立方程式の係数値（左辺側の行列成分）を計算する。
- * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、各々が同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
- *
- * @image html GetCoefficientsForLeastSquareFitting.png
- *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の左辺の行列成分を計算するという意味ではGetMatrixCoefficientsForLeastSquareFitting()と同じだが、先にGetMatrixCoefficientsForLeastSquareFitting()によって係数値を計算した状態の後、クリッピングなどによってデータ点のうち少数のみを除外して改めて係数値を計算する場合を想定しており、高速化のため、先に計算した各成分から、除外するデータ点に対応する値を差し引く。
- * @par
- * @param[in] num_clipped 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。
- * @param[in] clipped_indices 除外したいデータ点のインデックスをこの配列の先頭から順にセットする。要素数は必ず @a num_mask でなければならない。
- * @n must-be-aligned
- * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] in 先に求めた係数値（左辺側の行列成分）をセットする。要素数は必ず( @a num_model_bases * @a num_model_bases )でなければならない。
- * @n must-be-aligned
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_mask * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_mask )でなければならない。
- * @n must-be-aligned
- * @param[out] out 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a out [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
- * @n must-be-aligned
- * @return 終了ステータス。
- * @~english
- * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
- * @details
- * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
- * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
- * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
- * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
- * the coefficients to be solved, these values are connected via the following
- * simultaneous equations known as normal equation:
- *
- * @image html GetCoefficientsForLeastSquareFitting.png
- *
- * Note that the summation means all the data points except masked ones
- * are to be added.
- * This function updates the elements in the matrix at the left side of the
- * above simultaneous equations : for each component, values corresponding to
- * the data points which have been used previously but not this time will be
- * subtracted from the component values previously calculated.
- * @par
- * @param[in] num_clipped the number of data points to be excluded this time.
- * @param[in] clipped_indices an array containing indices of data points
- * to be excluded this time. the indices must be stored in the first
- * @a num_clipped elements. anyway, its length must be @a num_mask .
- * @n must-be-aligned
- * @param[in] num_model_bases number of basis functions of @a model.
- * @param[in] in set a 1D array containing the matrix elements previously
- * calculated.
- * @n must-be-aligned
- * @param[in] model a 1D array containing values of all its basis functions
- * concatenated. loop for basis index must be inside of that for data index,
- * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_mask * @a (n-1) + @a (m-1) ]. its length must be equal
- * to ( @a num_model_bases * @a num_mask ).
- * @n must-be-aligned
- * @param[out] out a 1D array containing the values of a matrix
- * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
- * loop for columns comes inside that for rows, i.e., the value at the
- * @a m -th row and @a n -th column is stored at @a out [ @a
- * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
- * symmetric.
- * @n must-be-aligned
- * @return status code.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateMatrixCoefficientsForLeastSquareFitting)(
-		size_t num_clipped, size_t const clipped_indices[/*num_mask*/],
-		size_t num_model_bases,
-		double const in[/*num_model_bases*num_model_bases*/],
-		double const model[/*num_model_bases*num_mask*/],
-		double out[/*num_model_bases*num_model_bases*/])
-				LIBSAKURA_WARN_UNUSED_RESULT;
-
-/**
- * @~japanese
- * @brief 最小二乗フィットを解くための連立方程式の係数値（右辺側のベクトル成分）を計算する。
- * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、各々が同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
- *
- * @image html GetCoefficientsForLeastSquareFitting.png
- *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の右辺のベクトル成分を計算する。
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の左辺の行列成分と右辺のベクトル成分を計算する。
  * @par
  * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
- * @param[out] out 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
+ * @param[out] lsq_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
+ * @n must-be-aligned
+ * @param[out] lsq_vector 求める連立方程式の右辺側のベクトル成分を格納する配列。配列の長さは @a num_model_bases となる。
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
- * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
+ * Suppose fitting ( @a num_data ) discrete data points yi with a linear
  * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
- * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
+ * also given as ( @a num_data ) discrete points. Assuming the best-fit model
  * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
  * the coefficients to be solved, these values are connected via the following
  * simultaneous equations known as normal equation:
@@ -1810,61 +1673,71 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  *
  * Note that the summation means all the data points except masked ones
  * are to be added.
- * This function computes the components in the vector at the right side
- * of the above simultaneous equations.
+ * This function computes the coefficients of the above simultaneous equations, i.e.,
+ * the elements of the matrix at the left side and of the vector at the right side.
  * @par
  * @param[in] num_data the number of elements in the arrays @a data
  * and @a mask, and also the number of elements in each model data
- * (i.e., discrete values of basis function) consisting the total model.
+ * (i.e., discrete values of basis function) consisting the entire model.
  * @param[in] data input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask input mask data with length of @a num_data .
+ * @param[in] mask input mask data with length of @a num_mask .
  * @n must-be-aligned
- * @param[in] num_model_bases number of basis functions of @a model.
- * @param[in] model a 1D array containing values of all its basis functions
+ * @param[in] num_model_bases number of model basis functions.
+ * @param[in] basis_data a 1D array containing values of all basis functions
  * concatenated. loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be equal
- * to ( @a num_model_bases * @a num_data ).
+ * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be
+ * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
- * @param[out] out the right side value of the simultaneous
- * equations for least-square fitting. its length should be equal to
- * @a num_model_bases.
+ * @param[out] lsq_matrix a 1D array containing the values of a matrix
+ * at the left side of simultaneous equations for least-square fitting.
+ * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
+ * loop for columns comes inside that for rows, i.e., the value at the
+ * @a m -th row and @a n -th column is stored at @a out [ @a
+ * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
+ * symmetric.
+ * @n must-be-aligned
+ * @param[out] lsq_vector the values of a vector at the right side of
+ * simultaneous equations for least-square fitting. its length should be
+ * equal to @a num_model_bases.
  * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(
-		size_t num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/], size_t num_model_bases,
-		double const model[/*num_model_bases*num_data*/],
-		double out[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(
+		size_t const num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t const num_model_bases,
+		double const basis_data[/*num_model_bases*num_data*/],
+		double lsq_matrix[/*num_model_bases*num_model_bases*/],
+		double lsq_vector[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
- * @brief 最小二乗フィットを解くための連立方程式の係数値（右辺側のベクトル成分）を計算する。
+ * @brief 最小二乗フィットを解くための連立方程式の係数値を更新する。
  * @details
- * ( @a num_mask ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_mask ) を、各々が同じく ( @a num_mask ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
+ * ( @a num_data ) 個の離散的な点で与えられたデータ yi ( 1 <= i <= @a num_data ) を、各々が同じく ( @a num_data ) 個の離散的な点で与えられる ( @a num_model_bases ) 個の基底関数 ai, bi, ..., ni の線型結合 (A * ai + B * bi + ... + N * ni) で最小二乗フィットし、基底関数の係数値 A, B, C, ... を求めることを考える。この時、これらの数の間には以下のような連立方程式(正規方程式)が成り立つ。
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の右辺のベクトル成分を計算するという意味ではGetVectorCoefficientsForLeastSquareFitting()と同じだが、先にGetVectorCoefficientsForLeastSquareFitting()によって係数値を計算した状態の後、クリッピングなどによってデータ点のうち少数のみを除外して改めて係数値を計算する場合を想定しており、高速化のため、先に計算した各成分から、除外するデータ点に対応する値を差し引く。
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、先にGetLeastSquareFittingCoefficients()によって求められた、上の連立方程式の係数値を更新するために用いる。即ち、データ点のうち幾つかを除外して連立方程式を計算し直す際に、先に計算した各成分から除外するデータ点に対応する値を差し引く。除外するデータ数が少ない（前回の計算に用いられたデータ数の半分未満）場合は、一から計算し直すよりも高速である。
  * @par
+ * @param[in] num_data 配列 @a data 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] num_clipped 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。
- * @param[in] clipped_indices 除外したいデータ点のインデックスをこの配列の先頭から順にセットする。要素数は必ず @a num_mask でなければならない。
+ * @param[in] clipped_indices 除外したいデータ点のインデックス ( @a basis_data の行の添字(0始まり)) を列挙した配列。要素数は列挙するインデックスの個数に関係なく、必ず @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
- * @param[in] in 先に求めた係数値（右辺側のベクトル成分）をセットする。要素数は必ず @a num_model_bases でなければならない。
+ * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
- * @param[in] model モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a model [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
+ * @param[in,out] lsq_matrix 更新するべき連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。要素数は必ず ( @a num_model_bases * @a num_model_bases ) でなければならない。
  * @n must-be-aligned
- * @param[out] out 求める連立方程式の右辺値を格納する配列。配列の長さは @a num_model_bases となる。
+ * @param[in,out] lsq_vector 更新するべき連立方程式の右辺側のベクトル成分を格納する配列。要素数は必ず @a num_model_bases でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
- * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
+ * @brief Update coefficients of simultaneous equations used for Least-Square fitting.
  * @details
  * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
  * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
@@ -1877,41 +1750,56 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  *
  * Note that the summation means all the data points except masked ones
  * are to be added.
- * This function updates the elements in the vector at the right side of the
- * above simultaneous equations : for each component, values corresponding to
- * the data points which have been used previously but not this time will be
- * subtracted from the component values previously calculated.
+ * This function updates the coefficients of the above simultaneous equations
+ * by subtracting values corresponding to data points which have been used in
+ * the previous calculation but not this time. this is faster than newly
+ * calculating coefficients if the number of points to be excluded this time
+ * is less than half of those previously used.
  * @par
+ * @param[in] num_data the number of elements in the arrays @a data and the
+ * number of elements in each model data (i.e., discrete values of basis
+ * function) consisting the entire model.
  * @param[in] data input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_clipped the number of data points to be excluded this time.
  * @param[in] clipped_indices an array containing indices of data points
- * to be excluded this time. the indices must be stored in the first
- * @a num_clipped elements. anyway, its length must be @a num_mask .
+ * (the row index of @a basis_data ) to be excluded this time. the indices
+ * must be stored in the first @a num_clipped elements. regardless of
+ * @a num_clipped, its length must be @a num_data .
  * @n must-be-aligned
- * @param[in] num_model_bases number of basis functions of @a model.
+ * @param[in] num_model_bases number of model basis functions.
  * @param[in] in set a 1D array containing the vector components previously
  * calculated.
  * @n must-be-aligned
- * @param[in] model a 1D array containing values of all its basis functions
+ * @param[in] basis_data a 1D array containing values of all basis functions
  * concatenated. loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a model [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be equal
- * to ( @a num_model_bases * @a num_data ).
+ * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be
+ * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
- * @param[out] out the right side value of the simultaneous
- * equations for least-square fitting. its length should be equal to
- * @a num_model_bases.
+ * @param[in,out] lsq_matrix a 1D array containing the values of a matrix
+ * at the left side of simultaneous equations for least-square fitting.
+ * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
+ * loop for columns comes inside that for rows, i.e., the value at the
+ * @a m -th row and @a n -th column is stored at @a out [ @a
+ * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
+ * symmetric.
+ * @n must-be-aligned
+ * @param[in,out] lsq_vector the values of a vector at the right side of
+ * simultaneous equations for least-square fitting. its length should be
+ * equal to @a num_model_bases.
  * @n must-be-aligned
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateVectorCoefficientsForLeastSquareFitting)(
-		float const data[/*num_data*/], size_t num_clipped,
-		size_t const clipped_indices[/*num_data*/], size_t num_model_bases,
-		double const in[/*num_model_bases*/],
-		double const model[/*num_model_bases*num_data*/],
-		double out[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
+		size_t const num_data, float const data[/*num_data*/],
+		size_t const num_clipped, size_t const clipped_indices[/*num_data*/],
+		size_t const num_model_bases,
+		double const basis_data[/*num_model_bases*num_data*/],
+		double lsq_matrix[/*num_model_bases*num_model_bases*/],
+		double lsq_vector[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -1969,20 +1857,20 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 typedef enum {
 	/**
 	 * @~japanese
- 	 * @brief 成功または正常
- 	 * @~english
- 	 * @brief OK
- 	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
+	 * @brief 成功または正常
+	 * @~english
+	 * @brief OK
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0, /**
 	 * @~japanese
 	 * @brief 失敗または異常
 	 * @~english
 	 * @brief NG
 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNG) = 1, /**
- 	 * @~japanese
- 	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
- 	 * @~english
- 	 * @brief not enough data for baseline fitting
- 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2
+	 * @~japanese
+	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
+	 * @~english
+	 * @brief not enough data for baseline fitting
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2
 }LIBSAKURA_SYMBOL(BaselineStatus);
 
 /**

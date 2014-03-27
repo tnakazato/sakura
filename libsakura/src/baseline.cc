@@ -179,7 +179,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                                                           const zero = _mm256_set1_pd(0.);
+	__m256d                                                               const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -202,76 +202,6 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 			out_double += coeff[j] * basis[num_bases * i + j];
 		}
 		out[i] = out_double;
-	}
-}
-
-inline void GetLeastSquareFittingCoefficients(size_t num_data,
-		float const *data_arg, bool const *mask_arg,
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double *lsq_matrix_arg, double *lsq_vector_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto basis = AssumeAligned(context->basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-
-	size_t num_bases = context->num_bases;
-
-	LIBSAKURA_SYMBOL(Status) get_matrix_status =
-	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(num_data, mask,
-			num_bases, basis, lsq_matrix);
-	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"failed in GetMatrixCoefficientsForLeastSquareFitting.");
-	}
-
-	LIBSAKURA_SYMBOL(Status) get_vector_status =
-	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(num_data, data,
-			mask, num_bases, basis, lsq_vector);
-	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"failed in GetVectorCoefficientsForLeastSquareFitting.");
-	}
-}
-
-inline void UpdateLeastSquareFittingCoefficients(size_t num_data,
-		float const *data_arg, size_t num_clipped,
-		size_t const *clipped_indices_arg,
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double *lsq_matrix_arg, double *lsq_vector_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	auto data = AssumeAligned(data_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto basis = AssumeAligned(context->basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-
-	size_t num_bases = context->num_bases;
-
-	LIBSAKURA_SYMBOL(Status) get_matrix_status =
-	LIBSAKURA_SYMBOL(UpdateMatrixCoefficientsForLeastSquareFitting)(num_clipped,
-			clipped_indices, num_bases, lsq_matrix, basis, lsq_matrix);
-	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"failed in UpdateMatrixCoefficientsForLeastSquareFitting.");
-	}
-
-	LIBSAKURA_SYMBOL(Status) get_vector_status =
-	LIBSAKURA_SYMBOL(UpdateVectorCoefficientsForLeastSquareFitting)(data,
-			num_clipped, clipped_indices, num_bases, lsq_vector, basis,
-			lsq_vector);
-	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"failed in UpdateVectorCoefficientsForLeastSquareFitting.");
 	}
 }
 
@@ -303,8 +233,13 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	GetLeastSquareFittingCoefficients(num_data, data, mask, context, lsq_matrix,
-			lsq_vector);
+	LIBSAKURA_SYMBOL(Status) coeff_status =
+	LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(num_data, data, mask,
+			context->num_bases, context->basis_data, lsq_matrix, lsq_vector);
+	if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error(
+				"failed in GetLeastSquareFittingCoefficients.");
+	}
 	LIBSAKURA_SYMBOL(Status) solve_status =
 	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(context->num_bases,
 			lsq_matrix, lsq_vector, coeff);
@@ -433,12 +368,27 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			if (num_unmasked_data <= num_clipped) {
-				GetLeastSquareFittingCoefficients(num_data, data, final_mask,
-						baseline_context, lsq_matrix, lsq_vector);
+				LIBSAKURA_SYMBOL(Status) coeff_status =
+						LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(
+								num_data, data, final_mask,
+								baseline_context->num_bases,
+								baseline_context->basis_data, lsq_matrix,
+								lsq_vector);
+				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+					throw std::runtime_error(
+							"failed in GetLeastSquareFittingCoefficients.");
+				}
 			} else {
-				UpdateLeastSquareFittingCoefficients(num_data, data,
-						num_clipped, clipped_indices, baseline_context,
-						lsq_matrix, lsq_vector);
+				LIBSAKURA_SYMBOL(Status) coeff_status =
+						LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
+								num_data, data, num_clipped, clipped_indices,
+								baseline_context->num_bases,
+								baseline_context->basis_data, lsq_matrix,
+								lsq_vector);
+				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+					throw std::runtime_error(
+							"failed in UpdateLeastSquareFittingCoefficients.");
+				}
 			}
 
 			LIBSAKURA_SYMBOL(Status) solve_status =
