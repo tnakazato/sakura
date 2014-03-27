@@ -67,11 +67,13 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 
 inline void SetBasisDataCubicSpline(
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
-	//
+	// TODO implement here.
+	assert(false);
 }
 
 inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
-	//
+	// TODO implement here.
+	assert(false);
 }
 
 inline void SetBasisData(LIBSAKURA_SYMBOL(BaselineContext) *context) {
