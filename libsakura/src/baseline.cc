@@ -177,7 +177,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                                                  const zero = _mm256_set1_pd(0.);
+	__m256d                                                         const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -203,228 +203,88 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 	}
 }
 
-inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
-bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
-		float *out_arg) {
+inline void CreateLeastSquareFittingCoefficients(size_t num_data,
+		float const *data_arg, bool const *mask_arg,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		double *lsq_matrix_arg, double *lsq_vector_arg) {
 	if (num_data != context->num_basis_data) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: num_data and the model data in baseline context does not conform.");
+				"num_data and the model data in baseline context does not conform.");
 	}
 	if (num_data < context->num_bases) {
-		throw std::runtime_error(
-				"DoGetBestFitBaseline: Not enough data for baseline fitting.");
+		throw std::runtime_error("not enough data for baseline fitting.");
 	}
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto basis = AssumeAligned(context->basis_data);
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto out = AssumeAligned(out_arg);
 
 	size_t num_bases = context->num_bases;
 
-	LIBSAKURA_SYMBOL(Status) get_matrix_status;
-	//---0from
-	/*
-	 size_t num_repeat = 1;
-	 double timemtx0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//---0to
-	get_matrix_status =
+	LIBSAKURA_SYMBOL(Status) get_matrix_status =
 	LIBSAKURA_SYMBOL(GetMatrixCoefficientsForLeastSquareFitting)(num_data, mask,
 			num_bases, basis, lsq_matrix);
-	//---1from
-	/*
-	 }
-	 double timemtx1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 */
-	//---1to
 	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in GetMatrixCoefficientsForLeastSquareFitting.");
+				"failed in GetMatrixCoefficientsForLeastSquareFitting.");
 	}
 
-	LIBSAKURA_SYMBOL(Status) get_vector_status;
-	//---2from
-	/*
-	 double timevec0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//---2to
-	get_vector_status =
+	LIBSAKURA_SYMBOL(Status) get_vector_status =
 	LIBSAKURA_SYMBOL(GetVectorCoefficientsForLeastSquareFitting)(num_data, data,
 			mask, num_bases, basis, lsq_vector);
-	//---3from
-	/*
-	 }
-	 double timevec1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 */
-	//---3to
 	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in GetVectorCoefficientsForLeastSquareFitting.");
+				"failed in GetVectorCoefficientsForLeastSquareFitting.");
 	}
-
-	LIBSAKURA_SYMBOL(Status) solve_status;
-	//---4from
-	/*
-	 double timesol0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//---4to
-	solve_status =
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
-			lsq_vector, coeff);
-	//---5from
-	/*
-	 }
-	 double timesol1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 */
-	//---5to
-	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in SolveSimultaneousEquationsByLU.");
-	}
-
-	//---6from
-	/*
-	 double timemmd0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//----6to
-	AddMulMatrix(num_bases, coeff, num_data, basis, out);
-	//----7from
-	/*
-	 }
-	 double timemmd1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 std::cout << "mat:vec:sol = " << (timemtx1 - timemtx0) << ", "
-	 << (timevec1 - timevec0) << ", " << (timesol1 - timesol0) << ", "
-	 << (timemmd1 - timemmd0) << ", " << std::endl;
-	 */
-	//---7to
 }
 
-inline void DoGetBestFitBaseline(size_t num_data, float const *data_arg,
-		size_t num_clipped, size_t const *clipped_indices_arg,
+inline void UpdateLeastSquareFittingCoefficients(size_t num_data,
+		float const *data_arg, size_t num_clipped,
+		size_t const *clipped_indices_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double *lsq_matrix_arg, double *lsq_vector_arg, double *coeff_arg,
-		float *out_arg) {
+		double *lsq_matrix_arg, double *lsq_vector_arg) {
 	if (num_data != context->num_basis_data) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: num_data and the model data in baseline context does not conform.");
+				"num_data and the model data in baseline context does not conform.");
 	}
 	if (num_data < context->num_bases) {
-		throw std::runtime_error(
-				"DoGetBestFitBaseline: Not enough data for baseline fitting.");
+		throw std::runtime_error("not enough data for baseline fitting.");
 	}
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto basis = AssumeAligned(context->basis_data);
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto out = AssumeAligned(out_arg);
 
 	size_t num_bases = context->num_bases;
 
-	LIBSAKURA_SYMBOL(Status) get_matrix_status;
-	//---0from
-	/*
-	 size_t num_repeat = 1;
-	 double timemtx0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//---0to
-	get_matrix_status =
+	LIBSAKURA_SYMBOL(Status) get_matrix_status =
 	LIBSAKURA_SYMBOL(UpdateMatrixCoefficientsForLeastSquareFitting)(num_clipped,
 			clipped_indices, num_bases, lsq_matrix, basis, lsq_matrix);
-	//---1from
-	/*
-	 }
-	 double timemtx1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 */
-	//---1to
 	if (get_matrix_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in UpdateMatrixCoefficientsForLeastSquareFitting.");
+				"failed in UpdateMatrixCoefficientsForLeastSquareFitting.");
 	}
 
-	LIBSAKURA_SYMBOL(Status) get_vector_status;
-	//---2from
-	/*
-	 double timevec0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//---2to
-	get_vector_status =
+	LIBSAKURA_SYMBOL(Status) get_vector_status =
 	LIBSAKURA_SYMBOL(UpdateVectorCoefficientsForLeastSquareFitting)(data,
 			num_clipped, clipped_indices, num_bases, lsq_vector, basis,
 			lsq_vector);
-	//---3from
-	/*
-	 }
-	 double timevec1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 */
-	//---3to
 	if (get_vector_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in UpdateVectorCoefficientsForLeastSquareFitting.");
+				"failed in UpdateVectorCoefficientsForLeastSquareFitting.");
 	}
-
-	LIBSAKURA_SYMBOL(Status) solve_status;
-	//---4from
-	/*
-	 double timesol0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//---4to
-	solve_status =
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(num_bases, lsq_matrix,
-			lsq_vector, coeff);
-	//---5from
-	/*
-	 }
-	 double timesol1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 */
-	//---5to
-	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"DoGetBestFitBaseline: failed in SolveSimultaneousEquationsByLU.");
-	}
-
-	//---6from
-	/*
-	 double timemmd0 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 for (size_t j = 0; j < num_repeat; ++j) {
-	 */
-	//----6to
-	AddMulMatrix(num_bases, coeff, num_data, basis, out);
-	//----7from
-	/*
-	 }
-	 double timemmd1 = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	 std::cout << "mat:vec:sol = " << (timemtx1 - timemtx0) << ", "
-	 << (timevec1 - timevec0) << ", " << (timesol1 - timesol0) << ", "
-	 << (timemmd1 - timemmd0) << ", " << std::endl;
-	 */
-	//---7to
 }
 
 inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
@@ -432,9 +292,11 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float *out_arg, LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
+	auto basis = AssumeAligned(context->basis_data);
 	auto out = AssumeAligned(out_arg);
 
 	size_t num_lsq_matrix = context->num_bases * context->num_bases;
@@ -453,8 +315,16 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	DoGetBestFitBaseline(num_data, data, mask, context, lsq_matrix, lsq_vector,
-			coeff, out);
+	CreateLeastSquareFittingCoefficients(num_data, data, mask, context,
+			lsq_matrix, lsq_vector);
+	LIBSAKURA_SYMBOL(Status) solve_status =
+	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(context->num_bases,
+			lsq_matrix, lsq_vector, coeff);
+	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error("failed in SolveSimultaneousEquationsByLU.");
+	}
+
+	AddMulMatrix(context->num_bases, coeff, num_data, basis, out);
 }
 
 inline size_t ClipData(size_t num_data, float const *data_arg,
@@ -488,7 +358,7 @@ bool *out_mask_arg, size_t *clipped_indices_arg) {
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
 	std::stringstream ss;
-	ss << "SubtractBaseline: Available data became too few in the ";
+	ss << "SubtractBaseline: available data became too few in the ";
 	ss << idx_erroneous_fitting;
 	ss << " ";
 
@@ -517,10 +387,12 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(baseline_context->basis_data));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
+	auto basis = AssumeAligned(baseline_context->basis_data);
 
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
@@ -554,13 +426,9 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	float clip_threshold_sigma = fabs((double)clip_threshold_sigma_arg);
-	uint16_t num_fitting_max = num_fitting_max_arg;
-	if (num_fitting_max < 1) {
-		num_fitting_max = 1;
-	}
-
-	size_t num_unmasked_data = 0;
+	float clip_threshold_sigma = fabs((double) clip_threshold_sigma_arg);
+	uint16_t num_fitting_max = std::max((uint16_t)1, num_fitting_max_arg);
+	size_t num_unmasked_data = num_data;
 	size_t num_clipped = num_data;
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -571,22 +439,32 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 	try {
 		for (uint16_t i = 0; i < num_fitting_max; ++i) {
-			if ((i > 0) && (num_unmasked_data < baseline_context->num_bases)) {
+			if (num_unmasked_data < baseline_context->num_bases) {
 				*baseline_status =
 				LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
 				throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
 			}
 
-			if (num_unmasked_data < num_clipped) {
-				DoGetBestFitBaseline(num_data, data, final_mask,
-						baseline_context, lsq_matrix, lsq_vector, coeff,
-						best_fit_model);
+			if (num_unmasked_data <= num_clipped) {
+				CreateLeastSquareFittingCoefficients(num_data, data, final_mask,
+						baseline_context, lsq_matrix, lsq_vector);
 			} else {
-				DoGetBestFitBaseline(num_data, data, num_clipped,
-						clipped_indices, baseline_context, lsq_matrix,
-						lsq_vector, coeff, best_fit_model);
+				UpdateLeastSquareFittingCoefficients(num_data, data,
+						num_clipped, clipped_indices, baseline_context,
+						lsq_matrix, lsq_vector);
 			}
 
+			LIBSAKURA_SYMBOL(Status) solve_status =
+					LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+							baseline_context->num_bases, lsq_matrix, lsq_vector,
+							coeff);
+			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+				throw std::runtime_error(
+						"failed in SolveSimultaneousEquationsByLU.");
+			}
+
+			AddMulMatrix(baseline_context->num_bases, coeff, num_data, basis,
+					best_fit_model);
 			OperateFloatSubtraction(num_data, data, best_fit_model,
 					residual_data);
 
@@ -595,8 +473,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
 					final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error(
-						"SubtractBaseline: ComputeStatistics failed.");
+				throw std::runtime_error("failed in ComputeStatistics.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;

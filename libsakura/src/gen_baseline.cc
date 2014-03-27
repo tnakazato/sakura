@@ -85,6 +85,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
@@ -132,6 +134,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto baselineop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
@@ -176,6 +180,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	auto baselineop =
