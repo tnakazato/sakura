@@ -79,6 +79,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data != context->num_basis_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data < context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out == nullptr)
@@ -121,6 +123,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data != context->num_basis_data)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data < context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);

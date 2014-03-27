@@ -179,7 +179,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                                                          const zero = _mm256_set1_pd(0.);
+	__m256d                                                           const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -209,13 +209,6 @@ inline void GetLeastSquareFittingCoefficients(size_t num_data,
 		float const *data_arg, bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg) {
-	if (num_data != context->num_basis_data) {
-		throw std::runtime_error(
-				"num_data and the model data in baseline context does not conform.");
-	}
-	if (num_data < context->num_bases) {
-		throw std::runtime_error("not enough data for baseline fitting.");
-	}
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
@@ -251,13 +244,6 @@ inline void UpdateLeastSquareFittingCoefficients(size_t num_data,
 		size_t const *clipped_indices_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg) {
-	if (num_data != context->num_basis_data) {
-		throw std::runtime_error(
-				"num_data and the model data in baseline context does not conform.");
-	}
-	if (num_data < context->num_bases) {
-		throw std::runtime_error("not enough data for baseline fitting.");
-	}
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
@@ -519,13 +505,8 @@ bool const *mask_arg, uint16_t order, float clip_threshold_sigma,
 		DestroyBaselineContext(context);
 	});
 
-	try {
-		SubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
-				num_fitting_max, get_residual, final_mask, out,
-				baseline_status);
-	} catch (...) {
-		throw;
-	}
+	SubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
+			num_fitting_max, get_residual, final_mask, out, baseline_status);
 }
 
 } /* anonymous namespace */
