@@ -177,7 +177,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                                                         const zero = _mm256_set1_pd(0.);
+	__m256d                                                          const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -203,7 +203,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 	}
 }
 
-inline void CreateLeastSquareFittingCoefficients(size_t num_data,
+inline void GetLeastSquareFittingCoefficients(size_t num_data,
 		float const *data_arg, bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		double *lsq_matrix_arg, double *lsq_vector_arg) {
@@ -315,8 +315,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	CreateLeastSquareFittingCoefficients(num_data, data, mask, context,
-			lsq_matrix, lsq_vector);
+	GetLeastSquareFittingCoefficients(num_data, data, mask, context, lsq_matrix,
+			lsq_vector);
 	LIBSAKURA_SYMBOL(Status) solve_status =
 	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(context->num_bases,
 			lsq_matrix, lsq_vector, coeff);
@@ -380,7 +380,7 @@ inline std::string GetNotEnoughDataMessage(
 
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
-		float clip_threshold_sigma_arg, uint16_t num_fitting_max_arg,
+		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -426,8 +426,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
-	float clip_threshold_sigma = fabs((double) clip_threshold_sigma_arg);
-	uint16_t num_fitting_max = std::max((uint16_t)1, num_fitting_max_arg);
+	uint16_t num_fitting_max = std::max((uint16_t) 1, num_fitting_max_arg);
 	size_t num_unmasked_data = num_data;
 	size_t num_clipped = num_data;
 
@@ -446,7 +445,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			if (num_unmasked_data <= num_clipped) {
-				CreateLeastSquareFittingCoefficients(num_data, data, final_mask,
+				GetLeastSquareFittingCoefficients(num_data, data, final_mask,
 						baseline_context, lsq_matrix, lsq_vector);
 			} else {
 				UpdateLeastSquareFittingCoefficients(num_data, data,
@@ -455,9 +454,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			LIBSAKURA_SYMBOL(Status) solve_status =
-					LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
-							baseline_context->num_bases, lsq_matrix, lsq_vector,
-							coeff);
+			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+					baseline_context->num_bases, lsq_matrix, lsq_vector, coeff);
 			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in SolveSimultaneousEquationsByLU.");

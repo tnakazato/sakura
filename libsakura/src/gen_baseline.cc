@@ -124,7 +124,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data < context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (clip_threshold_sigma == 0.0f)
+	if (clip_threshold_sigma <= 0.0f)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (final_mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -171,7 +171,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (clip_threshold_sigma == 0.0f)
+	if (clip_threshold_sigma <= 0.0f)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (final_mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);

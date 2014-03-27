@@ -775,8 +775,8 @@ TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaseline with zero value of
  * clip_threshold_sigma.
- * in case zero is given for clipping threshold, SubtractBaseline()
- * should fail and return Status_kInvalidArgument.
+ * SubtractBaseline() should fail and return Status_kInvalidArgument
+ * because it accepts only positive value for clipping threshold.
  * RESULT:
  * out = []
  */
@@ -838,9 +838,8 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaseline with negative value
  * of clip_threshold_sigma.
- * even if negative value is given for clipping threshold, there
- * should be no problem because the absolute value will be internally
- * used. hence the resulting data should be zero throughout.
+ * SubtractBaseline() should fail and return Status_kInvalidArgument
+ * because it accepts only positive value for clipping threshold.
  * RESULT:
  * out = []
  */
@@ -863,10 +862,6 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -889,16 +884,11 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
 			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
 			out, &subbl_blstatus);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-
-	for (size_t i = 0; i < num_model; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
-	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
 		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
 	}
 
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
@@ -1329,9 +1319,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaselinePolynomial with zero value
  * of clip_threshold_sigma.
- * in case zero is given for clipping threshold,
  * SubtractBaselinePolynomial() should fail and return
- * Status_kInvalidArgument.
+ * Status_kInvalidArgument because it accepts only positive value
+ * for clipping threshold.
  * RESULT:
  * out = []
  */
@@ -1380,9 +1370,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaselinePolynomial with negative value
  * of clip_threshold_sigma.
- * even if negative value is given for clipping threshold, there
- * should be no problem because the absolute value will be internally
- * used. hence the resulting data should be zero throughout.
+ * SubtractBaselinePolynomial() should fail and return
+ * Status_kInvalidArgument because it accepts only positive value
+ * for clipping threshold.
  * RESULT:
  * out = []
  */
@@ -1403,10 +1393,6 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 	}
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1422,15 +1408,11 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 	LIBSAKURA_SYMBOL(Status) status =
 	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
 			order, -3.0, 5, true, final_mask, out, &baseline_status);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 
-	for (size_t i = 0; i < num_model; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
-	}
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
 		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
 	}
 }
 
