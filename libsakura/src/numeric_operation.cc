@@ -235,9 +235,7 @@ inline void GetVectorCoefficientsForLeastSquareFittingUsingTemplate(
 		if (mask[i]) {
 			auto model_i = &model[i * NUM_MODEL_BASES];
 			auto data_i = data[i];
-			for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
-				out[j] += model_i[j] * data_i;
-			}
+			AddMulVectorTemplate<NUM_MODEL_BASES>(data_i, model_i, out);
 		}
 	}
 }
@@ -262,9 +260,7 @@ inline void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 		if (mask[i]) {
 			auto model_i = &model[i * num_model_bases];
 			auto data_i = data[i];
-			for (size_t j = 0; j < num_model_bases; ++j) {
-				out[j] += model_i[j] * data_i;
-			}
+			AddMulVector(num_model_bases, data_i, model_i, out);
 		}
 	}
 }
@@ -292,9 +288,7 @@ inline void UpdateVectorCoefficientsForLeastSquareFittingUsingTemplate(
 	for (size_t i = 0; i < num_clipped; ++i) {
 		auto model_i = &model[clipped_indices[i] * NUM_MODEL_BASES];
 		auto data_i = data[clipped_indices[i]];
-		for (size_t j = 0; j < NUM_MODEL_BASES; ++j) {
-			out[j] -= model_i[j] * data_i;
-		}
+		SubMulVectorTemplate<NUM_MODEL_BASES>(data_i, model_i, out);
 	}
 }
 
@@ -320,9 +314,7 @@ inline void UpdateVectorCoefficientsForLeastSquareFitting(float const *data_arg,
 	for (size_t i = 0; i < num_clipped; ++i) {
 		auto model_i = &model[clipped_indices[i] * num_model_bases];
 		auto data_i = data[clipped_indices[i]];
-		for (size_t j = 0; j < num_model_bases; ++j) {
-			out[j] -= model_i[j] * data_i;
-		}
+		SubMulVector(num_model_bases, data_i, model_i, out);
 	}
 }
 
