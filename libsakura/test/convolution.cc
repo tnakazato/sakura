@@ -201,6 +201,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}
+		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
@@ -234,8 +235,9 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
 		//verbose = true;
 		if (verbose) {
-			PrintArray("without FFT\n", num_data, output_data);
+			PrintArray("without FFT------> \n", num_data, output_data);
 		}
+		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
@@ -271,6 +273,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		if (verbose) {
 			PrintArray("without FFT \n", num_data, output_data);
 		}
+		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
@@ -487,7 +490,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}
-		//verbose = false;
+		verbose = false;
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
