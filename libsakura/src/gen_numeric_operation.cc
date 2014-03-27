@@ -52,17 +52,22 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
-		size_t const num_data, float const data[], size_t const num_clipped,
-		size_t const clipped_indices[], size_t const num_model_bases,
-		double const basis_data[], double lsq_matrix[], double lsq_vector[]) {
+		size_t const num_data, float const data[],
+		size_t const num_exclude_indices, size_t const exclude_indices[],
+		size_t const num_model_bases, double const basis_data[],
+		double lsq_matrix[], double lsq_vector[]) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (clipped_indices == nullptr)
+	if (exclude_indices == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(clipped_indices)))
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(exclude_indices)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	for (size_t i = 0; i < num_exclude_indices; ++i) {
+		if (exclude_indices[i] >= num_data)
+			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 	if (basis_data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
@@ -79,9 +84,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 	auto numop =
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetNumericOperationImpl();
 	try {
-		numop->UpdateLeastSquareFittingCoefficients(num_data, data, num_clipped,
-				clipped_indices, num_model_bases, basis_data, lsq_matrix,
-				lsq_vector);
+		numop->UpdateLeastSquareFittingCoefficients(num_data, data,
+				num_exclude_indices, exclude_indices, num_model_bases,
+				basis_data, lsq_matrix, lsq_vector);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);

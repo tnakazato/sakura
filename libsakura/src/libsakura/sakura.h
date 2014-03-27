@@ -1725,8 +1725,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data 配列 @a data 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[in] num_clipped 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。
- * @param[in] clipped_indices 除外したいデータ点のインデックス ( @a basis_data の行の添字(0始まり)) を列挙した配列。要素数は列挙するインデックスの個数に関係なく、必ず @a num_data でなければならない。
+ * @param[in] num_exclude_indices 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。
+ * @param[in] exclude_indices 除外したいデータ点のインデックス ( @a basis_data の行の添字(0始まり)) を列挙した配列。要素数は @a num_exclude_indices 。要素数が @a num_exclude_indices より多くてもエラーにはならないが、 @a num_exclude_indices 番目、及びそれ以降の要素は無視される。
  * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。
  * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
@@ -1761,11 +1761,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * function) consisting the entire model.
  * @param[in] data input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_clipped the number of data points to be excluded this time.
- * @param[in] clipped_indices an array containing indices of data points
+ * @param[in] num_exclude_indices the number of data points to be excluded this time.
+ * @param[in] exclude_indices an array containing indices of data points
  * (the row index of @a basis_data ) to be excluded this time. the indices
- * must be stored in the first @a num_clipped elements. regardless of
- * @a num_clipped, its length must be @a num_data .
+ * must be stored in the first @a num_exclude_indices elements. its length
+ * must be at least @a num_exclude_indices . longer size is allowed, but the
+ * elements at index equal to and greater than @a num_exclude_indices will be
+ * ignored.
  * @n must-be-aligned
  * @param[in] num_model_bases number of model basis functions.
  * @param[in] in set a 1D array containing the vector components previously
@@ -1795,7 +1797,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
 		size_t const num_data, float const data[/*num_data*/],
-		size_t const num_clipped, size_t const clipped_indices[/*num_data*/],
+		size_t const num_exclude_indices, size_t const exclude_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		double lsq_matrix[/*num_model_bases*num_model_bases*/],

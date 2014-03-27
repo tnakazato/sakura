@@ -211,8 +211,8 @@ public:
 			double lsq_matrix[/*num_model_bases*num_model_bases*/],
 			double lsq_vector[/*num_model_bases*/]) const = 0;
 	virtual void UpdateLeastSquareFittingCoefficients(size_t const num_data,
-			float const data[/*num_data*/], size_t const num_clipped,
-			size_t const clipped_indices[/*num_data*/],
+			float const data[/*num_data*/], size_t const num_exclude_indices,
+			size_t const exclude_indices[/*num_data*/],
 			size_t const num_model_bases,
 			double const basis_data[/*num_model_bases*num_data*/],
 			double lsq_matrix[/*num_model_bases*num_model_bases*/],
