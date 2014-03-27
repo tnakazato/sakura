@@ -117,11 +117,16 @@ inline void ExecuteBaseline(float clipping_threshold_sigma,
 		sakura_BaselineContext const *context, size_t num_data,
 		float const input_data[], float output_data[],
 		bool mask_after_clipping[]) {
+	sakura_BaselineStatus baseline_status;
 	sakura_Status status = sakura_SubtractBaseline(num_data, input_data, mask,
 			context, clipping_threshold_sigma, num_fitting_max, true,
-			mask_after_clipping, output_data);
+			mask_after_clipping, output_data, &baseline_status);
 	if (status != sakura_Status_kOK) {
-		throw std::runtime_error("baseline");
+		std::string mesg = "baseline";
+		if (baseline_status == sakura_BaselineStatus_kNotEnoughData) {
+			mesg += " : not enough data.";
+		}
+		throw std::runtime_error(mesg);
 	}
 }
 
