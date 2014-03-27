@@ -364,27 +364,18 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::GetMatrixCoefficientsForLeastSqua
 			size_t num_mask, bool const *mask, size_t num_model_bases,
 			double const *model, double *out);
 
-	static GetMatrixCoefficientsForLeastSquareFittingFunc const funcs[] =
-			{ GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<0>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<1>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<2>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<3>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<4>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<5>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<6>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<7>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<8>,
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<9>,
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 30),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 40),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 50),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 60),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 70),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 80),
-					RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 90),
-					GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<100> };
+	static GetMatrixCoefficientsForLeastSquareFittingFunc const funcs[] = {
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 0),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 30),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 40),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 50),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 60),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 70),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 80),
+	RepeatTen(GetMatrixCoefficientsForLeastSquareFittingUsingTemplate, 90),
+			GetMatrixCoefficientsForLeastSquareFittingUsingTemplate<100> };
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
 		funcs[num_model_bases](num_mask, mask, num_model_bases, model, out);
@@ -412,28 +403,18 @@ void ADDSUFFIX(NumericOperation, ARCH_SUFFIX)::UpdateMatrixCoefficientsForLeastS
 			size_t num_model_bases, double const *in, double const *model,
 			double *out);
 
-	static UpdateMatrixCoefficientsForLeastSquareFittingFunc const funcs[] =
-			{ UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<0>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<1>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<2>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<3>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<4>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<5>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<6>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<7>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<8>,
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<9>,
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 30),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 40),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 50),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 60),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 70),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 80),
-					RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 90),
-					UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<
-							100> };
+	static UpdateMatrixCoefficientsForLeastSquareFittingFunc const funcs[] = {
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 0),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 10),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 20),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 30),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 40),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 50),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 60),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 70),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 80),
+	RepeatTen(UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate, 90),
+			UpdateMatrixCoefficientsForLeastSquareFittingUsingTemplate<100> };
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
 		funcs[num_model_bases](num_clipped, clipped_indices, num_model_bases,
