@@ -261,10 +261,10 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
-		auto invalid_kernel_type =
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(-1);
+		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
+				LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
 		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, invalid_kernel_type,
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
 				kernel_width, fftuse, nullptr);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
