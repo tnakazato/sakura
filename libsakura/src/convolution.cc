@@ -124,11 +124,9 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 
 inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
 		size_t kernel_width, float* output_data) {
-	const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
-	float const fwhm = kernel_width / six_sigma;
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ fwhm; // sqrt(log(16)) / fwhm
-	float const height = .939437278699651333772340328410 / fwhm; // sqrt(8*log(2)/(2*M_PI)) / fwhm
+			/ kernel_width; // sqrt(log(16)) / kernel_width
+	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	float center = (num_data) / 2.f;
 	if (num_data % 2 != 0) {
 		center = (num_data - 1) / 2.f;
@@ -151,11 +149,9 @@ inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
 
 inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
 		float* output_data) {
-	const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
-	float const fwhm = kernel_width / six_sigma;
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ fwhm; // sqrt(log(16)) / fwhm
-	float const height = .939437278699651333772340328410 / fwhm; // sqrt(8*log(2)/(2*M_PI)) / fwhm
+			/ kernel_width; // sqrt(log(16)) / kernel_width
+	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	float center = (num_data) / 2.f;
 	if (num_data % 2 != 0) {
 		center = (num_data - 1) / 2.f;
@@ -340,9 +336,14 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	} else {
+		size_t threshold = kernel_width / 2;
+		if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) {
+			const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+			threshold = kernel_width * six_sigma;
+		}
 		size_t tuned_num_data;
-		if (2 * kernel_width <= num_data) {
-			tuned_num_data = 2 * kernel_width;
+		if (2 * threshold <= num_data) {
+			tuned_num_data = 2 * threshold;
 		} else {
 			tuned_num_data = 2 * num_data;
 		}
@@ -369,7 +370,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_kernel_array = real_kernel_array;
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->num_data = num_data;
-		work_context->kernel_width = kernel_width;
+		work_context->kernel_width = threshold;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	}

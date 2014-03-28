@@ -16,7 +16,7 @@
 #include "aligned_memory.h"
 
 /* the number of elements in input/output array to test */
-#define NUM_WIDTH 12
+#define NUM_WIDTH 5
 #define NUM_WIDTH_THIN 2
 #define NUM_IN 24
 #define NUM_IN_ODD 25
@@ -200,7 +200,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}
-		verbose = false;
+		//verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
@@ -251,6 +251,21 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, invalid_kernel_type,
 				kernel_width, fftuse, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+	}
+	{ // context == nullptr
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		size_t const num_data(NUM_IN);
+		size_t const kernel_width(NUM_WIDTH);
+		bool fftuse = true;
+		auto invalid_kernel_type =
+				static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(-1);
+		LIBSAKURA_SYMBOL(Status) status_Create =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, invalid_kernel_type,
+				kernel_width, fftuse, nullptr);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
