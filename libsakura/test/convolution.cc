@@ -128,7 +128,7 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // num_data > INT_MAX
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-		size_t const num_data(INT_MAX + 1);
+		size_t const num_data(size_t(INT_MAX) + 1);
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
@@ -196,11 +196,11 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}
-		//verbose = false;
+		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
@@ -232,7 +232,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray("without FFT\n", num_data, output_data);
 		}
@@ -851,7 +851,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray("without FFT\n", num_data, output_data);
 		}
@@ -902,7 +902,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		verbose = true;
+		//verbose = true;
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}
@@ -967,6 +967,12 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 	}
 }
 
+/*
+ * Test
+ * RESULT:
+ */
+//TEST_F(Convolve1DOperation , dummy) {
+//}
 /*
  * Test
  * RESULT:

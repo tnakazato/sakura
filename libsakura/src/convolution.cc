@@ -133,33 +133,22 @@ inline void Create1DGaussianKernel(size_t num_data, size_t use_fft,
 	}
 	size_t middle = (num_data) / 2;
 	size_t loop_max = middle;
-	if (use_fft) {
-		output_data[0] = height;
-		output_data[middle] = height
-				* exp(
-						-(center * reciprocal_of_denominator)
-								* (center * reciprocal_of_denominator));
-		size_t plus_one_for_odd = 0;
-		if (num_data % 2 != 0) {
-			plus_one_for_odd = 1;
-			output_data[middle + 1] = output_data[middle];
-		}
-		for (size_t j = 1; j < loop_max; ++j) {
-			float value = (j - center) * reciprocal_of_denominator;
+	output_data[0] = height;
+	output_data[middle] = height
+			* exp(
+					-(center * reciprocal_of_denominator)
+							* (center * reciprocal_of_denominator));
+	size_t plus_one_for_odd = 0;
+	if (num_data % 2 != 0) {
+		plus_one_for_odd = 1;
+		output_data[middle + 1] = output_data[middle];
+	}
+	for (size_t j = 1; j < loop_max; ++j) {
+		float value = (j - center) * reciprocal_of_denominator;
+		output_data[middle - j] = height * exp(-(value * value));
+		if (use_fft) {
 			output_data[middle + j + plus_one_for_odd] =
-					output_data[middle - j] = height * exp(-(value * value));
-		}
-	} else {
-		size_t plus_one_for_odd = 1;
-		if (num_data % 2 == 0) {
-			plus_one_for_odd = 0;
-			float value = (-center) * reciprocal_of_denominator;
-			output_data[0] = height * exp(-(value * value));
-		}
-		output_data[middle] = height;
-		for (size_t j = 1; j < loop_max; ++j) {
-			float value = (j - center) * reciprocal_of_denominator;
-			output_data[j - plus_one_for_odd] = height * exp(-(value * value));
+					output_data[middle - j];
 		}
 	}
 }
@@ -191,15 +180,21 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	if (kernel_width > num_data) {
-		kernel_width = num_data / 2;
+		kernel_width = num_data;
+	}
+	size_t plus_one_for_odd = 1;
+	if (num_data % 2 == 0) {
+		plus_one_for_odd = 0;
 	}
 	for (size_t j = 0; j < num_data; ++j) {
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0; ((j + i < num_data) && (i <= kernel_width)); ++i) {
-			left += input_data[j + i] * input_kernel[kernel_width - i];
+		for (size_t i = 0;
+				((j + i < num_data) && (i < kernel_width + plus_one_for_odd));
+				++i) {
+			left += input_data[j + i] * input_kernel[i];
 		}
 		for (size_t k = 0; k < j && (k < kernel_width); ++k) {
-			right += input_data[j - 1 - k] * input_kernel[kernel_width - k - 1];
+			right += input_data[j - 1 - k] * input_kernel[k + 1];
 		}
 		output_data[j] = left + right;
 	}
@@ -208,7 +203,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
-	assert(*context == nullptr);
+	assert(!(context == nullptr));
 	if (use_fft) {
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
@@ -297,17 +292,15 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
 			threshold = kernel_width * six_sigma;
 		}
-		size_t tuned_num_data;
-		if (2 * threshold <= num_data) {
-			tuned_num_data = 2 * threshold;
-		} else {
-			tuned_num_data = num_data;
+		size_t tuned_num_data = 2 * threshold;
+		if (2 * threshold > num_data) {
+			threshold = num_data;
+			tuned_num_data = 2 * num_data;
 		}
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * tuned_num_data / 2,
-						&real_kernel_array));
+						sizeof(float) * threshold, &real_kernel_array));
 		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
 		Create1DKernel(tuned_num_data, use_fft, kernel_type, kernel_width,
 				real_kernel_array);

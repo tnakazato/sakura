@@ -1516,14 +1516,18 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
  */
 typedef enum {
 	/**
+	 * @brief Start
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kStart), /**
 	 * @brief Gaussian
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), /**
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = LIBSAKURA_SYMBOL(Convolve1DKernelType_kStart), /**
 	 * @brief BoxCar
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar), /**
 	 * @brief Hanning
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning), /**
 	 * @brief Hamming
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming), /**
+	 * @brief End
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kEnd)
 }LIBSAKURA_SYMBOL(Convolve1DKernelType);
 /**
  * @brief Context struct for discrete convolution
