@@ -58,7 +58,6 @@ protected:
 			verbose(false) {
 	}
 	virtual void SetUp() {
-		//in1_[] = {0.000141569,0,};
 		// Initialize sakura
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 				nullptr);
@@ -78,6 +77,39 @@ protected:
 		}
 		//cout << in[num_in - 1] << endl;
 	}
+	void RunBaseTest(float input_data[], size_t num_data,
+			size_t kernel_width, bool fftuse,
+			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
+			bool align_check,
+			LIBSAKURA_SYMBOL(Status) expected_status,
+			bool verbose) {
+		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
+			input_data[i] = 0.0;
+		}
+		input_data[ELEMENTSOF(input_data) / 2] = 1.0; // one spike
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
+				kernel_width, fftuse, &context);
+		ASSERT_EQ(expected_status, status);
+		if (align_check) {
+			ASSERT_TRUE(sakura_IsAligned(context->real_array))<< "real_array is not aligned";
+			ASSERT_TRUE(sakura_IsAligned(context->real_array_kernel))<< "real_array_kernel is not aligned";
+		}
+		SIMD_ALIGN
+		float output_data[ELEMENTSOF(input_data)];
+		LIBSAKURA_SYMBOL(Status) status_Convolved =
+		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
+				output_data);
+		ASSERT_EQ(expected_status, status_Convolved);
+		if (verbose) {
+			PrintArray("\n", num_data, output_data);
+		}
+		verbose = false;
+		LIBSAKURA_SYMBOL(Status) status_Destroy =
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		ASSERT_EQ(expected_status, status_Destroy);
+	}
 
 	bool verbose;
 };
@@ -88,34 +120,16 @@ protected:
  */
 TEST_F(Convolve1DOperation , AlignmentCheck) {
 	{
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			input_data[i] = 0.0;
-		}
-		input_data[NUM_IN / 2] = 1.0; // one spike
 		size_t const kernel_width(NUM_WIDTH);
-		bool fftuse = true;
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
-				kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-
-		ASSERT_TRUE(sakura_IsAligned(context->real_array))<< "real_array is not aligned";
-		ASSERT_TRUE(sakura_IsAligned(context->real_array_kernel))<< "real_array_kernel is not aligned";
-		SIMD_ALIGN
-		float output_data[num_data];
-		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
-				output_data);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve1d);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		bool const align_check = true;
+		bool const fftuse = true;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian), align_check,
+				sakura_Status_kOK,verbose);
 	}
 }
 
@@ -127,134 +141,84 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
  */
 TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // num_data > INT_MAX
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		SIMD_ALIGN
+		float input_data[NUM_IN];
 		size_t const num_data(size_t(INT_MAX) + 1);
+		//size_t const num_data(0);
+		SIMD_ALIGN
 		size_t const kernel_width(NUM_WIDTH);
-		bool fftuse = true;
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
-				kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+		bool const align_check = false;
+		bool const fftuse = true;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+		sakura_Convolve1DKernelType_kGaussian, align_check,
+				sakura_Status_kInvalidArgument, verbose);
 	}
 	{ // num_data == 0
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 		size_t const num_data(0);
+		SIMD_ALIGN
+		float input_data[NUM_IN];
 		size_t const kernel_width(NUM_WIDTH);
-		bool fftuse = true;
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
-				kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+		bool const align_check = false;
+		bool const fftuse = true;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+		sakura_Convolve1DKernelType_kGaussian, align_check,
+				sakura_Status_kInvalidArgument, verbose);
 	}
 	{ // kernel_width == 0
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-		size_t const num_data(NUM_IN);
 		size_t const kernel_width(0);
-		bool fftuse = true;
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
-				kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+		SIMD_ALIGN
+		float input_data[NUM_IN];
+		size_t const num_data(ELEMENTSOF(input_data));
+		bool const align_check = false;
+		bool const fftuse = true;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+		sakura_Convolve1DKernelType_kGaussian, align_check,
+				sakura_Status_kInvalidArgument, verbose);
 	}
 	{ // (FFT) kernel_width > num_data
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		size_t const kernel_width( NUM_IN_LARGE + 1);
 		SIMD_ALIGN
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			input_data[i] = 0.0;
-		}
-		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width( NUM_IN_LARGE + 1);
-		bool fftuse = true; // FFT
-		SIMD_ALIGN
-		float output_data[ELEMENTSOF(input_data)];
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		LIBSAKURA_SYMBOL(Status) status_Create;
-		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
-				kernel_type, kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
-		LIBSAKURA_SYMBOL(Status) status_Convolve;
-		status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
-				output_data);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
-		if (verbose) {
-			PrintArray("\n", num_data, output_data);
-		}
-		verbose = false;
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		bool const align_check = true;
+		bool const fftuse = true;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+		sakura_Convolve1DKernelType_kGaussian, align_check,
+				sakura_Status_kOK,
+				verbose);
 	}
 	{ // (Without FFT) kernel_width > num_data
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		size_t const kernel_width( NUM_IN_LARGE + 1);
 		SIMD_ALIGN
 		float input_data[NUM_IN_LARGE];
 		size_t const num_data(ELEMENTSOF(input_data));
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			input_data[i] = 0.0;
-		}
-		input_data[num_data / 2] = 1.0; // center ch
-		size_t const kernel_width( NUM_IN_LARGE + 1);
-		bool fftuse = false; // without FFT
-		SIMD_ALIGN
-		float output_data[ELEMENTSOF(input_data)];
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			output_data[i] = 0.0;
-		}
-		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
-		LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian);
-		LIBSAKURA_SYMBOL(Status) status_Create;
-		status_Create = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
-				kernel_type, kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Create);
-		LIBSAKURA_SYMBOL(Status) status_Convolve;
-		status_Convolve =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
-				output_data);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
-		if (verbose) {
-			PrintArray("without FFT\n", num_data, output_data);
-		}
-		verbose = false;
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Destroy);
+		bool const align_check = true;
+		bool const fftuse = false;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+		sakura_Convolve1DKernelType_kGaussian, align_check,
+				sakura_Status_kOK,
+				verbose);
 	}
 	{ // KernelType == undefined
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-		size_t const num_data(NUM_IN);
-		size_t const kernel_width(NUM_WIDTH);
-		bool fftuse = true;
+
 		auto invalid_kernel_type =
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(-1);
-		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, invalid_kernel_type,
-				kernel_width, fftuse, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+		size_t const kernel_width(NUM_WIDTH);
+		SIMD_ALIGN
+		float input_data[NUM_IN_LARGE];
+		size_t const num_data(ELEMENTSOF(input_data));
+		bool const align_check = false;
+		bool const fftuse = true;
+		bool const verbose = false;
+		RunBaseTest(input_data, num_data, kernel_width, fftuse,
+				invalid_kernel_type, align_check,
+				sakura_Status_kInvalidArgument,
+				verbose);
 	}
 	{ // context == nullptr
 		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
@@ -290,7 +254,7 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
-		input_data[NUM_IN / 2] = 1.0; // one spike
+		input_data[num_data / 2] = 1.0; // one spike
 		size_t const kernel_width(NUM_WIDTH);
 		bool fftuse = true;
 		LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type =
