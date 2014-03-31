@@ -21,7 +21,7 @@
 #define NUM_IN 24
 #define NUM_IN_ODD 25
 #define NUM_IN_LARGE 64
-#define NUM_IN_MAX 8192
+#define NUM_IN_MAX 8192//1024
 #define LOOP_MAX 1000
 
 extern "C" {
@@ -196,7 +196,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}
@@ -232,7 +232,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
 				output_data);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray("without FFT\n", num_data, output_data);
 		}
@@ -851,7 +851,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray("without FFT\n", num_data, output_data);
 		}
@@ -902,7 +902,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		}
 		double end_time = sakura_GetCurrentTime();
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Convolve);
-		//verbose = true;
+		verbose = true;
 		if (verbose) {
 			PrintArray("\n", num_data, output_data);
 		}

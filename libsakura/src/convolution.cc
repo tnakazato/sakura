@@ -122,7 +122,7 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 	}
 }
 
-inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
+inline void Create1DGaussianKernel(size_t num_data, size_t use_fft,
 		size_t kernel_width, float* output_data) {
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ kernel_width; // sqrt(log(16)) / kernel_width
@@ -133,45 +133,34 @@ inline void Create1DGaussianKernelForWithoutFFT(size_t num_data,
 	}
 	size_t middle = (num_data) / 2;
 	size_t loop_max = middle;
-	size_t plus_one_for_odd = 1;
-	if (num_data % 2 == 0) {
-		plus_one_for_odd = 0;
-		float value = (-center) * reciprocal_of_denominator;
-		output_data[0] = height * exp(-(value * value));
-	}
-	output_data[middle] = height;
-	for (size_t j = 1; j < loop_max; ++j) {
-		float value = (j - center) * reciprocal_of_denominator;
-		output_data[num_data - j + plus_one_for_odd] = output_data[j
-				- plus_one_for_odd] = height * exp(-(value * value));
-	}
-}
-
-inline void Create1DGaussianKernel(size_t num_data, size_t kernel_width,
-		float* output_data) {
-	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ kernel_width; // sqrt(log(16)) / kernel_width
-	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-	float center = (num_data) / 2.f;
-	if (num_data % 2 != 0) {
-		center = (num_data - 1) / 2.f;
-	}
-	size_t middle = (num_data) / 2;
-	size_t loop_max = middle;
-	output_data[0] = height;
-	output_data[middle] = height
-			* exp(
-					-(center * reciprocal_of_denominator)
-							* (center * reciprocal_of_denominator));
-	size_t plus_one_for_odd = 0;
-	if (num_data % 2 != 0) {
-		plus_one_for_odd = 1;
-		output_data[middle + 1] = output_data[middle];
-	}
-	for (size_t j = 1; j < loop_max; ++j) {
-		float value = (j - center) * reciprocal_of_denominator;
-		output_data[middle + j + plus_one_for_odd] = output_data[middle - j] =
-				height * exp(-(value * value));
+	if (use_fft) {
+		output_data[0] = height;
+		output_data[middle] = height
+				* exp(
+						-(center * reciprocal_of_denominator)
+								* (center * reciprocal_of_denominator));
+		size_t plus_one_for_odd = 0;
+		if (num_data % 2 != 0) {
+			plus_one_for_odd = 1;
+			output_data[middle + 1] = output_data[middle];
+		}
+		for (size_t j = 1; j < loop_max; ++j) {
+			float value = (j - center) * reciprocal_of_denominator;
+			output_data[middle + j + plus_one_for_odd] =
+					output_data[middle - j] = height * exp(-(value * value));
+		}
+	} else {
+		size_t plus_one_for_odd = 1;
+		if (num_data % 2 == 0) {
+			plus_one_for_odd = 0;
+			float value = (-center) * reciprocal_of_denominator;
+			output_data[0] = height * exp(-(value * value));
+		}
+		output_data[middle] = height;
+		for (size_t j = 1; j < loop_max; ++j) {
+			float value = (j - center) * reciprocal_of_denominator;
+			output_data[j - plus_one_for_odd] = height * exp(-(value * value));
+		}
 	}
 }
 
@@ -180,12 +169,7 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		float* output_data) {
 	switch (kernel_type) {
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
-		if (use_fft) {
-			Create1DGaussianKernel(num_data, kernel_width, output_data);
-		} else {
-			Create1DGaussianKernelForWithoutFFT(num_data, kernel_width,
-					output_data);
-		}
+		Create1DGaussianKernel(num_data, use_fft, kernel_width, output_data);
 		break;
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar):
 		break;
@@ -199,53 +183,25 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 	}
 }
 
-inline void ConvolutionWithoutFFTLowKernelWidth(size_t num_data,
-		float const *input_data_arg, size_t kernel_width,
-		float const *input_kernel, float *output_data_arg) {
+inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
+		size_t kernel_width, float const *input_kernel,
+		float *output_data_arg) {
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
-	for (size_t j = 0; j < num_data; ++j) {
-		float convolved_sum = 0.0;
-		if (j <= kernel_width) {
-			for (size_t i = 0; i < 2 * kernel_width && kernel_width + j - i > 0;
-					++i) {
-				convolved_sum += input_kernel[kernel_width + j - i]
-						* input_data[i];
-			}
-		}
-		if (j > kernel_width && kernel_width + j <= num_data) {
-			for (size_t i = 0; i < 2 * kernel_width; ++i) {
-				convolved_sum += input_kernel[2 * kernel_width - i]
-						* input_data[j - kernel_width + i];
-			}
-		}
-		if (kernel_width + j > num_data) {
-			for (size_t i = 0;
-					i < 2 * kernel_width && kernel_width + j + i - num_data > 0;
-					++i) {
-				convolved_sum += input_kernel[kernel_width + j + i - num_data]
-						* input_data[num_data - i];
-			}
-		}
-		output_data[j] = convolved_sum;
+	if (kernel_width > num_data) {
+		kernel_width = num_data / 2;
 	}
-}
-
-inline void ConvolutionWithoutFFTHighKernelWidth(size_t num_data,
-		float const *input_data_arg, size_t kernel_width,
-		float const *input_kernel, float *output_data_arg) {
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
-	auto input_data = AssumeAligned(input_data_arg);
-	auto output_data = AssumeAligned(output_data_arg);
 	for (size_t j = 0; j < num_data; ++j) {
-		float convolved_sum = 0.0;
-		for (size_t i = 0; i < num_data; ++i) {
-			convolved_sum += input_kernel[num_data + j - i] * input_data[i];
+		float right = 0.0, left = 0.0;
+		for (size_t i = 0; ((j + i < num_data) && (i <= kernel_width)); ++i) {
+			left += input_data[j + i] * input_kernel[kernel_width - i];
 		}
-		output_data[j] = convolved_sum;
+		for (size_t k = 0; k < j && (k < kernel_width); ++k) {
+			right += input_data[j - 1 - k] * input_kernel[kernel_width - k - 1];
+		}
+		output_data[j] = left + right;
 	}
 }
 
@@ -345,12 +301,13 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		if (2 * threshold <= num_data) {
 			tuned_num_data = 2 * threshold;
 		} else {
-			tuned_num_data = 2 * num_data;
+			tuned_num_data = num_data;
 		}
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * tuned_num_data, &real_kernel_array));
+						sizeof(float) * tuned_num_data / 2,
+						&real_kernel_array));
 		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
 		Create1DKernel(tuned_num_data, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
@@ -419,15 +376,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
-		if (2 * context->kernel_width <= num_data) {
-			ConvolutionWithoutFFTLowKernelWidth(num_data,
-					const_cast<float*>(input_data), context->kernel_width,
-					context->real_kernel_array, output_data);
-		} else {
-			ConvolutionWithoutFFTHighKernelWidth(num_data,
-					const_cast<float*>(input_data), context->kernel_width,
-					context->real_kernel_array, output_data);
-		}
+		ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
+				context->kernel_width, context->real_kernel_array, output_data);
 	}
 }
 
