@@ -102,9 +102,6 @@ template<size_t NUM_MODEL_BASES>
 inline void GetMatrixCoefficientsForLeastSquareFittingTemplate(size_t num_mask,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
@@ -134,9 +131,6 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 inline void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
@@ -168,10 +162,6 @@ inline void UpdateMatrixCoefficientsForLeastSquareFittingTemplate(
 		size_t num_clipped, size_t const *clipped_indices_arg,
 		size_t num_model_bases, double const *in_arg, double const *model_arg,
 		double *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
 	auto model = AssumeAligned(model_arg);
@@ -193,10 +183,6 @@ inline void UpdateMatrixCoefficientsForLeastSquareFittingTemplate(
 inline void UpdateMatrixCoefficientsForLeastSquareFitting(size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
 	auto model = AssumeAligned(model_arg);
@@ -218,11 +204,6 @@ template<size_t NUM_MODEL_BASES>
 inline void GetVectorCoefficientsForLeastSquareFittingTemplate(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
 		double const *model_arg, double *out_arg) {
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
@@ -243,11 +224,6 @@ inline void GetVectorCoefficientsForLeastSquareFittingTemplate(size_t num_data,
 inline void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
 		double const *model_arg, double *out_arg) {
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
@@ -270,12 +246,6 @@ inline void UpdateVectorCoefficientsForLeastSquareFittingTemplate(
 		float const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
@@ -296,12 +266,6 @@ inline void UpdateVectorCoefficientsForLeastSquareFitting(float const *data_arg,
 		size_t num_clipped, size_t const *clipped_indices_arg,
 		size_t num_model_bases, double const *in_arg, double const *model_arg,
 		double *out_arg) {
-
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
@@ -410,7 +374,6 @@ inline void UpdateLeastSquareFittingCoefficients(size_t const num_data,
 
 inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 		double const *in_matrix_arg, double const *in_vector_arg, double *out) {
-
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));

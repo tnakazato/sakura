@@ -1650,12 +1650,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  *
  * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の左辺の行列成分と右辺のベクトル成分を計算する。
  * @par
- * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
+ * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正の数でなければならない。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
- * @param[in] num_model_bases モデルを構成する基底関数の数。
+ * @param[in] num_model_bases モデルを構成する基底関数の数。正で、且つ、 @a num_data 以下の数でなければならない。
  * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
  * @param[out] lsq_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
@@ -1683,11 +1683,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data the number of elements in the arrays @a data
  * and @a mask, and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the entire model.
+ * it must be a positive number.
  * @param[in] data input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask input mask data with length of @a num_mask .
  * @n must-be-aligned
- * @param[in] num_model_bases number of model basis functions.
+ * @param[in] num_model_bases number of model basis functions. it must be a
+ * positive number, also it must be equal to or less than @a num_data .
  * @param[in] basis_data a 1D array containing values of all basis functions
  * concatenated. loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
@@ -1726,13 +1728,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  *
  * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、先にGetLeastSquareFittingCoefficients()によって求められた、上の連立方程式の係数値を更新するために用いる。即ち、データ点のうち幾つかを除外して連立方程式を計算し直す際に、先に計算した各成分から除外するデータ点に対応する値を差し引く。除外するデータ数が少ない（前回の計算に用いられたデータ数の半分未満）場合は、一から計算し直すよりも高速である。
  * @par
- * @param[in] num_data 配列 @a data 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
+ * @param[in] num_data 配列 @a data 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正の数でなければならない。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[in] num_exclude_indices 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。
+ * @param[in] num_exclude_indices 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。0以上、且つ、 @a num_data 以下の数でなければならない。
  * @param[in] exclude_indices 除外したいデータ点のインデックス ( @a basis_data の行の添字(0始まり)) を列挙した配列。要素数は @a num_exclude_indices 。要素数が @a num_exclude_indices より多くてもエラーにはならないが、 @a num_exclude_indices 番目、及びそれ以降の要素は無視される。
  * @n must-be-aligned
- * @param[in] num_model_bases モデルを構成する基底関数の数。
+ * @param[in] num_model_bases モデルを構成する基底関数の数。正で、且つ、 @a num_data 以下の数でなければならない。
  * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
  * @param[in,out] lsq_matrix 更新するべき連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。要素数は必ず ( @a num_model_bases * @a num_model_bases ) でなければならない。
@@ -1763,9 +1765,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] num_data the number of elements in the arrays @a data and the
  * number of elements in each model data (i.e., discrete values of basis
  * function) consisting the entire model.
+ * it must be a positive number.
  * @param[in] data input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_exclude_indices the number of data points to be excluded this time.
+ * @param[in] num_exclude_indices the number of data points to be excluded
+ * this time. the range of allowed value is between 0 and @a num_data .
  * @param[in] exclude_indices an array containing indices of data points
  * (the row index of @a basis_data ) to be excluded this time. the indices
  * must be stored in the first @a num_exclude_indices elements. its length
@@ -1773,7 +1777,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * elements at index equal to and greater than @a num_exclude_indices will be
  * ignored.
  * @n must-be-aligned
- * @param[in] num_model_bases number of model basis functions.
+ * @param[in] num_model_bases number of model basis functions. it must be a
+ * positive number, also it must be equal to or less than @a num_data .
  * @param[in] in set a 1D array containing the vector components previously
  * calculated.
  * @n must-be-aligned
@@ -2009,7 +2014,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @~japanese
  * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、差し引く。
  * @details
- * @param[in] num_data 配列 @a data 、 @a mask 、 @a out の要素数。
+ * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。
@@ -2034,7 +2039,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @brief Recursively fit a baseline and subtract it from input spectrum.
  * @details
  * @param[in] num_data the number of elements in the arrays @a data,
- * @a mask, and @a out.
+ * @a mask, @a final_mask, and @a out.
  * @param[in] data the input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
@@ -2073,7 +2078,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @~japanese
  * @brief 入力データに多項式ベースラインをフィットし差し引く。
  * @details
- * @param[in] num_data 配列 @a data 、 @a mask 、 @a out の要素数。
+ * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
@@ -2096,7 +2101,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @brief Fit a baseline and subtract it from input data.
  * @details
  * @param[in] num_data the number of elements in the arrays @a data,
- * @a mask, and @a out.
+ * @a mask, @a final_mask, and @a out.
  * @param[in] data the input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .

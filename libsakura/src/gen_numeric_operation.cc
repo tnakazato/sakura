@@ -15,6 +15,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) {
+	if (num_data == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
@@ -22,6 +24,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 	if (mask == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_model_bases == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_model_bases > num_data)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (basis_data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -56,6 +62,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		size_t const num_exclude_indices, size_t const exclude_indices[],
 		size_t const num_model_bases, double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) {
+	if (num_data == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
@@ -64,10 +72,16 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(exclude_indices)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_exclude_indices > num_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	for (size_t i = 0; i < num_exclude_indices; ++i) {
 		if (exclude_indices[i] >= num_data)
 			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
+	if (num_model_bases == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_model_bases > num_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (basis_data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
