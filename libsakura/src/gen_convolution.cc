@@ -16,7 +16,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
 	if (context == nullptr) {
-		LOG4CXX_ERROR(logger, "context should not be nullptr");
+		LOG4CXX_ERROR(logger, "context should not be NULL");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (!(0 < num_data && num_data <= INT_MAX)) {
