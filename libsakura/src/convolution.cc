@@ -179,12 +179,9 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
-	if (kernel_width > num_data) {
-		kernel_width = num_data;
-	}
-	size_t plus_one_for_odd = 1;
-	if (num_data % 2 == 0) {
-		plus_one_for_odd = 0;
+	size_t plus_one_for_odd = 0;
+	if (num_data % 2 != 0) {
+		plus_one_for_odd = 1;
 	}
 	for (size_t j = 0; j < num_data; ++j) {
 		float right = 0.0, left = 0.0;
@@ -288,16 +285,14 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		*context = work_context.release();
 	} else {
 		size_t threshold = kernel_width / 2;
-		size_t tuned_num_data = kernel_width;
 		if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) {
 			const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
 			threshold = kernel_width * six_sigma;
-			tuned_num_data = 2 * threshold + 1;
 		}
 		if (2 * threshold + 1 > num_data) {
 			threshold = num_data - 1;
-			tuned_num_data = 2 * threshold + 1;
 		}
+		size_t tuned_num_data = 2 * threshold + 1;
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -321,7 +316,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_kernel_array = real_kernel_array;
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->num_data = num_data;
-		work_context->kernel_width = threshold;
+		work_context->kernel_width = threshold + 1;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	}
