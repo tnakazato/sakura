@@ -17,12 +17,17 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
+	if (baseline_type >= LIBSAKURA_SYMBOL(BaselineType_kNumType)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	/*
 	if ((baseline_type != LIBSAKURA_SYMBOL(BaselineType_kPolynomial))
 			&& (baseline_type != LIBSAKURA_SYMBOL(BaselineType_kChebyshev))
 			&& (baseline_type != LIBSAKURA_SYMBOL(BaselineType_kCubicSpline))
 			&& (baseline_type != LIBSAKURA_SYMBOL(BaselineType_kSinusoid))) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
+	*/
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}

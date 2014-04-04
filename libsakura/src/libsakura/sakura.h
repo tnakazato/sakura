@@ -1881,7 +1881,12 @@ typedef enum {
 	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
 	 * @~english
 	 * @brief not enough data for baseline fitting
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2, /**
+	 * @~japanese
+	 * @brief 実装されているエラーコードの個数
+	 * @~english
+	 * @brief Number of error codes implemented
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kNumStatus)
 }LIBSAKURA_SYMBOL(BaselineStatus);
 
 /**
@@ -1911,7 +1916,12 @@ typedef enum {
 	 * @brief 三角多項式
 	 * @~english
 	 * @brief Sinusoids
-	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid)
+	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid), /**
+	 * @~japanese
+	 * @brief 実装されている関数形の個数
+	 * @~english
+	 * @brief Number of baseline functions implemented
+	 */LIBSAKURA_SYMBOL(BaselineType_kNumType)
 }LIBSAKURA_SYMBOL(BaselineType);
 
 /**
