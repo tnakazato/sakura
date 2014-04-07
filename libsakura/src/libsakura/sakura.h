@@ -1648,7 +1648,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の左辺の行列成分と右辺のベクトル成分を計算する。
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、上の連立方程式の係数値、即ち、左辺の行列成分と右辺のベクトル成分を計算する。
  * @par
  * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正の数でなければならない。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
@@ -1662,7 +1662,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[out] lsq_vector 求める連立方程式の右辺側のベクトル成分を格納する配列。配列の長さは @a num_model_bases となる。
  * @n must-be-aligned
- * @return 終了ステータス。
+ * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、演算処理中にオーバーフローなどによって内部で runtime_error（及びそこから継承された型の）例外が発生した場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
@@ -1708,7 +1708,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * simultaneous equations for least-square fitting. its length should be
  * equal to @a num_model_bases.
  * @n must-be-aligned
- * @return status code.
+ * @return status code. Status_kOK if finished successfully,
+ * Status_kInvalidArgument in case parameters does not meet the above
+ * criteria, Status_kNG in case runtime_error or its derived exception
+ * emitted internally, and Status_kUnknownError in case other exceptions
+ * emitted internally.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(
@@ -1741,7 +1745,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in,out] lsq_vector 更新するべき連立方程式の右辺側のベクトル成分を格納する配列。要素数は必ず @a num_model_bases でなければならない。
  * @n must-be-aligned
- * @return 終了ステータス。
+ * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、演算処理中にオーバーフローなどによって内部で runtime_error（及びそこから継承された型の）例外が発生した場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
  * @~english
  * @brief Update coefficients of simultaneous equations used for Least-Square fitting.
  * @details
@@ -1800,7 +1804,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * simultaneous equations for least-square fitting. its length should be
  * equal to @a num_model_bases.
  * @n must-be-aligned
- * @return status code.
+ * @return status code. Status_kOK if finished successfully,
+ * Status_kInvalidArgument in case parameters does not meet the above
+ * criteria, Status_kNG in case runtime_error or its derived exception
+ * emitted internally, and Status_kUnknownError in case other exceptions
+ * emitted internally.
  * @~
  * MT-safe
  */
