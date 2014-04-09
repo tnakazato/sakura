@@ -101,9 +101,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		numop->UpdateLeastSquareFittingCoefficients(num_data, data,
 				num_exclude_indices, exclude_indices, num_model_bases,
 				basis_data, lsq_matrix, lsq_vector);
-	} catch (const std::runtime_error &e) {
-		LOG4CXX_ERROR(logger, e.what());
-		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}

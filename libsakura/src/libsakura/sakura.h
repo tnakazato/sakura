@@ -1662,7 +1662,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[out] lsq_vector 求める連立方程式の右辺側のベクトル成分を格納する配列。配列の長さは @a num_model_bases となる。
  * @n must-be-aligned
- * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、演算処理中にオーバーフローなどによって内部で runtime_error（及びそこから継承された型の）例外が発生した場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
+ * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、マスクされていないデータの数が求める連立方程式の本数に満たない場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
  * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting.
  * @details
@@ -1710,8 +1710,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @return status code. Status_kOK if finished successfully,
  * Status_kInvalidArgument in case parameters does not meet the above
- * criteria, Status_kNG in case runtime_error or its derived exception
- * emitted internally, and Status_kUnknownError in case other exceptions
+ * criteria, Status_kNG in case the number of unmasked data (for which
+ * mask is @a false ) is less than the number of simultaneous equations,
+ * and Status_kUnknownError in case other exceptions
  * emitted internally.
  * @~
  * MT-safe
@@ -1745,7 +1746,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in,out] lsq_vector 更新するべき連立方程式の右辺側のベクトル成分を格納する配列。要素数は必ず @a num_model_bases でなければならない。
  * @n must-be-aligned
- * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、演算処理中にオーバーフローなどによって内部で runtime_error（及びそこから継承された型の）例外が発生した場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
+ * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
+ * @par 注意:
+ * この関数を使うにあたっては、残りのデータ数が連立方程式を解くための必要最低限 ( @a num_model_bases ) を割り込んだり、同じデータ点を重複して差し引いたりすることのないよう、ユーザー自身が気を付ける必要がある。
  * @~english
  * @brief Update coefficients of simultaneous equations used for Least-Square fitting.
  * @details
@@ -1806,9 +1809,13 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @return status code. Status_kOK if finished successfully,
  * Status_kInvalidArgument in case parameters does not meet the above
- * criteria, Status_kNG in case runtime_error or its derived exception
- * emitted internally, and Status_kUnknownError in case other exceptions
- * emitted internally.
+ * criteria, and Status_kUnknownError in case other exceptions emitted
+ * internally.
+ * @par Caution:
+ * users must be careful in using this function about which and how many
+ * data are to be excluded not to fall into destructive cases that the
+ * number of used data becomes less than @a num_model_bases or not to
+ * exclude the same data duplicatedly.
  * @~
  * MT-safe
  */
