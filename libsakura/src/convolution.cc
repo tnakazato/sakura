@@ -122,16 +122,20 @@ inline void ApplyMaskByLinearInterpolation(size_t num_data,
 	}
 }
 
-inline void Create1DGaussianKernel(size_t num_data, size_t use_fft,
+inline void Create1DGaussianKernel(size_t array_size, size_t use_fft,
 		size_t kernel_width, float* output_data) {
+	size_t num_data_for_gauss = 2 * array_size - 1;
+	if (use_fft) {
+		num_data_for_gauss = array_size;
+	}
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ kernel_width; // sqrt(log(16)) / kernel_width
 	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-	float center = (num_data) / 2.f;
-	if (num_data % 2 != 0) {
-		center = (num_data - 1) / 2.f;
+	float center = (num_data_for_gauss) / 2.f;
+	if (num_data_for_gauss % 2 != 0) {
+		center = (num_data_for_gauss - 1) / 2.f;
 	}
-	size_t middle = (num_data) / 2;
+	size_t middle = (num_data_for_gauss) / 2;
 	size_t loop_max = middle;
 	output_data[0] = height;
 	output_data[middle] = height
@@ -139,7 +143,7 @@ inline void Create1DGaussianKernel(size_t num_data, size_t use_fft,
 					-(center * reciprocal_of_denominator)
 							* (center * reciprocal_of_denominator));
 	size_t plus_one_for_odd = 0;
-	if (num_data % 2 != 0) {
+	if (num_data_for_gauss % 2 != 0) {
 		plus_one_for_odd = 1;
 		output_data[middle + 1] = output_data[middle];
 	}
@@ -173,24 +177,17 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 }
 
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
-		size_t kernel_width, float const *input_kernel,
-		float *output_data_arg) {
+		size_t array_size, float const *input_kernel, float *output_data_arg) {
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
 	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
-	size_t plus_one_for_odd = 0;
-	if (num_data % 2 != 0) {
-		plus_one_for_odd = 1;
-	}
 	for (size_t j = 0; j < num_data; ++j) {
 		float right = 0.0, left = 0.0;
-		for (size_t i = 0;
-				((j + i < num_data) && (i < kernel_width + plus_one_for_odd));
-				++i) {
+		for (size_t i = 0; ((j + i < num_data) && (i < array_size)); ++i) {
 			left += input_data[j + i] * input_kernel[i];
 		}
-		for (size_t k = 0; k < j && (k < kernel_width); ++k) {
+		for (size_t k = 0; k < j && (k < array_size); ++k) {
 			right += input_data[j - k - 1] * input_kernel[k + 1];
 		}
 		output_data[j] = left + right;
@@ -289,16 +286,16 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 			const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
 			threshold = kernel_width * six_sigma;
 		}
-		if (2 * threshold + 1 > num_data) {
-			threshold = num_data - 1;
+		size_t array_size = threshold + 1;
+		if (2 * array_size - 1 > num_data) {
+			array_size = num_data;
 		}
-		size_t tuned_num_data = 2 * threshold + 1;
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * (threshold + 1), &real_kernel_array));
+						sizeof(float) * array_size, &real_kernel_array));
 		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
-		Create1DKernel(tuned_num_data, use_fft, kernel_type, kernel_width,
+		Create1DKernel(array_size, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
 		LIBSAKURA_PREFIX::Memory> work_context(
@@ -316,7 +313,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		work_context->real_kernel_array = real_kernel_array;
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->num_data = num_data;
-		work_context->kernel_width = threshold + 1;
+		work_context->kernel_width = array_size;
 		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	}
