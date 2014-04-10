@@ -249,9 +249,27 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 				kernel_width, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
-	{ // KernelType == undefined
+	{ // KernelType < 0
 		auto invalid_kernel_type =
 				static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(-1);
+		size_t const kernel_width(NUM_WIDTH);
+		size_t const input_data_size(NUM_IN_LARGE);
+		size_t const num_data(input_data_size);
+		bool const use_dummy_num_data = false;
+		bool const align_check = false;
+		bool const use_fft = true;
+		bool const verbose = false;
+		size_t loop_max(1);
+		SIMD_ALIGN
+		float output_data[input_data_size];
+		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
+				use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
+				output_data, sakura_Status_kInvalidArgument, align_check,
+				verbose, loop_max);
+	}
+	{ // KernelType > kNumType
+		auto invalid_kernel_type =
+				LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumType);
 		size_t const kernel_width(NUM_WIDTH);
 		size_t const input_data_size(NUM_IN_LARGE);
 		size_t const num_data(input_data_size);
@@ -366,7 +384,6 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
-
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 }
