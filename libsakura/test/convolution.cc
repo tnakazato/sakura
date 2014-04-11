@@ -790,7 +790,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 			gthan = true;
 		}
 		EXPECT_EQ(true, gthan);
-		EXPECT_FLOAT_EQ(0.18788746, output_data[0]);
+		EXPECT_FLOAT_EQ(0.18788747, output_data[0]);
 		EXPECT_FLOAT_EQ(0.18788774, output_data[input_data_size - 1]);
 		EXPECT_FLOAT_EQ(0.187887758, output_data[input_data_size / 2]);
 		EXPECT_FLOAT_EQ(output_data_fft[input_data_size / 2],
