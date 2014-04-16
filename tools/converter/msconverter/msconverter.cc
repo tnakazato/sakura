@@ -28,6 +28,8 @@ using namespace sqlite;
 namespace {
 char const ENV_VAR_SAKURA_ROOT[] = "SAKURA_ROOT";
 
+bool ignore_error = false;
+
 union {
   int i;
   float f;
@@ -77,6 +79,19 @@ void bindArrayAsBlob<Complex>(PreparedStatement *stmt, int pos, Array<Complex> c
   delete [] blob;
 }
 
+void executeUpdate1(PreparedStatement *stmt) throw (SQLException) {
+  try {
+    int result = stmt->executeUpdate();
+    assert(result == 1);
+  } catch (SQLException) {
+    if (ignore_error) {
+      cerr << "*** SQLException was ignored! Output data may be corrupted. ***\n";
+    } else {
+      throw;
+    }
+  }
+}
+
 void savePol(Connection *con, MeasurementSet &ms) {
   enter();
   MSPolarization &pol = ms.polarization();
@@ -104,8 +119,7 @@ void savePol(Connection *con, MeasurementSet &ms) {
     bindArrayAsBlob<Int>(stmt.get(), ++pos, cols.corrProduct()(i));
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -203,8 +217,7 @@ void saveSw(Connection *con, MeasurementSet &ms) {
       stmt->setInt(DOPPLER_ID, cols.dopplerId()(i));
     }
     stmt->setInt(FLAG_ROW, cols.flagRow()(i));
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
   }
 
@@ -260,8 +273,7 @@ void saveSw(Connection *con, MeasurementSet &ms) {
       } else {
 	stmt->setNull(ASSOC_NATURE);
       }
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+      executeUpdate1(stmt.get());
     }
   }
   }
@@ -298,8 +310,7 @@ void saveDataDesc(Connection *con, MeasurementSet &ms) {
     }
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -399,8 +410,7 @@ void saveSource(Connection *con, MeasurementSet &ms) {
     } else {
       stmt->setInt(PULSAR_ID, cols.pulsarId()(i));
     }
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
   }
 
@@ -471,8 +481,7 @@ void saveSource(Connection *con, MeasurementSet &ms) {
 	  } else {
 	    stmt->setNull(SYSVEL);
 	  }
-	  int result = stmt->executeUpdate();
-	  assert(result == 1);
+	  executeUpdate1(stmt.get());
 	}
       }
     }
@@ -511,8 +520,7 @@ void saveSource(Connection *con, MeasurementSet &ms) {
 // 	//stmt->setTransientString(MODEL_KEY, v.name(j).c_str());
 // 	cout << "data type = " << v.type(j) << endl;
 
-// 	int result = stmt->executeUpdate();
-// 	assert(result == 1);
+//	executeUpdate1(stmt.get());
 //       }
 //     }
 //   }
@@ -556,8 +564,7 @@ void saveFreqOffset(Connection *con, MeasurementSet &ms) {
     stmt->setDouble(++pos, cols.interval()(i)); // INTERVAL
     stmt->setDouble(++pos, cols.offset()(i)); // OFFSET
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }  
 }
 
@@ -621,8 +628,7 @@ void saveObs(Connection *con, MeasurementSet &ms) {
     stmt->setTransientString(PROJECT, cols.project()(i).c_str());
     stmt->setDouble(RELEASE_DATE, cols.releaseDate()(i));
     stmt->setInt(FLAG_ROW, cols.flagRow()(i));
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
   }
 
@@ -653,8 +659,7 @@ void saveObs(Connection *con, MeasurementSet &ms) {
 	stmt->setInt(OBSERVATION_ID, i);
 	stmt->setInt(IDX, j);
 	stmt->setTransientString(LOG, data[j].c_str());
-	int result = stmt->executeUpdate();
-	assert(result == 1);
+	executeUpdate1(stmt.get());
       }
     }
   } catch (AipsError x) {
@@ -691,8 +696,7 @@ void saveObs(Connection *con, MeasurementSet &ms) {
 	stmt->setInt(OBSERVATION_ID, i);
 	stmt->setInt(IDX, j);
 	stmt->setTransientString(SCHEDULE, data[j].c_str());
-	int result = stmt->executeUpdate();
-	assert(result == 1);
+	executeUpdate1(stmt.get());
       }
     }
   } catch (AipsError x) {
@@ -745,8 +749,7 @@ void saveProcessor(Connection *con, MeasurementSet &ms) {
       stmt->setInt(PASS_ID, cols.passId()(i));
     }
     stmt->setInt(FLAG_ROW, cols.flagRow()(i));
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -791,8 +794,7 @@ void saveState(Connection *con, MeasurementSet &ms) {
     stmt->setInt(SUB_SCAN, cols.subScan()(i));
     stmt->setTransientString(OBS_MODE, cols.obsMode()(i).c_str());
     stmt->setInt(FLAG_ROW, cols.flagRow()(i));
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -839,8 +841,7 @@ void saveField(Connection *con, MeasurementSet &ms) {
     }
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
   }
 
@@ -879,8 +880,7 @@ void saveField(Connection *con, MeasurementSet &ms) {
       stmt->setDouble(++pos, referenceDir(0,j)); // REFERENCE_DIRX
       stmt->setDouble(++pos, referenceDir(1,j)); // REFERENCE_DIRY
       assert(pos == stmt->getParameterCount());
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+      executeUpdate1(stmt.get());
     }
   }
   }
@@ -943,8 +943,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
       }
     }
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
   }
 
@@ -982,8 +981,7 @@ void saveFeed(Connection *con, MeasurementSet &ms) {
       bindArrayAsBlob<Complex>(stmt.get(), ++pos, polResponse.row(j)); // POL_RESPONSE
       stmt->setDouble(++pos, recAngle(j)); // RECEPTOR_ANGLE
       assert(pos == stmt->getParameterCount());
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+      executeUpdate1(stmt.get());
     }
   }
   }
@@ -1062,8 +1060,7 @@ void saveAntenna(Connection *con, MeasurementSet &ms) {
     }
     stmt->setInt(++pos, cols.flagRow()(i)); // FLAG_ROW
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1189,8 +1186,7 @@ void saveWeather(Connection *con, MeasurementSet &ms) {
     }
 
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1278,8 +1274,7 @@ void savePointing(Connection *con, MeasurementSet &ms) {
     }
 
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1437,8 +1432,7 @@ void saveSysCal(Connection *con, MeasurementSet &ms) {
     }
 
     assert(pos == stmt->getParameterCount());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1648,8 +1642,7 @@ void saveMain(Connection *con, MeasurementSet &ms) {
     bindArrayAsBlob<Bool>(stmt.get(), FLAG, cols.flag()(i));
     bindArrayAsBlob<Bool>(stmt.get(), FLAG_CATEGORY, cols.flagCategory()(i));
     stmt->setInt(FLAG_ROW, cols.flagRow()(i) ? 1 : 0);
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1705,8 +1698,7 @@ void saveFlagCmd(Connection *con, MeasurementSet &ms) {
     stmt->setInt(SEVERITY, cols.severity()(i));
     stmt->setInt(APPLIED, cols.applied()(i) ? 1 : 0);
     stmt->setTransientString(COMMAND, cols.command()(i).c_str());
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1746,8 +1738,7 @@ void saveDoppler(Connection *con, MeasurementSet &ms) {
     stmt->setInt(TRANSITION_ID, cols.transitionId()(i));
     stmt->setDouble(VELDEF, cols.velDef()(i));
 
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
 }
 
@@ -1796,8 +1787,7 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
     stmt->setInt(OBJECT_ID, cols.objectId()(i));
     stmt->setTransientString(APPLICATION, cols.application()(i).c_str());
 
-    int result = stmt->executeUpdate();
-    assert(result == 1);
+    executeUpdate1(stmt.get());
   }
   }
 
@@ -1830,8 +1820,7 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
       stmt->setInt(IDX, j);
       stmt->setTransientString(CLI_COMMAND, data[j].c_str());
 
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+      executeUpdate1(stmt.get());
     }
   }
   }
@@ -1865,8 +1854,7 @@ void saveHistory(Connection *con, MeasurementSet &ms) {
       stmt->setInt(IDX, j);
       stmt->setTransientString(APP_PARAMS, data[j].c_str());
 
-      int result = stmt->executeUpdate();
-      assert(result == 1);
+      executeUpdate1(stmt.get());
     }
   }
   }
@@ -2005,6 +1993,8 @@ void usage() {
   cerr << "options:: \n";
   cerr << "\t--prefix path\tA path where sakura is installed.\n";
   cerr << "\t-p path\n";
+  cerr << "\t--force\tIgnore errors.\n";
+  cerr << "\t-f\n";
 }
 
 }
@@ -2020,12 +2010,13 @@ int main(int argc, char const * const argv[]) {
 
   static struct option const long_options[] = {
     {"prefix", 1, NULL, 'p'},
+    {"force", 1, NULL, 'f'},
     {0, 0, NULL, 0}
   };
 
   for (;;) {
     int option_index = 0;
-    int optCh = getopt_long (argc, const_cast<char *const *>(argv), "p:",
+    int optCh = getopt_long (argc, const_cast<char *const *>(argv), "p:f",
 			     long_options, &option_index);
     if (optCh == -1) {
       break;
@@ -2033,6 +2024,9 @@ int main(int argc, char const * const argv[]) {
     switch (optCh) {
     case 'p':
       prefix = optarg;
+      break;
+    case 'f':
+      ignore_error = true;
       break;
     case '?':
       usage();
@@ -2050,7 +2044,11 @@ int main(int argc, char const * const argv[]) {
   }
   cout << "SAKURA_ROOT: " << prefix << endl;
   double start = currenttime();
-  conv(prefix, argv[argStart], argv[argStart + 1]);
+  try {
+    conv(prefix, argv[argStart], argv[argStart + 1]);
+  } catch (char const *& msg) {
+    cerr << msg << endl;
+  }
   double end = currenttime();
   cout << end - start << "sec\n";
   return 0;
