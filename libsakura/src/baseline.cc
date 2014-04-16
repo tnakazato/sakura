@@ -17,10 +17,10 @@
 #	include <immintrin.h>
 #endif
 
-#include <libsakura/localdef.h>
-#include <libsakura/memory_manager.h>
-#include <libsakura/optimized_implementation_factory_impl.h>
-#include <libsakura/sakura.h>
+#include "libsakura/localdef.h"
+#include "libsakura/memory_manager.h"
+#include "libsakura/optimized_implementation_factory_impl.h"
+#include "libsakura/sakura.h"
 #include "baseline.h"
 
 namespace {
