@@ -100,7 +100,7 @@ PreparedStatement *Connection::prepare(char const *sql) throw (SQLException) {
 			       );
 }
 
-Statement::~Statement() {}
+Statement::~Statement() throw (SQLException) {}
 
 PreparedStatement::PreparedStatement(Connection *con, sqlite3_stmt *stmt
 #ifdef SQLDEBUG

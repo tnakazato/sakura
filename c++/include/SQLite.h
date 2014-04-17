@@ -34,7 +34,7 @@ class SQLException {
  */
 class Statement {
  public:
-  virtual ~Statement();
+  virtual ~Statement() throw (SQLException);
 };
 
 class PreparedStatement;
