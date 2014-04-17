@@ -232,6 +232,7 @@ class PreparedStatement: public Statement {
  * This class represents a connection to SQLite DBMS.
  * An instance of this class must exists while all instances created from
  * the instance exist.
+ * Do not share a connection among threads.
  */
 class Connection {
   sqlite3 *const db;
