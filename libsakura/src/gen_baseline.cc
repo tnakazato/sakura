@@ -20,14 +20,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	if (baseline_type >= LIBSAKURA_SYMBOL(BaselineType_kNumType)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	/*
-	if ((baseline_type != LIBSAKURA_SYMBOL(BaselineType_kPolynomial))
-			&& (baseline_type != LIBSAKURA_SYMBOL(BaselineType_kChebyshev))
-			&& (baseline_type != LIBSAKURA_SYMBOL(BaselineType_kCubicSpline))
-			&& (baseline_type != LIBSAKURA_SYMBOL(BaselineType_kSinusoid))) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	*/
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -150,8 +142,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->SubtractBaseline(num_data, data, mask, context,
-				clip_threshold_sigma, num_fitting_max, get_residual,
-				final_mask, out, baseline_status);
+				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
+				out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -197,8 +189,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 			::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetBaselineImpl();
 	try {
 		baselineop->SubtractBaselinePolynomial(num_data, data, mask, order,
-				clip_threshold_sigma, num_fitting_max, get_residual,
-				final_mask, out, baseline_status);
+				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
+				out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
