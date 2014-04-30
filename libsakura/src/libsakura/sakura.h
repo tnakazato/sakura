@@ -321,15 +321,15 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
  * and @a upper_bounds.
  * @param[in] lower_bounds The input array of size, @a num_condition.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[in] upper_bounds The input array of size, @a num_condition.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
@@ -350,15 +350,15 @@ typedef struct {
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
  * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
  * 下限値と上限値の組の数を表す。
  * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
  * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * @n must-be-aligned
@@ -398,15 +398,15 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[in] num_condition The number of elements in the arrays, @a lower_bounds
  * and @a upper_bounds.
  * @param[in] lower_bounds The input array of size, @a num_condition.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[in] upper_bounds The input array of size, @a num_condition.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
@@ -427,15 +427,15 @@ typedef struct {
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
  * @param[in] num_condition 一次元配列@a lower_bounds 及び@a upper_bounds の要素の数。
  * 下限値と上限値の組の数を表す。
  * @param[in] lower_bounds 入力一次元配列。検定条件の下限値を格納する。要素数は@a num_condition でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
  * @param[in] upper_bounds 入力一次元配列。検定条件の上限値を格納する。要素数は@a num_condition でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * @n must-be-aligned
@@ -471,9 +471,10 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[in] threshold the threshold of evaluation.
+ * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
  * @return status code
@@ -491,9 +492,9 @@ typedef struct {
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
- * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[in] threshold しきい値。引数が浮動少数点型の場合、値がInfやNaNであってはならない。InfやNaNの場合の動作は不定。
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス
@@ -524,9 +525,10 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[in] threshold the threshold of evaluation.
+ * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
  * @return status code
@@ -544,9 +546,9 @@ typedef struct {
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
- * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[in] threshold しきい値。引数が浮動少数点型の場合、値がInfやNaNであってはならない。InfやNaNの場合の動作は不定。
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス
@@ -577,9 +579,10 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[in] threshold the threshold of evaluation.
+ * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
  * @return status code
@@ -597,9 +600,9 @@ typedef struct {
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
- * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[in] threshold しきい値。引数が浮動少数点型の場合、値がInfやNaNであってはならない。InfやNaNの場合の動作は不定。
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス
@@ -630,9 +633,10 @@ typedef struct {
  * @param[in] num_data The number of elements in the arrays, @a data
  * and @a result
  * @param[in] data An input array of size, @a num_data.
- * Array elements should not contain Inf nor NaN.
+ * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation. The value should not be Inf nor NaN.
+ * @param[in] threshold the threshold of evaluation.
+ * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
  * @return status code
@@ -650,9 +654,9 @@ typedef struct {
  *
  * @param[in] num_data 一次元配列@a data 及び@a result の要素の数。
  * @param[in] data 入力一次元配列。検定の対象となる値を格納する。要素数は@a num_data でなければならない。
- * 要素はInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
+ * 配列が浮動少数点型の場合、要素がInfやNaNを含んではならない。InfやNaNの場合の動作は不定。
  * @n must-be-aligned
- * @param[in] threshold しきい値。値はInfやNaNであってはならない。InfやNaNの場合の動作は不定。
+ * @param[in] threshold しきい値。引数が浮動少数点型の場合、値がInfやNaNであってはならない。InfやNaNの場合の動作は不定。
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス
