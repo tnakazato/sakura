@@ -258,10 +258,12 @@ bool cmpsumwt(double (*a)[NCHAN][NPOL], double (*b)[NPOL][NCHAN]) {
 }
 
 extern "C" {
-void ggridsd_(double const xy[][2], const complex<float>*, integer*, integer*,
-		integer*, const integer*, const integer*, const float*, integer*,
-		integer*, complex<float>*, float*, integer*, integer*, integer *,
-		integer *, integer*, integer*, float*, integer*, integer*, double*);
+void ggridsd_(double const xy[][2], const complex<float> *values,
+		integer *nvispol, integer *nvischan, integer *dowt, integer const *flag,
+		integer const *rflag, float const *weight, integer *nrow, integer *irow,
+		complex<float> *grid, float *wgrid, integer *nx, integer *ny,
+		integer *npol, integer *nchan, integer *support, integer *sampling,
+		float *convFunc, integer *chanmap, integer *polmap, double *sumwt);
 }
 
 void trySpeed(bool dowt, float (*values_)[NROW][NVISPOL][NVISCHAN],
