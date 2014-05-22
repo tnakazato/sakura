@@ -1239,21 +1239,21 @@ typedef enum {
 /**
  * @~japanese
  * @brief 1次元の補間を行う。
- * @details 長さ@a num_base の1次元配列@a base_x と @a base_data で定義される数値データ列を
- * もとにして1次元の補間を行う。 @a base_data には @a num_y 個のデータを同時に渡すことができる。
- * このとき、 @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなすことができる。
- * @a base_data の要素数は @a num_base × @a num_y でなければならない。 @a M を列優先
- * の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、 @a base_data のメモリレイアウトは、
+ * @details 長さ @a num_base の1次元配列 @a base_x と 長さ @a num_base x @a num_y の1次元
+ * 配列 @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
+ * @link sakura_InterpolateXAxisFloat sakura_InterpolateXAxisFloat @endlink
+ * は @a num_y 個のデータを一括で補間することができる。
+ * @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなされる。
+ * @a M を列優先の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、
+ * @a base_data のメモリレイアウトは、
  *
  * @image html InterpolateXAxisFloat.png
  *
  * となっており、この関数はx軸に沿った補間を行う。
  *
- * 補間によって値を得たい点のx軸方向の位置のリストを長さ
- * @a num_interpolated の配列 @a interpolated_x に渡すと、補間結果が
- * 長さ @a num_interpolated の配列 @a interpolated_data に格納される。
- * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
- * @a interpolated_data にセットされる）。
+ * 補間によって値を得たい点のx軸方向の位置のリストを長さ　@a num_interpolated の配列 @a interpolated_x に
+ * 渡すと、補間結果が長さ @a num_interpolated x @a num_y の配列 @a interpolated_data に格納される。
+ * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列 @a interpolated_data にセットされる）。
  *
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1273,7 +1273,7 @@ typedef enum {
  * を返す。
  *
  * @par
- * @pre @a base_x および@a interpolated_x は昇順または降順にソートされていなければ
+ * @pre @a base_x および @a interpolated_x は昇順または降順にソートされていなければ
  * ならない。また、@a base_x の要素には重複があってはならない。
  *
  * @par 昇順の場合と降順の場合の速度の違いについて:
@@ -1345,19 +1345,21 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 /**
  * @~japanese
  * @brief 1次元の補間を行う。
- * @details 長さ@a num_base の1次元配列@a base_y と @a base_data で定義される数値データ列を
- * もとにして1次元の補間を行う。 @a base_data には @a num_x 個のデータを同時に渡すことができる。
- * このとき、 @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなすことができる。
- * @a base_data の要素数は @a num_base × @a num_x でなければならない。 @a M を列優先
- * の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、 @a base_data のメモリレイアウトは、
+ * @details 長さ @a num_base の1次元配列 @a base_y と長さ @a num_base x @a num_x の1次元配列
+ * @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
+ * @link sakura_InterpolateYAxisFloat sakura_InterpolateYAxisFloat @endlink
+ * は @a num_x 個のデータを一括で補間することができる。
+ * @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなされる。
+ * @a M を列優先の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、
+ * @a base_data のメモリレイアウトは、
  *
  * @image html InterpolateYAxisFloat.png
  *
- * となっており、この関数はY軸に沿った補間を行う。
+ * となっており、この関数はy軸に沿った補間を行う。
  *
  * 補間によって値を得たい点のy軸方向の位置のリストを長さ
  * @a num_interpolated の配列 @a interpolated_y に渡すと、補間結果が
- * 長さ @a num_interpolated の配列 @a interpolated_data に格納される。
+ * 長さ @a num_interpolated x @a num_x の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
  * @a interpolated_data にセットされる）。
  *
@@ -1379,7 +1381,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * を返す。
  *
  * @par
- * @pre @a base_y および@a interpolated_y は昇順または降順にソートされていなければ
+ * @pre @a base_y および @a interpolated_y は昇順または降順にソートされていなければ
  * ならない。また、@a base_y の要素には重複があってはならない。
  *
  * @par 昇順の場合と降順の場合の速度の違いについて:
