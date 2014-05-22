@@ -1239,9 +1239,9 @@ typedef enum {
 /**
  * @~japanese
  * @brief 1次元の補間を行う。
- * @details 長さ @a num_base の1次元配列 @a base_x と 長さ @a num_base x @a num_y の1次元
+ * @details 長さ @a num_base の1次元配列 @a base_x と 長さ @a num_base × @a num_y の1次元
  * 配列 @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
- * @link sakura_InterpolateXAxisFloat sakura_InterpolateXAxisFloat @endlink
+ * @a sakura_InterpolateXAxisFloat
  * は @a num_y 個のデータを一括で補間することができる。
  * @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなされる。
  * @a M を列優先の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、
@@ -1252,7 +1252,7 @@ typedef enum {
  * となっており、この関数はx軸に沿った補間を行う。
  *
  * 補間によって値を得たい点のx軸方向の位置のリストを長さ　@a num_interpolated の配列 @a interpolated_x に
- * 渡すと、補間結果が長さ @a num_interpolated x @a num_y の配列 @a interpolated_data に格納される。
+ * 渡すと、補間結果が長さ @a num_interpolated × @a num_y の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列 @a interpolated_data にセットされる）。
  *
  * 戻り値は終了ステータスである。正常終了の場合、
@@ -1345,9 +1345,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 /**
  * @~japanese
  * @brief 1次元の補間を行う。
- * @details 長さ @a num_base の1次元配列 @a base_y と長さ @a num_base x @a num_x の1次元配列
+ * @details 長さ @a num_base の1次元配列 @a base_y と長さ @a num_base × @a num_x の1次元配列
  * @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
- * @link sakura_InterpolateYAxisFloat sakura_InterpolateYAxisFloat @endlink
+ * @a sakura_InterpolateYAxisFloat
  * は @a num_x 個のデータを一括で補間することができる。
  * @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなされる。
  * @a M を列優先の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、
@@ -1359,7 +1359,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  *
  * 補間によって値を得たい点のy軸方向の位置のリストを長さ
  * @a num_interpolated の配列 @a interpolated_y に渡すと、補間結果が
- * 長さ @a num_interpolated x @a num_x の配列 @a interpolated_data に格納される。
+ * 長さ @a num_interpolated × @a num_x の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
  * @a interpolated_data にセットされる）。
  *
