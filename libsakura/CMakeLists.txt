@@ -19,4 +19,4 @@ set(SAKURA_ROOT_DIR ${PROJECT_SOURCE_DIR})
 add_subdirectory(src bin)
 add_subdirectory(gtest bingtest)
 add_subdirectory(test bintest)
-
+add_subdirectory(python-binding python-bin)
