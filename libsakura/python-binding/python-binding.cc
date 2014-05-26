@@ -17,10 +17,26 @@
  * http://docs.python.jp/2/c-api/arg.html
  *
  */
+
+#define MODULE_NAME "libsakurapy"
+
 namespace {
 
-char const kAlignedBufferName[] = "AlignedBuffer.sakura.nao.ac.jp";
 constexpr size_t kMaxNumberOfDimensions = 5;
+
+constexpr char const kAlignedBufferName[] =
+#if 0
+		"AlignedBuffer.sakura.nao.ac.jp";
+#else
+		MODULE_NAME ".AlignedBuffer";
+#endif
+
+constexpr char const kConvolve1DContextName[] =
+#if 0
+		"Convolve1DContext.sakura.nao.ac.jp";
+#else
+		MODULE_NAME ".Convolve1DContext";
+#endif
 
 }
 
@@ -40,14 +56,23 @@ namespace {
 
 PyObject *sakura_error;
 
+template<typename T, char const *Key, LIBSAKURA_SYMBOL(Status) (*Func)(T*)>
 void TCapsuleDesctructor(PyObject *obj) {
-	if (PyCapsule_IsValid(obj, kAlignedBufferName)) {
+	if (!PyCapsule_IsValid(obj, Key)) {
 		return;
 	}
-	auto buf =
+	auto ptr = reinterpret_cast<T *>(PyCapsule_GetPointer(obj, Key));
+	Func(ptr);
+}
+
+void TCapsuleDesctructorForAlignedBuffer(PyObject *obj) {
+	if (!PyCapsule_IsValid(obj, kAlignedBufferName)) {
+		return;
+	}
+	auto ptr =
 			reinterpret_cast<LIBSAKURA_SYMBOL(PyAlignedBuffer) *>(PyCapsule_GetPointer(
 					obj, kAlignedBufferName));
-	LIBSAKURA_SYMBOL(PyAlignedBufferDestroy)(buf);
+	LIBSAKURA_SYMBOL(PyAlignedBufferDestroy)(ptr);
 }
 
 PyObject *Initialize(PyObject *self, PyObject *args) {
@@ -150,6 +175,44 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
+PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data;
+	int kernel_type;
+	Py_ssize_t kernel_width;
+	PyObject *use_fft;
+	if (!PyArg_ParseTuple(args, "ninO", &num_data, &kernel_type, &kernel_width,
+			&use_fft)) {
+		return nullptr;
+	}
+	if (!((0 <= kernel_type
+			&& kernel_type < LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumType))
+			&& (use_fft == Py_True || use_fft == Py_False))) {
+		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+		return nullptr;
+	}
+
+	LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
+			static_cast<size_t>(num_data),
+			static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(kernel_type),
+			static_cast<size_t>(kernel_width), use_fft == Py_True, &context);
+
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError,
+				"sakura_CreateConvolve1DContext failed.");
+		return nullptr;
+	}
+	PyCapsule_Destructor destructor = TCapsuleDesctructor<
+	LIBSAKURA_SYMBOL(Convolve1DContext), kConvolve1DContextName,
+	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)>;
+	auto capsule = PyCapsule_New(context, kConvolve1DContextName, destructor);
+	if (capsule == nullptr) {
+		PyErr_SetString(PyExc_MemoryError, "No memory.");
+		return nullptr;
+	}
+	return capsule;
+}
+
 PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *dataSeq;
 	int type;
@@ -195,12 +258,12 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 			break;
 		}
 	} catch (std::bad_alloc const&e) {
-
+		PyErr_SetString(PyExc_MemoryError, "No memory.");
+		return nullptr;
 	}
 
 	PyObject *capsule = nullptr;
 	LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(buf, &capsule);
-	Py_XINCREF(capsule);
 	return capsule;
 }
 
@@ -216,6 +279,9 @@ PyMethodDef module_methods[] = {
 { "compute_statistics", ComputeStatistics, METH_VARARGS,
 		"Computes statistics of unmasked elements." },
 
+{ "create_convolve1D_context", CreateConvolve1DContext, METH_VARARGS,
+		"Creates a context for convolving 1D." },
+
 { "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
 		"Creates a new aligned buffer." },
 
@@ -229,7 +295,7 @@ PyDoc_STRVAR(module_doc, "Python binding of libsakura library.");
 extern "C" {
 
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(
-		LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, PyObject **capsule) {
+LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, PyObject **capsule) {
 	if (capsule == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -237,7 +303,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(
 		*capsule = nullptr;
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	*capsule = PyCapsule_New(buffer, kAlignedBufferName, TCapsuleDesctructor);
+	*capsule = PyCapsule_New(buffer, kAlignedBufferName,
+			TCapsuleDesctructorForAlignedBuffer);
 	if (*capsule == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	}
@@ -260,7 +327,6 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferDecapsulate)(
 	assert(*buffer);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
-
 
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 LIBSAKURA_SYMBOL(PyTypeId) type, void *original_addr, void *aligned_addr,
@@ -336,12 +402,12 @@ LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, LIBSAKURA_SYMBOL(PyTypeId) *type) {
 }
 
 PyMODINIT_FUNC initlibsakurapy(void) {
-	PyObject *mod = Py_InitModule3("libsakurapy", module_methods, module_doc);
+	PyObject *mod = Py_InitModule3(MODULE_NAME, module_methods, module_doc);
 	if (mod == nullptr) {
 		return;
 	}
 
-	static char excep_name[] = "libsakurapy.error";
+	static char excep_name[] = MODULE_NAME ".error";
 	static char excep_doc[] = "error on invoking libsakura functions";
 	sakura_error = PyErr_NewExceptionWithDoc(excep_name, excep_doc, nullptr,
 			nullptr);
@@ -354,7 +420,16 @@ PyMODINIT_FUNC initlibsakurapy(void) {
 	PyModule_AddIntConstant(mod, "TYPE_INT32", LIBSAKURA_SYMBOL(TypeId_kInt32));
 	PyModule_AddIntConstant(mod, "TYPE_FLOAT", LIBSAKURA_SYMBOL(TypeId_kFloat));
 	PyModule_AddIntConstant(mod, "TYPE_DOUBLE",
-			LIBSAKURA_SYMBOL(TypeId_kDouble));
+	LIBSAKURA_SYMBOL(TypeId_kDouble));
+
+	PyModule_AddIntConstant(mod, "CONVOLVE1D_KERNEL_TYPE_GAUSSIAN",
+	LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian));
+	PyModule_AddIntConstant(mod, "CONVOLVE1D_KERNEL_TYPE_BOXCAR",
+	LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar));
+	PyModule_AddIntConstant(mod, "CONVOLVE1D_KERNEL_TYPE_HANNING",
+	LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning));
+	PyModule_AddIntConstant(mod, "CONVOLVE1D_KERNEL_TYPE_HAMMING",
+	LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming));
 }
 
 }

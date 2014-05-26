@@ -51,7 +51,7 @@ typedef enum {
 
 /**
  * @~japanese
- * @brief @ref PyAlignedBuffer を  PyObject(PyCapsule) にカプセル化する
+ * @brief @ref sakura_PyAlignedBuffer を  PyObject(PyCapsule) にカプセル化する
  *
  * @param[in] buffer カプセル化する @ref sakura_PyAlignedBuffer。カプセル化に成功した後は、 @a buffer の解放は PyObjectに委ねられる。
  * @param[out] capsule 成功した場合は、カプセル化した @a PyObject のアドレス。それ以外の場合は不定。
