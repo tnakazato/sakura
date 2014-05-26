@@ -80,12 +80,11 @@ bool isValidAlignedBuffer(size_t num, AlignedBufferConfiguration const conf[],
 		PyObject *capsules[],
 		LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[]) {
 	for (size_t i = 0; i < num; ++i) {
-		if (!PyCapsule_IsValid(capsules[i], kAlignedBufferName)) {
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) *buf = nullptr;
+		if (LIBSAKURA_SYMBOL(PyAlignedBufferDecapsulate)(capsules[i],
+				&buf) != LIBSAKURA_SYMBOL(Status_kOK)) {
 			return false;
 		}
-		auto buf =
-				reinterpret_cast<LIBSAKURA_SYMBOL(PyAlignedBuffer) *>(PyCapsule_GetPointer(
-						capsules[i], kAlignedBufferName));
 		assert(buf);
 		if (buf->type != conf[i].type) {
 			return false;
@@ -199,7 +198,8 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 
 	}
 
-	auto capsule = PyCapsule_New(buf, kAlignedBufferName, TCapsuleDesctructor);
+	PyObject *capsule = nullptr;
+	LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(buf, &capsule);
 	Py_XINCREF(capsule);
 	return capsule;
 }
@@ -227,6 +227,41 @@ PyDoc_STRVAR(module_doc, "Python binding of libsakura library.");
 }
 
 extern "C" {
+
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, PyObject **capsule) {
+	if (capsule == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	if (buffer == nullptr) {
+		*capsule = nullptr;
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	*capsule = PyCapsule_New(buffer, kAlignedBufferName, TCapsuleDesctructor);
+	if (*capsule == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferDecapsulate)(
+		PyObject *capsule,
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) **buffer) {
+	if (buffer == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	if (capsule == nullptr || !PyCapsule_IsValid(capsule, kAlignedBufferName)) {
+		*buffer = nullptr;
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	*buffer =
+			reinterpret_cast<LIBSAKURA_SYMBOL(PyAlignedBuffer) *>(PyCapsule_GetPointer(
+					capsule, kAlignedBufferName));
+	assert(*buffer);
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 LIBSAKURA_SYMBOL(PyTypeId) type, void *original_addr, void *aligned_addr,
 		size_t dimensions, size_t elements[], void (*destructor)(void *),
@@ -318,7 +353,8 @@ PyMODINIT_FUNC initlibsakurapy(void) {
 	PyModule_AddIntConstant(mod, "TYPE_INT8", LIBSAKURA_SYMBOL(TypeId_kInt8));
 	PyModule_AddIntConstant(mod, "TYPE_INT32", LIBSAKURA_SYMBOL(TypeId_kInt32));
 	PyModule_AddIntConstant(mod, "TYPE_FLOAT", LIBSAKURA_SYMBOL(TypeId_kFloat));
-	PyModule_AddIntConstant(mod, "TYPE_DOUBLE", LIBSAKURA_SYMBOL(TypeId_kDouble));
+	PyModule_AddIntConstant(mod, "TYPE_DOUBLE",
+			LIBSAKURA_SYMBOL(TypeId_kDouble));
 }
 
 }

@@ -33,6 +33,8 @@ endif(EIGEN3_FOUND)
 project(libsakura-python)
 set(CMAKE_INSTALL_PREFIX /usr/local)
 
+option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
+
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
@@ -76,6 +78,24 @@ set_target_properties(sakurapy PROPERTIES
 )
 
 target_link_libraries(sakurapy sakura log4cxx ${PYTHON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+
+if(BUILD_DOC)
+	find_package(Doxygen)
+	if (NOT DOXYGEN_FOUND)
+		message(FATAL_ERROR 
+			"Doxygen is needed to build the API documentation.")
+	endif(NOT DOXYGEN_FOUND)
+
+	configure_file (
+	  "${PROJECT_SOURCE_DIR}/Doxyfile.in"
+	  "${PROJECT_BINARY_DIR}/Doxyfile"
+	  @ONLY)
+	add_custom_target(pyapidoc
+		mkdir -p "${PROJECT_BINARY_DIR}/docs"
+		COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
+		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+		COMMENT "Generating the API documentation with Doxygen")
+endif(BUILD_DOC)
 
 add_custom_target(copyTest
 	COMMAND cp -f "${PROJECT_SOURCE_DIR}/test.*" "${PROJECT_BINARY_DIR}" 
