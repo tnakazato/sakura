@@ -6,9 +6,10 @@
 #include <unistd.h>
 #include <memory>
 
-#include <libsakura/sakura-python.h>
-#include "libsakura/localdef.h"
-#include "libsakura/memory_manager.h"
+#include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
+#include <libsakura/memory_manager.h>
+#include "libsakura/sakura-python.h"
 
 /*
  * Refer to following documents:
@@ -192,10 +193,15 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	}
 
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
-			static_cast<size_t>(num_data),
-			static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(kernel_type),
-			static_cast<size_t>(kernel_width), use_fft == Py_True, &context);
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status =
+				LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
+						static_cast<size_t>(num_data),
+						static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(kernel_type),
+						static_cast<size_t>(kernel_width), use_fft == Py_True,
+						&context);
+		Py_END_ALLOW_THREADS
 
 	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		PyErr_SetString(PyExc_ValueError,
