@@ -57,6 +57,18 @@ namespace {
 
 PyObject *sakura_error;
 
+void DecrementRef(PyObject *obj) {
+	Py_XDECREF(obj);
+}
+
+class RefHolder: public std::unique_ptr<PyObject, decltype(&DecrementRef)> {
+public:
+	explicit RefHolder(PyObject *obj) :
+			std::unique_ptr<PyObject, decltype(&DecrementRef)>(obj,
+					DecrementRef) {
+	}
+};
+
 template<typename T, char const *Key, LIBSAKURA_SYMBOL(Status) (*Func)(T*)>
 void TCapsuleDesctructor(PyObject *obj) {
 	if (!PyCapsule_IsValid(obj, Key)) {
@@ -128,15 +140,17 @@ bool isValidAlignedBuffer(size_t num, AlignedBufferConfiguration const conf[],
 }
 
 PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
-	unsigned PY_LONG_LONG num_data;
+	Py_ssize_t num_data_py;
 	enum {
 		kData, kIsValid
 	};
 	PyObject *capsules[2];
 
-	if (!PyArg_ParseTuple(args, "KOO", &num_data, &capsules[0], &capsules[1])) {
+	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
+			&capsules[kIsValid])) {
 		return nullptr;
 	}
+	auto num_data = static_cast<size_t>(num_data_py);
 	static AlignedBufferConfiguration const conf[] = {
 
 	{ LIBSAKURA_SYMBOL(TypeId_kFloat), 1, { num_data } },
@@ -152,7 +166,7 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 	LIBSAKURA_SYMBOL(StatisticsResult) result;
 	LIBSAKURA_SYMBOL(Status) status;
 	Py_BEGIN_ALLOW_THREADS
-		status = sakura_ComputeStatistics(num_data,
+		status = LIBSAKURA_SYMBOL(ComputeStatistics)(num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kIsValid]->aligned_addr),
 				&result);
@@ -164,11 +178,57 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	return Py_BuildValue("{s:K,s:f,s:f,s:f,s:f,s:f,s:f,s:i,s:i}", "count",
-			static_cast<unsigned PY_LONG_LONG>(result.count), "sum", result.sum,
-			"mean", result.mean, "rms", result.rms, "stddev", result.stddev,
-			"min", result.min, "max", result.max, "index_of_min",
-			result.index_of_min, "index_of_max", result.index_of_max);
+	return Py_BuildValue("{s:n,s:f,s:f,s:f,s:f,s:f,s:f,s:i,s:i}", "count",
+			static_cast<Py_ssize_t>(result.count), "sum", result.sum, "mean",
+			result.mean, "rms", result.rms, "stddev", result.stddev, "min",
+			result.min, "max", result.max, "index_of_min", result.index_of_min,
+			"index_of_max", result.index_of_max);
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+PyObject *Uint8ToBool(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	enum {
+		kData, kResult
+	};
+	PyObject *capsules[2];
+
+	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
+			&capsules[kResult])) {
+		return nullptr;
+	}
+	auto num_data = static_cast<size_t>(num_data_py);
+	static AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(TypeId_kInt8), 1, { num_data } },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kBool), 1, { num_data } },
+
+	};
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[2];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status = LIBSAKURA_SYMBOL(Uint8ToBool)(num_data,
+				reinterpret_cast<uint8_t const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<bool *>(bufs[kResult]->aligned_addr));
+		Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
 
 	invalid_arg:
 
@@ -219,6 +279,106 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	return capsule;
 }
 
+PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
+	PyObject *capsule = nullptr;
+
+	if (!PyArg_ParseTuple(args, "O", &capsule)) {
+		return nullptr;
+	}
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *buf = nullptr;
+	if (LIBSAKURA_SYMBOL(PyAlignedBufferDecapsulate)(capsule,
+			&buf) != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+		return nullptr;
+	}
+	assert(buf);
+
+	RefHolder result(PyTuple_New(buf->dimensions));
+	if (result.get() == nullptr) {
+		goto out_of_memory;
+	}
+	for (size_t i = 0; i < buf->dimensions; ++i) {
+		auto element = PyInt_FromSsize_t(buf->elements[i]);
+		if (element == nullptr) {
+			goto out_of_memory;
+		}
+		PyTuple_SetItem(result.get(), i, element);
+	}
+	return result.release();
+
+	out_of_memory:
+
+	PyErr_SetString(PyExc_MemoryError, "No memory.");
+	return nullptr;
+}
+
+PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
+	PyObject *elements;
+	int typeInt;
+	if (!PyArg_ParseTuple(args, "iO", &typeInt, &elements)) {
+		return nullptr;
+	}
+
+	size_t dimensions = PySequence_Length(elements);
+	if (!(0 < dimensions && dimensions <= kMaxNumberOfDimensions && 0 <= typeInt
+			&& typeInt < LIBSAKURA_SYMBOL(TypeId_kEnd))) {
+		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+		return nullptr;
+	}
+	LIBSAKURA_SYMBOL(PyTypeId) type =
+			static_cast<LIBSAKURA_SYMBOL(PyTypeId)>(typeInt);
+
+	size_t elems[dimensions];
+	size_t total_elements = 1;
+	for (size_t i = 0; i < dimensions; ++i) {
+		RefHolder item(PySequence_GetItem(elements, i));
+		auto n = PyNumber_AsSsize_t(item.get(), PyExc_OverflowError);
+		if (PyErr_Occurred()) {
+			return nullptr;
+		}
+		elems[i] = n;
+		total_elements *= n;
+	}
+
+	static size_t const sizes[] = { sizeof(bool), sizeof(int8_t),
+			sizeof(int32_t), sizeof(int64_t), sizeof(float), sizeof(double),
+			sizeof(long double) };
+	STATIC_ASSERT(LIBSAKURA_SYMBOL(TypeId_kEnd) == ELEMENTSOF((sizes)));
+
+	std::unique_ptr<LIBSAKURA_SYMBOL(PyAlignedBuffer),
+			decltype(&LIBSAKURA_SYMBOL(PyAlignedBufferDestroy))> bufPtr(nullptr,
+	LIBSAKURA_SYMBOL(PyAlignedBufferDestroy));
+	try {
+		char *aligned = nullptr;
+		auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<char>(
+				sizes[type] * total_elements, &aligned);
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) *buf = nullptr;
+		LIBSAKURA_SYMBOL(Status) status =
+				LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(type, addr, aligned,
+						dimensions, elems, LIBSAKURA_PREFIX::Memory::Free,
+						&buf);
+		if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+			throw std::bad_alloc();
+		}
+		bufPtr.reset(buf);
+		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+	} catch (std::bad_alloc const&e) {
+		PyErr_SetString(PyExc_MemoryError, "No memory.");
+		return nullptr;
+	}
+
+	PyObject *capsule = nullptr;
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(bufPtr.get(), &capsule);
+	if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+		PyErr_SetString(PyExc_MemoryError, "No memory.");
+		return nullptr;
+	}
+	assert(status == LIBSAKURA_SYMBOL(Status_kOK) && capsule != nullptr);
+	bufPtr.release();
+	return capsule;
+}
+
 PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *dataSeq;
 	int type;
@@ -236,9 +396,26 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 			bool>(sizeof(bool) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
-				auto item = PySequence_GetItem(dataSeq, i);
-				auto val = PyInt_AsLong(PyNumber_Int(item));
+				RefHolder item(PySequence_GetItem(dataSeq, i));
+				RefHolder itemInt(PyNumber_Int(item.get()));
+				auto val = PyInt_AsLong(itemInt.get());
 				aligned[i] = val != 0;
+			}
+			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
+					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
+					elements, LIBSAKURA_PREFIX::Memory::Free, &buf);
+		}
+			break;
+
+		case LIBSAKURA_SYMBOL(TypeId_kInt8): {
+			uint8_t *aligned = nullptr;
+			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
+					uint8_t>(sizeof(uint8_t) * len, &aligned);
+			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
+				RefHolder item(PySequence_GetItem(dataSeq, i));
+				RefHolder itemInt(PyNumber_Int(item.get()));
+				auto val = PyInt_AsLong(itemInt.get());
+				aligned[i] = val;
 			}
 			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
@@ -251,8 +428,9 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 					float>(sizeof(float) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
-				auto item = PySequence_GetItem(dataSeq, i);
-				auto val = PyFloat_AsDouble(PyNumber_Float(item));
+				RefHolder item(PySequence_GetItem(dataSeq, i));
+				RefHolder itemFloat(PyNumber_Float(item.get()));
+				auto val = PyFloat_AsDouble(itemFloat.get());
 				aligned[i] = val;
 			}
 			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
@@ -285,8 +463,17 @@ PyMethodDef module_methods[] = {
 { "compute_statistics", ComputeStatistics, METH_VARARGS,
 		"Computes statistics of unmasked elements." },
 
+{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
+		"Converts uint8 to bool." },
+
 { "create_convolve1D_context", CreateConvolve1DContext, METH_VARARGS,
 		"Creates a context for convolving 1D." },
+
+{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer, METH_VARARGS,
+		"gets_elements of the aligned buffer." },
+
+{ "new_uninitialized_aligned_buffer", NewUninitializedAlignedBuffer,
+		METH_VARARGS, "Creates an uninitialized new aligned buffer with supplied elements." },
 
 { "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
 		"Creates a new aligned buffer." },

@@ -31,6 +31,17 @@ print result
 del mask
 del data
 
+buf = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (10, 20, 30, 40, 50))
+print(libsakurapy.get_elements_of_aligned_buffer(buf))
+del buf
+
+n = 1024*1024*16;
+ui8 = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT8, (n,))
+bl = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (n,))
+libsakurapy.uint8_to_bool(n, ui8, bl)
+del ui8
+del bl
+
 gc.collect(2)
 
 libsakurapy.clean_up()
