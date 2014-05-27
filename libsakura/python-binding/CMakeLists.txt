@@ -103,7 +103,7 @@ add_custom_target(copyTest
 )
 
 add_custom_target(pytest
-	COMMAND "./test.sh"
+	COMMAND ./test.sh test.py
 	WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 	)
 
