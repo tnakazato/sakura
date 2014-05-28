@@ -92,7 +92,10 @@ if(BUILD_DOC)
 	  @ONLY)
 	add_custom_target(pyapidoc
 		mkdir -p "${PROJECT_BINARY_DIR}/docs"
+		COMMAND rm -f "${PROJECT_BINARY_DIR}/libsakura/config.h"
+		COMMAND ln -s "${PROJECT_BINARY_DIR}/../bin/libsakura/config.h" "${PROJECT_BINARY_DIR}/libsakura"
 		COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
+		COMMAND rm -f "${PROJECT_BINARY_DIR}/libsakura/config.h"
 		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 		COMMENT "Generating the API documentation with Doxygen")
 endif(BUILD_DOC)

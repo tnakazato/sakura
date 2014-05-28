@@ -459,7 +459,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = @PROJECT_BINARY_DIR@ @PROJECT_SOURCE_DIR@ 
+INPUT                  = @PROJECT_BINARY_DIR@ @PROJECT_SOURCE_DIR@
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -468,7 +468,7 @@ INPUT                  = @PROJECT_BINARY_DIR@ @PROJECT_SOURCE_DIR@
 # *.c *.cc *.cxx *.cpp *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx 
 # *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm *.py
 
-FILE_PATTERNS          = *.h *.c *.cc
+FILE_PATTERNS          = *.h
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
@@ -1022,7 +1022,7 @@ PREDEFINED             = "__x86_64__=1" \
 # The macro definition that is found in the sources will be used. 
 # Use the PREDEFINED tag if you want to use a different macro definition.
 
-EXPAND_AS_DEFINED      = 
+EXPAND_AS_DEFINED      = LIBSAKURA_SYMBOL
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES (the default) then 
 # doxygen's preprocessor will remove all function-like macros that are alone 
@@ -1030,7 +1030,7 @@ EXPAND_AS_DEFINED      =
 # function macros are typically used for boiler-plate code, and will confuse 
 # the parser if not removed.
 
-SKIP_FUNCTION_MACROS   = YES
+SKIP_FUNCTION_MACROS   = NO
 
 #---------------------------------------------------------------------------
 # Configuration::additions related to external references   
