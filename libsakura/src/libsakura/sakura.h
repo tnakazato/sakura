@@ -1239,21 +1239,16 @@ typedef enum {
 /**
  * @~japanese
  * @brief 1次元の補間を行う。
- * @details 長さ @a num_base の1次元配列 @a base_x と 長さ @a num_base × @a num_y の1次元
+ * @details 長さ @a num_base の1次元配列 @a base_position と 長さ @a num_base x @a num_array の1次元
  * 配列 @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
  * @a sakura_InterpolateXAxisFloat
- * は @a num_y 個のデータを一括で補間することができる。
- * @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなされる。
- * @a M を列優先の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、
- * @a base_data のメモリレイアウトは、
+ * は @a num_array 個のデータを一括で補間することができる。
+ * @a base_data のメモリレイアウトは、[num_array][num_base]である。
  *
- * @image html InterpolateXAxisFloat.png
- *
- * となっており、この関数はx軸に沿った補間を行う。
- *
- * 補間によって値を得たい点のx軸方向の位置のリストを長さ　@a num_interpolated の配列 @a interpolated_x に
- * 渡すと、補間結果が長さ @a num_interpolated × @a num_y の配列 @a interpolated_data に格納される。
+ * 補間によって値を得たい点の位置のリストを長さ　@a num_interpolated の配列 @a interpolate_position に
+ * 渡すと、補間結果が長さ @a num_interpolated x @a num_array の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列 @a interpolated_data にセットされる）。
+ * @a interpolated_data のメモリレイアウトは[num_array][num_interpolated]である。
  *
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1273,11 +1268,11 @@ typedef enum {
  * を返す。
  *
  * @par
- * @pre @a base_x および @a interpolated_x は昇順または降順にソートされていなければ
- * ならない。また、@a base_x の要素には重複があってはならない。
+ * @pre @a base_position および @a interpolate_position は昇順または降順にソートされていなければ
+ * ならない。また、@a base_position の要素には重複があってはならない。
  *
  * @par 昇順の場合と降順の場合の速度の違いについて:
- * @a base_x または @a interpolated_x が降順にソートされている場合、
+ * @a base_position または @a interpolate_position が降順にソートされている場合、
  * 内部では配列要素をコピーして昇順に並べ替えた上で補間を行う。そのため、降順の場合は
  * 昇順よりも処理が遅くなる。
  *
@@ -1294,21 +1289,21 @@ typedef enum {
  * @param[in] polynomial_order 多項式補間法の場合の最大次数。
  * 実際に適用される次数は、@a num_base との兼ね合いで決まる。
  * @param[in] num_base 補間のためのデータ点の数。
- * @param[in] base_x 補間のための各データのx軸上の位置。
+ * @param[in] base_position 補間のための各データの位置。
  * 要素数は@a num_base でなければならない。
- * @a base_x は昇順または降順にソートされていなければならない。
+ * @a base_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
- * @param[in] num_y 同時に渡すデータ列の数。
+ * @param[in] num_array 同時に渡すデータ列の数。
  * @param[in] base_data 補間のためのデータ列。
- * 要素数は@a num_base × @a num_y でなければならない。
+ * 要素数は@a num_base × @a num_array でなければならない。
  * must-be-aligned
  * @param[in] num_interpolated 補間したいデータ点の数。
- * @param[in] interpolated_x 補間したいデータ点のx座標。
+ * @param[in] interpolate_position 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
- * @a interpolated_x は昇順または降順にソートされていなければならない。
+ * @a interpolate_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
  * @param[out] interpolated_data 補間結果。
- * 要素数は@a num_interpolated × @a num_y でなければならない。
+ * 要素数は@a num_interpolated × @a num_array でなければならない。
  * must-be-aligned
  * @return 終了ステータス。
  *
@@ -1320,16 +1315,16 @@ typedef enum {
  * Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
  * @param[in] num_base number of elements for data points.
- * @param[in] base_x x-coordinate of data points. Its length must be @a num_base.
+ * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
- * @param[in] num_y number of arrays given in @a base_data.
- * @param[in] base_data Data points. Its length must be @a num_base times @a num_y.
+ * @param[in] num_array number of arrays given in @a base_data.
+ * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
  * @param[in] num_interpolated number of elements for points that wants to get
  * interpolated value.
- * @param[in] interpolated_x x-coordinate of points that wants to get interpolated
+ * @param[in] interpolate_position x-coordinate of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * @param[out] interpolated_data storage for interpolation result. Its length must be
- * @a num_interpolated times @a num_y.
+ * @a num_interpolated times @a num_array.
  * @return status code.
  *
  * @~
@@ -1337,31 +1332,26 @@ typedef enum {
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateXAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
-		double const base_x[/*num_base*/], size_t num_y,
-		float const base_data[/*num_base*num_y*/], size_t num_interpolated,
-		double const interpolated_x[/*num_interpolated*/],
-		float interpolated_data[/*num_interpolated*num_y*/]);
+		double const base_position[/*num_base*/], size_t num_array,
+		float const base_data[/*num_base*num_array*/], size_t num_interpolated,
+		double const interpolate_position[/*num_interpolated*/],
+		float interpolated_data[/*num_interpolated*num_array*/]);
 
 /**
  * @~japanese
  * @brief 1次元の補間を行う。
- * @details 長さ @a num_base の1次元配列 @a base_y と長さ @a num_base × @a num_x の1次元配列
+ * @details 長さ @a num_base の1次元配列 @a base_position と長さ @a num_base x @a num_array の1次元配列
  * @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
  * @a sakura_InterpolateYAxisFloat
- * は @a num_x 個のデータを一括で補間することができる。
- * @a base_data は2次元の配列 @a M を1次元配列で表現したものとみなされる。
- * @a M を列優先の2次元配列とし、列方向をx軸、行方向をy軸と呼ぶことにすると、
- * @a base_data のメモリレイアウトは、
+ * は @a num_array 個のデータを一括で補間することができる。
+ * @a base_data のメモリレイアウトは[num_base][num_array]である。
  *
- * @image html InterpolateYAxisFloat.png
- *
- * となっており、この関数はy軸に沿った補間を行う。
- *
- * 補間によって値を得たい点のy軸方向の位置のリストを長さ
- * @a num_interpolated の配列 @a interpolated_y に渡すと、補間結果が
- * 長さ @a num_interpolated × @a num_x の配列 @a interpolated_data に格納される。
+ * 補間によって値を得たい点の位置のリストを長さ
+ * @a num_interpolated の配列 @a interpolate_position に渡すと、補間結果が
+ * 長さ @a num_interpolated x @a num_array の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
  * @a interpolated_data にセットされる）。
+ * @a interpolated_dataのメモリレイアウトは[num_interpolated][num_array]である。
  *
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1381,11 +1371,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * を返す。
  *
  * @par
- * @pre @a base_y および @a interpolated_y は昇順または降順にソートされていなければ
- * ならない。また、@a base_y の要素には重複があってはならない。
+ * @pre @a base_position および @a interpolate_position は昇順または降順にソートされていなければ
+ * ならない。また、@a base_position の要素には重複があってはならない。
  *
  * @par 昇順の場合と降順の場合の速度の違いについて:
- * @a base_y または @a interpolated_y が降順にソートされている場合、
+ * @a base_position または @a interpolate_position が降順にソートされている場合、
  * 内部では配列要素をコピーして昇順に並べ替えた上で補間を行う。そのため、降順の場合は
  * 昇順よりも処理が遅くなる。
  *
@@ -1402,21 +1392,21 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @param[in] polynomial_order 多項式補間法の場合の最大次数。
  * 実際に適用される次数は、@a num_base との兼ね合いで決まる。
  * @param[in] num_base 補間のためのデータ点の数。
- * @param[in] base_y 補間のための各データのx軸上の位置。
+ * @param[in] base_position 補間のための各データの位置。
  * 要素数は@a num_base でなければならない。
- * @a base_y は昇順または降順にソートされていなければならない。
+ * @a base_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
- * @param[in] num_x 同時に渡すデータ列の数。
+ * @param[in] num_array 同時に渡すデータ列の数。
  * @param[in] base_data 補間のためのデータ列。
- * 要素数は@a num_base × @a num_x でなければならない。
+ * 要素数は@a num_base × @a num_array でなければならない。
  * must-be-aligned
  * @param[in] num_interpolated 補間したいデータ点の数。
- * @param[in] interpolated_y 補間したいデータ点のx座標。
+ * @param[in] interpolate_position 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
- * @a interpolated_y は昇順または降順にソートされていなければならない。
+ * @a interpolate_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
  * @param[out] interpolated_data 補間結果。
- * 要素数は@a num_interpolated × @a num_x でなければならない。
+ * 要素数は@a num_interpolated × @a num_array でなければならない。
  * must-be-aligned
  * @return 終了ステータス。
  *
@@ -1428,26 +1418,26 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
  * @param[in] num_base number of elements for data points.
- * @param[in] base_y y-coordinate of data points. Its length must be @a num_base.
+ * @param[in] base_position y-coordinate of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
- * @param[in] num_x number of arrays given in @a base_data.
- * @param[in] base_data Data points. Its length must be @a num_base times @a num_x.
+ * @param[in] num_array number of arrays given in @a base_data.
+ * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
  * @param[in] num_interpolated number of elements for points that wants to get
  * interpolated value.
- * @param[in] interpolated_y y-coordinate of points that wants to get interpolated
+ * @param[in] interpolate_position y-coordinate of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * @param[out] interpolated_data storage for interpolation result. Its length must be
- * @a num_interpolated times @a num_x.
+ * @a num_interpolated times @a num_array.
  * @return status code.
  *
  * @~
  * MT-safe */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
-		double const base_y[/*num_base*/], size_t num_x,
-		float const base_data[/*num_base*num_x*/], size_t num_interpolated,
-		double const interpolated_y[/*num_interpolated*/],
-		float interpolated_data[/*num_interpolated*num_x*/]);
+		double const base_position[/*num_base*/], size_t num_array,
+		float const base_data[/*num_base*num_array*/], size_t num_interpolated,
+		double const interpolate_position[/*num_interpolated*/],
+		float interpolated_data[/*num_interpolated*num_array*/]);
 
 /**
  * @japanese
