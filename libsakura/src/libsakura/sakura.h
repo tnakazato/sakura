@@ -267,40 +267,40 @@ typedef struct {
  * @param[in] support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= (INT32_MAX - 1) / 2<br/>
  * ただし、@a support * @a sampling に比例するサイズの領域をスタック上に確保するので、@a support * @a sampling が大きな値となる場合、スタックオーバーフローを起こす。
  * @param[in] sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
- * @param[in] num_polarizations 範囲は、0 < num_polarization <= INT32_MAX
- * @param[in] polarization_map	要素数は、num_polarization。各要素の値は、[0,num_polarization_for_grid)でなければならない。<br/>must-be-aligned
+ * @param[in] num_polarizations 範囲は、0 < num_polarizations <= INT32_MAX
+ * @param[in] polarization_map	要素数は、num_polarizations。各要素の値は、[0,num_polarizations_for_grid)でなければならない。<br/>must-be-aligned
  * @param[in] num_channels 範囲は、0 < num_channels <= INT32_MAX
  * @param[in] channel_map	要素数は、num_channels。各要素の値は、[0,num_channels_for_grid)でなければならない。<br/>must-be-aligned
- * @param[in] mask	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
- * @param[in] value	要素のレイアウトは、[num_spectra][num_polarization][num_channels]。グリッディングする値。<br/>must-be-aligned
+ * @param[in] mask	要素のレイアウトは、[num_spectra][num_polarizations][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
+ * @param[in] value	要素のレイアウトは、[num_spectra][num_polarizations][num_channels]。グリッディングする値。<br/>must-be-aligned
  * @param[in] weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
  * @param[in] weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
  * @param[in] num_convolution_table @a convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= convolution_table <= INT32_MAX / 32
  * @param[in] convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。各要素の値は、NaN,Infであってはならない。要素0が中心を表す。<br/>must-be-aligned
- * @param[in] num_polarization_for_grid 範囲は、0 < num_polarization_for_grid <= INT32_MAX
+ * @param[in] num_polarizations_for_grid 範囲は、0 < num_polarizations_for_grid <= INT32_MAX
  * @param[in] num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
  * @param[in] width 範囲は、0 < width <= INT32_MAX
  * @param[in] height 範囲は、0 < height <= INT32_MAX
- * @param[out] weight_sum	要素のレイアウトは、[num_polarization_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
- * @param[out] weight_of_grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
- * @param[out] grid	要素のレイアウトは、[height][width][num_polarization_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
+ * @param[out] weight_sum	要素のレイアウトは、[num_polarizations_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
+ * @param[out] weight_of_grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
+ * @param[out] grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
 		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
 		double const x[/*num_spectra*/], double const y[/*num_spectra*/],
-		size_t support, size_t sampling, size_t num_polarization,
-		uint32_t const polarization_map[/*num_polarization*/],
+		size_t support, size_t sampling, size_t num_polarizations,
+		uint32_t const polarization_map[/*num_polarizations*/],
 		size_t num_channels, uint32_t const channel_map[/*num_channels*/],
-		bool const mask/*[num_spectra][num_polarization]*/[/*num_channels*/],
-		float const value/*[num_spectra][num_polarization]*/[/*num_channels*/],
+		bool const mask/*[num_spectra][num_polarizations]*/[/*num_channels*/],
+		float const value/*[num_spectra][num_polarizations]*/[/*num_channels*/],
 		float const weight/*[num_spectra]*/[/*num_channels*/], bool weight_only,
 		size_t num_convolution_table/*= ceil(sqrt(2.)*(support+1)*sampling)*/,
 		float const convolution_table[/*num_convolution_table*/],
-		size_t num_polarization_for_grid, size_t num_channels_for_grid,
+		size_t num_polarizations_for_grid, size_t num_channels_for_grid,
 		size_t width, size_t height,
-		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/])
+		double weight_sum/*[num_polarizations_for_grid]*/[/*num_channels_for_grid*/],
+		float weight_of_grid/*[height][width][num_polarizations_for_grid]*/[/*num_channels_for_grid*/],
+		float grid/*[height][width][num_polarizations_for_grid]*/[/*num_channels_for_grid*/])
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
