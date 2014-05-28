@@ -25,6 +25,8 @@ namespace {
 
 constexpr size_t kMaxNumberOfDimensions = 5;
 
+typedef PyObject *(*FuncForPython)(PyObject *self, PyObject *args);
+
 constexpr char const kAlignedBufferName[] =
 #if 0
 		"AlignedBuffer.sakura.nao.ac.jp";
@@ -110,9 +112,18 @@ PyObject *GetCurrentTime(PyObject *self, PyObject *args) {
 
 struct AlignedBufferConfiguration {
 	LIBSAKURA_SYMBOL(PyTypeId) type;
-	size_t dimensions;
-	size_t elements[kMaxNumberOfDimensions];
+	std::function<bool(LIBSAKURA_SYMBOL(PyAlignedBuffer) const &)> pred;
 };
+
+bool TotalElementsGreaterOrEqual(LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf,
+		size_t n) {
+	assert(0 < buf.dimensions && buf.dimensions <= kMaxNumberOfDimensions);
+	size_t total_elements = 1;
+	for (size_t i = 0; i < buf.dimensions; ++i) {
+		total_elements *= buf.elements[i];
+	}
+	return total_elements >= n;
+}
 
 bool isValidAlignedBuffer(size_t num, AlignedBufferConfiguration const conf[],
 		PyObject *capsules[],
@@ -124,14 +135,7 @@ bool isValidAlignedBuffer(size_t num, AlignedBufferConfiguration const conf[],
 			return false;
 		}
 		assert(buf);
-		if (buf->type != conf[i].type) {
-			return false;
-		}
-		if (buf->dimensions != conf[i].dimensions) {
-			return false;
-		}
-		if (memcmp(buf->elements, conf[i].elements,
-				sizeof(buf->elements[0]) * buf->dimensions) != 0) {
+		if (!(buf->type == conf[i].type && conf[i].pred(*buf))) {
 			return false;
 		}
 		bufs[i] = buf;
@@ -151,11 +155,13 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
-	static AlignedBufferConfiguration const conf[] = {
+	auto pred = [num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+	{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	AlignedBufferConfiguration const conf[] = {
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), 1, { num_data } },
+	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kBool), 1, { num_data } },
+	{ LIBSAKURA_SYMBOL(TypeId_kBool), pred },
 
 	};
 
@@ -190,7 +196,162 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
-PyObject *Uint8ToBool(PyObject *self, PyObject *args) {
+PyObject *GridConvolving(PyObject *self, PyObject *args) {
+	Py_ssize_t num_spectra_py;
+	Py_ssize_t start_spectrum_py;
+	Py_ssize_t end_spectrum_py;
+	Py_ssize_t support_py;
+	Py_ssize_t sampling_py;
+	Py_ssize_t num_polarizations_py;
+	Py_ssize_t num_channels_py;
+	Py_ssize_t num_convolution_table_py;
+	Py_ssize_t num_polarizations_for_grid_py;
+	Py_ssize_t num_channels_for_grid_py;
+	Py_ssize_t width_py;
+	Py_ssize_t height_py;
+	PyObject *weight_only = nullptr;
+	enum {
+		kSpectrumMask,
+		kX,
+		kY,
+		kPolarizationMap,
+		kChannelMap,
+		kMask,
+		kValue,
+		kWeight,
+		kConvolutionTable,
+		kWeightSum,
+		kWeightOfGrid,
+		kGrid,
+		kEnd
+	};
+	PyObject *capsules[kEnd];
+
+	if (!PyArg_ParseTuple(args, "nnnOOOnnnOnOOOOOnOnnnnOOO", &num_spectra_py,
+			&start_spectrum_py, &end_spectrum_py, &capsules[kSpectrumMask],
+			&capsules[kX], &capsules[kY], &support_py, &sampling_py,
+			&num_polarizations_py, &capsules[kPolarizationMap],
+			&num_channels_py, &capsules[kChannelMap], &capsules[kMask],
+			&capsules[kValue], &capsules[kWeight], &weight_only,
+			&num_convolution_table_py, &capsules[kConvolutionTable],
+			&num_polarizations_for_grid_py, &num_channels_for_grid_py,
+			&width_py, &height_py, &capsules[kWeightSum],
+			&capsules[kWeightOfGrid], &capsules[kGrid])) {
+		return nullptr;
+	}
+	auto num_spectra = static_cast<size_t>(num_spectra_py);
+	auto start_spectrum = static_cast<size_t>(start_spectrum_py);
+	auto end_spectrum = static_cast<size_t>(end_spectrum_py);
+	auto support = static_cast<size_t>(support_py);
+	auto sampling = static_cast<size_t>(sampling_py);
+	auto num_polarizations = static_cast<size_t>(num_polarizations_py);
+	auto num_channels = static_cast<size_t>(num_channels_py);
+	auto num_convolution_table = static_cast<size_t>(num_convolution_table_py);
+	auto num_polarizations_for_grid =
+			static_cast<size_t>(num_polarizations_for_grid_py);
+	auto num_channels_for_grid = static_cast<size_t>(num_channels_for_grid_py);
+	auto width = static_cast<size_t>(width_py);
+	auto height = static_cast<size_t>(height_py);
+
+	auto pred_num_spectra =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_spectra);};
+	auto pred_num_polarizations =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_polarizations);};
+	auto pred_num_channels =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_channels);};
+	auto pred_sp_pol_ch =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_spectra * num_polarizations * num_channels);};
+	auto pred_sp_ch = [=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+	{	return TotalElementsGreaterOrEqual(buf, num_spectra * num_channels);};
+	auto pred_num_convolution_table =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_convolution_table);};
+	auto pred_pol_ch_for_grid =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_polarizations_for_grid * num_channels_for_grid);};
+	auto pred_h_w_pol_ch_for_grid =
+			[=](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, height * width * num_polarizations_for_grid * num_channels_for_grid);};
+
+	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(TypeId_kBool), pred_num_spectra },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kDouble), pred_num_spectra },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kDouble), pred_num_spectra },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kInt32), pred_num_polarizations },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kInt32), pred_num_channels },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kBool), pred_sp_pol_ch },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_sp_pol_ch },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_sp_ch },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_num_convolution_table },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kDouble), pred_pol_ch_for_grid },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_h_w_pol_ch_for_grid },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_h_w_pol_ch_for_grid },
+
+	};
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status =
+				LIBSAKURA_SYMBOL(GridConvolving)(num_spectra, start_spectrum,
+						end_spectrum,
+						static_cast<bool const *>(bufs[kSpectrumMask]->aligned_addr),
+						static_cast<double const *>(bufs[kX]->aligned_addr),
+						static_cast<double const *>(bufs[kY]->aligned_addr),
+						support, sampling, num_polarizations,
+						static_cast<uint32_t const *>(bufs[kPolarizationMap]->aligned_addr),
+						num_channels,
+						static_cast<uint32_t const *>(bufs[kChannelMap]->aligned_addr),
+						static_cast<bool const *>(bufs[kMask]->aligned_addr),
+						static_cast<float const *>(bufs[kValue]->aligned_addr),
+						static_cast<float const *>(bufs[kWeight]->aligned_addr),
+						weight_only == Py_True, num_convolution_table,
+						static_cast<float const *>(bufs[kConvolutionTable]->aligned_addr),
+						num_polarizations_for_grid, num_channels_for_grid,
+						width, height,
+						static_cast<double *>(bufs[kWeightSum]->aligned_addr),
+						static_cast<float *>(bufs[kWeightOfGrid]->aligned_addr),
+						static_cast<float *>(bufs[kGrid]->aligned_addr));
+		//fprintf(stderr, "Grid\n");
+		Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_RETURN_NONE;
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+template<typename FromType, typename ToType,
+LIBSAKURA_SYMBOL(PyTypeId) FromTypeId, LIBSAKURA_SYMBOL(PyTypeId) ToTypeId,
+LIBSAKURA_SYMBOL(Status) (*Func)(size_t, FromType const *, ToType *)>
+PyObject *ConvertArray(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
 		kData, kResult
@@ -202,11 +363,13 @@ PyObject *Uint8ToBool(PyObject *self, PyObject *args) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
-	static AlignedBufferConfiguration const conf[] = {
+	auto pred = [num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+	{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	AlignedBufferConfiguration const conf[] = {
 
-	{ LIBSAKURA_SYMBOL(TypeId_kInt8), 1, { num_data } },
+	{ FromTypeId, pred },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kBool), 1, { num_data } },
+	{ ToTypeId, pred },
 
 	};
 
@@ -216,9 +379,9 @@ PyObject *Uint8ToBool(PyObject *self, PyObject *args) {
 	}
 	LIBSAKURA_SYMBOL(Status) status;
 	Py_BEGIN_ALLOW_THREADS
-		status = LIBSAKURA_SYMBOL(Uint8ToBool)(num_data,
-				reinterpret_cast<uint8_t const*>(bufs[kData]->aligned_addr),
-				reinterpret_cast<bool *>(bufs[kResult]->aligned_addr));
+		status = Func(num_data,
+				reinterpret_cast<FromType const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<ToType *>(bufs[kResult]->aligned_addr));
 		Py_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -235,6 +398,22 @@ PyObject *Uint8ToBool(PyObject *self, PyObject *args) {
 	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
 	return nullptr;
 }
+
+constexpr FuncForPython Uint8ToBool = ConvertArray<uint8_t, bool,
+LIBSAKURA_SYMBOL(TypeId_kInt8), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(Uint8ToBool)>;
+
+constexpr FuncForPython Uint32ToBool = ConvertArray<uint32_t, bool,
+LIBSAKURA_SYMBOL(TypeId_kInt32), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(Uint32ToBool)>;
+
+constexpr FuncForPython InvertBool = ConvertArray<bool, bool,
+LIBSAKURA_SYMBOL(TypeId_kBool), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(InvertBool)>;
+
+constexpr FuncForPython SetFalseFloatIfNanOrInf = ConvertArray<float, bool,
+LIBSAKURA_SYMBOL(TypeId_kFloat), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)>;
 
 PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data;
@@ -354,9 +533,8 @@ PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 				sizes[type] * total_elements, &aligned);
 		LIBSAKURA_SYMBOL(PyAlignedBuffer) *buf = nullptr;
 		LIBSAKURA_SYMBOL(Status) status =
-				LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(type, addr, aligned,
-						dimensions, elems, LIBSAKURA_PREFIX::Memory::Free,
-						&buf);
+		LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(type, addr, aligned, dimensions,
+				elems, LIBSAKURA_PREFIX::Memory::Free, &buf);
 		if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
 			throw std::bad_alloc();
 		}
@@ -397,13 +575,20 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 			bool>(sizeof(bool) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
-				RefHolder itemInt(PyNumber_Int(item.get()));
-				auto val = PyInt_AsLong(itemInt.get());
+				auto val = PyInt_AsLong(item.get());
+				if (PyErr_Occurred()) {
+					return nullptr;
+				}
 				aligned[i] = val != 0;
 			}
+			LIBSAKURA_SYMBOL(Status) status =
 			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
 					elements, LIBSAKURA_PREFIX::Memory::Free, &buf);
+			if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+				throw std::bad_alloc();
+			}
+			assert(status == LIBSAKURA_SYMBOL(Status_kOK));
 		}
 			break;
 
@@ -413,13 +598,43 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 					uint8_t>(sizeof(uint8_t) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
-				RefHolder itemInt(PyNumber_Int(item.get()));
-				auto val = PyInt_AsLong(itemInt.get());
+				auto val = PyInt_AsLong(item.get());
+				if (PyErr_Occurred()) {
+					return nullptr;
+				}
 				aligned[i] = val;
 			}
+			LIBSAKURA_SYMBOL(Status) status =
 			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
 					elements, LIBSAKURA_PREFIX::Memory::Free, &buf);
+			if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+				throw std::bad_alloc();
+			}
+			assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+		}
+			break;
+
+		case LIBSAKURA_SYMBOL(TypeId_kInt32): {
+			uint32_t *aligned = nullptr;
+			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
+					uint32_t>(sizeof(uint32_t) * len, &aligned);
+			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
+				RefHolder item(PySequence_GetItem(dataSeq, i));
+				auto val = PyInt_AsLong(item.get());
+				if (PyErr_Occurred()) {
+					return nullptr;
+				}
+				aligned[i] = val;
+			}
+			LIBSAKURA_SYMBOL(Status) status =
+			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
+					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
+					elements, LIBSAKURA_PREFIX::Memory::Free, &buf);
+			if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+				throw std::bad_alloc();
+			}
+			assert(status == LIBSAKURA_SYMBOL(Status_kOK));
 		}
 			break;
 
@@ -429,16 +644,47 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 					float>(sizeof(float) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
-				RefHolder itemFloat(PyNumber_Float(item.get()));
-				auto val = PyFloat_AsDouble(itemFloat.get());
+				auto val = PyFloat_AsDouble(item.get());
+				if (PyErr_Occurred()) {
+					return nullptr;
+				}
 				aligned[i] = val;
 			}
+			LIBSAKURA_SYMBOL(Status) status =
 			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
 					elements, LIBSAKURA_PREFIX::Memory::Free, &buf);
+			if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+				throw std::bad_alloc();
+			}
+			assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+		}
+			break;
+
+		case LIBSAKURA_SYMBOL(TypeId_kDouble): {
+			double *aligned = nullptr;
+			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
+					double>(sizeof(double) * len, &aligned);
+			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
+				RefHolder item(PySequence_GetItem(dataSeq, i));
+				auto val = PyFloat_AsDouble(item.get());
+				if (PyErr_Occurred()) {
+					return nullptr;
+				}
+				aligned[i] = val;
+			}
+			LIBSAKURA_SYMBOL(Status) status =
+			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
+					(LIBSAKURA_SYMBOL(PyTypeId)) type, addr, aligned, 1,
+					elements, LIBSAKURA_PREFIX::Memory::Free, &buf);
+			if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+				throw std::bad_alloc();
+			}
+			assert(status == LIBSAKURA_SYMBOL(Status_kOK));
 		}
 			break;
 		default:
+			assert(false);
 			break;
 		}
 	} catch (std::bad_alloc const&e) {
@@ -447,7 +693,13 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 	}
 
 	PyObject *capsule = nullptr;
+	LIBSAKURA_SYMBOL(Status) status =
 	LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(buf, &capsule);
+	if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+		PyErr_SetString(PyExc_MemoryError, "No memory.");
+		return nullptr;
+	}
+	assert(status == LIBSAKURA_SYMBOL(Status_kOK));
 	return capsule;
 }
 
@@ -463,8 +715,17 @@ PyMethodDef module_methods[] = {
 { "compute_statistics", ComputeStatistics, METH_VARARGS,
 		"Computes statistics of unmasked elements." },
 
-{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
-		"Converts uint8 to bool." },
+{ "grid_convolving", GridConvolving, METH_VARARGS,
+		"Grids spectra on X-Y plane with convolving." },
+
+{ "uint8_to_bool", Uint8ToBool, METH_VARARGS, "Converts uint8 to bool." },
+
+{ "uint32_to_bool", Uint32ToBool, METH_VARARGS, "Converts uint32 to bool." },
+
+{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
+
+{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf, METH_VARARGS,
+		"set false if float value is NaN or Inf." },
 
 { "create_convolve1D_context", CreateConvolve1DContext, METH_VARARGS,
 		"Creates a context for convolving 1D." },
@@ -473,7 +734,8 @@ PyMethodDef module_methods[] = {
 		"gets_elements of the aligned buffer." },
 
 { "new_uninitialized_aligned_buffer", NewUninitializedAlignedBuffer,
-		METH_VARARGS, "Creates an uninitialized new aligned buffer with supplied elements." },
+METH_VARARGS,
+		"Creates an uninitialized new aligned buffer with supplied elements." },
 
 { "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
 		"Creates a new aligned buffer." },

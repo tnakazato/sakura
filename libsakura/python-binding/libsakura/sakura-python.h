@@ -58,7 +58,7 @@ typedef enum {
  * @return 終了ステータス
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferEncapsulate)(
-LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, PyObject **capsule);
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, PyObject **capsule) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -71,7 +71,7 @@ LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, PyObject **capsule);
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferDecapsulate)(
 		PyObject *capsule,
-		LIBSAKURA_SYMBOL(PyAlignedBuffer) **buffer);
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) **buffer) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -83,7 +83,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferDecapsulate)(
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(
 LIBSAKURA_SYMBOL(PyTypeId) type, void *original_addr, void *aligned_addr,
 		size_t dimensions, size_t elements[], void (*destructor)(void *),
-		LIBSAKURA_SYMBOL(PyAlignedBuffer) **buffer);
+		LIBSAKURA_SYMBOL(PyAlignedBuffer) **buffer)
+LIBSAKURA_WARN_UNUSED_RESULT;
 
 void LIBSAKURA_SYMBOL(PyAlignedBufferDestroy)(
 LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer);
