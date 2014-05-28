@@ -6,7 +6,6 @@ import math
 import gc
 from threading import *
 
-sys.path.append(r'.')
 import libsakurapy
 
 print dir(libsakurapy);
@@ -73,7 +72,7 @@ def test_grid():
 		mask, value, weight, False,
 		num_convolution_table, convolution_table,
 		num_polarizations_for_grid, num_channels_for_grid,
-		160, 100,
+		width, height,
 		weight_sum, weight_of_grid, grid)
 
 def test_AB():
