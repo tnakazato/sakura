@@ -1267,8 +1267,8 @@ typedef enum {
  * @pre @a base_position および @a interpolate_position は昇順または降順にソートされていなければ
  * ならない。また、@a base_position の要素には重複があってはならない。
  *
- * @par sakura_InterpolateYAxisFloat()との違いについて
- * sakura_InterpolateXAxisFloat()とsakura_InterpolateYAxisFloat()の違いは、@a base_data
+ * @par sakura_InterpolateXAxisFloat() と sakura_InterpolateYAxisFloat() の違いについて
+ * sakura_InterpolateXAxisFloat() と sakura_InterpolateYAxisFloat() の違いは、@a base_data
  * と@a interpolated_data のメモリレイアウトである。たとえば、@a base_data に対して前者が想定する
  * メモリレイアウトは[num_array][num_base]であり、@a base_data に複数のデータを連結する場合には、
  * @verbatim    (データ0の全要素), (データ1の全要素), ... @endverbatim
