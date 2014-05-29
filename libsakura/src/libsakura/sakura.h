@@ -1241,14 +1241,11 @@ typedef enum {
  * @brief 1次元の補間を行う。
  * @details 長さ @a num_base の1次元配列 @a base_position と 長さ @a num_base x @a num_array の1次元
  * 配列 @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
- * @a sakura_InterpolateXAxisFloat
- * は @a num_array 個のデータを一括で補間することができる。
- * @a base_data のメモリレイアウトは、[num_array][num_base]である。
+ * @a base_data に @a num_array 個のデータを1次元配列として連結し、一括で補間することができる。
  *
  * 補間によって値を得たい点の位置のリストを長さ　@a num_interpolated の配列 @a interpolate_position に
  * 渡すと、補間結果が長さ @a num_interpolated x @a num_array の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列 @a interpolated_data にセットされる）。
- * @a interpolated_data のメモリレイアウトは[num_array][num_interpolated]である。
  *
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1267,9 +1264,19 @@ typedef enum {
  * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
  * を返す。
  *
- * @par
  * @pre @a base_position および @a interpolate_position は昇順または降順にソートされていなければ
  * ならない。また、@a base_position の要素には重複があってはならない。
+ *
+ * @par sakura_InterpolateYAxisFloat()との違いについて
+ * sakura_InterpolateXAxisFloat()とsakura_InterpolateYAxisFloat()の違いは、@a base_data
+ * と@a interpolated_data のメモリレイアウトである。たとえば、@a base_data に対して前者が想定する
+ * メモリレイアウトは[num_array][num_base]であり、@a base_data に複数のデータを連結する場合には、
+ * @verbatim    (データ0の全要素), (データ1の全要素), ... @endverbatim
+ * という順序でデータを格納する。
+ * 一方後者では、メモリレイアウトとして[num_base][num_array]を
+ * 仮定する。すなわち、@a base_data に複数のデータを連結する場合には、
+ * @verbatim    (全データの第0要素), (全データの第1要素), ... @endverbatim
+ * という順序でデータを格納する。@a interpolated_data のメモリレイアウトもこれに倣う。
  *
  * @par 昇順の場合と降順の場合の速度の違いについて:
  * @a base_position または @a interpolate_position が降順にソートされている場合、
@@ -1338,100 +1345,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float interpolated_data[/*num_interpolated*num_array*/]);
 
 /**
- * @~japanese
- * @brief 1次元の補間を行う。
- * @details 長さ @a num_base の1次元配列 @a base_position と長さ @a num_base x @a num_array の1次元配列
- * @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
- * @a sakura_InterpolateYAxisFloat
- * は @a num_array 個のデータを一括で補間することができる。
- * @a base_data のメモリレイアウトは[num_base][num_array]である。
- *
- * 補間によって値を得たい点の位置のリストを長さ
- * @a num_interpolated の配列 @a interpolate_position に渡すと、補間結果が
- * 長さ @a num_interpolated x @a num_array の配列 @a interpolated_data に格納される。
- * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列
- * @a interpolated_data にセットされる）。
- * @a interpolated_dataのメモリレイアウトは[num_interpolated][num_array]である。
- *
- * 戻り値は終了ステータスである。正常終了の場合、
- * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
- * を返す。
- * 引数に不正がある場合には
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * を返す。内部で利用するメモリの確保に失敗した場合は、
- * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink を返す。
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * が返された場合、
- * 考えられる原因は以下の二つである。
- *     - @a interpolation_method が正しくない
- *     - 引数に渡した配列がアラインされていない
- *
- * また、原因不明のエラーでは
- * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
- * を返す。
- *
- * @par
- * @pre @a base_position および @a interpolate_position は昇順または降順にソートされていなければ
- * ならない。また、@a base_position の要素には重複があってはならない。
- *
- * @par 昇順の場合と降順の場合の速度の違いについて:
- * @a base_position または @a interpolate_position が降順にソートされている場合、
- * 内部では配列要素をコピーして昇順に並べ替えた上で補間を行う。そのため、降順の場合は
- * 昇順よりも処理が遅くなる。
- *
- * @par 多項式補間の動作について:
- * @a polynomial_order はあくまで最大次数を規定するものであり、その次数で必ず
- * 補間が行われるとは限らない。たとえば、@a polynomial_order が2（2次多項式による補間）
- * で@a num_base が2の場合、実際には2点を通る1次多項式が一意に決まるため、2次多項式に
- * よる補間ではなく1次多項式による補間（線形補間）が行われる。
- * @par
- * @a polynomial_order に0を指定した場合、最近接補間が行われる。
- *
- * @par
- * @param[in] interpolation_method 補間方法
- * @param[in] polynomial_order 多項式補間法の場合の最大次数。
- * 実際に適用される次数は、@a num_base との兼ね合いで決まる。
- * @param[in] num_base 補間のためのデータ点の数。
- * @param[in] base_position 補間のための各データの位置。
- * 要素数は@a num_base でなければならない。
- * @a base_position は昇順または降順にソートされていなければならない。
- * must-be-aligned
- * @param[in] num_array 同時に渡すデータ列の数。
- * @param[in] base_data 補間のためのデータ列。
- * 要素数は@a num_base × @a num_array でなければならない。
- * must-be-aligned
- * @param[in] num_interpolated 補間したいデータ点の数。
- * @param[in] interpolate_position 補間したいデータ点のx座標。
- * 要素数は@a num_interpolated でなければならない。
- * @a interpolate_position は昇順または降順にソートされていなければならない。
- * must-be-aligned
- * @param[out] interpolated_data 補間結果。
- * 要素数は@a num_interpolated × @a num_array でなければならない。
- * must-be-aligned
- * @return 終了ステータス。
- *
- * @~english
- * @brief Perform one-dimensional interpolation.
- * @details
- * @param[in] interpolation_method interpolation method.
- * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
- * Actual order will be determined by a balance
- * between @a polynomial_order and @a num_base.
- * @param[in] num_base number of elements for data points.
- * @param[in] base_position y-coordinate of data points. Its length must be @a num_base.
- * It must be sorted either ascending or descending.
- * @param[in] num_array number of arrays given in @a base_data.
- * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
- * @param[in] num_interpolated number of elements for points that wants to get
- * interpolated value.
- * @param[in] interpolate_position y-coordinate of points that wants to get interpolated
- * value. Its length must be @a num_interpolated.
- * @param[out] interpolated_data storage for interpolation result. Its length must be
- * @a num_interpolated times @a num_array.
- * @return status code.
- *
- * @~
- * MT-safe */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
+ * @copybrief sakura_IntepolateXAxisFloat
+ * @copydetails sakura_InterpolateXAxisFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
 		double const base_position[/*num_base*/], size_t num_array,
