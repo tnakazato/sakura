@@ -46,6 +46,28 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
+	// Set (1+x+x*x) float values into an array
+	void SetFloatPolynomial(size_t const num_data, float *data) {
+		for (size_t i = 0; i < num_data; ++i) {
+			double x = (double) i;
+			data[i] = (float) (1.0 + x + x * x);
+		}
+	}
+
+	// Set constant float values into an array
+	void SetFloatConstant(float value, size_t const num_data, float *data) {
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = value;
+		}
+	}
+
+	// Set constant boolean values into an array
+	void SetBoolConstant(bool value, size_t const num_data, bool *data) {
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = value;
+		}
+	}
+
 	//1D float array
 	void PrintArray(char const *name, size_t print_length, float const *data,
 			size_t start_idx = 0, bool print_name = true, bool newline = true) {
@@ -158,6 +180,37 @@ TEST_F(Baseline, CreateBaselineContextForChebyshevPolynomial) {
 				context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
+}
+
+/*
+ * Test sakura_CreateBaselineContext : failure case : invalid baseline type
+ * returned value must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, CreateBaselineContextWithInvalidBaselineType) {
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kNumType), order, num_chan, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+}
+
+/*
+ * Test sakura_CreateBaselineContext : failure case : context is nullptr
+ * returned value must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, CreateBaselineContextWithContextNullPointer) {
+	uint16_t const order(20);
+	size_t const num_chan(4096);
+
+	LIBSAKURA_SYMBOL(BaselineContext) **context_ptr_ptr = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan,
+			context_ptr_ptr);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 }
 
 /*
@@ -306,6 +359,17 @@ TEST_F(Baseline, DestroyBaselineContext) {
 }
 
 /*
+ * Test sakura_DestroyBaselineContext : failure case : context is nullptr
+ * returned value must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, DestroyBaselineContextWithContextNullPointer) {
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
+}
+
+/*
  * Test sakura_GetBestFitBaseline
  * RESULT:
  * out = []
@@ -313,13 +377,18 @@ TEST_F(Baseline, DestroyBaselineContext) {
 TEST_F(Baseline, GetBestFitBaseline) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN
-	float in_data[num_data] = { 1.0, 3.0, 7.0, 130.0, 21.0 };
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	in_data[3] = 130.0;
 	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)] = { true, true, true, false, true };
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)] = { 1.0, 3.0, 7.0, 13.0, 21.0 };
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatPolynomial(ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -352,6 +421,400 @@ TEST_F(Baseline, GetBestFitBaseline) {
 }
 
 /*
+ * Test sakura_GetBestFitBaseline : failure case : data is nullptr
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithDataNullPointer) {
+	size_t const num_data(NUM_DATA);
+	float *in_data = nullptr;
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_mask)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t const num_model(NUM_MODEL);
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : data is not aligned
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithDataNotAligned) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data + 1];
+	float *in_data_unaligned = in_data + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_unaligned));
+	SetFloatPolynomial(num_data, in_data_unaligned);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_mask)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data_unaligned, in_mask,
+			context, out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : mask is nullptr
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithMaskNullPointer) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	bool *in_mask = nullptr;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : mask is not aligned
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithMaskNotAligned) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data) + 1];
+	bool *in_mask_unaligned = in_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	in_mask_unaligned[3] = false;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask_unaligned,
+			context, out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : baseline context is nullptr
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithBaselineContextNullPointer) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : num_data not identical with
+ * num_basis_data of baseline context
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataNumBasisDataNotIdentical) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t const num_data_arg(context->num_basis_data + 1);
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data_arg, in_data, in_mask,
+			context, out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : num_data less than
+ * num_bases of baseline context
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataLessThanNumBases) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t const num_data_arg(context->num_bases - 1);
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data_arg, in_data, in_mask,
+			context, out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : out is nullptr
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithOutNullPointer) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL);
+	float *out = nullptr;
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : out is not aligned
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data) + 1];
+	float *out_unaligned = out + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out_unaligned, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaseline : failure case : baseline_status is nullptr
+ * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineWithBaselineStatusNullPointer) {
+	size_t const num_data(NUM_DATA);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) *getbl_blstatus_ptr = nullptr;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, getbl_blstatus_ptr);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
  * Test sakura_GetBestFitBaseline: failure case of too many masked
  * input data.
  * RESULT:
@@ -360,9 +823,13 @@ TEST_F(Baseline, GetBestFitBaseline) {
 TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA);
 	SIMD_ALIGN
-	float in_data[num_data] = { 1.0, 3.0, 7.0, 130.0, 21.0 };
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)] = { true, false, false, false, true };
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
+	in_mask[0] = true;
+	in_mask[ELEMENTSOF(in_data)-1] = true;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -405,23 +872,16 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -435,7 +895,7 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	float clipping_threshold_sigma = 3.0;
-	uint16_t num_fitting_max = 3;
+	uint16_t num_fitting_max = 1;
 	bool get_residual = true;
 
 	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
@@ -478,23 +938,16 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -552,9 +1005,8 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
 	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
 		if (i == 3)
 			in_data[i] += 1000.0f;
 		if (i == 6)
@@ -564,16 +1016,14 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 	}
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
 		if (i == 3)
 			answer[i] += 1000.0f;
 		if (i == 6)
@@ -621,6 +1071,567 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 }
 
 /*
+ * Test sakura_SubtractBaselineWithDataNullPointer
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	float *in_data = nullptr;
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_mask)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_mask)];
+
+	if (verbose) {
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithDataNotAligned
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data + 1];
+	float *in_data_unaligned = in_data + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_unaligned));
+	SetFloatPolynomial(num_data, in_data_unaligned);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data_unaligned, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max, get_residual,
+			final_mask, out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithMaskNullPointer
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	bool *in_mask = nullptr;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithMaskNotAligned
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data) + 1];
+	bool *in_mask_unaligned = in_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask_unaligned);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask_unaligned,
+			context, clipping_threshold_sigma, num_fitting_max, get_residual,
+			final_mask, out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithBaselineContextNullPointer
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
+	size_t const num_data(NUM_DATA2);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+}
+
+/*
+ * Test sakura_SubtractBaseline : failure case : num_data not identical with
+ * num_basis_data of baseline context
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithBaselineNumDataNumBasisDataNotIdentical) {
+	size_t const num_data_for_context(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data_for_context];
+	SetFloatPolynomial(num_data_for_context, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data_for_context, in_data);
+		PrintArray("in_mask", num_data_for_context, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data_for_context,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t const num_data = context->num_basis_data + 1;
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaseline : failure case : num_data less than
+ * num_bases of baseline context
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithBaselineNumDataLessThanNumBases) {
+	size_t const num_data_for_context(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data_for_context];
+	SetFloatPolynomial(num_data_for_context, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data_for_context, in_data);
+		PrintArray("in_mask", num_data_for_context, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data_for_context,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t const num_data = context->num_bases - 1;
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 5;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithFinalMaskNullPointer
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	bool *final_mask = nullptr;
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithFinalMaskNotAligned
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data) + 1];
+	bool *final_mask_unaligned = final_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(final_mask_unaligned));
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual,
+			final_mask_unaligned, out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithOutNullPointer
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	float *out = nullptr;
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithOutNotAligned
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data) + 1];
+	float *out_unaligned = out + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out_unaligned, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineWithBaselineStatusNullPointer
+ * sakura_SubtractBaseline must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) *subbl_blstatus_ptr = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, subbl_blstatus_ptr);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
  * Test sakura_SubtractBaselineWithZeroClipThreshold
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaseline with zero value of
@@ -636,15 +1647,10 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
@@ -673,11 +1679,6 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-	}
-
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -699,15 +1700,10 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
@@ -736,11 +1732,6 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-	}
-
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -765,23 +1756,16 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -840,23 +1824,16 @@ TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -908,19 +1885,12 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-		if (i == 3)
-			in_data[i] += 1000.0f;
-		if (i == 8)
-			in_data[i] += 100.0f;
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = ((i == 0) || (i == ELEMENTSOF(in_data) - 1));
-	}
+	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
+	in_mask[0] = true;
+	in_mask[ELEMENTSOF(in_data)-1] = true;
 
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
@@ -968,8 +1938,8 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	float in_data[num_data] = { 1.0, 2.5, 8.0, 1013.0, 21.5, 31.5, 42.5, 57.5,
 			173.5, 90.5, 111.5, 132.5, 157.0, 182.5, 211.5 };
 	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)] = { true, true, true, true, true, true,
-	true, true, true, true, true, true, true, true, true };
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 
 	size_t order = 3;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
@@ -1018,21 +1988,14 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1047,7 +2010,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 
 	LIBSAKURA_SYMBOL(Status) status =
 	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 0, true, final_mask, out, &baseline_status);
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -1078,21 +2041,14 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1138,9 +2094,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
 	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
 		if (i == 3)
 			in_data[i] += 1000.0f;
 		if (i == 6)
@@ -1150,14 +2105,12 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 	}
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
 		if (i == 3)
 			answer[i] += 1000.0f;
 		if (i == 6)
@@ -1206,20 +2159,14 @@ TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		in_data[i] = 1.0f;
-	}
+	SetFloatConstant(1.0f, ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1248,6 +2195,381 @@ TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 }
 
 /*
+ * Test sakura_SubtractBaselinePolynomialNumDataEqualToOrder
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialNumDataEqualToOrder) {
+	size_t const num_data(NUM_DATA2);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_data;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialNumDataLessThanOrder
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialNumDataLessThanOrder) {
+	size_t const num_data(NUM_DATA2);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_data + 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithDataNullPointer
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithDataNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	float *in_data = nullptr;
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_mask)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_mask)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithDataNotAligned
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithDataNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data + 1];
+	float *in_data_unaligned = in_data + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_unaligned));
+	SetFloatPolynomial(num_data, in_data_unaligned);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data_unaligned);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data_unaligned,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithMaskNullPointer
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	bool *in_mask = nullptr;
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithMaskNotAligned
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data) + 1];
+	bool *in_mask_unaligned = in_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask_unaligned);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data,
+			in_mask_unaligned, order, 3.0, 1, true, final_mask, out,
+			&baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithFinalMaskNullPointer
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	bool *final_mask = nullptr;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithFinalMaskNotAligned
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data) + 1];
+	bool *final_mask_unaligned = final_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(final_mask_unaligned));
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask_unaligned, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithOutNullPointer
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithOutNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	float *out = nullptr;
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithOutNotAligned
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithOutNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data) + 1];
+	float *out_unaligned = out + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out_unaligned, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialWithBaselineStatusNullPointer
+ * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialWithBaselineStatusNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status_ptr = nullptr;
+
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, baseline_status_ptr);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
  * Test sakura_SubtractBaselinePolynomialWithZeroClipThreshold
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaselinePolynomial with zero value
@@ -1264,15 +2586,10 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
@@ -1315,15 +2632,10 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
@@ -1368,21 +2680,14 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1429,15 +2734,10 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	for (size_t i = 0; i < num_data; ++i) {
-		double x = (double) i;
-		in_data[i] = (float) (1.0 + x + x * x);
-	}
+	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
@@ -1480,13 +2780,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
-	float in_data[num_data] = { 1.0, 3.0, 7.0, 1013.0, 21.0, 31.0, 43.0, 57.0,
-			173.0, 91.0, 111.0, 133.0, 157.0, 183.0, 211.0 };
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)] = {
-	true, false, false, false, false,
-	true, false, false, false, false,
-	false, false, false, false, false };
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
+	in_mask[0] = true;
+	in_mask[5] = true;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -1522,8 +2822,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialTooManyDataClipped) {
 	float in_data[num_data] = { 1.0, 2.5, 8.0, 1013.0, 21.5, 31.5, 42.5, 57.5,
 			173.5, 90.5, 111.5, 132.5, 157.0, 182.5, 211.5 };
 	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)] = { true, true, true, true, true, true,
-	true, true, true, true, true, true, true, true, true };
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
@@ -2526,17 +3826,13 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	}
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		in_mask[i] = true;
-	}
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	for (size_t i = 0; i < num_data; ++i) {
-		answer[i] = 0.0f;
-	}
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
