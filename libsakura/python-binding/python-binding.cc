@@ -304,6 +304,7 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_h_w_pol_ch_for_grid },
 
 	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
 	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
 	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
