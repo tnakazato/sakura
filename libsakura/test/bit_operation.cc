@@ -70,39 +70,38 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	void SetTestKit(operation_type const operation, testKit *kit) {
+	testKit GetTestKit(operation_type const operation) {
+		testKit ret_kit;
 		// Answers for each operation
 		DataType const base_pattern1 = (~static_cast<DataType>(0)); // 11...111
 		DataType const base_pattern00 = (~static_cast<DataType>(0) << 2); // 11...100
-
-		kit->function = nullptr;
 
 		switch (operation) {
 		case And: {
 			DataType answer[] = { 0, 1, 2, 3, 0, 0, 2, 2 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "AND";
-			kit->invert_mask = false;
+			ret_kit.name = "AND";
+			ret_kit.invert_mask = false;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case NonImplication: {
 			DataType answer[] = { 0, 1, 2, 3, 0, 1, 0, 1 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "Material Nonimplication";
-			kit->invert_mask = true;
+			ret_kit.name = "Material Nonimplication";
+			ret_kit.invert_mask = true;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case ConverseNonImplication: {
 			DataType answer[] = { 0, 1, 2, 3, 2, 2, 0, 0 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "Converse Nonimplication";
-			kit->invert_mask = false;
+			ret_kit.name = "Converse Nonimplication";
+			ret_kit.invert_mask = false;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Nor: {
@@ -110,10 +109,10 @@ protected:
 					static_cast<DataType>(base_pattern00 + 1), base_pattern00,
 					static_cast<DataType>(base_pattern00 + 1), base_pattern00 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "NOR";
-			kit->invert_mask = true;
+			ret_kit.name = "NOR";
+			ret_kit.invert_mask = true;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Implication: {
@@ -121,10 +120,10 @@ protected:
 					static_cast<DataType>(base_pattern1 << 1), base_pattern1,
 					static_cast<DataType>(base_pattern1 << 1) };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "Material Implication";
-			kit->invert_mask = false;
+			ret_kit.name = "Material Implication";
+			ret_kit.invert_mask = false;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Nand: {
@@ -132,19 +131,19 @@ protected:
 					static_cast<DataType>(base_pattern1 - 2),
 					static_cast<DataType>(base_pattern1 - 2) };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "NAND";
-			kit->invert_mask = true;
+			ret_kit.name = "NAND";
+			ret_kit.invert_mask = true;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Or: {
 			DataType answer[] = { 0, 1, 2, 3, 2, 3, 2, 3 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "OR";
-			kit->invert_mask = false;
+			ret_kit.name = "OR";
+			ret_kit.invert_mask = false;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case ConverseImplication: {
@@ -153,19 +152,19 @@ protected:
 					static_cast<DataType>(base_pattern1 - 2), base_pattern1,
 					base_pattern1 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "Converse Implication";
-			kit->invert_mask = true;
+			ret_kit.name = "Converse Implication";
+			ret_kit.invert_mask = true;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Xor: {
 			DataType answer[] = { 0, 1, 2, 3, 2, 3, 0, 1 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "XOR";
-			kit->invert_mask = false;
+			ret_kit.name = "XOR";
+			ret_kit.invert_mask = false;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Xnor: {
@@ -174,10 +173,10 @@ protected:
 					static_cast<DataType>(base_pattern1 << 2), base_pattern1,
 					static_cast<DataType>(base_pattern1 << 1) };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "XNOR";
-			kit->invert_mask = true;
+			ret_kit.name = "XNOR";
+			ret_kit.invert_mask = true;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		case Not: {
@@ -186,18 +185,19 @@ protected:
 					static_cast<DataType>(base_pattern00 + 2),
 					static_cast<DataType>(base_pattern00 + 1), base_pattern00 };
 			STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-			kit->name = "NOT";
-			kit->invert_mask = false;
+			ret_kit.name = "NOT";
+			ret_kit.invert_mask = false;
 			for (size_t i = 0; i < NUM_IN; ++i)
-				kit->answer[i] = answer[i];
+				ret_kit.answer[i] = answer[i];
 			break;
 		}
 		default:
-			FAIL()<< "Invalid operation type.";
+			ADD_FAILURE()<< "Invalid operation type.";
 		}
-	}
 
-	virtual testKit GetTestKit(operation_type const operation) = 0;
+		ret_kit.function = operation_functions[operation];
+		return ret_kit;
+	}
 
 	void Initialize() {
 		// Initialize data template
@@ -212,7 +212,7 @@ protected:
 	}
 	void InitKit() {
 		for (size_t iop = 0; iop < num_operation; ++iop) {
-			all_kit[iop] = GetTestKit( (operation_type) iop );
+			all_kit[iop] = GetTestKit((operation_type) iop);
 		}
 		for (size_t iop = 0; iop < num_standard_test; ++iop) {
 			misc_kit[iop] = all_kit[test_list_standard[iop]];
@@ -235,9 +235,9 @@ protected:
 		buff[bit_size] = '\0';
 		for (size_t i = 0; i < bit_size; ++i) {
 			if ((value >> i) % 2 == 0)
-			buff[bit_size - 1 - i] = '0';
+				buff[bit_size - 1 - i] = '0';
 			else
-			buff[bit_size - 1 - i] = '1';
+				buff[bit_size - 1 - i] = '1';
 		}
 		return string(buff);
 	}
@@ -250,7 +250,7 @@ protected:
 			//result = result * 2 + ((uint8_t) in_string[i]);
 			result <<= 1;
 			if (bit_pattern[i] == '1')
-			result += 1;
+				result += 1;
 			++i;
 		}
 		return result;
@@ -265,7 +265,7 @@ protected:
 	void PrintArray(char const *name, size_t num_data, DataType *data_array) {
 		size_t max_length(20);
 		cout << name << " = ";
-		if (data_array==nullptr) { // array is nullptr
+		if (data_array == nullptr) { // array is nullptr
 			cout << "NULL" << endl;
 		} else if (num_data > max_length) { // long array (just show the length)
 			cout << num_data << " elements" << endl;
@@ -273,7 +273,7 @@ protected:
 			cout << "[ ";
 			if (num_data > 0) {
 				for (size_t i = 0; i < num_data - 1; ++i)
-				cout << BToS(data_array[i]) << ", ";
+					cout << BToS(data_array[i]) << ", ";
 				cout << BToS(data_array[num_data - 1]);
 			}
 			cout << " ]" << endl;
@@ -283,7 +283,7 @@ protected:
 	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
 		size_t max_length(20);
 		cout << name << " = ";
-		if (data_array==nullptr) { // array is nullptr
+		if (data_array == nullptr) { // array is nullptr
 			cout << "NULL" << endl;
 		} else if (num_data > max_length) { // long array (just show the length)
 			cout << num_data << " elements" << endl;
@@ -291,7 +291,7 @@ protected:
 			cout << "[ ";
 			if (num_data > 0) {
 				for (size_t i = 0; i < num_data - 1; ++i)
-				cout << (data_array[i] ? "T" : "F") << ", ";
+					cout << (data_array[i] ? "T" : "F") << ", ";
 				cout << (data_array[num_data - 1] ? "T" : "F");
 			}
 			cout << " ]" << endl;
@@ -314,9 +314,11 @@ protected:
 	/*
 	 * A function ot run a list of bit operations and compare result with expected answer.
 	 */
-	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask, DataType *out_data, size_t num_operation, testKit const *kits, LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat=1) {
+	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask,
+			DataType *out_data, size_t num_operation, testKit const *kits,
+			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
 
-		bool in_place(in_data==out_data);
+		bool in_place(in_data == out_data);
 		PrepareInputs(num_data, in_data, mask);
 		if (verbose) {
 			PrintArray("in", num_data, in_data);
@@ -325,28 +327,30 @@ protected:
 
 		if (num_repeat > 1)
 			cout << "Iterating " << num_repeat
-				<< " loops for each operation. The length of arrays is "
-				<< num_data << endl;
+					<< " loops for each operation. The length of arrays is "
+					<< num_data << endl;
 		for (size_t iop = 0; iop < num_operation; ++iop) {
 			testKit kit = kits[iop];
 			LIBSAKURA_SYMBOL(Status) status;
 			double start, end;
 			cout << "Testing bit operation: " << kit.name << endl;
 			start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			for (size_t irun=0; irun < num_repeat; ++irun){
+			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Need to refresh data for in-place operation
-				if (in_place) PrepareInputs(num_data, in_data, mask);
+				if (in_place)
+					PrepareInputs(num_data, in_data, mask);
 				// Actual execution of bit operation function
 				status = (*kit.function)(
-						(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, in_data,
-						mask, out_data);
+						(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data,
+						in_data, mask, out_data);
 			} // end of num_repeat loop
 			end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 			if (num_repeat > 1)
-				cout << "Elapse time of operation: " << end - start << " sec" << endl;
+				cout << "Elapse time of operation: " << end - start << " sec"
+						<< endl;
 
-			if (verbose){
-				if (status==LIBSAKURA_SYMBOL(Status_kOK))
+			if (verbose) {
+				if (status == LIBSAKURA_SYMBOL(Status_kOK))
 					PrintArray("result", num_data, out_data);
 				else
 					cout << "sakura_Status = " << status << endl;
@@ -354,7 +358,8 @@ protected:
 			// Verification
 			EXPECT_EQ(return_value, status);
 			if (status == LIBSAKURA_SYMBOL(Status_kOK))
-			ExactCompare(num_data, out_data, ELEMENTSOF(kit.answer), kit.answer);
+				ExactCompare(num_data, out_data, ELEMENTSOF(kit.answer),
+						kit.answer);
 		} // end of bit operation loop
 	}
 
@@ -362,8 +367,8 @@ protected:
 		// Handling of nullptr array
 		DataType dummy_data[num_data];
 		bool dummy_mask[ELEMENTSOF(dummy_data)];
-		DataType *data_ptr = (data!=nullptr) ? data : dummy_data;
-		bool *mask_ptr = (mask!=nullptr) ? mask : dummy_mask;
+		DataType *data_ptr = (data != nullptr) ? data : dummy_data;
+		bool *mask_ptr = (mask != nullptr) ? mask : dummy_mask;
 		// Get array with length, num_data
 		GetInputDataInLength(num_data, data_ptr, mask_ptr);
 	}
@@ -377,10 +382,12 @@ protected:
 	static size_t const bit_size = sizeof(DataType) * 8;
 
 	operation_type const num_operation = NUM_OPERATION;
+	function_ptr_t operation_functions[NUM_OPERATION];
 	testKit all_kit[NUM_OPERATION];
 	// The standard test list
 	static size_t const num_standard_test = 6;
-	operation_type test_list_standard[num_standard_test] = {And , ConverseNonImplication, Implication, Or, Xor, Not};
+	operation_type test_list_standard[num_standard_test] = { And,
+			ConverseNonImplication, Implication, Or, Xor, Not };
 	testKit misc_kit[num_standard_test];
 };
 
@@ -420,58 +427,32 @@ class BitOperation32: public BitOperation<uint32_t> {
 
 protected:
 	BitOperation32() {
+		operation_functions[And] = LIBSAKURA_SYMBOL(OperateBitsUint32And);
+		operation_functions[NonImplication] =
+		LIBSAKURA_SYMBOL(OperateBitsUint32And);
+		operation_functions[ConverseNonImplication] =
+		LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication);
+		operation_functions[Nor] =
+		LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication);
+		operation_functions[Implication] =
+		LIBSAKURA_SYMBOL(OperateBitsUint32Implication);
+		operation_functions[Nand] =
+		LIBSAKURA_SYMBOL(OperateBitsUint32Implication);
+		operation_functions[Or] = LIBSAKURA_SYMBOL(OperateBitsUint32Or);
+		operation_functions[ConverseImplication] =
+				LIBSAKURA_SYMBOL(OperateBitsUint32Or);
+		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitsUint32Xor);
+		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitsUint32Xor);
+		operation_functions[Not] = Not32Wrapper;
+
 		Initialize();
 	}
+
 	static LIBSAKURA_SYMBOL(Status) Not32Wrapper(uint32_t bit_mask,
 			size_t num_data, uint32_t const *data, bool const *edit_mask,
 			uint32_t *result) {
 		return LIBSAKURA_SYMBOL(OperateBitsUint32Not)(num_data, data, edit_mask,
 				result);
-	}
-	virtual testKit GetTestKit(operation_type const operation) {
-		testKit ret_kit;
-		SetTestKit(operation, &ret_kit);
-		switch (operation) {
-		case And:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32And);
-			break;
-		case NonImplication:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32And);
-			break;
-		case ConverseNonImplication:
-			ret_kit.function =
-			LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication);
-			break;
-		case Nor:
-			ret_kit.function =
-			LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication);
-			break;
-		case Implication:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32Implication);
-			break;
-		case Nand:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32Implication);
-			break;
-		case Or:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32Or);
-			break;
-		case ConverseImplication:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32Or);
-			break;
-		case Xor:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32Xor);
-			break;
-		case Xnor:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint32Xor);
-			break;
-		case Not:
-			ret_kit.function = Not32Wrapper;
-			break;
-		default:
-			//this should have already failed at SetTestKit.
-			ADD_FAILURE()<< "Invalid operation type.";
-		}
-		return ret_kit;
 	}
 };
 
@@ -510,6 +491,24 @@ class BitOperation8: public BitOperation<uint8_t> {
 
 protected:
 	BitOperation8() {
+		operation_functions[And] = LIBSAKURA_SYMBOL(OperateBitsUint8And);
+		operation_functions[NonImplication] =
+		LIBSAKURA_SYMBOL(OperateBitsUint8And);
+		operation_functions[ConverseNonImplication] =
+		LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication);
+		operation_functions[Nor] =
+		LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication);
+		operation_functions[Implication] =
+		LIBSAKURA_SYMBOL(OperateBitsUint8Implication);
+		operation_functions[Nand] =
+		LIBSAKURA_SYMBOL(OperateBitsUint8Implication);
+		operation_functions[Or] = LIBSAKURA_SYMBOL(OperateBitsUint8Or);
+		operation_functions[ConverseImplication] =
+				LIBSAKURA_SYMBOL(OperateBitsUint8Or);
+		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitsUint8Xor);
+		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitsUint8Xor);
+		operation_functions[Not] = Not8Wrapper;
+
 		Initialize();
 	}
 	static LIBSAKURA_SYMBOL(Status) Not8Wrapper(uint8_t bit_mask,
@@ -518,58 +517,16 @@ protected:
 		return LIBSAKURA_SYMBOL(OperateBitsUint8Not)(num_data, data, edit_mask,
 				result);
 	}
-	virtual testKit GetTestKit(operation_type const operation) {
-		testKit ret_kit;
-		SetTestKit(operation, &ret_kit);
-		switch (operation) {
-		case And:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8And);
-			break;
-		case NonImplication:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8And);
-			break;
-		case ConverseNonImplication:
-			ret_kit.function =
-			LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication);
-			break;
-		case Nor:
-			ret_kit.function =
-			LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication);
-			break;
-		case Implication:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8Implication);
-			break;
-		case Nand:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8Implication);
-			break;
-		case Or:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8Or);
-			break;
-		case ConverseImplication:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8Or);
-			break;
-		case Xor:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8Xor);
-			break;
-		case Xnor:
-			ret_kit.function = LIBSAKURA_SYMBOL(OperateBitsUint8Xor);
-			break;
-		case Not:
-			ret_kit.function = Not8Wrapper;
-			break;
-		default:
-			//this should have already failed at SetTestKit.
-			ADD_FAILURE()<< "Invalid operation type.";
-		}
-		return ret_kit;
-	}
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
  * Test various bit operations with an Uint8 array of length 8
  */
+//TEST_F(BitOperation, VariousLength) {
+//	BitOperation<uint8_t>::RunVariousLength();
+//	BitOperation<uint32_t>::RunVariousLength();
+//}
 TEST_F(BitOperation8, MiscOp) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
@@ -976,8 +933,8 @@ TEST_F(BitOperation8, MiscOpLong) {
 	size_t const num_repeat = 20000;
 
 	// Loop over num_repeat times for each operation type (Standard set)
-	RunBitOperationTest(num_large, data, edit_mask, result,
-			num_standard_test, misc_kit,
+	RunBitOperationTest(num_large, data, edit_mask, result, num_standard_test,
+			misc_kit,
 			LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
 }
 
@@ -996,7 +953,7 @@ TEST_F(BitOperation32, MiscOpLong) {
 	size_t const num_repeat = 20000;
 
 	// Loop over num_repeat times for each operation type (Standard set)
-	RunBitOperationTest(num_large, data, edit_mask, result,
-			num_standard_test, misc_kit,
+	RunBitOperationTest(num_large, data, edit_mask, result, num_standard_test,
+			misc_kit,
 			LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
 }
