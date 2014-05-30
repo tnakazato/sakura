@@ -268,7 +268,7 @@ protected:
 		if (data_array==nullptr) { // array is nullptr
 			cout << "NULL" << endl;
 		} else if (num_data > max_length) { // long array (just show the length)
-			cout << ELEMENTSOF(data_array) << " elements" << endl;
+			cout << num_data << " elements" << endl;
 		} else { // normal array
 			cout << "[ ";
 			if (num_data > 0) {
@@ -286,7 +286,7 @@ protected:
 		if (data_array==nullptr) { // array is nullptr
 			cout << "NULL" << endl;
 		} else if (num_data > max_length) { // long array (just show the length)
-			cout << ELEMENTSOF(data_array) << " elements" << endl;
+			cout << num_data << " elements" << endl;
 		} else { // normal array
 			cout << "[ ";
 			if (num_data > 0) {
