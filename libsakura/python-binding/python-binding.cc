@@ -575,11 +575,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 			bool>(sizeof(bool) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
-				auto val = PyInt_AsLong(item.get());
-				if (PyErr_Occurred()) {
-					return nullptr;
-				}
-				aligned[i] = val != 0;
+				aligned[i] = item.get() == Py_True;
 			}
 			LIBSAKURA_SYMBOL(Status) status =
 			LIBSAKURA_SYMBOL(PyAlignedBufferCreate)(

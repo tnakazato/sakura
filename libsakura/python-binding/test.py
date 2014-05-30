@@ -20,8 +20,9 @@ def test_stats():
 	except Exception as e:
 		print e
 
-	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (1, 1, 1, 1))
-	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, 2, 3, 4))
+	num = 4
+	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True,) * num)
+	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, range(num))
 	result = libsakurapy.compute_statistics(4, data, mask)
 	print result
 	del mask
