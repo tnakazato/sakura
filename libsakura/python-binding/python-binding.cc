@@ -354,9 +354,9 @@ LIBSAKURA_SYMBOL(Status) (*Func)(size_t, FromType const *, ToType *)>
 PyObject *ConvertArray(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
-		kData, kResult
+		kData, kResult, kEnd
 	};
-	PyObject *capsules[2];
+	PyObject *capsules[kEnd];
 
 	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
 			&capsules[kResult])) {
@@ -372,8 +372,9 @@ PyObject *ConvertArray(PyObject *self, PyObject *args) {
 	{ ToTypeId, pred },
 
 	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[2];
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
 	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
 		goto invalid_arg;
 	}
@@ -414,6 +415,77 @@ LIBSAKURA_SYMBOL(InvertBool)>;
 constexpr FuncForPython SetFalseFloatIfNanOrInf = ConvertArray<float, bool,
 LIBSAKURA_SYMBOL(TypeId_kFloat), LIBSAKURA_SYMBOL(TypeId_kBool),
 LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)>;
+
+template<typename Type,
+LIBSAKURA_SYMBOL(PyTypeId) TypeId,
+LIBSAKURA_SYMBOL(Status) (*Func)(size_t, Type const *, size_t, Type const *,
+		Type const *, bool *)>
+PyObject *RangeCheck(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	Py_ssize_t num_range_py;
+	enum {
+		kData, kLower, kUpper, kMask, kEnd
+	};
+	PyObject *capsules[kEnd];
+
+	if (!PyArg_ParseTuple(args, "nOnOOO", &num_data_py, &capsules[kData],
+			&num_range_py, &capsules[kLower], &capsules[kUpper],
+			&capsules[kMask])) {
+		return nullptr;
+	}
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto num_range = static_cast<size_t>(num_range_py);
+	auto predData =
+			[num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	auto predRange =
+			[num_range](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_range);};
+	AlignedBufferConfiguration const conf[] = {
+
+	{ TypeId, predData },
+
+	{ TypeId, predRange },
+
+	{ TypeId, predRange },
+
+	{ LIBSAKURA_SYMBOL(TypeId_kBool), predData },
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status = Func(num_data,
+				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
+				num_range,
+				reinterpret_cast<Type const*>(bufs[kLower]->aligned_addr),
+				reinterpret_cast<Type const*>(bufs[kUpper]->aligned_addr),
+				reinterpret_cast<bool *>(bufs[kMask]->aligned_addr));
+		Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kMask]);
+	return capsules[kMask];
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+constexpr FuncForPython Int32SetTrueIntInRangesExclusive = RangeCheck<int32_t,
+LIBSAKURA_SYMBOL(TypeId_kInt32),
+LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)>;
 
 PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data;
@@ -699,45 +771,53 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 	return capsule;
 }
 
-PyMethodDef module_methods[] = {
+PyMethodDef module_methods[] =
+		{
 
-{ "initialize", Initialize, METH_VARARGS, "Initializes libsakura." },
+		{ "initialize", Initialize, METH_VARARGS, "Initializes libsakura." },
 
-{ "clean_up", CleanUp, METH_VARARGS, "Cleans up libsakura." },
+		{ "clean_up", CleanUp, METH_VARARGS, "Cleans up libsakura." },
 
-{ "get_current_time", GetCurrentTime, METH_VARARGS,
-		"Gets current time in seconds of type double." },
+		{ "get_current_time", GetCurrentTime, METH_VARARGS,
+				"Gets current time in seconds of type double." },
 
-{ "compute_statistics", ComputeStatistics, METH_VARARGS,
-		"Computes statistics of unmasked elements." },
+		{ "compute_statistics", ComputeStatistics, METH_VARARGS,
+				"Computes statistics of unmasked elements." },
 
-{ "grid_convolving", GridConvolving, METH_VARARGS,
-		"Grids spectra on X-Y plane with convolving." },
+		{ "grid_convolving", GridConvolving, METH_VARARGS,
+				"Grids spectra on X-Y plane with convolving." },
 
-{ "uint8_to_bool", Uint8ToBool, METH_VARARGS, "Converts uint8 to bool." },
+				{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
+						"Converts uint8 to bool." },
 
-{ "uint32_to_bool", Uint32ToBool, METH_VARARGS, "Converts uint32 to bool." },
+				{ "uint32_to_bool", Uint32ToBool, METH_VARARGS,
+						"Converts uint32 to bool." },
 
-{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
+				{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
 
-{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf, METH_VARARGS,
-		"set false if float value is NaN or Inf." },
+				{ "set_true_int_in_ranges_exclusive",
+						Int32SetTrueIntInRangesExclusive, METH_VARARGS,
+						"Sets True if the element is in at least one of ranges." },
 
-{ "create_convolve1D_context", CreateConvolve1DContext, METH_VARARGS,
-		"Creates a context for convolving 1D." },
+				{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf,
+				METH_VARARGS, "set false if float value is NaN or Inf." },
 
-{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer, METH_VARARGS,
-		"gets_elements of the aligned buffer." },
+				{ "create_convolve1D_context", CreateConvolve1DContext,
+				METH_VARARGS, "Creates a context for convolving 1D." },
 
-{ "new_uninitialized_aligned_buffer", NewUninitializedAlignedBuffer,
-METH_VARARGS,
-		"Creates an uninitialized new aligned buffer with supplied elements." },
+				{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
+				METH_VARARGS, "gets_elements of the aligned buffer." },
 
-{ "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
-		"Creates a new aligned buffer." },
+				{ "new_uninitialized_aligned_buffer",
+						NewUninitializedAlignedBuffer,
+						METH_VARARGS,
+						"Creates an uninitialized new aligned buffer with supplied elements." },
 
-{ NULL, NULL, 0, NULL } /* Sentinel */
-};
+				{ "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
+						"Creates a new aligned buffer." },
+
+				{ NULL, NULL, 0, NULL } /* Sentinel */
+		};
 
 PyDoc_STRVAR(module_doc, "Python binding of libsakura library.");
 

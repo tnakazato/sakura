@@ -104,6 +104,15 @@ def test_logical():
 	del bl
 	del bl2
 
+def test_range():
+	n = 1024*1024*16
+	dim = (n,)
+	data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, dim)
+	mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
+	lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (1, 100, 200))
+	upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (10, 110, 210))
+	result = libsakurapy.set_true_int_in_ranges_exclusive(n, data, 3, lower, upper, mask)
+
 def test_convolve1D():
 	ctx1D = libsakurapy.create_convolve1D_context(10, libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN, 4, True);
 	del ctx1D
@@ -113,6 +122,7 @@ def testAll():
 	test_stats()
 	test_grid()
 	test_logical()
+	test_range()
 	test_convolve1D()
 
 testAll()
