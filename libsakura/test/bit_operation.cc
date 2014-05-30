@@ -26,7 +26,7 @@ class BitOperation: public ::testing::Test {
 protected:
 
 	BitOperation() :
-			verbose(false) {
+			verbose(true) {
 	}
 
 	typedef LIBSAKURA_SYMBOL(Status) (*function_ptr_t)(DataType, size_t,
@@ -57,6 +57,18 @@ protected:
 		DataType answer[NUM_IN];   // answer array
 		bool invert_mask;          // is operation needs inverting mask
 	};
+
+	virtual void SetUp() {
+		// Initialize sakura
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+				nullptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	}
+
+	virtual void TearDown() {
+		// Clean-up sakura
+		LIBSAKURA_SYMBOL(CleanUp)();
+	}
 
 	void SetTestKit(operation_type const operation, testKit *kit) {
 		// Answers for each operation
@@ -207,18 +219,6 @@ protected:
 		}
 	}
 
-	virtual void SetUp() {
-		// Initialize sakura
-		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
-				nullptr);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	}
-
-	virtual void TearDown() {
-		// Clean-up sakura
-		LIBSAKURA_SYMBOL(CleanUp)();
-	}
-
 // Create arbitrary length of input data and edit mask by repeating in_[] and edit_mask_[]
 	void GetInputDataInLength(size_t num_data, DataType *data, bool *mask) {
 		size_t const num_in(NUM_IN);
@@ -263,23 +263,39 @@ protected:
 	}
 
 	void PrintArray(char const *name, size_t num_data, DataType *data_array) {
-		cout << name << " = [";
-		if (num_data > 0) {
-			for (size_t i = 0; i < num_data - 1; ++i)
-			cout << BToS(data_array[i]) << ", ";
-			cout << BToS(data_array[num_data - 1]);
+		size_t max_length(20);
+		cout << name << " = ";
+		if (data_array==nullptr) { // array is nullptr
+			cout << "NULL" << endl;
+		} else if (num_data > max_length) { // long array (just show the length)
+			cout << ELEMENTSOF(data_array) << " elements" << endl;
+		} else { // normal array
+			cout << "[ ";
+			if (num_data > 0) {
+				for (size_t i = 0; i < num_data - 1; ++i)
+				cout << BToS(data_array[i]) << ", ";
+				cout << BToS(data_array[num_data - 1]);
+			}
+			cout << " ]" << endl;
 		}
-		cout << " ]" << endl;
 	}
 
 	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
-		cout << name << " = [ ";
-		if (num_data > 0) {
-			for (size_t i = 0; i < num_data - 1; ++i)
-			cout << (data_array[i] ? "T" : "F") << ", ";
-			cout << (data_array[num_data - 1] ? "T" : "F");
+		size_t max_length(20);
+		cout << name << " = ";
+		if (data_array==nullptr) { // array is nullptr
+			cout << "NULL" << endl;
+		} else if (num_data > max_length) { // long array (just show the length)
+			cout << ELEMENTSOF(data_array) << " elements" << endl;
+		} else { // normal array
+			cout << "[ ";
+			if (num_data > 0) {
+				for (size_t i = 0; i < num_data - 1; ++i)
+				cout << (data_array[i] ? "T" : "F") << ", ";
+				cout << (data_array[num_data - 1] ? "T" : "F");
+			}
+			cout << " ]" << endl;
 		}
-		cout << " ]" << endl;
 	}
 
 	/*
@@ -298,31 +314,58 @@ protected:
 	/*
 	 * A function ot run a list of bit operations and compare result with expected answer.
 	 */
-	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask, DataType *out_data, size_t num_operation, testKit const *kits, LIBSAKURA_SYMBOL(Status) return_value) {
+	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask, DataType *out_data, size_t num_operation, testKit const *kits, LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat=1) {
 
-		GetInputDataInLength(num_data, in_data, mask);
+		bool in_place(in_data==out_data);
+		PrepareInputs(num_data, in_data, mask);
 		if (verbose) {
-//		if (true) {
 			PrintArray("in", num_data, in_data);
 			PrintArray("mask", num_data, mask);
 		}
 
+		if (num_repeat > 1)
+			cout << "Iterating " << num_repeat
+				<< " loops for each operation. The length of arrays is "
+				<< num_data << endl;
 		for (size_t iop = 0; iop < num_operation; ++iop) {
-			// need to refresh data for in-place operation
-			if (in_data==out_data) GetInputDataInLength(num_data, in_data, mask);
 			testKit kit = kits[iop];
+			LIBSAKURA_SYMBOL(Status) status;
+			double start, end;
 			cout << "Testing bit operation: " << kit.name << endl;
-			LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-					(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, in_data,
-					mask, out_data);
+			start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			for (size_t irun=0; irun < num_repeat; ++irun){
+				// Need to refresh data for in-place operation
+				if (in_place) PrepareInputs(num_data, in_data, mask);
+				// Actual execution of bit operation function
+				status = (*kit.function)(
+						(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, in_data,
+						mask, out_data);
+			} // end of num_repeat loop
+			end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			if (num_repeat > 1)
+				cout << "Elapse time of operation: " << end - start << " sec" << endl;
 
-			if (verbose) PrintArray("result", num_data, out_data);
-
+			if (verbose){
+				if (status==LIBSAKURA_SYMBOL(Status_kOK))
+					PrintArray("result", num_data, out_data);
+				else
+					cout << "sakura_Status = " << status << endl;
+			}
 			// Verification
 			EXPECT_EQ(return_value, status);
 			if (status == LIBSAKURA_SYMBOL(Status_kOK))
 			ExactCompare(num_data, out_data, ELEMENTSOF(kit.answer), kit.answer);
-		}
+		} // end of bit operation loop
+	}
+
+	void PrepareInputs(size_t num_data, DataType *data, bool *mask) {
+		// Handling of nullptr array
+		DataType dummy_data[num_data];
+		bool dummy_mask[ELEMENTSOF(dummy_data)];
+		DataType *data_ptr = (data!=nullptr) ? data : dummy_data;
+		bool *mask_ptr = (mask!=nullptr) ? mask : dummy_mask;
+		// Get array with length, num_data
+		GetInputDataInLength(num_data, data_ptr, mask_ptr);
 	}
 
 	DataType data_[NUM_IN];
@@ -542,7 +585,7 @@ TEST_F(BitOperation8, MiscOp) {
 }
 
 /*
- * Test various bit operations (except for NOT) with an Uint32 array of length 8
+ * Test various bit operations with an Uint32 array of length 8
  */
 TEST_F(BitOperation32, MiscOp) {
 	size_t const num_data(NUM_IN);
@@ -664,71 +707,48 @@ TEST_F(BitOperation32, MiscOpLengthZero) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
- * Test failure cases of various bit operations (except for NOT): NULL data array
+ * Test failure cases of various bit operations: NULL data array
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
 TEST_F(BitOperation8, MiscOpFailNullData) {
 	size_t const num_data(NUM_IN);
-	uint8_t dummy[num_data];
 	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(dummy)];
+	bool edit_mask[num_data];
 	SIMD_ALIGN
-	uint8_t result[ELEMENTSOF(dummy)];
+	uint8_t result[ELEMENTSOF(edit_mask)];
 
 	uint8_t *data_null = nullptr;
 
-	GetInputDataInLength(num_data, dummy, edit_mask);
-
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data_null,
-				edit_mask, result);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data_null, edit_mask, result,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /*
- * Test failure cases of various bit operations (except for NOT): NULL data array
+ * Test failure cases of various bit operations: NULL data array
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
 TEST_F(BitOperation32, MiscOpFailNullData) {
 	size_t const num_data(NUM_IN);
-	uint32_t dummy[num_data];
 	SIMD_ALIGN
-	bool edit_mask[ELEMENTSOF(dummy)];
+	bool edit_mask[num_data];
 	SIMD_ALIGN
-	uint32_t result[ELEMENTSOF(dummy)];
+	uint32_t result[ELEMENTSOF(edit_mask)];
 
 	uint32_t *data_null = nullptr;
 
-	GetInputDataInLength(num_data, dummy, edit_mask);
-
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data_null,
-				edit_mask, result);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data_null, edit_mask, result,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
- * Test failure cases of various bit operations (except for NOT): NULL mask array
+ * Test failure cases of various bit operations: NULL mask array
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -736,59 +756,33 @@ TEST_F(BitOperation8, MiscOpFailNullMask) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	uint8_t data[num_data];
-
-	bool dummy[ELEMENTSOF(data)];
 	SIMD_ALIGN
-	uint8_t out[ELEMENTSOF(data)];
+	uint8_t result[ELEMENTSOF(data)];
 
 	bool *mask_null = nullptr;
 
-	GetInputDataInLength(num_data, data, dummy);
-
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				mask_null, out);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, mask_null, result, num_standard_test,
+			misc_kit, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 TEST_F(BitOperation32, MiscOpFailNullMask) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	uint32_t data[num_data];
-
-	bool dummy[ELEMENTSOF(data)];
 	SIMD_ALIGN
-	uint32_t out[ELEMENTSOF(data)];
+	uint32_t result[ELEMENTSOF(data)];
 
 	bool *mask_null = nullptr;
 
-	GetInputDataInLength(num_data, data, dummy);
-
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				mask_null, out);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, mask_null, result, num_standard_test,
+			misc_kit, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
- * Test failure cases of various bit operations (except for NOT): NULL result array
+ * Test failure cases of various bit operations: NULL result array
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -801,20 +795,10 @@ TEST_F(BitOperation8, MiscOpFailNullResult) {
 
 	uint8_t *result_null = nullptr;
 
-	GetInputDataInLength(num_data, data, edit_mask);
-
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				edit_mask, result_null);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, edit_mask, result_null,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 TEST_F(BitOperation32, MiscOpFailNullResult) {
@@ -826,20 +810,10 @@ TEST_F(BitOperation32, MiscOpFailNullResult) {
 
 	uint32_t *result_null = nullptr;
 
-	GetInputDataInLength(num_data, data, edit_mask);
-
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				edit_mask, result_null);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, edit_mask, result_null,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -859,24 +833,14 @@ TEST_F(BitOperation8, MiscOpFailNotAlignedData) {
 	SIMD_ALIGN
 	uint8_t result[ELEMENTSOF(data)];
 
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-// Define unaligned array
+	// Define unaligned array
 	uint8_t *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data,
-				data_shift, edit_mask, result);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data_shift, edit_mask, result,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 TEST_F(BitOperation32, MiscOpFailNotAlignedData) {
@@ -890,24 +854,14 @@ TEST_F(BitOperation32, MiscOpFailNotAlignedData) {
 	SIMD_ALIGN
 	uint32_t result[ELEMENTSOF(data)];
 
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-// Define unaligned array
+	// Define unaligned array
 	uint32_t *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data,
-				data_shift, edit_mask, result);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data_shift, edit_mask, result,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -927,24 +881,14 @@ TEST_F(BitOperation8, MiscOpFailNotAlignedMask) {
 	SIMD_ALIGN
 	uint8_t result[ELEMENTSOF(data)];
 
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-// Define unaligned array
+	// Define unaligned array
 	bool *mask_shift = &edit_mask[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
 
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				mask_shift, result);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, mask_shift, result, num_standard_test,
+			misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 TEST_F(BitOperation32, MiscOpFailNotAlignedMask) {
@@ -958,24 +902,14 @@ TEST_F(BitOperation32, MiscOpFailNotAlignedMask) {
 	SIMD_ALIGN
 	uint32_t result[ELEMENTSOF(data)];
 
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-// Define unaligned array
+	// Define unaligned array
 	bool *mask_shift = &edit_mask[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
 
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				mask_shift, result);
-
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, mask_shift, result, num_standard_test,
+			misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -995,23 +929,14 @@ TEST_F(BitOperation8, MiscOpFailNotAlignedResult) {
 	SIMD_ALIGN
 	uint8_t result[ELEMENTSOF(data)];
 
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-// Define unaligned array
+	// Define unaligned array
 	uint8_t *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				edit_mask, result_shift);
 
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, edit_mask, result_shift,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 TEST_F(BitOperation32, MiscOpFailNotAlignedResult) {
@@ -1025,23 +950,14 @@ TEST_F(BitOperation32, MiscOpFailNotAlignedResult) {
 	SIMD_ALIGN
 	uint32_t result[ELEMENTSOF(data)];
 
-	GetInputDataInLength(num_elements, data, edit_mask);
-
-// Define unaligned array
+	// Define unaligned array
 	uint32_t *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		LIBSAKURA_SYMBOL(Status) status = (*kit.function)(
-				(kit.invert_mask ? ~bit_mask_ : bit_mask_), num_data, data,
-				edit_mask, result_shift);
 
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+	// Loop over operation types  (Standard tests)
+	RunBitOperationTest(num_data, data, edit_mask, result_shift,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1049,43 +965,20 @@ TEST_F(BitOperation32, MiscOpFailNotAlignedResult) {
 /*
  * Long test of various bit operations with with a large Uint8 array
  */
-
 TEST_F(BitOperation8, MiscOpLong) {
+	size_t const num_large(NUM_IN_LONG);
 	SIMD_ALIGN
-	uint8_t data[NUM_IN_LONG];
+	uint8_t data[num_large];
 	SIMD_ALIGN
 	bool edit_mask[ELEMENTSOF(data)];
 	SIMD_ALIGN
 	uint8_t result[ELEMENTSOF(data)];
-
-	size_t const num_large(ELEMENTSOF(data));
-
-	double start, end;
 	size_t const num_repeat = 20000;
-	LIBSAKURA_SYMBOL(Status) status;
 
-// Create long input data by repeating in_data and edit_mask_
-	GetInputDataInLength(num_large, data, edit_mask);
-
-	cout << "Iterating " << num_repeat
-			<< " loops for each operation. The length of arrays is "
-			<< num_large << endl;
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		start = sakura_GetCurrentTime();
-		for (size_t i = 0; i < num_repeat; ++i) {
-			status = (*kit.function)((kit.invert_mask ? ~bit_mask_ : bit_mask_),
-					num_large, data, edit_mask, result);
-		}
-		end = sakura_GetCurrentTime();
-		cout << "Elapse time of operation: " << end - start << " sec" << endl;
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		ExactCompare(num_large, result, ELEMENTSOF(kit.answer), kit.answer);
-	}
+	// Loop over num_repeat times for each operation type (Standard set)
+	RunBitOperationTest(num_large, data, edit_mask, result,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
 }
 
 /*
@@ -1093,39 +986,17 @@ TEST_F(BitOperation8, MiscOpLong) {
  */
 
 TEST_F(BitOperation32, MiscOpLong) {
+	size_t const num_large(NUM_IN_LONG);
 	SIMD_ALIGN
-	uint32_t data[NUM_IN_LONG];
+	uint32_t data[num_large];
 	SIMD_ALIGN
 	bool edit_mask[ELEMENTSOF(data)];
 	SIMD_ALIGN
 	uint32_t result[ELEMENTSOF(data)];
-
-	size_t const num_large(ELEMENTSOF(data));
-
-	double start, end;
 	size_t const num_repeat = 20000;
-	LIBSAKURA_SYMBOL(Status) status;
 
-// Create long input data by repeating in_data and edit_mask_
-	GetInputDataInLength(num_large, data, edit_mask);
-
-	cout << "Iterating " << num_repeat
-			<< " loops for each operation. The length of arrays is "
-			<< num_large << endl;
-// Loop over operation types (Standard tests)
-	for (size_t iop = 0; iop < num_standard_test; ++iop) {
-		operation_type operation = test_list_standard[iop];
-		testKit kit = GetTestKit(operation);
-		cout << "Testing bit operation: " << kit.name << endl;
-		start = sakura_GetCurrentTime();
-		for (size_t i = 0; i < num_repeat; ++i) {
-			status = (*kit.function)((kit.invert_mask ? ~bit_mask_ : bit_mask_),
-					num_large, data, edit_mask, result);
-		}
-		end = sakura_GetCurrentTime();
-		cout << "Elapse time of operation: " << end - start << " sec" << endl;
-		// Verification
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		ExactCompare(num_large, result, ELEMENTSOF(kit.answer), kit.answer);
-	}
+	// Loop over num_repeat times for each operation type (Standard set)
+	RunBitOperationTest(num_large, data, edit_mask, result,
+			num_standard_test, misc_kit,
+			LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
 }
