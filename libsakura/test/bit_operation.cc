@@ -26,7 +26,7 @@ class BitOperation: public ::testing::Test {
 protected:
 
 	BitOperation() :
-			verbose(true) {
+			verbose(false) {
 	}
 
 	typedef LIBSAKURA_SYMBOL(Status) (*function_ptr_t)(DataType, size_t,
