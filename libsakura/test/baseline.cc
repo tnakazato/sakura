@@ -137,11 +137,10 @@ protected:
 };
 
 /*
- * Test sakura_CreateBaselineContext
- * RESULT:
- * out = []
+ * Test sakura_CreateBaselineContextWithPolynomial
+ * successful case (with normal polynomial model)
  */
-TEST_F(Baseline, CreateBaselineContextForPolynomial) {
+TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
@@ -160,11 +159,10 @@ TEST_F(Baseline, CreateBaselineContextForPolynomial) {
 }
 
 /*
- * Test sakura_CreateBaselineContext
- * RESULT:
- * out = []
+ * Test sakura_CreateBaselineContextWithChebyshevPolynomial
+ * successful case (with Chebyshev polynomial model)
  */
-TEST_F(Baseline, CreateBaselineContextForChebyshevPolynomial) {
+TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
@@ -183,8 +181,9 @@ TEST_F(Baseline, CreateBaselineContextForChebyshevPolynomial) {
 }
 
 /*
- * Test sakura_CreateBaselineContext : failure case : invalid baseline type
- * returned value must be Status_kInvalidArgument
+ * Test sakura_CreateBaselineContextWithInvalidBaselineType
+ * failure case : invalid baseline type
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, CreateBaselineContextWithInvalidBaselineType) {
 	uint16_t const order(20);
@@ -198,8 +197,9 @@ TEST_F(Baseline, CreateBaselineContextWithInvalidBaselineType) {
 }
 
 /*
- * Test sakura_CreateBaselineContext : failure case : context is nullptr
- * returned value must be Status_kInvalidArgument
+ * Test sakura_CreateBaselineContextWithContextNullPointer
+ * failure case : context is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, CreateBaselineContextWithContextNullPointer) {
 	uint16_t const order(20);
@@ -214,9 +214,9 @@ TEST_F(Baseline, CreateBaselineContextWithContextNullPointer) {
 }
 
 /*
- * Test sakura_CreateBaselineContext: failure case for too large order
- * RESULT:
- * out = []
+ * Test sakura_CreateBaselineContextWithOrderLargerThanNumData
+ * failure case : order is too large (> num_data)
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
 	uint16_t const order(20);
@@ -235,8 +235,7 @@ TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
 
 /*
  * Test sakura_GetBaselineModelPolynomial
- * RESULT:
- * out = []
+ * successful case (for normal polynomial model)
  */
 TEST_F(Baseline, GetBaselineModelPolynomial) {
 	uint16_t const order(20);
@@ -275,17 +274,6 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	ASSERT_EQ(num_model, num_bases);
 	size_t num_basis_data = context->num_basis_data;
 	ASSERT_EQ(num_chan, num_basis_data);
-	/*
-	 cout.precision(20);
-	 cout << "-------------------------" << endl;
-	 cout << "power0 : [" << out[0] << "], ..., [" << out[5994] << "]" << endl;
-	 cout << "power1 : [" << out[1] << "], ..., [" << out[5995] << "]" << endl;
-	 cout << "power2 : [" << out[2] << "], ..., [" << out[5996] << "]" << endl;
-	 cout << "power3 : [" << out[3] << "], ..., [" << out[5997] << "]" << endl;
-	 cout << "power4 : [" << out[4] << "], ..., [" << out[5998] << "]" << endl;
-	 cout << "power5 : [" << out[5] << "], ..., [" << out[5999] << "]" << endl;
-	 cout << "-------------------------" << endl;
-	 */
 
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
@@ -294,8 +282,7 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 
 /*
  * Test sakura_GetBaselineModelChebyshev
- * RESULT:
- * out = []
+ * successful case (for Chebyshev polynomial model)
  */
 TEST_F(Baseline, GetBaselineModelChebyshev) {
 	uint16_t const order(20);
@@ -341,8 +328,7 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 
 /*
  * Test sakura_DestroyBaselineContext
- * RESULT:
- * out = []
+ * successful case
  */
 TEST_F(Baseline, DestroyBaselineContext) {
 	uint16_t const order(20);
@@ -359,7 +345,8 @@ TEST_F(Baseline, DestroyBaselineContext) {
 }
 
 /*
- * Test sakura_DestroyBaselineContext : failure case : context is nullptr
+ * Test sakura_DestroyBaselineContext
+ * failure case : context is a null pointer
  * returned value must be Status_kInvalidArgument
  */
 TEST_F(Baseline, DestroyBaselineContextWithContextNullPointer) {
@@ -371,8 +358,7 @@ TEST_F(Baseline, DestroyBaselineContextWithContextNullPointer) {
 
 /*
  * Test sakura_GetBestFitBaseline
- * RESULT:
- * out = []
+ * successful case
  */
 TEST_F(Baseline, GetBestFitBaseline) {
 	size_t const num_data(NUM_DATA);
@@ -421,8 +407,9 @@ TEST_F(Baseline, GetBestFitBaseline) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : data is nullptr
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithDataNullPointer
+ * failure case : data is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithDataNullPointer) {
 	size_t const num_data(NUM_DATA);
@@ -459,8 +446,9 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNullPointer) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : data is not aligned
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithDataNotAligned
+ * failure case : data is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithDataNotAligned) {
 	size_t const num_data(NUM_DATA);
@@ -501,8 +489,9 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNotAligned) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : mask is nullptr
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithMaskNullPointer
+ * failure case : mask is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithMaskNullPointer) {
 	size_t const num_data(NUM_DATA);
@@ -538,8 +527,9 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNullPointer) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : mask is not aligned
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithMaskNotAligned
+ * failure case : mask is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithMaskNotAligned) {
 	size_t const num_data(NUM_DATA);
@@ -580,8 +570,9 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNotAligned) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : baseline context is nullptr
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithBaselineContextNullPointer
+ * failure case : baseline context is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithBaselineContextNullPointer) {
 	size_t const num_data(NUM_DATA);
@@ -610,9 +601,9 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineContextNullPointer) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : num_data not identical with
- * num_basis_data of baseline context
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithBaselineNumDataNumBasisDataNotEqual
+ * failure case : num_data != num_basis_data
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataNumBasisDataNotIdentical) {
 	size_t const num_data(NUM_DATA);
@@ -652,9 +643,9 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataNumBasisDataNotIdentical) 
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : num_data less than
- * num_bases of baseline context
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithBaselineNumDataLessThanNumBases
+ * failure case : num_data < num_bases
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataLessThanNumBases) {
 	size_t const num_data(NUM_DATA);
@@ -694,8 +685,9 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataLessThanNumBases) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : out is nullptr
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithOutNullPointer
+ * failure case : out is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithOutNullPointer) {
 	size_t const num_data(NUM_DATA);
@@ -733,8 +725,9 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNullPointer) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : out is not aligned
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithOutNotAligned
+ * failure case : out is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
 	size_t const num_data(NUM_DATA);
@@ -775,8 +768,9 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline : failure case : baseline_status is nullptr
- * returned value of sakura_GetBestFitBaseline must be Status_kInvalidArgument
+ * Test sakura_GetBestFitBaselineWithBaselineStatusNullPointer
+ * failure case : baseline_status is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, GetBestFitBaselineWithBaselineStatusNullPointer) {
 	size_t const num_data(NUM_DATA);
@@ -815,10 +809,9 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineStatusNullPointer) {
 }
 
 /*
- * Test sakura_GetBestFitBaseline: failure case of too many masked
- * input data.
- * RESULT:
- * out = []
+ * Test sakura_GetBestFitBaselineWithTooManyMaskedData
+ * failure case : too many masked input data
+ * returned value : Status_kNG
  */
 TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA);
@@ -859,12 +852,11 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 
 /*
  * Test sakura_SubtractBaselineFromNormalDataWithoutClipping
+ * successful case
  * the input data have smooth shape and no spiky feature, and
  * sakura_SubtractBaseline is executed without doing recursive
  * clipping.
  * the baseline-subtracted data should be zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	size_t const num_data(NUM_DATA2);
@@ -923,14 +915,13 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 
 /*
  * Test sakura_SubtractBaselineFromSmoothDataWithClipping
+ * successful case
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaseline where recursive baseline fitting,
  * 10 times at maximum, with clipping data outside 3 sigma level.
  * since the input data haven't any outliers the baseline-subtracted
  * data should be identical with those in case without clipping,
  * namely, zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 	size_t const num_data(NUM_DATA2);
@@ -989,6 +980,7 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 
 /*
  * Test sakura_SubtractBaselineFromSpikyDataWithClipping
+ * successful case
  * the input data have three outliers.
  * execute sakura_SubtractBaseline where recursive
  * baseline fitting, 5 times at maximum, with clipping data
@@ -996,8 +988,6 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
  * in the process of recursive clipping, the outliers will be
  * removed from baseline fitting procedure and the final result
  * should be zero throughout except for the outliers.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 	size_t const num_data(NUM_DATA2);
@@ -1072,7 +1062,8 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 
 /*
  * Test sakura_SubtractBaselineWithDataNullPointer
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : data is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -1116,7 +1107,8 @@ TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 
 /*
  * Test sakura_SubtractBaselineWithDataNotAligned
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : data is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -1165,7 +1157,8 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 
 /*
  * Test sakura_SubtractBaselineWithMaskNullPointer
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : mask is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -1209,7 +1202,8 @@ TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
 
 /*
  * Test sakura_SubtractBaselineWithMaskNotAligned
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : mask is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -1258,7 +1252,8 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 
 /*
  * Test sakura_SubtractBaselineWithBaselineContextNullPointer
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : context is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -1295,11 +1290,11 @@ TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
 }
 
 /*
- * Test sakura_SubtractBaseline : failure case : num_data not identical with
- * num_basis_data of baseline context
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * Test sakura_SubtractBaselineWithNumDataNumBasisDataNotEqual
+ * failure case : num_data != num_basis_data of baseline context
+ * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, SubtractBaselineWithBaselineNumDataNumBasisDataNotIdentical) {
+TEST_F(Baseline, SubtractBaselineWithNumDataNumBasisDataNotEqual) {
 	size_t const num_data_for_context(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 
@@ -1345,11 +1340,11 @@ TEST_F(Baseline, SubtractBaselineWithBaselineNumDataNumBasisDataNotIdentical) {
 }
 
 /*
- * Test sakura_SubtractBaseline : failure case : num_data less than
- * num_bases of baseline context
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * Test sakura_SubtractBaselineWithNumDataLessThanNumBases
+ * failure case : num_data < num_bases of baseline context
+ * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, SubtractBaselineWithBaselineNumDataLessThanNumBases) {
+TEST_F(Baseline, SubtractBaselineWithNumDataLessThanNumBases) {
 	size_t const num_data_for_context(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 
@@ -1396,7 +1391,8 @@ TEST_F(Baseline, SubtractBaselineWithBaselineNumDataLessThanNumBases) {
 
 /*
  * Test sakura_SubtractBaselineWithFinalMaskNullPointer
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : final_mask is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -1442,7 +1438,8 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 
 /*
  * Test sakura_SubtractBaselineWithFinalMaskNotAligned
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : final_mask is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -1491,7 +1488,8 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 
 /*
  * Test sakura_SubtractBaselineWithOutNullPointer
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : out is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -1537,7 +1535,8 @@ TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
 
 /*
  * Test sakura_SubtractBaselineWithOutNotAligned
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : out is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -1586,7 +1585,8 @@ TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 
 /*
  * Test sakura_SubtractBaselineWithBaselineStatusNullPointer
- * sakura_SubtractBaseline must return Status_kInvalidArgument
+ * failure case : baseline_status is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -1633,13 +1633,8 @@ TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 
 /*
  * Test sakura_SubtractBaselineWithZeroClipThreshold
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaseline with zero value of
- * clip_threshold_sigma.
- * SubtractBaseline() should fail and return Status_kInvalidArgument
- * because it accepts only positive value for clipping threshold.
- * RESULT:
- * out = []
+ * failure case : clip_threshold_sigma == 0
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 	size_t const num_data(NUM_DATA2);
@@ -1686,13 +1681,8 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 
 /*
  * Test sakura_SubtractBaselineWithNegativeClipThreshold
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaseline with negative value
- * of clip_threshold_sigma.
- * SubtractBaseline() should fail and return Status_kInvalidArgument
- * because it accepts only positive value for clipping threshold.
- * RESULT:
- * out = []
+ * failure case : clip_threshold_sigma < 0
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 	size_t const num_data(NUM_DATA2);
@@ -1739,16 +1729,13 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 
 /*
  * Test sakura_SubtractBaselineWithZeroNumFittingMax
+ * successful case : num_fitting_max == 0
  * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaseline with negative value of
- * num_fitting_max specifying the maximum number of fitting
- * procedure inside SubtractBaseline.
- * in case zero or negative value is given, num_fitting_max should
- * be changed to 1 inside SubtractBaseline so that baseline
- * subtraction IS executed.
+ * execute sakura_SubtractBaseline with num_fitting_max == 0.
+ * in case zero or negative value is given, num_fitting_max
+ * should be changed to 1 inside SubtractBaseline so that
+ * baseline subtraction IS executed.
  * hence the resulting data should be zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 	size_t const num_data(NUM_DATA2);
@@ -1807,16 +1794,14 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 
 /*
  * Test sakura_SubtractBaselineWithNegativeNumFittingMax
+ * successful case : num_fitting_max < 0
  * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaseline with negative value
- * of num_fitting_max specifying the maximum number of fitting
- * procedure inside SubtractBaseline.
- * in case zero or negative value is given, num_fitting_max should
- * be changed to 1 inside SubtractBaseline so that baseline
- * subtraction IS executed.
+ * execute sakura_SubtractBaseline with negative value of
+ * num_fitting_max.
+ * in case zero or negative value is given, num_fitting_max
+ * should be changed to 1 inside SubtractBaseline so that
+ * baseline subtraction IS executed.
  * hence the resulting data should be zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
 	size_t const num_data(NUM_DATA2);
@@ -1874,10 +1859,9 @@ TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
 }
 
 /*
- * Test sakura_SubtractBaseline: failure case of too many masked
- * input data.
- * RESULT:
- * out = []
+ * Test sakura_SubtractBaseline
+ * failure case : too many masked input data
+ * returned value : Status_kNG
  */
 TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA2);
@@ -1924,13 +1908,13 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 }
 
 /*
- * Test sakura_SubtractBaseline: failure case of too many data
- * clipped in the process of recursive baseline fitting.
+ * Test sakura_SubtractBaseline
+ * failure case : too many data clipped in the process of recursive
+ * baseline fitting.
  * for this case, unmasked data should be less than the minimum needed
  * for fitting with the given baseline model just before the sixth
  * recursive baseline fitting.
- * RESULT:
- * out = []
+ * returned value : Status_kNG
  */
 TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	size_t const num_data(NUM_DATA2);
@@ -1975,12 +1959,11 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialFromSmoothDataWithoutClipping
+ * successfule case
  * the input data have smooth shape and no spiky feature, and
  * sakura_SubtractBaselinePolynomial is executed without doing
  * recursive clipping.
  * the baseline-subtracted data should be zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 	size_t const num_data(NUM_DATA2);
@@ -2025,6 +2008,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialFromSmoothDataWithClipping
+ * successful case
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaselinePolynomial where recursive
  * baseline fitting, 10 times at maximum, with clipping data
@@ -2032,8 +2016,6 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
  * since the input data haven't any outliers the baseline-subtracted
  * data should be identical with those in case without clipping,
  * namely, zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
 	size_t const num_data(NUM_DATA2);
@@ -2078,6 +2060,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialFromSpikyDataWithClipping
+ * successful case
  * the input data have three outliers.
  * execute sakura_SubtractBaselinePolynomial where recursive
  * baseline fitting, 5 times at maximum, with clipping data
@@ -2085,8 +2068,6 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
  * in the process of recursive clipping, the outliers will be
  * removed from baseline fitting procedure and the final result
  * should be zero throughout except for the outliers.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 	size_t const num_data(NUM_DATA2);
@@ -2147,13 +2128,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialZeroOrder
- * the input data have flat and smooth profile: all elements
- * have the same value.
- * execute sakura_SubtractBaselinePolynomial with order of 0.
- * it should finish successfully since zero value for polynomial
- * order must be accepted.
- * RESULT:
- * out = []
+ * successful case : order == 0
  */
 TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 	size_t const num_data(NUM_DATA2);
@@ -2196,7 +2171,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialNumDataEqualToOrder
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : num_data == order
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialNumDataEqualToOrder) {
 	size_t const num_data(NUM_DATA2);
@@ -2229,7 +2205,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialNumDataEqualToOrder) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialNumDataLessThanOrder
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : num_data < order
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialNumDataLessThanOrder) {
 	size_t const num_data(NUM_DATA2);
@@ -2262,7 +2239,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialNumDataLessThanOrder) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithDataNullPointer
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : data is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithDataNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -2294,7 +2272,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithDataNullPointer) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithDataNotAligned
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : data is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithDataNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -2330,7 +2309,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithDataNotAligned) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithMaskNullPointer
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : mask is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -2362,7 +2342,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNullPointer) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithMaskNotAligned
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : mask is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -2399,7 +2380,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNotAligned) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithFinalMaskNullPointer
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : final_mask is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -2432,7 +2414,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNullPointer) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithFinalMaskNotAligned
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : final_mask is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -2468,7 +2451,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNotAligned) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithOutNullPointer
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : out is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithOutNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -2501,7 +2485,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithOutNullPointer) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithOutNotAligned
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : out is not aligned
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithOutNotAligned) {
 	size_t const num_data(NUM_DATA2);
@@ -2537,7 +2522,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithOutNotAligned) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithBaselineStatusNullPointer
- * sakura_SubtractBaselinePolynomial must return Status_kInvalidArgument
+ * failure case : baseline_status is a null pointer
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithBaselineStatusNullPointer) {
 	size_t const num_data(NUM_DATA2);
@@ -2571,14 +2557,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithBaselineStatusNullPointer) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithZeroClipThreshold
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaselinePolynomial with zero value
- * of clip_threshold_sigma.
- * SubtractBaselinePolynomial() should fail and return
- * Status_kInvalidArgument because it accepts only positive value
- * for clipping threshold.
- * RESULT:
- * out = []
+ * failure case : clip_threshold_sigma == 0 for smooth-shaped input data
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
 	size_t const num_data(NUM_DATA2);
@@ -2617,14 +2597,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithNegativeClipThreshold
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaselinePolynomial with negative value
- * of clip_threshold_sigma.
- * SubtractBaselinePolynomial() should fail and return
- * Status_kInvalidArgument because it accepts only positive value
- * for clipping threshold.
- * RESULT:
- * out = []
+ * failure case : clip_threshold_sigma < 0.0
+ * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 	size_t const num_data(NUM_DATA2);
@@ -2663,16 +2637,11 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithZeroNumFittingMax
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaselinePolynomial with negative value
- * of num_fitting_max specifying the maximum number of fitting
- * procedure inside SubtractBaselinePolynomial.
+ * successful case : num_fitting_max == 0
  * in case zero or negative value is given, num_fitting_max should
  * be changed to 1 inside SubtractBaseline so that baseline
  * subtraction IS executed.
  * hence the resulting data should be zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
 	size_t const num_data(NUM_DATA2);
@@ -2717,16 +2686,11 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
 
 /*
  * Test sakura_SubtractBaselinePolynomialWithNegativeNumFittingMax
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaselinePolynomial with negative value
- * of num_fitting_max specifying the maximum number of fitting
- * procedure inside SubtractBaselinePolynomial.
+ * successful case : num_fitting_max < 0
  * in case zero or negative value is given, num_fitting_max should
  * be changed to 1 inside SubtractBaseline so that baseline
  * subtraction IS executed.
  * hence the resulting data should be zero throughout.
- * RESULT:
- * out = []
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 	size_t const num_data(NUM_DATA2);
@@ -2772,10 +2736,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 }
 
 /*
- * Test sakura_SubtractBaselinePolynomial: failure case of too many
- * masked input data.
- * RESULT:
- * out = []
+ * Test sakura_SubtractBaselinePolynomial
+ * failure case : too many masked input data
+ * returned value : Status_kNG
  */
 TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 	size_t const num_data(NUM_DATA2);
@@ -2808,13 +2771,14 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 }
 
 /*
- * Test sakura_SubtractBaselinePolynomial: failure case of too many data
- * clipped in the process of recursive baseline fitting.
+ * Test sakura_SubtractBaselinePolynomial
+ * failure case : too many data clipped in the process of recursive
+ * baseline fitting.
  * for this case, unmasked data should be less than the minimum needed
  * for fitting with the given baseline model just before the sixth
  * recursive baseline fitting.
- * RESULT:
- * out = []
+ * returned value : status = Status_kNG,
+ * returned value : baseline_status = BaselineStatus_kNotEnoughData
  */
 TEST_F(Baseline, SubtractBaselinePolynomialTooManyDataClipped) {
 	size_t const num_data(NUM_DATA2);
@@ -2845,14 +2809,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialTooManyDataClipped) {
 }
 
 /*
- * Test sakura_SubtractBaseline : subtract baseline from a realistic
- * spectrum data with 3840 channels. the data used here are taken from
- * the first spectrum of the test data used in the e2e test script for Sakura.
- * clipping conditions also are identical with those used in e2e test.
- * the baseline model here is a big set of Chebyshev polynomials with
- * order up to 400.
- * RESULT:
- * out = []
+ * Test sakura_SubtractBaselineFromBigDataUsingBigChebyshevModel
+ * successful case
+ * subtract baseline from a realistic spectrum data with 3840 channels.
+ * the data used here are taken from the first spectrum of the test
+ * data used in the e2e test script for Sakura. clipping conditions
+ * also are identical with those used in e2e test. the baseline model
+ * here is a big set of Chebyshev polynomials with order up to 400.
  */
 TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	size_t const num_data(3840);
