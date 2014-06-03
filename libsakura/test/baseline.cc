@@ -22,6 +22,8 @@
 #define NUM_DATA3 4096
 #define NUM_MODEL 3
 #define NUM_REPEAT 20000
+#define NUM_REPEAT2 2000000
+#define NUM_REPEAT3 800000
 
 using namespace std;
 
@@ -334,14 +336,17 @@ TEST_F(Baseline, DestroyBaselineContext) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
-	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
-	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	size_t const num_repeat(NUM_REPEAT);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+		LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+				context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
 
 /*
@@ -389,10 +394,13 @@ TEST_F(Baseline, GetBestFitBaseline) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
-	LIBSAKURA_SYMBOL(Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
+	size_t const num_repeat(NUM_REPEAT2);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		LIBSAKURA_SYMBOL(Status) getbl_status =
+		LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask,
+				context, out, &getbl_blstatus);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
+	}
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
@@ -822,7 +830,7 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
 	in_mask[0] = true;
-	in_mask[ELEMENTSOF(in_data)-1] = true;
+	in_mask[ELEMENTSOF(in_data) - 1] = true;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -891,13 +899,14 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	bool get_residual = true;
 
 	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
-
-	LIBSAKURA_SYMBOL(Status) subbl_status =
-	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
-			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
-			out, &subbl_blstatus);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-
+	size_t const num_repeat(NUM_REPEAT3);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		LIBSAKURA_SYMBOL(Status) subbl_status =
+		LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+				clipping_threshold_sigma, num_fitting_max, get_residual,
+				final_mask, out, &subbl_blstatus);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	}
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
@@ -1874,7 +1883,7 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
 	in_mask[0] = true;
-	in_mask[ELEMENTSOF(in_data)-1] = true;
+	in_mask[ELEMENTSOF(in_data) - 1] = true;
 
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
@@ -1990,12 +1999,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 	bool final_mask[ELEMENTSOF(in_data)];
 
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
-
-	LIBSAKURA_SYMBOL(Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-
+	size_t const num_repeat(NUM_REPEAT3);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+				order, 3.0, 1, true, final_mask, out, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	}
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
