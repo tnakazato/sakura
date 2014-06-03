@@ -28,6 +28,9 @@ protected:
 
 	BitOperation() :
 			verbose(false) {
+		for (size_t iop=0; iop < NUM_OPERATION;++iop){
+			operation_functions[iop] = nullptr;
+		}
 	}
 
 	typedef LIBSAKURA_SYMBOL(Status) (*function_ptr_t)(DataType, size_t,
