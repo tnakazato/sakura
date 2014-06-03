@@ -51,6 +51,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 
@@ -102,6 +103,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 				num_exclude_indices, exclude_indices, num_model_bases,
 				basis_data, lsq_matrix, lsq_vector);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 
@@ -130,6 +132,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 		numop->SolveSimultaneousEquationsByLU(num_equations, in_matrix,
 				in_vector, out);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 
