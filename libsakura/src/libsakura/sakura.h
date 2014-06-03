@@ -1647,7 +1647,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] num_exclude_indices 先に係数値を計算した状態と比較して、除外したいデータ点の個数をセットする。0以上、且つ、 @a num_data 以下の数でなければならない。
- * @param[in] exclude_indices 除外したいデータ点のインデックス ( @a basis_data の行の添字(0始まり)) を列挙した配列。要素数は @a num_exclude_indices 。要素数が @a num_exclude_indices より多くてもエラーにはならないが、 @a num_exclude_indices 番目、及びそれ以降の要素は無視される。
+ * @param[in] exclude_indices 除外したいデータ点のインデックス ( @a basis_data の行の添字(0始まり)) を列挙した配列。要素数は @a num_exclude_indices 。
  * @n must-be-aligned
  * @param[in] num_model_bases モデルを構成する基底関数の数。正で、且つ、 @a num_data 以下の数でなければならない。
  * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
@@ -1690,9 +1690,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @param[in] exclude_indices an array containing indices of data points
  * (the row index of @a basis_data ) to be excluded this time. the indices
  * must be stored in the first @a num_exclude_indices elements. its length
- * must be at least @a num_exclude_indices . longer size is allowed, but the
- * elements at index equal to and greater than @a num_exclude_indices will be
- * ignored.
+ * should be @a num_exclude_indices .
  * @n must-be-aligned
  * @param[in] num_model_bases number of model basis functions. it must be a
  * positive number, also it must be equal to or less than @a num_data .
