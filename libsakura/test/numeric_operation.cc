@@ -20,7 +20,7 @@
 #define NUM_DATA 4096
 #define NUM_MODEL 20
 #define NUM_REPEAT 3000
-#define NUM_REPEAT2 40000
+#define NUM_REPEAT2 300
 #define NUM_REPEAT3 1500000
 #define NUM_EXCLUDE 5
 
@@ -239,6 +239,7 @@ protected:
 /*
  * Test sakura_GetLeastSquareFittingCoefficients
  * successful case
+ * note: repeating NUM_REPEAT times for performance measurement
  */
 TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 	size_t const num_data(NUM_DATA);
@@ -713,6 +714,7 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsTooManyMaskedData) {
 /*
  * Test sakura_UpdateLeastSquareFittingCoefficients
  * successful case
+ * note : repeating NUM_REPEAT2 times for performance measurement
  */
 TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 	size_t const num_data(NUM_DATA);
@@ -742,8 +744,6 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
-			in_lsq_vector);
 	LIBSAKURA_SYMBOL(Status) status_getlsq =
 			sakura_GetLeastSquareFittingCoefficients(num_data, in_data, in_mask,
 					num_model, model, answer, answer_vector);
@@ -754,11 +754,20 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 		PrintArray("model  ", num_data, num_model, model);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status =
-			sakura_UpdateLeastSquareFittingCoefficients(num_data, in_data,
-					num_exclude_indices, exclude_indices, num_model, model,
-					in_lsq_matrix, in_lsq_vector);
-	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	size_t const num_repeat(NUM_REPEAT2);
+	double elapse_time = 0.0;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+				in_lsq_vector);
+		double start = sakura_GetCurrentTime();
+		LIBSAKURA_SYMBOL(Status) status =
+				sakura_UpdateLeastSquareFittingCoefficients(num_data, in_data,
+						num_exclude_indices, exclude_indices, num_model, model,
+						in_lsq_matrix, in_lsq_vector);
+		double end = sakura_GetCurrentTime();
+		elapse_time += (end - start);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	}
 
 	for (size_t i = 0; i < num_model * num_model; ++i) {
 		double deviation;
@@ -786,6 +795,8 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 	}
 
 	if (verbose) {
+		cout << "Elapse time of " << num_repeat << " repetition: "
+				<< elapse_time << " sec." << endl;
 		PrintArray("out   ", num_model, num_model, in_lsq_matrix);
 		PrintArray("answer", num_model, num_model, answer);
 	}
@@ -1434,6 +1445,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithLsqVectorNotAli
 /*
  * Test sakura_SolveSimultaneousEquationsByLU
  * successful case
+ * note : repeating NUM_REPEAT3 times for performance measurement
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	size_t const num_data(NUM_DATA_TESTLU);
@@ -1518,7 +1530,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNullPointer) 
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix, lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
+			lsq_vector);
 
 	LIBSAKURA_SYMBOL(Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLU(num_model, in_matrix_np,
@@ -1551,11 +1564,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix_unaligned, lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model,
+			lsq_matrix_unaligned, lsq_vector);
 
 	LIBSAKURA_SYMBOL(Status) solve_status =
-			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix_unaligned,
-					lsq_vector, out);
+			sakura_SolveSimultaneousEquationsByLU(num_model,
+					lsq_matrix_unaligned, lsq_vector, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), solve_status);
 }
 
@@ -1584,7 +1598,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNullPointer) 
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix, lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
+			lsq_vector);
 
 	LIBSAKURA_SYMBOL(Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
@@ -1605,7 +1620,7 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL_TESTLU);
 	SIMD_ALIGN
-	double lsq_vector[num_model+1];
+	double lsq_vector[num_model + 1];
 	double *in_vector_unaligned = lsq_vector + 1;
 	SIMD_ALIGN
 	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
@@ -1617,7 +1632,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix, in_vector_unaligned);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
+			in_vector_unaligned);
 
 	LIBSAKURA_SYMBOL(Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
@@ -1648,7 +1664,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix, lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
+			lsq_vector);
 
 	LIBSAKURA_SYMBOL(Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
@@ -1675,13 +1692,14 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNotAligned) {
 	SIMD_ALIGN
 	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
 	SIMD_ALIGN
-	double out[ELEMENTSOF(lsq_vector)+1];
+	double out[ELEMENTSOF(lsq_vector) + 1];
 	double *out_unaligned = out + 1;
 
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix, lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
+			lsq_vector);
 
 	LIBSAKURA_SYMBOL(Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
