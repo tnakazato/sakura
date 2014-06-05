@@ -275,7 +275,7 @@ typedef struct {
  * @param[in] value	要素のレイアウトは、[num_spectra][num_polarizations][num_channels]。グリッディングする値。<br/>must-be-aligned
  * @param[in] weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
  * @param[in] weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
- * @param[in] num_convolution_table @a convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= convolution_table <= INT32_MAX / 32
+ * @param[in] num_convolution_table @a convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= num_convolution_table <= INT32_MAX / 32
  * @param[in] convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。各要素の値は、NaN,Infであってはならない。要素0が中心を表す。<br/>must-be-aligned
  * @param[in] num_polarizations_for_grid 範囲は、0 < num_polarizations_for_grid <= INT32_MAX
  * @param[in] num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
