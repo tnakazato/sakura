@@ -159,9 +159,9 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 	{	return TotalElementsGreaterOrEqual(buf, num_data);};
 	AlignedBufferConfiguration const conf[] = {
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), pred },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kBool), pred },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred },
 
 	};
 
@@ -279,29 +279,29 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 
 	AlignedBufferConfiguration const conf[] = {
 
-	{ LIBSAKURA_SYMBOL(TypeId_kBool), pred_num_spectra },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred_num_spectra },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kDouble), pred_num_spectra },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), pred_num_spectra },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kDouble), pred_num_spectra },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), pred_num_spectra },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kInt32), pred_num_polarizations },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kInt32), pred_num_polarizations },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kInt32), pred_num_channels },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kInt32), pred_num_channels },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kBool), pred_sp_pol_ch },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred_sp_pol_ch },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_sp_pol_ch },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), pred_sp_pol_ch },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_sp_ch },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), pred_sp_ch },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_num_convolution_table },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), pred_num_convolution_table },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kDouble), pred_pol_ch_for_grid },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), pred_pol_ch_for_grid },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_h_w_pol_ch_for_grid },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), pred_h_w_pol_ch_for_grid },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kFloat), pred_h_w_pol_ch_for_grid },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), pred_h_w_pol_ch_for_grid },
 
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
@@ -402,19 +402,19 @@ PyObject *ConvertArray(PyObject *self, PyObject *args) {
 }
 
 constexpr FuncForPython Uint8ToBool = ConvertArray<uint8_t, bool,
-LIBSAKURA_SYMBOL(TypeId_kInt8), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(PyTypeId_kInt8), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 LIBSAKURA_SYMBOL(Uint8ToBool)>;
 
 constexpr FuncForPython Uint32ToBool = ConvertArray<uint32_t, bool,
-LIBSAKURA_SYMBOL(TypeId_kInt32), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(PyTypeId_kInt32), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 LIBSAKURA_SYMBOL(Uint32ToBool)>;
 
 constexpr FuncForPython InvertBool = ConvertArray<bool, bool,
-LIBSAKURA_SYMBOL(TypeId_kBool), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(PyTypeId_kBool), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 LIBSAKURA_SYMBOL(InvertBool)>;
 
 constexpr FuncForPython SetFalseFloatIfNanOrInf = ConvertArray<float, bool,
-LIBSAKURA_SYMBOL(TypeId_kFloat), LIBSAKURA_SYMBOL(TypeId_kBool),
+LIBSAKURA_SYMBOL(PyTypeId_kFloat), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)>;
 
 template<typename Type,
@@ -450,7 +450,7 @@ PyObject *RangeCheck(PyObject *self, PyObject *args) {
 
 	{ TypeId, predRange },
 
-	{ LIBSAKURA_SYMBOL(TypeId_kBool), predData },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData },
 
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
@@ -485,7 +485,7 @@ PyObject *RangeCheck(PyObject *self, PyObject *args) {
 }
 
 constexpr FuncForPython Int32SetTrueIntInRangesExclusive = RangeCheck<int32_t,
-LIBSAKURA_SYMBOL(TypeId_kInt32),
+LIBSAKURA_SYMBOL(PyTypeId_kInt32),
 LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)>;
 
 PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
@@ -573,7 +573,7 @@ PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 
 	size_t dimensions = PySequence_Length(elements);
 	if (!(0 < dimensions && dimensions <= kMaxNumberOfDimensions && 0 <= typeInt
-			&& typeInt < LIBSAKURA_SYMBOL(TypeId_kEnd))) {
+			&& typeInt < LIBSAKURA_SYMBOL(PyTypeId_kEnd))) {
 		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
 		return nullptr;
 	}
@@ -595,7 +595,7 @@ PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 	static size_t const sizes[] = { sizeof(bool), sizeof(int8_t),
 			sizeof(int32_t), sizeof(int64_t), sizeof(float), sizeof(double),
 			sizeof(long double) };
-	STATIC_ASSERT(LIBSAKURA_SYMBOL(TypeId_kEnd) == ELEMENTSOF((sizes)));
+	STATIC_ASSERT(LIBSAKURA_SYMBOL(PyTypeId_kEnd) == ELEMENTSOF((sizes)));
 
 	std::unique_ptr<LIBSAKURA_SYMBOL(PyAlignedBuffer),
 			decltype(&LIBSAKURA_SYMBOL(PyAlignedBufferDestroy))> bufPtr(nullptr,
@@ -642,7 +642,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 	LIBSAKURA_SYMBOL(PyAlignedBuffer) *buf = nullptr;
 	try {
 		switch (type) {
-		case LIBSAKURA_SYMBOL(TypeId_kBool): {
+		case LIBSAKURA_SYMBOL(PyTypeId_kBool): {
 			bool *aligned = nullptr;
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 			bool>(sizeof(bool) * len, &aligned);
@@ -661,7 +661,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 		}
 			break;
 
-		case LIBSAKURA_SYMBOL(TypeId_kInt8): {
+		case LIBSAKURA_SYMBOL(PyTypeId_kInt8): {
 			uint8_t *aligned = nullptr;
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 					uint8_t>(sizeof(uint8_t) * len, &aligned);
@@ -684,7 +684,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 		}
 			break;
 
-		case LIBSAKURA_SYMBOL(TypeId_kInt32): {
+		case LIBSAKURA_SYMBOL(PyTypeId_kInt32): {
 			uint32_t *aligned = nullptr;
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 					uint32_t>(sizeof(uint32_t) * len, &aligned);
@@ -707,7 +707,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 		}
 			break;
 
-		case LIBSAKURA_SYMBOL(TypeId_kFloat): {
+		case LIBSAKURA_SYMBOL(PyTypeId_kFloat): {
 			float *aligned = nullptr;
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 					float>(sizeof(float) * len, &aligned);
@@ -730,7 +730,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 		}
 			break;
 
-		case LIBSAKURA_SYMBOL(TypeId_kDouble): {
+		case LIBSAKURA_SYMBOL(PyTypeId_kDouble): {
 			double *aligned = nullptr;
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
 					double>(sizeof(double) * len, &aligned);
@@ -947,12 +947,12 @@ PyMODINIT_FUNC initlibsakurapy(void) {
 		Py_INCREF(sakura_error);
 		PyModule_AddObject(mod, "error", sakura_error);
 	}
-	PyModule_AddIntConstant(mod, "TYPE_BOOL", LIBSAKURA_SYMBOL(TypeId_kBool));
-	PyModule_AddIntConstant(mod, "TYPE_INT8", LIBSAKURA_SYMBOL(TypeId_kInt8));
-	PyModule_AddIntConstant(mod, "TYPE_INT32", LIBSAKURA_SYMBOL(TypeId_kInt32));
-	PyModule_AddIntConstant(mod, "TYPE_FLOAT", LIBSAKURA_SYMBOL(TypeId_kFloat));
+	PyModule_AddIntConstant(mod, "TYPE_BOOL", LIBSAKURA_SYMBOL(PyTypeId_kBool));
+	PyModule_AddIntConstant(mod, "TYPE_INT8", LIBSAKURA_SYMBOL(PyTypeId_kInt8));
+	PyModule_AddIntConstant(mod, "TYPE_INT32", LIBSAKURA_SYMBOL(PyTypeId_kInt32));
+	PyModule_AddIntConstant(mod, "TYPE_FLOAT", LIBSAKURA_SYMBOL(PyTypeId_kFloat));
 	PyModule_AddIntConstant(mod, "TYPE_DOUBLE",
-	LIBSAKURA_SYMBOL(TypeId_kDouble));
+	LIBSAKURA_SYMBOL(PyTypeId_kDouble));
 
 	PyModule_AddIntConstant(mod, "CONVOLVE1D_KERNEL_TYPE_GAUSSIAN",
 	LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian));
