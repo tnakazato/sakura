@@ -17,11 +17,17 @@
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
+#define NUM_DATA0 65536
 #define NUM_DATA 4096
+#define NUM_DATA2 50
+#define NUM_DATA3 500
 #define NUM_MODEL 20
+#define NUM_MODEL2 5
+#define NUM_MODEL3 499
+#define NUM_REPEAT0 200
 #define NUM_REPEAT 3000
 #define NUM_REPEAT2 300
-#define NUM_REPEAT3 1500000
+#define NUM_REPEAT3 15
 #define NUM_EXCLUDE 5
 
 using namespace std;
@@ -242,7 +248,7 @@ protected:
  * note: repeating NUM_REPEAT times for performance measurement
  */
 TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
-	size_t const num_data(NUM_DATA);
+	size_t const num_data(NUM_DATA0);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
@@ -269,7 +275,7 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 		PrintArray("model  ", num_data, num_model, model);
 	}
 
-	size_t const num_repeat(NUM_REPEAT);
+	size_t const num_repeat(NUM_REPEAT0);
 	double start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) status =
@@ -1440,20 +1446,77 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithLsqVectorNotAli
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-#define NUM_DATA_TESTLU 50
-#define NUM_MODEL_TESTLU 5
 /*
  * Test sakura_SolveSimultaneousEquationsByLU
  * successful case
- * note : repeating NUM_REPEAT3 times for performance measurement
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
+	SIMD_ALIGN
+	double lsq_vector[num_model];
+	SIMD_ALIGN
+	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
+	SIMD_ALIGN
+	double out[ELEMENTSOF(lsq_vector)];
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(lsq_vector)];
+
+	SetFloatPolynomial(num_data, in_data);
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
+	SetFloatConstant(1.0, ELEMENTSOF(lsq_vector), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+		PrintArray("model", num_data, num_model, model);
+	}
+
+	LIBSAKURA_SYMBOL(Status) coeff_status =
+			sakura_GetLeastSquareFittingCoefficients(num_data, in_data, in_mask,
+					num_model, model, lsq_matrix, lsq_vector);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+
+	if (verbose) {
+		PrintArray("lsq_matrix", num_model, num_model, lsq_matrix);
+		PrintArray("lsq_vector", num_model, lsq_vector);
+	}
+
+	LIBSAKURA_SYMBOL(Status) solve_status =
+			sakura_SolveSimultaneousEquationsByLU(num_model, lsq_matrix,
+					lsq_vector, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		float deviation = (out[i] - answer[i]) / out[i];
+		ASSERT_LE(deviation, 1e-7);
+	}
+
+	if (verbose) {
+		PrintArray("out   ", num_model, out);
+		PrintArray("answer", num_model, answer);
+	}
+}
+
+/*
+ * Test sakura_SolveSimultaneousEquationsByLUBigOrderModel
+ * successful case
+ * note : repeating NUM_REPEAT3 times for performance measurement
+ */
+TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
+	size_t const num_data(NUM_DATA3);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	size_t const num_model(NUM_MODEL3);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
 	SIMD_ALIGN
@@ -1494,11 +1557,6 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
 	}
 
-	for (size_t i = 0; i < num_model; ++i) {
-		float deviation = (out[i] - answer[i]) / answer[i];
-		ASSERT_LE(deviation, 1e-7);
-	}
-
 	if (verbose) {
 		PrintArray("out   ", num_model, out);
 		PrintArray("answer", num_model, answer);
@@ -1511,12 +1569,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
  * returned value : Status_kInvalidArgument
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNullPointer) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
 	SIMD_ALIGN
@@ -1545,12 +1603,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNullPointer) 
  * returned value : Status_kInvalidArgument
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNotAligned) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
 	SIMD_ALIGN
@@ -1579,12 +1637,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNotAligned) {
  * returned value : Status_kInvalidArgument
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNullPointer) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
 	double *in_vector_np = nullptr;
@@ -1613,12 +1671,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNullPointer) 
  * returned value : Status_kInvalidArgument
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNotAligned) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
 	SIMD_ALIGN
 	double lsq_vector[num_model + 1];
 	double *in_vector_unaligned = lsq_vector + 1;
@@ -1647,12 +1705,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNotAligned) {
  * returned value : Status_kInvalidArgument
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNullPointer) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
 	SIMD_ALIGN
@@ -1679,12 +1737,12 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNullPointer) {
  * returned value : Status_kInvalidArgument
  */
 TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNotAligned) {
-	size_t const num_data(NUM_DATA_TESTLU);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	size_t const num_model(NUM_MODEL_TESTLU);
+	size_t const num_model(NUM_MODEL2);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
 	SIMD_ALIGN
