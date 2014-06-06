@@ -22,8 +22,6 @@
 #define NUM_DATA3 4096
 #define NUM_MODEL 3
 #define NUM_REPEAT 20000
-#define NUM_REPEAT2 2000000
-#define NUM_REPEAT3 800000
 
 using namespace std;
 
@@ -143,12 +141,12 @@ protected:
  * successful case (with normal polynomial model)
  */
 TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
-	uint16_t const order(20);
-	size_t const num_chan(4096);
+	uint16_t const order(8000);
+	size_t const num_chan(65535);
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 
-	size_t const num_repeat(NUM_REPEAT);
+	size_t const num_repeat(1);
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
 		LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan, &context);
@@ -165,21 +163,17 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
  * successful case (with Chebyshev polynomial model)
  */
 TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
-	uint16_t const order(20);
-	size_t const num_chan(4096);
+	uint16_t const order(7000);
+	size_t const num_chan(65535);
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	size_t const num_repeat(NUM_REPEAT);
-	for (size_t i = 0; i < num_repeat; ++i) {
-		LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-
-		LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
-				context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
-	}
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
 
 /*
@@ -394,16 +388,63 @@ TEST_F(Baseline, GetBestFitBaseline) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
-	size_t const num_repeat(NUM_REPEAT2);
-	for (size_t i = 0; i < num_repeat; ++i) {
-		LIBSAKURA_SYMBOL(Status) getbl_status =
-		LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask,
-				context, out, &getbl_blstatus);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
-	}
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
+
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status =
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineBigDataBigModel
+ * successful case
+ * note : repeating for performance measurement
+ */
+TEST_F(Baseline, GetBestFitBaselineBigDataBigModel) {
+	size_t const num_data(NUM_DATA * 7000);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
+	in_data[3] = 130.0;
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	in_mask[3] = false;
+	size_t const num_model(NUM_MODEL * 100);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatPolynomial(ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	LIBSAKURA_SYMBOL(BaselineStatus) getbl_blstatus;
+	LIBSAKURA_SYMBOL(Status) getbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
+			out, &getbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
+
 	if (verbose) {
 		PrintArray("out   ", num_data, out);
 		PrintArray("answer", num_data, answer);
@@ -899,16 +940,74 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	bool get_residual = true;
 
 	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
-	size_t const num_repeat(NUM_REPEAT3);
+	LIBSAKURA_SYMBOL(Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i], out[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineFromNormalDataWithoutClippingBigDataBigModel
+ * successful case
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_SubtractBaseline is executed without doing recursive
+ * clipping.
+ * the baseline-subtracted data should be zero throughout.
+ */
+TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
+	size_t const num_data(NUM_DATA2 * 250);
+	size_t const num_model(NUM_MODEL * 250);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	LIBSAKURA_SYMBOL(BaselineStatus) subbl_blstatus;
+	size_t const num_repeat(1);
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
 				clipping_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, out, &subbl_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-	}
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
 	}
 
 	if (verbose) {
@@ -1999,15 +2098,61 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 	bool final_mask[ELEMENTSOF(in_data)];
 
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
-	size_t const num_repeat(NUM_REPEAT3);
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
+			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i], out[i]);
+	}
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+}
+
+/*
+ * Test sakura_SubtractBaselinePolynomialFromSmoothDataWithoutClippingBigDataBigModel
+ * successfule case
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_SubtractBaselinePolynomial is executed without doing
+ * recursive clipping.
+ * the baseline-subtracted data should be zero throughout.
+ * this test is for performance measurement hence big values are
+ * given for num_data and num_model.
+ */
+TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClippingBigDataBigModel) {
+	size_t const num_data(NUM_DATA2 * 250);
+	size_t const num_model(NUM_MODEL * 250);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	size_t const num_repeat(1);
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
 				order, 3.0, 1, true, final_mask, out, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	}
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
