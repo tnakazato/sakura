@@ -168,8 +168,17 @@ def test_convolve1D():
 	del ctx1D, data, result
 
 def test_baseline():
-	y = (0.5, 1.0, 2.5, 2.0, 2.5, 3.0)
-	ctxbl = libsakurapy.create_baseline_context(libsakurapy.BASELINE_TYPE_POLYNOMIAL, 1, len(y))
+	ndata = 8
+	order = 1
+	ctxbl = libsakurapy.create_baseline_context(libsakurapy.BASELINE_TYPE_POLYNOMIAL, order, ndata)
+	y = [0.5*i for i in range(ndata)]
+	m = [True]*ndata
+	y[4] += 3.
+	m[4] = False
+	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
+	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, m)
+	result = libsakurapy.subtract_baseline(ndata, data, mask, ctxbl, 5., 1, True)
+	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
 	del ctxbl
 
 def testAll():

@@ -850,6 +850,78 @@ PyObject *CreateBaselineContext(PyObject *self, PyObject *args) {
 	return capsule;
 }
 
+PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	float clip_threshold_sigma;
+	unsigned int num_fitting_max;
+	enum {
+		kData, kMask, kEnd
+	};
+	PyObject *capsules[kEnd];
+	PyObject *context_capsule, *get_residual_py;
+	if (!PyArg_ParseTuple(args, "nOOOfIO", &num_data_py, &capsules[kData], &capsules[kMask],
+			&context_capsule, &clip_threshold_sigma, &num_fitting_max, &get_residual_py)) {
+		return nullptr;
+	}
+	auto context = reinterpret_cast<LIBSAKURA_SYMBOL(BaselineContext) *>(
+			PyCapsule_GetPointer(context_capsule,
+					PyCapsule_GetName(context_capsule)));
+	if ((context == nullptr) || !(get_residual_py == Py_True || get_residual_py == Py_False ) ) {
+		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+		return nullptr;
+	}
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto predData =
+			[num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData }
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status;
+	LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+	Py_BEGIN_ALLOW_THREADS
+		status = LIBSAKURA_SYMBOL(SubtractBaseline)(
+				num_data,
+				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
+				context, clip_threshold_sigma,
+				static_cast<uint16_t>(num_fitting_max), (get_residual_py == Py_True),
+				reinterpret_cast<bool *>(bufs[kMask]->aligned_addr),
+				reinterpret_cast<float *>(bufs[kData]->aligned_addr),
+				&bl_status);
+	Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (bl_status != LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+				return nullptr;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kData]);
+	return capsules[kData];
+
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
 PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *capsule = nullptr;
 
@@ -1143,6 +1215,9 @@ PyMethodDef module_methods[] =
 
 		{ "create_baseline_context", CreateBaselineContext,
 				METH_VARARGS, "Creates a context for baseline subtraction." },
+
+		{ "subtract_baseline", SubtractBaseline,
+				METH_VARARGS, "perform baseline subtraction." },
 
 		{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
 				METH_VARARGS, "gets_elements of the aligned buffer." },
