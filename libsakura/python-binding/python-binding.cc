@@ -488,6 +488,72 @@ constexpr FuncForPython Int32SetTrueIntInRangesExclusive = RangeCheck<int32_t,
 LIBSAKURA_SYMBOL(PyTypeId_kInt32),
 LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)>;
 
+constexpr FuncForPython FloatSetTrueIntInRangesExclusive = RangeCheck<float,
+LIBSAKURA_SYMBOL(PyTypeId_kFloat),
+LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)>;
+
+template<typename Type,
+LIBSAKURA_SYMBOL(PyTypeId) TypeId,
+LIBSAKURA_SYMBOL(Status) (*Func)(Type, size_t, Type const *, bool const *, Type *)>
+PyObject *BitOperation(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	unsigned int bitmask_py;
+
+	enum {
+		kData, kMask, kEnd
+	};
+	PyObject *capsules[kEnd];
+
+	if (!PyArg_ParseTuple(args, "InOO", &bitmask_py, &num_data_py, &capsules[kData],
+			&capsules[kMask])) {
+		return nullptr;
+	}
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto bitmask = static_cast<Type>(bitmask_py);
+	auto predData =
+			[num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_data);};
+
+	AlignedBufferConfiguration const conf[] = {
+
+	{ TypeId, predData },
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData },
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status = Func(bitmask, num_data,
+				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
+				reinterpret_cast<Type *>(bufs[kData]->aligned_addr));
+		Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kData]);
+	return capsules[kData];
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+constexpr FuncForPython Uint8OperateBitsOr = BitOperation<uint8_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kInt8),
+		LIBSAKURA_SYMBOL(OperateBitsUint8Or)>;
+
+
 PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data;
 	int kernel_type;
@@ -545,8 +611,8 @@ PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	}
 	assert(buf);
 
-	RefHolder result(PyTuple_New(buf->dimensions));
-	if (result.get() == nullptr) {
+	RefHolder dims(PyTuple_New(buf->dimensions));
+	if (dims.get() == nullptr) {
 		goto out_of_memory;
 	}
 	for (size_t i = 0; i < buf->dimensions; ++i) {
@@ -554,15 +620,16 @@ PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 		if (element == nullptr) {
 			goto out_of_memory;
 		}
-		PyTuple_SetItem(result.get(), i, element);
+		PyTuple_SetItem(dims.get(), i, element);
 	}
-	return result.release();
+	return dims.release();
 
 	out_of_memory:
 
 	PyErr_SetString(PyExc_MemoryError, "No memory.");
 	return nullptr;
 }
+
 
 PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *elements;
@@ -788,36 +855,44 @@ PyMethodDef module_methods[] =
 		{ "grid_convolving", GridConvolving, METH_VARARGS,
 				"Grids spectra on X-Y plane with convolving." },
 
-				{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
-						"Converts uint8 to bool." },
+		{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
+				"Converts uint8 to bool." },
 
-				{ "uint32_to_bool", Uint32ToBool, METH_VARARGS,
-						"Converts uint32 to bool." },
+		{ "uint32_to_bool", Uint32ToBool, METH_VARARGS,
+				"Converts uint32 to bool." },
 
-				{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
+		{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
 
-				{ "set_true_int_in_ranges_exclusive",
-						Int32SetTrueIntInRangesExclusive, METH_VARARGS,
-						"Sets True if the element is in at least one of ranges." },
+		{ "operate_bits_uint8_or", Uint8OperateBitsOr, METH_VARARGS,
+				"Bit operation OR between an uint8 value and uint8 array." },
 
-				{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf,
+		{ "set_true_float_in_ranges_exclusive",
+				FloatSetTrueIntInRangesExclusive, METH_VARARGS,
+				"Sets True if the element is in at least one of ranges." },
+
+		{ "set_true_int_in_ranges_exclusive",
+				Int32SetTrueIntInRangesExclusive, METH_VARARGS,
+				"Sets True if the element is in at least one of ranges." },
+
+		{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf,
 				METH_VARARGS, "set false if float value is NaN or Inf." },
 
-				{ "create_convolve1D_context", CreateConvolve1DContext,
+		{ "create_convolve1D_context", CreateConvolve1DContext,
 				METH_VARARGS, "Creates a context for convolving 1D." },
 
-				{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
+		{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
 				METH_VARARGS, "gets_elements of the aligned buffer." },
 
-				{ "new_uninitialized_aligned_buffer",
-						NewUninitializedAlignedBuffer,
-						METH_VARARGS,
-						"Creates an uninitialized new aligned buffer with supplied elements." },
+//		{ "get_list_from_aligned_buffer", GetListFromAlignedBuffer,
+//				METH_VARARGS, "gets decapsulated 1-dementional array from the aligned buffer." },
 
-				{ "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
-						"Creates a new aligned buffer." },
+		{ "new_uninitialized_aligned_buffer", NewUninitializedAlignedBuffer,
+				METH_VARARGS, "Creates an uninitialized new aligned buffer with supplied elements." },
 
-				{ NULL, NULL, 0, NULL } /* Sentinel */
+		{ "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
+				"Creates a new aligned buffer." },
+
+		{ NULL, NULL, 0, NULL } /* Sentinel */
 		};
 
 PyDoc_STRVAR(module_doc, "Python binding of libsakura library.");
@@ -962,6 +1037,24 @@ PyMODINIT_FUNC initlibsakurapy(void) {
 	LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning));
 	PyModule_AddIntConstant(mod, "CONVOLVE1D_KERNEL_TYPE_HAMMING",
 	LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming));
+	// Enum for interpolation methods
+	PyModule_AddIntConstant(mod, "INTERPOLATION_METHOD_NEAREST",
+	LIBSAKURA_SYMBOL(InterpolationMethod_kNearest));
+	PyModule_AddIntConstant(mod, "INTERPOLATION_METHOD_LINEAR",
+	LIBSAKURA_SYMBOL(InterpolationMethod_kLinear));
+	PyModule_AddIntConstant(mod, "INTERPOLATION_METHOD_POLYNOMIAL",
+	LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial));
+	PyModule_AddIntConstant(mod, "INTERPOLATION_METHOD_SPLINE",
+	LIBSAKURA_SYMBOL(InterpolationMethod_kSpline));
+	// Enum for baseline functions
+	PyModule_AddIntConstant(mod, "BASELINE_TYPE_POLYNOMIAL",
+	LIBSAKURA_SYMBOL(BaselineType_kPolynomial));
+	PyModule_AddIntConstant(mod, "BASELINE_TYPE_CHEBYSHEV",
+	LIBSAKURA_SYMBOL(BaselineType_kChebyshev));
+	PyModule_AddIntConstant(mod, "BASELINE_TYPE_CUBIC_SPLINE",
+	LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	PyModule_AddIntConstant(mod, "BASELINE_TYPE_SINUSOID",
+	LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
 }
 
 }
