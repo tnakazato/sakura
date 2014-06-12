@@ -112,6 +112,23 @@ def test_range():
 	lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (1, 100, 200))
 	upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (10, 110, 210))
 	result = libsakurapy.set_true_int_in_ranges_exclusive(n, data, 3, lower, upper, mask)
+	del n, dim, data, mask, lower, upper, result
+	# Test set_true_float_in_ranges_exclusive
+	dataf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, [0., 2., 1., 3.])
+	ndata = libsakurapy.get_elements_of_aligned_buffer(dataf)[0]
+	maskf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True, True, True, True])
+	lowerf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, [0.5])
+	upperf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, [2.5])
+	result = libsakurapy.set_true_float_in_ranges_exclusive(ndata,dataf,1,lowerf,upperf,maskf)
+	del dataf, ndata, maskf, lowerf, upperf, result
+
+def test_bit():
+	# Test operate_bits_uint8_or
+	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]*4+[False]*4)
+	data8 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT8, [0, 2, 1, 3]*2)
+	ndata = libsakurapy.get_elements_of_aligned_buffer(data8)[0]
+	result = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask)
+	del mask, data8, result, ndata
 
 def test_convolve1D():
 	ctx1D = libsakurapy.create_convolve1D_context(10, libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN, 4, True);
