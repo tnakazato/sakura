@@ -130,9 +130,47 @@ def test_bit():
 	result = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask)
 	del mask, data8, result, ndata
 
+def test_interpolate():
+	nchan = 4
+	xin = [0., 1.]
+	xout = [0.75]
+	yin = [float(6.0)]*nchan + [float(5.0)]*nchan
+	nbase = len(xin)
+	npos = len(xout)
+	order = 1
+	yindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yin)
+	xindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xin)
+	xoutdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xout)
+	youtdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nchan))
+	result = libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, xindata, nchan, yindata, npos, xoutdata, youtdata)
+	# the result should be [5.25]*nchan
+
+def test_calibration():
+	ndata = 7
+	yon = [5.0 for i in range(ndata)]
+	yoff = [(on - 1.0) for on in yon]
+	factor = [float(i) for i in range(ndata)]
+	ondata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yon)
+	offdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yoff)
+	facdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, factor)
+	result = libsakurapy.apply_position_switch_calibration(len(factor), facdata, ndata, ondata, offdata)
+	# the result should be [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
+	
+
 def test_convolve1D():
-	ctx1D = libsakurapy.create_convolve1D_context(10, libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN, 4, True);
-	del ctx1D
+	ndata = 10
+	width = 3
+	y = [0.]*ndata
+	y[5] = 1.0
+	ctx1D = libsakurapy.create_convolve1D_context(ndata, libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN, width, True);
+	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
+	result = libsakurapy.convolve1D(ctx1D, ndata, data)
+	del ctx1D, data, result
+
+def test_baseline():
+	y = (0.5, 1.0, 2.5, 2.0, 2.5, 3.0)
+	ctxbl = libsakurapy.create_baseline_context(libsakurapy.BASELINE_TYPE_POLYNOMIAL, 1, len(y))
+	del ctxbl
 
 def testAll():
 	test_AB()

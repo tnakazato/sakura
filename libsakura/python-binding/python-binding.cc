@@ -41,6 +41,13 @@ constexpr char const kConvolve1DContextName[] =
 		MODULE_NAME ".Convolve1DContext";
 #endif
 
+constexpr char const kBaselineContextName[] =
+#if 0
+		"BaselineContext.sakura.nao.ac.jp";
+#else
+		MODULE_NAME ".BaselineContext";
+#endif
+
 }
 
 extern "C" {
@@ -554,6 +561,155 @@ constexpr FuncForPython Uint8OperateBitsOr = BitOperation<uint8_t,
 		LIBSAKURA_SYMBOL(OperateBitsUint8Or)>;
 
 
+template<typename Type,
+LIBSAKURA_SYMBOL(PyTypeId) TypeId,
+LIBSAKURA_SYMBOL(Status) (*Func)(LIBSAKURA_SYMBOL(InterpolationMethod),
+		uint8_t, size_t, double const *, size_t, Type const *, size_t,
+		double const *, Type *)>
+PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
+	int interpolate_type_py;
+	uint8_t polynomial_order;
+	Py_ssize_t num_base_py;
+	Py_ssize_t num_array_py;
+	Py_ssize_t num_interpolated_py;
+	enum {
+		kFromAxis, kFromData, kToAxis, kToData, kEnd
+	};
+	PyObject *capsules[kEnd];
+
+	if (!PyArg_ParseTuple(args, "ibnOnOnOO", &interpolate_type_py, &polynomial_order,
+			&num_base_py, &capsules[kFromAxis], &num_array_py, &capsules[kFromData],
+			&num_interpolated_py, &capsules[kToAxis], &capsules[kToData])) {
+		return nullptr;
+	}
+	if (!(0 <= interpolate_type_py
+			&& interpolate_type_py < LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod))) {
+		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+		return nullptr;
+	}
+	auto interpolate_type = static_cast<LIBSAKURA_SYMBOL(InterpolationMethod)>(interpolate_type_py);
+	auto num_base = static_cast<size_t>(num_base_py);
+	auto num_array = static_cast<size_t>(num_array_py);
+	auto num_interpolated = static_cast<size_t>(num_interpolated_py);
+	auto predFromAxis =
+			[num_base](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_base);};
+	auto predFromData =
+			[num_base, num_array](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_base*num_array);};
+	auto predToAxis =
+			[num_interpolated](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_interpolated);};
+	auto predToData =
+			[num_interpolated, num_array](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_interpolated*num_array);};
+	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), predFromAxis },
+
+	{ TypeId, predFromData },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), predToAxis },
+
+	{ TypeId, predToData }
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status = Func(interpolate_type, polynomial_order, num_base,
+				reinterpret_cast<double const*>(bufs[kFromAxis]->aligned_addr),
+				num_array,
+				reinterpret_cast<Type const*>(bufs[kFromData]->aligned_addr),
+				num_interpolated,
+				reinterpret_cast<double const*>(bufs[kToAxis]->aligned_addr),
+				reinterpret_cast<Type *>(bufs[kToData]->aligned_addr));
+		Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kToData]);
+	return capsules[kToData];
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+constexpr FuncForPython InterpolateFloatYAxis = InterpolateAxis<float,
+		LIBSAKURA_SYMBOL(PyTypeId_kFloat),
+		LIBSAKURA_SYMBOL(InterpolateYAxisFloat)>;
+
+PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
+	Py_ssize_t num_scaling_factor_py, num_data_py;
+	enum {
+		kFactor, kData, kOff, kEnd
+	};
+	PyObject *capsules[kEnd];
+	if (!PyArg_ParseTuple(args, "nOnOO", &num_scaling_factor_py, &capsules[kFactor],
+			&num_data_py, &capsules[kData], &capsules[kOff])) {
+		return nullptr;
+	}
+	auto num_scaling_factor = static_cast<size_t>(num_scaling_factor_py);
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto predFactor =
+			[num_scaling_factor](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_scaling_factor);};
+	auto predData =
+			[num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predFactor },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData }
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status = LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
+				num_scaling_factor,
+				reinterpret_cast<float const*>(bufs[kFactor]->aligned_addr),
+				num_data,
+				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<float const*>(bufs[kOff]->aligned_addr),
+				reinterpret_cast<float *>(bufs[kData]->aligned_addr));
+		Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kData]);
+	return capsules[kData];
+
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
 PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data;
 	int kernel_type;
@@ -597,6 +753,103 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 	return capsule;
 }
 
+PyObject *Convolve1D(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	enum {
+		kData, kEnd
+	};
+	PyObject *capsules[kEnd];
+	PyObject *context_capsule;
+	if (!PyArg_ParseTuple(args, "OnO", &context_capsule,
+			&num_data_py, &capsules[kData])) {
+		return nullptr;
+	}
+	auto context = reinterpret_cast<LIBSAKURA_SYMBOL(Convolve1DContext) *>(
+			PyCapsule_GetPointer(context_capsule,
+					PyCapsule_GetName(context_capsule)));
+//	if (context == nullptr) {
+//		goto invalid_arg;
+//	};
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto predData =
+			[num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs) || context == nullptr) {
+		goto invalid_arg;
+	}
+
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status = LIBSAKURA_SYMBOL(Convolve1D)(
+				context, num_data,
+				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<float *>(bufs[kData]->aligned_addr));
+	Py_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kData]);
+	return capsules[kData];
+
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+PyObject *CreateBaselineContext(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data;
+	unsigned int order;
+	int baseline_type;
+	if (!PyArg_ParseTuple(args, "iIn", &baseline_type, &order, &num_data)) {
+		return nullptr;
+	}
+	if (!(0 <= baseline_type
+			&& baseline_type < LIBSAKURA_SYMBOL(BaselineType_kNumType))) {
+		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+		return nullptr;
+	}
+
+	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Status) status;
+	Py_BEGIN_ALLOW_THREADS
+		status =
+				LIBSAKURA_SYMBOL(CreateBaselineContext)(
+						static_cast<LIBSAKURA_SYMBOL(BaselineType)>(baseline_type),
+						static_cast<uint16_t>(order),
+						static_cast<size_t>(num_data),
+						&context);
+	Py_END_ALLOW_THREADS
+
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError,
+				"sakura_CreateBaselineContext failed.");
+		return nullptr;
+	}
+	PyCapsule_Destructor destructor = TCapsuleDesctructor<
+	LIBSAKURA_SYMBOL(BaselineContext), kBaselineContextName,
+	LIBSAKURA_SYMBOL(DestroyBaselineContext)>;
+	auto capsule = PyCapsule_New(context, kBaselineContextName, destructor);
+	if (capsule == nullptr) {
+		PyErr_SetString(PyExc_MemoryError, "No memory.");
+		return nullptr;
+	}
+	return capsule;
+}
+
 PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *capsule = nullptr;
 
@@ -629,7 +882,6 @@ PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	PyErr_SetString(PyExc_MemoryError, "No memory.");
 	return nullptr;
 }
-
 
 PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *elements;
@@ -877,8 +1129,20 @@ PyMethodDef module_methods[] =
 		{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf,
 				METH_VARARGS, "set false if float value is NaN or Inf." },
 
+		{ "interpolate_float_yaxis", InterpolateFloatYAxis,
+				METH_VARARGS, "perform one-dimensional interpolation." },
+
+		{ "apply_position_switch_calibration", ApplyPositionSwitchCalibration,
+						METH_VARARGS, "apply position switch calibration." },
+
 		{ "create_convolve1D_context", CreateConvolve1DContext,
 				METH_VARARGS, "Creates a context for convolving 1D." },
+
+		{ "convolve1D", Convolve1D,
+				METH_VARARGS, "perform one-dimensional discrete convolution." },
+
+		{ "create_baseline_context", CreateBaselineContext,
+				METH_VARARGS, "Creates a context for baseline subtraction." },
 
 		{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
 				METH_VARARGS, "gets_elements of the aligned buffer." },
