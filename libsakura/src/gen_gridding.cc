@@ -40,7 +40,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 	CHECK_ARGS(polarization_map != nullptr);
 	CHECK_ARGS(channel_map != nullptr);
 	CHECK_ARGS(mask != nullptr);
-	CHECK_ARGS(value != nullptr);
+	CHECK_ARGS(weight_only || value != nullptr);
 	CHECK_ARGS(weight != nullptr);
 	CHECK_ARGS(convolution_table != nullptr);
 	CHECK_ARGS(weight_sum != nullptr);
@@ -52,7 +52,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(polarization_map));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(channel_map));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(value));
+	CHECK_ARGS(weight_only || LIBSAKURA_SYMBOL(IsAligned)(value));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(weight));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(convolution_table));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(weight_sum));
