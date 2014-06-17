@@ -198,7 +198,6 @@ public:
 		return &bool_filter_collection_after_sandy_bridge_uint32;
 	}
 	virtual Convolution const *GetConvolutionImpl() const {
-		// return &convolution_after_sandy_bridge;
 		return &convolution_after_sandy_bridge;
 	}
 	virtual Gridding const *GetGriddingImpl() const {
@@ -206,7 +205,6 @@ public:
 	}
 	virtual Interpolation<double, float> const *GetInterpolationImpl() const {
 		return &interpolation_after_sandy_bridge;
-//		return &interpolation_default;
 	}
 	virtual NumericOperation const *GetNumericOperationImpl() const {
 		return &numeric_operation_after_sandy_bridge;
@@ -215,6 +213,66 @@ public:
 		return &statistics_after_sandy_bridge;
 	}
 } after_sandy_bridge;
+
+::LIBSAKURA_PREFIX::ApplyCalibrationAfterHaswell<float> const apply_calibration_after_haswell;
+::LIBSAKURA_PREFIX::BaselineAfterHaswell const baseline_after_haswell;
+::LIBSAKURA_PREFIX::BitOperationAfterHaswell<uint8_t> const bit_operation_after_haswell_uint8;
+::LIBSAKURA_PREFIX::BitOperationAfterHaswell<uint32_t> const bit_operation_after_haswell_uint32;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterHaswell<float> const bool_filter_collection_after_haswell_float;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterHaswell<int> const bool_filter_collection_after_haswell_int;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterHaswell<uint8_t> const bool_filter_collection_after_haswell_uint8;
+::LIBSAKURA_PREFIX::BoolFilterCollectionAfterHaswell<uint32_t> const bool_filter_collection_after_haswell_uint32;
+::LIBSAKURA_PREFIX::ConvolutionAfterHaswell const convolution_after_haswell;
+::LIBSAKURA_PREFIX::InterpolationAfterHaswell<double, float> const interpolation_after_haswell;
+::LIBSAKURA_PREFIX::NumericOperationAfterHaswell const numeric_operation_after_haswell;
+::LIBSAKURA_PREFIX::GriddingAfterHaswell const gridding_after_haswell;
+::LIBSAKURA_PREFIX::StatisticsAfterHaswell const statistics_after_haswell;
+
+class OptimizedImplementationFactoryAfterHaswell: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
+public:
+	virtual char const *GetName() const {
+		return "AfterHaswell";
+	}
+	virtual ApplyCalibration<float> const *GetApplyCalibrationImpl() const {
+		return &apply_calibration_after_haswell;
+	}
+	virtual Baseline const *GetBaselineImpl() const {
+		return &baseline_after_haswell;
+	}
+	virtual BitOperation<uint8_t> const *GetBitOperationImplUint8() const {
+		return &bit_operation_after_haswell_uint8;
+	}
+	virtual BitOperation<uint32_t> const *GetBitOperationImplUint32() const {
+		return &bit_operation_after_haswell_uint32;
+	}
+	virtual BoolFilterCollection<float> const *GetBoolFilterCollectionImplFloat() const {
+		return &bool_filter_collection_after_haswell_float;
+	}
+	virtual BoolFilterCollection<int> const *GetBoolFilterCollectionImplInt() const {
+		return &bool_filter_collection_after_haswell_int;
+	}
+	virtual BoolFilterCollection<uint8_t> const *GetBoolFilterCollectionImplUint8() const {
+		return &bool_filter_collection_after_haswell_uint8;
+	}
+	virtual BoolFilterCollection<uint32_t> const *GetBoolFilterCollectionImplUint32() const {
+		return &bool_filter_collection_after_haswell_uint32;
+	}
+	virtual Convolution const *GetConvolutionImpl() const {
+		return &convolution_after_haswell;
+	}
+	virtual Gridding const *GetGriddingImpl() const {
+		return &gridding_after_haswell;
+	}
+	virtual Interpolation<double, float> const *GetInterpolationImpl() const {
+		return &interpolation_after_haswell;
+	}
+	virtual NumericOperation const *GetNumericOperationImpl() const {
+		return &numeric_operation_after_haswell;
+	}
+	virtual Statistics const *GetStatisticsImpl() const {
+		return &statistics_after_haswell;
+	}
+} after_haswell;
 
 }
 
@@ -227,11 +285,15 @@ void OptimizedImplementationFactory::InitializeFactory(char const *simd_spec) {
 	GetCpuFeature(simd_feature);
 
 	if (strcmp(simd_spec, "adaptive") == 0) {
-		if (simd_feature.avx) {
+		if (simd_feature.avx2) {
+			factory_ = &after_haswell;
+		} else if (simd_feature.avx) {
 			factory_ = &after_sandy_bridge;
 		} else {
 			factory_ = &default_factory;
 		}
+	} else if (simd_feature.avx && strcmp(simd_spec, "avx2") == 0) {
+		factory_ = &after_haswell;
 	} else if (simd_feature.avx && strcmp(simd_spec, "avx") == 0) {
 		factory_ = &after_sandy_bridge;
 	} else if (strcmp(simd_spec, "disabled") == 0) {

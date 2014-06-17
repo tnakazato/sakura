@@ -35,6 +35,21 @@ message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
+set(DefaultArch "")
+set(SandyBridgeArch "")
+set(HaswellArch "")
+
+if(CMAKE_COMPILER_IS_GNUCC)
+	set(DefaultArch "-mtune=generic")
+	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
+		set(SandyBridgeArch "-march=corei7-avx")
+		set(HaswellArch "-march=core-avx2")
+	else(CMAKE_CXX_COMPILER_VERSION)
+		set(SandyBridgeArch "-march=sandybridge")
+		set(HaswellArch "-march=haswell")
+	endif(CMAKE_CXX_COMPILER_VERSION)
+endif(CMAKE_COMPILER_IS_GNUCC)
+
 set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
@@ -42,13 +57,15 @@ set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
-#set(ADDITIONAL_CXXFLAGS_Default "-mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
-#set(ADDITIONAL_CXXFLAGS_Default "-march=core2 -mtune=generic -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
-set(ADDITIONAL_CXXFLAGS_Default "-march=corei7 -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
+#set(ADDITIONAL_CXXFLAGS_Default "${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
+#set(ADDITIONAL_CXXFLAGS_Default "-march=core2 ${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
+set(ADDITIONAL_CXXFLAGS_Default "${SandyBridgeArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
 if(SCALAR)
-	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge -DARCH_SCALAR=1 -fno-tree-vectorize")
+	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "${SandyBridgeArch} -DARCH_SUFFIX=AfterSandyBridge -DARCH_SCALAR=1 -fno-tree-vectorize")
+	set(ADDITIONAL_CXXFLAGS_AfterHaswell "${HaswellArch} -DARCH_SUFFIX=AfterHaswell -DARCH_SCALAR=1 -fno-tree-vectorize")
 else(SCALAR)
-	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "-march=corei7-avx -DARCH_SUFFIX=AfterSandyBridge -DARCH_AFTER_SANDY_BRIDGE=1")
+	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "${SandyBridgeArch} -DARCH_SUFFIX=AfterSandyBridge -DARCH_AFTER_SANDY_BRIDGE=1")
+	set(ADDITIONAL_CXXFLAGS_AfterHaswell "${HaswellArch} -DARCH_SUFFIX=AfterHaswell -DARCH_AFTER_SANDY_BRIDGE=1 -DARCH_AFTER_HASWELL=1")
 endif(SCALAR)
 
 set(MULTI_SOURCE apply_calibration.cc baseline.cc bit_operation.cc 
@@ -107,6 +124,16 @@ foreach(_file ${MULTI_SOURCE})
 		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterSandyBridge} \${VECT_VERB} ${PROF_MODE}"
 	)
 	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}AfterSandyBridge${_ext})
+
+	# after haswell
+	add_custom_command(
+		OUTPUT "${PROJECT_BINARY_DIR}/${_base}AfterHaswell${_ext}"
+		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}AfterHaswell${_ext}"
+	)
+	set_property(SOURCE ${_base}AfterHaswell${_ext} PROPERTY
+		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterHaswell} \${VECT_VERB} ${PROF_MODE}"
+	)
+	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}AfterHaswell${_ext})
 endforeach()
 message(${OPTIMIZED_SOURCES})
 

@@ -1021,7 +1021,7 @@ public:
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
-		result.raw_float =
+		result.raw_int32 =
 		_mm256_cmpeq_epi32(lhs.raw_int32, rhs.raw_int32);
 #else
 		result.v_prior.v[0].raw_int32 = _mm_cmpeq_epi32(
@@ -1039,7 +1039,7 @@ public:
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 #if defined(__AVX2__)
-		result.raw_float =
+		result.raw_int32 =
 		_mm256_cmpgt_epi32(rhs.raw_int32, lhs.raw_int32);
 #else
 		result.v_prior.v[0].raw_int32 = _mm_cmplt_epi32(
