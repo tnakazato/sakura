@@ -650,6 +650,10 @@ constexpr FuncForPython InterpolateFloatYAxis = InterpolateAxis<float,
 		LIBSAKURA_SYMBOL(PyTypeId_kFloat),
 		LIBSAKURA_SYMBOL(InterpolateYAxisFloat)>;
 
+constexpr FuncForPython InterpolateFloatXAxis = InterpolateAxis<float,
+		LIBSAKURA_SYMBOL(PyTypeId_kFloat),
+		LIBSAKURA_SYMBOL(InterpolateXAxisFloat)>;
+
 PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 	Py_ssize_t num_scaling_factor_py, num_data_py;
 	enum {
@@ -1203,6 +1207,9 @@ PyMethodDef module_methods[] =
 
 		{ "interpolate_float_yaxis", InterpolateFloatYAxis,
 				METH_VARARGS, "perform one-dimensional interpolation." },
+
+		{ "interpolate_float_xaxis", InterpolateFloatXAxis,
+						METH_VARARGS, "perform one-dimensional interpolation." },
 
 		{ "apply_position_switch_calibration", ApplyPositionSwitchCalibration,
 						METH_VARARGS, "apply position switch calibration." },

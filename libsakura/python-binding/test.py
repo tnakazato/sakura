@@ -131,19 +131,35 @@ def test_bit():
 	del mask, data8, result, ndata
 
 def test_interpolate():
+	# interpolate in Y-axis
 	nchan = 4
-	xin = [0., 1.]
-	xout = [0.75]
-	yin = [float(6.0)]*nchan + [float(5.0)]*nchan
+	yin = [0., 1.]
+	yout = [0.75]
+	zin = [float(6.0)]*nchan + [float(5.0)]*nchan
+	nbase = len(yin)
+	npos = len(yout)
+	order = 1
+	zindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, zin)
+	yindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, yin)
+	youtdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, yout)
+	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nchan))
+	result = libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, yindata, nchan, zindata, npos, youtdata, zoutdata)
+	# the result should be [5.25]*nchan
+	del yin, yout, zin, zindata, yindata, youtdata, zoutdata
+	# interpolate in X-axis
+	xin = [0.,1.]
+	xout = [0.25]
 	nbase = len(xin)
 	npos = len(xout)
+	nrow = 3
+	zin = [float(6.0), float(5.0)]*nrow
 	order = 1
-	yindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yin)
+	zindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, zin)
 	xindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xin)
 	xoutdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xout)
-	youtdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nchan))
-	result = libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, xindata, nchan, yindata, npos, xoutdata, youtdata)
-	# the result should be [5.25]*nchan
+	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nrow))
+	result = libsakurapy.interpolate_float_xaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, xindata, nrow, zindata, npos, xoutdata, zoutdata)
+	# the result should be [5.75]*nrow
 
 def test_calibration():
 	ndata = 7
