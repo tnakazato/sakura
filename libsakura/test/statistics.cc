@@ -225,6 +225,54 @@ TEST(Statistics, ComputeStatistics) {
 		EXPECT_TRUE(isnanf(result.rms));
 		EXPECT_TRUE(isnanf(result.stddev));
 	}
+	{
+		SIMD_ALIGN
+		static float data[1024];
+		SIMD_ALIGN
+		static bool is_valid[ELEMENTSOF(data)];
+		size_t count = 0;
+		float sum = 0;
+		float max = -1;
+		float min = ELEMENTSOF(data) + 1;
+		size_t max_idx = -1;
+		size_t min_idx = -1;
+		float sqsum = 0;
+		for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+			data[i] = i;
+			is_valid[i] = i % 7 == 0;
+			if (is_valid[i]) {
+				count++;
+				sum += data[i];
+				sqsum += data[i] * data[i];
+				if (max < data[i]) {
+					max = data[i];
+					max_idx = i;
+				}
+				if (min > data[i]) {
+					min = data[i];
+					min_idx = i;
+				}
+			}
+		}
+		float const rms2 = sqsum / count;
+		float const mean = sum / count;
+
+		LIBSAKURA_SYMBOL (StatisticsResult) result;
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL (ComputeStatistics)(
+		ELEMENTSOF(data), data, is_valid, &result);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		EXPECT_EQ(count, result.count);
+		EXPECT_EQ(max_idx, result.index_of_max);
+		EXPECT_EQ(min_idx, result.index_of_min);
+		EXPECT_EQ(max, result.max);
+		EXPECT_EQ(min, result.min);
+		EXPECT_FLOAT_EQ(sum, result.sum);
+		EXPECT_FLOAT_EQ(mean, result.mean);
+		EXPECT_EQ(static_cast<int>(1000 * std::sqrt(rms2)),
+				static_cast<int>(1000 * result.rms));
+		EXPECT_EQ(static_cast<int>(1000 * std::sqrt(rms2 - mean * mean)),
+				static_cast<int>(1000 * result.stddev));
+	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
 

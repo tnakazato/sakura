@@ -34,6 +34,13 @@ inline float AddHorizontally(__m256 packed_values) {
 }
 
 inline int32_t AddHorizontally(__m256i packed_values) {
+#if defined(__AVX2__)
+	packed_values = _mm256_hadd_epi32(packed_values, packed_values);
+	packed_values = _mm256_hadd_epi32(packed_values, packed_values);
+	__m128i sum2 = _mm256_extractf128_si256(packed_values, 1);
+	return _mm_cvtsi128_si32(
+			_mm_add_epi32(_mm256_castsi256_si128(packed_values), sum2));
+#else
 	__m128i count2 = _mm256_castsi256_si128(
 	_mm256_permute2f128_si256(packed_values, packed_values, 1));
 	__m128i count4w = _mm_hadd_epi32(_mm256_castsi256_si128(packed_values),
@@ -42,6 +49,7 @@ inline int32_t AddHorizontally(__m256i packed_values) {
 	count4w = _mm_hadd_epi32(count4w, count4w);
 	int32_t total = _mm_extract_epi32(count4w, 0);
 	return total;
+#endif
 }
 
 inline int32_t AddHorizontally128(__m128i packed_values) {
@@ -107,17 +115,29 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 	STATIC_ASSERT(sizeof(m256) == sizeof(__m256 ));
 	__m256 sum = _mm256_setzero_ps();
 	__m256 const zero = _mm256_setzero_ps();
-	__m128i const zero128i = _mm_setzero_si128();
 	__m256 const nan = _mm256_set1_ps(NAN);
-	__m128i count = _mm_setzero_si128();
 	__m256 min = nan;
 	__m256 max = nan;
 	__m256i index_of_min = _mm256_set1_epi32(-1);
 	__m256i index_of_max = _mm256_set1_epi32(-1);
 	__m256 square_sum = zero;
+#if defined(__AVX2__)
+	__m256i zero256i = _mm256_setzero_si256();
+	__m256i count = zero256i;
+	double const *mask_ = AssumeAligned(reinterpret_cast<double const *>(is_valid));
+#else
+	__m128i const zero128i = _mm_setzero_si128();
+	__m128i count = zero128i;
 	float const *mask_ = AssumeAligned(reinterpret_cast<float const *>(is_valid));
+#endif
 	__m256 const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
+#if defined(__AVX2__)
+		__m256i mask8 = _mm256_cvtepi8_epi32(
+				_mm_castpd_si128(_mm_load1_pd(&mask_[i])));
+		count = _mm256_add_epi32(count, mask8);
+		mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
+#else
 		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
 		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
 		mask0 = _mm_cvtepu8_epi32(mask0);
@@ -128,6 +148,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		mask1 = _mm_cmpeq_epi32(mask1, zero128i);
 		__m256i mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask0),
 				mask1, 1);
+#endif
 		__m256 maskf = _mm256_cvtepi32_ps(mask8);
 		/* maskf: 0xffffffff means invalid data, 0 means valid data. */
 
@@ -150,8 +171,11 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 						_mm256_cmp_ps(max, value, _CMP_NEQ_UQ)));
 	}
 	{
-
+#if defined(__AVX2__)
+		size_t numTotal = static_cast<size_t>(AddHorizontally(count));
+#else
 		size_t numTotal = static_cast<size_t>(AddHorizontally128(count));
+#endif
 		float total = AddHorizontally(sum);
 		result.sum = total;
 		result.count = numTotal;
