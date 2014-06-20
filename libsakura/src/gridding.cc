@@ -94,6 +94,7 @@ struct VWeightedValue {
 template<typename WeightFunc>
 struct ScalarImpl {
 	static inline void ChannelLoop(float convolution_factor,
+			integer const chan_start,
 			integer const num_channels,
 			uint32_t const channel_map_arg[/*num_channels*/],
 			float const weight_arg[/*num_channels*/],
@@ -104,7 +105,7 @@ struct ScalarImpl {
 			float weight_of_grid[/*num_channels_for_grid*/]) {
 		auto weight = AssumeAligned(weight_arg);
 		auto channel_map = AssumeAligned(channel_map_arg);
-		for (integer ichan = 0; ichan < num_channels; ++ichan) {
+		for (integer ichan = chan_start; ichan < num_channels; ++ichan) {
 			if (mask[ichan]) {
 				integer out_chan = channel_map[ichan];
 				float the_weight = weight[ichan] * convolution_factor;
@@ -118,9 +119,10 @@ struct ScalarImpl {
 };
 
 #if defined(__AVX__)
-template<typename WeightFunc>
+template<typename WeightFunc, typename WeightFunc4Scalar>
 struct VectorizedImpl {
 	static inline void ChannelLoop(float convolution_factor,
+			integer const chan_start,
 			integer const num_channels,
 			uint32_t const channel_map[/*num_channels*/],
 			float const weight[/*num_channels*/],
@@ -148,7 +150,8 @@ struct VectorizedImpl {
 		LIBSAKURA_SYMBOL(SimdPacketNative) *vweight_sum =
 				(LIBSAKURA_SYMBOL(SimdPacketNative) *) weight_sum;
 
-		for (integer ichan = 0;
+		integer ichan;
+		for (ichan = chan_start;
 				ichan
 						< num_channels
 								/ LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
@@ -190,15 +193,15 @@ struct VectorizedImpl {
 					LIBSAKURA_SYMBOL(SimdArchNative)>::FloatToDouble(
 							pweight.v_prior.v[1]));
 			vweight_sum += 2;
-			channel_map += LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
 		}
 	}
 };
 #else
-template<typename WeightFunc>
+template<typename WeightFunc, typename WeightFunc4Scalar>
 struct VectorizedImpl {
 	static inline void ChannelLoop(
 			float convolution_factor,
+			integer const chan_start,
 			integer const num_channels,
 			uint32_t const channel_map[/*num_channels*/],
 			float const weight[/*num_channels*/],
@@ -266,7 +269,7 @@ inline void Grid(integer locx, integer locy, integer const doubled_support,
 				float *weight_of_grid_local = &weight_of_grid_pos_local[At2(
 						num_channels_for_grid, out_pol, 0)];
 
-				Impl::ChannelLoop(convolution_factor, num_channels, channel_map,
+				Impl::ChannelLoop(convolution_factor, 0, num_channels, channel_map,
 						weight, mask_local, value_local, num_channels_for_grid,
 						weight_sum_local, grid_local, weight_of_grid_local);
 			} // ipol
@@ -350,8 +353,8 @@ inline bool IsVectorOperationApplicable(size_t num_channels,
 #endif
 	size_t elements_in_packet = LIBSAKURA_SYMBOL(GetAlignment)()
 			/ sizeof(float);
-	if (num_channels % elements_in_packet != 0
-			|| num_channels < elements_in_packet) {
+	if (/*num_channels % elements_in_packet != 0
+			|| */num_channels < elements_in_packet) {
 		return false;
 	}
 
@@ -384,7 +387,7 @@ void GridConvolvingCasted(size_t num_spectra, size_t start_spectrum,
 		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) {
 	if (weight_only) {
 		if (IsVectorOperationApplicable(num_channels, channel_map)) {
-			InternalGrid<VectorizedImpl<VWeightOnly> >(num_spectra,
+			InternalGrid<VectorizedImpl<VWeightOnly, WeightOnly> >(num_spectra,
 					start_spectrum, end_spectrum, spectrum_mask, x, y, support,
 					sampling, num_polarization, polarization_map, num_channels,
 					channel_map, mask, value, weight, num_convolution_table,
@@ -402,7 +405,7 @@ void GridConvolvingCasted(size_t num_spectra, size_t start_spectrum,
 		}
 	} else {
 		if (IsVectorOperationApplicable(num_channels, channel_map)) {
-			InternalGrid<VectorizedImpl<VWeightedValue> >(num_spectra,
+			InternalGrid<VectorizedImpl<VWeightedValue, WeightedValue> >(num_spectra,
 					start_spectrum, end_spectrum, spectrum_mask, x, y, support,
 					sampling, num_polarization, polarization_map, num_channels,
 					channel_map, mask, value, weight, num_convolution_table,
