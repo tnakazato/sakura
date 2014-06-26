@@ -132,7 +132,7 @@ protected:
 		double end = sakura_GetCurrentTime();
 		if (align_check) {
 			ASSERT_TRUE(sakura_IsAligned(context->real_array))<< "real_array is not aligned";
-			ASSERT_TRUE(sakura_IsAligned(context->real_kernel_array))<< "real_array_kernel is not aligned";
+			ASSERT_TRUE(sakura_IsAligned(context->real_kernel_array))<< "real_kernel_array is not aligned";
 		}
 		size_t bad_num_data = num_data;
 		if (use_dummy_num_data) {
@@ -174,7 +174,7 @@ protected:
 /*
  * Test Alignment Check
  * RESULT:
- * input/output_data and real_array/real_array_kernel should be aligned
+ * input/output_data and real_array/real_kernel_array should be aligned
  */
 TEST_F(Convolve1DOperation , AlignmentCheck) {
 	{

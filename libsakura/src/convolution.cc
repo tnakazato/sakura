@@ -101,9 +101,9 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 		size_t num_kernel, float const *kernel_arg, float *output_data_arg) {
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg)));
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto kernel = AssumeAligned(kernel_arg);
 	auto output_data = AssumeAligned(output_data_arg);
@@ -122,18 +122,18 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 inline void CreateConvolve1DContext(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
-	assert(!(context == nullptr));
+	assert(context != nullptr);
 	if (use_fft) {
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_kernel_array));
-		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
+		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
 		float *real_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_array));
-		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_array)));
+		assert(LIBSAKURA_SYMBOL(IsAligned)(real_array));
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
 				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
@@ -219,7 +219,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_kernel, &real_kernel_array));
-		assert(!(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array)));
+		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
 		Create1DKernel(num_kernel, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
 		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
@@ -251,8 +251,8 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (!(context->num_data == num_data)) {
 		throw std::invalid_argument("num_data must equal to context->num_data");
 	}
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg)));
-	assert(!(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg)));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	if (context->use_fft) {
