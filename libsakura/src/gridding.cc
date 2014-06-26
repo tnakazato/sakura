@@ -134,8 +134,12 @@ struct VectorizedImpl {
 		LIBSAKURA_SYMBOL(SimdPacketNative) pconvolution_factor;
 		pconvolution_factor.set1(convolution_factor);
 
-		float const *vmask = reinterpret_cast<float const *>(mask);
-
+		auto vmask =
+#if defined(__AVX2__)
+				reinterpret_cast<__m64 const *>(mask);
+#else
+		reinterpret_cast<float const *>(mask);
+#endif
 		LIBSAKURA_SYMBOL(SimdPacketNative) const *vvalue =
 				(LIBSAKURA_SYMBOL(SimdPacketNative) const *) value;
 
@@ -150,6 +154,9 @@ struct VectorizedImpl {
 		LIBSAKURA_SYMBOL(SimdPacketNative) *vweight_sum =
 				(LIBSAKURA_SYMBOL(SimdPacketNative) *) weight_sum;
 
+#if defined(__AVX2__)
+		__m128 const zero128i = _mm_setzero_ps();
+#endif
 		integer ichan;
 		for (ichan = chan_start;
 				ichan
@@ -157,6 +164,12 @@ struct VectorizedImpl {
 								/ LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
 				++ichan) {
 			LIBSAKURA_SYMBOL(SimdPacketNative) pweight;
+#if defined(__AVX2__)
+			pweight.raw_float = _mm256_cvtepi32_ps(
+					_mm256_cvtepu8_epi32(
+							_mm_castps_si128(_mm_loadl_pi(zero128i, vmask))));
+			++vmask;
+#else
 			pweight.raw_float =
 					_mm256_cvtepi32_ps(
 							_mm256_castps_si256(
@@ -164,6 +177,8 @@ struct VectorizedImpl {
 													_mm_castsi128_ps(_mm_cvtepi8_epi32(_mm_castps_si128(_mm_load1_ps(&vmask[0]))))),
 											_mm_castsi128_ps(_mm_cvtepi8_epi32(_mm_castps_si128(_mm_load1_ps(&vmask[1])))),
 											1)));
+			vmask += 2;
+#endif
 			pweight = LIBSAKURA_SYMBOL(SimdMath)<
 			LIBSAKURA_SYMBOL(SimdArchNative), float>::Mul(pweight,
 					pconvolution_factor);
