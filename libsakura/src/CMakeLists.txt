@@ -59,7 +59,7 @@ message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
 #set(ADDITIONAL_CXXFLAGS_Default "${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
 #set(ADDITIONAL_CXXFLAGS_Default "-march=core2 ${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
-set(ADDITIONAL_CXXFLAGS_Default "${SandyBridgeArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
+set(ADDITIONAL_CXXFLAGS_Default "${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
 if(SCALAR)
 	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "${SandyBridgeArch} -DARCH_SUFFIX=AfterSandyBridge -DARCH_SCALAR=1 -fno-tree-vectorize")
 	set(ADDITIONAL_CXXFLAGS_AfterHaswell "${HaswellArch} -DARCH_SUFFIX=AfterHaswell -DARCH_SCALAR=1 -fno-tree-vectorize")
