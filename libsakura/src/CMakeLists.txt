@@ -50,7 +50,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
 	endif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
 endif(CMAKE_COMPILER_IS_GNUCC)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
+set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall -Wno-deprecated-register")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")

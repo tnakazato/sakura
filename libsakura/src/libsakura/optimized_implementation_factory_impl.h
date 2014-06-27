@@ -12,6 +12,7 @@ namespace LIBSAKURA_PREFIX {
 template<class DataType>
 class ApplyCalibrationDefault: public ApplyCalibration<DataType> {
 public:
+	ApplyCalibrationDefault() {}
 	virtual ~ApplyCalibrationDefault() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
@@ -24,6 +25,7 @@ public:
 template<class DataType>
 class ApplyCalibrationAfterSandyBridge: public ApplyCalibration<DataType> {
 public:
+	ApplyCalibrationAfterSandyBridge() {}
 	virtual ~ApplyCalibrationAfterSandyBridge() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
@@ -36,6 +38,7 @@ public:
 template<class DataType>
 class ApplyCalibrationAfterHaswell: public ApplyCalibration<DataType> {
 public:
+	ApplyCalibrationAfterHaswell() {}
 	virtual ~ApplyCalibrationAfterHaswell() {
 	}
 	virtual void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
@@ -47,6 +50,7 @@ public:
 
 class BaselineDefault: public Baseline {
 public:
+	BaselineDefault() {}
 	virtual ~BaselineDefault() {
 	}
 	virtual void CreateBaselineContext(
@@ -80,6 +84,7 @@ public:
 
 class BaselineAfterSandyBridge: public Baseline {
 public:
+	BaselineAfterSandyBridge() {}
 	virtual ~BaselineAfterSandyBridge() {
 	}
 	virtual void CreateBaselineContext(
@@ -113,6 +118,7 @@ public:
 
 class BaselineAfterHaswell: public Baseline {
 public:
+	BaselineAfterHaswell() {}
 	virtual ~BaselineAfterHaswell() {
 	}
 	virtual void CreateBaselineContext(
@@ -147,6 +153,7 @@ public:
 template<typename DataType>
 class BitOperationDefault: public BitOperation<DataType> {
 public:
+	BitOperationDefault() {}
 	virtual ~BitOperationDefault() {
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
@@ -178,6 +185,7 @@ public:
 template<typename DataType>
 class BitOperationAfterSandyBridge: public BitOperation<DataType> {
 public:
+	BitOperationAfterSandyBridge() {}
 	virtual ~BitOperationAfterSandyBridge() {
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
@@ -209,6 +217,7 @@ public:
 template<typename DataType>
 class BitOperationAfterHaswell: public BitOperation<DataType> {
 public:
+	BitOperationAfterHaswell() {}
 	virtual ~BitOperationAfterHaswell() {
 	}
 	virtual void OperateBitsAnd(DataType bit_mask, size_t num_data,
@@ -240,6 +249,7 @@ public:
 template<typename DataType>
 class BoolFilterCollectionDefault: public BoolFilterCollection<DataType> {
 public:
+	BoolFilterCollectionDefault() {}
 	virtual ~BoolFilterCollectionDefault() {
 	}
 	virtual void SetTrueInRangesInclusive(size_t num_data,
@@ -275,6 +285,7 @@ public:
 template<typename DataType>
 class BoolFilterCollectionAfterSandyBridge: public BoolFilterCollection<DataType> {
 public:
+	BoolFilterCollectionAfterSandyBridge() {}
 	virtual ~BoolFilterCollectionAfterSandyBridge() {
 	}
 	virtual void SetTrueInRangesInclusive(size_t num_data,
@@ -310,6 +321,7 @@ public:
 template<typename DataType>
 class BoolFilterCollectionAfterHaswell: public BoolFilterCollection<DataType> {
 public:
+	BoolFilterCollectionAfterHaswell() {}
 	virtual ~BoolFilterCollectionAfterHaswell() {
 	}
 	virtual void SetTrueInRangesInclusive(size_t num_data,
@@ -344,6 +356,7 @@ public:
 
 class ConvolutionDefault: public Convolution {
 public:
+	ConvolutionDefault() {}
 	virtual ~ConvolutionDefault() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_data,
@@ -358,6 +371,7 @@ public:
 
 class ConvolutionAfterSandyBridge: public Convolution {
 public:
+	ConvolutionAfterSandyBridge() {}
 	virtual ~ConvolutionAfterSandyBridge() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_data,
@@ -372,6 +386,7 @@ public:
 
 class ConvolutionAfterHaswell: public Convolution {
 public:
+	ConvolutionAfterHaswell() {}
 	virtual ~ConvolutionAfterHaswell() {
 	}
 	virtual void CreateConvolve1DContext(size_t num_data,
@@ -386,6 +401,7 @@ public:
 
 class GriddingDefault: public Gridding {
 public:
+	GriddingDefault() {}
 	virtual void GridConvolving(size_t num_spectra, size_t start_spectrum,
 			size_t end_spectrum,
 			bool const spectrum_mask[/*num_spectra*/],
@@ -408,6 +424,7 @@ public:
 
 class GriddingAfterSandyBridge: public Gridding {
 public:
+	GriddingAfterSandyBridge() {}
 	virtual void GridConvolving(size_t num_spectra, size_t start_spectrum,
 			size_t end_spectrum,
 			bool const spectrum_mask[/*num_spectra*/],
@@ -430,6 +447,7 @@ public:
 
 class GriddingAfterHaswell: public Gridding {
 public:
+	GriddingAfterHaswell() {}
 	virtual void GridConvolving(size_t num_spectra, size_t start_spectrum,
 			size_t end_spectrum,
 			bool const spectrum_mask[/*num_spectra*/],
@@ -453,6 +471,7 @@ public:
 template<class XDataType, class YDataType>
 class InterpolationDefault: public Interpolation<XDataType, YDataType> {
 public:
+	InterpolationDefault() {}
 	virtual ~InterpolationDefault() {
 	}
 	virtual void InterpolateXAxis(
@@ -476,6 +495,7 @@ public:
 template<class XDataType, class YDataType>
 class InterpolationAfterSandyBridge: public Interpolation<XDataType, YDataType> {
 public:
+	InterpolationAfterSandyBridge() {}
 	virtual ~InterpolationAfterSandyBridge() {
 	}
 	virtual void InterpolateXAxis(
@@ -499,6 +519,7 @@ public:
 template<class XDataType, class YDataType>
 class InterpolationAfterHaswell: public Interpolation<XDataType, YDataType> {
 public:
+	InterpolationAfterHaswell() {}
 	virtual ~InterpolationAfterHaswell() {
 	}
 	virtual void InterpolateXAxis(
@@ -521,6 +542,7 @@ public:
 
 class NumericOperationDefault: public NumericOperation {
 public:
+	NumericOperationDefault() {}
 	virtual ~NumericOperationDefault() {
 	}
 	virtual void GetLeastSquareFittingCoefficients(size_t const num_data,
@@ -544,6 +566,7 @@ public:
 
 class NumericOperationAfterSandyBridge: public NumericOperation {
 public:
+	NumericOperationAfterSandyBridge() {}
 	virtual ~NumericOperationAfterSandyBridge() {
 	}
 	virtual void GetLeastSquareFittingCoefficients(size_t const num_data,
@@ -567,6 +590,7 @@ public:
 
 class NumericOperationAfterHaswell: public NumericOperation {
 public:
+	NumericOperationAfterHaswell() {}
 	virtual ~NumericOperationAfterHaswell() {
 	}
 	virtual void GetLeastSquareFittingCoefficients(size_t const num_data,
@@ -590,6 +614,7 @@ public:
 
 class StatisticsDefault: public Statistics {
 public:
+	StatisticsDefault() {}
 	virtual void ComputeStatistics(float const data[], bool const mask[],
 			size_t elements,
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
@@ -597,6 +622,7 @@ public:
 
 class StatisticsAfterSandyBridge: public Statistics {
 public:
+	StatisticsAfterSandyBridge() {}
 	virtual void ComputeStatistics(float const data[], bool const mask[],
 			size_t elements,
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
@@ -604,6 +630,7 @@ public:
 
 class StatisticsAfterHaswell: public Statistics {
 public:
+	StatisticsAfterHaswell() {}
 	virtual void ComputeStatistics(float const data[], bool const mask[],
 			size_t elements,
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;

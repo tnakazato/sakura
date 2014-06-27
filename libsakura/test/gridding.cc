@@ -60,7 +60,8 @@ inline integer at4(integer B, integer C, integer D, integer a, integer b,
 #define SUPPORT (size_t(10))
 #define NX (size_t(200))
 #define NY (size_t(180))
-#define CONV_TABLE_SIZE (size_t(ceil(sqrt(2.)*((SUPPORT+1) * SAMPLING))))
+//#define CONV_TABLE_SIZE (size_t(ceil(sqrt(2.)*((SUPPORT+1) * SAMPLING))))
+#define CONV_TABLE_SIZE (size_t(2*((SUPPORT+1) * SAMPLING))) // to compile with clang++
 
 SIMD_ALIGN float convTab[CONV_TABLE_SIZE] AVX;
 SIMD_ALIGN uint32_t chanmap[NVISCHAN] AVX;
