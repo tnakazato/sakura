@@ -33,6 +33,7 @@ inline float AddHorizontally(__m256 packed_values) {
 			_mm_add_ss(_mm256_castps256_ps128(packed_values), sum2));
 }
 
+#ifdef __AVX2__
 inline int32_t AddHorizontally(__m256i packed_values) {
 #if defined(__AVX2__)
 	packed_values = _mm256_hadd_epi32(packed_values, packed_values);
@@ -51,13 +52,14 @@ inline int32_t AddHorizontally(__m256i packed_values) {
 	return total;
 #endif
 }
-
+#else /* __AVX2__ */
 inline int32_t AddHorizontally128(__m128i packed_values) {
 	packed_values = _mm_hadd_epi32(packed_values, packed_values);
 	packed_values = _mm_hadd_epi32(packed_values, packed_values);
 	int32_t total = _mm_extract_epi32(packed_values, 0);
 	return total;
 }
+#endif /* __AVX2__ */
 
 #if 0
 inline void ComputeStatisticsSimple(float const data_arg[], bool const is_valid_arg[],
