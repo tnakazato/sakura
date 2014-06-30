@@ -10,13 +10,13 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <cassert>
 
 template<size_t ALIGN>
 class AlignedMemory {
 	char buf[ALIGN - 1];
-	AlignedMemory() {
-	}
 public:
+	AlignedMemory() = default;
 	static void *operator new(size_t size, size_t realSize) {
 		void *p = new char[size + realSize];
 		return p;
@@ -28,6 +28,20 @@ public:
 	static AlignedMemory *newAlignedMemory(size_t size) {
 		AlignedMemory *p = new (size) AlignedMemory();
 		return p;
+	}
+
+	inline void operator()(void *ptr) const noexcept {
+		delete[] reinterpret_cast<char *>(ptr);
+	}
+
+	template<typename T>
+	static inline void *AlignedAllocateOrException(size_t size_in_bytes,
+			T **aligned_address) throw (std::bad_alloc) {
+		assert(aligned_address != nullptr);
+		auto ptr = newAlignedMemory(size_in_bytes);
+		*aligned_address = ptr->template memory<T>();
+		assert(*aligned_address != nullptr);
+		return reinterpret_cast<void *>(ptr);
 	}
 
 	template<typename T>

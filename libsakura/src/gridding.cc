@@ -368,8 +368,8 @@ inline bool IsVectorOperationApplicable(size_t num_channels,
 #endif
 	size_t elements_in_packet = LIBSAKURA_SYMBOL(GetAlignment)()
 			/ sizeof(float);
-	if (/*num_channels % elements_in_packet != 0
-			|| */num_channels < elements_in_packet) {
+	if (num_channels % elements_in_packet != 0
+			|| num_channels < elements_in_packet) {
 		return false;
 	}
 
