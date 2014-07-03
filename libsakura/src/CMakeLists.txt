@@ -47,10 +47,12 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		set(HaswellArch "-march=haswell")
 	endif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-  # using Intel C++
+	set(DefaultArch "-mkl=sequential -xSSE4.2")
+	set(SandyBridgeArch "-mkl=sequential -xAVX ")
+	set(HaswellArch "-mkl=sequential -xCORE-AVX2 -mtune=core-avx2")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
-endif(CMAKE_CXX_COMPILER_ID)
+endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall -Wno-deprecated-register")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")

@@ -24,6 +24,15 @@ using ::Eigen::Aligned;
 
 namespace {
 
+#if defined(__AVX__)
+#if defined(__AVX2__)
+#define FMAD(a,b,c)	_mm256_fmadd_pd(a, b, c)
+#else
+#define FMAD(a,b,c)	_mm256_add_pd(_mm256_mul_pd(a, b), c)
+#endif
+#define IFMSD(a,b,c)	_mm256_sub_pd(c, _mm256_mul_pd(a, b))
+#endif
+
 template<size_t NUM_MODEL_BASES>
 void AddMulVectorTemplate(double k, double const *vec, double *out) {
 	size_t i = 0;
@@ -33,7 +42,7 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 	__m256d coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) + coeff * v);
+		_mm256_storeu_pd(&out[i], FMAD(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 	if (NUM_MODEL_BASES % pack_elements == 0) {
 		return;
@@ -53,7 +62,7 @@ void SubMulVectorTemplate(double k, double const *vec, double *out) {
 	__m256d coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) - coeff * v);
+		_mm256_storeu_pd(&out[i], IFMSD(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 	if (NUM_MODEL_BASES % pack_elements == 0) {
 		return;
@@ -73,7 +82,7 @@ inline void AddMulVector(size_t const num_model_bases, double k,
 	__m256d coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) + coeff * v);
+		_mm256_storeu_pd(&out[i], FMAD(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 #endif
 	for (; i < num_model_bases; ++i) {
@@ -90,7 +99,7 @@ inline void SubMulVector(size_t const num_model_bases, double k,
 	__m256d coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i], _mm256_loadu_pd(&out[i]) - coeff * v);
+		_mm256_storeu_pd(&out[i], IFMSD(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 #endif
 	for (; i < num_model_bases; ++i) {

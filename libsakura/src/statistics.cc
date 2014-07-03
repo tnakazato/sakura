@@ -155,9 +155,9 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		/* maskf: 0xffffffff means invalid data, 0 means valid data. */
 
 		__m256 value = data_[i];
-		sum += _mm256_blendv_ps(value, zero, maskf);
-		square_sum += _mm256_blendv_ps(_mm256_mul_ps(value, value), zero,
-				maskf);
+		sum = _mm256_add_ps(sum, _mm256_blendv_ps(value, zero, maskf));
+		square_sum = _mm256_add_ps(square_sum,
+				_mm256_blendv_ps(_mm256_mul_ps(value, value), zero, maskf));
 
 		min = _mm256_min_ps(min, _mm256_blendv_ps(value, min, maskf));
 		max = _mm256_max_ps(max, _mm256_blendv_ps(value, max, maskf));

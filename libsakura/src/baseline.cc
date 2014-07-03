@@ -191,7 +191,11 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 			__m256d bs = _mm256_set_pd(bases_row[j + offset3],
 					bases_row[j + offset2], bases_row[j + offset1],
 					bases_row[j]);
-			total += ce * bs;
+#if defined(__AVX2__)
+			total = _mm256_fmadd_pd(ce, bs, total);
+#else
+			total = _mm256_add_pd(_mm256_mul_pd(ce, bs), total);
+#endif
 		}
 		_mm_store_ps(&out[i], _mm256_cvtpd_ps(total));
 	}
