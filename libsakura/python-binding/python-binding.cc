@@ -424,6 +424,56 @@ constexpr FuncForPython SetFalseFloatIfNanOrInf = ConvertArray<float, bool,
 LIBSAKURA_SYMBOL(PyTypeId_kFloat), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)>;
 
+
+inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
+	auto dst_u8 = AssumeAligned(reinterpret_cast<uint8_t *>(dst));
+	auto src_u8 = AssumeAligned(reinterpret_cast<uint8_t const*>(src));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
+	STATIC_ASSERT(sizeof(*dst_u8) == sizeof(*dst));
+	for (size_t i = 0; i < elements; ++i) {
+		dst_u8[i] &= src_u8[i];
+	}
+}
+
+PyObject *LogicalAnd(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	enum {
+		kData, kResult, kEnd
+	};
+	PyObject *capsules[kEnd];
+
+	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
+			&capsules[kResult])) {
+		return nullptr;
+	}
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto pred = [num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+	{	return TotalElementsGreaterOrEqual(buf, num_data);};
+	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred },
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	AlignedBoolAnd(num_data, reinterpret_cast<bool const*>(bufs[kData]->aligned_addr),
+			reinterpret_cast<bool *>(bufs[kResult]->aligned_addr));
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
 template<typename Type,
 LIBSAKURA_SYMBOL(PyTypeId) TypeId,
 LIBSAKURA_SYMBOL(Status) (*Func)(size_t, Type const *, size_t, Type const *,
@@ -959,6 +1009,7 @@ PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
+
 PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *elements;
 	int typeInt;
@@ -1191,6 +1242,9 @@ PyMethodDef module_methods[] =
 
 		{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
 
+		{ "logical_and", LogicalAnd, METH_VARARGS,
+				"Takes logical conjunction of boolean arrays." },
+
 		{ "operate_bits_uint8_or", Uint8OperateBitsOr, METH_VARARGS,
 				"Bit operation OR between an uint8 value and uint8 array." },
 
@@ -1228,9 +1282,6 @@ PyMethodDef module_methods[] =
 
 		{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
 				METH_VARARGS, "gets_elements of the aligned buffer." },
-
-//		{ "get_list_from_aligned_buffer", GetListFromAlignedBuffer,
-//				METH_VARARGS, "gets decapsulated 1-dementional array from the aligned buffer." },
 
 		{ "new_uninitialized_aligned_buffer", NewUninitializedAlignedBuffer,
 				METH_VARARGS, "Creates an uninitialized new aligned buffer with supplied elements." },
