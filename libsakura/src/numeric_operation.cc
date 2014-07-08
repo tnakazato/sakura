@@ -44,9 +44,6 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i], FMAD(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
-	if (NUM_MODEL_BASES % pack_elements == 0) {
-		return;
-	}
 #endif
 	for (; i < NUM_MODEL_BASES; ++i) {
 		out[i] += k * vec[i];
@@ -63,9 +60,6 @@ void SubMulVectorTemplate(double k, double const *vec, double *out) {
 	for (i = 0; i < end; i += pack_elements) {
 		__m256d v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i], IFMSD(coeff, v, _mm256_loadu_pd(&out[i])));
-	}
-	if (NUM_MODEL_BASES % pack_elements == 0) {
-		return;
 	}
 #endif
 	for (; i < NUM_MODEL_BASES; ++i) {
