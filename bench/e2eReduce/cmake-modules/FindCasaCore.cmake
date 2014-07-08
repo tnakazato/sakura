@@ -1,8 +1,8 @@
-# Here it is assumed that casacore is located in /nfsstore1/sakura_e2e/casacore/
-SET(SAKURA_E2E_DIR /nfsstore1/sakura_e2e)
-FIND_PATH(CASACORE_INCLUDE_DIR casacore/casa/Arrays.h PATHS ${SAKURA_E2E_DIR}/casacore/include /opt/share/casa/current/release/include)
-FIND_LIBRARY(CASACORE_CASA_LIBRARY NAMES casa_casa PATHS ${SAKURA_E2E_DIR}/casacore/lib /opt/share/casa/current/release/lib64)
-FIND_LIBRARY(CASACORE_TABLE_LIBRARY NAMES casa_tables PATHS ${SAKURA_E2E_DIR}/casacore/lib /opt/share/casa/current/release/lib64)
+# Here it is assumed that casacore is located in /work/sakura_e2e/casa/
+SET(SAKURA_E2E_DIR /work/sakura_e2e/casa)
+FIND_PATH(CASACORE_INCLUDE_DIR casacore/casa/Arrays.h PATHS ${SAKURA_E2E_DIR}/include /opt/share/casa/current/release/include)
+FIND_LIBRARY(CASACORE_CASA_LIBRARY NAMES casa_casa PATHS ${SAKURA_E2E_DIR}/lib /opt/share/casa/current/release/lib64)
+FIND_LIBRARY(CASACORE_TABLE_LIBRARY NAMES casa_tables PATHS ${SAKURA_E2E_DIR}/lib /opt/share/casa/current/release/lib64)
 SET(CASACORE_LIBRARY ${CASACORE_CASA_LIBRARY} ${CASACORE_TABLE_LIBRARY})
 
 INCLUDE(FindPackageHandleStandardArgs)
