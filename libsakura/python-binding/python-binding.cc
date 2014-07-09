@@ -21,6 +21,16 @@
 
 #define MODULE_NAME "libsakurapy"
 
+#undef KEEP_GIL
+
+#ifdef KEEP_GIL
+# define SAKURA_BEGIN_ALLOW_THREADS {
+# define SAKURA_END_ALLOW_THREADS }
+#else
+# define SAKURA_BEGIN_ALLOW_THREADS Py_BEGIN_ALLOW_THREADS
+# define SAKURA_END_ALLOW_THREADS Py_END_ALLOW_THREADS
+#endif
+
 namespace {
 
 constexpr size_t kMaxNumberOfDimensions = 5;
@@ -178,12 +188,12 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 	}
 	LIBSAKURA_SYMBOL(StatisticsResult) result;
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = LIBSAKURA_SYMBOL(ComputeStatistics)(num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kIsValid]->aligned_addr),
 				&result);
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -318,7 +328,7 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status =
 				LIBSAKURA_SYMBOL(GridConvolving)(num_spectra, start_spectrum,
 						end_spectrum,
@@ -340,7 +350,7 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 						static_cast<float *>(bufs[kWeightOfGrid]->aligned_addr),
 						static_cast<float *>(bufs[kGrid]->aligned_addr));
 		//fprintf(stderr, "Grid\n");
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -387,11 +397,11 @@ PyObject *ConvertArray(PyObject *self, PyObject *args) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(num_data,
 				reinterpret_cast<FromType const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<ToType *>(bufs[kResult]->aligned_addr));
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -517,14 +527,14 @@ PyObject *RangeCheck(PyObject *self, PyObject *args) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(num_data,
 				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
 				num_range,
 				reinterpret_cast<Type const*>(bufs[kLower]->aligned_addr),
 				reinterpret_cast<Type const*>(bufs[kUpper]->aligned_addr),
 				reinterpret_cast<bool *>(bufs[kMask]->aligned_addr));
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -584,12 +594,12 @@ PyObject *BitOperation(PyObject *self, PyObject *args) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(bitmask, num_data,
 				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
 				reinterpret_cast<Type *>(bufs[kData]->aligned_addr));
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -671,7 +681,7 @@ PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(interpolate_type, polynomial_order, num_base,
 				reinterpret_cast<double const*>(bufs[kFromAxis]->aligned_addr),
 				num_array,
@@ -679,7 +689,7 @@ PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
 				num_interpolated,
 				reinterpret_cast<double const*>(bufs[kToAxis]->aligned_addr),
 				reinterpret_cast<Type *>(bufs[kToData]->aligned_addr));
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -738,7 +748,7 @@ PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
 				num_scaling_factor,
 				reinterpret_cast<float const*>(bufs[kFactor]->aligned_addr),
@@ -746,7 +756,7 @@ PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<float const*>(bufs[kOff]->aligned_addr),
 				reinterpret_cast<float *>(bufs[kData]->aligned_addr));
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -782,14 +792,14 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 
 	LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status =
 				LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 						static_cast<size_t>(num_data),
 						static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(kernel_type),
 						static_cast<size_t>(kernel_width), use_fft == Py_True,
 						&context);
-		Py_END_ALLOW_THREADS
+		SAKURA_END_ALLOW_THREADS
 
 	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		PyErr_SetString(PyExc_ValueError,
@@ -841,12 +851,12 @@ PyObject *Convolve1D(PyObject *self, PyObject *args) {
 	}
 
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = LIBSAKURA_SYMBOL(Convolve1D)(
 				context, num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<float *>(bufs[kData]->aligned_addr));
-	Py_END_ALLOW_THREADS
+	SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -879,14 +889,14 @@ PyObject *CreateBaselineContext(PyObject *self, PyObject *args) {
 
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	LIBSAKURA_SYMBOL(Status) status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status =
 				LIBSAKURA_SYMBOL(CreateBaselineContext)(
 						static_cast<LIBSAKURA_SYMBOL(BaselineType)>(baseline_type),
 						static_cast<uint16_t>(order),
 						static_cast<size_t>(num_data),
 						&context);
-	Py_END_ALLOW_THREADS
+	SAKURA_END_ALLOW_THREADS
 
 	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		PyErr_SetString(PyExc_ValueError,
@@ -944,7 +954,7 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 
 	LIBSAKURA_SYMBOL(Status) status;
 	LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
-	Py_BEGIN_ALLOW_THREADS
+	SAKURA_BEGIN_ALLOW_THREADS
 		status = LIBSAKURA_SYMBOL(SubtractBaseline)(
 				num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
@@ -954,7 +964,7 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 				reinterpret_cast<bool *>(bufs[kMask]->aligned_addr),
 				reinterpret_cast<float *>(bufs[kData]->aligned_addr),
 				&bl_status);
-	Py_END_ALLOW_THREADS
+	SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
