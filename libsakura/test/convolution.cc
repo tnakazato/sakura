@@ -811,7 +811,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		bool const align_check = false;
 		bool const use_fft = false;
 		bool const verbose = false;
-		size_t loop_max(1000);
+		size_t loop_max(10000);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
@@ -834,7 +834,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		bool const align_check = false;
 		bool const use_fft = true;
 		bool const verbose = false;
-		size_t loop_max(1000);
+		size_t loop_max(10000);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
@@ -850,7 +850,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		bool const align_check = false;
 		bool const use_fft = true;
 		bool const verbose = false;
-		size_t loop_max(1000);
+		size_t loop_max(10000);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
