@@ -341,7 +341,7 @@ protected:
 			start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Need to refresh data for in-place operation
-				if (in_place && irun > 0)
+				if (in_place)
 					PrepareInputs(num_data, in_data, mask);
 				// Actual execution of bit operation function
 				status = (*kit.function)(
