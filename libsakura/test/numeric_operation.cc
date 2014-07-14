@@ -6,7 +6,10 @@
  */
 
 #include <cmath>
+#include <cstddef>
+#include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <sys/time.h>
 
@@ -174,17 +177,21 @@ protected:
 		}
 	}
 
-	// Check if the expected and actual values are close within given precision
-	void CheckResultValue(double expected, double actual, double precision) {
+	// Check if the expected and actual values are enough close to each other
+	void CheckAlmostEqual(double expected, double actual, double tolerance) {
 		double deviation = fabs(actual - expected);
-		if (deviation > precision) {
-			if (expected != 0.0) {
-				deviation = fabs((actual - expected) / expected);
-			} else if (actual != 0.0) {
-				deviation = fabs((actual - expected) / actual);
-			}
-		}
-		ASSERT_LE(deviation, precision);
+		double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
+		ASSERT_LE(deviation, val);
+		/*
+		 if (deviation > tolerance) {
+		 if (expected != 0.0) {
+		 deviation = fabs((actual - expected) / expected);
+		 } else if (actual != 0.0) {
+		 deviation = fabs((actual - expected) / actual);
+		 }
+		 }
+		 ASSERT_LE(deviation, tolerance);
+		 */
 	}
 
 	//1D float array
@@ -262,21 +269,65 @@ protected:
  */
 TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 	size_t const num_data(NUM_DATA0);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
-	SIMD_ALIGN
-	double out[num_model * num_model];
-	SIMD_ALIGN
-	double out_vector[num_model];
-	SIMD_ALIGN
-	double model[num_model * ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	double answer[num_model * num_model];
-	SIMD_ALIGN
-	double answer_vector[num_model];
+	size_t const num_model_num_data(num_model * num_data);
+	size_t const num_model_num_model(num_model * num_model);
+
+	float *in_data = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_indata(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*in_data) * num_data, &in_data));
+	if (in_data == nullptr) {
+		throw bad_alloc();
+	}
+
+	bool *in_mask = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_inmask(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*in_mask) * num_data, &in_mask));
+	if (in_mask == nullptr) {
+		throw bad_alloc();
+	}
+
+	double *out = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_out(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*out) * num_model_num_model, &out));
+	if (out == nullptr) {
+		throw bad_alloc();
+	}
+
+	double *out_vector = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_outvector(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*out_vector) * num_model, &out_vector));
+	if (out_vector == nullptr) {
+		throw bad_alloc();
+	}
+
+	double *model = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_model(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*model) * num_model_num_data, &model));
+	if (model == nullptr) {
+		throw bad_alloc();
+	}
+
+	double *answer = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> storage_for_answer(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*answer) * num_model_num_model, &answer));
+	if (answer == nullptr) {
+		throw bad_alloc();
+	}
+
+	double *answer_vector = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> storage_for_answervector(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*answer_vector) * num_model, &answer_vector));
+	if (answer_vector == nullptr) {
+		throw bad_alloc();
+	}
 
 	SetInputData(num_data, in_data);
 	SetBoolConstant(true, num_data, in_mask);
@@ -299,10 +350,10 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 	double end = sakura_GetCurrentTime();
 
 	for (size_t i = 0; i < num_model * num_model; ++i) {
-		CheckResultValue(answer[i], out[i], 1e-10);
+		CheckAlmostEqual(answer[i], out[i], 1e-10);
 	}
 	for (size_t i = 0; i < num_model; ++i) {
-		CheckResultValue(answer_vector[i], out_vector[i], 1e-10);
+		CheckAlmostEqual(answer_vector[i], out_vector[i], 1e-10);
 	}
 
 	if (verbose) {
