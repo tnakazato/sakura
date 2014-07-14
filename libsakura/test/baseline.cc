@@ -262,7 +262,7 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
 		out[i] = context->basis_data[i];
-		ASSERT_EQ(answer[i], out[i]);
+		EXPECT_DOUBLE_EQ(answer[i], out[i]);
 	}
 	LIBSAKURA_SYMBOL(BaselineType) type = context->baseline_type;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), type);
@@ -314,7 +314,7 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
 		out[i] = context->basis_data[i];
-		ASSERT_EQ(answer[i], out[i]);
+		EXPECT_DOUBLE_EQ(answer[i], out[i]);
 	}
 
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
