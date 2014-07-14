@@ -5,6 +5,7 @@
  *      Author: wataru
  */
 
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <sys/time.h>
@@ -66,6 +67,19 @@ protected:
 		for (size_t i = 0; i < num_data; ++i) {
 			data[i] = value;
 		}
+	}
+
+	// Check if the expected and actual values are close within given precision
+	void CheckResultValue(double expected, double actual, double precision) {
+		double deviation = fabs(actual - expected);
+				if (deviation > precision) {
+					if (expected != 0.0) {
+						deviation = fabs((actual - expected) / expected);
+					} else if (actual != 0.0) {
+						deviation = fabs((actual - expected) / actual);
+					}
+				}
+				ASSERT_LE(deviation, precision);
 	}
 
 	//1D float array
@@ -261,8 +275,7 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
-		out[i] = context->basis_data[i];
-		EXPECT_DOUBLE_EQ(answer[i], out[i]);
+		CheckResultValue(answer[i], context->basis_data[i], 1e-10);
 	}
 	LIBSAKURA_SYMBOL(BaselineType) type = context->baseline_type;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), type);
@@ -313,8 +326,7 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
-		out[i] = context->basis_data[i];
-		EXPECT_DOUBLE_EQ(answer[i], out[i]);
+		CheckResultValue(answer[i], context->basis_data[i], 1e-10);
 	}
 
 	LIBSAKURA_SYMBOL(Status) destroy_status = sakura_DestroyBaselineContext(
