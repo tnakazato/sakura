@@ -155,17 +155,23 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 
 	size_t const num_repeat(1);
+	double start, end;
+	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
+		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
 		create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan,
 				&context);
+		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (Status)
 		destroy_status = sakura_DestroyBaselineContext(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 }
 
 /*
@@ -177,10 +183,13 @@ TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
 	size_t const num_chan(65535);
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	LIBSAKURA_SYMBOL (Status)
 	create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan,
 			&context);
+	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	LIBSAKURA_SYMBOL (Status)
@@ -349,6 +358,8 @@ TEST_F(Baseline, DestroyBaselineContext) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
+	double start, end;
+	double elapsed_time = 0.0;
 	size_t const num_repeat(NUM_REPEAT);
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -358,10 +369,14 @@ TEST_F(Baseline, DestroyBaselineContext) {
 				&context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
+		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
 		destroy_status = sakura_DestroyBaselineContext(context);
+		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 }
 
 /*
@@ -465,9 +480,12 @@ TEST_F(Baseline, GetBestFitBaselineBigDataBigModel) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus)
 	getbl_blstatus;
+	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	LIBSAKURA_SYMBOL (Status)
 	getbl_status = LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data,
 			in_mask, context, out, &getbl_blstatus);
+	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
 
 	if (verbose) {
@@ -1052,14 +1070,20 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus)
 	subbl_blstatus;
+	double start, end;
+	double elapsed_time = 0.0;
 	size_t const num_repeat(1);
 	for (size_t i = 0; i < num_repeat; ++i) {
+		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
 		subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data,
 				in_mask, context, clipping_threshold_sigma, num_fitting_max,
 				get_residual, final_mask, out, &subbl_blstatus);
+		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
@@ -2253,16 +2277,23 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClippingBigDataB
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 
+	double start, end;
+	double elapsed_time = 0.0;
 	LIBSAKURA_SYMBOL (BaselineStatus)
 	baseline_status;
 	size_t const num_repeat(1);
 	for (size_t i = 0; i < num_repeat; ++i) {
+		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
 		status = LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data,
 				in_mask, order, 3.0, 1, true, final_mask, out,
 				&baseline_status);
+		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
+
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
 		PrintArray("out   ", num_data, out);
@@ -4103,10 +4134,13 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	LIBSAKURA_SYMBOL (BaselineStatus)
 	subbl_blstatus;
 
+	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	LIBSAKURA_SYMBOL (Status)
 	subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data,
 			in_mask, context, clipping_threshold_sigma, num_fitting_max,
 			get_residual, final_mask, out, &subbl_blstatus);
+	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	float limit_residual = 0.04f;

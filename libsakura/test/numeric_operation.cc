@@ -340,14 +340,18 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 	}
 
 	size_t const num_repeat(NUM_REPEAT0);
-	double start = sakura_GetCurrentTime();
+	double start, end;
+	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
+		start = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status)
 		status = sakura_GetLeastSquareFittingCoefficients(num_data, in_data,
 				in_mask, num_model, model, out, out_vector);
+		end = sakura_GetCurrentTime();
+		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
-	double end = sakura_GetCurrentTime();
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
 	for (size_t i = 0; i < num_model * num_model; ++i) {
 		CheckAlmostEqual(answer[i], out[i], 1e-10);
@@ -357,8 +361,6 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 	}
 
 	if (verbose) {
-		cout << "Elapse time of " << num_repeat << " repetition: "
-				<< end - start << " sec." << endl;
 		PrintArray("out   ", num_model, num_model, out);
 		PrintArray("answer", num_model, num_model, answer);
 	}
@@ -816,7 +818,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 	}
 
 	size_t const num_repeat(NUM_REPEAT2);
-	double elapse_time = 0.0;
+	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
 		SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
 				in_lsq_vector);
@@ -826,9 +828,10 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 				num_exclude_indices, exclude_indices, num_model, model,
 				in_lsq_matrix, in_lsq_vector);
 		double end = sakura_GetCurrentTime();
-		elapse_time += (end - start);
+		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
 	for (size_t i = 0; i < num_model * num_model; ++i) {
 		double deviation;
@@ -856,8 +859,6 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 	}
 
 	if (verbose) {
-		cout << "Elapse time of " << num_repeat << " repetition: "
-				<< elapse_time << " sec." << endl;
 		PrintArray("out   ", num_model, num_model, in_lsq_matrix);
 		PrintArray("answer", num_model, num_model, answer);
 	}
@@ -1604,13 +1605,19 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 		PrintArray("lsq_vector", num_model, lsq_vector);
 	}
 
+	double start, end;
+	double elapsed_time = 0.0;
 	size_t const num_repeat = NUM_REPEAT3;
 	for (size_t i = 0; i < num_repeat; ++i) {
+		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
 		solve_status = sakura_SolveSimultaneousEquationsByLU(num_model,
 				lsq_matrix, lsq_vector, out);
+		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
 	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
 	if (verbose) {
 		PrintArray("out   ", num_model, out);
