@@ -185,8 +185,9 @@ def test_convolve1D():
 	y[5] = 1.0
 	ctx1D = libsakurapy.create_convolve1D_context(ndata, libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN, width, True);
 	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
-	result = libsakurapy.convolve1D(ctx1D, ndata, data)
-	del ctx1D, data, result
+	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	out = libsakurapy.convolve1D(ctx1D, ndata, data, result)
+	del ctx1D, data, result, out
 
 def test_baseline():
 	ndata = 8

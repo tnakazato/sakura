@@ -820,12 +820,12 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 PyObject *Convolve1D(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
-		kData, kEnd
+		kData, kResult, kEnd
 	};
 	PyObject *capsules[kEnd];
 	PyObject *context_capsule;
-	if (!PyArg_ParseTuple(args, "OnO", &context_capsule,
-			&num_data_py, &capsules[kData])) {
+	if (!PyArg_ParseTuple(args, "OnOO", &context_capsule,
+			&num_data_py, &capsules[kData], &capsules[kResult])) {
 		return nullptr;
 	}
 	auto context = reinterpret_cast<LIBSAKURA_SYMBOL(Convolve1DContext) *>(
@@ -842,6 +842,8 @@ PyObject *Convolve1D(PyObject *self, PyObject *args) {
 
 	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
 
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData }
+
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
@@ -855,7 +857,7 @@ PyObject *Convolve1D(PyObject *self, PyObject *args) {
 		status = LIBSAKURA_SYMBOL(Convolve1D)(
 				context, num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
-				reinterpret_cast<float *>(bufs[kData]->aligned_addr));
+				reinterpret_cast<float *>(bufs[kResult]->aligned_addr));
 	SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -864,8 +866,8 @@ PyObject *Convolve1D(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	Py_INCREF(capsules[kData]);
-	return capsules[kData];
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
 
 
 	invalid_arg:
