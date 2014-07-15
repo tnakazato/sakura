@@ -567,12 +567,12 @@ PyObject *BitOperation(PyObject *self, PyObject *args) {
 	unsigned int bitmask_py;
 
 	enum {
-		kData, kMask, kEnd
+		kData, kMask, kResult, kEnd
 	};
 	PyObject *capsules[kEnd];
 
-	if (!PyArg_ParseTuple(args, "InOO", &bitmask_py, &num_data_py, &capsules[kData],
-			&capsules[kMask])) {
+	if (!PyArg_ParseTuple(args, "InOOO", &bitmask_py, &num_data_py, &capsules[kData],
+			&capsules[kMask], &capsules[kResult])) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
@@ -585,6 +585,7 @@ PyObject *BitOperation(PyObject *self, PyObject *args) {
 
 	{ TypeId, predData },
 	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData },
+	{ TypeId, predData }
 
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
@@ -598,7 +599,7 @@ PyObject *BitOperation(PyObject *self, PyObject *args) {
 		status = Func(bitmask, num_data,
 				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
-				reinterpret_cast<Type *>(bufs[kData]->aligned_addr));
+				reinterpret_cast<Type *>(bufs[kResult]->aligned_addr));
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -607,8 +608,8 @@ PyObject *BitOperation(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	Py_INCREF(capsules[kData]);
-	return capsules[kData];
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
 
 	invalid_arg:
 
@@ -717,11 +718,11 @@ constexpr FuncForPython InterpolateFloatXAxis = InterpolateAxis<float,
 PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 	Py_ssize_t num_scaling_factor_py, num_data_py;
 	enum {
-		kFactor, kData, kOff, kEnd
+		kFactor, kData, kOff, kResult, kEnd
 	};
 	PyObject *capsules[kEnd];
-	if (!PyArg_ParseTuple(args, "nOnOO", &num_scaling_factor_py, &capsules[kFactor],
-			&num_data_py, &capsules[kData], &capsules[kOff])) {
+	if (!PyArg_ParseTuple(args, "nOnOOO", &num_scaling_factor_py, &capsules[kFactor],
+			&num_data_py, &capsules[kData], &capsules[kOff], &capsules[kResult])) {
 		return nullptr;
 	}
 	auto num_scaling_factor = static_cast<size_t>(num_scaling_factor_py);
@@ -735,6 +736,8 @@ PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 	AlignedBufferConfiguration const conf[] = {
 
 	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predFactor },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
 
 	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
 
@@ -755,7 +758,7 @@ PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 				num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<float const*>(bufs[kOff]->aligned_addr),
-				reinterpret_cast<float *>(bufs[kData]->aligned_addr));
+				reinterpret_cast<float *>(bufs[kResult]->aligned_addr));
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -764,8 +767,8 @@ PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	Py_INCREF(capsules[kData]);
-	return capsules[kData];
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
 
 
 	invalid_arg:
@@ -921,12 +924,13 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 	float clip_threshold_sigma;
 	unsigned int num_fitting_max;
 	enum {
-		kData, kMask, kEnd
+		kData, kMask, kFinalMask, kResult, kEnd
 	};
 	PyObject *capsules[kEnd];
 	PyObject *context_capsule, *get_residual_py;
-	if (!PyArg_ParseTuple(args, "nOOOfIO", &num_data_py, &capsules[kData], &capsules[kMask],
-			&context_capsule, &clip_threshold_sigma, &num_fitting_max, &get_residual_py)) {
+	if (!PyArg_ParseTuple(args, "nOOOfIOOO", &num_data_py, &capsules[kData], &capsules[kMask],
+			&context_capsule, &clip_threshold_sigma, &num_fitting_max, &get_residual_py,
+			&capsules[kFinalMask], &capsules[kResult])) {
 		return nullptr;
 	}
 	auto context = reinterpret_cast<LIBSAKURA_SYMBOL(BaselineContext) *>(
@@ -944,7 +948,11 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 
 	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData },
 
-	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData }
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kFloat), predData }
 
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
@@ -963,8 +971,8 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
 				context, clip_threshold_sigma,
 				static_cast<uint16_t>(num_fitting_max), (get_residual_py == Py_True),
-				reinterpret_cast<bool *>(bufs[kMask]->aligned_addr),
-				reinterpret_cast<float *>(bufs[kData]->aligned_addr),
+				reinterpret_cast<bool *>(bufs[kFinalMask]->aligned_addr),
+				reinterpret_cast<float *>(bufs[kResult]->aligned_addr),
 				&bl_status);
 	SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
@@ -978,8 +986,8 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	Py_INCREF(capsules[kData]);
-	return capsules[kData];
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
 
 
 	invalid_arg:
@@ -1020,7 +1028,6 @@ PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	PyErr_SetString(PyExc_MemoryError, "No memory.");
 	return nullptr;
 }
-
 
 PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *elements;

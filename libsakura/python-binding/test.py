@@ -132,8 +132,9 @@ def test_bit():
 	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]*4+[False]*4)
 	data8 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT8, [0, 2, 1, 3]*2)
 	ndata = libsakurapy.get_elements_of_aligned_buffer(data8)[0]
-	result = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask)
-	del mask, data8, result, ndata
+	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT8, (ndata,))
+	out = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask,result)
+	del mask, data8, result, ndata, out
 
 def test_interpolate():
 	# interpolate in Y-axis
@@ -174,8 +175,10 @@ def test_calibration():
 	ondata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yon)
 	offdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yoff)
 	facdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, factor)
-	result = libsakurapy.apply_position_switch_calibration(len(factor), facdata, ndata, ondata, offdata)
+	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	out = libsakurapy.apply_position_switch_calibration(len(factor), facdata, ndata, ondata, offdata, result)
 	# the result should be [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
+	del yon, yoff, factor, ondata, offdata, facdata, result, out
 	
 
 def test_convolve1D():
@@ -199,7 +202,9 @@ def test_baseline():
 	m[4] = False
 	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
 	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, m)
-	result = libsakurapy.subtract_baseline(ndata, data, mask, ctxbl, 5., 1, True)
+	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	final_mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (ndata,))
+	out = libsakurapy.subtract_baseline(ndata, data, mask, ctxbl, 5., 1, True, final_mask, result)
 	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
 	del ctxbl
 
@@ -209,7 +214,11 @@ def testAll():
 	test_grid()
 	test_logical()
 	test_range()
+	test_bit()
+	test_interpolate()
+	test_calibration()
 	test_convolve1D()
+	test_baseline()
 
 testAll()
 gc.collect(2)
