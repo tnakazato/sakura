@@ -996,6 +996,81 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
+template<typename T>
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComplementMaskedValue)(
+		size_t num_data, T const *data, bool const *mask, T *result) {
+	for (size_t i = 0; i < num_data; ++i) {
+		T value = data[i];
+		if (!mask[i]) {
+			value = 0;
+		}
+		result[i] = value;
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+template<typename Type,
+LIBSAKURA_SYMBOL(PyTypeId) TypeId,
+LIBSAKURA_SYMBOL(Status) (*Func)(size_t, Type const *, bool const *, Type *)>
+PyObject *ComplementMaskedValue(PyObject *self, PyObject *args) {
+	Py_ssize_t num_data_py;
+	enum {
+		kData, kMask, kResult, kEnd
+	};
+	PyObject *capsules[kEnd];
+
+	if (!PyArg_ParseTuple(args, "nOOO", &num_data_py, &capsules[kData],
+			&capsules[kMask], &capsules[kResult])) {
+		return nullptr;
+	}
+	auto num_data = static_cast<size_t>(num_data_py);
+	auto predData =
+			[num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_data);};
+
+	AlignedBufferConfiguration const conf[] = {
+
+	{ TypeId, predData },
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predData },
+
+	{ TypeId, predData }
+
+	};
+	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
+
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
+	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+		goto invalid_arg;
+	}
+	LIBSAKURA_SYMBOL(Status) status;
+	SAKURA_BEGIN_ALLOW_THREADS
+		status = Func(num_data,
+				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
+				reinterpret_cast<Type *>(bufs[kResult]->aligned_addr));
+		SAKURA_END_ALLOW_THREADS
+	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		goto invalid_arg;
+	}
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
+		return nullptr;
+	}
+	Py_INCREF(capsules[kResult]);
+	return capsules[kResult];
+
+	invalid_arg:
+
+	PyErr_SetString(PyExc_ValueError, "Invalid argument.");
+	return nullptr;
+}
+
+constexpr FuncForPython ComplementMaskedValueFloat = ComplementMaskedValue<
+		float,
+		LIBSAKURA_SYMBOL(PyTypeId_kFloat),
+		LIBSAKURA_SYMBOL(ComplementMaskedValue)<float> >;
+
 PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 	PyObject *capsule = nullptr;
 
@@ -1150,9 +1225,9 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 			break;
 
 		case LIBSAKURA_SYMBOL(PyTypeId_kInt32): {
-			uint32_t *aligned = nullptr;
+			int32_t *aligned = nullptr;
 			auto addr = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException<
-					uint32_t>(sizeof(uint32_t) * len, &aligned);
+					int32_t>(sizeof(int32_t) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
 				auto val = PyInt_AsLong(item.get());
@@ -1299,6 +1374,9 @@ PyMethodDef module_methods[] =
 		{ "subtract_baseline", SubtractBaseline,
 				METH_VARARGS, "perform baseline subtraction." },
 
+		{ "complement_masked_value_float", ComplementMaskedValueFloat,
+				METH_VARARGS, "complement masked value with, tentatively, 0." },
+
 		{ "get_elements_of_aligned_buffer", GetElementsOfAlignedBuffer,
 				METH_VARARGS, "gets_elements of the aligned buffer." },
 
@@ -1366,6 +1444,7 @@ LIBSAKURA_SYMBOL(PyTypeId) type, void *original_addr, void *aligned_addr,
 	if (buf == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	}
+	//printf("%p: alloc\n", original_addr);
 	buf->type = type;
 	buf->original_addr = original_addr;
 	buf->aligned_addr = aligned_addr;
@@ -1373,6 +1452,7 @@ LIBSAKURA_SYMBOL(PyTypeId) type, void *original_addr, void *aligned_addr,
 	buf->dimensions = dimensions;
 	memcpy(buf->elements, elements, sizeof(buf->elements[0]) * dimensions);
 	*buffer = buf;
+	//printf("%p: alloc\n", buf);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1380,8 +1460,10 @@ void LIBSAKURA_SYMBOL(PyAlignedBufferDestroy)(
 LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer) {
 	if (buffer) {
 		if (buffer->destructor) {
+			//printf("%p: free\n", buffer->original_addr);
 			buffer->destructor(buffer->original_addr);
 		}
+		//printf("%p: free\n", buffer);
 		free(buffer);
 	}
 }

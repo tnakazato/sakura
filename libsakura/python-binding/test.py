@@ -108,7 +108,6 @@ def test_logical():
 	dst = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, True, False, False))
 	out = libsakurapy.logical_and(4, src, dst)
 
-
 def test_range():
 	n = 1024*1024*16
 	dim = (n,)
@@ -208,6 +207,21 @@ def test_baseline():
 	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
 	del ctxbl
 
+def test_complement():
+	n = 1024
+	dim = (n,)
+	data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, dim)
+	mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
+	lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (0,))
+	upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (2100000000,))
+	result = libsakurapy.set_true_int_in_ranges_exclusive(n, data, 1, lower, upper, mask)
+	del lower, upper, data, result
+	
+	data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
+	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
+	libsakurapy.complement_masked_value_float(n, data, mask, result)
+	del data, mask, result
+
 def testAll():
 	test_AB()
 	test_stats()
@@ -219,6 +233,7 @@ def testAll():
 	test_calibration()
 	test_convolve1D()
 	test_baseline()
+	test_complement()
 
 testAll()
 gc.collect(2)
