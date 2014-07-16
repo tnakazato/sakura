@@ -29,7 +29,7 @@
 #define NUM_MODEL3 499
 #define NUM_REPEAT0 200
 #define NUM_REPEAT 3000
-#define NUM_REPEAT2 300
+#define NUM_REPEAT2 300000
 #define NUM_REPEAT3 15
 #define NUM_EXCLUDE 5
 
@@ -794,7 +794,11 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
+	double in_lsq_matrix_orig[num_model * num_model];
+	SIMD_ALIGN
 	double in_lsq_vector[num_model];
+	SIMD_ALIGN
+	double in_lsq_vector_orig[num_model];
 	SIMD_ALIGN
 	double answer[num_model * num_model];
 	SIMD_ALIGN
@@ -817,11 +821,17 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 		PrintArray("model  ", num_data, num_model, model);
 	}
 
+	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix_orig, in_lsq_vector_orig);
+
 	size_t const num_repeat(NUM_REPEAT2);
 	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
-				in_lsq_vector);
+		for (size_t j = 0; j < ELEMENTSOF(in_lsq_matrix); ++j) {
+			in_lsq_matrix[j] = in_lsq_matrix_orig[j];
+		}
+		for (size_t j = 0; j < ELEMENTSOF(in_lsq_vector); ++j) {
+			in_lsq_vector[j] = in_lsq_vector_orig[j];
+		}
 		double start = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status)
 		status = sakura_UpdateLeastSquareFittingCoefficients(num_data, in_data,
