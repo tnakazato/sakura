@@ -104,10 +104,10 @@ def test_logical():
 	del bl
 	del bl2
 
-	src = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, False, True, False))
-	dst = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, True, False, False))
-	out = libsakurapy.logical_and(4, src, dst)
-
+	src1 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, False, True, False))
+	src2 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, True, False, False))
+	dst = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (4,))
+	out = libsakurapy.logical_and(4, src1, src2, dst)
 def test_range():
 	n = 1024*1024*16
 	dim = (n,)

@@ -435,32 +435,35 @@ LIBSAKURA_SYMBOL(PyTypeId_kFloat), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)>;
 
 
-inline void AlignedBoolAnd(size_t elements, bool const src[], bool dst[]) {
+inline void AlignedBoolAnd(size_t elements, bool const src1[], bool const src2[], bool dst[]) {
 	auto dst_u8 = AssumeAligned(reinterpret_cast<uint8_t *>(dst));
-	auto src_u8 = AssumeAligned(reinterpret_cast<uint8_t const*>(src));
+	auto src1_u8 = AssumeAligned(reinterpret_cast<uint8_t const*>(src1));
+	auto src2_u8 = AssumeAligned(reinterpret_cast<uint8_t const*>(src2));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 	STATIC_ASSERT(sizeof(*dst_u8) == sizeof(*dst));
 	for (size_t i = 0; i < elements; ++i) {
-		dst_u8[i] &= src_u8[i];
+		dst_u8[i] = src1_u8[i] & src2_u8[i];
 	}
 }
 
 PyObject *LogicalAnd(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
-		kData, kResult, kEnd
+		kData1, kData2, kResult, kEnd
 	};
 	PyObject *capsules[kEnd];
 
-	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
-			&capsules[kResult])) {
+	if (!PyArg_ParseTuple(args, "nOOO", &num_data_py, &capsules[kData1],
+			&capsules[kData2], &capsules[kResult])) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
 	auto pred = [num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
 	{	return TotalElementsGreaterOrEqual(buf, num_data);};
 	AlignedBufferConfiguration const conf[] = {
+
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred },
 
 	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), pred },
 
@@ -473,7 +476,8 @@ PyObject *LogicalAnd(PyObject *self, PyObject *args) {
 	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
 		goto invalid_arg;
 	}
-	AlignedBoolAnd(num_data, reinterpret_cast<bool const*>(bufs[kData]->aligned_addr),
+	AlignedBoolAnd(num_data, reinterpret_cast<bool const*>(bufs[kData1]->aligned_addr),
+			reinterpret_cast<bool const*>(bufs[kData2]->aligned_addr),
 			reinterpret_cast<bool *>(bufs[kResult]->aligned_addr));
 	Py_INCREF(capsules[kResult]);
 	return capsules[kResult];
