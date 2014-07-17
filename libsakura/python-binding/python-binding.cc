@@ -1044,12 +1044,12 @@ PyObject *ComplementMaskedValue(PyObject *self, PyObject *args) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	SAKURA_BEGIN_ALLOW_THREADS
+	//SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(num_data,
 				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
 				reinterpret_cast<Type *>(bufs[kResult]->aligned_addr));
-		SAKURA_END_ALLOW_THREADS
+	//SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
