@@ -18,7 +18,7 @@ using ::Eigen::Aligned;
 
 namespace {
 
-#if defined(__AVX__)
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
 #include <immintrin.h>
 
 template<typename Arch, typename DataType, typename Context>
@@ -175,7 +175,7 @@ inline void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 		DataType const *scaling_factor, size_t num_data, DataType const *target,
 		DataType const *reference, DataType *result) {
 	if (target == result) {
-#if defined(__AVX__)
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
 		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
 				num_data, target, reference, result);
 #else
