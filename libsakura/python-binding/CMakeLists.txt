@@ -77,7 +77,7 @@ set_target_properties(sakurapy PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
-target_link_libraries(sakurapy sakura log4cxx ${PYTHON_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(sakurapy sakura log4cxx ${PYTHON_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 if(BUILD_DOC)
 	find_package(Doxygen)
