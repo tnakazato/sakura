@@ -12,7 +12,11 @@ endif(EIGEN3_FOUND)
 if(FFTW3_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${FFTW3_INCLUDE_DIR}")
 endif(FFTW3_FOUND)
-
+if(LOG4CXX_FOUND)
+  set(HAS_LOG4CXX 1)
+else(LOG4CXX_FOUND)
+  set(HAS_LOG4CXX 0)
+endif(LOG4CXX_FOUND)
 
 project(libsakura)
 set(libsakura_VERSION_MAJOR 0)

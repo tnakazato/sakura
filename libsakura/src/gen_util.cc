@@ -13,7 +13,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#if LIBSAKURA_HAS_LOG4CXX
 #include <log4cxx/propertyconfigurator.h>
+#endif
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -37,6 +39,7 @@ void DefaultFree(void *ptr) {
 
 namespace LIBSAKURA_PREFIX {
 
+#if LIBSAKURA_HAS_LOG4CXX
 ::log4cxx::LoggerPtr Logger::GetLogger(char const *suffix) {
 	std::string logger = LIBSAKURA_PREFIX_STRING;
 	if (*suffix != '\0') {
@@ -45,6 +48,7 @@ namespace LIBSAKURA_PREFIX {
 	}
 	return log4cxx::Logger::getLogger(logger);
 }
+#endif
 
 LIBSAKURA_SYMBOL(UserAllocator) Memory::allocator_;
 LIBSAKURA_SYMBOL(UserDeallocator) Memory::deallocator_;
