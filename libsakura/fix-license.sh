@@ -10,9 +10,9 @@ header_end="_END@"
 replace() {
 	file="$1"
 	echo -n "Processing $file: "
-	sed "1,/$header_pre$header_start/d" $file | grep --quiet "$header_pre$header_end" || { echo "Missing end marker. Skipped." ; return; }
+	(echo | cat - $file) | sed "1,/$header_pre$header_start/d" | grep --quiet "$header_pre$header_end" || { echo "Missing end marker. Skipped." ; return; }
 	prefix="`grep "$header_pre$header_start" $file | sed -n \"s/\\(.*\\)${header_pre}${header_start}.*/\\1/;1p\" `"
-	sed -n "1,/$header_pre$header_start/p" $file > $tmp && sed "s/^/$prefix/" $notice >> $tmp && sed -n "/$header_pre$header_end/,\$p" $file >> $tmp && mv $tmp $file && echo "Done."
+	(echo | cat - $file) | sed -n "1,/$header_pre$header_start/p" | sed '1d'  > $tmp && sed "s/^/$prefix/" $notice >> $tmp && sed -n "/$header_pre$header_end/,\$p" $file >> $tmp && mv $tmp $file && echo "Done."
 }
 
 usage() {
