@@ -1,3 +1,7 @@
+/*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
 #include <algorithm>
 #include <cassert>
 #include <cmath>

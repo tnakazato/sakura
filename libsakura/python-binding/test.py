@@ -1,5 +1,10 @@
 #!/bin/env python
 
+"""
+# @SAKURA_LICENSE_HEADER_START@
+# @SAKURA_LICENSE_HEADER_END@
+"""
+
 import sys
 import time
 import math

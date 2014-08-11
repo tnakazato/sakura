@@ -1,4 +1,8 @@
 /*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
+/*
  * loginit.h
  *
  *  Created on: 2013/11/29

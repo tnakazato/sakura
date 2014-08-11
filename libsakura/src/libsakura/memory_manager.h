@@ -1,4 +1,8 @@
 /*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
+/*
  * memory_manager.h
  *
  *  Created on: 2013/09/13

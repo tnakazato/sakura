@@ -1,4 +1,8 @@
 /*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
+/*
  * statistics.cc
  *
  *  Created on: 2013/08/20

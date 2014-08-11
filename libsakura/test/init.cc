@@ -1,4 +1,8 @@
 /*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
+/*
  * init.cc
  *
  *  Created on: 2013/05/01

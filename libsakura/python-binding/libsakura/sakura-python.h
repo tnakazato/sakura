@@ -1,5 +1,8 @@
-/**
- * @file
+/*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
+/** @file
  *  Sakura python binding header file.
  *
  * sakura-python.h

@@ -1,3 +1,6 @@
+# @SAKURA_LICENSE_HEADER_START@
+# @SAKURA_LICENSE_HEADER_END@
+
 # default
 log4j.rootLogger=WARN, A1
 log4j.appender.A1=org.apache.log4j.ConsoleAppender

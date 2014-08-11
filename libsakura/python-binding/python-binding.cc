@@ -1,3 +1,8 @@
+/*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
+
 #include <Python.h>
 
 #include <cstdlib>

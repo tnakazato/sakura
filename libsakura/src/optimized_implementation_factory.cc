@@ -1,3 +1,7 @@
+/*
+ * @SAKURA_LICENSE_HEADER_START@
+ * @SAKURA_LICENSE_HEADER_END@
+ */
 // Author: Kohji Nakamura <k.nakamura@nao.ac.jp>, (C) 2012
 //
 // Copyright: See COPYING file that comes with this distribution

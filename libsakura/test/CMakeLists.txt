@@ -1,5 +1,8 @@
 # $Id$
 #
+# @SAKURA_LICENSE_HEADER_START@
+# @SAKURA_LICENSE_HEADER_END@
+#
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_Fortran_COMPILER_NAMES gfortran)
 set(CMAKE_Fortran_COMPILER gfortran)
