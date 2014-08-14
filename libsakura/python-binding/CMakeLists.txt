@@ -77,10 +77,17 @@ configure_file (
   "${PROJECT_BINARY_DIR}/libsakura/config-python.h"
   @ONLY)
 
-include_directories(${LOG4CXX_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}
-	${PYTHON_INCLUDE_PATH}
-	"${PROJECT_SOURCE_DIR}/../src" "${PROJECT_BINARY_DIR}/../bin"
-	"${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}")
+if(LOG4CXX_FOUND)
+    include_directories(${LOG4CXX_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}
+	    ${PYTHON_INCLUDE_PATH}
+	    "${PROJECT_SOURCE_DIR}/../src" "${PROJECT_BINARY_DIR}/../bin"
+	    "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}")
+else(LOG4CXX_FOUND)
+    include_directories(${EIGEN3_INCLUDE_DIR}
+        ${PYTHON_INCLUDE_PATH}
+        "${PROJECT_SOURCE_DIR}/../src" "${PROJECT_BINARY_DIR}/../bin"
+        "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}")
+endif(LOG4CXX_FOUND)
 
 #find_library(pthread pthread)
 add_library(sakurapy SHARED ${SOURCE})
@@ -98,7 +105,11 @@ set_target_properties(sakurapy PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
-target_link_libraries(sakurapy sakura log4cxx ${PYTHON_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+if(LOG4CXX_FOUND)
+    target_link_libraries(sakurapy sakura log4cxx ${PYTHON_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+else(LOG4CXX_FOUND)
+    target_link_libraries(sakurapy sakura ${PYTHON_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+endif(LOG4CXX_FOUND)
 
 if(BUILD_DOC)
 	find_package(Doxygen)

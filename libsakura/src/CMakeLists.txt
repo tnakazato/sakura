@@ -129,8 +129,12 @@ if(BUILD_DOC)
 		COMMENT "Generating the API documentation with Doxygen")
 endif(BUILD_DOC)
 
-include_directories(${LOG4CXX_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
-
+if(HAS_LOG4CXX)
+    include_directories(${LOG4CXX_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
+else(HAS_LOG4CXX)
+    include_directories(${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
+endif(HAS_LOG4CXX)
+    
 foreach(_file ${MULTI_SOURCE})
 	get_filename_component(_base ${_file} NAME_WE)
 	get_filename_component(_ext ${_file} EXT)
@@ -180,7 +184,11 @@ set_target_properties(sakura PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
-target_link_libraries(sakura log4cxx fftw3f ${CMAKE_THREAD_LIBS_INIT})
+if(HAS_LOG4CXX)
+    target_link_libraries(sakura log4cxx fftw3f ${CMAKE_THREAD_LIBS_INIT})
+else(HAS_LOG4CXX)
+    target_link_libraries(sakura fftw3f ${CMAKE_THREAD_LIBS_INIT})
+endif(HAS_LOG4CXX)
 
 install(TARGETS sakura
 	LIBRARY DESTINATION lib
