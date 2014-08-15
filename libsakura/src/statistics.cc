@@ -100,13 +100,13 @@ inline void ComputeStatisticsSimple(float const data_arg[], bool const is_valid_
 			++count;
 			auto value = data[i];
 			sum += value;
-			if (isnanf(min)
-					|| (!isnanf(value) && value < min)) {
+			if (std::isnan(min)
+					|| (!std::isnan(value) && value < min)) {
 				min = value;
 				index_of_min = i;
 			}
-			if (isnanf(max)
-					|| (!isnanf(value) && value > max)) {
+			if (std::isnan(max)
+					|| (!std::isnan(value) && value > max)) {
 				max = value;
 				index_of_max = i;
 			}
@@ -214,7 +214,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		float r = tmp.floatv[0];
 		int result_index = tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
-			if (isnanf(r) || (!isnanf(tmp.floatv[i]) && tmp.floatv[i] < r)) {
+			if (std::isnan(r) || (!std::isnan(tmp.floatv[i]) && tmp.floatv[i] < r)) {
 				r = tmp.floatv[i];
 				result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
 			}
@@ -233,7 +233,7 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		float r = tmp.floatv[0];
 		int result_index = tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
-			if (isnanf(r) || (!isnanf(tmp.floatv[i]) && tmp.floatv[i] > r)) {
+			if (std::isnan(r) || (!std::isnan(tmp.floatv[i]) && tmp.floatv[i] > r)) {
 				r = tmp.floatv[i];
 				result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
 			}
@@ -250,13 +250,13 @@ void ComputeStatisticsSimd(float const data[], bool const is_valid[],
 		if (is_valid[i]) {
 			++result.count;
 			result.sum += data[i];
-			if (isnanf(result.min)
-					|| (!isnanf(data[i]) && data[i] < result.min)) {
+			if (std::isnan(result.min)
+					|| (!std::isnan(data[i]) && data[i] < result.min)) {
 				result.min = data[i];
 				result.index_of_min = i;
 			}
-			if (isnanf(result.max)
-					|| (!isnanf(data[i]) && data[i] > result.max)) {
+			if (std::isnan(result.max)
+					|| (!std::isnan(data[i]) && data[i] > result.max)) {
 				result.max = data[i];
 				result.index_of_max = i;
 			}
@@ -317,7 +317,7 @@ public:
 		assert(j == 0); //  support only 1 dimension array
 		if (is_valid) {
 			++count;
-			assert(!isnanf(value));
+			assert(!std::isnan(value));
 			sum += value;
 			square_sum += value * value;
 			if (value < min) {

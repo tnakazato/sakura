@@ -217,12 +217,12 @@ TEST(Statistics, ComputeStatistics) {
 		EXPECT_EQ(ELEMENTSOF(data), result.count);
 		EXPECT_EQ(-1, result.index_of_max);
 		EXPECT_EQ(-1, result.index_of_min);
-		EXPECT_TRUE(isnanf(result.max));
-		EXPECT_TRUE(isnanf(result.min));
+		EXPECT_TRUE(std::isnan(result.max));
+		EXPECT_TRUE(std::isnan(result.min));
 		EXPECT_EQ(0.f, result.sum);
-		EXPECT_TRUE(isnanf(result.mean));
-		EXPECT_TRUE(isnanf(result.rms));
-		EXPECT_TRUE(isnanf(result.stddev));
+		EXPECT_TRUE(std::isnan(result.mean));
+		EXPECT_TRUE(std::isnan(result.rms));
+		EXPECT_TRUE(std::isnan(result.stddev));
 	}
 	{
 		SIMD_ALIGN
@@ -240,12 +240,12 @@ TEST(Statistics, ComputeStatistics) {
 		EXPECT_EQ(0, result.count);
 		EXPECT_EQ(-1, result.index_of_max);
 		EXPECT_EQ(-1, result.index_of_min);
-		EXPECT_TRUE(isnanf(result.max));
-		EXPECT_TRUE(isnanf(result.min));
+		EXPECT_TRUE(std::isnan(result.max));
+		EXPECT_TRUE(std::isnan(result.min));
 		EXPECT_EQ(0.f, result.sum);
-		EXPECT_TRUE(isnanf(result.mean));
-		EXPECT_TRUE(isnanf(result.rms));
-		EXPECT_TRUE(isnanf(result.stddev));
+		EXPECT_TRUE(std::isnan(result.mean));
+		EXPECT_TRUE(std::isnan(result.rms));
+		EXPECT_TRUE(std::isnan(result.stddev));
 	}
 	{
 		SIMD_ALIGN

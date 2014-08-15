@@ -105,7 +105,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
 		size_t valid_count = 0;
 		for (size_t i = 0; i < elements; ++i) {
 			if (is_valid[i]) {
-				assert(!isnanf(data[i]));
+				assert(!std::isnan(data[i]));
 				data[valid_count] = data[i];
 				++valid_count;
 			}
