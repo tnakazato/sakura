@@ -39,6 +39,12 @@ if(OPENMP_FOUND)
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif(OPENMP_FOUND)
 
+if(APPLE)
+#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -stdlib=libc++ -arch x86_64")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++ -arch x86_64")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -std=c++11 -stdlib=libc++ -arch x86_64")
+endif(APPLE)
+
 project(libsakura_test)
 enable_testing()
 
@@ -46,19 +52,24 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall ${PROF_MODE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall ${PROF_MODE}")
 
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG   "-g -O3")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
-set(CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG -fopt-info-vec-optimized")
-set(CMAKE_Fortran_FLAGS_DEBUG   "-g -funroll-all-loops -O3 -fopt-info-vec-optimized")
+if (APPLE)
+    set(CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-g -funroll-all-loops -O3")
+else(APPLE)
+    set(CMAKE_Fortran_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG -fopt-info-vec-optimized")
+    set(CMAKE_Fortran_FLAGS_DEBUG   "-g -funroll-all-loops -O3 -fopt-info-vec-optimized")
+endif(APPLE)
 
 message("PROJECT_SOURCE_DIR is ${PROJECT_SOURCE_DIR}")
 message("PROJECT_BINARY_DIR is ${PROJECT_BINARY_DIR}")
 
-include_directories(${PROJECT_SOURCE_DIR}/../src ${PROJECT_BINARY_DIR}/../bin "${GTEST_INCLUDE_DIRS}" ${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/../src ${PROJECT_BINARY_DIR}/../bin "${GTEST_INCLUDE_DIRS}" ${PROJECT_SOURCE_DIR} ${FFTW3_INCLUDE_DIR})
 
 add_custom_target(logConfig
 	COMMAND cp -f "${PROJECT_SOURCE_DIR}/libsakura.log4j" "${PROJECT_BINARY_DIR}"
