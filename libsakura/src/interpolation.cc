@@ -23,7 +23,6 @@
 #include <cassert>
 #include <sstream>
 #include <memory>
-#include <cstdalign>
 #include <utility>
 #include <vector>
 
