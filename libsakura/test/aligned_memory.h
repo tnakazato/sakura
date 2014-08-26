@@ -20,13 +20,6 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
-/*
- * aligned_memory.h
- *
- *  Created on: 2013/08/09
- *      Author: kohji
- */
-
 #ifndef ALIGNED_MEMORY_H_
 #define ALIGNED_MEMORY_H_
 
@@ -68,7 +61,7 @@ public:
 
 	template<typename T>
 	T *memory() {
-		uint64_t addr = reinterpret_cast<uint64_t>(&buf[ALIGN - 1]);
+		uintptr_t addr = reinterpret_cast<uintptr_t>(&buf[ALIGN - 1]);
 		addr &= ~(ALIGN - 1);
 		return reinterpret_cast<T *>(addr);
 	}

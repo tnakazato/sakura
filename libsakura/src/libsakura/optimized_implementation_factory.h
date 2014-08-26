@@ -254,6 +254,31 @@ public:
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const = 0;
 };
 
+class FFT {
+public:
+	virtual ~FFT() {
+	}
+	typedef union {
+		float x;
+	} Type4;
+	virtual void Flip4(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type4 const src[], Type4 dst[]) const = 0;
+
+	typedef union {
+		double x;
+	} Type8;
+	virtual void Flip8(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type8 const src[], Type8 dst[]) const = 0;
+
+	typedef union {
+		struct {
+			double x, y;
+		} x;
+	} Type16;
+	virtual void Flip16(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type16 const src[], Type16 dst[]) const = 0;
+};
+
 class OptimizedImplementationFactory {
 public:
 	/**
@@ -291,6 +316,7 @@ public:
 	virtual Interpolation<double, float> const *GetInterpolationImpl() const = 0;
 	virtual NumericOperation const *GetNumericOperationImpl() const = 0;
 	virtual Statistics const *GetStatisticsImpl() const = 0;
+	virtual FFT const *GetFFTImpl() const = 0;
 protected:
 	static OptimizedImplementationFactory const *factory_;
 	OptimizedImplementationFactory() {

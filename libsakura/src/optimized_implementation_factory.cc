@@ -43,6 +43,7 @@ using ::LIBSAKURA_PREFIX::Interpolation;
 using ::LIBSAKURA_PREFIX::NumericOperation;
 using ::LIBSAKURA_PREFIX::Gridding;
 using ::LIBSAKURA_PREFIX::Statistics;
+using ::LIBSAKURA_PREFIX::FFT;
 
 // a logger for this module
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger(
@@ -128,6 +129,7 @@ void GetCpuFeature(SimdFeature &simd_feature) {
 ::LIBSAKURA_PREFIX::NumericOperationDefault const numeric_operation_default;
 ::LIBSAKURA_PREFIX::GriddingDefault const gridding_default;
 ::LIBSAKURA_PREFIX::StatisticsDefault const statistics_default;
+::LIBSAKURA_PREFIX::FFTDefault const fft_default;
 
 class OptimizedImplementationFactoryDefault: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -173,6 +175,9 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_default;
 	}
+	virtual FFT const *GetFFTImpl() const {
+		return &fft_default;
+	}
 
 } default_factory;
 
@@ -189,6 +194,7 @@ public:
 ::LIBSAKURA_PREFIX::NumericOperationAfterSandyBridge const numeric_operation_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::GriddingAfterSandyBridge const gridding_after_sandy_bridge;
 ::LIBSAKURA_PREFIX::StatisticsAfterSandyBridge const statistics_after_sandy_bridge;
+::LIBSAKURA_PREFIX::FFTAfterSandyBridge const fft_after_sandy_bridge;
 
 class OptimizedImplementationFactoryAfterSandyBridge: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -234,6 +240,9 @@ public:
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_sandy_bridge;
 	}
+	virtual FFT const *GetFFTImpl() const {
+		return &fft_after_sandy_bridge;
+	}
 } after_sandy_bridge;
 
 ::LIBSAKURA_PREFIX::ApplyCalibrationAfterHaswell<float> const apply_calibration_after_haswell;
@@ -249,6 +258,7 @@ public:
 ::LIBSAKURA_PREFIX::NumericOperationAfterHaswell const numeric_operation_after_haswell;
 ::LIBSAKURA_PREFIX::GriddingAfterHaswell const gridding_after_haswell;
 ::LIBSAKURA_PREFIX::StatisticsAfterHaswell const statistics_after_haswell;
+::LIBSAKURA_PREFIX::FFTAfterHaswell const fft_after_haswell;
 
 class OptimizedImplementationFactoryAfterHaswell: public ::LIBSAKURA_PREFIX::OptimizedImplementationFactory {
 public:
@@ -293,6 +303,9 @@ public:
 	}
 	virtual Statistics const *GetStatisticsImpl() const {
 		return &statistics_after_haswell;
+	}
+	virtual FFT const *GetFFTImpl() const {
+		return &fft_after_haswell;
 	}
 } after_haswell;
 

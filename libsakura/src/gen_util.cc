@@ -128,8 +128,7 @@ extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() {
 }
 
 extern "C" bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) {
-	STATIC_ASSERT(sizeof(uint64_t) >= sizeof(void *));
-	uint64_t addr = (uint64_t) ptr;
+	uintptr_t addr = (uintptr_t) ptr;
 	return addr % LIBSAKURA_ALIGNMENT == 0;
 }
 
@@ -139,12 +138,9 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 		return nullptr;
 	}
 
-	STATIC_ASSERT(sizeof(uint64_t) >= sizeof(void *));
-	STATIC_ASSERT(sizeof(uint64_t) >= sizeof(size_t));
-
-	uint64_t addr = (uint64_t) vp;
-	uint64_t max_padding = LIBSAKURA_ALIGNMENT - 1u;
-	uint64_t new_addr = (addr + max_padding) & ~max_padding;
+	uintptr_t addr = (uintptr_t) vp;
+	uintptr_t max_padding = LIBSAKURA_ALIGNMENT - 1u;
+	uintptr_t new_addr = (addr + max_padding) & ~max_padding;
 	if (size_of_arena - (size_t) (new_addr - addr) < size_required) {
 		return nullptr;
 	}

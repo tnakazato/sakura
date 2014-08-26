@@ -658,6 +658,46 @@ public:
 			LIBSAKURA_SYMBOL(StatisticsResult) *result) const;
 };
 
+class FFTDefault: public FFT {
+public:
+	FFTDefault() {}
+	virtual void Flip4(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type4 const src[], Type4 dst[]) const;
+
+	virtual void Flip8(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type8 const src[], Type8 dst[]) const;
+
+	virtual void Flip16(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type16 const src[], Type16 dst[]) const;
+};
+
+class FFTAfterSandyBridge: public FFT {
+public:
+	FFTAfterSandyBridge() {}
+	virtual void Flip4(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type4 const src[], Type4 dst[]) const;
+
+	virtual void Flip8(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type8 const src[], Type8 dst[]) const;
+
+	virtual void Flip16(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type16 const src[], Type16 dst[]) const;
+};
+
+class FFTAfterHaswell: public FFT {
+public:
+	FFTAfterHaswell() {}
+	virtual void Flip4(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type4 const src[], Type4 dst[]) const;
+
+	virtual void Flip8(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type8 const src[], Type8 dst[]) const;
+
+	virtual void Flip16(bool reverse, bool innerMostUntouched, size_t dim,
+			size_t const len[], Type16 const src[], Type16 dst[]) const;
+};
+
+
 } // namespace LIBSAKURA_PREFIX
 
 #endif /* LIBSAKURA_LIBSAKURA_OPTIMIZED_IMPLEMENTATION_FACTORY_IMPL_H_ */

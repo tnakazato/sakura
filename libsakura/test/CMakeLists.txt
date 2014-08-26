@@ -87,6 +87,7 @@ add_executable(testInterpolationX        interpolation_x.cc)
 add_executable(testInterpolationY        interpolation_y.cc)
 add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
+add_executable(testFFT fft.cc)
 
 if(LOG4CXX_FOUND)
     set(LOG4CXX_LIB "-llog4cxx")
@@ -105,6 +106,7 @@ target_link_libraries (testInterpolationX        ${GTEST_MAIN_LIBRARIES} ${GTEST
 target_link_libraries (testInterpolationY        ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura ${LOG4CXX_LIB} -lpthread)
 target_link_libraries (testNumericOperation      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura ${LOG4CXX_LIB} -lpthread)
 target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura ${LOG4CXX_LIB} -lpthread)
+target_link_libraries (testFFT ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin -lsakura ${LOG4CXX_LIB} -lpthread)
 
 add_dependencies(testInit logConfig)
 
@@ -119,6 +121,7 @@ add_custom_target(testInterpolationXRun        COMMAND ./testInterpolationX     
 add_custom_target(testInterpolationYRun        COMMAND ./testInterpolationY        DEPENDS testInterpolationY)
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
+add_custom_target(testFFTRun            COMMAND ./testFFT            DEPENDS testFFT)
 add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
 add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX --gtest_filter="-*Performance*"   DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY --gtest_filter="-*Performance*"   DEPENDS testInterpolationY)
@@ -140,4 +143,5 @@ add_custom_target(test
 	COMMAND ./testInterpolationY
 	COMMAND ./testApplyCalibration
 	COMMAND ./testConvolution
+	COMMAND ./testFFT
 	)

@@ -2092,6 +2092,35 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
+
+ /**
+  * @~english
+  * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
+  * as some FFT library expects.
+  *
+  * @details
+  * TODO to be written with examples
+  *
+  * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
+  * @param[in] dims Dimensions of the matrix @a src and @a dst.
+  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
+  * @param[in] src	Source matrix.
+  * @n must-be-aligned
+  * @param[in] dst	Destination matrix.
+  * @n must-be-aligned
+  * @return status code.
+  * @~
+  * MT-safe
+  */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		float const src[], float dst[]);
+
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		float const src[], float dst[]);
+
+
 #ifdef __cplusplus
 }
 /* extern "C" */
