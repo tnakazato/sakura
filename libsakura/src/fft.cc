@@ -23,8 +23,8 @@
 #include <cassert>
 #include <cstdint>
 
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
-#include <immintrin.h>
+#if defined(__SSE2__) && !defined(ARCH_SCALAR)
+#include "emmintrin.h"
 #endif
 
 #include "libsakura/sakura.h"
@@ -60,7 +60,7 @@ struct LastDimNoFlip {
 	}
 };
 
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
+#if defined(__SSE2__) && !defined(ARCH_SCALAR)
 template<>
 struct LastDimFlip<LIBSAKURA_PREFIX::FFT::Type16> {
 	static void flip(size_t len, size_t dstPos,
