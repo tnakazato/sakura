@@ -65,7 +65,7 @@ bool IsEqual(size_t size, T const p[], T const q[]) {
 
 template<typename T, size_t COL>
 void Print(size_t size, T const p[]) {
-	if (! verbose)
+	if (!verbose)
 		return;
 	for (size_t i = 0; i < size; ++i) {
 		cout << setw(3) << p[i] << ", ";
@@ -224,7 +224,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 4>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 4 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -232,7 +233,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 4>(true, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 5 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -240,7 +242,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 5 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -248,7 +251,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(true, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 5, 3 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -257,7 +261,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 5, 3 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -266,27 +271,28 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(true, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 3, 4 };
 		const size_t dims = ELEMENTSOF(elements);
-		static T const ref[] = {
-				T(11), T(12),
-				T(4), T(5),
-				T(1), T(2), T(3), T(9), T(10), T(6), T(7), T(8) };
+		static T const ref[] = { T(9), T(7), T(8), T(12), T(10), T(11), T(3), T(
+				1), T(2), T(6), T(4), T(5) };
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 3>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 3, 4 };
 		const size_t dims = ELEMENTSOF(elements);
-		static T const ref[] = { T(11), T(12),T(1), T(2),
-				T(3), T(4), T(5), T(6), T(7), T(8), T(9), T(10) };
+		static T const ref[] = { T(7), T(8), T(9), T(10), T(11), T(12), T(1), T(
+				2), T(3), T(4), T(5), T(6) };
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 3>(true, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 2, 3, 2 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -296,7 +302,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 2>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 2, 3, 2 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -306,7 +313,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 2>(true, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -314,7 +322,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -322,7 +331,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(true, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { };
 		const size_t dims = ELEMENTSOF(elements);
@@ -330,7 +340,8 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(false, dims, elements, ref);
 	}
-	if (verbose) cout << "---\n";
+	if (verbose)
+		cout << "---\n";
 	{
 		static size_t const elements[] = { };
 		const size_t dims = ELEMENTSOF(elements);
@@ -344,38 +355,46 @@ template<typename T, bool Flag>
 void TestsError() {
 	{
 		const size_t dims = 0;
-		SIMD_ALIGN T const src[] = { };
-		SIMD_ALIGN T dst[] = { };
+		SIMD_ALIGN
+		T const src[] = { };
+		SIMD_ALIGN
+		T dst[] = { };
 		auto result = TestTarget<T>::Flip(Flag, dims, nullptr, src, dst);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 	{
 		static size_t const elements[] = { };
 		const size_t dims = ELEMENTSOF(elements);
-		SIMD_ALIGN T dst[] = { };
+		SIMD_ALIGN
+		T dst[] = { };
 		auto result = TestTarget<T>::Flip(Flag, dims, elements, nullptr, dst);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 	{
 		static size_t const elements[] = { };
 		const size_t dims = ELEMENTSOF(elements);
-		SIMD_ALIGN T const src[] = { };
+		SIMD_ALIGN
+		T const src[] = { };
 		auto result = TestTarget<T>::Flip(Flag, dims, elements, src, nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
-		SIMD_ALIGN T const src[] = { 1, 1};
-		SIMD_ALIGN T dst[] = { 1, 1 };
+		SIMD_ALIGN
+		T const src[] = { 1, 1 };
+		SIMD_ALIGN
+		T dst[] = { 1, 1 };
 		auto result = TestTarget<T>::Flip(Flag, dims, elements, &src[1], dst);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
-		SIMD_ALIGN T const src[] = { 1, 1};
-		SIMD_ALIGN T dst[] = { 1, 1 };
+		SIMD_ALIGN
+		T const src[] = { 1, 1 };
+		SIMD_ALIGN
+		T dst[] = { 1, 1 };
 		auto result = TestTarget<T>::Flip(Flag, dims, elements, src, &dst[1]);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
