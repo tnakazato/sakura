@@ -30,6 +30,7 @@
 #include <iostream>
 #include <iomanip>
 #include <memory>
+#include <complex>
 
 #include <libsakura/sakura.h>
 
@@ -41,6 +42,8 @@
 using namespace std;
 
 namespace {
+
+constexpr bool verbose = false;
 
 template<typename T>
 void InitArray(size_t size, T p[]) {
@@ -62,7 +65,7 @@ bool IsEqual(size_t size, T const p[], T const q[]) {
 
 template<typename T, size_t COL>
 void Print(size_t size, T const p[]) {
-	if (true)
+	if (! verbose)
 		return;
 	for (size_t i = 0; i < size; ++i) {
 		cout << setw(3) << p[i] << ", ";
@@ -84,6 +87,72 @@ T Product(size_t n, T const data[]) {
 	return result;
 }
 
+template<typename T>
+struct TestTarget {
+	static LIBSAKURA_SYMBOL(Status) Flip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			T const src[], T dst[]) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	}
+	static LIBSAKURA_SYMBOL(Status) Unflip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			T const src[], T dst[]) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	}
+};
+
+template<>
+struct TestTarget<float> {
+	static LIBSAKURA_SYMBOL(Status) Flip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			float const src[], float dst[]) {
+		return LIBSAKURA_SYMBOL(FlipMatrixFloat)(innerMostUntouched, dims,
+				elements, src, dst);
+	}
+	static LIBSAKURA_SYMBOL(Status) Unflip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			float const src[], float dst[]) {
+		return LIBSAKURA_SYMBOL(UnflipMatrixFloat)(innerMostUntouched, dims,
+				elements, src, dst);
+	}
+};
+
+template<>
+struct TestTarget<double> {
+	static LIBSAKURA_SYMBOL(Status) Flip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			double const src[], double dst[]) {
+		return LIBSAKURA_SYMBOL(FlipMatrixDouble)(innerMostUntouched, dims,
+				elements, src, dst);
+	}
+	static LIBSAKURA_SYMBOL(Status) Unflip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			double const src[], double dst[]) {
+		return LIBSAKURA_SYMBOL(UnflipMatrixDouble)(innerMostUntouched, dims,
+				elements, src, dst);
+	}
+};
+
+template<>
+struct TestTarget<complex<double> > {
+	static LIBSAKURA_SYMBOL(Status) Flip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			complex<double> const src[], complex<double> dst[]) {
+		return LIBSAKURA_SYMBOL(FlipMatrixDouble2)(innerMostUntouched, dims,
+				elements, reinterpret_cast<double const (*)[2]>(src),
+				reinterpret_cast<double (*)[2]>(dst));
+	}
+	static LIBSAKURA_SYMBOL(Status) Unflip(
+	bool innerMostUntouched, size_t dims, size_t const elements[],
+			complex<double> const src[], complex<double> dst[]) {
+		return LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(innerMostUntouched, dims,
+				elements, reinterpret_cast<double const (*)[2]>(src),
+				reinterpret_cast<double (*)[2]>(dst));
+	}
+};
+
 template<typename T, size_t COL, bool timing = false>
 void TestGeneric(bool innerMostUntouched, size_t dims, size_t const elements[],
 		T const ref[]) {
@@ -101,17 +170,17 @@ void TestGeneric(bool innerMostUntouched, size_t dims, size_t const elements[],
 	unique_ptr<void, DefaultAlignedMemory> flippedDataStorage(
 			DefaultAlignedMemory::AlignedAllocateOrException(
 					sizeof(flippedData[0]) * prod, &flippedData));
-	int repeat = 4;
+	int repeat = 1;
 	LIBSAKURA_SYMBOL(Status) result;
 	{
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		for (int i = 0; i < repeat; ++i) {
-			result = LIBSAKURA_SYMBOL(FlipMatrixFloat)(innerMostUntouched, dims,
-					elements, data, flippedData);
+			result = TestTarget<T>::Flip(innerMostUntouched, dims, elements,
+					data, flippedData);
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		if (timing) {
-			cout << "Flip time: " << end - start << " sec" <<  endl;
+			cout << "Flip time: " << end - start << " sec" << endl;
 		}
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -130,8 +199,8 @@ void TestGeneric(bool innerMostUntouched, size_t dims, size_t const elements[],
 	{
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		for (int i = 0; i < repeat; ++i) {
-			result = LIBSAKURA_SYMBOL(UnflipMatrixFloat)(innerMostUntouched,
-					dims, elements, flippedData, revData);
+			result = TestTarget<T>::Unflip(innerMostUntouched, dims, elements,
+					flippedData, revData);
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		if (timing) {
@@ -155,6 +224,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 4>(false, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 4 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -162,6 +232,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 4>(true, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 5 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -169,6 +240,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(false, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 5 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -176,6 +248,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(true, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 5, 3 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -184,6 +257,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(false, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 5, 3 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -192,6 +266,27 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 5>(true, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
+	{
+		static size_t const elements[] = { 3, 4 };
+		const size_t dims = ELEMENTSOF(elements);
+		static T const ref[] = {
+				T(11), T(12),
+				T(4), T(5),
+				T(1), T(2), T(3), T(9), T(10), T(6), T(7), T(8) };
+		assert(ELEMENTSOF(ref) == Product(dims, elements));
+		TestGeneric<T, 3>(false, dims, elements, ref);
+	}
+	if (verbose) cout << "---\n";
+	{
+		static size_t const elements[] = { 3, 4 };
+		const size_t dims = ELEMENTSOF(elements);
+		static T const ref[] = { T(11), T(12),T(1), T(2),
+				T(3), T(4), T(5), T(6), T(7), T(8), T(9), T(10) };
+		assert(ELEMENTSOF(ref) == Product(dims, elements));
+		TestGeneric<T, 3>(true, dims, elements, ref);
+	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 2, 3, 2 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -201,6 +296,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 2>(false, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 2, 3, 2 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -210,6 +306,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 2>(true, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -217,6 +314,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(false, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
@@ -224,6 +322,7 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(true, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { };
 		const size_t dims = ELEMENTSOF(elements);
@@ -231,12 +330,54 @@ void Tests() {
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(false, dims, elements, ref);
 	}
+	if (verbose) cout << "---\n";
 	{
 		static size_t const elements[] = { };
 		const size_t dims = ELEMENTSOF(elements);
 		static T const ref[] = { };
 		assert(ELEMENTSOF(ref) == Product(dims, elements));
 		TestGeneric<T, 1>(true, dims, elements, ref);
+	}
+}
+
+template<typename T, bool Flag>
+void TestsError() {
+	{
+		const size_t dims = 0;
+		SIMD_ALIGN T const src[] = { };
+		SIMD_ALIGN T dst[] = { };
+		auto result = TestTarget<T>::Flip(Flag, dims, nullptr, src, dst);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+	}
+	{
+		static size_t const elements[] = { };
+		const size_t dims = ELEMENTSOF(elements);
+		SIMD_ALIGN T dst[] = { };
+		auto result = TestTarget<T>::Flip(Flag, dims, elements, nullptr, dst);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+	}
+	{
+		static size_t const elements[] = { };
+		const size_t dims = ELEMENTSOF(elements);
+		SIMD_ALIGN T const src[] = { };
+		auto result = TestTarget<T>::Flip(Flag, dims, elements, src, nullptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+	}
+	{
+		static size_t const elements[] = { 1 };
+		const size_t dims = ELEMENTSOF(elements);
+		SIMD_ALIGN T const src[] = { 1, 1};
+		SIMD_ALIGN T dst[] = { 1, 1 };
+		auto result = TestTarget<T>::Flip(Flag, dims, elements, &src[1], dst);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+	}
+	{
+		static size_t const elements[] = { 1 };
+		const size_t dims = ELEMENTSOF(elements);
+		SIMD_ALIGN T const src[] = { 1, 1};
+		SIMD_ALIGN T dst[] = { 1, 1 };
+		auto result = TestTarget<T>::Flip(Flag, dims, elements, src, &dst[1]);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 }
 
@@ -254,14 +395,37 @@ void TestsSpeed() {
 	}
 }
 
-}
+} // namespace
 
 TEST(FFT, Basic) {
 	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 			nullptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
+	cout << "float:\n";
 	Tests<float>();
+	cout << "double:\n";
+	Tests<double>();
+	cout << "complex<double>:\n";
+	Tests<complex<double> >();
+
+	LIBSAKURA_SYMBOL(CleanUp)();
+}
+
+TEST(FFT, ErrorCase) {
+	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+			nullptr);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+
+	cout << "float:\n";
+	TestsError<float, false>();
+	TestsError<float, true>();
+	cout << "double:\n";
+	TestsError<double, false>();
+	TestsError<double, true>();
+	cout << "complex<double>:\n";
+	TestsError<complex<double>, false>();
+	TestsError<complex<double>, true>();
 
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
@@ -271,7 +435,12 @@ TEST(FFT, Performance) {
 			nullptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
+	cout << "float:\n";
 	TestsSpeed<float>();
+	cout << "double:\n";
+	TestsSpeed<double>();
+	cout << "complex<double>:\n";
+	TestsSpeed<complex<double> >();
 
 	LIBSAKURA_SYMBOL(CleanUp)();
 }

@@ -47,7 +47,7 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 
 option(SCALAR "Disable auto-vectorization by compiler" OFF)
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
-set(DOC_LANG "Japanese" CACHE STRING "Language for the document generation")
+set(DOC_LANG "English" CACHE STRING "Language for the document generation")
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")

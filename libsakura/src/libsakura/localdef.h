@@ -20,13 +20,6 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
-/*
- * localdef.h
- *
- *  Created on: 2013/02/22
- *      Author: kohji
- */
-
 /**
  * @file
  * Contains utility stuffs for internal use.
@@ -159,9 +152,8 @@ private:
  * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
  */
 template<typename T>
-inline T AssumeAligned(T ptr) {
-	return reinterpret_cast<T>(__builtin_assume_aligned(ptr,
-	LIBSAKURA_ALIGNMENT));
+inline T AssumeAligned(T ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
+	return reinterpret_cast<T>(__builtin_assume_aligned(ptr, alignment));
 }
 #else /* defined(__GNUG__) && !defined(__clang__) */
 /**

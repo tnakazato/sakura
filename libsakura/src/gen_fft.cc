@@ -36,9 +36,14 @@
 
 namespace {
 
-inline LIBSAKURA_SYMBOL(Status) FlipMatrixFloat(bool reverse,
-bool innerMostUntouched, size_t dims, size_t const elements[],
-		float const src[], float dst[]) {
+template<typename T>
+LIBSAKURA_SYMBOL(Status) FlipMatrix(
+		void (LIBSAKURA_PREFIX::FFT::*func)(bool reverse,
+		bool innerMostUntouched, size_t dim, size_t const len[], T const src[],
+				T dst[]) const,
+		bool reverse,
+		bool innerMostUntouched, size_t dims, size_t const elements[],
+		T const src[], T dst[]) {
 	CHECK_ARGS(elements != nullptr);
 	CHECK_ARGS(src != nullptr);
 	CHECK_ARGS(dst != nullptr);
@@ -48,10 +53,9 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
 	try {
 		auto fft =
 				::LIBSAKURA_PREFIX::OptimizedImplementationFactory::GetFactory()->GetFFTImpl();
-		STATIC_ASSERT(sizeof(src[0]) == sizeof(LIBSAKURA_PREFIX::FFT::Type4));
-		fft->Flip4(reverse, innerMostUntouched, dims, elements,
-				reinterpret_cast<LIBSAKURA_PREFIX::FFT::Type4 const *>(src),
-				reinterpret_cast<LIBSAKURA_PREFIX::FFT::Type4 *>(dst));
+		STATIC_ASSERT(sizeof(src[0]) == sizeof(T));
+		(fft->*func)(reverse, innerMostUntouched, dims, elements,
+				reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 	} catch (...) {
 		assert(false); // no exception should not be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -64,11 +68,59 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
 bool innerMostUntouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) {
-	return FlipMatrixFloat(false, innerMostUntouched, dims, elements, src, dst);
+	typedef LIBSAKURA_PREFIX::FFT::Type4 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(&LIBSAKURA_PREFIX::FFT::Flip4, false,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
 bool innerMostUntouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) {
-	return FlipMatrixFloat(true, innerMostUntouched, dims, elements, src, dst);
+	typedef LIBSAKURA_PREFIX::FFT::Type4 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(&LIBSAKURA_PREFIX::FFT::Flip4, true,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[], double dst[]) {
+	typedef LIBSAKURA_PREFIX::FFT::Type8 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(&LIBSAKURA_PREFIX::FFT::Flip8, false,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[], double dst[]) {
+	typedef LIBSAKURA_PREFIX::FFT::Type8 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(&LIBSAKURA_PREFIX::FFT::Flip8, true,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[][2], double dst[][2]) {
+	typedef LIBSAKURA_PREFIX::FFT::Type16 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(&LIBSAKURA_PREFIX::FFT::Flip16, false,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[][2], double dst[][2]) {
+	typedef LIBSAKURA_PREFIX::FFT::Type16 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(&LIBSAKURA_PREFIX::FFT::Flip16, true,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }

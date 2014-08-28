@@ -1378,7 +1378,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float interpolated_data[/*num_interpolated*num_array*/]);
 
 /**
- * @japanese
+ * @~japanese
  * @brief position switch calibrationを実行する。
  * @details
  * position switch calibrationを実行する。
@@ -1422,7 +1422,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * must-be-aligned
  *
  * @return 終了ステータス。
- * @english
+ *
+ * @~english
  * @brief Apply position switch calibration.
  * @param[in] num_scaling_factor
  * @param[in] scaling_factor
@@ -2093,32 +2094,108 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 
- /**
-  * @~english
-  * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
-  * as some FFT library expects.
-  *
-  * @details
-  * TODO to be written with examples
-  *
-  * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
-  * @param[in] dims Dimensions of the matrix @a src and @a dst.
-  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
-  * @param[in] src	Source matrix.
-  * @n must-be-aligned
-  * @param[in] dst	Destination matrix.
-  * @n must-be-aligned
-  * @return status code.
-  * @~
-  * MT-safe
-  */
+/**
+ * @~english
+ * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
+ * as some FFT library expects.
+ *
+ * @details
+ * When you provide @a innerMostUntouched = false, @a elements = {3, 4} and @a src = {
+ * @code
+ *   1,   2,   3,
+ *   4,   5,   6,
+ *   7,   8,   9,
+ *   10,  11,  12,
+ * @endcode
+ * }, then you will get @a dst as below.
+ * @code
+ *   9,   7,   8,
+ *  12,  10,  11,
+ *   3,   1,   2,
+ *   6,   4,   5,
+ * @endcode
+ *
+ * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
+ * @param[in] dims Dimensions of the matrix @a src and @a dst.
+ * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
+ * @param[in] src	Source matrix.
+ * @n must-be-aligned
+ * @param[in] dst	Destination matrix.
+ * @n must-be-aligned
+ * @return status code.
+ * @~
+ * MT-safe
+ */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
 bool innerMostUntouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]);
 
+/**
+ * @~english
+ * @brief Copy elements in the @a src matrix into the @a dst matrix with unflipping elements to the original order.
+ *
+ * @details
+ * When you provide @a innerMostUntouched = false, @a elements = {3, 4} and @a src = {
+ * @code
+ *   9,   7,   8,
+ *  12,  10,  11,
+ *   3,   1,   2,
+ *   6,   4,   5,
+ * @endcode
+ * }, then you will get @a dst as below.
+ * @code
+ *   1,   2,   3,
+ *   4,   5,   6,
+ *   7,   8,   9,
+ *   10,  11,  12,
+ * @endcode
+ *
+ * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
+ * @param[in] dims Dimensions of the matrix @a src and @a dst.
+ * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
+ * @param[in] src	Source matrix.
+ * @n must-be-aligned
+ * @param[in] dst	Destination matrix.
+ * @n must-be-aligned
+ * @return status code.
+ * @~
+ * MT-safe
+ */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
 bool innerMostUntouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]);
+
+/**
+ * @~english
+ * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the matrixes.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[], double dst[]);
+
+/**
+ * @~english
+ * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the matrixes.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+	double const src[], double dst[]);
+
+/**
+ * @~english
+ * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the matrixes.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[][2], double dst[][2]);
+
+/**
+ * @~english
+ * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the matrixes.
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+	double const src[][2], double dst[][2]);
 
 
 #ifdef __cplusplus

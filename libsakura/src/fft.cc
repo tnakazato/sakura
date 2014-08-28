@@ -23,6 +23,10 @@
 #include <cassert>
 #include <cstdint>
 
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+#include <immintrin.h>
+#endif
+
 #include "libsakura/sakura.h"
 #include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
@@ -31,14 +35,16 @@ namespace {
 template<typename T>
 struct LastDimFlip {
 	static void flip(size_t len, size_t dstPos, T const src[], T dst[]) {
+		auto srcAligned = AssumeAligned(src, sizeof(T));
+		auto dstAligned = AssumeAligned(dst, sizeof(T));
 		size_t i;
 		size_t end = len - dstPos;
 		for (i = 0; i < end; ++i, ++dstPos) {
-			dst[dstPos] = src[i];
+			dstAligned[dstPos] = srcAligned[i];
 		}
 		dstPos = 0;
 		for (; i < len; ++i, ++dstPos) {
-			dst[dstPos] = src[i];
+			dstAligned[dstPos] = srcAligned[i];
 		}
 	}
 };
@@ -46,11 +52,49 @@ struct LastDimFlip {
 template<typename T>
 struct LastDimNoFlip {
 	static void flip(size_t len, size_t dstPos, T const src[], T dst[]) {
+		auto srcAligned = AssumeAligned(src, sizeof(T));
+		auto dstAligned = AssumeAligned(dst, sizeof(T));
 		for (size_t i = 0; i < len; ++i) {
-			dst[i] = src[i];
+			dstAligned[i] = srcAligned[i];
 		}
 	}
 };
+
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+template<>
+struct LastDimFlip<LIBSAKURA_PREFIX::FFT::Type16> {
+	static void flip(size_t len, size_t dstPos,
+	LIBSAKURA_PREFIX::FFT::Type16 const src[],
+	LIBSAKURA_PREFIX::FFT::Type16 dst[]) {
+		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
+		size_t i;
+		size_t end = len - dstPos;
+		for (i = 0; i < end; ++i, ++dstPos) {
+			_mm_store_pd(reinterpret_cast<double*>(&dst[dstPos]),
+			_mm_load_pd(reinterpret_cast<double const*>(&src[i])));
+		}
+		dstPos = 0;
+		for (; i < len; ++i, ++dstPos) {
+			_mm_store_pd(reinterpret_cast<double*>(&dst[dstPos]),
+			_mm_load_pd(reinterpret_cast<double const*>(&src[i])));
+		}
+	}
+};
+
+template<>
+struct LastDimNoFlip<LIBSAKURA_PREFIX::FFT::Type16> {
+	static void flip(size_t len, size_t dstPos,
+			LIBSAKURA_PREFIX::FFT::Type16 const src[],
+			LIBSAKURA_PREFIX::FFT::Type16 dst[]) {
+		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
+		for (size_t i = 0; i < len; ++i) {
+			_mm_store_pd(reinterpret_cast<double*>(&dst[i]),
+			_mm_load_pd(reinterpret_cast<double const*>(&src[i])));
+		}
+	}
+};
+
+#endif
 
 template<typename T, typename LastDim, size_t Extra>
 void flip_(size_t lowerPlaneElements, size_t dim, size_t const len[],
@@ -75,6 +119,9 @@ void flip_(size_t lowerPlaneElements, size_t dim, size_t const len[],
 template<typename T>
 void flip(bool reverse, bool innerMostUntouched, size_t dim, size_t const len[],
 		T const src[], T dst[]) {
+	STATIC_ASSERT(
+			sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8
+					|| sizeof(T) == 16 || sizeof(T) == 32);
 	size_t lowerPlaneElements = 1;
 	for (size_t i = 0; i + 1 < dim; ++i) {
 		lowerPlaneElements *= len[i];
@@ -99,20 +146,20 @@ void flip(bool reverse, bool innerMostUntouched, size_t dim, size_t const len[],
 } // namespace
 
 namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip4(bool reverse, bool innerMostUntouched, size_t dim,
-		size_t const len[], Type4 const src[], Type4 dst[]) const {
+void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip4(bool reverse, bool innerMostUntouched,
+		size_t dim, size_t const len[], Type4 const src[], Type4 dst[]) const {
 	flip<Type4>(reverse, innerMostUntouched, dim, len, src, dst);
 }
 
-void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip8(bool reverse, bool innerMostUntouched, size_t dim,
-		size_t const len[], Type8 const src[], Type8 dst[]) const {
+void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip8(bool reverse, bool innerMostUntouched,
+		size_t dim, size_t const len[], Type8 const src[], Type8 dst[]) const {
 	flip<Type8>(reverse, innerMostUntouched, dim, len, src, dst);
 }
 
-void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip16(bool reverse, bool innerMostUntouched, size_t dim,
-		size_t const len[], Type16 const src[], Type16 dst[]) const {
+void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip16(bool reverse, bool innerMostUntouched,
+		size_t dim, size_t const len[], Type16 const src[],
+		Type16 dst[]) const {
 	flip<Type16>(reverse, innerMostUntouched, dim, len, src, dst);
 }
 
 } // namespace LIBSAKURA_PREFIX
-
