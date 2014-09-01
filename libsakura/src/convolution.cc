@@ -24,7 +24,7 @@
  * convolution.cc
  *
  *  Created on: 2013/11/25
- *      Author: shinnosuke
+ *      Author: shinnosuke kawakami
  */
 
 #include <cassert>
