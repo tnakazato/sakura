@@ -20,6 +20,13 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+/**
+ * convolution.cc
+ *
+ *  Created on: 2013/11/25
+ *      Author: shinnosuke
+ */
+
 #include <cassert>
 #include <cstddef>
 #include <cmath>
