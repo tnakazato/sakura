@@ -47,8 +47,8 @@ LIBSAKURA_SYMBOL(Status) FlipMatrix(
 	CHECK_ARGS(elements != nullptr);
 	CHECK_ARGS(src != nullptr);
 	CHECK_ARGS(dst != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(src));
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(dst));
+	CHECK_ARGS(IsAligned(src, sizeof(T)));
+	CHECK_ARGS(IsAligned(dst, sizeof(T)));
 
 	try {
 		auto fft =

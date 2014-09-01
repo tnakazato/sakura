@@ -64,6 +64,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 
 #if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1600
@@ -73,6 +74,11 @@
 #endif
 
 namespace {
+
+inline bool IsAligned(void const*ptr, size_t alignemnt) {
+	uintptr_t addr = (uintptr_t) ptr;
+	return addr % alignemnt == 0;
+}
 
 class ScopeGuard {
 	typedef std::function<void(void) noexcept> Func;
