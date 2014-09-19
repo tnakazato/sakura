@@ -1513,7 +1513,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * If not using FFT, it is performed against real input data by real kernel
  * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
- * MT-safe
+ * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
@@ -1569,7 +1569,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] context context.
  * @return status code.
- * MT-safe
+ * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
 
