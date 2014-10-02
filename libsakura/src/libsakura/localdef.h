@@ -155,6 +155,7 @@ private:
  * コンパイラは、戻り値がsakuraのアライメント要件を満たしているものとして最適化を行う。
  *
  * @param ptr sakuraのアライメント要件を満たしているアドレス
+ * @param alignment アライメントサイズ
  * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
  */
 template<typename T>
@@ -170,6 +171,7 @@ inline T AssumeAligned(T ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
  * コンパイラは、戻り値がsakuraのアライメント要件を満たしているものとして最適化を行う。
  *
  * @param ptr sakuraのアライメント要件を満たしているアドレス
+ * @param alignment アライメントサイズ
  * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
  */
 template<typename T>
