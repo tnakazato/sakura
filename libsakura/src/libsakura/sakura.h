@@ -277,6 +277,7 @@ typedef struct {
  *
  * @a start_spectrum から @a end_spectrum までの、@a x , @a y 座標上の @a value の値を
  * @a convolution_table で表される広がりを持った点として、@a grid 上にプロットする。
+ * エッジから2*supportピクセル分の値は信頼できない(理由:処理の高速化のため)。
  * @a grid にプロットする際は、@a polarization_map , @a channel_map によって偏波とチャネルのマッピングが行われる。
  *
  * 各浮動小数点の数値はNaN/+-Infであってはならない。
