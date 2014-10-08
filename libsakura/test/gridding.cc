@@ -27,6 +27,7 @@
 #include <cstring>
 #include <cstdint>
 #include <memory>
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <type_traits>
@@ -140,17 +141,7 @@ struct SIMD_ALIGN RowBase {
 	SIMD_ALIGN
 	float weight[NROW][NVISCHAN];
 	void Init() {
-		{
-			auto a = &values;
-			auto value = 0.0f;
-			for (size_t i = 0; i < ELEMENTSOF(*a); ++i) {
-				for (size_t j = 0; j < ELEMENTSOF((*a)[0]); ++j) {
-					for (size_t k = 0; k < ELEMENTSOF((*a)[0][0]); ++k) {
-						(*a)[i][j][k] = value;
-					}
-				}
-			}
-		}
+		SetValues(0.f);
 		{
 			auto a = &x;
 			auto b = &y;
@@ -191,15 +182,15 @@ struct SIMD_ALIGN RowBase {
 
 	void SetRandomXY(double xmin, double xmax, double ymin, double ymax) {
 		for (size_t i = 0; i < ELEMENTSOF(x); ++i) {
-			x[i] = xmin + (xmax- xmin) * drand48();
-			y[i] = ymin + (ymax- ymin) * drand48();
+			x[i] = xmin + (xmax - xmin) * drand48();
+			y[i] = ymin + (ymax - ymin) * drand48();
 		}
 	}
 
 	void SetRandomXYInt(double xmin, double xmax, double ymin, double ymax) {
 		for (size_t i = 0; i < ELEMENTSOF(x); ++i) {
-			x[i] = int(xmin + (xmax- xmin) * drand48());
-			y[i] = int(ymin + (ymax- ymin) * drand48());
+			x[i] = int(xmin + (xmax - xmin) * drand48());
+			y[i] = int(ymin + (ymax - ymin) * drand48());
 		}
 	}
 
@@ -207,7 +198,16 @@ struct SIMD_ALIGN RowBase {
 		for (size_t i = 0; i < ELEMENTSOF(values); ++i) {
 			for (size_t j = 0; j < ELEMENTSOF(values[0]); ++j) {
 				for (size_t k = 0; k < ELEMENTSOF(values[0][0]); ++k) {
-					values[i][j][k] = min + (max-min) * drand48();
+					values[i][j][k] = min + (max - min) * drand48();
+				}
+			}
+		}
+	}
+	void SetValues(float value) {
+		for (size_t i = 0; i < ELEMENTSOF(values); ++i) {
+			for (size_t j = 0; j < ELEMENTSOF(values[0]); ++j) {
+				for (size_t k = 0; k < ELEMENTSOF(values[0][0]); ++k) {
+					values[i][j][k] = value;
 				}
 			}
 		}
@@ -259,8 +259,8 @@ protected:
 		}
 	}
 
-	bool CmpGrid(char const msg[], GridType *a,
-			GridType *b) {
+	template<typename GridType>
+	bool CmpGrid(char const msg[], GridType *a, GridType *b) {
 		cout << "comparing " << msg << "\n";
 		size_t count = 0;
 		size_t count2 = 0;
@@ -303,6 +303,7 @@ protected:
 		return count2 > 0 ? false : true;
 	}
 
+	template<typename SumType>
 	bool CmpSumwt(SumType *a, SumType *b) {
 		cout << "comparing sumwt\n";
 		size_t count = 0;
@@ -338,7 +339,7 @@ protected:
 
 	void InitTabs() {
 #if 0
-		static float ct[] = { 2.0f, 1.0f, 0.f };
+		static float ct[] = {2.0f, 1.0f, 0.f};
 		SetConvTab(ELEMENTSOF(ct), ct);
 #else
 		for (size_t i = 0; i < ELEMENTSOF(convTab); ++i) {
@@ -390,346 +391,391 @@ public:
 				grid[0][0][0]);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-		result = sakura_GridConvolving(0, 0, 0, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], true, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+		result = sakura_GridConvolving(0, 0, 0, rows.sp_mask, rows.x, rows.y,
+				SUPPORT, SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+				rows.mask[0][0], rows.values[0][0], rows.weight[0], true,
+				ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+				wgrid[0][0][0], grid[0][0][0]);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 		{ // nullptr
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, nullptr,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, nullptr,
+					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
+					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
+					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
+					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				nullptr, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, nullptr, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, nullptr, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, nullptr, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, nullptr,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, nullptr, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, nullptr, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, nullptr,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, nullptr, rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap, nullptr,
+					rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], nullptr,
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], nullptr, rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], nullptr,
-				rows.weight[0], true, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], nullptr, rows.weight[0], true,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				nullptr, false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], nullptr, false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), nullptr, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), nullptr, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, nullptr, wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, nullptr,
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], nullptr, grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					nullptr, grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], nullptr);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-	}
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], nullptr);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+		}
 
 		{ // alignment
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask+1,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask + 1, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x+1, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x + 1, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y+1, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y + 1, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap+1,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap + 1, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap+1, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap + 1,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, &rows.mask[0][0][1], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					&rows.mask[0][0][1], rows.values[0][0], rows.weight[0],
+					false, ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], &rows.values[0][0][1],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], &rows.values[0][0][1], rows.weight[0],
+					false, ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], &rows.values[0][0][1],
-				rows.weight[0], true, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], &rows.values[0][0][1], rows.weight[0],
+					true, ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				&rows.weight[0][1], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], &rows.weight[0][1],
+					false, ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab+1, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab + 1, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, &sumwt[0][1], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
+					&sumwt[0][1], wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], &wgrid[0][0][0][1], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					&wgrid[0][0][0][1], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], &grid[0][0][0][1]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-	}
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], &grid[0][0][0][1]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+		}
 
 		{ // out of range
 			constexpr uint32_t int32max = INT32_MAX;
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW + 1, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW + 1,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, 0, SAMPLING, RT::kNVISPOL,
+					polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
+					rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, (int32max - 1) / 2 + 1,
+					SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, 0, RT::kNVISPOL,
+					polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
+					rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, int32max + 1,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING, 0, polmap,
 					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
 					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
 					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, 0, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					int32max + 1, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, (int32max - 1) / 2 + 1, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, 0, chanmap, rows.mask[0][0],
+					rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, 0, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, int32max + 1, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, int32max+1, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, 0, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, 0, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, int32max + 1, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, int32max+1, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, 0, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					0, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, int32max + 1, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					int32max+1, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, 0, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, 0,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, int32max + 1, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, int32max+1,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, 0, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					0, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, int32max + 1,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					int32max+1, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					0, convTab, NPOL, NCHAN, NX, NY, sumwt[0], wgrid[0][0][0],
+					grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, 0, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, int32max+1, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, 0, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, int32max+1, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, 0, convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab)+1, convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab) + 1, convTab, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab)-1, convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab) - 1, convTab, NPOL, NCHAN, NX, NY,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, int32max / 2, 3, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, int32max / 2, 3,
+					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
 		}
@@ -800,8 +846,7 @@ public:
 
 	template<typename RT>
 	void TrySpeed(bool do_verify, bool weightOnly, RT *rows,
-			double (*sumwt2)[NPOL][NCHAN],
-			float (*wgrid2)[NY][NX][NPOL][NCHAN],
+			double (*sumwt2)[NPOL][NCHAN], float (*wgrid2)[NY][NX][NPOL][NCHAN],
 			float (*grid2)[NY][NX][NPOL][NCHAN]) {
 		STATIC_ASSERT(RT::kNVISCHAN == kNVISCHAN);
 		STATIC_ASSERT(RT::kNVISPOL == kNVISPOL);
@@ -812,11 +857,10 @@ public:
 				LIBSAKURA_SYMBOL(
 						Status) result = sakura_GridConvolving(RT::kNROW, 0,
 						RT::kNROW, rows->sp_mask, rows->x, rows->y, SUPPORT,
-						SAMPLING, RT::kNVISPOL, polmap,
-						RT::kNVISCHAN, chanmap, rows->mask[0][0],
-						rows->values[0][0], rows->weight[0], weightOnly,
-						ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
-						sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+						SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
+						rows->mask[0][0], rows->values[0][0], rows->weight[0],
+						weightOnly, ELEMENTSOF(convTab), convTab, NPOL, NCHAN,
+						NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 			}
 			double end = CurrentTime();
@@ -832,7 +876,7 @@ public:
 
 	template<typename RT>
 	void TestGrid(
-			std::function<
+			function<
 					void(GridBase *, RT *, SumType *sumwt, GridType *wgrid,
 							GridType *grid)> func) {
 		STATIC_ASSERT(RT::kNVISCHAN == kNVISCHAN);
@@ -867,6 +911,7 @@ public:
 
 typedef GridBase<1, 1, 1, 1, 2, 2, 7, 7, InitFuncs<4> > TestMinimal;
 typedef GridBase<1024, 4, 1024, 4, 100, 10, 200, 180, InitFuncs<1024> > TestTypical;
+typedef GridBase<1023, 4, 17, 2, 100, 10, 200, 180, InitFuncs<1023> > TestOdd;
 
 #if 0
 typedef TestBase<512, 2, 1024, 4, 1024, 4, 100, 10, 200, 180, InitFuncs<2> > TestCase1;
@@ -876,7 +921,7 @@ typedef TestBase<512, 1, 512, 4, 1024, 4, 100, 10, 200, 180, InitFuncs2<1> > Tes
 typedef TestBase<512, 10000, 3, 1, 3, 1, 100, 10, 3, 3, InitFuncs<1> > TestSmall;
 #endif
 }
-			// namespace
+ // namespace
 
 TEST(Gridding, Basic) {
 typedef TestMinimal TestCase;
@@ -896,7 +941,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				bool weightOnly = true;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
@@ -904,7 +949,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 3;
 				rows->y[0] = 3;
@@ -940,7 +985,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 2.5;
 				rows->y[0] = 2.5;
@@ -950,22 +995,22 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 109.f;
 				}
 				TestCase::GridType wgrid = {
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   4.0,   5.0,   5.0,   4.0,   3.0,   0.0},
-						{  0.0,   5.0,   7.0,   7.0,   5.0,   3.0,   0.0},
-						{  0.0,   5.0,   7.0,   7.0,   5.0,   3.0,   0.0},
-						{  0.0,   4.0,   5.0,   5.0,   4.0,   3.0,   0.0},
-						{  0.0,   3.0,   3.0,   3.0,   3.0,   1.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 4.0, 5.0, 5.0, 4.0, 3.0, 0.0},
+					{	0.0, 5.0, 7.0, 7.0, 5.0, 3.0, 0.0},
+					{	0.0, 5.0, 7.0, 7.0, 5.0, 3.0, 0.0},
+					{	0.0, 4.0, 5.0, 5.0, 4.0, 3.0, 0.0},
+					{	0.0, 3.0, 3.0, 3.0, 3.0, 1.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				TestCase::GridType grid = {
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   8.0,  10.0,  10.0,   8.0,   6.0,   0.0},
-						{  0.0,  10.0,  14.0,  14.0,  10.0,   6.0,   0.0},
-						{  0.0,  10.0,  14.0,  14.0,  10.0,   6.0,   0.0},
-						{  0.0,   8.0,  10.0,  10.0,   8.0,   6.0,   0.0},
-						{  0.0,   6.0,   6.0,   6.0,   6.0,   2.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 8.0, 10.0, 10.0, 8.0, 6.0, 0.0},
+					{	0.0, 10.0, 14.0, 14.0, 10.0, 6.0, 0.0},
+					{	0.0, 10.0, 14.0, 14.0, 10.0, 6.0, 0.0},
+					{	0.0, 8.0, 10.0, 10.0, 8.0, 6.0, 0.0},
+					{	0.0, 6.0, 6.0, 6.0, 6.0, 2.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				bool weightOnly = false;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
@@ -976,7 +1021,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 2.49;
 				rows->y[0] = 2.49;
@@ -986,22 +1031,22 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 109.f;
 				}
 				TestCase::GridType wgrid = {
-						{  1.0,   3.0,   3.0,   3.0,   3.0,   0.0,   0.0},
-						{  3.0,   4.0,   5.0,   5.0,   4.0,   0.0,   0.0},
-						{  3.0,   5.0,   7.0,   7.0,   5.0,   0.0,   0.0},
-						{  3.0,   5.0,   7.0,   7.0,   5.0,   0.0,   0.0},
-						{  3.0,   4.0,   5.0,   5.0,   4.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	1.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0},
+					{	3.0, 4.0, 5.0, 5.0, 4.0, 0.0, 0.0},
+					{	3.0, 5.0, 7.0, 7.0, 5.0, 0.0, 0.0},
+					{	3.0, 5.0, 7.0, 7.0, 5.0, 0.0, 0.0},
+					{	3.0, 4.0, 5.0, 5.0, 4.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				TestCase::GridType grid = {
-						{  2.0,   6.0,   6.0,   6.0,   6.0,   0.0,   0.0},
-						{  6.0,   8.0,  10.0,  10.0,   8.0,   0.0,   0.0},
-						{  6.0,  10.0,  14.0,  14.0,  10.0,   0.0,   0.0},
-						{  6.0,  10.0,  14.0,  14.0,  10.0,   0.0,   0.0},
-						{  6.0,   8.0,  10.0,  10.0,   8.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	2.0, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0},
+					{	6.0, 8.0, 10.0, 10.0, 8.0, 0.0, 0.0},
+					{	6.0, 10.0, 14.0, 14.0, 10.0, 0.0, 0.0},
+					{	6.0, 10.0, 14.0, 14.0, 10.0, 0.0, 0.0},
+					{	6.0, 8.0, 10.0, 10.0, 8.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				bool weightOnly = false;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
@@ -1012,7 +1057,7 @@ test_case->TestGrid<RowType>(
 			{ // incremental grid
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 3;
 				rows->y[0] = 3;
@@ -1022,22 +1067,22 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 225.f;
 				}
 				TestCase::GridType wgrid = {
-						{  1.0,   3.0,   3.0,   3.0,   3.0,   0.0,   0.0},
-						{  3.0,   7.0,   9.0,   9.0,   8.0,   3.0,   0.0},
-						{  3.0,   9.0,  13.0,  13.0,  11.0,   4.0,   0.0},
-						{  3.0,   9.0,  13.0,  15.0,  11.0,   4.0,   0.0},
-						{  3.0,   8.0,  11.0,  11.0,  10.0,   4.0,   0.0},
-						{  0.0,   3.0,   4.0,   4.0,   4.0,   3.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	1.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0},
+					{	3.0, 7.0, 9.0, 9.0, 8.0, 3.0, 0.0},
+					{	3.0, 9.0, 13.0, 13.0, 11.0, 4.0, 0.0},
+					{	3.0, 9.0, 13.0, 15.0, 11.0, 4.0, 0.0},
+					{	3.0, 8.0, 11.0, 11.0, 10.0, 4.0, 0.0},
+					{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				TestCase::GridType grid = {
-						{  2.0,   6.0,   6.0,   6.0,   6.0,   0.0,   0.0},
-						{  6.0,  14.0,  18.0,  18.0,  16.0,   6.0,   0.0},
-						{  6.0,  18.0,  26.0,  26.0,  22.0,   8.0,   0.0},
-						{  6.0,  18.0,  26.0,  30.0,  22.0,   8.0,   0.0},
-						{  6.0,  16.0,  22.0,  22.0,  20.0,   8.0,   0.0},
-						{  0.0,   6.0,   8.0,   8.0,   8.0,   6.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	2.0, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0},
+					{	6.0, 14.0, 18.0, 18.0, 16.0, 6.0, 0.0},
+					{	6.0, 18.0, 26.0, 26.0, 22.0, 8.0, 0.0},
+					{	6.0, 18.0, 26.0, 30.0, 22.0, 8.0, 0.0},
+					{	6.0, 16.0, 22.0, 22.0, 20.0, 8.0, 0.0},
+					{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				bool weightOnly = false;
 				tc->TrySpeed(false, weightOnly, rows, sumwt2, &wgrid, &grid);
@@ -1051,7 +1096,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 3;
 				rows->y[0] = 3;
@@ -1061,13 +1106,13 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 348.f;
 				}
 				TestCase::GridType wgrid = {
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   9.0,  12.0,  12.0,  12.0,   9.0,   0.0},
-						{  0.0,  12.0,  18.0,  18.0,  18.0,  12.0,   0.0},
-						{  0.0,  12.0,  18.0,  24.0,  18.0,  12.0,   0.0},
-						{  0.0,  12.0,  18.0,  18.0,  18.0,  12.0,   0.0},
-						{  0.0,   9.0,  12.0,  12.0,  12.0,   9.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 9.0, 12.0, 12.0, 12.0, 9.0, 0.0},
+					{	0.0, 12.0, 18.0, 18.0, 18.0, 12.0, 0.0},
+					{	0.0, 12.0, 18.0, 24.0, 18.0, 12.0, 0.0},
+					{	0.0, 12.0, 18.0, 18.0, 18.0, 12.0, 0.0},
+					{	0.0, 9.0, 12.0, 12.0, 12.0, 9.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				bool weightOnly = true;
 				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
@@ -1082,7 +1127,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 3;
 				rows->y[0] = 3;
@@ -1093,16 +1138,58 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 58.f;
 				}
 				TestCase::GridType wgrid = {
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   1.5,   2.0,   2.0,   2.0,   1.5,   0.0},
-						{  0.0,   2.0,   3.0,   3.0,   3.0,   2.0,   0.0},
-						{  0.0,   2.0,   3.0,   4.0,   3.0,   2.0,   0.0},
-						{  0.0,   2.0,   3.0,   3.0,   3.0,   2.0,   0.0},
-						{  0.0,   1.5,   2.0,   2.0,   2.0,   1.5,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 1.5, 2.0, 2.0, 2.0, 1.5, 0.0},
+					{	0.0, 2.0, 3.0, 3.0, 3.0, 2.0, 0.0},
+					{	0.0, 2.0, 3.0, 4.0, 3.0, 2.0, 0.0},
+					{	0.0, 2.0, 3.0, 3.0, 3.0, 2.0, 0.0},
+					{	0.0, 1.5, 2.0, 2.0, 2.0, 1.5, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				bool weightOnly = true;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &wgrid);
+			}
+		});
+}
+
+TEST(Gridding, Masking) {
+typedef TestMinimal TestCase;
+typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+
+TestCase *test_case;
+unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+				&test_case));
+test_case->SetUp();
+auto finFunc = [=]() {test_case->TearDown();};
+auto fin = Finalizer<decltype(finFunc)>(finFunc);
+
+test_case->TestGrid<RowType>(
+		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+			{
+				TestCase::ClearResults(sumwt2, wgrid2, grid2);
+				tc->ClearResults();
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+				tc->SetConvTab(ELEMENTSOF(ct), ct);
+				rows->x[0] = 3;
+				rows->y[0] = 3;
+				rows->values[0][0][0] = 2;
+				rows->sp_mask[0] = false;
+				bool weightOnly = false;
+				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+			}
+			{
+				TestCase::ClearResults(sumwt2, wgrid2, grid2);
+				tc->ClearResults();
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+				tc->SetConvTab(ELEMENTSOF(ct), ct);
+				rows->x[0] = 3;
+				rows->y[0] = 3;
+				rows->values[0][0][0] = 2;
+				rows->sp_mask[0] = true;
+				rows->mask[0][0][0] = false;
+				bool weightOnly = false;
+				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 			}
 		});
 }
@@ -1124,7 +1211,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 1.5;
 				rows->y[0] = 1.5;
@@ -1134,22 +1221,22 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 109.f;
 				}
 				TestCase::GridType wgrid = {
-						{  4.0,   5.0,   5.0,   4.0,   3.0,   0.0,   0.0},
-						{  5.0,   7.0,   7.0,   5.0,   3.0,   0.0,   0.0},
-						{  5.0,   7.0,   7.0,   5.0,   3.0,   0.0,   0.0},
-						{  4.0,   5.0,   5.0,   4.0,   3.0,   0.0,   0.0},
-						{  3.0,   3.0,   3.0,   3.0,   1.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	4.0, 5.0, 5.0, 4.0, 3.0, 0.0, 0.0},
+					{	5.0, 7.0, 7.0, 5.0, 3.0, 0.0, 0.0},
+					{	5.0, 7.0, 7.0, 5.0, 3.0, 0.0, 0.0},
+					{	4.0, 5.0, 5.0, 4.0, 3.0, 0.0, 0.0},
+					{	3.0, 3.0, 3.0, 3.0, 1.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				TestCase::GridType grid = {
-						{  8.0,  10.0,  10.0,   8.0,   6.0,   0.0,   0.0},
-						{ 10.0,  14.0,  14.0,  10.0,   6.0,   0.0,   0.0},
-						{ 10.0,  14.0,  14.0,  10.0,   6.0,   0.0,   0.0},
-						{  8.0,  10.0,  10.0,   8.0,   6.0,   0.0,   0.0},
-						{  6.0,   6.0,   6.0,   6.0,   2.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0}
+					{	8.0, 10.0, 10.0, 8.0, 6.0, 0.0, 0.0},
+					{	10.0, 14.0, 14.0, 10.0, 6.0, 0.0, 0.0},
+					{	10.0, 14.0, 14.0, 10.0, 6.0, 0.0, 0.0},
+					{	8.0, 10.0, 10.0, 8.0, 6.0, 0.0, 0.0},
+					{	6.0, 6.0, 6.0, 6.0, 2.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
 				};
 				bool weightOnly = false;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
@@ -1157,7 +1244,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 4.5;
 				rows->y[0] = 4.5;
@@ -1168,7 +1255,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 4.49;
 				rows->y[0] = 4.49;
@@ -1178,33 +1265,30 @@ test_case->TestGrid<RowType>(
 					p[0][0] = 109.f;
 				}
 				TestCase::GridType wgrid = {
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   1.0,   3.0,   3.0,   3.0,   3.0},
-						{  0.0,   0.0,   3.0,   4.0,   5.0,   5.0,   4.0},
-						{  0.0,   0.0,   3.0,   5.0,   7.0,   7.0,   5.0},
-						{  0.0,   0.0,   3.0,   5.0,   7.0,   7.0,   5.0},
-						{  0.0,   0.0,   3.0,   4.0,   5.0,   5.0,   4.0}
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 1.0, 3.0, 3.0, 3.0, 3.0},
+					{	0.0, 0.0, 3.0, 4.0, 5.0, 5.0, 4.0},
+					{	0.0, 0.0, 3.0, 5.0, 7.0, 7.0, 5.0},
+					{	0.0, 0.0, 3.0, 5.0, 7.0, 7.0, 5.0},
+					{	0.0, 0.0, 3.0, 4.0, 5.0, 5.0, 4.0}
 				};
 				TestCase::GridType grid = {
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0},
-						{  0.0,   0.0,   2.0,   6.0,   6.0,   6.0,   6.0},
-						{  0.0,   0.0,   6.0,   8.0,  10.0,  10.0,   8.0},
-						{  0.0,   0.0,   6.0,  10.0,  14.0,  14.0,  10.0},
-						{  0.0,   0.0,   6.0,  10.0,  14.0,  14.0,  10.0},
-						{  0.0,   0.0,   6.0,   8.0,  10.0,  10.0,   8.0}
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+					{	0.0, 0.0, 2.0, 6.0, 6.0, 6.0, 6.0},
+					{	0.0, 0.0, 6.0, 8.0, 10.0, 10.0, 8.0},
+					{	0.0, 0.0, 6.0, 10.0, 14.0, 14.0, 10.0},
+					{	0.0, 0.0, 6.0, 10.0, 14.0, 14.0, 10.0},
+					{	0.0, 0.0, 6.0, 8.0, 10.0, 10.0, 8.0}
 				};
 				bool weightOnly = false;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-				TestCase::Dump(&tc->sumwt, 5);
-				TestCase::Dump(&tc->wgrid, 5);
-				TestCase::Dump(&tc->grid, 5);
 			}
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->values[0][0][0] = 2;
 				rows->x[0] = 1.49;
@@ -1227,7 +1311,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 8, 7, 6, 5, 4, 3, 2, 1, -.9f };
+				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = -1;
 				rows->y[0] = 3;
@@ -1268,7 +1352,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 2, 1, -.9f };
+				static float ct[] = {2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 2;
 				rows->y[0] = 2;
@@ -1323,7 +1407,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 2, 1, -.9f };
+				static float ct[] = {2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				tc->chanmap[0] = 1;
 				tc->chanmap[1] = 1;
@@ -1376,7 +1460,63 @@ test_case->TestGrid<RowType>(
 				bool weightOnly = false;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 			}
-});
+			{
+				TestCase::ClearResults(sumwt2, wgrid2, grid2);
+				tc->ClearResults();
+				static float ct[] = {2, 1, -.9f};
+				tc->SetConvTab(ELEMENTSOF(ct), ct);
+				rows->x[0] = 2;
+				rows->y[0] = 2;
+				rows->values[0][0][0] = 2;
+				rows->values[0][0][1] = 3;
+				rows->weight[0][1] = 0.5;
+				rows->mask[0][0][0] = false;
+				{
+					auto p = *sumwt2;
+					p[0][0] = 0;
+					p[0][1] = 5;
+				}
+				TestCase::GridTypeRef rwgrid = { {
+						{
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						},
+						{	{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.5, 0.5, 0.5, 0.0},
+							{	0.0, 0.5, 1.0, 0.5, 0.0},
+							{	0.0, 0.5, 0.5, 0.5, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						}
+					}
+				};
+				TestCase::GridTypeRef rgrid = { {
+						{
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						},
+						{
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 1.5, 1.5, 1.5, 0.0},
+							{	0.0, 1.5, 3.0, 1.5, 0.0},
+							{	0.0, 1.5, 1.5, 1.5, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						}
+					}
+				};
+				TestCase::GridType wgrid;
+				TestCase::GridType grid;
+				TestCase::Transform(&rwgrid, &wgrid);
+				TestCase::Transform(&rgrid, &grid);
+				bool weightOnly = false;
+				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+			}
+		});
 }
 
 TEST(Gridding, PolMapping) {
@@ -1397,7 +1537,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 2, 1, -.9f };
+				static float ct[] = {2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				rows->x[0] = 2;
 				rows->y[0] = 2;
@@ -1446,7 +1586,7 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
-				static float ct[] = { 2, 1, -.9f };
+				static float ct[] = {2, 1, -.9f};
 				tc->SetConvTab(ELEMENTSOF(ct), ct);
 				tc->polmap[0] = 1;
 				tc->polmap[1] = 1;
@@ -1495,7 +1635,57 @@ test_case->TestGrid<RowType>(
 				bool weightOnly = false;
 				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 			}
-});
+			{
+				TestCase::ClearResults(sumwt2, wgrid2, grid2);
+				tc->ClearResults();
+				static float ct[] = {2, 1, -.9f};
+				tc->SetConvTab(ELEMENTSOF(ct), ct);
+				rows->x[0] = 2;
+				rows->y[0] = 2;
+				rows->values[0][0][0] = 2;
+				rows->values[0][1][0] = 3;
+				rows->mask[0][0][0] = false;
+				{
+					auto p = *sumwt2;
+					p[0][0] = 0;
+					p[1][0] = 5;
+				}
+				TestCase::GridTypeRef rwgrid = { { {
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						}}, { {
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.5, 0.5, 0.5, 0.0},
+							{	0.0, 0.5, 1.0, 0.5, 0.0},
+							{	0.0, 0.5, 0.5, 0.5, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						}}
+				};
+				TestCase::GridTypeRef rgrid = { { {
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						}}, { {
+							{	0.0, 0.0, 0.0, 0.0, 0.0},
+							{	0.0, 1.5, 1.5, 1.5, 0.0},
+							{	0.0, 1.5, 3.0, 1.5, 0.0},
+							{	0.0, 1.5, 1.5, 1.5, 0.0},
+							{	0.0, 0.0, 0.0, 0.0, 0.0}
+						}}
+				};
+				TestCase::GridType wgrid;
+				TestCase::GridType grid;
+				TestCase::Transform(&rwgrid, &wgrid);
+				TestCase::Transform(&rgrid, &grid);
+				bool weightOnly = false;
+				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+			}
+		});
 }
 
 TEST(Gridding, Typical) {
@@ -1516,43 +1706,121 @@ test_case->TestGrid<RowType>(
 			{
 				TestCase::ClearResults(sumwt2, wgrid2, grid2);
 				tc->ClearResults();
+				rows->sp_mask[rows->kNROW -1] = false;
+				for (size_t i = 0; i < rows->kNROW; ++i) {
+					rows->mask[i][rows->kNVISPOL-2][rows->kNVISCHAN-2] = false;
+				}
+				rows->weight[0][0] = 2.f;
+				rows->SetValues(1);
 				rows->SetRandomXYInt(2 * TestCase::kSUPPORT, TestCase::kNX - 2 * TestCase::kSUPPORT,
 						2 * TestCase::kSUPPORT, TestCase::kNY - 2 * TestCase::kSUPPORT);
 				bool weightOnly = false;
 				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
-				//TestCase::Dump(&tc->sumwt, 5);
+				ASSERT_DOUBLE_EQ(86829.7941513061523438, tc->sumwt[0][0]);
+				ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][1]);
+				EXPECT_TRUE(all_of(&tc->sumwt[0][2], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
+								[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][1];}));
+				for (size_t i = 1; i < rows->kNVISPOL-2; ++i) {
+					EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[i], sizeof(tc->sumwt[0])));
+				}
+				EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[rows->kNVISPOL-1], sizeof(tc->sumwt[0])));
+				bool fail = false;
+				auto a = &tc->wgrid;
+				for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
+					for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
+						for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
+							for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
+								auto rw = tc->wgrid[y][x][0][1];
+								auto w = tc->wgrid[y][x][pol][ch];
+								auto rv = tc->grid[y][x][0][1];
+								auto v = tc->grid[y][x][pol][ch];
+								if (pol == rows->kNVISPOL-2 && ch ==rows->kNVISCHAN-2) {
+									EXPECT_EQ(0., w);
+									EXPECT_EQ(0., v);
+								} else if (ch == 0) {
+									EXPECT_LE(rw, w);
+									EXPECT_LE(rv, v);
+								} else if (rw == w && rv == v) {
+								} else {
+									cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
+									fail = true;
+								}
+							}
+						}
+					}
+				}
+				EXPECT_TRUE(fail == false);
 			}
 		});
 }
 
-#if 0
-TEST(Gridding, Generic) {
-typedef TestCase1 TestCase;
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-test_case->TearDown();
-}
-
 TEST(Gridding, Odd) {
-typedef TestCase2 TestCase;
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-test_case->TearDown();
-}
+typedef TestTypical TestCase;
+typedef RowBase<512, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TEST(Gridding, Small) {
-typedef TestSmall TestCase;
 TestCase *test_case;
 unique_ptr<void, DefaultAlignedMemory> test_case_storage(
 		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
 				&test_case));
 test_case->SetUp();
-test_case->TearDown();
+auto finFunc = [=]() {test_case->TearDown();};
+auto fin = Finalizer<decltype(finFunc)>(finFunc);
+
+test_case->TestInvalidArg<RowType>();
+test_case->TestGrid<RowType>(
+		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+			{
+				TestCase::ClearResults(sumwt2, wgrid2, grid2);
+				tc->ClearResults();
+				tc->chanmap[0] = 1;
+				rows->sp_mask[rows->kNROW -1] = false;
+				for (size_t i = 0; i < rows->kNROW; ++i) {
+					rows->mask[i][rows->kNVISPOL-2][rows->kNVISCHAN-2] = false;
+				}
+				rows->weight[0][0] = 2.f;
+				rows->SetValues(1);
+				rows->SetRandomXYInt(2 * TestCase::kSUPPORT, TestCase::kNX - 2 * TestCase::kSUPPORT,
+						2 * TestCase::kSUPPORT, TestCase::kNY - 2 * TestCase::kSUPPORT);
+				bool weightOnly = false;
+				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+				ASSERT_DOUBLE_EQ(0, tc->sumwt[0][0]);
+				ASSERT_DOUBLE_EQ(173489.9988609105348587, tc->sumwt[0][1]);
+				ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][2]);
+				EXPECT_TRUE(all_of(&tc->sumwt[0][3], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
+								[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][2];}));
+				for (size_t i = 1; i < rows->kNVISPOL-2; ++i) {
+					EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[i], sizeof(tc->sumwt[0])));
+				}
+				EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[rows->kNVISPOL-1], sizeof(tc->sumwt[0])));
+				bool fail = false;
+				auto a = &tc->wgrid;
+				for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
+					for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
+						for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
+							for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
+								auto rw = tc->wgrid[y][x][0][2];
+								auto w = tc->wgrid[y][x][pol][ch];
+								auto rv = tc->grid[y][x][0][2];
+								auto v = tc->grid[y][x][pol][ch];
+								if (pol == rows->kNVISPOL-2 && ch ==rows->kNVISCHAN-2) {
+									EXPECT_EQ(0., w);
+									EXPECT_EQ(0., v);
+								} else if (ch == 0) {
+									EXPECT_EQ(0, w);
+									EXPECT_EQ(0, v);
+								} else if (ch == 1) {
+									EXPECT_LE(rw, w);
+									EXPECT_LE(rv, v);
+								} else if (rw == w && rv == v) {
+								} else {
+									cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
+									fail = true;
+								}
+							}
+						}
+					}
+				}
+				EXPECT_TRUE(fail == false);
+			}
+		});
 }
-#endif
