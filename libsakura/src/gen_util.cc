@@ -27,13 +27,13 @@
  *      Author: kohji
  */
 
+#include <sys/time.h>
+#include <cassert>
+#include <cstdint>
+#include <cstdlib>
+#include <cstdio>
 #include <string>
 #include <algorithm>
-#include <sys/time.h>
-#include <assert.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #if LIBSAKURA_HAS_LOG4CXX
 #include <log4cxx/propertyconfigurator.h>
@@ -137,6 +137,9 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 	if (vp == nullptr) {
 		return nullptr;
 	}
+
+	// If gcc supports std::align,
+	// 	return std::align(LIBSAKURA_ALIGNMENT, size_required, vp, size_of_arena);
 
 	uintptr_t addr = (uintptr_t) vp;
 	uintptr_t max_padding = LIBSAKURA_ALIGNMENT - 1u;
