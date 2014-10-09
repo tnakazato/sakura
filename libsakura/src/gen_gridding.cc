@@ -83,7 +83,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(
 	CHECK_ARGS(
 			0 <= start_spectrum && start_spectrum <= end_spectrum
 					&& end_spectrum <= num_spectra);
-	CHECK_ARGS(0 < support && support <= (INT32_MAX - 1) / 2);
+	CHECK_ARGS(0 < support && support <= 256);
 	CHECK_ARGS(0 < sampling && sampling <= INT32_MAX);
 	CHECK_ARGS(static_cast<size_t>(support) * sampling <= INT32_MAX / 32);
 	CHECK_ARGS(0 < num_polarization && num_polarization <= INT32_MAX);

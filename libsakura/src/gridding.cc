@@ -69,19 +69,25 @@ inline size_t At4(size_t B, size_t C, size_t D, integer a, integer b, integer c,
 inline void GridPosition(double const xy[/*2*/], integer sampling,
 		integer loc[/*2*/], integer off[/*2*/]) {
 	for (integer idim = 0; idim < 2; ++idim) {
-		float pos = xy[idim];
-		loc[idim] = Round<integer, float>(pos);
-		off[idim] = Round<integer, float>((loc[idim] - pos) * sampling);
+		double pos = xy[idim];
+		loc[idim] = Round<integer, double>(pos);
+		off[idim] = Round<integer, double>((loc[idim] - pos) * sampling);
 	}
 }
 
-inline bool OnGrid(integer width, integer height, integer loc[/*2*/],
-		integer support) {
-	integer &x = loc[0];
-	integer &y = loc[1];
+inline bool OnGrid(double const xy[/*2*/], integer width, integer height,
+		integer loc[/*2*/], integer support) {
+	auto &x = loc[0];
+	auto &y = loc[1];
 
-	return (x - support >= 0) && (x + support < width) && (y - support >= 0)
-			&& (y + support < height);
+	bool on_grid = (x - support >= 0) && (x + support < width)
+			&& (y - support >= 0) && (y + support < height);
+
+	// rough check against the case where integer can't represent the location correctly.
+	on_grid = on_grid && (xy[0] - support >= -1)
+			&& (xy[0] + support - 1 < width) && (xy[1] - support >= -1)
+			&& (xy[1] + support - 1 < height);
+	return on_grid;
 }
 
 struct WeightOnly {
@@ -344,7 +350,7 @@ inline void InternalGrid(size_t num_spectra, size_t start_spectrum,
 			double xy[2] = { x[spectrum], y[spectrum] };
 			integer point[2], offset[2];
 			GridPosition(xy, sampling, point, offset);
-			if (OnGrid(width, height, point, support)) {
+			if (OnGrid(xy, width, height, point, support)) {
 				SIMD_ALIGN
 				size_t integral_radius[Square(doubled_support)];
 				{

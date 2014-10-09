@@ -70,7 +70,7 @@ public:
 };
 
 template<typename T>
-T square(T n) {
+T Square(T n) {
 	return n * n;
 }
 
@@ -169,15 +169,7 @@ struct SIMD_ALIGN RowBase {
 				}
 			}
 		}
-		{
-			auto a = &weight;
-			auto value = 1.0f;
-			for (size_t i = 0; i < ELEMENTSOF(*a); ++i) {
-				for (size_t j = 0; j < ELEMENTSOF((*a)[0]); ++j) {
-					(*a)[i][j] = value;
-				}
-			}
-		}
+		SetWeight(1.f);
 	}
 
 	void SetRandomXY(double xmin, double xmax, double ymin, double ymax) {
@@ -191,6 +183,13 @@ struct SIMD_ALIGN RowBase {
 		for (size_t i = 0; i < ELEMENTSOF(x); ++i) {
 			x[i] = int(xmin + (xmax - xmin) * drand48());
 			y[i] = int(ymin + (ymax - ymin) * drand48());
+		}
+	}
+
+	void SetXY(double xx, double yy) {
+		for (size_t i = 0; i < ELEMENTSOF(x); ++i) {
+			x[i] = xx;
+			y[i] = yy;
 		}
 	}
 
@@ -209,6 +208,14 @@ struct SIMD_ALIGN RowBase {
 				for (size_t k = 0; k < ELEMENTSOF(values[0][0]); ++k) {
 					values[i][j][k] = value;
 				}
+			}
+		}
+	}
+
+	void SetWeight(float value) {
+		for (size_t i = 0; i < ELEMENTSOF(weight); ++i) {
+			for (size_t j = 0; j < ELEMENTSOF(weight[0]); ++j) {
+				weight[i][j] = value;
 			}
 		}
 	}
@@ -338,14 +345,7 @@ protected:
 	}
 
 	void InitTabs() {
-#if 0
-		static float ct[] = {2.0f, 1.0f, 0.f};
-		SetConvTab(ELEMENTSOF(ct), ct);
-#else
-		for (size_t i = 0; i < ELEMENTSOF(convTab); ++i) {
-			convTab[i] = exp(-square(2.0 * i / ELEMENTSOF(convTab)));
-		}
-#endif
+		InitConvTab();
 		ResetMap();
 		ClearResults();
 	}
@@ -357,6 +357,10 @@ public:
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 		srand48(0);
 		assert(LIBSAKURA_SYMBOL(IsAligned(this)));
+		assert(
+				kCONV_TABLE_SIZE
+						== static_cast<size_t>(ceil(
+								sqrt(2.) * (kSUPPORT + 1) * kSAMPLING)));
 	}
 
 	void TearDown() {
@@ -375,12 +379,24 @@ public:
 		}
 	}
 
+	void InitConvTab() {
+		for (size_t i = 0; i < ELEMENTSOF(convTab); ++i) {
+			convTab[i] = exp(-Square(2.0 * i / ELEMENTSOF(convTab)));
+		}
+	}
+
 	template<typename RT>
 	void TestInvalidArg() {
 		STATIC_ASSERT(RT::kNVISCHAN == kNVISCHAN);
 		STATIC_ASSERT(RT::kNVISPOL == kNVISPOL);
 
-		SIMD_ALIGN RT rows;
+		InitTabs();
+		RT *rows_ptr;
+		unique_ptr<void, DefaultAlignedMemory> rows_storage(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*rows_ptr), &rows_ptr));
+		rows_ptr->Init();
+		SIMD_ALIGN RT &rows = *rows_ptr;
 		// OK
 		LIBSAKURA_SYMBOL(
 				Status) result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
@@ -913,914 +929,1069 @@ typedef GridBase<1, 1, 1, 1, 2, 2, 7, 7, InitFuncs<4> > TestMinimal;
 typedef GridBase<1024, 4, 1024, 4, 100, 10, 200, 180, InitFuncs<1024> > TestTypical;
 typedef GridBase<1023, 4, 17, 2, 100, 10, 200, 180, InitFuncs<1023> > TestOdd;
 
-#if 0
-typedef TestBase<512, 2, 1024, 4, 1024, 4, 100, 10, 200, 180, InitFuncs<2> > TestCase1;
-typedef TestBase<512 - 1, 10, 1024 - 1, 4 - 1, 1024 - 1, 4, 100, 10, 100, 90,
-InitFuncs<7> > TestCase2;
-typedef TestBase<512, 1, 512, 4, 1024, 4, 100, 10, 200, 180, InitFuncs2<1> > TestNto1;
-typedef TestBase<512, 10000, 3, 1, 3, 1, 100, 10, 3, 3, InitFuncs<1> > TestSmall;
-#endif
 }
- // namespace
+// namespace
 
 TEST(Gridding, Basic) {
-typedef TestMinimal TestCase;
-typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef TestMinimal TestCase;
+	typedef RowBase<2, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestInvalidArg<RowType>();
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				bool weightOnly = true;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 3;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 2;
+	test_case->TestInvalidArg<RowType>();
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				rows->x[1] = INT64_MIN;
+				rows->y[1] = INT64_MAX;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 116.f;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					bool weightOnly = true;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 				}
-				TestCase::GridType wgrid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
-					{	0.0, 4.0, 6.0, 6.0, 6.0, 4.0, 0.0},
-					{	0.0, 4.0, 6.0, 8.0, 6.0, 4.0, 0.0},
-					{	0.0, 4.0, 6.0, 6.0, 6.0, 4.0, 0.0},
-					{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				TestCase::GridType grid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
-					{	0.0, 8.0, 12.0, 12.0, 12.0, 8.0, 0.0},
-					{	0.0, 8.0, 12.0, 16.0, 12.0, 8.0, 0.0},
-					{	0.0, 8.0, 12.0, 12.0, 12.0, 8.0, 0.0},
-					{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-				TestCase::Dump(&tc->sumwt, 5);
-				TestCase::Dump(&tc->wgrid, 5);
-				TestCase::Dump(&tc->grid, 5);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 2.5;
-				rows->y[0] = 2.5;
-				rows->values[0][0][0] = 2;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 109.f;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 3;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 2;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 116.f;
+					}
+					TestCase::GridType wgrid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
+						{	0.0, 4.0, 6.0, 6.0, 6.0, 4.0, 0.0},
+						{	0.0, 4.0, 6.0, 8.0, 6.0, 4.0, 0.0},
+						{	0.0, 4.0, 6.0, 6.0, 6.0, 4.0, 0.0},
+						{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					TestCase::GridType grid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
+						{	0.0, 8.0, 12.0, 12.0, 12.0, 8.0, 0.0},
+						{	0.0, 8.0, 12.0, 16.0, 12.0, 8.0, 0.0},
+						{	0.0, 8.0, 12.0, 12.0, 12.0, 8.0, 0.0},
+						{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+					TestCase::Dump(&tc->sumwt, 5);
+					TestCase::Dump(&tc->wgrid, 5);
+					TestCase::Dump(&tc->grid, 5);
 				}
-				TestCase::GridType wgrid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 4.0, 5.0, 5.0, 4.0, 3.0, 0.0},
-					{	0.0, 5.0, 7.0, 7.0, 5.0, 3.0, 0.0},
-					{	0.0, 5.0, 7.0, 7.0, 5.0, 3.0, 0.0},
-					{	0.0, 4.0, 5.0, 5.0, 4.0, 3.0, 0.0},
-					{	0.0, 3.0, 3.0, 3.0, 3.0, 1.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				TestCase::GridType grid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 8.0, 10.0, 10.0, 8.0, 6.0, 0.0},
-					{	0.0, 10.0, 14.0, 14.0, 10.0, 6.0, 0.0},
-					{	0.0, 10.0, 14.0, 14.0, 10.0, 6.0, 0.0},
-					{	0.0, 8.0, 10.0, 10.0, 8.0, 6.0, 0.0},
-					{	0.0, 6.0, 6.0, 6.0, 6.0, 2.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-				TestCase::Dump(&tc->sumwt, 5);
-				TestCase::Dump(&tc->wgrid, 5);
-				TestCase::Dump(&tc->grid, 5);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 2.49;
-				rows->y[0] = 2.49;
-				rows->values[0][0][0] = 2;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 109.f;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 2.5;
+					rows->y[0] = 2.5;
+					rows->values[0][0][0] = 2;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 109.f;
+					}
+					TestCase::GridType wgrid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 4.0, 5.0, 5.0, 4.0, 3.0, 0.0},
+						{	0.0, 5.0, 7.0, 7.0, 5.0, 3.0, 0.0},
+						{	0.0, 5.0, 7.0, 7.0, 5.0, 3.0, 0.0},
+						{	0.0, 4.0, 5.0, 5.0, 4.0, 3.0, 0.0},
+						{	0.0, 3.0, 3.0, 3.0, 3.0, 1.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					TestCase::GridType grid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 8.0, 10.0, 10.0, 8.0, 6.0, 0.0},
+						{	0.0, 10.0, 14.0, 14.0, 10.0, 6.0, 0.0},
+						{	0.0, 10.0, 14.0, 14.0, 10.0, 6.0, 0.0},
+						{	0.0, 8.0, 10.0, 10.0, 8.0, 6.0, 0.0},
+						{	0.0, 6.0, 6.0, 6.0, 6.0, 2.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+					TestCase::Dump(&tc->sumwt, 5);
+					TestCase::Dump(&tc->wgrid, 5);
+					TestCase::Dump(&tc->grid, 5);
 				}
-				TestCase::GridType wgrid = {
-					{	1.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0},
-					{	3.0, 4.0, 5.0, 5.0, 4.0, 0.0, 0.0},
-					{	3.0, 5.0, 7.0, 7.0, 5.0, 0.0, 0.0},
-					{	3.0, 5.0, 7.0, 7.0, 5.0, 0.0, 0.0},
-					{	3.0, 4.0, 5.0, 5.0, 4.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				TestCase::GridType grid = {
-					{	2.0, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0},
-					{	6.0, 8.0, 10.0, 10.0, 8.0, 0.0, 0.0},
-					{	6.0, 10.0, 14.0, 14.0, 10.0, 0.0, 0.0},
-					{	6.0, 10.0, 14.0, 14.0, 10.0, 0.0, 0.0},
-					{	6.0, 8.0, 10.0, 10.0, 8.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-				TestCase::Dump(&tc->sumwt, 5);
-				TestCase::Dump(&tc->wgrid, 5);
-				TestCase::Dump(&tc->grid, 5);
-			}
-			{ // incremental grid
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 3;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 2;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 225.f;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 2.49;
+					rows->y[0] = 2.49;
+					rows->values[0][0][0] = 2;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 109.f;
+					}
+					TestCase::GridType wgrid = {
+						{	1.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0},
+						{	3.0, 4.0, 5.0, 5.0, 4.0, 0.0, 0.0},
+						{	3.0, 5.0, 7.0, 7.0, 5.0, 0.0, 0.0},
+						{	3.0, 5.0, 7.0, 7.0, 5.0, 0.0, 0.0},
+						{	3.0, 4.0, 5.0, 5.0, 4.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					TestCase::GridType grid = {
+						{	2.0, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0},
+						{	6.0, 8.0, 10.0, 10.0, 8.0, 0.0, 0.0},
+						{	6.0, 10.0, 14.0, 14.0, 10.0, 0.0, 0.0},
+						{	6.0, 10.0, 14.0, 14.0, 10.0, 0.0, 0.0},
+						{	6.0, 8.0, 10.0, 10.0, 8.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+					TestCase::Dump(&tc->sumwt, 5);
+					TestCase::Dump(&tc->wgrid, 5);
+					TestCase::Dump(&tc->grid, 5);
 				}
-				TestCase::GridType wgrid = {
-					{	1.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0},
-					{	3.0, 7.0, 9.0, 9.0, 8.0, 3.0, 0.0},
-					{	3.0, 9.0, 13.0, 13.0, 11.0, 4.0, 0.0},
-					{	3.0, 9.0, 13.0, 15.0, 11.0, 4.0, 0.0},
-					{	3.0, 8.0, 11.0, 11.0, 10.0, 4.0, 0.0},
-					{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				TestCase::GridType grid = {
-					{	2.0, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0},
-					{	6.0, 14.0, 18.0, 18.0, 16.0, 6.0, 0.0},
-					{	6.0, 18.0, 26.0, 26.0, 22.0, 8.0, 0.0},
-					{	6.0, 18.0, 26.0, 30.0, 22.0, 8.0, 0.0},
-					{	6.0, 16.0, 22.0, 22.0, 20.0, 8.0, 0.0},
-					{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = false;
-				tc->TrySpeed(false, weightOnly, rows, sumwt2, &wgrid, &grid);
-				rows->x[0] = 2.49;
-				rows->y[0] = 2.49;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-				TestCase::Dump(&tc->sumwt, 5);
-				TestCase::Dump(&tc->wgrid, 5);
-				TestCase::Dump(&tc->grid, 5);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 3;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 100;
+				{ // incremental grid
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 3;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 2;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 225.f;
+					}
+					TestCase::GridType wgrid = {
+						{	1.0, 3.0, 3.0, 3.0, 3.0, 0.0, 0.0},
+						{	3.0, 7.0, 9.0, 9.0, 8.0, 3.0, 0.0},
+						{	3.0, 9.0, 13.0, 13.0, 11.0, 4.0, 0.0},
+						{	3.0, 9.0, 13.0, 15.0, 11.0, 4.0, 0.0},
+						{	3.0, 8.0, 11.0, 11.0, 10.0, 4.0, 0.0},
+						{	0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					TestCase::GridType grid = {
+						{	2.0, 6.0, 6.0, 6.0, 6.0, 0.0, 0.0},
+						{	6.0, 14.0, 18.0, 18.0, 16.0, 6.0, 0.0},
+						{	6.0, 18.0, 26.0, 26.0, 22.0, 8.0, 0.0},
+						{	6.0, 18.0, 26.0, 30.0, 22.0, 8.0, 0.0},
+						{	6.0, 16.0, 22.0, 22.0, 20.0, 8.0, 0.0},
+						{	0.0, 6.0, 8.0, 8.0, 8.0, 6.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, &wgrid, &grid);
+					rows->x[0] = 2.49;
+					rows->y[0] = 2.49;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+					TestCase::Dump(&tc->sumwt, 5);
+					TestCase::Dump(&tc->wgrid, 5);
+					TestCase::Dump(&tc->grid, 5);
+				}
 				{
-					auto p = *sumwt2;
-					p[0][0] = 348.f;
-				}
-				TestCase::GridType wgrid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 9.0, 12.0, 12.0, 12.0, 9.0, 0.0},
-					{	0.0, 12.0, 18.0, 18.0, 18.0, 12.0, 0.0},
-					{	0.0, 12.0, 18.0, 24.0, 18.0, 12.0, 0.0},
-					{	0.0, 12.0, 18.0, 18.0, 18.0, 12.0, 0.0},
-					{	0.0, 9.0, 12.0, 12.0, 12.0, 9.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = true;
-				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 3;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 100;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 348.f;
+					}
+					TestCase::GridType wgrid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 9.0, 12.0, 12.0, 12.0, 9.0, 0.0},
+						{	0.0, 12.0, 18.0, 18.0, 18.0, 12.0, 0.0},
+						{	0.0, 12.0, 18.0, 24.0, 18.0, 12.0, 0.0},
+						{	0.0, 12.0, 18.0, 18.0, 18.0, 12.0, 0.0},
+						{	0.0, 9.0, 12.0, 12.0, 12.0, 9.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = true;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->values[0][0][0] = 0;
-				weightOnly = false;
-				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+					rows->values[0][0][0] = 0;
+					weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->values[0][0][0] = 2;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &wgrid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 3;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 100;
-				rows->weight[0][0] = 0.5;
-				{
-					auto p = *sumwt2;
-					p[0][0] = 58.f;
+					rows->values[0][0][0] = 2;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &wgrid);
 				}
-				TestCase::GridType wgrid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 1.5, 2.0, 2.0, 2.0, 1.5, 0.0},
-					{	0.0, 2.0, 3.0, 3.0, 3.0, 2.0, 0.0},
-					{	0.0, 2.0, 3.0, 4.0, 3.0, 2.0, 0.0},
-					{	0.0, 2.0, 3.0, 3.0, 3.0, 2.0, 0.0},
-					{	0.0, 1.5, 2.0, 2.0, 2.0, 1.5, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = true;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &wgrid);
-			}
-		});
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 3;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 100;
+					rows->weight[0][0] = 0.5;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 58.f;
+					}
+					TestCase::GridType wgrid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 1.5, 2.0, 2.0, 2.0, 1.5, 0.0},
+						{	0.0, 2.0, 3.0, 3.0, 3.0, 2.0, 0.0},
+						{	0.0, 2.0, 3.0, 4.0, 3.0, 2.0, 0.0},
+						{	0.0, 2.0, 3.0, 3.0, 3.0, 2.0, 0.0},
+						{	0.0, 1.5, 2.0, 2.0, 2.0, 1.5, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = true;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &wgrid);
+				}
+			});
 }
 
 TEST(Gridding, Masking) {
-typedef TestMinimal TestCase;
-typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef TestMinimal TestCase;
+	typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 3;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 2;
-				rows->sp_mask[0] = false;
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 3;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 2;
-				rows->sp_mask[0] = true;
-				rows->mask[0][0][0] = false;
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
-			}
-		});
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 3;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 2;
+					rows->sp_mask[0] = false;
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+				}
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 3;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 2;
+					rows->sp_mask[0] = true;
+					rows->mask[0][0][0] = false;
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+				}
+			});
 }
 
 TEST(Gridding, Clipping) {
-typedef TestMinimal TestCase;
-typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef TestMinimal TestCase;
+	typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 1.5;
-				rows->y[0] = 1.5;
-				rows->values[0][0][0] = 2;
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
 				{
-					auto p = *sumwt2;
-					p[0][0] = 109.f;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 1.5;
+					rows->y[0] = 1.5;
+					rows->values[0][0][0] = 2;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 109.f;
+					}
+					TestCase::GridType wgrid = {
+						{	4.0, 5.0, 5.0, 4.0, 3.0, 0.0, 0.0},
+						{	5.0, 7.0, 7.0, 5.0, 3.0, 0.0, 0.0},
+						{	5.0, 7.0, 7.0, 5.0, 3.0, 0.0, 0.0},
+						{	4.0, 5.0, 5.0, 4.0, 3.0, 0.0, 0.0},
+						{	3.0, 3.0, 3.0, 3.0, 1.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					TestCase::GridType grid = {
+						{	8.0, 10.0, 10.0, 8.0, 6.0, 0.0, 0.0},
+						{	10.0, 14.0, 14.0, 10.0, 6.0, 0.0, 0.0},
+						{	10.0, 14.0, 14.0, 10.0, 6.0, 0.0, 0.0},
+						{	8.0, 10.0, 10.0, 8.0, 6.0, 0.0, 0.0},
+						{	6.0, 6.0, 6.0, 6.0, 2.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
+					};
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridType wgrid = {
-					{	4.0, 5.0, 5.0, 4.0, 3.0, 0.0, 0.0},
-					{	5.0, 7.0, 7.0, 5.0, 3.0, 0.0, 0.0},
-					{	5.0, 7.0, 7.0, 5.0, 3.0, 0.0, 0.0},
-					{	4.0, 5.0, 5.0, 4.0, 3.0, 0.0, 0.0},
-					{	3.0, 3.0, 3.0, 3.0, 1.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				TestCase::GridType grid = {
-					{	8.0, 10.0, 10.0, 8.0, 6.0, 0.0, 0.0},
-					{	10.0, 14.0, 14.0, 10.0, 6.0, 0.0, 0.0},
-					{	10.0, 14.0, 14.0, 10.0, 6.0, 0.0, 0.0},
-					{	8.0, 10.0, 10.0, 8.0, 6.0, 0.0, 0.0},
-					{	6.0, 6.0, 6.0, 6.0, 2.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}
-				};
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 4.5;
-				rows->y[0] = 4.5;
-				rows->values[0][0][0] = 2;
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 4.49;
-				rows->y[0] = 4.49;
-				rows->values[0][0][0] = 2;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 109.f;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 4.5;
+					rows->y[0] = 4.5;
+					rows->values[0][0][0] = 2;
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 				}
-				TestCase::GridType wgrid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 1.0, 3.0, 3.0, 3.0, 3.0},
-					{	0.0, 0.0, 3.0, 4.0, 5.0, 5.0, 4.0},
-					{	0.0, 0.0, 3.0, 5.0, 7.0, 7.0, 5.0},
-					{	0.0, 0.0, 3.0, 5.0, 7.0, 7.0, 5.0},
-					{	0.0, 0.0, 3.0, 4.0, 5.0, 5.0, 4.0}
-				};
-				TestCase::GridType grid = {
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-					{	0.0, 0.0, 2.0, 6.0, 6.0, 6.0, 6.0},
-					{	0.0, 0.0, 6.0, 8.0, 10.0, 10.0, 8.0},
-					{	0.0, 0.0, 6.0, 10.0, 14.0, 14.0, 10.0},
-					{	0.0, 0.0, 6.0, 10.0, 14.0, 14.0, 10.0},
-					{	0.0, 0.0, 6.0, 8.0, 10.0, 10.0, 8.0}
-				};
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->values[0][0][0] = 2;
-				rows->x[0] = 1.49;
-				rows->y[0] = 1.5;
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 4.49;
+					rows->y[0] = 4.49;
+					rows->values[0][0][0] = 2;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 109.f;
+					}
+					TestCase::GridType wgrid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 1.0, 3.0, 3.0, 3.0, 3.0},
+						{	0.0, 0.0, 3.0, 4.0, 5.0, 5.0, 4.0},
+						{	0.0, 0.0, 3.0, 5.0, 7.0, 7.0, 5.0},
+						{	0.0, 0.0, 3.0, 5.0, 7.0, 7.0, 5.0},
+						{	0.0, 0.0, 3.0, 4.0, 5.0, 5.0, 4.0}
+					};
+					TestCase::GridType grid = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 2.0, 6.0, 6.0, 6.0, 6.0},
+						{	0.0, 0.0, 6.0, 8.0, 10.0, 10.0, 8.0},
+						{	0.0, 0.0, 6.0, 10.0, 14.0, 14.0, 10.0},
+						{	0.0, 0.0, 6.0, 10.0, 14.0, 14.0, 10.0},
+						{	0.0, 0.0, 6.0, 8.0, 10.0, 10.0, 8.0}
+					};
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
+				}
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->values[0][0][0] = 2;
+					rows->x[0] = 1.49;
+					rows->y[0] = 1.5;
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->x[0] = 1.5;
-				rows->y[0] = 1.49;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+					rows->x[0] = 1.5;
+					rows->y[0] = 1.49;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->x[0] = 4.49;
-				rows->y[0] = 4.5;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+					rows->x[0] = 4.49;
+					rows->y[0] = 4.5;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->x[0] = 4.5;
-				rows->y[0] = 4.49;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = -1;
-				rows->y[0] = 3;
-				rows->values[0][0][0] = 2;
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+					rows->x[0] = 4.5;
+					rows->y[0] = 4.49;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+				}
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {8, 7, 6, 5, 4, 3, 2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = -1;
+					rows->y[0] = 3;
+					rows->values[0][0][0] = 2;
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->x[0] = 8;
-				rows->y[0] = 3;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+					rows->x[0] = 8;
+					rows->y[0] = 3;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->x[0] = 3;
-				rows->y[0] = -1;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+					rows->x[0] = 3;
+					rows->y[0] = -1;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
 
-				rows->x[0] = 3;
-				rows->y[0] = 8;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
-			}
-		});
+					rows->x[0] = 3;
+					rows->y[0] = 8;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, wgrid2, grid2);
+				}
+			});
 }
 
 TEST(Gridding, ChMapping) {
-typedef GridBase<2, 1, 2, 1, 1, 1, 5, 5, InitFuncs<4> > TestCase;
-typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef GridBase<2, 1, 2, 1, 1, 1, 5, 5, InitFuncs<4> > TestCase;
+	typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestInvalidArg<RowType>();
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 2;
-				rows->y[0] = 2;
-				rows->values[0][0][0] = 2;
-				rows->values[0][0][1] = 3;
-				rows->weight[0][1] = 0.5;
+	test_case->TestInvalidArg<RowType>();
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
 				{
-					auto p = *sumwt2;
-					p[0][0] = 10;
-					p[0][1] = 5;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 2;
+					rows->y[0] = 2;
+					rows->values[0][0][0] = 2;
+					rows->values[0][0][1] = 3;
+					rows->weight[0][1] = 0.5;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 10;
+						p[0][1] = 5;
+					}
+					TestCase::GridTypeRef rwgrid = { {
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 1.0, 2.0, 1.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							},
+							{	{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.5, 0.5, 0.5, 0.0},
+								{	0.0, 0.5, 1.0, 0.5, 0.0},
+								{	0.0, 0.5, 0.5, 0.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}
+						}
+					};
+					TestCase::GridTypeRef rgrid = { {
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 2.0, 2.0, 2.0, 0.0},
+								{	0.0, 2.0, 4.0, 2.0, 0.0},
+								{	0.0, 2.0, 2.0, 2.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							},
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 1.5, 3.0, 1.5, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}
+						}
+					};
+					TestCase::GridType wgrid;
+					TestCase::GridType grid;
+					TestCase::Transform(&rwgrid, &wgrid);
+					TestCase::Transform(&rgrid, &grid);
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridTypeRef rwgrid = { {
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 1.0, 2.0, 1.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						},
-						{	{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.5, 0.5, 0.5, 0.0},
-							{	0.0, 0.5, 1.0, 0.5, 0.0},
-							{	0.0, 0.5, 0.5, 0.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}
-					}
-				};
-				TestCase::GridTypeRef rgrid = { {
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 2.0, 2.0, 2.0, 0.0},
-							{	0.0, 2.0, 4.0, 2.0, 0.0},
-							{	0.0, 2.0, 2.0, 2.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						},
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 1.5, 3.0, 1.5, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}
-					}
-				};
-				TestCase::GridType wgrid;
-				TestCase::GridType grid;
-				TestCase::Transform(&rwgrid, &wgrid);
-				TestCase::Transform(&rgrid, &grid);
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				tc->chanmap[0] = 1;
-				tc->chanmap[1] = 1;
-				rows->x[0] = 2;
-				rows->y[0] = 2;
-				rows->values[0][0][0] = 2;
-				rows->values[0][0][1] = 3;
-				rows->weight[0][1] = 0.5;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 0;
-					p[0][1] = 15;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					tc->chanmap[0] = 1;
+					tc->chanmap[1] = 1;
+					rows->x[0] = 2;
+					rows->y[0] = 2;
+					rows->values[0][0][0] = 2;
+					rows->values[0][0][1] = 3;
+					rows->weight[0][1] = 0.5;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 0;
+						p[0][1] = 15;
+					}
+					TestCase::GridTypeRef rwgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							},
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 1.5, 3.0, 1.5, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}
+						}
+					};
+					TestCase::GridTypeRef rgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							},
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 3.5, 3.5, 3.5, 0.0},
+								{	0.0, 3.5, 7.0, 3.5, 0.0},
+								{	0.0, 3.5, 3.5, 3.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}
+						}
+					};
+					TestCase::GridType wgrid;
+					TestCase::GridType grid;
+					TestCase::Transform(&rwgrid, &wgrid);
+					TestCase::Transform(&rgrid, &grid);
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridTypeRef rwgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						},
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 1.5, 3.0, 1.5, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}
-					}
-				};
-				TestCase::GridTypeRef rgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						},
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 3.5, 3.5, 3.5, 0.0},
-							{	0.0, 3.5, 7.0, 3.5, 0.0},
-							{	0.0, 3.5, 3.5, 3.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}
-					}
-				};
-				TestCase::GridType wgrid;
-				TestCase::GridType grid;
-				TestCase::Transform(&rwgrid, &wgrid);
-				TestCase::Transform(&rgrid, &grid);
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 2;
-				rows->y[0] = 2;
-				rows->values[0][0][0] = 2;
-				rows->values[0][0][1] = 3;
-				rows->weight[0][1] = 0.5;
-				rows->mask[0][0][0] = false;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 0;
-					p[0][1] = 5;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 2;
+					rows->y[0] = 2;
+					rows->values[0][0][0] = 2;
+					rows->values[0][0][1] = 3;
+					rows->weight[0][1] = 0.5;
+					rows->mask[0][0][0] = false;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 0;
+						p[0][1] = 5;
+					}
+					TestCase::GridTypeRef rwgrid = { {
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							},
+							{	{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.5, 0.5, 0.5, 0.0},
+								{	0.0, 0.5, 1.0, 0.5, 0.0},
+								{	0.0, 0.5, 0.5, 0.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}
+						}
+					};
+					TestCase::GridTypeRef rgrid = { {
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							},
+							{
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 1.5, 3.0, 1.5, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}
+						}
+					};
+					TestCase::GridType wgrid;
+					TestCase::GridType grid;
+					TestCase::Transform(&rwgrid, &wgrid);
+					TestCase::Transform(&rgrid, &grid);
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridTypeRef rwgrid = { {
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						},
-						{	{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.5, 0.5, 0.5, 0.0},
-							{	0.0, 0.5, 1.0, 0.5, 0.0},
-							{	0.0, 0.5, 0.5, 0.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}
-					}
-				};
-				TestCase::GridTypeRef rgrid = { {
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						},
-						{
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 1.5, 3.0, 1.5, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}
-					}
-				};
-				TestCase::GridType wgrid;
-				TestCase::GridType grid;
-				TestCase::Transform(&rwgrid, &wgrid);
-				TestCase::Transform(&rgrid, &grid);
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-		});
+			});
 }
 
 TEST(Gridding, PolMapping) {
-typedef GridBase<1, 2, 1, 2, 1, 1, 5, 5, InitFuncs<4> > TestCase;
-typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef GridBase<1, 2, 1, 2, 1, 1, 5, 5, InitFuncs<4> > TestCase;
+	typedef RowBase<1, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestInvalidArg<RowType>();
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 2;
-				rows->y[0] = 2;
-				rows->values[0][0][0] = 2;
-				rows->values[0][1][0] = 3;
+	test_case->TestInvalidArg<RowType>();
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
 				{
-					auto p = *sumwt2;
-					p[0][0] = 10;
-					p[1][0] = 10;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 2;
+					rows->y[0] = 2;
+					rows->values[0][0][0] = 2;
+					rows->values[0][1][0] = 3;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 10;
+						p[1][0] = 10;
+					}
+					TestCase::GridTypeRef rwgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 1.0, 2.0, 1.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}, { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 1.0, 2.0, 1.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}
+					};
+					TestCase::GridTypeRef rgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 2.0, 2.0, 2.0, 0.0},
+								{	0.0, 2.0, 4.0, 2.0, 0.0},
+								{	0.0, 2.0, 2.0, 2.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}, { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 3.0, 3.0, 3.0, 0.0},
+								{	0.0, 3.0, 6.0, 3.0, 0.0},
+								{	0.0, 3.0, 3.0, 3.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}
+					};
+					TestCase::GridType wgrid;
+					TestCase::GridType grid;
+					TestCase::Transform(&rwgrid, &wgrid);
+					TestCase::Transform(&rgrid, &grid);
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridTypeRef rwgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 1.0, 2.0, 1.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}, { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 1.0, 2.0, 1.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}
-				};
-				TestCase::GridTypeRef rgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 2.0, 2.0, 2.0, 0.0},
-							{	0.0, 2.0, 4.0, 2.0, 0.0},
-							{	0.0, 2.0, 2.0, 2.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}, { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 3.0, 3.0, 3.0, 0.0},
-							{	0.0, 3.0, 6.0, 3.0, 0.0},
-							{	0.0, 3.0, 3.0, 3.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}
-				};
-				TestCase::GridType wgrid;
-				TestCase::GridType grid;
-				TestCase::Transform(&rwgrid, &wgrid);
-				TestCase::Transform(&rgrid, &grid);
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				tc->polmap[0] = 1;
-				tc->polmap[1] = 1;
-				rows->x[0] = 2;
-				rows->y[0] = 2;
-				rows->values[0][0][0] = 2;
-				rows->values[0][1][0] = 3;
-				rows->weight[0][0] = 0.5;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 0;
-					p[0][1] = 10;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					tc->polmap[0] = 1;
+					tc->polmap[1] = 1;
+					rows->x[0] = 2;
+					rows->y[0] = 2;
+					rows->values[0][0][0] = 2;
+					rows->values[0][1][0] = 3;
+					rows->weight[0][0] = 0.5;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 0;
+						p[0][1] = 10;
+					}
+					TestCase::GridTypeRef rwgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}, { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 1.0, 2.0, 1.0, 0.0},
+								{	0.0, 1.0, 1.0, 1.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}
+					};
+					TestCase::GridTypeRef rgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}, { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 2.5, 2.5, 2.5, 0.0},
+								{	0.0, 2.5, 5.0, 2.5, 0.0},
+								{	0.0, 2.5, 2.5, 2.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}
+					};
+					TestCase::GridType wgrid;
+					TestCase::GridType grid;
+					TestCase::Transform(&rwgrid, &wgrid);
+					TestCase::Transform(&rgrid, &grid);
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridTypeRef rwgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}, { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 1.0, 2.0, 1.0, 0.0},
-							{	0.0, 1.0, 1.0, 1.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}
-				};
-				TestCase::GridTypeRef rgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}, { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 2.5, 2.5, 2.5, 0.0},
-							{	0.0, 2.5, 5.0, 2.5, 0.0},
-							{	0.0, 2.5, 2.5, 2.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}
-				};
-				TestCase::GridType wgrid;
-				TestCase::GridType grid;
-				TestCase::Transform(&rwgrid, &wgrid);
-				TestCase::Transform(&rgrid, &grid);
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				static float ct[] = {2, 1, -.9f};
-				tc->SetConvTab(ELEMENTSOF(ct), ct);
-				rows->x[0] = 2;
-				rows->y[0] = 2;
-				rows->values[0][0][0] = 2;
-				rows->values[0][1][0] = 3;
-				rows->mask[0][0][0] = false;
 				{
-					auto p = *sumwt2;
-					p[0][0] = 0;
-					p[1][0] = 5;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					static float ct[] = {2, 1, -.9f};
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+					rows->x[0] = 2;
+					rows->y[0] = 2;
+					rows->values[0][0][0] = 2;
+					rows->values[0][1][0] = 3;
+					rows->mask[0][0][0] = false;
+					{
+						auto p = *sumwt2;
+						p[0][0] = 0;
+						p[1][0] = 5;
+					}
+					TestCase::GridTypeRef rwgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}, { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.5, 0.5, 0.5, 0.0},
+								{	0.0, 0.5, 1.0, 0.5, 0.0},
+								{	0.0, 0.5, 0.5, 0.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}
+					};
+					TestCase::GridTypeRef rgrid = { { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}, { {
+								{	0.0, 0.0, 0.0, 0.0, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 1.5, 3.0, 1.5, 0.0},
+								{	0.0, 1.5, 1.5, 1.5, 0.0},
+								{	0.0, 0.0, 0.0, 0.0, 0.0}
+							}}
+					};
+					TestCase::GridType wgrid;
+					TestCase::GridType grid;
+					TestCase::Transform(&rwgrid, &wgrid);
+					TestCase::Transform(&rgrid, &grid);
+					bool weightOnly = false;
+					tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
 				}
-				TestCase::GridTypeRef rwgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}, { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.5, 0.5, 0.5, 0.0},
-							{	0.0, 0.5, 1.0, 0.5, 0.0},
-							{	0.0, 0.5, 0.5, 0.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}
-				};
-				TestCase::GridTypeRef rgrid = { { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}, { {
-							{	0.0, 0.0, 0.0, 0.0, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 1.5, 3.0, 1.5, 0.0},
-							{	0.0, 1.5, 1.5, 1.5, 0.0},
-							{	0.0, 0.0, 0.0, 0.0, 0.0}
-						}}
-				};
-				TestCase::GridType wgrid;
-				TestCase::GridType grid;
-				TestCase::Transform(&rwgrid, &wgrid);
-				TestCase::Transform(&rgrid, &grid);
-				bool weightOnly = false;
-				tc->TrySpeed(true, weightOnly, rows, sumwt2, &wgrid, &grid);
-			}
-		});
+			});
 }
 
+#define ENDOFARRAY(x) (&(x)[ELEMENTSOF(x)])
+
 TEST(Gridding, Typical) {
-typedef TestTypical TestCase;
-typedef RowBase<512, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef TestTypical TestCase;
+	typedef RowBase<512, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestInvalidArg<RowType>();
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				rows->sp_mask[rows->kNROW -1] = false;
-				for (size_t i = 0; i < rows->kNROW; ++i) {
-					rows->mask[i][rows->kNVISPOL-2][rows->kNVISCHAN-2] = false;
-				}
-				rows->weight[0][0] = 2.f;
-				rows->SetValues(1);
-				rows->SetRandomXYInt(2 * TestCase::kSUPPORT, TestCase::kNX - 2 * TestCase::kSUPPORT,
-						2 * TestCase::kSUPPORT, TestCase::kNY - 2 * TestCase::kSUPPORT);
-				bool weightOnly = false;
-				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
-				ASSERT_DOUBLE_EQ(86829.7941513061523438, tc->sumwt[0][0]);
-				ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][1]);
-				EXPECT_TRUE(all_of(&tc->sumwt[0][2], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
-								[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][1];}));
-				for (size_t i = 1; i < rows->kNVISPOL-2; ++i) {
-					EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[i], sizeof(tc->sumwt[0])));
-				}
-				EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[rows->kNVISPOL-1], sizeof(tc->sumwt[0])));
-				bool fail = false;
-				auto a = &tc->wgrid;
-				for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
-					for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
-						for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
-							for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
-								auto rw = tc->wgrid[y][x][0][1];
-								auto w = tc->wgrid[y][x][pol][ch];
-								auto rv = tc->grid[y][x][0][1];
-								auto v = tc->grid[y][x][pol][ch];
-								if (pol == rows->kNVISPOL-2 && ch ==rows->kNVISCHAN-2) {
-									EXPECT_EQ(0., w);
-									EXPECT_EQ(0., v);
-								} else if (ch == 0) {
-									EXPECT_LE(rw, w);
-									EXPECT_LE(rv, v);
-								} else if (rw == w && rv == v) {
-								} else {
-									cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
-									fail = true;
+	test_case->TestInvalidArg<RowType>();
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				{
+					constexpr int pos = 50;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					rows->SetWeight(7);
+					rows->SetValues(5);
+					rows->SetXY(pos, pos);
+					fill_n(tc->convTab, ELEMENTSOF(tc->convTab), 11);
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+
+					double wsum = rows->kNROW;
+					wsum *= rows->weight[0][0] * tc->convTab[0];
+					wsum *= Square(2 * tc->kSUPPORT + 1);
+					auto result = accumulate(tc->sumwt, ENDOFARRAY(tc->sumwt), true,
+							[wsum](bool init, decltype(tc->sumwt[0]) &x) -> bool {
+								return init && all_of(x, ENDOFARRAY(x), [wsum](decltype(x[0]++) v) -> bool {
+											return v == wsum;
+										});
+							});
+					ASSERT_TRUE(result);
+
+					float const grid_value = wsum * rows->values[0][0][0] / Square(2 * tc->kSUPPORT + 1);
+					float const wgrid_value = wsum / Square(2 * tc->kSUPPORT + 1);
+
+					auto is_inside = [=](size_t x, size_t y) -> bool {
+						return pos - tc->kSUPPORT <= x && x <= pos + tc->kSUPPORT &&
+						pos - tc->kSUPPORT <= y && y <= pos + tc->kSUPPORT;
+					};
+					bool fail = false;
+					auto a = &tc->wgrid;
+					for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
+						for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
+							for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
+								for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
+									auto rw = is_inside(x, y) ? wgrid_value : 0;
+									auto w = tc->wgrid[y][x][pol][ch];
+									auto rv = is_inside(x, y) ? grid_value : 0;
+									auto v = tc->grid[y][x][pol][ch];
+									if (!(rw == w && rv == v)) {
+										cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
+										fail = true;
+									}
 								}
 							}
 						}
 					}
+					EXPECT_TRUE(fail == false);
 				}
-				EXPECT_TRUE(fail == false);
-			}
-		});
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					tc->InitConvTab();
+					rows->Init();
+					rows->sp_mask[rows->kNROW -1] = false;
+					for (size_t i = 0; i < rows->kNROW; ++i) {
+						rows->mask[i][rows->kNVISPOL-2][rows->kNVISCHAN-2] = false;
+					}
+					rows->weight[0][0] = 2.f;
+					rows->SetValues(1);
+					rows->SetRandomXYInt(2 * TestCase::kSUPPORT, TestCase::kNX - 2 * TestCase::kSUPPORT,
+							2 * TestCase::kSUPPORT, TestCase::kNY - 2 * TestCase::kSUPPORT);
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+					ASSERT_DOUBLE_EQ(86829.7941513061523438, tc->sumwt[0][0]);
+					ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][1]);
+					EXPECT_TRUE(all_of(&tc->sumwt[0][2], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
+									[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][1];}));
+					for (size_t i = 1; i < rows->kNVISPOL-2; ++i) {
+						EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[i], sizeof(tc->sumwt[0])));
+					}
+					EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[rows->kNVISPOL-1], sizeof(tc->sumwt[0])));
+					bool fail = false;
+					auto a = &tc->wgrid;
+					for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
+						for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
+							for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
+								for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
+									auto rw = tc->wgrid[y][x][0][1];
+									auto w = tc->wgrid[y][x][pol][ch];
+									auto rv = tc->grid[y][x][0][1];
+									auto v = tc->grid[y][x][pol][ch];
+									if (pol == rows->kNVISPOL-2 && ch ==rows->kNVISCHAN-2) {
+										EXPECT_EQ(0., w);
+										EXPECT_EQ(0., v);
+									} else if (ch == 0) {
+										EXPECT_LE(rw, w);
+										EXPECT_LE(rv, v);
+									} else if (rw == w && rv == v) {
+									} else {
+										cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
+										fail = true;
+									}
+								}
+							}
+						}
+					}
+					EXPECT_TRUE(fail == false);
+				}
+			});
 }
 
 TEST(Gridding, Odd) {
-typedef TestTypical TestCase;
-typedef RowBase<512, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+	typedef TestTypical TestCase;
+	typedef RowBase<512, 1, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
 
-TestCase *test_case;
-unique_ptr<void, DefaultAlignedMemory> test_case_storage(
-		DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
-				&test_case));
-test_case->SetUp();
-auto finFunc = [=]() {test_case->TearDown();};
-auto fin = Finalizer<decltype(finFunc)>(finFunc);
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
 
-test_case->TestInvalidArg<RowType>();
-test_case->TestGrid<RowType>(
-		[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
-			{
-				TestCase::ClearResults(sumwt2, wgrid2, grid2);
-				tc->ClearResults();
-				tc->chanmap[0] = 1;
-				rows->sp_mask[rows->kNROW -1] = false;
-				for (size_t i = 0; i < rows->kNROW; ++i) {
-					rows->mask[i][rows->kNVISPOL-2][rows->kNVISCHAN-2] = false;
-				}
-				rows->weight[0][0] = 2.f;
-				rows->SetValues(1);
-				rows->SetRandomXYInt(2 * TestCase::kSUPPORT, TestCase::kNX - 2 * TestCase::kSUPPORT,
-						2 * TestCase::kSUPPORT, TestCase::kNY - 2 * TestCase::kSUPPORT);
-				bool weightOnly = false;
-				tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
-				ASSERT_DOUBLE_EQ(0, tc->sumwt[0][0]);
-				ASSERT_DOUBLE_EQ(173489.9988609105348587, tc->sumwt[0][1]);
-				ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][2]);
-				EXPECT_TRUE(all_of(&tc->sumwt[0][3], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
-								[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][2];}));
-				for (size_t i = 1; i < rows->kNVISPOL-2; ++i) {
-					EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[i], sizeof(tc->sumwt[0])));
-				}
-				EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[rows->kNVISPOL-1], sizeof(tc->sumwt[0])));
-				bool fail = false;
-				auto a = &tc->wgrid;
-				for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
-					for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
-						for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
-							for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
-								auto rw = tc->wgrid[y][x][0][2];
-								auto w = tc->wgrid[y][x][pol][ch];
-								auto rv = tc->grid[y][x][0][2];
-								auto v = tc->grid[y][x][pol][ch];
-								if (pol == rows->kNVISPOL-2 && ch ==rows->kNVISCHAN-2) {
-									EXPECT_EQ(0., w);
-									EXPECT_EQ(0., v);
-								} else if (ch == 0) {
-									EXPECT_EQ(0, w);
-									EXPECT_EQ(0, v);
-								} else if (ch == 1) {
-									EXPECT_LE(rw, w);
-									EXPECT_LE(rv, v);
-								} else if (rw == w && rv == v) {
-								} else {
-									cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
-									fail = true;
+	test_case->TestInvalidArg<RowType>();
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				{
+					constexpr int pos = 50;
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					rows->SetWeight(7);
+					rows->SetValues(5);
+					rows->SetXY(pos, pos);
+					fill_n(tc->convTab, ELEMENTSOF(tc->convTab), 11);
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+
+					double wsum = rows->kNROW;
+					wsum *= rows->weight[0][0] * tc->convTab[0];
+					wsum *= Square(2 * tc->kSUPPORT + 1);
+					auto result = accumulate(tc->sumwt, ENDOFARRAY(tc->sumwt), true,
+							[wsum](bool init, decltype(tc->sumwt[0]) &x) -> bool {
+								return init && all_of(x, ENDOFARRAY(x), [wsum](decltype(x[0]++) v) -> bool {
+											return v == wsum;
+										});
+							});
+					ASSERT_TRUE(result);
+
+					float const grid_value = wsum * rows->values[0][0][0] / Square(2 * tc->kSUPPORT + 1);
+					float const wgrid_value = wsum / Square(2 * tc->kSUPPORT + 1);
+
+					auto is_inside = [=](size_t x, size_t y) -> bool {
+						return pos - tc->kSUPPORT <= x && x <= pos + tc->kSUPPORT &&
+						pos - tc->kSUPPORT <= y && y <= pos + tc->kSUPPORT;
+					};
+					bool fail = false;
+					auto a = &tc->wgrid;
+					for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
+						for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
+							for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
+								for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
+									auto rw = is_inside(x, y) ? wgrid_value : 0;
+									auto w = tc->wgrid[y][x][pol][ch];
+									auto rv = is_inside(x, y) ? grid_value : 0;
+									auto v = tc->grid[y][x][pol][ch];
+									if (!(rw == w && rv == v)) {
+										cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
+										fail = true;
+									}
 								}
 							}
 						}
 					}
+					EXPECT_TRUE(fail == false);
 				}
-				EXPECT_TRUE(fail == false);
-			}
-		});
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					tc->InitConvTab();
+					rows->Init();
+					tc->chanmap[0] = 1;
+					rows->sp_mask[rows->kNROW -1] = false;
+					for (size_t i = 0; i < rows->kNROW; ++i) {
+						rows->mask[i][rows->kNVISPOL-2][rows->kNVISCHAN-2] = false;
+					}
+					rows->weight[0][0] = 2.f;
+					rows->SetValues(1);
+					rows->SetRandomXYInt(2 * TestCase::kSUPPORT, TestCase::kNX - 2 * TestCase::kSUPPORT,
+							2 * TestCase::kSUPPORT, TestCase::kNY - 2 * TestCase::kSUPPORT);
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+					ASSERT_DOUBLE_EQ(0, tc->sumwt[0][0]);
+					ASSERT_DOUBLE_EQ(173489.9988609105348587, tc->sumwt[0][1]);
+					ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][2]);
+					EXPECT_TRUE(all_of(&tc->sumwt[0][3], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
+									[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][2];}));
+					for (size_t i = 1; i < rows->kNVISPOL-2; ++i) {
+						EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[i], sizeof(tc->sumwt[0])));
+					}
+					EXPECT_EQ(0, memcmp(tc->sumwt[0], tc->sumwt[rows->kNVISPOL-1], sizeof(tc->sumwt[0])));
+					bool fail = false;
+					auto a = &tc->wgrid;
+					for (size_t y = 0; y < ELEMENTSOF(*a); ++y) {
+						for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
+							for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
+								for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
+									auto rw = tc->wgrid[y][x][0][2];
+									auto w = tc->wgrid[y][x][pol][ch];
+									auto rv = tc->grid[y][x][0][2];
+									auto v = tc->grid[y][x][pol][ch];
+									if (pol == rows->kNVISPOL-2 && ch ==rows->kNVISCHAN-2) {
+										EXPECT_EQ(0., w);
+										EXPECT_EQ(0., v);
+									} else if (ch == 0) {
+										EXPECT_EQ(0, w);
+										EXPECT_EQ(0, v);
+									} else if (ch == 1) {
+										EXPECT_LE(rw, w);
+										EXPECT_LE(rv, v);
+									} else if (rw == w && rv == v) {
+									} else {
+										cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
+										fail = true;
+									}
+								}
+							}
+						}
+					}
+					EXPECT_TRUE(fail == false);
+				}
+			});
 }
+
+TEST(Gridding, SpeedVectorized) {
+	typedef TestTypical TestCase;
+	typedef RowBase<512, 2, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
+
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					rows->SetValues(1);
+					rows->SetRandomXY(-2. * TestCase::kSUPPORT,
+							TestCase::kNX + 2 * TestCase::kSUPPORT,
+							-2. * TestCase::kSUPPORT,
+							TestCase::kNY + 2 * TestCase::kSUPPORT);
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+				}
+			});
+}
+
+TEST(Gridding, SpeedScalar) {
+	typedef TestTypical TestCase;
+	typedef RowBase<512, 2, TestCase::kNVISCHAN, TestCase::kNVISPOL> RowType;
+
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto finFunc = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(finFunc)>(finFunc);
+
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					rows->SetValues(1);
+					rows->SetRandomXY(-2. * TestCase::kSUPPORT, TestCase::kNX + 2 * TestCase::kSUPPORT,
+							-2. * TestCase::kSUPPORT, TestCase::kNY + 2 * TestCase::kSUPPORT);
+					tc->chanmap[0] = 1;
+					bool weightOnly = false;
+					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
+				}
+			});
+}
+

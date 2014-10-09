@@ -285,9 +285,9 @@ typedef struct {
  * @param[in] start_spectrum 開始spectrumの添字
  * @param[in] end_spectrum 終了spectrumの添字+1
  * @param[in] spectrum_mask	要素数はnum_spectra。falseのスペクトルは無視される。<br/>must-be-aligned
- * @param[in] x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。<br/>must-be-aligned
- * @param[in] y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。<br/>must-be-aligned
- * @param[in] support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= (INT32_MAX - 1) / 2<br/>
+ * @param[in] x 要素数は@a num_spectra 。2次元平面に投射済みのx座標。範囲は、INT32_MIN < x[i] < INT32_MAX<br/>must-be-aligned
+ * @param[in] y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。範囲は、INT32_MIN < y[i] < INT32_MAX<br/>must-be-aligned
+ * @param[in] support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= 256<br/>
  * ただし、@a support * @a sampling に比例するサイズの領域をスタック上に確保するので、@a support * @a sampling が大きな値となる場合、スタックオーバーフローを起こす。
  * @param[in] sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
  * @param[in] num_polarizations 範囲は、0 < num_polarizations <= INT32_MAX
