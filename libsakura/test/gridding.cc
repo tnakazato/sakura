@@ -1730,12 +1730,14 @@ TEST(Gridding, Typical) {
 					double wsum = rows->kNROW;
 					wsum *= rows->weight[0][0] * tc->convTab[0];
 					wsum *= Square(2 * tc->kSUPPORT + 1);
-					auto result = accumulate(tc->sumwt, ENDOFARRAY(tc->sumwt), true,
-							[wsum](bool init, decltype(tc->sumwt[0]) &x) -> bool {
-								return init && all_of(x, ENDOFARRAY(x), [wsum](decltype(x[0]++) v) -> bool {
+					bool result = true;
+					for (size_t i = 0; i < ELEMENTSOF(tc->sumwt); ++i) {
+						if (all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
 											return v == wsum;
-										});
-							});
+										})) {
+							result =false;
+						}
+					}
 					ASSERT_TRUE(result);
 
 					float const grid_value = wsum * rows->values[0][0][0] / Square(2 * tc->kSUPPORT + 1);
@@ -1847,12 +1849,14 @@ TEST(Gridding, Odd) {
 					double wsum = rows->kNROW;
 					wsum *= rows->weight[0][0] * tc->convTab[0];
 					wsum *= Square(2 * tc->kSUPPORT + 1);
-					auto result = accumulate(tc->sumwt, ENDOFARRAY(tc->sumwt), true,
-							[wsum](bool init, decltype(tc->sumwt[0]) &x) -> bool {
-								return init && all_of(x, ENDOFARRAY(x), [wsum](decltype(x[0]++) v) -> bool {
+					bool result = true;
+					for (size_t i = 0; i < ELEMENTSOF(tc->sumwt); ++i) {
+						if (all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
 											return v == wsum;
-										});
-							});
+										})) {
+							result =false;
+						}
+					}
 					ASSERT_TRUE(result);
 
 					float const grid_value = wsum * rows->values[0][0][0] / Square(2 * tc->kSUPPORT + 1);
