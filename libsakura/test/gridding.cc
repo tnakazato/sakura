@@ -931,6 +931,7 @@ typedef GridBase<1023, 4, 17, 2, 100, 10, 200, 180, InitFuncs<1023> > TestOdd;
 
 }
 // namespace
+#pragma GCC diagnostic ignored "-Wmissing-braces"
 
 TEST(Gridding, Basic) {
 	typedef TestMinimal TestCase;
@@ -1609,7 +1610,7 @@ TEST(Gridding, PolMapping) {
 					{
 						auto p = *sumwt2;
 						p[0][0] = 0;
-						p[0][1] = 10;
+						p[1][0] = 10;
 					}
 					TestCase::GridTypeRef rwgrid = { { {
 								{	0.0, 0.0, 0.0, 0.0, 0.0},
@@ -1732,10 +1733,10 @@ TEST(Gridding, Typical) {
 					wsum *= Square(2 * tc->kSUPPORT + 1);
 					bool result = true;
 					for (size_t i = 0; i < ELEMENTSOF(tc->sumwt); ++i) {
-						if (all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
+						if (!all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
 											return v == wsum;
 										})) {
-							result =false;
+							result = false;
 						}
 					}
 					ASSERT_TRUE(result);
@@ -1851,10 +1852,10 @@ TEST(Gridding, Odd) {
 					wsum *= Square(2 * tc->kSUPPORT + 1);
 					bool result = true;
 					for (size_t i = 0; i < ELEMENTSOF(tc->sumwt); ++i) {
-						if (all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
+						if (!all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
 											return v == wsum;
 										})) {
-							result =false;
+							result = false;
 						}
 					}
 					ASSERT_TRUE(result);
