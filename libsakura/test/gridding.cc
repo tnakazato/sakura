@@ -1843,6 +1843,7 @@ TEST(Gridding, Odd) {
 					rows->SetWeight(7);
 					rows->SetValues(5);
 					rows->SetXY(pos, pos);
+					tc->chanmap[0] = 1;
 					fill_n(tc->convTab, ELEMENTSOF(tc->convTab), 11);
 					bool weightOnly = false;
 					tc->TrySpeed(false, weightOnly, rows, sumwt2, wgrid2, grid2);
@@ -1852,9 +1853,13 @@ TEST(Gridding, Odd) {
 					wsum *= Square(2 * tc->kSUPPORT + 1);
 					bool result = true;
 					for (size_t i = 0; i < ELEMENTSOF(tc->sumwt); ++i) {
-						if (!all_of(tc->sumwt[i], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
+						if (!(tc->sumwt[i][0] == 0 && tc->sumwt[i][1]) == wsum * 2) {
+							result = false;
+						}
+						if (!all_of(&tc->sumwt[i][2], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]++) v) -> bool {
 											return v == wsum;
 										})) {
+							cout << i << endl;
 							result = false;
 						}
 					}
@@ -1873,9 +1878,10 @@ TEST(Gridding, Odd) {
 						for (size_t x = 0; x < ELEMENTSOF((*a)[0]); ++x) {
 							for (size_t pol = 0; pol < ELEMENTSOF((*a)[0][0]); ++pol) {
 								for (size_t ch = 0; ch < ELEMENTSOF((*a)[0][0][0]); ++ch) {
-									auto rw = is_inside(x, y) ? wgrid_value : 0;
+									float k = ch == 0 ? 0 : (ch == 1 ? 2 : 1);
+									auto rw = is_inside(x, y) ? wgrid_value * k : 0;
 									auto w = tc->wgrid[y][x][pol][ch];
-									auto rv = is_inside(x, y) ? grid_value : 0;
+									auto rv = is_inside(x, y) ? grid_value * k : 0;
 									auto v = tc->grid[y][x][pol][ch];
 									if (!(rw == w && rv == v)) {
 										cout << pol << ", " << ch << ": " << rv << ", " << v << endl;
