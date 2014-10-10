@@ -27,6 +27,11 @@ cmake_minimum_required(VERSION 2.6)
 set(libsakura_VERSION_MAJOR 0)
 set(libsakura_VERSION_MINOR 1)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+
 # put Google Test as "gtest" under the directory which includes this file.
 
 find_path(GTEST_INCLUDE_DIRS gtest/gtest.h PATHS ${PROJECT_SOURCE_DIR}/gtest/include)

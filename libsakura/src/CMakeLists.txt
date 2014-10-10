@@ -33,11 +33,11 @@ endif(EIGEN3_FOUND)
 if(FFTW3_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${FFTW3_INCLUDE_DIR}")
 endif(FFTW3_FOUND)
-if(LOG4CXX_FOUND)
+
+set(HAS_LOG4CXX 0)
+if(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(HAS_LOG4CXX 1)
-else(LOG4CXX_FOUND)
-  set(HAS_LOG4CXX 0)
-endif(LOG4CXX_FOUND)
+endif(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 project(libsakura)
 set(libsakura_VERSION_MAJOR 0)
@@ -56,6 +56,7 @@ set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-cor
 set(DefaultArch "")
 set(SandyBridgeArch "")
 set(HaswellArch "")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -Wno-deprecated-register")
 
 message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -79,10 +80,6 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall -Wno-deprecated-register")
-if (APPLE)
-    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ -arch x86_64 -Wall -Wno-deprecated-register")
-endif(APPLE)
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
@@ -187,11 +184,12 @@ set_target_properties(sakura PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
+set(LIBS "-lfftw3f ${CMAKE_THREAD_LIBS_INIT}")
+
 if(HAS_LOG4CXX)
-    target_link_libraries(sakura log4cxx fftw3f ${CMAKE_THREAD_LIBS_INIT})
-else(HAS_LOG4CXX)
-    target_link_libraries(sakura fftw3f ${CMAKE_THREAD_LIBS_INIT})
+	set(LIBS "-llog4cxx ${LIBS}")
 endif(HAS_LOG4CXX)
+target_link_libraries(sakura ${LIBS})
 
 install(TARGETS sakura
 	LIBRARY DESTINATION lib
