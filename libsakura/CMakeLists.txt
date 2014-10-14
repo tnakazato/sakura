@@ -28,8 +28,12 @@ set(libsakura_VERSION_MAJOR 0)
 set(libsakura_VERSION_MINOR 1)
 
 # option for C++ library
+# TODO: need to reconsider a way to select standard C++ library 
+#       by default, we should follow OS standard on which library 
+#       (libstdc++ or libc++) to use while currently we assume 
+#       that clang prefer libc++ 
 option(USE_LIBCXX
-       "set ON to use libc++ instead of libstdc++ (only effective for clang)"
+       "set ON to use libc++ for standard C++ library (only effective for clang)"
        ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
