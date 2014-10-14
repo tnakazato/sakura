@@ -27,10 +27,20 @@ cmake_minimum_required(VERSION 2.6)
 set(libsakura_VERSION_MAJOR 0)
 set(libsakura_VERSION_MINOR 1)
 
+# option for C++ library
+option(USE_LIBCXX
+       "set ON to use libc++ instead of libstdc++ (only effective for clang)"
+       ON)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    if(USE_LIBCXX)
+    	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    else(USE_LIBCXX)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+    endif(USE_LIBCXX)
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
 # put Google Test as "gtest" under the directory which includes this file.
 
