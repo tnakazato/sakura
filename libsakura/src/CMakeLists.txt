@@ -184,10 +184,10 @@ set_target_properties(sakura PROPERTIES
 	PUBLIC_HEADER "${public_headers}"
 )
 
-set(LIBS "-lfftw3f ${CMAKE_THREAD_LIBS_INIT}")
+set(LIBS ${FFTW3_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 if(HAS_LOG4CXX)
-	set(LIBS "-llog4cxx ${LIBS}")
+	set(LIBS -llog4cxx ${LIBS})
 endif(HAS_LOG4CXX)
 target_link_libraries(sakura ${LIBS})
 

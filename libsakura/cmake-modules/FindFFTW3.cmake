@@ -7,7 +7,7 @@
 
 #to find header file and library of fftw3
 find_path(FFTW3_INCLUDE_DIR fftw3.h)
-find_library(FFTW3_LIBRARIES NAMES fftw3)
+find_library(FFTW3_LIBRARIES NAMES fftw3f)
 
 #to use FindPackageHandleStandardArgs function 
 include(FindPackageHandleStandardArgs)
