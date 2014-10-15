@@ -153,7 +153,7 @@ struct TestTarget<complex<double> > {
 	}
 };
 
-template<typename T, size_t COL, bool timing = false>
+template<typename T, size_t COL, bool timing = false, int repeat = 1>
 void TestGeneric(bool innerMostUntouched, size_t dims, size_t const elements[],
 		T const ref[]) {
 	const size_t prod = Product(dims, elements);
@@ -170,7 +170,6 @@ void TestGeneric(bool innerMostUntouched, size_t dims, size_t const elements[],
 	unique_ptr<void, DefaultAlignedMemory> flippedDataStorage(
 			DefaultAlignedMemory::AlignedAllocateOrException(
 					sizeof(flippedData[0]) * prod, &flippedData));
-	int repeat = 1;
 	LIBSAKURA_SYMBOL(Status) result;
 	{
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
@@ -403,14 +402,14 @@ void TestsError() {
 template<typename T>
 void TestsSpeed() {
 	{
-		static size_t const elements[] = { 1024, 1024, 512 };
+		static size_t const elements[] = { 128, 1024, 512 };
 		const size_t dims = ELEMENTSOF(elements);
-		TestGeneric<T, 1024, true>(false, dims, elements, nullptr);
+		TestGeneric<T, 512, true, 8>(false, dims, elements, nullptr);
 	}
 	{
-		static size_t const elements[] = { 1024, 1024, 512 };
+		static size_t const elements[] = { 128, 1024, 512 };
 		const size_t dims = ELEMENTSOF(elements);
-		TestGeneric<T, 1024, true>(true, dims, elements, nullptr);
+		TestGeneric<T, 512, true, 8>(true, dims, elements, nullptr);
 	}
 }
 
