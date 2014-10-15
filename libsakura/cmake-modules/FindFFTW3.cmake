@@ -7,7 +7,15 @@
 
 #to find header file and library of fftw3
 find_path(FFTW3_INCLUDE_DIR fftw3.h)
-find_library(FFTW3_LIBRARIES NAMES fftw3f)
+# support for multiple fftw3 libraries
+# set multiple library names to _components, e.g., set(_components fftw3f fftw3)
+set(_components fftw3f)
+foreach(_comp ${_components})
+	find_library(${_comp}_LIBRARY ${_comp})
+	if (${_comp}_LIBRARY)
+		list(APPEND FFTW3_LIBRARIES ${${_comp}_LIBRARY}) 
+	endif(${_comp}_LIBRARY)
+endforeach(_comp ${_components})
 
 #to use FindPackageHandleStandardArgs function 
 include(FindPackageHandleStandardArgs)
