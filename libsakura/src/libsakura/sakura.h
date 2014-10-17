@@ -1446,9 +1446,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
 
 /**
  * @~japanese
- * @brief 離散コンボリューションに使うカーネルタイプを列挙
+ * @brief コンボリューションに使うカーネルタイプを列挙
  * @~english
- * @brief Enumerations to define kernel types for discrete convolution.
+ * @brief Enumerations to define kernel types for convolution.
  */
 typedef enum {
 	/**
@@ -1464,12 +1464,12 @@ typedef enum {
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumType)
 }LIBSAKURA_SYMBOL(Convolve1DKernelType);
 /**
- * @brief Context struct for discrete convolution
+ * @brief Context struct for convolution
  */
 struct LIBSAKURA_SYMBOL(Convolve1DContext);
 /**
  * @~japanese
- * @brief 離散コンボリューションに必要なコンテキストを作成する。
+ * @brief コンボリューションに必要なコンテキストを作成する。
  * @details
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1481,39 +1481,40 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @par
  * @param[in] num_data データの要素数。0 < num_data <= INT_MAX
  * @param[in] kernel_type カーネルタイプ
- * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとに離散コンボリューションの結果は異なる。
+ * Gaussian,BoxCar,Hanning,Hammingを選択可能。各カーネルごとにコンボリューションの結果は異なる。
  * @param[in] kernel_width カーネルの幅. Gaussianカーネルの場合、kernal_widthは半値全幅（FWHM）と解釈される。0 < kernel_width
- * @param[in] use_fft 離散コンボリューションの演算のためにFFTを行うか否かのフラグ。カーネルタイプには無間係。true=行う。false=行わない。
+ * @param[in] use_fft コンボリューションの演算のためにFFTを行うか否かのフラグ。カーネルタイプには無間係。true=行う。false=行わない。
  * FFTを行う場合：
- * 離散畳み込み定理に従い離散FFTを利用した演算を行う。
- * 具体的には実数の入力データに対し離散FFTを行ってできた複素数配列と、事前に作った実数のカーネル配列に対し離散FFTを行って
- * できた複素数配列とを掛け合せ一つの複素数配列を得る。それを逆離散FFTし、実数配列である出力データを得る。
+ * 畳み込み定理に従いFFTを利用した演算を行う。
+ * 具体的には実数の入力データに対しFFTを行ってできた複素数配列と、事前に作った実数のカーネル配列に対しFFTを行って
+ * できた複素数配列とを掛け合せ一つの複素数配列を得る。それを逆FFTし、実数配列である出力データを得る。
  * FFTを行わない場合：
  * 実数の入力データに対して実数のカーネルを用いて演算を行う。
- * @param[out] context 離散コンボリューションのための情報を格納しているコンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
+ * @param[out] context コンボリューションのための情報を格納しているコンテキスト. Convolution1Dでの使用後にsakura_DestroyConvolve1DContext
  * により解放されなければならない。終了ステータスが
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink の場合はcontextには
- * 離散コンボリューションに必要な情報が格納されている。終了ステータスが@link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
+ * コンボリューションに必要な情報が格納されている。終了ステータスが@link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * または@link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlinkの場合、contextの値はnullptrである。
  *
  * @return 終了ステータス。
  * @~english
- * @brief create context for discrete convolution
+ * @brief create context for convolution
  * @details
  * @param[in] num_data number of data. @num_data must
  * be positive.  0 < num_data < INT32_MAX
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @kernel_type is defined as enum.
  * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM. 0 < kernel_width
- * @param[in] use_fft true means using FFT, false means not using FFT when discrete convolution is performed. And Independent of the type of kernel.
- * If using FFT, discrete FFT applied kernel which is already included context
+ * @param[in] use_fft true means using FFT, false means not using FFT when convolution is performed. And Independent of the type of kernel.
+ * If using FFT, FFT applied kernel which is already included context
  * by CreateConvolve1DContext is multiplied with input data
  * by complex-complex multiplication and then the multiplied complex
- * array is created. Finally inverse discrete FFT is applied against it
+ * array is created. Finally inverse FFT is applied against it
  * and then real output data will be created.
  * If not using FFT, it is performed against real input data by real kernel
  * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
  * @return status code.
+ * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
@@ -1522,8 +1523,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 				LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~japanese
- * @brief 離散コンボリューションを行う。
- * @details sakura_CreateConvolve1DContextで設定した条件に従い、入力データに対してカーネルによる離散コンボリューションを行う。
+ * @brief コンボリューションを行う。
+ * @details sakura_CreateConvolve1DContextで設定した条件に従い、入力データに対してカーネルによるコンボリューションを行う。
  * @n
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1542,7 +1543,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
- * @brief discrete convolution is performed
+ * @brief convolution is performed
  * @details it is performed according to setting of sakura_CreateConvolve1DContext
  * @param[in] context context
  * and @a num_data, @a input_real_array
@@ -1554,6 +1555,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * Its length equals to channel number
  * @n must-be-aligned
  * @return status code.
+ * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
@@ -1561,7 +1563,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
 		float output_data[/*num_data*/]);
 /**
  * @~japanese
- * @brief コンテキストを破棄する。
+ * @brief コンボリューションのために生成したコンテキストを破棄する。
  * @details
  * @param[in] context コンテキスト.
  * @return 終了ステータス。
@@ -1570,6 +1572,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @details
  * @param[in] context context.
  * @return status code.
+ * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
