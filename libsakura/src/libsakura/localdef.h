@@ -146,7 +146,13 @@ private:
 	bool called_;
 };
 
-#if defined(__GNUG__) && !defined(__clang__)
+#ifdef __has_builtin
+  /* clang has this macro */
+#else
+  #define __has_builtin(x) 0  // Compatibility with non-clang compilers.
+#endif
+
+#if defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned))
 /**
  * @~japanese
  * @brief @a ptr がsakuraのアライメント要件を満たしていると見なし、そのアドレスを返す。
@@ -162,7 +168,10 @@ template<typename T>
 inline T AssumeAligned(T ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
 	return reinterpret_cast<T>(__builtin_assume_aligned(ptr, alignment));
 }
-#else /* defined(__GNUG__) && !defined(__clang__) */
+#else /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */
+
+//#warning __builtin_assume_aligned is not supported.
+
 /**
  * @~japanese
  * @brief @a ptr がsakuraのアライメント要件を満たしていると見なし、そのアドレスを返す。
@@ -178,16 +187,17 @@ template<typename T>
 inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
 	return ptr;
 }
-#endif /* defined(__GNUG__) && !defined(__clang__) */
+#endif /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */
 }
 
 #else /* defined(__cplusplus) */
 
-#ifdef defined(__GNUG__) && !defined(__clang__)
+/*#warning __builtin_assume_aligned is not supported.*/
+#ifdef defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned))
 # define AssumeAligned(ptr) ((__typeof__(ptr))__builtin_assume_aligned((ptr), LIBSAKURA_ALIGNMENT))
-#else /* defined(__GNUG__) && !defined(__clang__) */
+#else /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */
 # define AssumeAligned(ptr) (ptr)
-#endif /* defined(__GNUG__) && !defined(__clang__) */
+#endif /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */
 
 #endif /* defined(__cplusplus) */
 
