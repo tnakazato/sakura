@@ -31,6 +31,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <climits>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -39,13 +40,15 @@
 #	include <immintrin.h>
 #endif
 
+#include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
 #include "libsakura/memory_manager.h"
-#include "libsakura/optimized_implementation_factory_impl.h"
-#include "libsakura/sakura.h"
+#include "libsakura/logger.h"
 #include "baseline.h"
 
 namespace {
+
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("baseline");
 
 inline void SetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
@@ -487,50 +490,182 @@ bool const *mask_arg, uint16_t order, float clip_threshold_sigma,
 
 } /* anonymous namespace */
 
-namespace LIBSAKURA_PREFIX {
-
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::CreateBaselineContext(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_data,
-		LIBSAKURA_SYMBOL(BaselineContext) **context) const {
-	::CreateBaselineContext(baseline_type, order, num_data, context);
+		LIBSAKURA_SYMBOL(BaselineContext) **context) {
+	if (baseline_type >= LIBSAKURA_SYMBOL(BaselineType_kNumType)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	if (context == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	try {
+		CreateBaselineContext(baseline_type, order, num_data, context);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "Order must be smaller than num_data.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::DestroyBaselineContext(
-LIBSAKURA_SYMBOL(BaselineContext) *context) const {
-	::DestroyBaselineContext(context);
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
+	if (context == nullptr) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	try {
+		DestroyBaselineContext(context);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::GetBestFitBaseline(size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
+		size_t num_data, float const data[], bool const mask[],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, float out[],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data != context->num_basis_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data < context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	try {
+		GetBestFitBaseline(num_data, data, mask, context, out,
+				baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
+		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float out[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const {
-	::GetBestFitBaseline(num_data, data, mask, context, out, baseline_status);
-}
-
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaseline(size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const {
-	::SubtractBaseline(num_data, data, mask, baseline_context,
-			clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
-			out, baseline_status);
+		bool get_residual, bool final_mask[], float out[],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data != context->num_basis_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data < context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (clip_threshold_sigma <= 0.0f)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	try {
+		SubtractBaseline(num_data, data, mask, context,
+				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
+				out, baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-void ADDSUFFIX(Baseline, ARCH_SUFFIX)::SubtractBaselinePolynomial(
-		size_t num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/], uint16_t order,
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
+		size_t num_data, float const data[], bool const mask[], uint16_t order,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) const {
-	::SubtractBaselinePolynomial(num_data, data, mask, order,
-			clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
-			out, baseline_status);
-}
+		bool get_residual, bool final_mask[], float out[],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	if (num_data <= order)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (clip_threshold_sigma <= 0.0f)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
+	try {
+		SubtractBaselinePolynomial(num_data, data, mask, order,
+				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
+				out, baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }

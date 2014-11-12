@@ -43,7 +43,6 @@
 #include "libsakura/localdef.h"
 #include "libsakura/logger.h"
 #include "libsakura/memory_manager.h"
-#include "libsakura/optimized_implementation_factory.h"
 
 namespace {
 
@@ -97,23 +96,10 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator) {
 	LIBSAKURA_PREFIX::Memory::deallocator_ =
 			deallocator == nullptr ? DefaultFree : deallocator;
 
-	{
-		std::string env_val_name(LIBSAKURA_PREFIX_STRING "_SIMD");
-		std::transform(env_val_name.begin(), env_val_name.end(),
-				env_val_name.begin(), ::toupper);
-		char const *simd_spec = getenv(env_val_name.c_str());
-		if (simd_spec == nullptr) {
-			simd_spec = "adaptive";
-		}
-		LIBSAKURA_PREFIX::OptimizedImplementationFactory::InitializeFactory(
-				simd_spec);
-	}
-
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 extern "C" void LIBSAKURA_SYMBOL(CleanUp)() {
-	LIBSAKURA_PREFIX::OptimizedImplementationFactory::CleanUpFactory();
 }
 
 extern "C" double LIBSAKURA_SYMBOL(GetCurrentTime)() {

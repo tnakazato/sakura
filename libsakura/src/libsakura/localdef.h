@@ -36,6 +36,18 @@
  * This file includes the definitions only for internal use of libsakura.
  */
 
+#if defined(__AVX2__)
+# define ARCH_AFTER_HASWELL 1
+#endif
+
+#if defined(__AVX__)
+# define ARCH_AFTER_SANDY_BRIDGE 1
+#endif
+
+#if !defined(ARCH_AFTER_SANDY_BRIDGE) && !defined(ARCH_SCALAR)
+# define ARCH_DEFAULT 1
+#endif
+
 #ifndef ARCH_SUFFIX
 # define ARCH_SUFFIX Default
 #endif

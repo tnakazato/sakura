@@ -47,12 +47,14 @@ set(CMAKE_INSTALL_PREFIX /usr/local)
 
 option(SCALAR "Disable auto-vectorization by compiler" OFF)
 option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
+set(SIMD_ARCH "NATIVE" CACHE STRING "SIMD architecture: one of NATIVE SSE4 AVX AVX2" )
 set(DOC_LANG "English" CACHE STRING "Language for the document generation")
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
+set(NativeArch "")
 set(DefaultArch "")
 set(SandyBridgeArch "")
 set(HaswellArch "")
@@ -60,10 +62,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -Wno-deprecated-register")
 
 message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	set(NativeArch "-march=native")
 	set(DefaultArch "-mtune=generic")
 	set(SandyBridgeArch "-march=corei7-avx")
 	set(HaswellArch "-march=core-avx2 -ffast-math -mfma") # -ffast-math is required to enable FMA
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	set(NativeArch "-march=native")
 	set(DefaultArch "-mtune=generic")
 	if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
 		set(SandyBridgeArch "-march=corei7-avx")
@@ -73,6 +77,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		set(HaswellArch "-march=haswell")
 	endif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.9")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+	set(NativeArch "-march=native")
 	set(DefaultArch "-mkl=sequential -xSSE4.2")
 	set(SandyBridgeArch "-mkl=sequential -xAVX ")
 	set(HaswellArch "-mkl=sequential -xCORE-AVX2 -mtune=core-avx2")
@@ -80,32 +85,33 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   # using Visual Studio C++
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
+message("SIMD_ARCH is ${SIMD_ARCH}")
+if("${SIMD_ARCH}" STREQUAL "NATIVE")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NativeArch}")
+elseif("${SIMD_ARCH}" STREQUAL "AVX2")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HaswellArch}")
+elseif("${SIMD_ARCH}" STREQUAL "AVX")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SandyBridgeArch}")
+elseif("${SIMD_ARCH}" STREQUAL "SSE4")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${DefaultArch}")
+endif("${SIMD_ARCH}" STREQUAL "NATIVE")
+
+if(SCALAR)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DARCH_SCALAR=1 -fno-tree-vectorize")
+endif(SCALAR)
+
+message("CMAKE_CXX_FLAGS is ${CMAKE_CXX_FLAGS}")
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
 set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
-#set(ADDITIONAL_CXXFLAGS_Default "${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
-#set(ADDITIONAL_CXXFLAGS_Default "-march=core2 ${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
-if(SCALAR)
-	set(ADDITIONAL_CXXFLAGS_Default "${DefaultArch} -DARCH_SUFFIX=Default -DARCH_SCALAR=1 -fno-tree-vectorize")
-	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "${SandyBridgeArch} -DARCH_SUFFIX=AfterSandyBridge -DARCH_SCALAR=1 -fno-tree-vectorize")
-	set(ADDITIONAL_CXXFLAGS_AfterHaswell "${HaswellArch} -DARCH_SUFFIX=AfterHaswell -DARCH_SCALAR=1 -fno-tree-vectorize")
-else(SCALAR)
-	set(ADDITIONAL_CXXFLAGS_Default "${DefaultArch} -DARCH_SUFFIX=Default -DARCH_DEFAULT=1")
-	set(ADDITIONAL_CXXFLAGS_AfterSandyBridge "${SandyBridgeArch} -DARCH_SUFFIX=AfterSandyBridge -DARCH_AFTER_SANDY_BRIDGE=1")
-	set(ADDITIONAL_CXXFLAGS_AfterHaswell "${HaswellArch} -DARCH_SUFFIX=AfterHaswell -DARCH_AFTER_SANDY_BRIDGE=1 -DARCH_AFTER_HASWELL=1")
-endif(SCALAR)
-
-set(MULTI_SOURCE apply_calibration.cc baseline.cc bit_operation.cc 
+set(SOURCES apply_calibration.cc baseline.cc bit_operation.cc 
 	bool_filter_collection.cc convolution.cc gridding.cc interpolation.cc 
-	numeric_operation.cc statistics.cc fft.cc)
-set(UNI_SOURCE gen_util.cc concurrent.cc optimized_implementation_factory.cc
-    gen_apply_calibration.cc gen_bit_operation.cc gen_bool_filter_collection.cc 
-    gen_convolution.cc gen_gridding.cc gen_interpolation.cc 
-    gen_numeric_operation.cc gen_baseline.cc gen_statistics.cc gen_fft.cc)
-
+	numeric_operation.cc statistics.cc fft.cc
+	gen_util.cc concurrent.cc 
+	)
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"
   "${PROJECT_BINARY_DIR}/libsakura/config.h"
@@ -134,45 +140,9 @@ if(HAS_LOG4CXX)
 else(HAS_LOG4CXX)
     include_directories(${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 endif(HAS_LOG4CXX)
-    
-foreach(_file ${MULTI_SOURCE})
-	get_filename_component(_base ${_file} NAME_WE)
-	get_filename_component(_ext ${_file} EXT)
-
-	# default
-	add_custom_command(
-		OUTPUT "${PROJECT_BINARY_DIR}/${_base}Default${_ext}"
-		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}Default${_ext}"
-	)
-	set_property(SOURCE ${_base}Default${_ext} PROPERTY
-		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_Default} \${VECT_VERB} ${PROF_MODE}"
-	)
-	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}Default${_ext})
-
-	# after sandybridge
-	add_custom_command(
-		OUTPUT "${PROJECT_BINARY_DIR}/${_base}AfterSandyBridge${_ext}"
-		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}AfterSandyBridge${_ext}"
-	)
-	set_property(SOURCE ${_base}AfterSandyBridge${_ext} PROPERTY
-		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterSandyBridge} \${VECT_VERB} ${PROF_MODE}"
-	)
-	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}AfterSandyBridge${_ext})
-
-	# after haswell
-	add_custom_command(
-		OUTPUT "${PROJECT_BINARY_DIR}/${_base}AfterHaswell${_ext}"
-		COMMAND ln -sf "${PROJECT_SOURCE_DIR}/${_file}" "${PROJECT_BINARY_DIR}/${_base}AfterHaswell${_ext}"
-	)
-	set_property(SOURCE ${_base}AfterHaswell${_ext} PROPERTY
-		COMPILE_FLAGS "${ADDITIONAL_CXXFLAGS_AfterHaswell} \${VECT_VERB} ${PROF_MODE}"
-	)
-	set(OPTIMIZED_SOURCES ${OPTIMIZED_SOURCES} ${_base}AfterHaswell${_ext})
-endforeach()
-message(${OPTIMIZED_SOURCES})
 
 #find_library(pthread pthread)
-add_library(sakura SHARED ${UNI_SOURCE} ${OPTIMIZED_SOURCES})
+add_library(sakura SHARED ${SOURCES})
 set(public_headers
 	libsakura/sakura.h
 	${PROJECT_BINARY_DIR}/libsakura/config.h
@@ -194,4 +164,5 @@ target_link_libraries(sakura ${LIBS})
 install(TARGETS sakura
 	LIBRARY DESTINATION lib
 	PUBLIC_HEADER DESTINATION include/libsakura)
+
 install(DIRECTORY "${PROJECT_BINARY_DIR}/docs/api" DESTINATION share/doc/libsakura)

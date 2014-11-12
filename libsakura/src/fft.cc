@@ -21,6 +21,7 @@
  * @SAKURA_LICENSE_HEADER_END@
  */
 #include <cassert>
+#include <cstdlib>
 #include <cstdint>
 
 #if defined(__SSE2__) && !defined(ARCH_SCALAR)
@@ -28,10 +29,23 @@
 #endif
 
 #include "libsakura/sakura.h"
-#include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
 namespace {
+typedef union {
+	float x;
+} Type4;
+
+typedef union {
+	double x;
+} Type8;
+
+typedef union {
+	struct {
+		double x, y;
+	} x;
+} Type16;
+
 template<typename T>
 struct LastDimFlip {
 	static void flip(size_t len, size_t dstPos, T const src[], T dst[]) {
@@ -62,10 +76,10 @@ struct LastDimNoFlip {
 
 #if defined(__SSE2__) && !defined(ARCH_SCALAR)
 template<>
-struct LastDimFlip<LIBSAKURA_PREFIX::FFT::Type16> {
+struct LastDimFlip<Type16> {
 	static void flip(size_t len, size_t dstPos,
-	LIBSAKURA_PREFIX::FFT::Type16 const src[],
-	LIBSAKURA_PREFIX::FFT::Type16 dst[]) {
+	Type16 const src[],
+	Type16 dst[]) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
 		size_t i;
 		size_t end = len - dstPos;
@@ -82,10 +96,10 @@ struct LastDimFlip<LIBSAKURA_PREFIX::FFT::Type16> {
 };
 
 template<>
-struct LastDimNoFlip<LIBSAKURA_PREFIX::FFT::Type16> {
+struct LastDimNoFlip<Type16> {
 	static void flip(size_t len, size_t dstPos,
-			LIBSAKURA_PREFIX::FFT::Type16 const src[],
-			LIBSAKURA_PREFIX::FFT::Type16 dst[]) {
+			Type16 const src[],
+			Type16 dst[]) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
 		for (size_t i = 0; i < len; ++i) {
 			_mm_store_pd(reinterpret_cast<double*>(&dst[i]),
@@ -145,21 +159,94 @@ void flip(bool reverse, bool innerMostUntouched, size_t dim, size_t const len[],
 
 } // namespace
 
-namespace LIBSAKURA_PREFIX {
-void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip4(bool reverse, bool innerMostUntouched,
-		size_t dim, size_t const len[], Type4 const src[], Type4 dst[]) const {
-	flip<Type4>(reverse, innerMostUntouched, dim, len, src, dst);
+#define CHECK_ARGS(x) do { \
+	if (!(x)) { \
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument); \
+	} \
+} while (false)
+
+namespace {
+
+template<typename T>
+LIBSAKURA_SYMBOL(Status) FlipMatrix(
+		bool reverse,
+		bool innerMostUntouched, size_t dims, size_t const elements[],
+		T const src[], T dst[]) {
+	CHECK_ARGS(elements != nullptr);
+	CHECK_ARGS(src != nullptr);
+	CHECK_ARGS(dst != nullptr);
+	CHECK_ARGS(IsAligned(src, sizeof(T)));
+	CHECK_ARGS(IsAligned(dst, sizeof(T)));
+
+	try {
+		STATIC_ASSERT(sizeof(src[0]) == sizeof(T));
+		flip<T>(reverse, innerMostUntouched, dims, elements,
+				reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+	} catch (...) {
+		assert(false); // no exception should not be raised for the current implementation.
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip8(bool reverse, bool innerMostUntouched,
-		size_t dim, size_t const len[], Type8 const src[], Type8 dst[]) const {
-	flip<Type8>(reverse, innerMostUntouched, dim, len, src, dst);
+} // namespace
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		float const src[], float dst[]) {
+	typedef Type4 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(false,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-void ADDSUFFIX(FFT, ARCH_SUFFIX)::Flip16(bool reverse, bool innerMostUntouched,
-		size_t dim, size_t const len[], Type16 const src[],
-		Type16 dst[]) const {
-	flip<Type16>(reverse, innerMostUntouched, dim, len, src, dst);
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		float const src[], float dst[]) {
+	typedef Type4 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(true,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-} // namespace LIBSAKURA_PREFIX
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[], double dst[]) {
+	typedef Type8 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(false,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[], double dst[]) {
+	typedef Type8 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(true,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[][2], double dst[][2]) {
+	typedef Type16 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(false,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
+bool innerMostUntouched, size_t dims, size_t const elements[],
+		double const src[][2], double dst[][2]) {
+	typedef Type16 T;
+	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
+	return FlipMatrix<T>(true,
+			innerMostUntouched, dims, elements,
+			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
+}

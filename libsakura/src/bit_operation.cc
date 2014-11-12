@@ -23,11 +23,11 @@
 #include <cassert>
 #include <cstddef>
 #include <cmath>
+#include <climits>
 #include <algorithm>
 #include <iostream>
 
 #include "libsakura/sakura.h"
-#include "libsakura/optimized_implementation_factory_impl.h"
 #include "libsakura/localdef.h"
 
 // Vectorization by Compiler
@@ -221,56 +221,358 @@ inline void OperateBitsXor(DataType bit_mask, size_t num_data,
 
 } /* anonymous namespace */
 
-namespace LIBSAKURA_PREFIX {
-template<typename DataType>
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsAnd(
-		DataType bit_mask, size_t num_data, DataType const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/],
-		DataType result[/*num_data*/]) const {
-	::OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+// Bit operation AND
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-template<typename DataType>
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsConverseNonImplication(
-		DataType bit_mask, size_t num_data, DataType const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/],
-		DataType result[/*num_data*/]) const {
-	::OperateBitsConverseNonImplication(bit_mask, num_data, data, edit_mask,
-			result);
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-template<typename DataType>
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsImplication(
-		DataType bit_mask, size_t num_data, DataType const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/],
-		DataType result[/*num_data*/]) const {
-	::OperateBitsImplication(bit_mask, num_data, data, edit_mask, result);
+// Bit operation, Converse Nonimplication
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsConverseNonImplication(bit_mask, num_data, data,
+				edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-template<typename DataType>
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsNot(
-		size_t num_data, DataType const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/],
-		DataType result[/*num_data*/]) const {
-	::OperateBitsNot(num_data, data, edit_mask, result);
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsConverseNonImplication(bit_mask, num_data, data,
+				edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-template<typename DataType>
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsOr(
-		DataType bit_mask, size_t num_data, DataType const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/],
-		DataType result[/*num_data*/]) const {
-	::OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
+// Bit operation, Material Implication
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsImplication(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-template<typename DataType>
-void ADDSUFFIX(BitOperation, ARCH_SUFFIX)<DataType>::OperateBitsXor(
-		DataType bit_mask, size_t num_data, DataType const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/],
-		DataType result[/*num_data*/]) const {
-	::OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implication)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsImplication(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint8_t> ;
-template class ADDSUFFIX(BitOperation, ARCH_SUFFIX)<uint32_t> ;
+// Bit operation NOT
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(
+		size_t num_data, uint8_t const data[], bool const edit_mask[],
+		uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsNot(num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
+		size_t num_data, uint32_t const data[], bool const edit_mask[],
+		uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsNot(num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+// Bit operation OR
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+// Bit operation XOR
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
+		uint32_t bit_mask, size_t num_data, uint32_t const data[],
+		bool const edit_mask[], uint32_t result[]) {
+	// Check parameter arguments.
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (result == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (edit_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	// Now actual operation
+	try {
+		OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }

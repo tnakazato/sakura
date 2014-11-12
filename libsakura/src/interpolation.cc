@@ -27,9 +27,8 @@
 #include <vector>
 
 #include <libsakura/sakura.h>
-#include <libsakura/optimized_implementation_factory_impl.h>
 #include <libsakura/localdef.h>
-//#include <libsakura/logger.h>
+#include <libsakura/logger.h>
 #include <libsakura/memory_manager.h>
 
 #include "locator.tcc"
@@ -38,7 +37,7 @@
 
 namespace {
 // a logger for this module
-//auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 template<class Interpolator, class XDataType, class YDataType>
 void Interpolate1D(uint8_t polynomial_order, size_t num_base,
@@ -177,9 +176,62 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			num_interpolated, interpolated_position, interpolated_data);
 }
 
-} /* anonymous namespace */
+// basic check of arguments
+bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		uint8_t polynomial_order, size_t num_interpolation_axis,
+		double const base[], size_t num_array, float const data_base[],
+		size_t num_interpolated, double const interpolated[],
+		float const data_interpolated[], LIBSAKURA_SYMBOL(Status) *status) {
 
-namespace LIBSAKURA_PREFIX {
+	bool process_data = true;
+
+	// check interpolation_method
+	if (interpolation_method != LIBSAKURA_SYMBOL(InterpolationMethod_kNearest)
+			&& interpolation_method
+					!= LIBSAKURA_SYMBOL(InterpolationMethod_kLinear)
+			&& interpolation_method
+					!= LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
+			&& interpolation_method
+					!= LIBSAKURA_SYMBOL(InterpolationMethod_kSpline)) {
+		LOG4CXX_ERROR(logger, "Invalid interpolation method");
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		process_data = false;
+	}
+
+	// num_base must be non-zero
+	if (num_interpolation_axis == 0) {
+		LOG4CXX_ERROR(logger, "num_base must be >0");
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		process_data = false;
+	}
+
+	// no interpolation will be done
+	if (num_interpolated == 0 || num_array == 0) {
+		// Nothing to do
+		LOG4CXX_INFO(logger, "Nothing has been done since num_interpolated is 0");
+		*status = LIBSAKURA_SYMBOL(Status_kOK);
+		process_data = false;
+	}
+
+	// input arrays are not aligned
+	if (!LIBSAKURA_SYMBOL(IsAligned)(base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(data_base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(interpolated)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
+		LOG4CXX_ERROR(logger, "input arrays are not aligned");
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		process_data = false;
+	}
+
+	// input arrays are null
+	if (base == nullptr || data_base == nullptr || interpolated == nullptr
+			|| data_interpolated == nullptr) {
+		LOG4CXX_ERROR(logger, "input arrays are null");
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		process_data = false;
+	}
+	return process_data;
+}
 
 /**
  * Interpolate1DAlongColumn performs 1D interpolation along column based on base_position
@@ -196,14 +248,14 @@ namespace LIBSAKURA_PREFIX {
  * where N and M correspond to num_x_base and num_y respectively.
  */
 template<class XDataType, class YDataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::InterpolateXAxis(
+void InterpolateXAxis(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_x_base,
 		XDataType const x_base[/*num_x_base*/], size_t num_y,
 		YDataType const data_base[/*num_x_base*num_y*/],
 		size_t num_x_interpolated,
 		XDataType const x_interpolated[/*num_x_interpolated*/],
-		YDataType data_interpolated[/*num_x_interpolated*num_y*/]) const {
+		YDataType data_interpolated[/*num_x_interpolated*num_y*/]) {
 	ExecuteInterpolate1D<XInterpolatorSet<XDataType, YDataType>, XDataType,
 			YDataType>(interpolation_method, polynomial_order, num_x_base,
 			x_base, num_y, data_base, num_x_interpolated, x_interpolated,
@@ -225,19 +277,92 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * where N and M correspond to num_y_base and num_x respectively.
  */
 template<class XDataType, class YDataType>
-void ADDSUFFIX(Interpolation, ARCH_SUFFIX)<XDataType, YDataType>::InterpolateYAxis(
+void InterpolateYAxis(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_y_base,
 		XDataType const y_base[/*num_y_base*/], size_t num_x,
 		YDataType const data_base[/*num_y_base*num_x*/],
 		size_t num_y_interpolated,
 		XDataType const y_interpolated[/*num_y_interpolated*/],
-		YDataType data_interpolated[/*num_y_interpolated*num_x*/]) const {
+		YDataType data_interpolated[/*num_y_interpolated*num_x*/]) {
 	ExecuteInterpolate1D<YInterpolatorSet<XDataType, YDataType>, XDataType,
 			YDataType>(interpolation_method, polynomial_order, num_y_base,
 			y_base, num_x, data_base, num_y_interpolated, y_interpolated,
 			data_interpolated);
 }
 
-template class ADDSUFFIX(Interpolation, ARCH_SUFFIX)<double, float> ;
-} /* namespace LIBSAKURA_PREFIX */
+} /* anonymous namespace */
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateXAxisFloat)(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		uint8_t polynomial_order, size_t num_x_base,
+		double const x_base[/*num_x_base*/], size_t num_y,
+		float const data_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
+		double const x_interpolated[/*num_x_interpolated*/],
+		float data_interpolated[/*num_x_interpolated*num_y*/]) {
+
+	// check arguments
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!CheckArguments(interpolation_method, polynomial_order, num_x_base,
+			x_base, num_y, data_base, num_x_interpolated, x_interpolated,
+			data_interpolated, &status)) {
+		return status;
+	}
+
+	try {
+		InterpolateXAxis(interpolation_method,
+				polynomial_order, num_x_base, x_base, num_y, data_base,
+				num_x_interpolated, x_interpolated, data_interpolated);
+	} catch (const std::bad_alloc &e) {
+		// failed to allocate memory
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const LIBSAKURA_SYMBOL(Status) &LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		// failed to allocate memory
+		LOG4CXX_ERROR(logger, "Invalid interpolation type.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (...) {
+		// any exception is thrown during interpolation
+		assert(false);
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return status;
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		uint8_t polynomial_order, size_t num_y_base,
+		double const y_base[/*num_y_base*/], size_t num_x,
+		float const data_base[/*num_y_base*num_x*/], size_t num_y_interpolated,
+		double const y_interpolated[/*num_y_interpolated*/],
+		float data_interpolated[/*num_y_interpolated*num_x*/]) {
+
+	// check arguments
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!CheckArguments(interpolation_method, polynomial_order, num_y_base,
+			y_base, num_x, data_base, num_y_interpolated, y_interpolated,
+			data_interpolated, &status)) {
+		return status;
+	}
+
+	try {
+		InterpolateYAxis(interpolation_method,
+				polynomial_order, num_y_base, y_base, num_x, data_base,
+				num_y_interpolated, y_interpolated, data_interpolated);
+	} catch (const std::bad_alloc &e) {
+		// failed to allocate memory
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const LIBSAKURA_SYMBOL(Status) &LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+		// failed to allocate memory
+		LOG4CXX_ERROR(logger, "Invalid interpolation type.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (...) {
+		// any exception is thrown during interpolation
+		assert(false);
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return status;
+}
