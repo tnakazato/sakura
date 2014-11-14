@@ -1,0 +1,137 @@
+Sakura Library
+============================
+
+ [1] http://alma.mtk.nao.ac.jp/j/
+
+
+Overview
+--------
+
+ Sakura Library is a high performance library for astronomical data analysis. Sakura library is optimized to use SIMD instructions to maximize utilization of performance of CPU. This is developed at ALMA Computing Team of NAOJ. For more information, please refer to the official Sakura library web page [1]. 
+
+
+Requirements for End Users
+--------------------------
+
+ For Linux and Macintosh OSX, there are the following requirements:
+
+### Linux requirement ###
+
+   * GNU compiler gcc/g++ 4.8 or higher supported c++11 or clang/clang++ 3.5
+
+
+### Mac OS X requirement ###
+
+   * xcode(5.1 or higher)
+      * There is a case where command line tools is need 
+
+ The followings are common requirements for Linux and Mac:
+
+
+### Linux/Mac requirements ###
+
+   * cmake 2.8 or higher
+   * doxygen 1.8 or higher
+   * gtest 1.7 or higher
+   * external library
+      * eigen 3.2 or higher
+      * fftw 3.3.2 or higher
+
+ If you build FFTW3 from source, use the configure options, "--enable-float" and "--enable-shared", to build a shared library, libfftw3f.
+
+
+### Hardware requirements ###
+
+ CPU requirements is SSE4.2 or higher. AVX or AVX2 is preferred.
+
+
+Getting the Source
+------------------
+
+ The following is the way of getting Sakura library source code. You can download a release code in tar format.
+
+### Source Package ###
+
+The source codes of Sakura library is available at the following URL. [2]. 
+
+   [2] ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/release/libsakura-src-X.Y.Z.tar.gz
+
+Once the package is downloaded, expand it with tar command as bellow. :
+
+   $ tar -xvzf libsakura-src-X.Y.Z.tar.gz
+
+
+Setting up the Build and Install
+--------------------
+
+ Sakura library uses Google Test framework (gtest) to run unit tests. Expand a gtest bundle and create a symbolic link to it in libsakura directory. The following example shows how to do it using gtest-1.7.0.zip.:
+
+   $ unzip gtest-1.7.0.zip -d libsakura
+   $ cd libsakura
+   $ ln -s gtest-1.7.0 gtest
+
+
+ When the preparation of gtest was successful, you can set up a build of Sakura library. To build Sakura library you need to tell your build system where depended external libraries are placed and their version numbers. Cmake allows you to do it quickly and set up build easily.
+
+
+### Setting up Using Cmake ###
+
+ You will be able to set up with attached CMakeLists.txt which has necessary configuration to run Cmake correctly. Cmake will create MakeFile which corresponds to your build environment. In case you put libsakura directory in the current directory, the procedure of Cmake is as below:
+
+gcc:
+   $ cd libsakura/build
+   $ cmake -D CMAKE_MODULE_PATH=../cmake-modules -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=/usr/local/lib/libsakura -D BUILD_DOC=BOOL:ON ..
+
+clang: (especially for Mac users)
+   $ cd libsakura/build
+   $ env CC=clang CXX=clang++ cmake ?D CMAKE_MODULE_PATH=../cmake-modules -D CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/lib/libsakura -D BUILD_DOC:BOOL=ON ..
+
+
+ FFTW3_ROOT_DIR option is needed in case you installed fftw3 library on '/opt/fftw3' which is your preferred place. EIGEN3_INCLUDE_DIR option is also needed in case you put Eigen-3.2.2 directory on current directory same as libsakura directory.
+
+cmake option:
+* CMAKE_MODULE_PATH
+   Specify the place where supplemental module (e.g. FindFFTW3.cmake etc.) is placed.
+* CMAKE_BUILD_TYPE
+   Specify a build type. This allows you to select a compiler flag as the following 3 types:
+   * Debug	     Debug mode. Compiler flag is -g
+   * Release	     Release mode. Compiler flag is -O3 -DNDEBUG
+   * RelWithDebInfo  Debug+Release mode. Compiler flag is -g -O3 -DNDEBUG
+* CMAKE_INSTALL_PREFIX:
+   Specify the directory path which you intend to install..
+* FFTW3_ROOT_DIR:
+   If the fftw3 installed directory was not found by cmake with the default option, you should specify the path of it explicitly as below:
+   e.g)  -DFFTW3_ROOT_DIR=/opt/fftw3
+* EIGEN3_INCLUDE_DIR:
+   If the Eigen-3.2.2 installed directory was not found by cmake with the default option, you should specify the path of it explicitly as below:
+   e.g.)  -DEIGEN3_INCLUDE_DIR=/opt/Eigen-3.2.2
+
+
+### Create API Document ###
+
+ Create API document using Doxygen. Doxygen will create the bin/api directory in the libsakura/build directory which has the document of Sakura library in html. Move to libsakura/build directory and do as below:
+ 
+   $ make apidoc
+
+
+### Install ###
+
+ If you need to install Sakura library in the directory such as /usr/local which requires root privileges, you must be a root user. Move to the libsakura/build directory and then do as below:
+
+   # make install
+
+
+### Unittest ###
+
+ You can run the unittest of Sakura library. This allows you to verify your installation of Sakura library and make sure that Sakura library is working correctly. The unittest doesn't require a root privileges. To run the unittest, you should move in the libsakura/build directory and then run as below as normal user, not as root user:
+
+   $ make test
+
+
+Getting Binary File
+------------------
+
+ We are planning to deliver Sakura library as binary file. We will announce when we are ready to do it.
+
+
+
