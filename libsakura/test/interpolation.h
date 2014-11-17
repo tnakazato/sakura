@@ -92,6 +92,12 @@ protected:
 		y_expected_ = sakura_AlignFloat(num_arena_yinterpolated,
 				storage_for_y_expected_.get(), num_interpolated * num_array);
 
+		float mem_bytes = 4.0
+				* (num_arena_ybase + num_arena_yinterpolated
+						+ num_arena_yinterpolated)
+				+ 8.0 * (num_arena_xbase + num_arena_xinterpolated);
+		std::cout << "memory size: " << mem_bytes / 1.0e9 << "GB" << std::endl;
+
 		// check alignment
 		ASSERT_TRUE(x_base_ != nullptr) << "x_base_ is null";
 		ASSERT_TRUE(sakura_IsAligned(x_base_)) << "x_base_ is not aligned";
