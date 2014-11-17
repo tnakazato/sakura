@@ -48,6 +48,7 @@ void InitializeFloatArray(size_t num_array, float array[], ...) {
 	}
 }
 
+template<typename T>
 class InterpolateFloatTestBase: public ::testing::Test {
 protected:
 	virtual void SetUp() {
@@ -58,6 +59,27 @@ protected:
 	}
 	virtual void TearDown() {
 		sakura_CleanUp();
+	}
+	void RunInterpolateArray1D(
+			sakura_InterpolationMethod interpolation_method, size_t num_base,
+			size_t num_interpolated, size_t num_array,
+			sakura_Status expected_status, bool check_result, size_t iteration =
+					1) {
+		// sakura must be properly initialized
+		ASSERT_EQ(sakura_Status_kOK, initialize_result_)<< "sakura must be properly initialized!";
+
+		// execute interpolation
+		double elapsed = 0.0;
+		for (size_t iter = 0; iter < iteration; ++iter) {
+			double start = sakura_GetCurrentTime();
+			sakura_Status result = T::Run(
+					interpolation_method, polynomial_order_, num_base,
+					x_base_, num_array, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			double end = sakura_GetCurrentTime();
+			elapsed += end - start;
+			InspectResult(expected_status, result, num_interpolated, num_array, check_result);
+		}
+		std::cout << "Elapsed time " << elapsed << " sec" << std::endl;
 	}
 	void InitializePointers() {
 		x_base_ = nullptr;
