@@ -79,7 +79,7 @@
 #include <cstdint>
 #include <functional>
 
-#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1600
+#if defined(DISABLE_ALIGNAS) || defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1600
 #define SIMD_ALIGN /* nothing */
 #else
 #define SIMD_ALIGN alignas(LIBSAKURA_ALIGNMENT)
