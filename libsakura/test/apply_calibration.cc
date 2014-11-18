@@ -58,6 +58,8 @@ public:
 			size_t num_data, size_t num_segments, float const target[],
 			float const reference[], float result[], float const expected[],
 			bool check_result, size_t iteration = 1) {
+		size_t memory_size = (num_scaling_factor + num_data * num_segments * ((target == result) ? 2 : 3)) * 4; // bytes
+		std::cout << "memory usage: " << (double)memory_size / 1.0e9 << "GB" << std::endl;
 		std::string message =
 				(expected_status == sakura_Status_kOK) ?
 						"ApplyCalibration had any problems during execution." :
@@ -99,7 +101,7 @@ public:
 
 				if (check_result && (expected_status == result_status)) {
 					// Value check
-					for (size_t index = 0; index < num_data; ++index) {
+					for (size_t index = i * num_data; index < (i + 1) * num_data; ++index) {
 						std::cout << "Expected value at index " << index << ": "
 								<< expected[index] << std::endl;
 						EXPECT_FLOAT_EQ(expected[index], result[index])
@@ -114,7 +116,54 @@ public:
 				<< iteration << " iterations) " << elapsed_time << " sec"
 				<< std::endl;
 	}
+	template<size_t ITER, size_t NUM_ARRAY, size_t NUM_CHAN, size_t NUM_SCALING, bool IN_PLACE>
+	void RunPerformanceTest() {
+		size_t const num_data = NUM_CHAN * NUM_ARRAY;
+		size_t const num_scaling_factor = get_num_scaling_factor<NUM_SCALING>(num_data);
+		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
+		size_t num_arena = num_scaling_factor + sakura_alignment - 1;
+		std::unique_ptr<float[]> storage_for_scaling_factor(new float[num_arena]);
+		float *scaling_factor = sakura_AlignFloat(num_arena,
+				storage_for_scaling_factor.get(), num_scaling_factor);
+		for (size_t i = 0; i < num_scaling_factor; ++i)
+			scaling_factor[i] = 1.0;
+                num_arena = num_data + sakura_alignment - 1;
+		std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
+		float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
+				num_data);
+		std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
+		float *reference = sakura_AlignFloat(num_arena, storage_for_reference.get(),
+				num_data);
+		float *storage = nullptr;
+		float *result = get_result_pointer<IN_PLACE>(num_data, target, num_arena, &storage);
+		std::unique_ptr<float[]> storage_for_result(storage);
+		for (size_t i = 0; i < num_data; ++i) {
+			target[i] = 2.0;
+			;
+			reference[i] = 1.0;
+		}
+
+		PerformTest(LIBSAKURA_SYMBOL(Status_kOK), NUM_SCALING,
+				scaling_factor, NUM_CHAN, NUM_ARRAY, target, reference, result, nullptr,
+				false, ITER);
+	}
+private:
+	template<size_t NUM_SCALING>
+	size_t get_num_scaling_factor(size_t num_data) {return num_data;}
+	template<bool IN_PLACE>
+	float *get_result_pointer(size_t num_data, float const *target, size_t num_storage, float **storage) {
+		return const_cast<float *>(target);
+	}
 };
+
+template<>
+size_t ApplyCalibrationTest::get_num_scaling_factor<1>(size_t num_data) {return 1;}
+template<>
+float *ApplyCalibrationTest::get_result_pointer<false>(size_t num_data, float const *target, size_t num_storage, float **storage) {
+	*storage = new float[num_storage];
+	return sakura_AlignFloat(num_storage, *storage, num_data);
+}
+
 TEST_F(ApplyCalibrationTest, ZeroLengthData) {
 	size_t const num_scaling_factor = 1;
 	size_t const num_data = 0;
@@ -343,158 +392,21 @@ TEST_F(ApplyCalibrationTest, IntrinsicsTest) {
 }
 
 TEST_F(ApplyCalibrationTest, PerformanceTestAllAtOnce) {
-	size_t const iteration = 5;
-	size_t const num_array = 1000;
-	size_t const length = 400000;
-	size_t const num_scaling_factor = length * num_array;
-	size_t const num_data = length * num_array;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_scaling_factor + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_scaling_factor(new float[num_arena]);
-	float *scaling_factor = sakura_AlignFloat(num_arena,
-			storage_for_scaling_factor.get(), num_scaling_factor);
-	for (size_t i = 0; i < num_scaling_factor; ++i)
-		scaling_factor[i] = 1.0;
-	std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
-	float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
-	float *reference = sakura_AlignFloat(num_arena, storage_for_reference.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_result(new float[num_arena]);
-	float *result = sakura_AlignFloat(num_arena, storage_for_result.get(),
-			num_data);
-	for (size_t i = 0; i < num_data; ++i) {
-		target[i] = 2.0;
-		;
-		reference[i] = 1.0;
-	}
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, 1, target, reference, result, nullptr,
-			false, iteration);
+	RunPerformanceTest<10, 1, 40000000, 40000000, false>();
 }
 
 TEST_F(ApplyCalibrationTest, PerformanceTestIndividual) {
-	size_t const iteration = 5;
-	size_t const num_array = 1000;
-	size_t const length = 400000;
-	size_t const num_scaling_factor = length * num_array;
-	size_t const num_data = length * num_array;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_scaling_factor + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_scaling_factor(new float[num_arena]);
-	float *scaling_factor = sakura_AlignFloat(num_arena,
-			storage_for_scaling_factor.get(), num_scaling_factor);
-	for (size_t i = 0; i < num_scaling_factor; ++i)
-		scaling_factor[i] = 1.0;
-	std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
-	float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
-	float *reference = sakura_AlignFloat(num_arena, storage_for_reference.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_result(new float[num_arena]);
-	float *result = sakura_AlignFloat(num_arena, storage_for_result.get(),
-			num_data);
-	for (size_t i = 0; i < num_data; ++i) {
-		target[i] = 2.0;
-		reference[i] = 1.0;
-	}
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), length, scaling_factor, length,
-			num_array, target, reference, result, nullptr,
-			false, iteration);
+	RunPerformanceTest<10, 1000, 40000, 40000, false>();
 }
 
 TEST_F(ApplyCalibrationTest, PerformanceTestSingleScalingFactor) {
-	size_t const iteration = 5;
-	size_t const num_array = 1000;
-	size_t const length = 400000;
-	size_t const num_scaling_factor = 1;
-	size_t const num_data = length * num_array;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_scaling_factor + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_scaling_factor(new float[num_arena]);
-	float *scaling_factor = sakura_AlignFloat(num_arena,
-			storage_for_scaling_factor.get(), num_scaling_factor);
-	for (size_t i = 0; i < num_scaling_factor; ++i)
-		scaling_factor[i] = 1.0;
-	num_arena = num_data + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
-	float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
-	float *reference = sakura_AlignFloat(num_arena, storage_for_reference.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_result(new float[num_arena]);
-	float *result = sakura_AlignFloat(num_arena, storage_for_result.get(),
-			num_data);
-	for (size_t i = 0; i < num_data; ++i) {
-		target[i] = 2.0;
-		reference[i] = 1.0;
-	}
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), 1, scaling_factor, num_data, 1,
-			target, reference, result, nullptr,
-			false, iteration);
+	RunPerformanceTest<10, 1, 40000000, 1, false>();
 }
 
 TEST_F(ApplyCalibrationTest, PerformanceTestShareInputOutput) {
-	size_t const iteration = 5;
-	size_t const num_array = 1000;
-	size_t const length = 400000;
-	size_t const num_scaling_factor = length * num_array;
-	size_t const num_data = length * num_array;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_scaling_factor + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_scaling_factor(new float[num_arena]);
-	float *scaling_factor = sakura_AlignFloat(num_arena,
-			storage_for_scaling_factor.get(), num_scaling_factor);
-	for (size_t i = 0; i < num_scaling_factor; ++i)
-		scaling_factor[i] = 1.0;
-	std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
-	float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
-	float *reference = sakura_AlignFloat(num_arena, storage_for_reference.get(),
-			num_data);
-	for (size_t i = 0; i < num_data; ++i) {
-		target[i] = 2.0;
-		reference[i] = 1.0;
-	}
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, 1, target, reference, target, nullptr,
-			false, iteration);
+	RunPerformanceTest<50, 1000, 40000, 40000, true>();
 }
 
 TEST_F(ApplyCalibrationTest, PerformanceTestShareInputOutputSingleScalingFactor) {
-	size_t const iteration = 5;
-	size_t const num_array = 1000;
-	size_t const length = 400000;
-	size_t const num_scaling_factor = 1;
-	size_t const num_data = length * num_array;
-	size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
-	size_t num_arena = num_scaling_factor + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_scaling_factor(new float[num_arena]);
-	float *scaling_factor = sakura_AlignFloat(num_arena,
-			storage_for_scaling_factor.get(), num_scaling_factor);
-	for (size_t i = 0; i < num_scaling_factor; ++i)
-		scaling_factor[i] = 1.0;
-	num_arena = num_data + sakura_alignment - 1;
-	std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
-	float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
-			num_data);
-	std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
-	float *reference = sakura_AlignFloat(num_arena, storage_for_reference.get(),
-			num_data);
-	for (size_t i = 0; i < num_data; ++i) {
-		target[i] = 2.0;
-		reference[i] = 1.0;
-	}
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, 1, target, reference, target, nullptr,
-			false, iteration);
+	RunPerformanceTest<50, 1000, 40000, 1, true>();
 }
