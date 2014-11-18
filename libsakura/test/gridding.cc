@@ -39,11 +39,6 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
-#ifdef DISABLE_ALIGNAS
-#undef SIMD_ALIGN
-#define SIMD_ALIGN
-#endif
-
 //#define AVX __attribute__((aligned (32)))
 #define AVX
 

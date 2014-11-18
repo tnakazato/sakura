@@ -70,7 +70,7 @@ public:
 typedef AlignedMemory<32> DefaultAlignedMemory; // for AVX
 
 #ifndef SIMD_ALIGN
-# if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1600
+# if defined(DISABLE_ALIGNAS) || defined(__INTEL_COMPILER) && __INTEL_COMPILER < 1600
 #  define SIMD_ALIGN /* nothing */
 # else
 #  define SIMD_ALIGN alignas(32) // for AVX
