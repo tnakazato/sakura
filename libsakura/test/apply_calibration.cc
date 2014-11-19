@@ -34,6 +34,9 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
+#define APPLYCAL_TEST(NAME) TEST_F(ApplyCalibrationTest, NAME)
+
+namespace {
 void InitializeFloatArray(size_t num_array, float array[], ...) {
 	va_list arguments_list;
 	va_start(arguments_list, array);
@@ -41,6 +44,126 @@ void InitializeFloatArray(size_t num_array, float array[], ...) {
 		array[i] = static_cast<float>(va_arg(arguments_list, double));
 	}
 }
+
+struct EmptyHelper {
+	static void AdditionalTest(float target[], float result[],
+			float expected[]) {
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct ZeroLengthDataInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 0 && NUM_SCALING == 1, "");
+		InitializeFloatArray(NUM_DATA, scaling_factor, 1.0);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct ZeroLengthScalingFactorInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 1 && NUM_SCALING == 0, "");
+		InitializeFloatArray(NUM_DATA, target, 1.0);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct InvalidNumberOfScalingFactorInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 3 && NUM_SCALING == 2, "");
+		InitializeFloatArray(NUM_SCALING, scaling_factor, 1.0, 1.0);
+		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0, 1.0);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct ZeroDivisionTestInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 2 && NUM_SCALING == 1, "");
+		InitializeFloatArray(NUM_SCALING, scaling_factor, 1.0);
+		InitializeFloatArray(NUM_DATA, target, 1.0, -1.0);
+		InitializeFloatArray(NUM_DATA, reference, 0.0, 0.0);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct ZeroDivisionTestHelper {
+	static void AdditionalTest(float target[], float result[],
+			float expected[]) {
+		static_assert(NUM_DATA == 2 && NUM_SCALING == 1, "");
+		// Check result is inf or not.
+		EXPECT_TRUE(isinf(result[0])) << "result must be inf! (" << result[0]
+				<< ")";
+		EXPECT_TRUE(isinf(result[1])) << "result must be -inf! (" << result[1]
+				<< ")";
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct BasicTestInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 2 && NUM_SCALING == 2, "");
+		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5, 2.0);
+		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0);
+		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
+		InitializeFloatArray(NUM_DATA, expected, 0.0, 2.0);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct InPlaceTestHelper {
+	static void AdditionalTest(float target[], float result[],
+			float expected[]) {
+		static_assert(NUM_DATA == 2 && NUM_SCALING == 2, "");
+		// make sure that input storage is overwritten
+		EXPECT_FLOAT_EQ(expected[0], target[0]);
+		EXPECT_FLOAT_EQ(expected[1], target[1]);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct SingleScalingFactorTestInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 2 && NUM_SCALING == 1, "");
+		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5);
+		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0);
+		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
+		InitializeFloatArray(NUM_DATA, expected, 0.0, 0.5);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct TooManyScalingFactorTestInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 2 && NUM_SCALING == 3, "");
+		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5, 1.0, -5.0);
+		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0);
+		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
+		InitializeFloatArray(NUM_DATA, expected, 0.0, 1.0);
+	}
+};
+
+template<size_t NUM_DATA, size_t NUM_SCALING>
+struct IntrinsicsTestInitializer {
+	static void Initialize(float scaling_factor[], float target[],
+			float reference[], float expected[]) {
+		static_assert(NUM_DATA == 10 && NUM_SCALING == 10, "");
+		for (size_t i = 0; i < NUM_DATA; ++i) {
+			scaling_factor[i] = 10.0;
+			target[i] = 2.0;
+			reference[i] = 1.0;
+			expected[i] = 10.0;
+		}
+	}
+};
+} // anonymous namespace
 
 class ApplyCalibrationTest: public ::testing::Test {
 public:
@@ -123,8 +246,8 @@ public:
 	bool IN_PLACE>
 	void RunPerformanceTest() {
 		size_t const num_data = NUM_CHAN * NUM_ARRAY;
-		size_t const num_scaling_factor = get_num_scaling_factor<NUM_SCALING>(
-				num_data);
+		size_t const num_scaling_factor =
+				(NUM_SCALING == 1) ? NUM_SCALING : num_data;
 		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 		size_t num_arena = num_scaling_factor + sakura_alignment - 1;
 		std::unique_ptr<float[]> storage_for_scaling_factor(
@@ -140,78 +263,36 @@ public:
 		std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
 		float *reference = sakura_AlignFloat(num_arena,
 				storage_for_reference.get(), num_data);
-		float *storage = nullptr;
-		float *result = get_result_pointer<IN_PLACE>(num_data, target,
-				num_arena, &storage);
-		std::unique_ptr<float[]> storage_for_result(storage);
+		std::unique_ptr<float[]> storage_for_result(new float[num_arena]);
+		float *_result = sakura_AlignFloat(num_arena, storage_for_result.get(),
+				num_data);
 		for (size_t i = 0; i < num_data; ++i) {
 			target[i] = 2.0;
-			;
 			reference[i] = 1.0;
 		}
+		float *result = (IN_PLACE) ? target : _result;
 
+		if (IN_PLACE) {
+			EXPECT_EQ(target, result);
+		}
 		PerformTest(LIBSAKURA_SYMBOL(Status_kOK), NUM_SCALING, scaling_factor,
 				NUM_CHAN, NUM_ARRAY, target, reference, result, nullptr,
 				false, ITER);
 	}
-	template<typename Helper, size_t NUM_DATA, size_t NUM_SCALING, bool IN_PLACE>
-	void RunTest(bool check_result = true) {
+	template<typename Initializer, typename Helper, size_t NUM_DATA,
+			size_t NUM_SCALING, bool IN_PLACE>
+	void RunTest(bool check_result = true,
+	LIBSAKURA_SYMBOL(Status) expected_status = LIBSAKURA_SYMBOL(Status_kOK)) {
 		SIMD_ALIGN
 		float scaling_factor[NUM_SCALING], target[NUM_DATA],
 				reference[NUM_DATA], result[NUM_DATA], expected[NUM_DATA];
-		Helper::Initialize(scaling_factor, target, reference, expected);
-		PerformTest(LIBSAKURA_SYMBOL(Status_kOK), NUM_SCALING, scaling_factor,
-				NUM_DATA, 1, target, reference, (IN_PLACE) ? target : result,
-				expected, check_result);
+		Initializer::Initialize(scaling_factor, target, reference, expected);
+		PerformTest(expected_status, NUM_SCALING, scaling_factor, NUM_DATA, 1,
+				target, reference, (IN_PLACE) ? target : result, expected,
+				check_result);
 		Helper::AdditionalTest(target, result, expected);
 	}
-private:
-	template<size_t NUM_SCALING>
-	size_t get_num_scaling_factor(size_t num_data) {
-		return num_data;
-	}
-	template<bool IN_PLACE>
-	float *get_result_pointer(size_t num_data, float const *target,
-			size_t num_storage, float **storage) {
-		return const_cast<float *>(target);
-	}
 };
-
-template<>
-size_t ApplyCalibrationTest::get_num_scaling_factor<1>(size_t num_data) {
-	return 1;
-}
-template<>
-float *ApplyCalibrationTest::get_result_pointer<false>(size_t num_data,
-		float const *target, size_t num_storage, float **storage) {
-	*storage = new float[num_storage];
-	return sakura_AlignFloat(num_storage, *storage, num_data);
-}
-
-#define APPLYCAL_TEST(NAME) TEST_F(ApplyCalibrationTest, NAME)
-
-APPLYCAL_TEST(ZeroLengthData) {
-	size_t const num_scaling_factor = 1;
-	size_t const num_data = 0;
-	SIMD_ALIGN
-	float scaling_factor[num_scaling_factor], target[num_data];
-	InitializeFloatArray(num_scaling_factor, scaling_factor, 1.0);
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kOK), num_scaling_factor,
-			scaling_factor, num_data, 1, target, target, target, nullptr, true);
-}
-
-APPLYCAL_TEST(ZeroLengthScalingFactor) {
-	size_t const num_scaling_factor = 0;
-	size_t const num_data = 1;
-	SIMD_ALIGN
-	float scaling_factor[num_scaling_factor], target[num_data];
-	InitializeFloatArray(num_data, target, 1.0);
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
-			scaling_factor, num_data, 1, target, target, target, nullptr,
-			false);
-}
 
 APPLYCAL_TEST(NullPointer) {
 	size_t const num_scaling_factor = 1;
@@ -239,140 +320,44 @@ APPLYCAL_TEST(InputArrayNotAligned) {
 			false);
 }
 
-APPLYCAL_TEST(InvaidNumberOfScalingFactor) {
-	size_t const num_scaling_factor = 2;
-	size_t const num_data = 3;
-	SIMD_ALIGN
-	float scaling_factor[num_scaling_factor], target[num_data];
-	InitializeFloatArray(num_scaling_factor, scaling_factor, 1.0, 1.0);
-	InitializeFloatArray(num_data, target, 1.0, 1.0, 1.0);
-
-	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
-			scaling_factor, num_data, 1, target, target, target, nullptr,
-			false);
+APPLYCAL_TEST(ZeroLengthData) {
+	RunTest<ZeroLengthDataInitializer<0, 1>, EmptyHelper, 0, 1,
+	false>();
 }
 
-template<size_t NUM_DATA, size_t NUM_SCALING>
-struct ZeroDivisionTestHelper {
-	static void Initialize(float scaling_factor[], float target[],
-			float reference[], float expected[]) {
-		static_assert(NUM_DATA == 2 && NUM_SCALING == 1, "");
-		InitializeFloatArray(NUM_SCALING, scaling_factor, 1.0);
-		InitializeFloatArray(NUM_DATA, target, 1.0, -1.0);
-		InitializeFloatArray(NUM_DATA, reference, 0.0, 0.0);
-	}
-	static void AdditionalTest(float target[], float result[],
-			float expected[]) {
-		// Check result is inf or not.
-		EXPECT_TRUE(isinf(result[0])) << "result must be inf! (" << result[0]
-				<< ")";
-		EXPECT_TRUE(isinf(result[1])) << "result must be -inf! (" << result[1]
-				<< ")";
-	}
-};
+APPLYCAL_TEST(ZeroLengthScalingFactor) {
+	RunTest<ZeroLengthScalingFactorInitializer<1, 0>, EmptyHelper, 1, 0,
+	false>(false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+}
+
+APPLYCAL_TEST(InvaidNumberOfScalingFactor) {
+	RunTest<InvalidNumberOfScalingFactorInitializer<3, 2>, EmptyHelper, 3, 2,
+	false>(false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+}
 
 APPLYCAL_TEST(ZeroDivision) {
-	RunTest<ZeroDivisionTestHelper<2, 1>, 2, 1, false>(false);
+	RunTest<ZeroDivisionTestInitializer<2, 1>, ZeroDivisionTestHelper<2, 1>, 2,
+			1, false>(false);
 }
-
-template<size_t NUM_DATA, size_t NUM_SCALING>
-struct BasicTestHelper {
-	static void Initialize(float scaling_factor[], float target[],
-			float reference[], float expected[]) {
-		static_assert(NUM_DATA == 2 && NUM_SCALING == 2, "");
-		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5, 2.0);
-		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0);
-		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
-		InitializeFloatArray(NUM_DATA, expected, 0.0, 2.0);
-	}
-	static void AdditionalTest(float target[], float result[],
-			float expected[]) {
-	}
-};
 
 APPLYCAL_TEST(BasicTest) {
-	RunTest<BasicTestHelper<2, 2>, 2, 2, false>();
+	RunTest<BasicTestInitializer<2, 2>, EmptyHelper, 2, 2, false>();
 }
-
-template<size_t NUM_DATA, size_t NUM_SCALING>
-struct InPlaceTestHelper {
-	static void Initialize(float scaling_factor[], float target[],
-			float reference[], float expected[]) {
-		static_assert(NUM_DATA == 2 && NUM_SCALING == 2, "");
-		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5, 2.0);
-		InitializeFloatArray(NUM_DATA, target, 1.0f, 1.0f);
-		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
-		InitializeFloatArray(NUM_DATA, expected, 0.0, 2.0);
-	}
-	static void AdditionalTest(float target[], float result[],
-			float expected[]) {
-		// make sure that input storage is overwritten
-		EXPECT_FLOAT_EQ(expected[0], target[0]);
-		EXPECT_FLOAT_EQ(expected[1], target[1]);
-	}
-};
 
 APPLYCAL_TEST(InPlaceTest) {
-	RunTest<InPlaceTestHelper<2, 2>, 2, 2, true>();
+	RunTest<BasicTestInitializer<2, 2>, InPlaceTestHelper<2, 2>, 2, 2, true>();
 }
-
-template<size_t NUM_DATA, size_t NUM_SCALING>
-struct SingleScalingFactorTestHelper {
-	static void Initialize(float scaling_factor[], float target[],
-			float reference[], float expected[]) {
-		static_assert(NUM_DATA == 2 && NUM_SCALING == 1, "");
-		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5);
-		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0);
-		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
-		InitializeFloatArray(NUM_DATA, expected, 0.0, 0.5);
-	}
-	static void AdditionalTest(float target[], float result[],
-			float expected[]) {
-	}
-};
 
 APPLYCAL_TEST(SingleScalingFactor) {
-	RunTest<SingleScalingFactorTestHelper<2, 1>, 2, 1, false>();
+	RunTest<SingleScalingFactorTestInitializer<2, 1>, EmptyHelper, 2, 1, false>();
 }
-
-template<size_t NUM_DATA, size_t NUM_SCALING>
-struct TooManyScalingFactorTestHelper {
-	static void Initialize(float scaling_factor[], float target[],
-			float reference[], float expected[]) {
-		static_assert(NUM_DATA == 2 && NUM_SCALING == 3, "");
-		InitializeFloatArray(NUM_SCALING, scaling_factor, 0.5, 1.0, -5.0);
-		InitializeFloatArray(NUM_DATA, target, 1.0, 1.0);
-		InitializeFloatArray(NUM_DATA, reference, 1.0, 0.5);
-		InitializeFloatArray(NUM_DATA, expected, 0.0, 1.0);
-	}
-	static void AdditionalTest(float target[], float result[],
-			float expected[]) {
-	}
-};
 
 APPLYCAL_TEST(TooManyScalingFactor) {
-	RunTest<TooManyScalingFactorTestHelper<2, 3>, 2, 3, false>();
+	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>();
 }
 
-template<size_t NUM_DATA, size_t NUM_SCALING>
-struct IntrinsicsTestHelper {
-	static void Initialize(float scaling_factor[], float target[],
-			float reference[], float expected[]) {
-		static_assert(NUM_DATA == 10 && NUM_SCALING == 10, "");
-		for (size_t i = 0; i < NUM_DATA; ++i) {
-			scaling_factor[i] = 10.0;
-			target[i] = 2.0;
-			reference[i] = 1.0;
-			expected[i] = 10.0;
-		}
-	}
-	static void AdditionalTest(float target[], float result[],
-			float expected[]) {
-	}
-};
-
 APPLYCAL_TEST(IntrinsicsTest) {
-	RunTest<IntrinsicsTestHelper<10, 10>, 10, 10, false>();
+	RunTest<IntrinsicsTestInitializer<10, 10>, EmptyHelper, 10, 10, false>();
 }
 
 APPLYCAL_TEST(PerformanceTestAllAtOnce) {
