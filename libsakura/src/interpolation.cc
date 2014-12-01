@@ -68,15 +68,13 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 
 	std::vector<StorageAndAlignedPointer<XDataType> > xdatatype_holder(2);
 	StorageAndAlignedPointer<YDataType> ydatatype_holder;
-	GetAscendingArray<typename Interpolator::XDataReorderer, XDataType,
-			XDataType>(num_base, base_position, 1, base_position,
-			&xdatatype_holder[0]);
-	GetAscendingArray<typename Interpolator::YDataReorderer, XDataType,
-			YDataType>(num_base, base_position, num_array, base_data,
-			&ydatatype_holder);
-	GetAscendingArray<typename Interpolator::XDataReorderer, XDataType,
-			XDataType>(num_interpolated, interpolated_position, 1,
-			interpolated_position, &xdatatype_holder[1]);
+	GetAscendingArray<Interpolator, XDataType, XDataType>(num_base,
+			base_position, 1, base_position, &xdatatype_holder[0]);
+	GetAscendingArray<Interpolator, XDataType, YDataType>(num_base,
+			base_position, num_array, base_data, &ydatatype_holder);
+	GetAscendingArray<Interpolator, XDataType, XDataType>(num_interpolated,
+			interpolated_position, 1, interpolated_position,
+			&xdatatype_holder[1]);
 	XDataType const *base_position_work = xdatatype_holder[0].pointer;
 	YDataType const *base_data_work = ydatatype_holder.pointer;
 	XDataType const *interpolated_position_work = xdatatype_holder[1].pointer;
@@ -208,7 +206,8 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	// no interpolation will be done
 	if (num_interpolated == 0 || num_array == 0) {
 		// Nothing to do
-		LOG4CXX_INFO(logger, "Nothing has been done since num_interpolated is 0");
+		LOG4CXX_INFO(logger,
+				"Nothing has been done since num_interpolated is 0");
 		*status = LIBSAKURA_SYMBOL(Status_kOK);
 		process_data = false;
 	}
@@ -291,28 +290,25 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			data_interpolated);
 }
 
-} /* anonymous namespace */
-
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateXAxisFloat)(
+template<typename Func>
+LIBSAKURA_SYMBOL(Status) DoInterpolate(Func func,
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		uint8_t polynomial_order, size_t num_x_base,
-		double const x_base[/*num_x_base*/], size_t num_y,
-		float const data_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
-		double const x_interpolated[/*num_x_interpolated*/],
+		uint8_t polynomial_order, size_t num_base,
+		double const base[/*num_x_base*/], size_t num_array,
+		float const data_base[/*num_x_base*num_y*/], size_t num_interpolated,
+		double const interpolated[/*num_x_interpolated*/],
 		float data_interpolated[/*num_x_interpolated*num_y*/]) {
-
 	// check arguments
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!CheckArguments(interpolation_method, polynomial_order, num_x_base,
-			x_base, num_y, data_base, num_x_interpolated, x_interpolated,
+	if (!CheckArguments(interpolation_method, polynomial_order, num_base, base,
+			num_array, data_base, num_interpolated, interpolated,
 			data_interpolated, &status)) {
 		return status;
 	}
 
 	try {
-		InterpolateXAxis(interpolation_method,
-				polynomial_order, num_x_base, x_base, num_y, data_base,
-				num_x_interpolated, x_interpolated, data_interpolated);
+		func(interpolation_method, polynomial_order, num_base, base, num_array,
+				data_base, num_interpolated, interpolated, data_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -330,6 +326,22 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	return status;
 }
 
+} /* anonymous namespace */
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateXAxisFloat)(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+		uint8_t polynomial_order, size_t num_x_base,
+		double const x_base[/*num_x_base*/], size_t num_y,
+		float const data_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
+		double const x_interpolated[/*num_x_interpolated*/],
+		float data_interpolated[/*num_x_interpolated*num_y*/]) {
+
+	return DoInterpolate(InterpolateXAxis<double, float>,
+			interpolation_method, polynomial_order, num_x_base, x_base, num_y,
+			data_base, num_x_interpolated, x_interpolated, data_interpolated);
+
+}
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_y_base,
@@ -338,31 +350,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		double const y_interpolated[/*num_y_interpolated*/],
 		float data_interpolated[/*num_y_interpolated*num_x*/]) {
 
-	// check arguments
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!CheckArguments(interpolation_method, polynomial_order, num_y_base,
-			y_base, num_x, data_base, num_y_interpolated, y_interpolated,
-			data_interpolated, &status)) {
-		return status;
-	}
+	return DoInterpolate(InterpolateYAxis<double, float>,
+			interpolation_method, polynomial_order, num_y_base, y_base, num_x,
+			data_base, num_y_interpolated, y_interpolated, data_interpolated);
 
-	try {
-		InterpolateYAxis(interpolation_method,
-				polynomial_order, num_y_base, y_base, num_x, data_base,
-				num_y_interpolated, y_interpolated, data_interpolated);
-	} catch (const std::bad_alloc &e) {
-		// failed to allocate memory
-		LOG4CXX_ERROR(logger, "Memory allocation failed.");
-		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const LIBSAKURA_SYMBOL(Status) &LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-		// failed to allocate memory
-		LOG4CXX_ERROR(logger, "Invalid interpolation type.");
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	} catch (...) {
-		// any exception is thrown during interpolation
-		assert(false);
-		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return status;
 }

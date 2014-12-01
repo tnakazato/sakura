@@ -31,37 +31,6 @@
 
 namespace {
 
-template<class DataType>
-class XAxisReordererImpl {
-public:
-	static inline void Reorder(size_t num_x, size_t num_y,
-			DataType const input_data[], DataType output_data[]) {
-		for (size_t i = 0; i < num_y; ++i) {
-			size_t start_position = num_x * i;
-			size_t end_position = start_position + num_x;
-			for (size_t j = start_position; j < end_position; ++j) {
-				output_data[j] = input_data[end_position - (j - start_position)
-						- 1];
-			}
-		}
-	}
-};
-
-template<class DataType>
-class YAxisReordererImpl {
-public:
-	static inline void Reorder(size_t num_x, size_t num_y,
-			DataType const input_data[], DataType output_data[]) {
-		for (size_t i = 0; i < num_x; ++i) {
-			DataType *out_storage = &output_data[i * num_y];
-			DataType const *in_storage = &input_data[(num_x - 1 - i) * num_y];
-			for (size_t j = 0; j < num_y; ++j) {
-				out_storage[j] = in_storage[j];
-			}
-		}
-	}
-};
-
 template<class Reorderer, class XDataType, class YDataType>
 inline void GetAscendingArray(size_t num_base,
 		XDataType const base_array[/*num_base*/], size_t num_array,
@@ -77,9 +46,19 @@ inline void GetAscendingArray(size_t num_base,
 }
 
 template<class InterpolatorImpl, class XDataType, class YDataType>
-struct XInterpolator: public InterpolatorImpl {
-	typedef XAxisReordererImpl<XDataType> XDataReorderer;
-	typedef XAxisReordererImpl<YDataType> YDataReorderer;
+struct XInterpolator: public InterpolatorImpl{
+	template<class DataType>
+	static inline void Reorder(size_t num_x, size_t num_y,
+			DataType const input_data[], DataType output_data[]) {
+		for (size_t i = 0; i < num_y; ++i) {
+			size_t start_position = num_x * i;
+			size_t end_position = start_position + num_x;
+			for (size_t j = start_position; j < end_position; ++j) {
+				output_data[j] = input_data[end_position - (j - start_position)
+						- 1];
+			}
+		}
+	}
 	static inline void SubstituteSingleBaseData(size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
@@ -105,7 +84,7 @@ struct XInterpolator: public InterpolatorImpl {
 		for (size_t j = 0; j < num_array; ++j) {
 			YDataType *work = &interpolated_data[j * num_interpolated];
 			for (size_t i = 0; i < middle_point; ++i) {
-				std::swap<YDataType>(work[i], work[right_edge - i]);
+				std::swap < YDataType > (work[i], work[right_edge - i]);
 			}
 		}
 	}
@@ -123,8 +102,17 @@ private:
 
 template<class InterpolatorImpl, class XDataType, class YDataType>
 struct YInterpolator: public InterpolatorImpl {
-	typedef YAxisReordererImpl<XDataType> XDataReorderer;
-	typedef YAxisReordererImpl<YDataType> YDataReorderer;
+	template<class DataType>
+	static inline void Reorder(size_t num_x, size_t num_y,
+			DataType const input_data[], DataType output_data[]) {
+		for (size_t i = 0; i < num_x; ++i) {
+			DataType *out_storage = &output_data[i * num_y];
+			DataType const *in_storage = &input_data[(num_x - 1 - i) * num_y];
+			for (size_t j = 0; j < num_y; ++j) {
+				out_storage[j] = in_storage[j];
+			}
+		}
+	}
 	static inline void SubstituteSingleBaseData(size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
@@ -150,7 +138,7 @@ struct YInterpolator: public InterpolatorImpl {
 			YDataType *b = &interpolated_data[(num_interpolated - 1 - i)
 					* num_array];
 			for (size_t j = 0; j < num_array; ++j) {
-				std::swap<YDataType>(a[j], b[j]);
+				std::swap < YDataType > (a[j], b[j]);
 			}
 		}
 	}
