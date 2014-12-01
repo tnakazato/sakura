@@ -25,7 +25,7 @@ cmake_minimum_required(VERSION 2.6)
 find_package(Threads)
 find_package(Eigen3 REQUIRED)
 find_package(Log4Cxx)
-find_package(FFTW3)
+find_package(FFTW3 REQUIRED)
 
 if(EIGEN3_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${EIGEN3_INCLUDE_DIR}")
