@@ -37,11 +37,11 @@
 struct Runner {
 	static sakura_Status Run(sakura_InterpolationMethod method,
 			uint8_t polynomial_order, size_t num_base, double const x_base[],
-			size_t num_array, float const y_base[], size_t num_interpolated,
-			double const x_interpolated[], float y_interpolated[]) {
+			size_t num_array, float const y_base[], bool const mask_base[], size_t num_interpolated,
+			double const x_interpolated[], float y_interpolated[], bool mask_interpolated[]) {
 		return sakura_InterpolateYAxisFloat(method, polynomial_order, num_base,
-				x_base, num_array, y_base, num_interpolated, x_interpolated,
-				y_interpolated);
+				x_base, num_array, y_base, mask_base, num_interpolated, x_interpolated,
+				y_interpolated, mask_interpolated);
 	}
 };
 typedef InterpolateFloatTestBase<Runner> InterpolateArray1DFloatTest;

@@ -986,9 +986,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateXAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_x_base,
 		double const x_base[/*num_x_base*/], size_t num_y,
-		float const data_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
+		float const data_base[/*num_x_base*num_y*/],
+		bool const mask_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
 		double const x_interpolated[/*num_x_interpolated*/],
-		float data_interpolated[/*num_x_interpolated*num_y*/]) {
+		float data_interpolated[/*num_x_interpolated*num_y*/],
+		bool mask_interpolated[/*num_x_interpolated*num_y*/]) {
 
 	return DoInterpolate(
 			ExecuteInterpolate1D<XInterpolatorHelper<double, float>, double,
@@ -1016,9 +1018,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_y_base,
 		double const y_base[/*num_y_base*/], size_t num_x,
-		float const data_base[/*num_y_base*num_x*/], size_t num_y_interpolated,
+		float const data_base[/*num_y_base*num_x*/],
+		bool const mask_base[/*num_y_base*num_x*/], size_t num_y_interpolated,
 		double const y_interpolated[/*num_y_interpolated*/],
-		float data_interpolated[/*num_y_interpolated*num_x*/]) {
+		float data_interpolated[/*num_y_interpolated*num_x*/],
+		bool mask_interpolated[/*num_y_interpolated*num_x*/]) {
 
 	return DoInterpolate(
 			ExecuteInterpolate1D<YInterpolatorHelper<double, float>, double,

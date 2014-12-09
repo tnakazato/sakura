@@ -31,6 +31,7 @@
 #define INTERPOLATION_H_
 
 #include <stdarg.h>
+#include <vector>
 
 void InitializeDoubleArray(size_t num_array, double array[], ...) {
 	va_list arguments_list;
@@ -60,24 +61,25 @@ protected:
 	virtual void TearDown() {
 		sakura_CleanUp();
 	}
-	void RunInterpolateArray1D(
-			sakura_InterpolationMethod interpolation_method, size_t num_base,
-			size_t num_interpolated, size_t num_array,
+	void RunInterpolateArray1D(sakura_InterpolationMethod interpolation_method,
+			size_t num_base, size_t num_interpolated, size_t num_array,
 			sakura_Status expected_status, bool check_result, size_t iteration =
 					1) {
 		// sakura must be properly initialized
-		ASSERT_EQ(sakura_Status_kOK, initialize_result_)<< "sakura must be properly initialized!";
+		ASSERT_EQ(sakura_Status_kOK, initialize_result_)
+				<< "sakura must be properly initialized!";
 
 		// execute interpolation
 		double elapsed = 0.0;
 		for (size_t iter = 0; iter < iteration; ++iter) {
 			double start = sakura_GetCurrentTime();
-			sakura_Status result = T::Run(
-					interpolation_method, polynomial_order_, num_base,
-					x_base_, num_array, y_base_, num_interpolated, x_interpolated_, y_interpolated_);
+			sakura_Status result = T::Run(interpolation_method,
+					polynomial_order_, num_base, x_base_, num_array, y_base_, mask_base_,
+					num_interpolated, x_interpolated_, y_interpolated_, mask_interpolated_);
 			double end = sakura_GetCurrentTime();
 			elapsed += end - start;
-			InspectResult(expected_status, result, num_interpolated, num_array, check_result);
+			InspectResult(expected_status, result, num_interpolated, num_array,
+					check_result);
 		}
 		std::cout << "Elapsed time " << elapsed << " sec" << std::endl;
 	}
@@ -87,6 +89,9 @@ protected:
 		x_interpolated_ = nullptr;
 		y_interpolated_ = nullptr;
 		y_expected_ = nullptr;
+		mask_base_ = nullptr;
+		mask_interpolated_ = nullptr;
+		mask_expected_ = nullptr;
 	}
 	virtual void AllocateMemory(size_t num_base, size_t num_interpolated,
 			size_t num_array) {
@@ -113,6 +118,19 @@ protected:
 		storage_for_y_expected_.reset(new float[num_arena_yinterpolated]);
 		y_expected_ = sakura_AlignFloat(num_arena_yinterpolated,
 				storage_for_y_expected_.get(), num_interpolated * num_array);
+		storage_mask_.resize(3);
+		size_t margin_bool = sakura_alignment_ - 1;
+		size_t required_mask = num_base * num_array * sizeof(bool);
+		mask_base_ = reinterpret_cast<bool *>(sakura_AlignAny(
+				required_mask + margin_bool, storage_mask_[0].get(),
+				required_mask));
+		required_mask = num_interpolated * num_array * sizeof(bool);
+		mask_interpolated_= reinterpret_cast<bool *>(sakura_AlignAny(
+				required_mask + margin_bool, storage_mask_[1].get(),
+				required_mask));
+		mask_expected_ = reinterpret_cast<bool *>(sakura_AlignAny(
+				required_mask + margin_bool, storage_mask_[2].get(),
+				required_mask));
 
 		float mem_bytes = 4.0
 				* (num_arena_ybase + num_arena_yinterpolated
@@ -162,11 +180,15 @@ protected:
 	std::unique_ptr<double[]> storage_for_x_interpolated_;
 	std::unique_ptr<float[]> storage_for_y_interpolated_;
 	std::unique_ptr<float[]> storage_for_y_expected_;
+	std::vector<std::unique_ptr<bool[]> > storage_mask_;
 	double *x_base_;
 	float *y_base_;
 	double *x_interpolated_;
 	float *y_interpolated_;
 	float *y_expected_;
+	bool *mask_base_;
+	bool *mask_interpolated_;
+	bool *mask_expected_;
 };
 
 #endif /* INTERPOLATION_H_ */

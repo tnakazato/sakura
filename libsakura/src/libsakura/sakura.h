@@ -1363,9 +1363,11 @@ typedef enum {
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
 		double const base_position[/*num_base*/], size_t num_array,
-		float const base_data[/*num_base*num_array*/], size_t num_interpolated,
+		float const base_data[/*num_base*num_array*/],
+		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolate_position[/*num_interpolated*/],
-		float interpolated_data[/*num_interpolated*num_array*/]);
+		float interpolated_data[/*num_interpolated*num_array*/],
+		bool interpolated_mask[/*num_interpolated*num_array*/]);
 
 /**
  * @copybrief sakura_IntepolateXAxisFloat
@@ -1374,9 +1376,11 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
 		double const base_position[/*num_base*/], size_t num_array,
-		float const base_data[/*num_base*num_array*/], size_t num_interpolated,
+		float const base_data[/*num_base*num_array*/],
+		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolate_position[/*num_interpolated*/],
-		float interpolated_data[/*num_interpolated*num_array*/]);
+		float interpolated_data[/*num_interpolated*num_array*/],
+		bool interpolated_mask[/*num_interpolated*num_array*/]);
 
 /**
  * @~japanese
@@ -1756,7 +1760,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
 		size_t const num_data, float const data[/*num_data*/],
-		size_t const num_exclude_indices, size_t const exclude_indices[/*num_data*/],
+		size_t const num_exclude_indices,
+		size_t const exclude_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		double lsq_matrix[/*num_model_bases*num_model_bases*/],
@@ -2097,7 +2102,6 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
-
 /**
  * @~english
  * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
@@ -2183,7 +2187,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
 bool innerMostUntouched, size_t dims, size_t const elements[],
-	double const src[], double dst[]);
+		double const src[], double dst[]);
 
 /**
  * @~english
@@ -2199,8 +2203,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
 bool innerMostUntouched, size_t dims, size_t const elements[],
-	double const src[][2], double dst[][2]);
-
+		double const src[][2], double dst[][2]);
 
 #ifdef __cplusplus
 }
