@@ -738,11 +738,12 @@ private:
 
 template<class Interpolator, class Helper, class XDataType, class YDataType>
 void Interpolate1D(uint8_t polynomial_order, size_t num_base,
-		XDataType const base_position[/*num_x_base*/], size_t num_array,
-		YDataType const base_data[/*num_x_base*num_y*/],
-		size_t num_interpolated,
-		XDataType const interpolated_position[/*num_x_interpolated*/],
-		YDataType interpolated_data[/*num_x_interpolated*num_y*/]) {
+		XDataType const base_position[/*num_base*/], size_t num_array,
+		YDataType const base_data[/*num_base*num_array*/],
+		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
+		XDataType const interpolated_position[/*num_interpolated*/],
+		YDataType interpolated_data[/*num_interpolated*num_array*/],
+		bool interpolated_mask[/*num_interpolated*num_array*/]) {
 	assert(num_base > 0);
 	assert(num_array > 0);
 	assert(num_interpolated > 0);
@@ -750,6 +751,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	assert(base_data != nullptr);
 	assert(interpolated_position != nullptr);
 	assert(interpolated_data != nullptr);
+	assert(base_mask != nullptr);
+	assert(interpolated_mask != nullptr);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(base_position));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(base_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(interpolated_position));
@@ -828,13 +831,15 @@ void ExecuteInterpolate1D(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base,
 		XDataType const base_position[], size_t num_array,
-		YDataType const base_data[], size_t num_interpolated,
-		XDataType const interpolated_position[],
-		YDataType interpolated_data[]) {
+		YDataType const base_data[], bool const base_mask[],
+		size_t num_interpolated, XDataType const interpolated_position[],
+		YDataType interpolated_data[], bool interpolated_mask[]) {
 	typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
-			size_t, YDataType const *, size_t, XDataType const *, YDataType *);
+			size_t, YDataType const *, bool const *, size_t, XDataType const *,
+			YDataType *, bool *);
 	Interpolate1DFunc func = [](uint8_t, size_t, XDataType const *,
-			size_t, YDataType const *, size_t, XDataType const *, YDataType *) {
+			size_t, YDataType const *, bool const *, size_t,
+			XDataType const *, YDataType *, bool *) {
 		throw LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	};
 	switch (interpolation_method) {
@@ -868,15 +873,17 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		break;
 	}
 	(*func)(polynomial_order, num_base, base_position, num_array, base_data,
-			num_interpolated, interpolated_position, interpolated_data);
+			base_mask, num_interpolated, interpolated_position,
+			interpolated_data, interpolated_mask);
 }
 
 // basic check of arguments
 bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_interpolation_axis,
 		double const base[], size_t num_array, float const data_base[],
-		size_t num_interpolated, double const interpolated[],
-		float const data_interpolated[], LIBSAKURA_SYMBOL(
+		bool const mask_base[], size_t num_interpolated,
+		double const interpolated[], float const data_interpolated[],
+		bool const mask_interpolated[], LIBSAKURA_SYMBOL(
 				Status)*status) {
 
 	bool process_data = true;
@@ -922,7 +929,8 @@ bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 
 	// input arrays are null
 	if (base == nullptr || data_base == nullptr || interpolated == nullptr
-			|| data_interpolated == nullptr) {
+			|| data_interpolated == nullptr || mask_base == nullptr
+			|| mask_interpolated == nullptr) {
 		LOG4CXX_ERROR(logger, "input arrays are null");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
@@ -934,21 +942,24 @@ template<typename Func>
 LIBSAKURA_SYMBOL(Status) DoInterpolate(Func func,
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interpolation_method, uint8_t polynomial_order,
-		size_t num_base, double const base[/*num_x_base*/], size_t num_array,
-		float const data_base[/*num_x_base*num_y*/], size_t num_interpolated,
+		size_t num_base, double const base[/*num_base*/], size_t num_array,
+		float const data_base[/*num_base*num_array*/],
+		bool const mask_base[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolated[/*num_x_interpolated*/],
-		float data_interpolated[/*num_x_interpolated*num_y*/]) {
+		float data_interpolated[/*num_x_interpolated*num_y*/],
+		bool mask_interpolated[/*num_x_interpolated*num_y*/]) {
 	// check arguments
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
 	if (!CheckArguments(interpolation_method, polynomial_order, num_base, base,
-			num_array, data_base, num_interpolated, interpolated,
-			data_interpolated, &status)) {
+			num_array, data_base, mask_base, num_interpolated, interpolated,
+			data_interpolated, mask_interpolated, &status)) {
 		return status;
 	}
 
 	try {
 		func(interpolation_method, polynomial_order, num_base, base, num_array,
-				data_base, num_interpolated, interpolated, data_interpolated);
+				data_base, mask_base, num_interpolated, interpolated,
+				data_interpolated, mask_interpolated);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -995,8 +1006,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	return DoInterpolate(
 			ExecuteInterpolate1D<XInterpolatorHelper<double, float>, double,
 					float>, interpolation_method, polynomial_order, num_x_base,
-			x_base, num_y, data_base, num_x_interpolated, x_interpolated,
-			data_interpolated);
+			x_base, num_y, data_base, mask_base, num_x_interpolated,
+			x_interpolated, data_interpolated, mask_interpolated);
 
 }
 
@@ -1027,7 +1038,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	return DoInterpolate(
 			ExecuteInterpolate1D<YInterpolatorHelper<double, float>, double,
 					float>, interpolation_method, polynomial_order, num_y_base,
-			y_base, num_x, data_base, num_y_interpolated, y_interpolated,
-			data_interpolated);
+			y_base, num_x, data_base, mask_base, num_y_interpolated,
+			y_interpolated, data_interpolated, mask_interpolated);
 
 }
