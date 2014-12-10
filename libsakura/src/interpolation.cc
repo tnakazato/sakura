@@ -625,6 +625,67 @@ struct XInterpolatorHelper {
 	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
 	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
 
+	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
+			size_t iarray, XDataType const position[], YDataType const data[],
+			bool const mask[], bool is_ascending, XDataType x[],
+			YDataType y[]) {
+		assert(iarray < num_array);
+		size_t n = 0;
+		for (size_t i = 0; i < num_base; ++i) {
+			size_t index = i + iarray * num_base;
+			XDataType p;
+			YDataType d;
+			bool m;
+			if (is_ascending) {
+				p = position[i];
+				d = data[index];
+				m = mask[index];
+			} else {
+				p = position[num_base - 1 - i];
+				d = data[num_base - 1 - i + iarray * num_base];
+				m = mask[num_base - 1 - i + iarray * num_base];
+			}
+			if (m) {
+				x[n] = p;
+				y[n] = d;
+				++n;
+			}
+		}
+		return n;
+	}
+
+	static void MaskAll(size_t num_interpolated, size_t num_array,
+			size_t iarray, bool mask[]) {
+		assert(iarray < num_array);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			mask[num_interpolated * iarray + i] = false;
+		}
+	}
+
+	static void SubstituteSingleBaseDataPerArray(size_t num_interpolated,
+			size_t num_array, size_t iarray, YDataType value,
+			YDataType data[]) {
+		assert(iarray < num_array);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			data[num_interpolated * iarray + i] = value;
+		}
+	}
+
+	static void FillResult(size_t num_interpolated, size_t num_array,
+			size_t iarray, bool is_ascending, YDataType y1[],
+			YDataType data[]) {
+		assert(iarray < num_array);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			if (is_ascending) {
+				data[i + iarray * num_interpolated] = y1[i];
+			} else {
+				data[num_interpolated - 1 - i + num_interpolated * iarray] =
+						y1[i];
+			}
+		}
+
+	}
+
 	template<class DataType>
 	static inline void Reorder(size_t num_x, size_t num_y,
 			DataType const input_data[], DataType output_data[]) {
@@ -680,10 +741,74 @@ private:
 
 template<class XDataType, class YDataType>
 struct YInterpolatorHelper {
-	typedef NearestYInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-	typedef LinearYInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialYInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineYInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
+//	typedef NearestYInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
+//	typedef LinearYInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
+//	typedef PolynomialYInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
+//	typedef SplineYInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
+	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
+	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
+	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
+	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
+
+	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
+			size_t iarray, XDataType const position[], YDataType const data[],
+			bool const mask[], bool is_ascending, XDataType x[],
+			YDataType y[]) {
+		assert(iarray < num_array);
+		size_t n = 0;
+		for (size_t i = 0; i < num_base; ++i) {
+			size_t index = num_array * i + iarray;
+			XDataType p;
+			YDataType d;
+			bool m;
+			if (is_ascending) {
+				p = position[i];
+				d = data[index];
+				m = mask[index];
+			} else {
+				p = position[num_base - 1 - i];
+				d = data[num_array * (num_base - 1 - i) + iarray];
+				m = mask[num_array * (num_base - 1 - i) + iarray];
+			}
+			if (m) {
+				x[n] = p;
+				y[n] = d;
+				++n;
+			}
+		}
+		return n;
+	}
+
+	static void MaskAll(size_t num_interpolated, size_t num_array,
+			size_t iarray, bool mask[]) {
+		assert(iarray < num_array);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			mask[iarray + num_array * i] = false;
+		}
+	}
+
+	static void SubstituteSingleBaseDataPerArray(size_t num_interpolated,
+			size_t num_array, size_t iarray, YDataType value,
+			YDataType data[]) {
+		assert(iarray < num_array);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			data[iarray + num_array * i] = value;
+		}
+	}
+
+	static void FillResult(size_t num_interpolated, size_t num_array,
+			size_t iarray, bool is_ascending, YDataType y1[],
+			YDataType data[]) {
+		assert(iarray < num_array);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			if (is_ascending) {
+				data[iarray + i * num_array] = y1[i];
+			} else {
+				data[num_array * (num_interpolated - 1 - i) + iarray] = y1[i];
+			}
+		}
+
+	}
 
 	template<class DataType>
 	static inline void Reorder(size_t num_x, size_t num_y,
@@ -758,71 +883,85 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(interpolated_position));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(interpolated_data));
 
-	if (num_base == 1) {
-		// No need to interpolate, just substitute base_data
-		// to all elements in y_interpolated
-		Helper::SubstituteSingleBaseData(num_base, num_array, num_interpolated,
-				base_data, interpolated_data);
-		return;
-	}
+	// basic check
+	bool is_base_ascending = (base_position[num_base - 1] > base_position[0]);
+	bool is_interp_ascending = (interpolated_position[num_interpolated - 1]
+			> interpolated_position[0]);
 
-	std::vector<StorageAndAlignedPointer<XDataType> > xdatatype_holder(2);
-	StorageAndAlignedPointer<YDataType> ydatatype_holder;
-	GetAscendingArray<Helper, XDataType, XDataType>(num_base, base_position, 1,
-			base_position, &xdatatype_holder[0]);
-	GetAscendingArray<Helper, XDataType, YDataType>(num_base, base_position,
-			num_array, base_data, &ydatatype_holder);
-	GetAscendingArray<Helper, XDataType, XDataType>(num_interpolated,
-			interpolated_position, 1, interpolated_position,
-			&xdatatype_holder[1]);
-	XDataType const *base_position_work = xdatatype_holder[0].pointer;
-	YDataType const *base_data_work = ydatatype_holder.pointer;
-	XDataType const *interpolated_position_work = xdatatype_holder[1].pointer;
-
-	// Perform 1-dimensional interpolation
-	// Any preparation for interpolation should be done here
-	std::unique_ptr<typename Interpolator::WorkingData> wdata_storage(
-			Interpolator::PrepareForInterpolation(polynomial_order, num_base,
-					num_array, base_position_work, base_data_work));
-	typename Interpolator::WorkingData *work_data = wdata_storage.get();
-
-	// Locate each element in x_base against x_interpolated
-	StorageAndAlignedPointer<size_t> size_t_holder;
-	AllocateAndAlign<size_t>(num_base, &size_t_holder);
-	size_t *location_base = size_t_holder.pointer;
-	size_t num_location_base = Locate<XDataType>(num_interpolated, num_base,
-			interpolated_position_work, base_position_work, location_base);
-
-	// Outside of x_base[0]
-	Helper::SubstituteLeftMostData(location_base[0], num_base, num_array,
-			num_interpolated, base_data_work, interpolated_data);
-
-	// Between x_base[0] and x_base[num_x_base-1]
-	size_t offset = 0;
-	if (base_position_work[0] < interpolated_position_work[0]) {
-		for (size_t i = 1; i < num_base; ++i) {
-			if (base_position_work[offset + 1]
-					< interpolated_position_work[0]) {
-				offset++;
-			} else {
-				break;
-			}
+	// Working arrays
+	StorageAndAlignedPointer<XDataType> x0_storage, x1_storage;
+	StorageAndAlignedPointer<YDataType> y0_storage, y1_storage;
+	AllocateAndAlign(num_base, &x0_storage);
+	AllocateAndAlign(num_base, &y0_storage);
+	XDataType *x0 = x0_storage.pointer;
+	YDataType *y0 = y0_storage.pointer;
+	XDataType const *x1 = interpolated_position;
+	if (!is_interp_ascending) {
+		AllocateAndAlign(num_interpolated, &x1_storage);
+		x1 = x1_storage.pointer;
+		XDataType *_x = const_cast<XDataType *>(x1);
+		for (size_t i = 0; i < num_interpolated; ++i) {
+			_x[i] = interpolated_position[num_interpolated - 1 - i];
 		}
 	}
-	Interpolator::Interpolate1D(num_base, base_position_work, num_array,
-			base_data_work, num_interpolated, interpolated_position_work,
-			interpolated_data, num_location_base, location_base, offset,
-			work_data);
+	AllocateAndAlign(num_interpolated, &y1_storage);
+	YDataType *y1 = y1_storage.pointer;
 
-	// Outside of x_base[num_x_base-1]
-	Helper::SubstituteRightMostData(location_base[num_location_base - 1],
-			num_base, num_array, num_interpolated, base_data_work,
-			interpolated_data);
+	for (size_t i = 0; i < num_array; ++i) {
+		size_t n = Helper::FillDataAsAscending(num_base, num_array, i,
+				base_position, base_data, base_mask, is_base_ascending, x0, y0);
+		if (n == 0) {
+			// cannot perform interpolation, mask all data
+			Helper::MaskAll(num_interpolated, num_array, i, interpolated_mask);
+		} else if (n == 1) {
+			// no need to interpolate, just substitute single base data
+			// to all elements in interpolated data, keep input mask
+			Helper::SubstituteSingleBaseDataPerArray(num_interpolated,
+					num_array, i, y0[0], interpolated_data);
+		} else {
+			// perform interpolation, keep input mask
 
-	// swap output array
-	if (interpolated_position[0]
-			> interpolated_position[num_interpolated - 1]) {
-		Helper::SwapResult(num_array, num_interpolated, interpolated_data);
+			// Perform 1-dimensional interpolation
+			// Any preparation for interpolation should be done here
+			std::unique_ptr<typename Interpolator::WorkingData> wdata_storage(
+					Interpolator::PrepareForInterpolation(polynomial_order,
+							num_base, 1, x0, y0));
+			typename Interpolator::WorkingData *work_data = wdata_storage.get();
+
+			// Locate each element in x_base against x_interpolated
+			StorageAndAlignedPointer<size_t> size_t_holder;
+			AllocateAndAlign<size_t>(num_base, &size_t_holder);
+			size_t *location_base = size_t_holder.pointer;
+			size_t num_location_base = Locate<XDataType>(num_interpolated,
+					num_base, x1, x0, location_base);
+
+			// Outside of x_base[0]
+			Helper::SubstituteLeftMostData(location_base[0], num_base, 1,
+					num_interpolated, y0, y1);
+
+			// Between x_base[0] and x_base[num_x_base-1]
+			size_t offset = 0;
+			if (x0[0] < x1[0]) {
+				for (size_t i = 1; i < num_base; ++i) {
+					if (x0[offset + 1] < x1[0]) {
+						offset++;
+					} else {
+						break;
+					}
+				}
+			}
+			Interpolator::Interpolate1D(num_base, x0, 1, y0, num_interpolated,
+					x1, y1, num_location_base, location_base, offset,
+					work_data);
+
+			// Outside of x_base[num_x_base-1]
+			Helper::SubstituteRightMostData(
+					location_base[num_location_base - 1], num_base, 1,
+					num_interpolated, y0, y1);
+
+			Helper::FillResult(num_interpolated, num_array, i,
+					is_interp_ascending, y1, interpolated_data);
+		}
 	}
 }
 
@@ -878,7 +1017,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 }
 
 // basic check of arguments
-bool CheckArguments(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+bool CheckArguments(
+LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_interpolation_axis,
 		double const base[], size_t num_array, float const data_base[],
 		bool const mask_base[], size_t num_interpolated,

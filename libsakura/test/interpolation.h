@@ -74,8 +74,9 @@ protected:
 		for (size_t iter = 0; iter < iteration; ++iter) {
 			double start = sakura_GetCurrentTime();
 			sakura_Status result = T::Run(interpolation_method,
-					polynomial_order_, num_base, x_base_, num_array, y_base_, mask_base_,
-					num_interpolated, x_interpolated_, y_interpolated_, mask_interpolated_);
+					polynomial_order_, num_base, x_base_, num_array, y_base_,
+					mask_base_, num_interpolated, x_interpolated_,
+					y_interpolated_, mask_interpolated_);
 			double end = sakura_GetCurrentTime();
 			elapsed += end - start;
 			InspectResult(expected_status, result, num_interpolated, num_array,
@@ -97,6 +98,7 @@ protected:
 			size_t num_array) {
 		size_t margin_double = ((sakura_alignment_ - 1) / sizeof(double) + 1);
 		size_t margin_float = ((sakura_alignment_ - 1) / sizeof(float) + 1);
+		size_t margin = sakura_alignment_ - 1;
 		size_t num_arena_xbase = num_base + margin_double;
 		size_t num_arena_ybase = num_base * num_array + margin_float;
 		size_t num_arena_xinterpolated = num_interpolated + margin_double;
@@ -119,18 +121,27 @@ protected:
 		y_expected_ = sakura_AlignFloat(num_arena_yinterpolated,
 				storage_for_y_expected_.get(), num_interpolated * num_array);
 		storage_mask_.resize(3);
-		size_t margin_bool = sakura_alignment_ - 1;
+		size_t margin_bool = ((sakura_alignment_ - 1) / sizeof(bool) + 1);
 		size_t required_mask = num_base * num_array * sizeof(bool);
-		mask_base_ = reinterpret_cast<bool *>(sakura_AlignAny(
-				required_mask + margin_bool, storage_mask_[0].get(),
-				required_mask));
+		storage_mask_[0].reset(new bool[required_mask + margin_bool]);
+		mask_base_ =
+				reinterpret_cast<bool *>(sakura_AlignAny(
+						required_mask + margin,
+						reinterpret_cast<void *>(storage_mask_[0].get()),
+						required_mask));
 		required_mask = num_interpolated * num_array * sizeof(bool);
-		mask_interpolated_= reinterpret_cast<bool *>(sakura_AlignAny(
-				required_mask + margin_bool, storage_mask_[1].get(),
-				required_mask));
-		mask_expected_ = reinterpret_cast<bool *>(sakura_AlignAny(
-				required_mask + margin_bool, storage_mask_[2].get(),
-				required_mask));
+		storage_mask_[1].reset(new bool[required_mask + margin_bool]);
+		storage_mask_[2].reset(new bool[required_mask + margin_bool]);
+		mask_interpolated_ =
+				reinterpret_cast<bool *>(sakura_AlignAny(
+						required_mask + margin,
+						reinterpret_cast<void *>(storage_mask_[1].get()),
+						required_mask));
+		mask_expected_ =
+				reinterpret_cast<bool *>(sakura_AlignAny(
+						required_mask + margin,
+						reinterpret_cast<void *>(storage_mask_[2].get()),
+						required_mask));
 
 		float mem_bytes = 4.0
 				* (num_arena_ybase + num_arena_yinterpolated
@@ -140,10 +151,26 @@ protected:
 
 		// check alignment
 		ASSERT_TRUE(x_base_ != nullptr) << "x_base_ is null";
+		ASSERT_TRUE(y_base_ != nullptr) << "y_base_ is null";
+		ASSERT_TRUE(x_interpolated_ != nullptr) << "x_interpolated_ is null";
+		ASSERT_TRUE(y_interpolated_ != nullptr) << "y_interpolated_ is null";
+		ASSERT_TRUE(mask_base_ != nullptr) << "mask_base_ is null";
+		ASSERT_TRUE(mask_interpolated_ != nullptr)
+				<< "mask_interpoalted_ is null";
+
 		ASSERT_TRUE(sakura_IsAligned(x_base_)) << "x_base_ is not aligned";
 		ASSERT_TRUE(sakura_IsAligned(y_base_)) << "y_base_ is not aligned";
 		ASSERT_TRUE(sakura_IsAligned(y_interpolated_))
 				<< "y_interpolated_ is not aligned";
+
+		// mask is initialized so that all the elements are valid
+		for (size_t i = 0; i < num_base * num_array; ++i) {
+			mask_base_[i] = true;
+		}
+		for (size_t i = 0; i < num_interpolated * num_array; ++i) {
+			mask_interpolated_[i] = true;
+			mask_expected_[i] = true;
+		}
 	}
 
 	virtual void InspectResult(sakura_Status expected_status,
