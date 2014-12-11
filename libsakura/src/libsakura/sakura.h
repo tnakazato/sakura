@@ -2103,6 +2103,27 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @~japanese
+ * @brief 入力データに対して、モデル基底関数の線型結合で表されるもののうち最も良く合うものを与えられたベストフィット係数により求め、差し引く。
+ * @details
+ * @param[in] num_data 配列 @a data 、 @a out の要素数。
+ * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] num_coeff 配列 @a coeff の要素数。
+ * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_bases でなければならない。
+ * @n must-be-aligned
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @n must-be-aligned
+ * @param[out] out 出力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @return 終了ステータス
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(
+		size_t num_data, float const data[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
+		double const coeff[/*num_data*/], float out[/*num_data*/])
+				LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
  * @~english
  * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
  * as some FFT library expects.
