@@ -233,12 +233,6 @@ template<class InterpolatorImpl, class WorkData, class XDataType,
 		class YDataType>
 struct InterpolatorInterface {
 	typedef WorkData WorkingData;
-	static WorkingData * PrepareForInterpolation(uint8_t polynomial_order,
-			size_t num_base, size_t num_array, XDataType const base_position[],
-			YDataType const base_data[]) {
-		return WorkingData::Initialize(polynomial_order, num_base, num_array,
-				base_position, base_data);
-	}
 	static void Interpolate1D(size_t num_base, XDataType const base_position[],
 			size_t num_array, YDataType const base_data[],
 			size_t num_interpolated, XDataType const interpolated_position[],
@@ -865,6 +859,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		XDataType const interpolated_position[/*num_interpolated*/],
 		YDataType interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) {
+	typedef typename Interpolator::WorkingData WorkingData;
 	assert(num_base > 0);
 	assert(num_array > 0);
 	assert(num_interpolated > 0);
@@ -919,17 +914,16 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 
 			// Perform 1-dimensional interpolation
 			// Any preparation for interpolation should be done here
-			std::unique_ptr<typename Interpolator::WorkingData> wdata_storage(
-					Interpolator::PrepareForInterpolation(polynomial_order,
-							n, 1, x0, y0));
-			typename Interpolator::WorkingData *work_data = wdata_storage.get();
+			std::unique_ptr<WorkingData> wdata_storage(
+					WorkingData::Initialize(polynomial_order, n, 1, x0, y0));
+			WorkingData *work_data = wdata_storage.get();
 
 			// Locate each element in base_position against interpolated_position
 			StorageAndAlignedPointer<size_t> size_t_holder;
 			AllocateAndAlign<size_t>(n, &size_t_holder);
 			size_t *location_base = size_t_holder.pointer;
-			size_t num_location_base = Locate<XDataType>(num_interpolated,
-					n, x1, x0, location_base);
+			size_t num_location_base = Locate<XDataType>(num_interpolated, n,
+					x1, x0, location_base);
 
 			// Outside of base_position[0]
 			Helper::SubstituteLeftMostData(location_base[0], n, 1,
@@ -946,9 +940,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					}
 				}
 			}
-			Interpolator::Interpolate1D(n, x0, 1, y0, num_interpolated,
-					x1, y1, num_location_base, location_base, offset,
-					work_data);
+			Interpolator::Interpolate1D(n, x0, 1, y0, num_interpolated, x1, y1,
+					num_location_base, location_base, offset, work_data);
 
 			// Outside of base_position[num_base-1]
 			Helper::SubstituteRightMostData(
