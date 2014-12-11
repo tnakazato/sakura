@@ -34,19 +34,22 @@
 
 //#include "asap/CubicSplineInterpolator1D.h"
 
+#define TEST_INTERP_Y(name) TEST_F( InterpolateArray1DFloatTest, name)
+
 struct Runner {
 	static sakura_Status Run(sakura_InterpolationMethod method,
 			uint8_t polynomial_order, size_t num_base, double const x_base[],
-			size_t num_array, float const y_base[], bool const mask_base[], size_t num_interpolated,
-			double const x_interpolated[], float y_interpolated[], bool mask_interpolated[]) {
+			size_t num_array, float const y_base[], bool const mask_base[],
+			size_t num_interpolated, double const x_interpolated[],
+			float y_interpolated[], bool mask_interpolated[]) {
 		return sakura_InterpolateYAxisFloat(method, polynomial_order, num_base,
-				x_base, num_array, y_base, mask_base, num_interpolated, x_interpolated,
-				y_interpolated, mask_interpolated);
+				x_base, num_array, y_base, mask_base, num_interpolated,
+				x_interpolated, y_interpolated, mask_interpolated);
 	}
 };
 typedef InterpolateFloatTestBase<Runner> InterpolateArray1DFloatTest;
 
-TEST_F(InterpolateArray1DFloatTest, InvalidType) {
+TEST_INTERP_Y(InvalidType) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -62,7 +65,7 @@ TEST_F(InterpolateArray1DFloatTest, InvalidType) {
 			num_interpolated, num_array, sakura_Status_kInvalidArgument, false);
 }
 
-TEST_F(InterpolateArray1DFloatTest, ZeroLengthBaseArray) {
+TEST_INTERP_Y(ZeroLengthBaseArray) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 1;
@@ -75,7 +78,7 @@ TEST_F(InterpolateArray1DFloatTest, ZeroLengthBaseArray) {
 			num_interpolated, num_array, sakura_Status_kInvalidArgument, false);
 }
 
-TEST_F(InterpolateArray1DFloatTest, ZeroLengthInterpolatedArray) {
+TEST_INTERP_Y(ZeroLengthInterpolatedArray) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 1;
@@ -88,7 +91,7 @@ TEST_F(InterpolateArray1DFloatTest, ZeroLengthInterpolatedArray) {
 			num_array, sakura_Status_kOK, false);
 }
 
-TEST_F(InterpolateArray1DFloatTest, InputArrayNotAligned) {
+TEST_INTERP_Y(InputArrayNotAligned) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -102,7 +105,7 @@ TEST_F(InterpolateArray1DFloatTest, InputArrayNotAligned) {
 			false);
 }
 
-TEST_F(InterpolateArray1DFloatTest, SingleBase) {
+TEST_INTERP_Y(SingleBase) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 1;
@@ -118,7 +121,7 @@ TEST_F(InterpolateArray1DFloatTest, SingleBase) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, OutOfRangeLeft) {
+TEST_INTERP_Y(OutOfRangeLeft) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 2;
@@ -135,7 +138,7 @@ TEST_F(InterpolateArray1DFloatTest, OutOfRangeLeft) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, OutOfRangeRight) {
+TEST_INTERP_Y(OutOfRangeRight) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 2;
@@ -152,7 +155,35 @@ TEST_F(InterpolateArray1DFloatTest, OutOfRangeRight) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, Nearest) {
+TEST_INTERP_Y(AllDataMasked) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 5;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -0.5, -1.0, 0.2);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.1, 0.5,
+			0.9, 1.2);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, -0.5,
+			1.0, -0.5, 1.0, -0.5, -1.0, 0.2, -1.0, 0.2);
+
+	// mask all data
+	for (size_t i = 0; i < num_base * num_array; ++i) {
+		mask_base_[i] = false;
+	}
+
+	// expected mask is all false
+	for (size_t i = 0; i < num_interpolated * num_array; ++i) {
+		mask_expected_[i] = false;
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false, true);
+}
+
+TEST_INTERP_Y(Nearest) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -170,7 +201,7 @@ TEST_F(InterpolateArray1DFloatTest, Nearest) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, NearestOffset) {
+TEST_INTERP_Y(NearestOffset) {
 	// initial setup
 	size_t const num_base = 4;
 	size_t const num_interpolated = 5;
@@ -189,7 +220,7 @@ TEST_F(InterpolateArray1DFloatTest, NearestOffset) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, NearestDescending) {
+TEST_INTERP_Y(NearestDescending) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -207,7 +238,7 @@ TEST_F(InterpolateArray1DFloatTest, NearestDescending) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, NearestOpposite) {
+TEST_INTERP_Y(NearestOpposite) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 5;
@@ -225,7 +256,27 @@ TEST_F(InterpolateArray1DFloatTest, NearestOpposite) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, Linear) {
+TEST_INTERP_Y(NearestMask) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 5;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 0.5, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -0.5, 1.0e10, 1.0,
+			-1.0, 0.2);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, -1.0, 0.1, 0.5,
+			0.9, 1.2);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, -0.5,
+			1.0, -0.5, 1.0, 1.0, -1.0, 0.2, -1.0, 0.2);
+	mask_base_[1] = false;
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, false, true);
+}
+
+TEST_INTERP_Y(Linear) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -241,12 +292,8 @@ TEST_F(InterpolateArray1DFloatTest, Linear) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] < x_base_[1]) ? 0 : 1;
 		size_t right_index = left_index + 1;
@@ -265,7 +312,7 @@ TEST_F(InterpolateArray1DFloatTest, Linear) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, LinearOffset) {
+TEST_INTERP_Y(LinearOffset) {
 	// initial setup
 	size_t const num_base = 5;
 	size_t const num_interpolated = 13;
@@ -279,16 +326,11 @@ TEST_F(InterpolateArray1DFloatTest, LinearOffset) {
 	y_expected_[0] = 1.5;
 	y_expected_[1] = -0.5;
 	for (size_t i = 0; i < num_array; ++i) {
-		//y_expected_[i] = y_base_[i];
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[2];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[2], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] < x_base_[3]) ? 2 : 3;
 		size_t right_index = left_index + 1;
@@ -307,7 +349,7 @@ TEST_F(InterpolateArray1DFloatTest, LinearOffset) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, SimpleLinear) {
+TEST_INTERP_Y(SimpleLinear) {
 	// initial setup
 	size_t const num_base = 2;
 	size_t const num_interpolated = 1;
@@ -323,7 +365,7 @@ TEST_F(InterpolateArray1DFloatTest, SimpleLinear) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, LinearDescending) {
+TEST_INTERP_Y(LinearDescending) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -338,12 +380,8 @@ TEST_F(InterpolateArray1DFloatTest, LinearDescending) {
 		y_expected_[i] = y_base_[(num_base - 1) * num_array + i];
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[0] - x_base_[num_base - 1];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[num_base - 1] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[num_base - 1], x_base_[0],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] > x_base_[1]) ? 0 : 1;
 		size_t right_index = left_index + 1;
@@ -362,7 +400,7 @@ TEST_F(InterpolateArray1DFloatTest, LinearDescending) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, LinearOpposite) {
+TEST_INTERP_Y(LinearOpposite) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -378,12 +416,8 @@ TEST_F(InterpolateArray1DFloatTest, LinearOpposite) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] > x_base_[1]) ? 0 : 1;
 		size_t right_index = left_index + 1;
@@ -402,7 +436,99 @@ TEST_F(InterpolateArray1DFloatTest, LinearOpposite) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder0) {
+TEST_INTERP_Y(LinearMask) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 0.0, -1.0, -1.0e10,
+			0.0, -0.2);
+	mask_base_[3] = false;
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	for (size_t i = 0; i < num_array; ++i) {
+		y_expected_[i] = y_base_[i];
+		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
+				- 1) * num_array + i];
+	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 0.0,
+			1.0, 0.0, 0.6, -0.02, 0.2, -0.04, -0.2, -0.06, -0.6, -0.08, -1.0,
+			-0.1, -0.8, -0.12, -0.6, -0.14, -0.4, -0.16, -0.2, -0.18, 0.0, -0.2,
+			0.0, -0.2);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true, true);
+}
+
+TEST_INTERP_Y(LinearMaskEdge) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0e10, 0.0, -1.0, 0.5,
+			0.0, -1.0e10);
+	mask_base_[0] = false;
+	mask_base_[5] = false;
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, -1.0, 0.0,
+			-1.0, 0.0, -1.0, 0.1, -1.0, 0.2, -1.0, 0.3, -1.0, 0.4, -1.0, 0.5,
+			-0.8, 0.5, -0.6, 0.5, -0.4, 0.5, -0.2, 0.5, 0.0, 0.5, 0.0, 0.5);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true, true);
+}
+
+TEST_INTERP_Y(LinearMaskArray) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 13;
+	size_t const num_array = 2;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 0.0, -1.0, -1.0e10,
+			0.0, -0.2);
+	mask_base_[1] = false;
+	mask_base_[3] = false;
+	mask_base_[5] = false;
+	for (size_t i = 1; i < num_interpolated * num_array; i += num_array) {
+		mask_expected_[i] = false;
+	}
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[num_interpolated - 1] = 10.0;
+	for (size_t i = 0; i < num_array; ++i) {
+		y_expected_[i] = y_base_[i];
+		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
+				- 1) * num_array + i];
+	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 0.0,
+			1.0, 0.0, 0.6, -0.02, 0.2, -0.04, -0.2, -0.06, -0.6, -0.08, -1.0,
+			-0.1, -0.8, -0.12, -0.6, -0.14, -0.4, -0.16, -0.2, -0.18, 0.0, -0.2,
+			0.0, -0.2);
+
+	// workaround for avoiding unexpected test failure
+	for (size_t i = 0; i < num_interpolated * num_array; ++i) {
+		y_interpolated_[i] = y_expected_[i];
+	}
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true, true);
+}
+
+TEST_INTERP_Y(PolynomialOrder0) {
 	// initial setup
 	polynomial_order_ = 0;
 	size_t const num_base = 2;
@@ -421,7 +547,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder0) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
+TEST_INTERP_Y(PolynomialOrder1) {
 	// initial setup
 	polynomial_order_ = 1;
 	size_t const num_base = 2;
@@ -438,12 +564,9 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
 	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t j = 1; j < num_interpolated - 1; ++j) {
 		double fraction = (x_interpolated_[j] - x_base_[0]) / dx;
 		size_t start = j * num_array;
@@ -458,7 +581,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Offset) {
+TEST_INTERP_Y(PolynomialOrder1Offset) {
 	// initial setup
 	polynomial_order_ = 1;
 	size_t const num_base = 5;
@@ -477,12 +600,8 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Offset) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[2];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[2], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] < x_base_[3]) ? 2 : 3;
 		size_t right_index = left_index + 1;
@@ -501,7 +620,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Offset) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2Full) {
+TEST_INTERP_Y(PolynomialOrder2Full) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -519,12 +638,8 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2Full) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t offset = i * num_array;
 		// expected value for first array can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
@@ -540,7 +655,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2Full) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullDescending) {
+TEST_INTERP_Y(PolynomialOrder2FullDescending) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -557,12 +672,8 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullDescending) {
 		y_expected_[i] = y_base_[(num_base - 1) * num_array + i];
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[0] - x_base_[num_base - 1];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[num_base - 1] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[num_base - 1], x_base_[0],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t offset = i * num_array;
 		// expected value for first array can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
@@ -578,7 +689,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullDescending) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullOpposite) {
+TEST_INTERP_Y(PolynomialOrder2FullOpposite) {
 	// initial setup
 	polynomial_order_ = 2;
 	size_t const num_base = 3;
@@ -596,12 +707,8 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullOpposite) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t offset = i * num_array;
 		// expected value for first array can be calculated by y = 1.5 x^2 - 3.5 x + 1.0
@@ -617,7 +724,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder2FullOpposite) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Sub) {
+TEST_INTERP_Y(PolynomialOrder1Sub) {
 	// initial setup
 	polynomial_order_ = 1;
 	size_t const num_base = 3;
@@ -635,12 +742,8 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Sub) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = 10;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 
 	for (size_t j = 1; j < num_interpolated - 1; ++j) {
 		// polynomial interpolation is a linear interpolation in the sub-region
@@ -661,7 +764,7 @@ TEST_F(InterpolateArray1DFloatTest, PolynomialOrder1Sub) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, Spline) {
+TEST_INTERP_Y(Spline) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -670,13 +773,9 @@ TEST_F(InterpolateArray1DFloatTest, Spline) {
 	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0);
 	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 5.0, -1.0, 6.0,
 			0.0, 9.5);
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
 	x_interpolated_[0] = -1.0;
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	x_interpolated_[num_interpolated - 1] = 10.0;
 	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 5.0,
 			1.0, 5.0, 0.456, 5.08, -0.052, 5.19, -0.488, 5.36, -0.816, 5.62,
@@ -688,7 +787,7 @@ TEST_F(InterpolateArray1DFloatTest, Spline) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, SplineOffset) {
+TEST_INTERP_Y(SplineOffset) {
 	// initial setup
 	size_t const num_base = 5;
 	size_t const num_interpolated = 13;
@@ -706,12 +805,8 @@ TEST_F(InterpolateArray1DFloatTest, SplineOffset) {
 		y_expected_[(num_interpolated - 1) * num_array + i] = y_base_[(num_base
 				- 1) * num_array + i];
 	}
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[2];
-	double increment = dx / static_cast<double>(num_segments);
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[2] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[2], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	for (size_t i = 1; i < num_interpolated - 1; ++i) {
 		size_t left_index = (x_interpolated_[i] < x_base_[3]) ? 2 : 3;
 		size_t right_index = left_index + 1;
@@ -730,7 +825,7 @@ TEST_F(InterpolateArray1DFloatTest, SplineOffset) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, SplineDescending) {
+TEST_INTERP_Y(SplineDescending) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -739,14 +834,10 @@ TEST_F(InterpolateArray1DFloatTest, SplineDescending) {
 	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
 	InitializeFloatArray(num_base * num_array, y_base_, 0.0, 9.5, -1.0, 6.0,
 			1.0, 5.0);
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[0] - x_base_[num_base - 1];
-	double increment = dx / static_cast<double>(num_segments);
 	x_interpolated_[0] = -1.0;
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[num_base - 1] + (i - 1) * increment;
-	}
 	x_interpolated_[num_interpolated - 1] = 10.0;
+	EquallySpacedGrid(num_interpolated - 2, x_base_[num_base - 1], x_base_[0],
+			&x_interpolated_[1]);
 	InitializeFloatArray(num_interpolated * num_array, y_expected_, 1.0, 5.0,
 			1.0, 5.0, 0.456, 5.08, -0.052, 5.19, -0.488, 5.36, -0.816, 5.62,
 			-1.0, 6.0, -1.016, 6.52, -0.888, 7.16, -0.652, 7.89, -0.344, 8.68,
@@ -757,7 +848,7 @@ TEST_F(InterpolateArray1DFloatTest, SplineDescending) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, SplineOpposite) {
+TEST_INTERP_Y(SplineOpposite) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -766,13 +857,9 @@ TEST_F(InterpolateArray1DFloatTest, SplineOpposite) {
 	InitializeDoubleArray(num_base, x_base_, 2.0, 1.0, 0.0);
 	InitializeFloatArray(num_base * num_array, y_base_, 0.0, 9.5, -1.0, 6.0,
 			1.0, 5.0);
-	size_t const num_segments = num_interpolated - 3;
-	double dx = x_base_[num_base - 1] - x_base_[0];
-	double increment = dx / static_cast<double>(num_segments);
 	x_interpolated_[0] = 10.0;
-	for (size_t i = 1; i < num_interpolated - 1; ++i) {
-		x_interpolated_[i] = x_base_[0] + (i - 1) * increment;
-	}
+	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
+			&x_interpolated_[1]);
 	x_interpolated_[num_interpolated - 1] = -1.0;
 	InitializeFloatArray(num_interpolated * num_array, y_expected_, 0.0, 9.5,
 			0.0, 9.5, -0.344, 8.68, -0.652, 7.89, -0.888, 7.16, -1.016, 6.52,
@@ -784,7 +871,7 @@ TEST_F(InterpolateArray1DFloatTest, SplineOpposite) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_F(InterpolateArray1DFloatTest, SingleBasePerformance) {
+TEST_INTERP_Y(SingleBasePerformance) {
 	// initial setup
 	size_t const num_base = 1;
 	size_t const num_interpolated = 4096;
@@ -795,35 +882,24 @@ TEST_F(InterpolateArray1DFloatTest, SingleBasePerformance) {
 	for (size_t i = 0; i < num_base * num_array; ++i) {
 		y_base_[i] = static_cast<float>(i);
 	}
-	for (size_t i = 0; i < num_interpolated; ++i) {
-		x_interpolated_[i] = -1.0
-				+ static_cast<double>(i) * 2.0
-						/ static_cast<double>(num_interpolated);
-	}
+	EquallySpacedGrid(num_interpolated, -1.0, 1.0, x_interpolated_);
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
-			num_interpolated, num_array, sakura_Status_kOK, false, iter);
+			num_interpolated, num_array, sakura_Status_kOK, false, false, iter);
 }
 
 #define PERFORMANCE_TEST(NAME,METHOD,NUM_BASE,NUM_INTERP,NUM_ARRAY,LEFT,RIGHT,START_POS,INCREMENT,ITER) \
-	TEST_F(InterpolateArray1DFloatTest, NAME) { \
+	TEST_INTERP_Y(NAME) { \
 	polynomial_order_ = 2; \
-	AllocateMemory(NUM_BASE, NUM_INTERP, NUM_ARRAY); \
-	double dx_base = (RIGHT - LEFT) / static_cast<double>(NUM_BASE - 1); \
-	for (size_t i = 0; i < NUM_BASE; ++i) { \
-		x_base_[i] = LEFT + dx_base * static_cast<double>(i); \
-	} \
-	for (size_t i = 0; i < NUM_BASE * NUM_ARRAY; ++i) { \
+	AllocateMemory((NUM_BASE), (NUM_INTERP), (NUM_ARRAY)); \
+	EquallySpacedGrid((NUM_BASE), (LEFT), (RIGHT), x_base_); \
+	for (size_t i = 0; i < (NUM_BASE) * (NUM_ARRAY); ++i) { \
 		y_base_[i] = static_cast<float>(i); \
 	} \
-	double dx = INCREMENT \
-			/ static_cast<double>(NUM_INTERP - 1); \
-	for (size_t i = 0; i < NUM_INTERP; ++i) { \
-		x_interpolated_[i] = START_POS + dx * static_cast<double>(i); \
-	} \
+	EquallySpacedGrid((NUM_INTERP), (START_POS), (START_POS) + (INCREMENT), x_interpolated_); \
 	RunInterpolateArray1D(METHOD, NUM_BASE, \
-			NUM_INTERP, NUM_ARRAY, sakura_Status_kOK, false, ITER); \
+			NUM_INTERP, NUM_ARRAY, sakura_Status_kOK, false, false, ITER); \
 }
 
 // Nearest
@@ -893,7 +969,7 @@ PERFORMANCE_TEST(SplineOpppsitePerformance, sakura_InterpolationMethod_kSpline,
 // 4. Change Interpolator1D::createLocator() so that it always uses
 //    BisectionLocator.
 //
-//TEST_F(InterpolateArray1DFloatTest, AsapSplinePerformance) {
+//TEST_INTERP_Y(AsapSplinePerformance) {
 //	// initial setup
 //	size_t const num_base = 3;
 //	size_t const num_interpolated = 4096;

@@ -33,7 +33,7 @@
 #include <stdarg.h>
 #include <vector>
 
-void InitializeDoubleArray(size_t num_array, double array[], ...) {
+inline void InitializeDoubleArray(size_t num_array, double array[], ...) {
 	va_list arguments_list;
 	va_start(arguments_list, array);
 	for (size_t i = 0; i < num_array; ++i) {
@@ -41,11 +41,20 @@ void InitializeDoubleArray(size_t num_array, double array[], ...) {
 	}
 }
 
-void InitializeFloatArray(size_t num_array, float array[], ...) {
+inline void InitializeFloatArray(size_t num_array, float array[], ...) {
 	va_list arguments_list;
 	va_start(arguments_list, array);
 	for (size_t i = 0; i < num_array; ++i) {
 		array[i] = static_cast<float>(va_arg(arguments_list, double));
+	}
+}
+
+template<typename T>
+inline void EquallySpacedGrid(size_t const num_grid, T const start, T const end,
+		T grid[]) {
+	T const incr = (end - start) / static_cast<T>(num_grid - 1);
+	for (size_t i = 0; i < num_grid; ++i) {
+		grid[i] = start + i * incr;
 	}
 }
 
