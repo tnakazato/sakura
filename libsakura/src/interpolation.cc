@@ -620,10 +620,10 @@ struct SplineYInterpolatorImpl: public InterpolatorInterface<
 
 template<class XDataType, class YDataType>
 struct XInterpolatorHelper {
-	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
+//	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
+//	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
+//	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
+//	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
 
 	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
 			size_t iarray, XDataType const position[], YDataType const data[],
@@ -745,10 +745,6 @@ struct YInterpolatorHelper {
 //	typedef LinearYInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
 //	typedef PolynomialYInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
 //	typedef SplineYInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
-	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
 
 	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
 			size_t iarray, XDataType const position[], YDataType const data[],
@@ -925,24 +921,24 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			// Any preparation for interpolation should be done here
 			std::unique_ptr<typename Interpolator::WorkingData> wdata_storage(
 					Interpolator::PrepareForInterpolation(polynomial_order,
-							num_base, 1, x0, y0));
+							n, 1, x0, y0));
 			typename Interpolator::WorkingData *work_data = wdata_storage.get();
 
-			// Locate each element in x_base against x_interpolated
+			// Locate each element in base_position against interpolated_position
 			StorageAndAlignedPointer<size_t> size_t_holder;
-			AllocateAndAlign<size_t>(num_base, &size_t_holder);
+			AllocateAndAlign<size_t>(n, &size_t_holder);
 			size_t *location_base = size_t_holder.pointer;
 			size_t num_location_base = Locate<XDataType>(num_interpolated,
-					num_base, x1, x0, location_base);
+					n, x1, x0, location_base);
 
-			// Outside of x_base[0]
-			Helper::SubstituteLeftMostData(location_base[0], num_base, 1,
+			// Outside of base_position[0]
+			Helper::SubstituteLeftMostData(location_base[0], n, 1,
 					num_interpolated, y0, y1);
 
-			// Between x_base[0] and x_base[num_x_base-1]
+			// Between base_position[0] and base_position[num_base-1]
 			size_t offset = 0;
 			if (x0[0] < x1[0]) {
-				for (size_t i = 1; i < num_base; ++i) {
+				for (size_t i = 1; i < n; ++i) {
 					if (x0[offset + 1] < x1[0]) {
 						offset++;
 					} else {
@@ -950,13 +946,13 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					}
 				}
 			}
-			Interpolator::Interpolate1D(num_base, x0, 1, y0, num_interpolated,
+			Interpolator::Interpolate1D(n, x0, 1, y0, num_interpolated,
 					x1, y1, num_location_base, location_base, offset,
 					work_data);
 
-			// Outside of x_base[num_x_base-1]
+			// Outside of base_position[num_base-1]
 			Helper::SubstituteRightMostData(
-					location_base[num_location_base - 1], num_base, 1,
+					location_base[num_location_base - 1], n, 1,
 					num_interpolated, y0, y1);
 
 			Helper::FillResult(num_interpolated, num_array, i,
@@ -973,6 +969,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		YDataType const base_data[], bool const base_mask[],
 		size_t num_interpolated, XDataType const interpolated_position[],
 		YDataType interpolated_data[], bool interpolated_mask[]) {
+	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
+	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
+	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
+	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
 	typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
 			size_t, YDataType const *, bool const *, size_t, XDataType const *,
 			YDataType *, bool *);
@@ -983,29 +983,27 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	};
 	switch (interpolation_method) {
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
-		func = Interpolate1D<typename InterpolatorHelper::NearestInterpolator,
-				InterpolatorHelper, XDataType, YDataType>;
+		func = Interpolate1D<NearestInterpolator, InterpolatorHelper, XDataType,
+				YDataType>;
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
-		func = Interpolate1D<typename InterpolatorHelper::LinearInterpolator,
-				InterpolatorHelper, XDataType, YDataType>;
+		func = Interpolate1D<LinearInterpolator, InterpolatorHelper, XDataType,
+				YDataType>;
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
 		if (polynomial_order == 0) {
 			// This is special case: 0-th polynomial interpolation
 			// acts like nearest interpolation
-			func = Interpolate1D<
-					typename InterpolatorHelper::NearestInterpolator,
-					InterpolatorHelper, XDataType, YDataType>;
+			func = Interpolate1D<NearestInterpolator, InterpolatorHelper,
+					XDataType, YDataType>;
 		} else {
-			func = Interpolate1D<
-					typename InterpolatorHelper::PolynomialInterpolator,
-					InterpolatorHelper, XDataType, YDataType>;
+			func = Interpolate1D<PolynomialInterpolator, InterpolatorHelper,
+					XDataType, YDataType>;
 		}
 		break;
 	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
-		func = Interpolate1D<typename InterpolatorHelper::SplineInterpolator,
-				InterpolatorHelper, XDataType, YDataType>;
+		func = Interpolate1D<SplineInterpolator, InterpolatorHelper, XDataType,
+				YDataType>;
 		break;
 	default:
 		// invalid interpolation method type
