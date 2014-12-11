@@ -700,9 +700,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(
-		size_t num_data, float const data[],LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t num_coeff,double const coeff[], float out[]) {
-
+		size_t num_data, float const data[],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
+		double const coeff[], float out[]) {
 
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
