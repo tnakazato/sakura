@@ -879,6 +879,11 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	bool is_interp_ascending = (interpolated_position[num_interpolated - 1]
 			> interpolated_position[0]);
 
+	// Initialize interpolated_mask to true
+	for (size_t i = 0; i < num_interpolated * num_array; ++i) {
+		interpolated_mask[i] = true;
+	}
+
 	// Working arrays
 	StorageAndAlignedPointer<XDataType> x0_storage, x1_storage;
 	StorageAndAlignedPointer<YDataType> y0_storage, y1_storage;
