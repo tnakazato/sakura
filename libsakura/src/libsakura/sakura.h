@@ -1993,7 +1993,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context)
+		size_t const num_data,
+		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -2010,7 +2011,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
-LIBSAKURA_SYMBOL(BaselineContext) *context);
+		struct LIBSAKURA_SYMBOL(BaselineContext) *context);
 
 /**
  * @~japanese
@@ -2047,7 +2048,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
@@ -2109,7 +2110,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
@@ -2196,9 +2197,9 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @return 終了ステータス
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(
 		size_t num_data, float const data[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
-		double const coeff[/*num_data*/], float out[/*num_data*/])
-				LIBSAKURA_WARN_UNUSED_RESULT;
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t num_coeff, double const coeff[/*num_data*/],
+		float out[/*num_data*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
