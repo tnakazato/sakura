@@ -63,8 +63,8 @@ protected:
 	}
 	void RunInterpolateArray1D(sakura_InterpolationMethod interpolation_method,
 			size_t num_base, size_t num_interpolated, size_t num_array,
-			sakura_Status expected_status, bool check_result, size_t iteration =
-					1) {
+			sakura_Status expected_status, bool check_result, bool check_mask =
+					false, size_t iteration = 1) {
 		// sakura must be properly initialized
 		ASSERT_EQ(sakura_Status_kOK, initialize_result_)
 				<< "sakura must be properly initialized!";
@@ -80,7 +80,7 @@ protected:
 			double end = sakura_GetCurrentTime();
 			elapsed += end - start;
 			InspectResult(expected_status, result, num_interpolated, num_array,
-					check_result);
+					check_result, check_mask);
 		}
 		std::cout << "Elapsed time " << elapsed << " sec" << std::endl;
 	}
@@ -125,21 +125,18 @@ protected:
 		size_t required_mask = num_base * num_array * sizeof(bool);
 		storage_mask_[0].reset(new bool[required_mask + margin_bool]);
 		mask_base_ =
-				reinterpret_cast<bool *>(sakura_AlignAny(
-						required_mask + margin,
+				reinterpret_cast<bool *>(sakura_AlignAny(required_mask + margin,
 						reinterpret_cast<void *>(storage_mask_[0].get()),
 						required_mask));
 		required_mask = num_interpolated * num_array * sizeof(bool);
 		storage_mask_[1].reset(new bool[required_mask + margin_bool]);
 		storage_mask_[2].reset(new bool[required_mask + margin_bool]);
 		mask_interpolated_ =
-				reinterpret_cast<bool *>(sakura_AlignAny(
-						required_mask + margin,
+				reinterpret_cast<bool *>(sakura_AlignAny(required_mask + margin,
 						reinterpret_cast<void *>(storage_mask_[1].get()),
 						required_mask));
 		mask_expected_ =
-				reinterpret_cast<bool *>(sakura_AlignAny(
-						required_mask + margin,
+				reinterpret_cast<bool *>(sakura_AlignAny(required_mask + margin,
 						reinterpret_cast<void *>(storage_mask_[2].get()),
 						required_mask));
 
@@ -175,7 +172,7 @@ protected:
 
 	virtual void InspectResult(sakura_Status expected_status,
 			sakura_Status result_status, size_t num_interpolated,
-			size_t num_array, bool check_result) {
+			size_t num_array, bool check_result, bool check_mask) {
 		// Should return InvalidArgument status
 		std::string message =
 				(expected_status == sakura_Status_kOK) ?
@@ -194,6 +191,19 @@ protected:
 						<< index << ": " << y_expected_[index] << ", "
 						<< y_interpolated_[index];
 			}
+		}
+		// Mask check
+		if (check_mask && (expected_status == result_status)) {
+			for (size_t index = 0; index < num_interpolated * num_array;
+					++index) {
+				std::cout << "Expected mask at index " << index << ": "
+						<< mask_expected_[index] << std::endl;
+				EXPECT_EQ(mask_expected_[index], mask_interpolated_[index])
+						<< "interpolated mask differs from expected value at "
+						<< index << ": " << mask_expected_[index] << ", "
+						<< mask_interpolated_[index];
+			}
+
 		}
 
 	}
@@ -217,5 +227,6 @@ protected:
 	bool *mask_interpolated_;
 	bool *mask_expected_;
 };
+
 
 #endif /* INTERPOLATION_H_ */
