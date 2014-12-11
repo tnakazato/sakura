@@ -1265,10 +1265,15 @@ typedef enum {
  * @details 長さ @a num_base の1次元配列 @a base_position と 長さ @a num_base x @a num_array の1次元
  * 配列 @a base_data で定義される数値データ列をもとにして1次元の補間を行う。
  * @a base_data に @a num_array 個のデータを1次元配列として連結し、一括で補間することができる。
+ * @a base_data の各要素が正常値か不正な値かをブール値のマスク @a base_mask で指定することができる。
+ * マスク値がtrueならば正常値、falseなら不正な値として扱われ、不正な値は補間処理からは除外される。
  *
  * 補間によって値を得たい点の位置のリストを長さ　@a num_interpolated の配列 @a interpolate_position に
  * 渡すと、補間結果が長さ @a num_interpolated x @a num_array の配列 @a interpolated_data に格納される。
  * 外挿は行わない（データ点が片側にしかない場合にはそのデータ点の値が出力配列 @a interpolated_data にセットされる）。
+ * @a interpolated_data に対応する出力マスク配列が @a interpolated_mask である。マスク値がfalseであるような
+ * 要素に対応する @a interpolated_data の値は不正であるとみなされる（信用してはいけない）。
+ * 出力マスク値がfalseにセットされるケースとしては、必要な入力データが全て不正な値で補間が実行できない場合がある。
  *
  * 戻り値は終了ステータスである。正常終了の場合、
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
@@ -1327,12 +1332,20 @@ typedef enum {
  * @param[in] base_data 補間のためのデータ列。
  * 要素数は@a num_base × @a num_array でなければならない。
  * must-be-aligned
+ * @param[in] base_mask @a base_data に対応するマスク。
+ * 要素数は@a num_base × @a num_array でなければならない。
+ * マスク値がfalseである要素に対応する @a base_data の値は補間に使われない。
+ * must-be-aligned
  * @param[in] num_interpolated 補間したいデータ点の数。
  * @param[in] interpolate_position 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
  * @a interpolate_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
  * @param[out] interpolated_data 補間結果。
+ * 要素数は@a num_interpolated × @a num_array でなければならない。
+ * must-be-aligned
+ * @param[out] interpolated_mask 補間結果のマスク。falseの要素に対応する
+ * @a interpolated_data の値は不正である（信用してはいけない）。
  * 要素数は@a num_interpolated × @a num_array でなければならない。
  * must-be-aligned
  * @return 終了ステータス。
