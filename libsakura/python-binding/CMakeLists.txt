@@ -59,7 +59,7 @@ option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 #set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall")
+set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall -fPIC")
 if(APPLE)
     set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ -arch x86_64 -Wall")
 endif(APPLE)
