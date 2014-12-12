@@ -501,18 +501,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*best_fit_model) * num_data, &best_fit_model));
-	float *residual_data = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_residual_data(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*residual_data) * num_data, &residual_data));
 
 	try {
 		AddMulMatrix(baseline_context->num_bases, coeff, num_data, basis,
 				best_fit_model);
-		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
-		for (size_t i = 0; i < num_data; ++i) {
-			out[i] = residual_data[i];
-		}
+		OperateFloatSubtraction(num_data, data, best_fit_model, out);
 	} catch (...) {
 		throw;
 	}
@@ -712,7 +705,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data < context->num_basis_data)
+	if (num_data < context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_coeff != context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
