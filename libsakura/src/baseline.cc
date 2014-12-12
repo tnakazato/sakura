@@ -330,6 +330,21 @@ inline std::string GetNotEnoughDataMessage(
 	return ss.str();
 }
 
+inline void GetBestFitModelAndResidual(size_t num_data, float const *data,
+LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
+		double const *coeff, float *best_fit_model,
+		float *residual_data) {
+
+		AddMulMatrix(baseline_context->num_bases, coeff, num_data, baseline_context->basis_data,
+				best_fit_model);
+		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
+}
+
+inline size_t GetNumBases(
+		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context) {
+	return baseline_context->num_bases;
+}
+
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
@@ -344,7 +359,6 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	auto mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
-	auto basis = AssumeAligned(baseline_context->basis_data);
 
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
@@ -425,10 +439,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 						"failed in SolveSimultaneousEquationsByLU.");
 			}
 
-			AddMulMatrix(baseline_context->num_bases, coeff, num_data, basis,
-					best_fit_model);
-			OperateFloatSubtraction(num_data, data, best_fit_model,
-					residual_data);
+			GetBestFitModelAndResidual(num_data, data, baseline_context,
+					num_coeff, coeff, best_fit_model, residual_data);
 
 			LIBSAKURA_SYMBOL(StatisticsResult) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
@@ -491,11 +503,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(baseline_context->basis_data));
 	auto data = AssumeAligned(data_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
-	auto basis = AssumeAligned(baseline_context->basis_data);
 
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
@@ -503,9 +513,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
 					sizeof(*best_fit_model) * num_data, &best_fit_model));
 
 	try {
-		AddMulMatrix(baseline_context->num_bases, coeff, num_data, basis,
-				best_fit_model);
-		OperateFloatSubtraction(num_data, data, best_fit_model, out);
+		GetBestFitModelAndResidual(num_data, data, baseline_context,
+				num_coeff, coeff, best_fit_model, out);
 	} catch (...) {
 		throw;
 	}
