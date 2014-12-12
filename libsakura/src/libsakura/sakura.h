@@ -1352,61 +1352,7 @@ typedef enum {
  *
  * @~english
  * @brief Perform one-dimensional interpolation.
- * @details It performs one-dimensional interpolation based on two input arrays @a base_position
- * and @a base_data. Size of input array is @a num_base for @a base_position and @a num_interpolated
- * times @a num_array for @a base_data, where @a num_array is a number of arrays that are passed to the
- * function so that interpolation on multiple arrays can be performed simultaneously.
- * One can set boolean mask for @a base_data using @a base_mask, which has same array shape as
- * @a base_data. Mask value is true if data is valid while the value is false if the data is invalid.
- * Invalid data will be excluded from interpolation.
- *
- * List of locations where interpolated value is evaluated have to be specified via @a interpolate_position
- * whose length is @a num_interpolated. Interpolation result on each point specified by
- * @a interpolate_position is stored to @a interpolated_data. No extrapolation will be performed. Instead,
- * out of range points are filled by the value of nearest points.
- * Output boolean mask is @a interpolated_mask. Data will be invalid if corresponding mask is false, i.e.,
- * the value is just a nominal one but a result of actual interpolation. The mask will be false when
- * interpolation is skipped due to missing enough valid data.
- *
- * The function returns result status. In the successful run, returned value is
- * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink while appropriate
- * error status will be returned for failure:
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * for invalid input arguments,
- * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
- * for memory allocation error for internal variables, and
- * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
- * for other unknown error.
- * Possible reason for
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * is either of (1) invalid @a interpolation_method or (2) any of input/output array is not aligned.
- *
- * @pre @a base_position and @a interpolate_position must be sorted. Also, these arrays should not
- * have duplicate values.
- *
- * @par Difference between sakura_InterpolateXAxisFloat() and sakura_InterpolateYAxisFloat():
- * Difference between these two similar functions is a memory layout of @a base_data and
- * @a interpolated_data. The former assumes the layout like [num_array][num_base] so that
- * @a base_data should store the data in the following order,
- * @verbatim data0[0], data0[1], ..., data1[0], data1[1], ... @endverbatim
- * On the other hand, the latter requires [num_base][num_array], i.e,
- * @verbatim data0[0], data1[0], ..., data0[1], data1[1], ... @endverbatim
- * Result array, @a interpolated_data, follows the memory layout required for @a base_data.
- *
- * @par Impact of sort order on performance:
- * When input arrays, @a base_position and/or @a base_data, are sorted in descending order,
- * the arrays are internally re-sorted in ascending order and store them to working array.
- * Therefore, descending inputs may cause degradation of performance compared with ascending inputs.
- *
- * @par Note on polynomial interpolation:
- * Note that @a polynomial_order defines maximum order for polynomial interpolation.
- * In other words, it doesn't assure the interpolation to be specified order.
- * For example, suppose that @a polynomial_order is 2 and @a num_base is also 2.
- * In this case, effective polynomial order is 1 since we can obtain unique polynomial
- * with order 1, not 2, that passes through given two points.
- * Note also that @a polynomial_order 0 is equivalent to nearest interpolation.
- *
- * @par
+ * @details
  * @param[in] interpolation_method interpolation method.
  * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
  * Actual order will be determined by a balance
@@ -1414,24 +1360,14 @@ typedef enum {
  * @param[in] num_base number of elements for data points.
  * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
- * must-be-aligned
  * @param[in] num_array number of arrays given in @a base_data.
  * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
- * must-be-aligned
- * @param[in] base_mask boolean mask for data. Its length must be @a num_base times @a num_array.
- * False points will be excluded from the interpolation
- * must-be-aligned
  * @param[in] num_interpolated number of elements for points that wants to get
  * interpolated value.
  * @param[in] interpolate_position x-coordinate of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
- * must-be-aligned
  * @param[out] interpolated_data storage for interpolation result. Its length must be
  * @a num_interpolated times @a num_array.
- * must-be-aligned
- * @param[out] interpolated_mask boolean mask for interpolation result. Its length must be
- * @a num_interpolated times @a num_array.
- * must-be-aligned
  * @return status code.
  *
  * @~
@@ -1993,8 +1929,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data,
-		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
+		size_t const num_data, LIBSAKURA_SYMBOL(BaselineContext) **context)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -2011,7 +1946,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
-		struct LIBSAKURA_SYMBOL(BaselineContext) *context);
+LIBSAKURA_SYMBOL(BaselineContext) *context);
 
 /**
  * @~japanese
@@ -2048,7 +1983,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
-		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
@@ -2110,7 +2045,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
@@ -2182,7 +2117,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @~japanese
- * @brief 入力データに対して、モデル基底関数の線型結合で表されるもののうち最も良く合うものを与えられたベストフィット係数により求め、差し引く。
+ * @brief 入力データに対して、与えられたベースラインモデルと係数からベースラインを求め、差し引く。
  * @details
  * @param[in] num_data 配列 @a data 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
@@ -2197,9 +2132,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @return 終了ステータス
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(
 		size_t num_data, float const data[/*num_data*/],
-		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t num_coeff, double const coeff[/*num_data*/],
-		float out[/*num_data*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
+		double const coeff[/*num_data*/], float out[/*num_data*/])
+				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
