@@ -123,9 +123,19 @@ if(BUILD_DOC)
 		message(FATAL_ERROR 
 			"Doxygen is needed to build the API documentation.")
 	endif(NOT DOXYGEN_FOUND)
+	if (${DOXYGEN_VERSION} MATCHES "^1\\.6.*$")
+	    message(STATUS "use template for version < 1.8")
+	    set(DOXYFILE_TEMPLATE Doxyfile.in)
+	elseif (${DOXYGEN_VERSION} MATCHES "^1\\.8.*$")
+	    message(STATUS "use template for version 1.8")
+	    set(DOXYFILE_TEMPLATE Doxyfile.in.1_8)
+	else()
+	    message(STATUS "use template for version < 1.8")
+        set(DOXYFILE_TEMPLATE Doxyfile.in)
+	endif()
 
 	configure_file (
-	  "${PROJECT_SOURCE_DIR}/Doxyfile.in"
+	  "${PROJECT_SOURCE_DIR}/${DOXYFILE_TEMPLATE}"
 	  "${PROJECT_BINARY_DIR}/Doxyfile"
 	  @ONLY)
 	add_custom_target(apidoc
