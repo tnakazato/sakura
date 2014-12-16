@@ -1,7 +1,7 @@
 /*
  * @SAKURA_LICENSE_HEADER_START@
  * Copyright (C) 2013-2014
- * National Astronomical Observatory of Japan
+ * National Astronomical Observatory of JapaGetNumBasesn
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
  * 
  * This file is part of Sakura.
@@ -11,7 +11,7 @@
  * Free Software Foundation, either version 3 of the License, or (at your 
  * option) any later version.
  * 
- * Sakura is distributed in the hope that it will be useful, but WITHOUT 
+ * Sakura is distriburedefinitionted in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public 
  * License for more details.
@@ -204,7 +204,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d const zero = _mm256_set1_pd(0.);
+	__m256d   const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -332,17 +332,174 @@ inline std::string GetNotEnoughDataMessage(
 
 inline void GetBestFitModelAndResidual(size_t num_data, float const *data,
 LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
-		double const *coeff, float *best_fit_model,
-		float *residual_data) {
+		double const *coeff, float *best_fit_model, float *residual_data) {
 
-		AddMulMatrix(baseline_context->num_bases, coeff, num_data, baseline_context->basis_data,
-				best_fit_model);
-		OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
+	AddMulMatrix(baseline_context->num_bases, coeff, num_data,
+			baseline_context->basis_data, best_fit_model);
+	OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 }
 
 inline size_t GetNumBases(
-		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context) {
+LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context) {
 	return baseline_context->num_bases;
+}
+
+inline void DoSubtractBaseline(size_t num_data, float const *data_arg,
+bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
+		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
+		size_t num_coeff, double *coeff_arg, bool *final_mask_arg,
+		float *out_arg,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(baseline_context->basis_data));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto final_mask = AssumeAligned(final_mask_arg);
+	auto out = AssumeAligned(out_arg);
+	auto coeff = AssumeAligned(coeff_arg);
+	auto basis = AssumeAligned(baseline_context->basis_data);
+
+	float *best_fit_model = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*best_fit_model) * num_data, &best_fit_model));
+
+	float *residual_data = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_residual_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*residual_data) * num_data, &residual_data));
+
+	size_t *clipped_indices = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*clipped_indices) * num_data, &clipped_indices));
+
+	size_t num_bases = baseline_context->num_bases;
+	size_t num_lsq_matrix = num_bases * num_bases;
+	double *lsq_matrix = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*lsq_matrix) * num_lsq_matrix, &lsq_matrix));
+	size_t num_lsq_vector = num_bases;
+	double *lsq_vector = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*lsq_vector) * num_lsq_vector, &lsq_vector));
+
+	//num_coeff = num_bases;
+	//double *coeff = nullptr;
+
+	//std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
+	//              LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+	//                              sizeof(*coeff) * num_coeff, &coeff));
+
+	uint16_t num_fitting_max = std::max((uint16_t) 1, num_fitting_max_arg);
+	size_t num_unmasked_data = num_data;
+	size_t num_clipped = num_data;
+
+	for (size_t i = 0; i < num_data; ++i) {
+		final_mask[i] = mask[i];
+	}
+
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+
+	try {
+		for (uint16_t i = 0; i < num_fitting_max; ++i) {
+			if (num_unmasked_data < baseline_context->num_bases) {
+				*baseline_status = LIBSAKURA_SYMBOL(
+						BaselineStatus_kNotEnoughData);
+				throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
+			}
+
+			if (num_unmasked_data <= num_clipped) {
+				LIBSAKURA_SYMBOL(Status) coeff_status =
+				LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(num_data,
+						data, final_mask, baseline_context->num_bases,
+						baseline_context->basis_data, lsq_matrix, lsq_vector);
+				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+					throw std::runtime_error(
+							"failed in GetLeastSquareFittingCoefficients.");
+				}
+			} else {
+				LIBSAKURA_SYMBOL(Status) coeff_status =
+				LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(num_data,
+						data, num_clipped, clipped_indices,
+						baseline_context->num_bases,
+						baseline_context->basis_data, lsq_matrix, lsq_vector);
+				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+					throw std::runtime_error(
+							"failed in UpdateLeastSquareFittingCoefficients.");
+				}
+			}
+
+			LIBSAKURA_SYMBOL(Status) solve_status =
+			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+					baseline_context->num_bases, lsq_matrix, lsq_vector, coeff);
+
+			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+				throw std::runtime_error(
+						"failed in SolveSimultaneousEquationsByLU.");
+			}
+
+			AddMulMatrix(baseline_context->num_bases, coeff, num_data, basis,
+					best_fit_model);
+			OperateFloatSubtraction(num_data, data, best_fit_model,
+					residual_data);
+
+			LIBSAKURA_SYMBOL(StatisticsResult) result;
+			LIBSAKURA_SYMBOL(Status) stat_status =
+			LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
+					final_mask, &result);
+			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+				throw std::runtime_error("failed in ComputeStatistics.");
+			}
+			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
+			float clip_threshold_lower = result.mean - clip_threshold_abs;
+			float clip_threshold_upper = result.mean + clip_threshold_abs;
+			num_clipped = ClipData(num_data, residual_data, final_mask,
+					clip_threshold_lower, clip_threshold_upper, final_mask,
+					clipped_indices);
+			if (num_clipped == 0) {
+				break;
+			}
+			num_unmasked_data = result.count - num_clipped;
+		}
+
+	} catch (...) {
+		if (*baseline_status == LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
+			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+		}
+		throw;
+	}
+}
+
+inline void GetBestFitBaselineCoeff(size_t num_data, float const *data_arg,
+bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
+		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
+		size_t num_coeff, double *coeff_arg, bool *final_mask_arg,
+		float *out_arg,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto final_mask = AssumeAligned(final_mask_arg);
+	auto out = AssumeAligned(out_arg);
+	auto coeff = AssumeAligned(coeff_arg);
+
+	DoSubtractBaseline(num_data, data, mask, baseline_context,
+			clip_threshold_sigma, num_fitting_max_arg, num_coeff, coeff,
+			final_mask, out, baseline_status);
+
 }
 
 inline void SubtractBaseline(size_t num_data, float const *data_arg,
@@ -513,8 +670,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
 					sizeof(*best_fit_model) * num_data, &best_fit_model));
 
 	try {
-		GetBestFitModelAndResidual(num_data, data, baseline_context,
-				num_coeff, coeff, best_fit_model, out);
+		GetBestFitModelAndResidual(num_data, data, baseline_context, num_coeff,
+				coeff, best_fit_model, out);
 	} catch (...) {
 		throw;
 	}
@@ -593,6 +750,63 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 
 	try {
 		GetBestFitBaseline(num_data, data, mask, context, out, baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
+		size_t num_data, float const data[], bool const mask[],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float clip_threshold_sigma, uint16_t num_fitting_max,
+		//bool get_residual,
+		size_t num_coeff, double coeff[],
+		bool final_mask[], float out[],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data != context->num_basis_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data < context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (clip_threshold_sigma <= 0.0f)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (final_mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(final_mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (coeff == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(coeff)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (out == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (baseline_status == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
+	try {
+		GetBestFitBaselineCoeff(num_data, data, mask, context,
+				clip_threshold_sigma, num_fitting_max,
+				//get_residual,
+				num_coeff, coeff, final_mask, out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);

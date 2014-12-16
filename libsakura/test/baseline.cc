@@ -77,6 +77,16 @@ protected:
 		}
 	}
 
+	//Set (3+x+2*x*x) float values into an array
+	void SetFloatPolynomial(size_t num_data, float *data,
+			double *coeff_answer) {
+		for (size_t i = 0; i < num_data; ++i) {
+			double x = (double) i;
+			data[i] = (float) (coeff_answer[0] + coeff_answer[1] * x
+					+ coeff_answer[2] * x * x);
+		}
+	}
+
 	// Set constant float values into an array
 	void SetFloatConstant(float value, size_t const num_data, float *data) {
 		for (size_t i = 0; i < num_data; ++i) {
@@ -960,6 +970,702 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
 	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Following the test code of sakura_SubtractBaseline
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClipping
+ * successful case
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_coeff; ++i) {
+		cout.precision();
+		cout << "diff between coeff_answer and coeff "
+				<< coeff_answer[i] - coeff[i] << endl;
+		ASSERT_EQ((float )coeff_answer[i], (float )coeff[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithDataNotAligned
+ * failure case: data is not aligned
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data + 1];
+	float *in_data_unaligned = in_data + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_unaligned));
+	SetFloatPolynomial(num_data, in_data_unaligned, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data_unaligned)];
+	SetBoolConstant(true, ELEMENTSOF(in_data_unaligned), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data_unaligned)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data_unaligned)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data_unaligned)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data_unaligned), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data_unaligned);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data_unaligned,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithMaskNotAligned
+ * failure case
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data) + 1];
+	bool *in_mask_unaligned = in_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	in_mask_unaligned[3] = false;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	for (size_t i = 0; i < num_coeff; ++i) {
+		cout.precision();
+		cout << "diff between coeff_answer and coeff "
+				<< coeff_answer[i] - coeff[i] << endl;
+		ASSERT_EQ((float )coeff_answer[i], (float )coeff[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithFinalMaskNotAligned
+ * failure case
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMaskNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data + 1];
+	//float *in_data = in_data;
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data) + 1];
+	bool *final_mask_unaligned = final_mask + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(final_mask_unaligned));
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_final_mask_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask_unaligned, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_final_mask_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithOutNotAligned
+ * failure case
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithOutNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data) + 1];
+	float *out_unaligned = out + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_out_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out_unaligned, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_out_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithCoeffNotAligned
+ * failure case: coeff is not aligned
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff + 1];
+	double *coeff_unaligned = coeff + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_unaligned));
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff_unaligned, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithDataNullPointer
+ * failure case: data is a null pointer
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	float *in_data = nullptr;
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_mask)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_mask)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_data_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_data_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithMaskNullPointer
+ * failure case: mask is a null pointer
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool *in_mask = nullptr;
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithFinalMaskNullPointer
+ * failure case: final_mask is a null pointer
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMaskNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	bool *final_mask = nullptr;
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithOutNullPointer
+ * failure case: out is a null pointer
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithOutNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float *out = nullptr;
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithCoeffNullPointer
+ * failure case: coeff is a null pointer
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNullPointer) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	double *coeff = nullptr;
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	//bool get_residual = true;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+			context, clipping_threshold_sigma, num_fitting_max,
+			//get_residual,
+			num_coeff, coeff, final_mask, out, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
 
@@ -4108,8 +4814,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoeff) {
 
 	size_t num_coeff = context->num_bases;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
-			LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data,
-					context, num_coeff, coeff, out);
+	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data, context,
+			num_coeff, coeff, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
