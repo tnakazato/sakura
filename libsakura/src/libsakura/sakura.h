@@ -2180,18 +2180,47 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] num_coeff 配列 @a coeff の要素数。
- * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_bases でなければならない。
+ * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_bases でなければならない。@a num_bases はsakura_GetNumBasesにより得られる
  * @n must-be-aligned
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス
+ * @~english
+ * @brief subtract baseline from input spectrum. baseline is calculated by baseline model and coeff.
+ * @details
+ * @param[in] num_data the number of elements in the arrays @a data and @a out.
+ * @param[in] data the input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] context an object containing baseline model data.
+ * @param[in] num_coeff the number of elements in the arrays @a coeff
+ * @param[in] coeff the input data with length of @a num_coeff.
+ * @n must-be-aligned
+ * @param[out] out the output data. its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] baseline_status baseline-specific error code.
+ * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(
 		size_t num_data, float const data[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 		double const coeff[/*num_data*/], float out[/*num_data*/])
 				LIBSAKURA_WARN_UNUSED_RESULT;
+
+ /**
+  * @~japanese
+  * @brief num_basesを返す
+  * @details
+  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+  * @return num_bases
+  * @~english
+  * @brief return num_bases
+  * @details
+  * @param[in] context an object containing baseline model data.
+  * @return num_bases
+  */size_t LIBSAKURA_SYMBOL(GetNumBases)(
+ 		LIBSAKURA_SYMBOL(BaselineContext) const *context)
+ 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
