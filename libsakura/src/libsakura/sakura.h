@@ -307,7 +307,7 @@ typedef struct {
  * @param[out] weight_sum	要素のレイアウトは、[num_polarizations_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
  * @param[out] weight_of_grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
  * @param[out] grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolving)(size_t num_spectra,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(size_t num_spectra,
 		size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
 		double const x[/*num_spectra*/], double const y[/*num_spectra*/],

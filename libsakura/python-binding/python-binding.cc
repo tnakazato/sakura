@@ -353,7 +353,7 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
 		status =
-				LIBSAKURA_SYMBOL(GridConvolving)(num_spectra, start_spectrum,
+				LIBSAKURA_SYMBOL(GridConvolvingFloat)(num_spectra, start_spectrum,
 						end_spectrum,
 						static_cast<bool const *>(bufs[kSpectrumMask]->aligned_addr),
 						static_cast<double const *>(bufs[kX]->aligned_addr),
