@@ -222,7 +222,7 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 
 /**
  * @~japanese
- * @brief @ref sakura_ComputeStatistics の結果を格納する構造体
+ * @brief @ref sakura_ComputeStatisticsFloat の結果を格納する構造体
  */
 typedef struct {
 	size_t count; /**< 個数 */
@@ -234,7 +234,7 @@ typedef struct {
 	float max; /**< 最大値 */
 	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
 	int index_of_max; /**< 最大値のインデックス(有効な値がなければ-1) */
-}LIBSAKURA_SYMBOL(StatisticsResult);
+}LIBSAKURA_SYMBOL(StatisticsResultFloat);
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
@@ -251,9 +251,9 @@ typedef struct {
  * @return 終了ステータス
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(size_t num_data,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(size_t num_data,
 		float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResult) *result)
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~japanese
@@ -268,7 +268,7 @@ typedef struct {
  * @return 終了ステータス
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
 		size_t num_data, bool const is_valid[], float data[],
 		size_t *new_num_data) LIBSAKURA_WARN_UNUSED_RESULT;
 /**

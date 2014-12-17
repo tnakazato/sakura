@@ -451,12 +451,12 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			OperateFloatSubtraction(num_data, data, best_fit_model,
 					residual_data);
 
-			LIBSAKURA_SYMBOL(StatisticsResult) result;
+			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
+			LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_data, residual_data,
 					final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in ComputeStatistics.");
+				throw std::runtime_error("failed in ComputeStatisticsFloat.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
@@ -599,12 +599,12 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			GetBestFitModelAndResidual(num_data, data, baseline_context,
 					num_coeff, coeff, best_fit_model, residual_data);
 
-			LIBSAKURA_SYMBOL(StatisticsResult) result;
+			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeStatistics)(num_data, residual_data,
+			LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_data, residual_data,
 					final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in ComputeStatistics.");
+				throw std::runtime_error("failed in ComputeStatisticsFloat.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;

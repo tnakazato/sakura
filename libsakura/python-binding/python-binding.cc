@@ -209,10 +209,10 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
 		goto invalid_arg;
 	}
-	LIBSAKURA_SYMBOL(StatisticsResult) result;
+	LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
-		status = LIBSAKURA_SYMBOL(ComputeStatistics)(num_data,
+		status = LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kIsValid]->aligned_addr),
 				&result);

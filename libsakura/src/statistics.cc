@@ -133,9 +133,9 @@ inline void ComputeStatisticsSimple(float const data_arg[], bool const is_valid_
 }
 #endif
 
-void ComputeStatisticsSimd(float const data[], bool const is_valid[],
-		size_t elements, LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
-	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
+void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
+		size_t elements, LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_) {
+	auto &result = *result_;
 	STATIC_ASSERT(sizeof(m256) == sizeof(__m256 ));
 	__m256 sum = _mm256_setzero_ps();
 	__m256 const zero = _mm256_setzero_ps();
@@ -378,11 +378,19 @@ inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid,
 
 namespace {
 
-void ComputeStatistics(float const data[],
+template<typename T, typename Result>
+void ComputeStatistics(T const data[],
 	bool const is_valid[], size_t elements,
-	LIBSAKURA_SYMBOL(StatisticsResult) *result) {
+	Result *result) {
+	assert(("Not yet implemented", false));
+}
+
+template<>
+void ComputeStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(float const data[],
+	bool const is_valid[], size_t elements,
+	LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 #if defined( __AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
-	ComputeStatisticsSimd(data, is_valid, elements, result);
+	ComputeStatisticsSimdFloat(data, is_valid, elements, result);
 #else
 	ComputeStatisticsEigen(data, is_valid, elements, result);
 #endif
@@ -398,9 +406,9 @@ void ComputeStatistics(float const data[],
 	} \
 } while (false)
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatistics)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 		size_t elements, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResult) *result) {
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 	CHECK_ARGS(elements <= INT32_MAX);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
@@ -424,7 +432,8 @@ void QuickSort(T data[], size_t elements) {
 	// TODO implement quick sort using expression template to avoid overhead of calling COMPARATOR.
 	qsort(data, elements, sizeof(T),
 			reinterpret_cast<int (*)(void const*,
-					void const*)>(COMPARATOR::Compare));}
+					void const*)>(COMPARATOR::Compare));
+}
 
 template<typename T>
 class AscendingOrder {
@@ -454,7 +463,7 @@ public:
 
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDensely)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
 		size_t elements, bool const is_valid[], float data[],
 		size_t *new_elements) {
 	CHECK_ARGS(data != nullptr);
