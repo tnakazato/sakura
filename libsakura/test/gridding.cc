@@ -394,7 +394,7 @@ public:
 		SIMD_ALIGN RT &rows = *rows_ptr;
 		// OK
 		LIBSAKURA_SYMBOL(
-				Status) result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+				Status) result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 				rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL,
 				polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
 				rows.values[0][0], rows.weight[0], false, ELEMENTSOF(convTab),
@@ -402,7 +402,7 @@ public:
 				grid[0][0][0]);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-		result = sakura_GridConvolving(0, 0, 0, rows.sp_mask, rows.x, rows.y,
+		result = sakura_GridConvolvingFloat(0, 0, 0, rows.sp_mask, rows.x, rows.y,
 				SUPPORT, SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 				rows.mask[0][0], rows.values[0][0], rows.weight[0], true,
 				ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
@@ -410,14 +410,14 @@ public:
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 		{ // nullptr
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, nullptr,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW, nullptr,
 					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
 					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
 					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
 					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, nullptr, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -425,7 +425,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, nullptr, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -433,7 +433,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, nullptr, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -441,7 +441,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, nullptr,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -449,7 +449,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap, nullptr,
 					rows.values[0][0], rows.weight[0], false,
@@ -457,7 +457,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], nullptr, rows.weight[0], false,
@@ -465,7 +465,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], nullptr, rows.weight[0], true,
@@ -473,7 +473,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], nullptr, false,
@@ -481,7 +481,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -489,7 +489,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -497,7 +497,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -505,7 +505,7 @@ public:
 					nullptr, grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -515,7 +515,7 @@ public:
 		}
 
 		{ // alignment
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask + 1, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -523,7 +523,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x + 1, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -531,7 +531,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y + 1, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -539,7 +539,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap + 1, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -547,7 +547,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap + 1,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -555,7 +555,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					&rows.mask[0][0][1], rows.values[0][0], rows.weight[0],
@@ -563,7 +563,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], &rows.values[0][0][1], rows.weight[0],
@@ -571,7 +571,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], &rows.values[0][0][1], rows.weight[0],
@@ -579,7 +579,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], &rows.weight[0][1],
@@ -587,7 +587,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -595,7 +595,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -603,7 +603,7 @@ public:
 					&sumwt[0][1], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -611,7 +611,7 @@ public:
 					&wgrid[0][0][0][1], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -622,7 +622,7 @@ public:
 
 		{ // out of range
 			constexpr uint32_t int32max = INT32_MAX;
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW + 1,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW + 1,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -630,7 +630,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, 0, SAMPLING, RT::kNVISPOL,
 					polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
 					rows.values[0][0], rows.weight[0], false,
@@ -638,7 +638,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, (int32max - 1) / 2 + 1,
 					SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -646,7 +646,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, 0, RT::kNVISPOL,
 					polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
 					rows.values[0][0], rows.weight[0], false,
@@ -654,7 +654,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, int32max + 1,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -662,14 +662,14 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING, 0, polmap,
 					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
 					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
 					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					int32max + 1, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -677,7 +677,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, 0, chanmap, rows.mask[0][0],
 					rows.values[0][0], rows.weight[0], false,
@@ -685,7 +685,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, int32max + 1, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -693,7 +693,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -701,7 +701,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -709,7 +709,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -717,7 +717,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -725,7 +725,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -733,7 +733,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -741,7 +741,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -749,7 +749,7 @@ public:
 					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -757,7 +757,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -765,7 +765,7 @@ public:
 					grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -773,7 +773,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -781,7 +781,7 @@ public:
 					sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
-			result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW,
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
 					rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
 					RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 					rows.mask[0][0], rows.values[0][0], rows.weight[0], false,
@@ -791,7 +791,7 @@ public:
 
 		}
 #if 0
-		result = sakura_GridConvolving(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
+		result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW, rows.sp_mask,
 				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
 				RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
 				rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
@@ -866,7 +866,7 @@ public:
 			double start = CurrentTime();
 			for (size_t i = 0; i < RT::kROW_FACTOR; ++i) {
 				LIBSAKURA_SYMBOL(
-						Status) result = sakura_GridConvolving(RT::kNROW, 0,
+						Status) result = sakura_GridConvolvingFloat(RT::kNROW, 0,
 						RT::kNROW, rows->sp_mask, rows->x, rows->y, SUPPORT,
 						SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 						rows->mask[0][0], rows->values[0][0], rows->weight[0],
