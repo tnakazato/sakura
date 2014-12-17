@@ -4790,14 +4790,13 @@ TEST_F(Baseline, SubtractBaselineUsingCoeff) {
 
 	SIMD_ALIGN
 	float in_data[num_data];
-	double coeff[ELEMENTSOF(in_data)];
 	for (size_t i = 0; i < num_data; ++i) {
 		in_data[i] = 1.0 + i;
-		coeff[i] = 1.0f;
 	}
 
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
 	float answer[ELEMENTSOF(in_data)];
 	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
@@ -4813,6 +4812,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoeff) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	size_t num_coeff = context->num_bases;
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	for (size_t i = 0; i < num_coeff; ++i) {
+		coeff[i] = 1.0f;
+	}
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data, context,
 			num_coeff, coeff, out);
@@ -4820,6 +4824,175 @@ TEST_F(Baseline, SubtractBaselineUsingCoeff) {
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
+
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineUsingCoeffWithInDataNotAligned
+ * failure case: data is not aligned
+ * subtract best fit model from input data using input coeff
+ */
+
+TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffWithDataNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data + 1];
+	float *in_data_unaligned = in_data + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_unaligned));
+
+	for (size_t i = 0; i < num_data; ++i) {
+		in_data_unaligned[i] = 1.0 + i;
+	}
+
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data_unaligned)];
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data_unaligned)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data_unaligned), answer);
+
+	if (verbose) {
+		PrintArray("in_data_unaligned", num_data, in_data_unaligned);
+	}
+
+	size_t order = num_model - 2;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t num_coeff = context->num_bases;
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	for (size_t i = 0; i < num_coeff; ++i) {
+		coeff[i] = 1.0f;
+	}
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data_unaligned,
+			context, num_coeff, coeff, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineUsingCoeffWithCoeffNotAligned
+ * failure case: coeff is not aligned
+ * subtract best fit model from input data using input coeff
+ */
+
+TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffWithCoeffNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		in_data[i] = 1.0 + i;
+	}
+
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+	}
+
+	size_t order = num_model - 2;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t num_coeff = context->num_bases;
+	SIMD_ALIGN
+	double coeff[num_coeff + 1];
+	double *coeff_unaligned = coeff + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_unaligned));
+	for (size_t i = 0; i < num_coeff; ++i) {
+		coeff_unaligned[i] = 1.0f;
+	}
+
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data, context,
+			num_coeff, coeff_unaligned, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+
+	if (verbose) {
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+/*
+ * Test sakura_SubtractBaselineUsingCoeffWithOutNotAligned
+ * failure case: out is not aligned
+ * subtract best fit model from input data using input coeff
+ */
+
+TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffWithOutNotAligned) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		in_data[i] = 1.0 + i;
+	}
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data) + 1];
+	float *out_unaligned = out + 1;
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+	}
+
+	size_t order = num_model - 2;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t num_coeff = context->num_bases;
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	for (size_t i = 0; i < num_coeff; ++i) {
+		coeff[i] = 1.0f;
+	}
+
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data, context,
+			num_coeff, coeff, out_unaligned);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	if (verbose) {
 		PrintArray("out   ", num_data, out);
