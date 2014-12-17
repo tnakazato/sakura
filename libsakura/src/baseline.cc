@@ -339,11 +339,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_coeff,
 	OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
 }
 
-inline size_t GetNumBases(
-LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context) {
-	return baseline_context->num_bases;
-}
-
 inline void DoSubtractBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
@@ -818,6 +813,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" size_t LIBSAKURA_SYMBOL(GetNumBases)(
+	LIBSAKURA_SYMBOL(BaselineContext) const *context){
+	if (context == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	return context->num_bases;
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
