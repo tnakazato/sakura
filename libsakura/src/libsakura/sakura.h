@@ -2274,7 +2274,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
  * @details
  * @param[in] context an object containing baseline model data.
  * @return status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficient)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t * num_coeff)
 		LIBSAKURA_WARN_UNUSED_RESULT;
 

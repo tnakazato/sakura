@@ -5050,6 +5050,50 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsInvalidArguments) {
 }
 
 /*
+ * Test sakura_SubtractBaselineUsingCoefficientsWithBigModelLowOrder
+ * successful case
+ * subtract best fit model from input data using input coeff
+ */
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithBigModelLowOrder) {
+	size_t const num_data(3840);
+	size_t const num_model(400);
+	SIMD_ALIGN
+	float in_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		in_data[i] = 1.0 + i;
+	}
+
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+	}
+
+	size_t order = num_model;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	size_t num_coeff = 1;//context->num_bases;
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	for (size_t i = 0; i < num_coeff; ++i) {
+		coeff[i] = 1.0f;
+	}
+	LIBSAKURA_SYMBOL (Status) subbl_status;
+		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(
+				num_data, in_data, context, num_coeff, coeff, out);
+		//ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
  * Test sakura_SubtractBaselineUsingCoefficientsPerformanceTest
  * successful case
  * subtract best fit model from input data using input coeff
@@ -5107,11 +5151,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsPerformanceTest) {
 }
 
 /*
- * Test sakura_GetNumberOfCoefficients
+ * Test sakura_GetNumberOfCoefficientss
  * It can get number of Coefficients from context
  * successful case
  */
-TEST_F(Baseline, GetNumberOfCoefficient) {
+TEST_F(Baseline, GetNumberOfCoefficients) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 	size_t order = num_model - 2;
@@ -5122,7 +5166,7 @@ TEST_F(Baseline, GetNumberOfCoefficient) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	size_t num_coeff = 0;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
-			LIBSAKURA_SYMBOL(GetNumberOfCoefficient)(context,&num_coeff));
+			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context,&num_coeff));
 	EXPECT_EQ(num_coeff, context->num_bases);
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
@@ -5130,15 +5174,15 @@ TEST_F(Baseline, GetNumberOfCoefficient) {
 }
 
 /*
- * Test sakura_sakura_GetNumberOfCoefficientsWithNullPointer
+ * Test sakura_sakura_GetNumberOfCoefficientssWithNullPointer
  * It can get number of Coefficients from context
  * failed case : context is nullpointer
  */
-TEST_F(Baseline, GetNumberOfCoefficientWithNullPointer) {
+TEST_F(Baseline, GetNumberOfCoefficientsWithNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	size_t num_coeff = 0;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-			LIBSAKURA_SYMBOL(GetNumberOfCoefficient)(context,&num_coeff));
+			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context,&num_coeff));
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
