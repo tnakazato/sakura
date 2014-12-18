@@ -355,7 +355,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
-	auto out = AssumeAligned(out_arg);
+	//auto out = AssumeAligned(out_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto basis = AssumeAligned(baseline_context->basis_data);
 
@@ -477,7 +477,6 @@ inline void GetBestFitBaselineCoeff(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
 		size_t num_coeff, double *coeff_arg, bool *final_mask_arg,
-		//float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 
 	float *out_arg = nullptr;
@@ -490,7 +489,6 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
-	//float *out_arg;
 	auto out = AssumeAligned(out_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 

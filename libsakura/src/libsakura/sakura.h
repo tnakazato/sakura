@@ -2121,13 +2121,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
  * @brief Extraction of the coefficients of the polynomial fit.
  * @details
  * @param[in] num_data the number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out.
+ * @a mask, and @a final_mask.
  * @param[in] data the input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] order order of polynomial model. must be equal or smaller
- * than @a num_data-1 .
  * @param[in] clip_threshold_sigma the threshold of clipping in unit
  * of sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
@@ -2137,15 +2135,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
  * The default is 1 (i.e., baseline fitting done just once and no
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
- * @param[in] get_residual set the output to be (input - best-fit) if true,
- * or the best-fit value if false.
  * @param[in] num_coeff the number of elements in the arrays @a coeff.
  * @param[out] coeff the coefficients of the polynomial fit. its length must be @a num_coeff.
  * @n must-be-aligned
  * @param[out] final_mask the final mask data after recursive clipping
  * procedure. its length must be @a num_data .
- * @n must-be-aligned
- * @param[out] out the output data. its length must be @a num_data .
  * @n must-be-aligned
  * @param[out] baseline_status baseline-specific error code.
  * @return status code.
@@ -2157,10 +2151,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
-		//bool get_residual,
 		size_t num_coeff, double coeff[/*num_coeff*/],
 		bool final_mask[/*num_data*/],
-		//float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
