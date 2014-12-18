@@ -2,7 +2,19 @@
 <project>
 	<configuration id="0.260843002" name="Default">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
-			<provider class="org.eclipse.cdt.core.language.settings.providers.LanguageSettingsGenericProvider" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider" name="CDT User Setting Entries" prefer-non-shared="true"/>
+			<provider class="org.eclipse.cdt.core.language.settings.providers.LanguageSettingsGenericProvider" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider" name="CDT User Setting Entries" prefer-non-shared="true" store-entries-with-project="true">
+				<language id="org.eclipse.cdt.core.g++">
+					<resource project-relative-path="">
+						<entry kind="includePath" name="/${ProjName}/build/bin">
+							<flag value="VALUE_WORKSPACE_PATH"/>
+						</entry>
+						<entry kind="includePath" name="${EIGEN_HOME}/include/eigen3">
+							<flag value="BUILTIN"/>
+						</entry>
+						<entry kind="macro" name="DISABLE_ALIGNAS" value="1"/>
+					</resource>
+				</language>
+			</provider>
 			<provider copy-of="extension" id="org.eclipse.cdt.managedbuilder.core.GCCBuildCommandParser"/>
 			<provider-reference id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" ref="shared-provider"/>
 		</extension>

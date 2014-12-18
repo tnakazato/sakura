@@ -30,7 +30,8 @@
 # define LIBSAKURA_PREFIX	@libsakura_PREFIX@
 # define LIBSAKURA_PREFIX_STRING	"@libsakura_PREFIX@"
 #endif
-#define LIBSAKURA_SYMBOL(x)	@libsakura_PREFIX@ ## _ ## x
+#define LIBSAKURA_CONCAT(x, y)	x ## _ ## y
+#define LIBSAKURA_SYMBOL(x)	LIBSAKURA_CONCAT(@libsakura_PREFIX@, x)
 
 #define LIBSAKURA_HAS_LOG4CXX @HAS_LOG4CXX@
 
