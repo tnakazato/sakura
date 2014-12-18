@@ -4621,11 +4621,11 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficients
+ * Test sakura_SubtractBaselineUsingCoefficientsFloat
  * successful case
  * subtract best fit model from input data using input coeff
  */
-TEST_F(Baseline, SubtractBaselineUsingCoefficients) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloat) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 
@@ -4659,7 +4659,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficients) {
 		coeff[i] = 1.0f;
 	}
 	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 			context, num_coeff, coeff, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	for (size_t i = 0; i < num_data; ++i) {
@@ -4677,12 +4677,12 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficients) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficientsWithNotAligned
+ * Test sakura_SubtractBaselineUsingCoefficientsFloatWithNotAligned
  * failure case: data/coeff/out is not aligned
  * subtract best fit model from input data using input coeff
  */
 
-TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNotAligned) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 	{ // in_data is not aligned
 		size_t const num_data(NUM_DATA2);
 		size_t const num_model(NUM_MODEL);
@@ -4720,7 +4720,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNotAligned) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
 				in_data_unaligned, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
@@ -4765,7 +4765,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNotAligned) {
 		}
 
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, num_coeff, coeff_unaligned, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
@@ -4809,7 +4809,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNotAligned) {
 		}
 
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, num_coeff, coeff, out_unaligned);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
@@ -4820,11 +4820,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNotAligned) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficientsWithNullPointer
+ * Test sakura_SubtractBaselineUsingCoefficientsFloatWithNullPointer
  * failure case : data/coeff/out is a null pointer
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNullPointer) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 	{ // data is nullpointer
 		size_t const num_data(NUM_DATA2);
 		size_t const num_model(NUM_MODEL);
@@ -4844,7 +4844,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNullPointer) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
@@ -4873,7 +4873,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNullPointer) {
 		size_t num_coeff = context->num_bases;
 		double *coeff = nullptr;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
@@ -4903,7 +4903,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNullPointer) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
@@ -4928,7 +4928,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNullPointer) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -4938,13 +4938,13 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithNullPointer) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficientsInvalidArguments
+ * Test sakura_SubtractBaselineUsingCoefficientsFloatInvalidArguments
  * failure case :  num_data != context->num_basis_data
  * failure case :  num_data < context->num_bases
  * failure case :  num_coeff != context->num_bases
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, SubtractBaselineUsingCoefficientsInvalidArguments) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 	{ // num_data != context->num_basis_data
 		size_t const num_data(NUM_DATA2);
 		size_t const num_model(NUM_MODEL);
@@ -4972,7 +4972,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsInvalidArguments) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(bad_num_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(bad_num_data,
 				in_data, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -5006,7 +5006,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsInvalidArguments) {
 		}
 		size_t bad_num_data = context->num_bases - 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(bad_num_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(bad_num_data,
 				in_data, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -5040,7 +5040,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsInvalidArguments) {
 		}
 		size_t bad_num_coeff = context->num_bases - 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(num_data, in_data,
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
 				context, bad_num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -5050,11 +5050,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsInvalidArguments) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficientsWithBigModelLowOrder
+ * Test sakura_SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder
  * successful case
  * subtract best fit model from input data using input coeff
  */
-TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithBigModelLowOrder) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 	size_t const num_data(3840);
 	size_t const num_model(400);
 	SIMD_ALIGN
@@ -5084,7 +5084,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithBigModelLowOrder) {
 		coeff[i] = 1.0f;
 	}
 	LIBSAKURA_SYMBOL (Status) subbl_status;
-		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(
+		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 				num_data, in_data, context, num_coeff, coeff, out);
 		//ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
@@ -5094,11 +5094,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsWithBigModelLowOrder) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficientsPerformanceTest
+ * Test sakura_SubtractBaselineUsingCoefficientsFloatPerformanceTest
  * successful case
  * subtract best fit model from input data using input coeff
  */
-TEST_F(Baseline, SubtractBaselineUsingCoefficientsPerformanceTest) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	size_t const num_data(3840);
 	size_t const num_model(400);
 	SIMD_ALIGN
@@ -5134,7 +5134,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsPerformanceTest) {
 	size_t loop_max = 1000;
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
-		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(
+		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 				num_data, in_data, context, num_coeff, coeff, out);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}

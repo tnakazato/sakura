@@ -2257,7 +2257,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
  * @n must-be-aligned
  * @param[out] baseline_status baseline-specific error code.
  * @return status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 		double const coeff[/*num_data*/], float out[/*num_data*/])
