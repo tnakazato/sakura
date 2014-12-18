@@ -225,20 +225,56 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
  * @brief @ref sakura_ComputeStatisticsFloat の結果を格納する構造体
  */
 typedef struct {
-	size_t count; /**< 個数 */
-	float sum; /**< 合計 */
-	float mean; /**< 平均 */
-	float rms; /**< 二乗平均平方根 */
-	float stddev; /**< 標準偏差 */
-	float min; /**< 最小値 */
-	float max; /**< 最大値 */
-	int index_of_min; /**< 最小値のインデックス(有効な値がなければ-1) */
-	int index_of_max; /**< 最大値のインデックス(有効な値がなければ-1) */
+	/**
+	 * @~
+	 * a number of valid data
+	 */
+	size_t count;
+	/**
+	 * @~
+	 * a sum of valid data
+	 */
+	float sum;
+	/**
+	 * @~
+	 * a mean of valid data
+	 */
+	float mean;
+	/**
+	 * @~
+	 * a root-mean-square of valid data
+	 */
+	float rms;
+	/**
+	 * @~
+	 * an stddev of valid data
+	 */
+	float stddev;
+	/**
+	 * @~
+	 * a min value of valid data
+	 */
+	float min;
+	/**
+	 * @~
+	 * a max value of valid data
+	 */
+	float max;
+	/**
+	 * @~
+	 * one of index for min value. -1 if there is no valid data.
+	 */
+	int index_of_min;
+	/**
+	 * @~
+	 * one of index for max value. -1 if there is no valid data.
+	 */
+	int index_of_max;
 }LIBSAKURA_SYMBOL(StatisticsResultFloat);
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
- * @ref sakura_StatisticsResult を参照
+ * @ref sakura_StatisticsResultFloat を参照
  *
  * @param[in] num_data @a data 及び@a is_valid の要素の数。@a num_data <= INT32_MAX
  * @param[in] data 対象となるデータ。対応する@a is_valid がtrueの場合、Inf/NaNであってはならない。
@@ -249,6 +285,21 @@ typedef struct {
  * @param[out] result 結果の格納先。計算不可能な場合は、構造体内のメンバーの値にNaNが設定される。
  * 同じ値が複数あった場合、どの値のインデックスが@a index_of_min, @a index_of_maxに格納されるかは不定である。
  * @return 終了ステータス
+ *
+ * @~english
+ * @brief Computes statistics. Refer to
+ * @ref sakura_StatisticsResultFloat to see what kind of statistics are computed.
+ *
+ * @param[in] num_data A number of elements of @a data and @a is_valid . @a num_data <= INT32_MAX
+ * @param[in] data Data. If corresponding element of @a is_valid is true, the element must not be Inf nor NaN.
+ * <br/>must-be-aligned
+ * @param[in] is_valid Masks of @a data. If a value of element is false,
+ * corresponding element of @a data is ignored.
+ * <br/>must-be-aligned
+ * @param[out] result An address where the result should be stored. Some fields may be set to NaN if it is impossible to figure out.
+ * If there is more than one occurrence of min or max value, it is undefined which index of the occurrence is selected for @a index_of_min or @a index_of_max.
+ * @return status code
+ *
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
@@ -266,6 +317,18 @@ typedef struct {
  * 対応する@a is_valid がtrueの場合、NaNであってはならない。
  * @param[out] new_num_data (validでないデータを除いた)ソートされた要素数( <= @a num_data ) の格納先
  * @return 終了ステータス
+ *
+ * @~english
+ * @brief Sort only valid data in ascending order.
+ *
+ * @param[in] is_valid Masks of @a data. If a value of element is false,
+ * corresponding element of @a data is ignored.
+ * @param[in] num_data A number of elements of @a data and @a is_valid .
+ * @param[in,out] data Data to be sorted. Since Data is sorted in place, contents of this array are not preserved.
+ * If corresponding element of @a is_valid is true, the element must not be Inf nor NaN.
+ * @param[out] new_num_data A number of sorted elements that don't include invalid data( <= @a num_data ) is stored in @a new_num_data.
+ * @return status code
+ *
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
