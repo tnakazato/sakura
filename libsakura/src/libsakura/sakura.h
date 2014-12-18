@@ -2159,7 +2159,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		//bool get_residual,
 		size_t num_coeff, double coeff[/*num_coeff*/],
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		bool final_mask[/*num_data*/],
+		//float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 

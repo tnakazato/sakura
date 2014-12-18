@@ -477,8 +477,10 @@ inline void GetBestFitBaselineCoeff(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
 		size_t num_coeff, double *coeff_arg, bool *final_mask_arg,
-		float *out_arg,
+		//float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+
+	float *out_arg = nullptr;
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -488,6 +490,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
+	//float *out_arg;
 	auto out = AssumeAligned(out_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 
@@ -764,7 +767,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		//bool get_residual,
 		size_t num_coeff, double coeff[],
-		bool final_mask[], float out[],
+		bool final_mask[],
+		//float out[],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -790,10 +794,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(coeff)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	//if (out == nullptr)
+	//	return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	//if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
+	//	return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (baseline_status == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
@@ -801,7 +805,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 		GetBestFitBaselineCoeff(num_data, data, mask, context,
 				clip_threshold_sigma, num_fitting_max,
 				//get_residual,
-				num_coeff, coeff, final_mask, out, baseline_status);
+				num_coeff, coeff, final_mask,
+				//out,
+				baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
