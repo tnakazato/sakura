@@ -5072,7 +5072,6 @@ TEST_F(Baseline, SubtractBaselineUsingCoeffWithNullPointer) {
 	}
 	{ // context is nullpointer
 		size_t const num_data(NUM_DATA2);
-		size_t const num_model(NUM_MODEL);
 		SIMD_ALIGN
 		float in_data[num_data];
 		for (size_t i = 0; i < num_data; ++i) {
@@ -5080,7 +5079,6 @@ TEST_F(Baseline, SubtractBaselineUsingCoeffWithNullPointer) {
 		}
 		SIMD_ALIGN
 		float out[ELEMENTSOF(in_data)];
-		size_t order = num_model - 2;
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		size_t num_coeff = 2;
 		SIMD_ALIGN
@@ -5265,5 +5263,43 @@ TEST_F(Baseline, SubtractBaselineUsingCoeffPerformanceTest) {
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetNumBases
+ * It can get number of bases from context
+ * successful case
+ */
+TEST_F(Baseline, GetNumBases) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t order = num_model - 2;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	size_t num_bases = 0;
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
+			LIBSAKURA_SYMBOL(GetNumBases)(context,&num_bases));
+	EXPECT_EQ(num_bases, context->num_bases);
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_GetNumBasesWithNullPointer
+ * It can get number of bases from context
+ * failed case : context is nullpointer
+ */
+TEST_F(Baseline, GetNumBasesWithNullPointer) {
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	size_t num_bases = 0;
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+			LIBSAKURA_SYMBOL(GetNumBases)(context,&num_bases));
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
 }
 

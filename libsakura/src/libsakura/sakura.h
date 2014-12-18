@@ -251,8 +251,8 @@ typedef struct {
  * @return 終了ステータス
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(size_t num_data,
-		float const data[], bool const is_valid[],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
+		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 /**
@@ -307,8 +307,8 @@ typedef struct {
  * @param[out] weight_sum	要素のレイアウトは、[num_polarizations_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
  * @param[out] weight_of_grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
  * @param[out] grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(size_t num_spectra,
-		size_t start_spectrum, size_t end_spectrum,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(
+		size_t num_spectra, size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
 		double const x[/*num_spectra*/], double const y[/*num_spectra*/],
 		size_t support, size_t sampling, size_t num_polarizations,
@@ -2207,20 +2207,20 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
 		double const coeff[/*num_data*/], float out[/*num_data*/])
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
- /**
-  * @~japanese
-  * @brief num_basesを返す
-  * @details
-  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
-  * @return num_bases
-  * @~english
-  * @brief return num_bases
-  * @details
-  * @param[in] context an object containing baseline model data.
-  * @return num_bases
-  */size_t LIBSAKURA_SYMBOL(GetNumBases)(
- 		LIBSAKURA_SYMBOL(BaselineContext) const *context)
- 				LIBSAKURA_WARN_UNUSED_RESULT;
+/**
+ * @~japanese
+ * @brief num_basesを返す
+ * @details
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @return 終了ステータス
+ * @~english
+ * @brief return num_bases
+ * @details
+ * @param[in] context an object containing baseline model data.
+ * @return status code.
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumBases)(
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t * num_bases)
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english

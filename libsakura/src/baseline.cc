@@ -815,11 +815,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" size_t LIBSAKURA_SYMBOL(GetNumBases)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context) {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumBases)(
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t *num_bases) {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	return context->num_bases;
+	*num_bases = context->num_bases;
+	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
