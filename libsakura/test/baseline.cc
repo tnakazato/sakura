@@ -5063,8 +5063,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 		in_data[i] = 1.0 + i;
 	}
 
-	SIMD_ALIGN
-	float out[ELEMENTSOF(in_data)];
+	//SIMD_ALIGN
+	//float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -5077,15 +5077,15 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 			&context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	size_t num_coeff = 1;//context->num_bases;
-	SIMD_ALIGN
-	double coeff[num_coeff];
-	for (size_t i = 0; i < num_coeff; ++i) {
-		coeff[i] = 1.0f;
-	}
-	LIBSAKURA_SYMBOL (Status) subbl_status;
-		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-				num_data, in_data, context, num_coeff, coeff, out);
+	//size_t num_coeff = 1;//context->num_bases;
+	//SIMD_ALIGN
+	//double coeff[num_coeff];
+	//for (size_t i = 0; i < num_coeff; ++i) {
+	//	coeff[i] = 1.0f;
+	//}
+	//LIBSAKURA_SYMBOL (Status) subbl_status;
+	//	subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
+	//			num_data, in_data, context, num_coeff, coeff, out);
 		//ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
