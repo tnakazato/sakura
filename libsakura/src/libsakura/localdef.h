@@ -36,6 +36,8 @@
  * This file includes the definitions only for internal use of libsakura.
  */
 
+#define MARK_AS_USED(x) ((void)(0 && (x)))
+
 #if defined(__AVX2__)
 # define ARCH_AFTER_HASWELL 1
 #endif

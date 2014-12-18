@@ -40,6 +40,7 @@
 #include <limits.h>
 
 #include "libsakura/config.h"
+#include "libsakura/localdef.h"
 #include "libsakura/concurrent.h"
 
 //#define LOG(x) do {}while(false)
@@ -112,7 +113,7 @@ Semaphore::Semaphore(unsigned initial) throw (int) {
 
 Semaphore::~Semaphore() {
 	int result = pthread_mutex_destroy(&mutex_);
-	(void) (0 && result);
+	MARK_AS_USED(result);
 	result = pthread_cond_destroy(&condition_);
 }
 
