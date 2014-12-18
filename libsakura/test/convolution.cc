@@ -166,7 +166,7 @@ protected:
 		double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < loop_max && expected_status == sakura_Status_kOK;
 				++i) {
-			status_Convolve = LIBSAKURA_SYMBOL(Convolve1D)(context, num_data,
+			status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data,
 					input_data, output_data);
 			ASSERT_EQ(expected_status, status_Convolve);
 		}
@@ -400,7 +400,7 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		SIMD_ALIGN
 		float output_data[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1D)(context, num_data, input_data,
+		LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data, input_data,
 				output_data);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =

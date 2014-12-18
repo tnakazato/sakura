@@ -1637,7 +1637,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
 		float output_data[/*num_data*/]);

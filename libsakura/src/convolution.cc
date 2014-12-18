@@ -276,7 +276,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	}
 }
 
-inline void Convolve1D(
+inline void Convolve1DFloat(
 LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
 		float output_data_arg[/*num_data*/]) {
@@ -388,7 +388,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1D)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 		float const input_data[/*num_data*/], float output_data[/*num_data*/]) {
 	if (context == nullptr) {
@@ -403,7 +403,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(output_data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	try {
-		Convolve1D(context, num_data, input_data, output_data);
+		Convolve1DFloat(context, num_data, input_data, output_data);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
