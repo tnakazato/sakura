@@ -821,11 +821,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumBases)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t *num_bases) {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficient)(
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t *num_coeff) {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	*num_bases = context->num_bases;
+	*num_coeff = context->num_bases;
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -924,7 +924,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficients)(
 		size_t num_data, float const data[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 		double const coeff[], float out[]) {
