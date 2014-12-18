@@ -4882,11 +4882,6 @@ TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffWithDataNotAligned) {
 			context, num_coeff, coeff, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
-	}
-
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -4939,11 +4934,6 @@ TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffWithCoeffNotAligned) {
 			num_coeff, coeff_unaligned, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
-	}
-
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -4993,11 +4983,6 @@ TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffWithOutNotAligned) {
 	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data, context,
 			num_coeff, coeff, out_unaligned);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-
-	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
-	}
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
@@ -5106,4 +5091,114 @@ TEST_F(Baseline, SubtractBaselineUsingCoeffWithOutNullPointer) {
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
+/*
+ * Test sakura_SubtractBaselineUsingCoeffInvalidArguments
+ * failure case : out is a null pointer
+ * returned value : Status_kInvalidArgument
+ */
+TEST_F(Baseline, sakura_SubtractBaselineUsingCoeffInvalidArguments) {
+	{ // num_data != context->num_basis_data
+		size_t const num_data(NUM_DATA2);
+		size_t const num_model(NUM_MODEL);
+		size_t const bad_num_data(NUM_DATA2 + 1);
+		SIMD_ALIGN
+		float in_data[num_data];
+		for (size_t i = 0; i < num_data; ++i) {
+			in_data[i] = 1.0 + i;
+		}
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		float answer[ELEMENTSOF(in_data)];
+		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		size_t order = num_model - 2;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+				&context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		size_t num_coeff = context->num_bases;
+		SIMD_ALIGN
+		double coeff[num_coeff];
+		for (size_t i = 0; i < num_coeff; ++i) {
+			coeff[i] = 1.0f;
+		}
+		LIBSAKURA_SYMBOL (Status) subbl_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(bad_num_data, in_data,
+				context, num_coeff, coeff, out);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	{ // num_data < context->num_bases
+		size_t const num_data(NUM_DATA2);
+		size_t const num_model(NUM_MODEL);
+		SIMD_ALIGN
+		float in_data[num_data];
+		for (size_t i = 0; i < num_data; ++i) {
+			in_data[i] = 1.0 + i;
+		}
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		float answer[ELEMENTSOF(in_data)];
+		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		size_t order = num_model - 2;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+				&context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		size_t num_coeff = context->num_bases;
+		SIMD_ALIGN
+		double coeff[num_coeff];
+		for (size_t i = 0; i < num_coeff; ++i) {
+			coeff[i] = 1.0f;
+		}
+		size_t bad_num_data = context->num_bases - 1;
+		LIBSAKURA_SYMBOL (Status) subbl_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(bad_num_data, in_data,
+				context, num_coeff, coeff, out);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	{ // num_coeff != context->num_bases
+		size_t const num_data(NUM_DATA2);
+		size_t const num_model(NUM_MODEL);
+		SIMD_ALIGN
+		float in_data[num_data];
+		for (size_t i = 0; i < num_data; ++i) {
+			in_data[i] = 1.0 + i;
+		}
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		float answer[ELEMENTSOF(in_data)];
+		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		size_t order = num_model - 2;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+				&context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		size_t num_coeff = context->num_bases;
+		SIMD_ALIGN
+		double coeff[num_coeff];
+		for (size_t i = 0; i < num_coeff; ++i) {
+			coeff[i] = 1.0f;
+		}
+		size_t bad_num_coeff = context->num_bases - 1;
+		LIBSAKURA_SYMBOL (Status) subbl_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeff)(num_data, in_data, context,
+				bad_num_coeff, coeff, out);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
