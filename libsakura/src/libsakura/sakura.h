@@ -2106,13 +2106,12 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @return status code.
  * @~
  * MT-safe
- */
-
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
-		float const data[/*num_data*/],
-		bool const mask[/*num_data*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float out[/*num_data*/],
+		float clip_threshold_sigma, uint16_t num_fitting_max,
+		bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2145,23 +2144,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
  * @return status code.
  * @~
  * MT-safe
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float clip_threshold_sigma, uint16_t num_fitting_max,
-		size_t num_coeff, double coeff[/*num_coeff*/],
+		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
+		double coeff[/*num_coeff*/],
 		bool final_mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
-
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float clip_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 

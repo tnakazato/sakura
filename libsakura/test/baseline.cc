@@ -1020,7 +1020,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask, &subbl_blstatus);
 
@@ -1091,7 +1091,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data_unaligned,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data_unaligned,
 			in_mask, context, clipping_threshold_sigma, num_fitting_max,
 			num_coeff, coeff, final_mask, &subbl_blstatus);
 
@@ -1150,7 +1150,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask, &subbl_blstatus);
 
@@ -1220,7 +1220,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_final_mask_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask_unaligned, &subbl_blstatus);
 
@@ -1278,7 +1278,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff_unaligned, final_mask, &subbl_blstatus);
 
@@ -1331,7 +1331,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_data_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask, &subbl_blstatus);
 
@@ -1386,7 +1386,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask, &subbl_blstatus);
 
@@ -1443,7 +1443,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask, &subbl_blstatus);
 
@@ -1499,7 +1499,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNu
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoeff)(num_data, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
 			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
 			coeff, final_mask, &subbl_blstatus);
 
