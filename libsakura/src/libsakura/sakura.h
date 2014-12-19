@@ -2119,7 +2119,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @~japanese
  * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、差し引く。
  * @details
- * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask 、 @a out の要素数。
+ * @param[in] num_data 配列 @a data 、 @a mask 、and @a final_mask
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。
@@ -2133,10 +2133,9 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
  * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
  * もし 0 が渡された場合は、自動的に 1 に変更される。
- * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
  * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[out] out 出力データ。要素数は @a num_data でなければならない。
+ * @param[out] coeff 出力データ。要素数は @a num_coeff でなければならない。
  * @n must-be-aligned
  * @param[out] baseline_status ベースライン固有のエラーコード。
  * @return 終了ステータス。
