@@ -5067,16 +5067,16 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
  * subtract best fit model from input data using input coeff
  */
 TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
-	size_t const num_data(3840);
-	size_t const num_model(400);
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float in_data[num_data];
 	for (size_t i = 0; i < num_data; ++i) {
 		in_data[i] = 1.0 + i;
 	}
 
-	//SIMD_ALIGN
-	//float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -5089,17 +5089,19 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 			&context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	//size_t num_coeff = 1;//context->num_bases;
-	//SIMD_ALIGN
-	//double coeff[num_coeff];
-	//for (size_t i = 0; i < num_coeff; ++i) {
-	//	coeff[i] = 1.0f;
-	//}
-	//LIBSAKURA_SYMBOL (Status) subbl_status;
-	//	subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-	//			num_data, in_data, context, num_coeff, coeff, out);
-	//ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	size_t num_coeff = 4;
+	double given_coeff[4] = { 1.0f, 2.0f, 3.0f, 0.0f };
+	double *coeff = new double[num_coeff];
+	coeff[0] = given_coeff[0];
+	coeff[1] = given_coeff[1];
+	coeff[2] = given_coeff[2];
+	coeff[3] = given_coeff[3];
 
+	LIBSAKURA_SYMBOL (Status) subbl_status;
+	subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
+			num_data, in_data, context, num_coeff, coeff, out);
+	delete coeff;
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
