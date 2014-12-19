@@ -85,7 +85,7 @@ inline int32_t AddHorizontally128(__m128i packed_values) {
 
 #if 0
 inline void ComputeStatisticsSimple(float const data_arg[], bool const is_valid_arg[],
-		size_t elements, LIBSAKURA_SYMBOL(StatisticsResult) *result) {
+		size_t elements, LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 	auto data = AssumeAligned(data_arg);
 	auto is_valid = AssumeAligned(is_valid_arg);
 	float sum = 0;
@@ -341,8 +341,8 @@ public:
 template<typename DataType>
 inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid,
 		size_t elements,
-		LIBSAKURA_SYMBOL(StatisticsResult) *result_) {
-	LIBSAKURA_SYMBOL(StatisticsResult) &result = *result_;
+			LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_) {
+	LIBSAKURA_SYMBOL(StatisticsResultFloat) &result = *result_;
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
