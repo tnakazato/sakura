@@ -5062,11 +5062,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 }
 
 /*
- * Test sakura_SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder
+ * Test sakura_SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding
  * successful case
  * subtract best fit model from input data using input coeff
  */
-TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
+TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
@@ -5074,6 +5074,9 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 	for (size_t i = 0; i < num_data; ++i) {
 		in_data[i] = 1.0 + i;
 	}
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -5082,27 +5085,33 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 		PrintArray("in_data", num_data, in_data);
 	}
 
-	size_t order = num_model;
+	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
 			&context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	size_t num_coeff = 4;
-	double given_coeff[4] = { 1.0f, 2.0f, 3.0f};
+	size_t num_coeff = context->num_bases;
+	SIMD_ALIGN
+	double given_coeff[2] = { 1.0f, 1.0f };
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	coeff[0] = given_coeff[0];
 	coeff[1] = given_coeff[1];
-	coeff[2] = given_coeff[2];
-	coeff[3] = 0.0f;
+	coeff[2] = 0.0f;
 
 	LIBSAKURA_SYMBOL (Status) subbl_status;
 	subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 			num_data, in_data, context, num_coeff, coeff, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
-	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	if (verbose) {
+		PrintArray("out", num_data, out);
+	}
+	for (size_t i = 0; i < num_data; ++i) {
+		EXPECT_FLOAT_EQ(answer[i], out[i]);
+	}
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
