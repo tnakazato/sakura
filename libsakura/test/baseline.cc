@@ -4675,7 +4675,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloat) {
 			context, num_coeff, coeff, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
+		EXPECT_EQ(answer[i], out[i]);
 	}
 
 	if (verbose) {
@@ -5110,7 +5110,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
 		PrintArray("out", num_data, out);
 	}
 	for (size_t i = 0; i < num_data; ++i) {
-		EXPECT_FLOAT_EQ(answer[i], out[i]);
+		EXPECT_EQ(answer[i], out[i]);
 	}
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
