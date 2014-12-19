@@ -5090,17 +5090,18 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	size_t num_coeff = 4;
-	double given_coeff[4] = { 1.0f, 2.0f, 3.0f, 0.0f };
-	double *coeff = new double[num_coeff];
+	double given_coeff[4] = { 1.0f, 2.0f, 3.0f};
+	SIMD_ALIGN
+	double coeff[num_coeff];
 	coeff[0] = given_coeff[0];
 	coeff[1] = given_coeff[1];
 	coeff[2] = given_coeff[2];
-	coeff[3] = given_coeff[3];
+	coeff[3] = 0.0f;
 
 	LIBSAKURA_SYMBOL (Status) subbl_status;
 	subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 			num_data, in_data, context, num_coeff, coeff, out);
-	delete coeff;
+
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
