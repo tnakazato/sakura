@@ -2117,7 +2117,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
 
 /**
  * @~japanese
- * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、差し引く。
+ * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、係数を返す。
  * @details
  * @param[in] num_data 配列 @a data 、 @a mask 、and @a final_mask
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
