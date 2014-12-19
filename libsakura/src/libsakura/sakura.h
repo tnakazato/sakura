@@ -1733,7 +1733,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * emitted internally.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
@@ -1834,7 +1834,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/],
@@ -1884,7 +1884,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 		size_t num_equations,
 		double const in_matrix[/*num_equations*num_equations*/],
 		double const in_vector[/*num_equations*/],
@@ -2043,8 +2043,8 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(size_t num_data,
-		float const data[/*num_data*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
+		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float out[/*num_data*/],
@@ -2106,8 +2106,9 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
@@ -2231,7 +2232,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context);
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], uint16_t order,
 		float clip_threshold_sigma, uint16_t num_fitting_max,

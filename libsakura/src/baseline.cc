@@ -204,7 +204,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d const zero = _mm256_set1_pd(0.);
+	__m256d   const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -234,7 +234,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 	}
 }
 
-inline void GetBestFitBaseline(size_t num_data, float const *data_arg,
+inline void GetBestFitBaselineFloat(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float *out_arg, LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -263,14 +263,15 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 					sizeof(*coeff) * num_coeff, &coeff));
 
 	LIBSAKURA_SYMBOL(Status) coeff_status =
-	LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(num_data, data, mask,
-			context->num_bases, context->basis_data, lsq_matrix, lsq_vector);
+	LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(num_data, data,
+			mask, context->num_bases, context->basis_data, lsq_matrix,
+			lsq_vector);
 	if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
 				"failed in GetLeastSquareFittingCoefficients.");
 	}
 	LIBSAKURA_SYMBOL(Status) solve_status =
-	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(context->num_bases,
+	LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(context->num_bases,
 			lsq_matrix, lsq_vector, coeff);
 	if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error("failed in SolveSimultaneousEquationsByLU.");
@@ -413,8 +414,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			if (num_unmasked_data <= num_clipped) {
 				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(num_data,
-						data, final_mask, baseline_context->num_bases,
+				LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
+						num_data, data, final_mask, baseline_context->num_bases,
 						baseline_context->basis_data, lsq_matrix, lsq_vector);
 				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 					throw std::runtime_error(
@@ -422,8 +423,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				}
 			} else {
 				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(num_data,
-						data, num_clipped, clipped_indices,
+				LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
+						num_data, data, num_clipped, clipped_indices,
 						baseline_context->num_bases,
 						baseline_context->basis_data, lsq_matrix, lsq_vector);
 				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
@@ -433,7 +434,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			LIBSAKURA_SYMBOL(Status) solve_status =
-			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 					baseline_context->num_bases, lsq_matrix, lsq_vector, coeff);
 
 			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
@@ -473,8 +474,10 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	}
 }
 
-inline void GetBestFitBaselineCoefficentsFloat(size_t num_data, float const *data_arg,
-bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
+inline void GetBestFitBaselineCoefficentsFloat(size_t num_data,
+		float const *data_arg,
+		bool const *mask_arg,
+		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
 		size_t num_coeff, double *coeff_arg, bool *final_mask_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
@@ -498,7 +501,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 }
 
-inline void SubtractBaseline(size_t num_data, float const *data_arg,
+inline void SubtractBaselineFloat(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
 		bool get_residual, bool *final_mask_arg, float *out_arg,
@@ -565,8 +568,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			if (num_unmasked_data <= num_clipped) {
 				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(num_data,
-						data, final_mask, baseline_context->num_bases,
+				LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
+						num_data, data, final_mask, baseline_context->num_bases,
 						baseline_context->basis_data, lsq_matrix, lsq_vector);
 				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 					throw std::runtime_error(
@@ -574,8 +577,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				}
 			} else {
 				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(num_data,
-						data, num_clipped, clipped_indices,
+				LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
+						num_data, data, num_clipped, clipped_indices,
 						baseline_context->num_bases,
 						baseline_context->basis_data, lsq_matrix, lsq_vector);
 				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
@@ -585,7 +588,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			LIBSAKURA_SYMBOL(Status) solve_status =
-			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 					baseline_context->num_bases, lsq_matrix, lsq_vector, coeff);
 			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
@@ -625,8 +628,9 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	}
 }
 
-inline void SubtractBaselinePolynomial(size_t num_data, float const *data_arg,
-bool const *mask_arg, uint16_t order, float clip_threshold_sigma,
+inline void SubtractBaselinePolynomialFloat(size_t num_data,
+		float const *data_arg,
+		bool const *mask_arg, uint16_t order, float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool *final_mask_arg, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
@@ -646,7 +650,7 @@ bool const *mask_arg, uint16_t order, float clip_threshold_sigma,
 		DestroyBaselineContext(context);
 	});
 
-	SubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
+	SubtractBaselineFloat(num_data, data, mask, context, clip_threshold_sigma,
 			num_fitting_max, get_residual, final_mask, out, baseline_status);
 }
 
@@ -719,7 +723,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
 		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, float out[],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
@@ -745,7 +749,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	try {
-		GetBestFitBaseline(num_data, data, mask, context, out, baseline_status);
+		GetBestFitBaselineFloat(num_data, data, mask, context, out,
+				baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -827,7 +832,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t *num_coeff) {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
 		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
@@ -861,9 +866,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	try {
-		SubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
-				num_fitting_max, get_residual, final_mask, out,
-				baseline_status);
+		SubtractBaselineFloat(num_data, data, mask, context,
+				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
+				out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -877,7 +882,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaseline)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(
 		size_t num_data, float const data[], bool const mask[], uint16_t order,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool final_mask[], float out[],
@@ -906,7 +911,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	try {
-		SubtractBaselinePolynomial(num_data, data, mask, order,
+		SubtractBaselinePolynomialFloat(num_data, data, mask, order,
 				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
 				out, baseline_status);
 	} catch (const std::bad_alloc &e) {

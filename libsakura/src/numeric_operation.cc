@@ -399,7 +399,7 @@ inline void UpdateLeastSquareFittingCoefficients(size_t const num_data,
 			clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
 }
 
-inline void SolveSimultaneousEquationsByLU(size_t num_equations,
+inline void SolveSimultaneousEquationsByLUDouble(size_t num_equations,
 		double const *in_matrix_arg, double const *in_vector_arg, double *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
@@ -426,8 +426,8 @@ inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 		(func<start_idx + 8>), \
 		(func<start_idx + 9>)
 
-void GetLeastSquareFittingCoefficientsEntry(
-		size_t const num_data, float const data[/*num_data*/],
+void GetLeastSquareFittingCoefficientsEntry(size_t const num_data,
+		float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		double lsq_matrix[/*num_model_bases*num_model_bases*/],
@@ -442,17 +442,17 @@ void GetLeastSquareFittingCoefficientsEntry(
 			float const *data, bool const *mask, size_t const num_model_bases,
 			double const *basis_data, double *lsq_matrix, double *lsq_vector);
 
-	static GetLeastSquareFittingCoefficientsFunc const funcs[] = {
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 0),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 10),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 20),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 30),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 40),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 50),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 60),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 70),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 80),
-	RepeatTen(GetLeastSquareFittingCoefficientsTemplate, 90),
+	static GetLeastSquareFittingCoefficientsFunc const funcs[] = { RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 0), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 10), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 20), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 30), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 40), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 50), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 60), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 70), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 80), RepeatTen(
+			GetLeastSquareFittingCoefficientsTemplate, 90),
 			GetLeastSquareFittingCoefficientsTemplate<100> };
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
@@ -464,9 +464,9 @@ void GetLeastSquareFittingCoefficientsEntry(
 	}
 }
 
-void UpdateLeastSquareFittingCoefficientsEntry(
-		size_t const num_data, float const data[/*num_data*/],
-		size_t const num_clipped, size_t const clipped_indices[/*num_data*/],
+void UpdateLeastSquareFittingCoefficientsEntry(size_t const num_data,
+		float const data[/*num_data*/], size_t const num_clipped,
+		size_t const clipped_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		double lsq_matrix[/*num_model_bases*num_model_bases*/],
@@ -482,17 +482,17 @@ void UpdateLeastSquareFittingCoefficientsEntry(
 			size_t const *clipped_indices, size_t const num_model_bases,
 			double const *basis_data, double *lsq_matrix, double *lsq_vector);
 
-	static UpdateLeastSquareFittingCoefficientsFunc const funcs[] = {
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 0),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 10),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 20),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 30),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 40),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 50),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 60),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 70),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 80),
-	RepeatTen(UpdateLeastSquareFittingCoefficientsTemplate, 90),
+	static UpdateLeastSquareFittingCoefficientsFunc const funcs[] = { RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 0), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 10), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 20), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 30), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 40), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 50), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 60), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 70), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 80), RepeatTen(
+			UpdateLeastSquareFittingCoefficientsTemplate, 90),
 			UpdateLeastSquareFittingCoefficientsTemplate<100> };
 
 	if (num_model_bases < ELEMENTSOF(funcs)) {
@@ -507,7 +507,7 @@ void UpdateLeastSquareFittingCoefficientsEntry(
 
 } /* anonymous namespace */
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficients)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) {
@@ -552,7 +552,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficients)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[],
 		size_t const num_exclude_indices, size_t const exclude_indices[],
 		size_t const num_model_bases, double const basis_data[],
@@ -602,7 +602,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLU)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 		size_t num_equations, double const in_matrix[],
 		double const in_vector[], double out[]) {
 	if (in_matrix == nullptr)
@@ -619,7 +619,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	try {
-		SolveSimultaneousEquationsByLU(num_equations, in_matrix,
+		SolveSimultaneousEquationsByLUDouble(num_equations, in_matrix,
 				in_vector, out);
 	} catch (...) {
 		assert(false);

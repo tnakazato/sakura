@@ -449,8 +449,8 @@ TEST_F(Baseline, GetBestFitBaseline) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -503,8 +503,8 @@ TEST_F(Baseline, GetBestFitBaselineBigDataBigModel) {
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
@@ -550,8 +550,8 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -594,8 +594,8 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data_unaligned, in_mask,
-			context, out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data_unaligned,
+			in_mask, context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -633,8 +633,8 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -677,8 +677,8 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask_unaligned,
-			context, out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data,
+			in_mask_unaligned, context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -712,8 +712,8 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineContextNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 }
 
@@ -751,7 +751,7 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataNumBasisDataNotIdentical) 
 	size_t const num_data_arg(context->num_basis_data + 1);
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data_arg, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data_arg, in_data, in_mask,
 			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
@@ -794,7 +794,7 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataLessThanNumBases) {
 	size_t const num_data_arg(context->num_bases - 1);
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data_arg, in_data, in_mask,
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data_arg, in_data, in_mask,
 			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
@@ -835,8 +835,8 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -879,8 +879,8 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out_unaligned, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out_unaligned, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -921,8 +921,8 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineStatusNullPointer) {
 
 	LIBSAKURA_SYMBOL(BaselineStatus) * getbl_blstatus_ptr = nullptr;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, getbl_blstatus_ptr);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, getbl_blstatus_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -964,8 +964,8 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaseline)(num_data, in_data, in_mask, context,
-			out, &getbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+			context, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), getbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -981,7 +981,6 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1020,9 +1019,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
@@ -1051,7 +1050,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNotAligned) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1091,9 +1089,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data_unaligned,
-			in_mask, context, clipping_threshold_sigma, num_fitting_max,
-			num_coeff, coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data,
+			in_data_unaligned, in_mask, context, clipping_threshold_sigma,
+			num_fitting_max, num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
@@ -1109,7 +1107,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1150,9 +1147,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
@@ -1180,7 +1177,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1220,9 +1216,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_final_mask_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask_unaligned, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask_unaligned, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_final_mask_status);
 
@@ -1238,7 +1234,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNotAligned) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1278,9 +1273,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff_unaligned, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff_unaligned, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
@@ -1296,7 +1291,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNullPointer) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1331,9 +1325,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_data_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_data_status);
 
@@ -1349,7 +1343,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1386,9 +1379,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
@@ -1404,7 +1397,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1443,9 +1435,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
@@ -1461,7 +1453,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNullPointer) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
@@ -1499,9 +1490,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNu
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data, in_mask,
-			context, clipping_threshold_sigma, num_fitting_max, num_coeff,
-			coeff, final_mask, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(num_data, in_data,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
@@ -1552,9 +1543,10 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	bool get_residual = true;
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
@@ -1619,9 +1611,9 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaseline)(num_data, in_data, in_mask, context,
-				clipping_threshold_sigma, num_fitting_max, get_residual,
-				final_mask, out, &subbl_blstatus);
+		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask,
+				context, clipping_threshold_sigma, num_fitting_max,
+				get_residual, final_mask, out, &subbl_blstatus);
 		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
@@ -1684,9 +1676,10 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -1766,9 +1759,10 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -1821,9 +1815,10 @@ TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -1871,10 +1866,10 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data_unaligned, in_mask, context,
-			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
-			out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data_unaligned,
+			in_mask, context, clipping_threshold_sigma, num_fitting_max,
+			get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -1917,9 +1912,10 @@ TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -1967,10 +1963,10 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask_unaligned, context,
-			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
-			out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data,
+			in_mask_unaligned, context, clipping_threshold_sigma,
+			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2010,9 +2006,10 @@ TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 }
 
@@ -2055,9 +2052,10 @@ TEST_F(Baseline, SubtractBaselineWithNumDataNumBasisDataNotEqual) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2104,9 +2102,10 @@ TEST_F(Baseline, SubtractBaselineWithNumDataLessThanNumBases) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2151,9 +2150,10 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2201,10 +2201,10 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask_unaligned, out,
-			&subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual,
+			final_mask_unaligned, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2249,9 +2249,10 @@ TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2299,10 +2300,10 @@ TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out_unaligned,
-			&subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out_unaligned, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2348,9 +2349,10 @@ TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 
 	LIBSAKURA_SYMBOL(BaselineStatus) * subbl_blstatus_ptr = nullptr;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, subbl_blstatus_ptr);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, subbl_blstatus_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2396,9 +2398,10 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2444,9 +2447,10 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2499,9 +2503,10 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -2565,9 +2570,10 @@ TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -2624,9 +2630,10 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 	}
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
@@ -2673,7 +2680,7 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	}
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
-	LIBSAKURA_SYMBOL (Status) status = LIBSAKURA_SYMBOL(SubtractBaseline)(
+	LIBSAKURA_SYMBOL (Status) status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
 			num_data, in_data, in_mask, context, clipping_threshold_sigma,
 			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
@@ -2718,8 +2725,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_data; ++i) {
 		ASSERT_EQ(answer[i], out[i]);
@@ -2772,8 +2779,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClippingBigDataB
 	for (size_t i = 0; i < num_repeat; ++i) {
 		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status) status =
-		LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-				order, 3.0, 1, true, final_mask, out, &baseline_status);
+		LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+				in_mask, order, 3.0, 1, true, final_mask, out,
+				&baseline_status);
 		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -2825,8 +2833,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 10, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 10, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -2893,8 +2901,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 5, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 5, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -2936,8 +2944,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -2979,8 +2987,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialNumDataEqualToOrder) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3013,8 +3021,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialNumDataLessThanOrder) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3046,8 +3054,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithDataNullPointer) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3083,8 +3091,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithDataNotAligned) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data_unaligned,
-			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data,
+			in_data_unaligned, in_mask, order, 3.0, 1, true, final_mask, out,
+			&baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3116,8 +3125,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNullPointer) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3153,7 +3162,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNotAligned) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data,
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
 			in_mask_unaligned, order, 3.0, 1, true, final_mask, out,
 			&baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -3188,8 +3197,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNullPointer) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3225,8 +3234,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNotAligned) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask_unaligned, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask_unaligned, out,
+			&baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3259,8 +3269,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithOutNullPointer) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3296,8 +3306,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithOutNotAligned) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out_unaligned, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out_unaligned,
+			&baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3331,8 +3342,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithBaselineStatusNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineStatus) * baseline_status_ptr = nullptr;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 1, true, final_mask, out, baseline_status_ptr);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 1, true, final_mask, out, baseline_status_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -3366,8 +3377,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 0.0, 5, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 0.0, 5, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 
 	if (verbose) {
@@ -3406,8 +3417,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, -3.0, 5, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, -3.0, 5, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 
 	if (verbose) {
@@ -3451,8 +3462,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 0, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 0, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -3502,8 +3513,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 	LIBSAKURA_SYMBOL (BaselineStatus) baseline_status;
 
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, -5, true, final_mask, out, &baseline_status);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, -5, true, final_mask, out, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < num_data; ++i) {
@@ -3546,8 +3557,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 3.0, 3, true, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 3.0, 3, true, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 }
 
@@ -3583,8 +3594,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialTooManyDataClipped) {
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) status =
-	LIBSAKURA_SYMBOL(SubtractBaselinePolynomial)(num_data, in_data, in_mask,
-			order, 1.0, 10, true, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(num_data, in_data,
+			in_mask, order, 1.0, 10, true, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData), subbl_blstatus);
 }
@@ -4597,9 +4608,10 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 
 	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-			num_data, in_data, in_mask, context, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
+			clipping_threshold_sigma, num_fitting_max, get_residual, final_mask,
+			out, &subbl_blstatus);
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
@@ -4765,8 +4777,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 		}
 
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, num_coeff, coeff_unaligned, out);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, num_coeff, coeff_unaligned, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -4809,8 +4821,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 		}
 
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, num_coeff, coeff, out_unaligned);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, num_coeff, coeff, out_unaligned);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -4844,8 +4856,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, num_coeff, coeff, out);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -4873,8 +4885,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		size_t num_coeff = context->num_bases;
 		double *coeff = nullptr;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, num_coeff, coeff, out);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -4903,8 +4915,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, num_coeff, coeff, out);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -4928,8 +4940,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 			coeff[i] = 1.0f;
 		}
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, num_coeff, coeff, out);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContext(context);
@@ -5040,8 +5052,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		}
 		size_t bad_num_coeff = context->num_bases - 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
-				context, bad_num_coeff, coeff, out);
+		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data,
+				in_data, context, bad_num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContext(context);
@@ -5086,7 +5098,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithBigModelLowOrder) {
 	//LIBSAKURA_SYMBOL (Status) subbl_status;
 	//	subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 	//			num_data, in_data, context, num_coeff, coeff, out);
-		//ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	//ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
