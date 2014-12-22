@@ -81,6 +81,7 @@ add_executable(testInterpolationY        interpolation_y.cc)
 add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
 add_executable(testFFT fft.cc)
+add_executable(testCInterface c_interface.c)
 
 target_link_libraries (testApplyCalibration      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaseline              ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
@@ -94,6 +95,7 @@ target_link_libraries (testInterpolationY        ${GTEST_MAIN_LIBRARIES} ${GTEST
 target_link_libraries (testNumericOperation      ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testStatistics            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testFFT ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testCInterface -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 
 add_dependencies(testInit logConfig)
 
@@ -112,6 +114,7 @@ add_custom_target(testFFTRun            COMMAND ./testFFT            DEPENDS tes
 add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
 add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX --gtest_filter="-*Performance*"   DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY --gtest_filter="-*Performance*"   DEPENDS testInterpolationY)
+add_custom_target(testCInterfaceRun            COMMAND ./testCInterface            DEPENDS testCInterface)
 
 # テストの順序
 # 1 より低レベルのもの(他のテストの前提となる、初期化とかログとかメモリー管理とか)
@@ -131,4 +134,5 @@ add_custom_target(test
 	COMMAND ./testApplyCalibration
 	COMMAND ./testConvolution
 	COMMAND ./testFFT
+	COMMAND ./testCInterface
 	)
