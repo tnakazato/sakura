@@ -39,11 +39,7 @@
 
 namespace concurrent {
 /**
- * universal comment
- * @~english
- * english comment
- * @~japanese
- * 日本語コメント
+ * Producer/Consumer Exception
  */
 class PCException {
 public:
@@ -134,8 +130,7 @@ public:
 	}
 
 	/**
-	 * Returns true if this thread could lock.
-	 * Returns false if already locked.
+	 * @return true if this thread could lock. false if already locked.
 	 */
 	virtual bool TryLock() {
 		return mutex_.TryLock();
@@ -258,7 +253,7 @@ public:
 	virtual void Consume(void *context) throw (PCException) = 0;
 
 	/**
-	 * <src>Produce()</src> should  call this method to
+	 * @ref Produce() should  call this method to
 	 * let consumer to know it is Ready.
 	 */
 	virtual void Ready() = 0;
@@ -267,27 +262,27 @@ public:
 	 * Returns true if ready,
 	 * otherwise, finished or there was an error, returns false.
 	 *
-	 * <src>Consume()</src> should call this method
+	 * @ref Consume() should call this method
 	 * to check if it is ready or not.
-	 * If false is returned, <src>IsError()</src> or/and
-	 * <src>IsFinished()</src> should be called to see the reason.
+	 * If false is returned, @ref IsError() or/and
+	 * @ref IsFinished() should be called to see the reason.
 	 */
 	virtual bool WaitForReady() = 0;
 
 	/**
-	 * Returns true if <src>Produce()</src> was finished,
+	 * Returns true if @ref Produce() was finished,
 	 * otherwise returns false.
 	 */
 	virtual bool IsFinished() = 0;
 
 	/**
-	 * <src>Produce()</src>/<src>Consume()</src> should call this method
-	 * to report error to <src>Consume()</src>/<src>Produce()</src>.
+	 * @ref Produce() / @ref Consume() should call this method
+	 * to report error to @ref Consume() / @ref Produce() .
 	 */
 	virtual void ReportError(void *error_info) = 0;
 
 	/**
-	 * Returns true and set error_info if <src>ReportError()</src> is called,
+	 * Returns true and set error_info if @ref ReportError() is called,
 	 * otherwise returns false and set error_info to NULL.
 	 */
 	virtual bool IsError(void **error_info) = 0;

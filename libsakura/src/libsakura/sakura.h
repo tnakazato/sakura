@@ -50,6 +50,30 @@ extern "C" {
 #endif
 
 /**
+ * @~
+ * @mainpage Sakura Library API
+ *
+ * @section intro Introduction
+ * Sakura Library(libsakura) is a ...
+ *
+ * @section link How to link libsakura to your application
+ * Include <libsakura/sakura.h> from your sources.
+ * @code
+ * #include <libsakura/sakura.h>
+ * @endcode
+ *
+ * Link your application with libsakura by
+ * @verbatim
+	cc/c++ your objects -lsakura ...
+	@endverbatim
+ *
+ * @section api API
+ * Public API of Sakura Library is available @ref sakura.h "here".
+ *
+ */
+;
+
+/**
  * @~japanese
  * @brief 関数の呼び出し結果を表す
  *
@@ -58,17 +82,21 @@ typedef enum {
 	/**
 	 * @~japanese
 	 * @brief 成功または正常
-	 */LIBSAKURA_SYMBOL(Status_kOK) = 0, /**
+	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
+	/**
 	 * @~japanese
 	 * @brief 失敗または異常
-	 */LIBSAKURA_SYMBOL(Status_kNG) = 1, /**
+	 */LIBSAKURA_SYMBOL(Status_kNG) = 1,
+	/**
 	 * @~japanese
 	 * @brief 引数が不正だった
 	 * @a must-be-aligned 制約に違反している場合も含む。
-	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2, /**
+	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2,
+	/**
 	 * @~japanese
 	 * @brief メモリーが足りない
-	 */LIBSAKURA_SYMBOL(Status_kNoMemory) = 3, /**
+	 */LIBSAKURA_SYMBOL(Status_kNoMemory) = 3,
+	/**
 	 * @~japanese
 	 * @brief 原因不明のエラー
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
@@ -1615,10 +1643,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief create context for convolution
  * @details
- * @param[in] num_data number of data. @num_data must
+ * @param[in] num_data number of data. @a num_data must
  * be positive.  0 < num_data < INT32_MAX
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
- * @kernel_type is defined as enum.
+ * @a kernel_type is defined as enum.
  * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM. 0 < kernel_width
  * @param[in] use_fft true means using FFT, false means not using FFT when convolution is performed. And Independent of the type of kernel.
  * If using FFT, FFT applied kernel which is already included context
