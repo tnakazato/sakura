@@ -2334,10 +2334,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t * num_coeff)
  * @details
  * When you provide @a innerMostUntouched = false, @a elements = {3, 4} and @a src = {
  * @code
- *   1,   2,   3,
+     1,   2,   3,
  *   4,   5,   6,
  *   7,   8,   9,
- *   10,  11,  12,
+ *  10,  11,  12,
  * @endcode
  * }, then you will get @a dst as below.
  * @code
@@ -2348,7 +2348,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t * num_coeff)
  * @endcode
  *
  * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
- * @param[in] dims Dimensions of the matrix @a src and @a dst.
+ * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, a number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
  * @param[in] src	Source matrix.
  * @n must-be-aligned
@@ -2379,11 +2379,11 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  *   1,   2,   3,
  *   4,   5,   6,
  *   7,   8,   9,
- *   10,  11,  12,
+ *  10,  11,  12,
  * @endcode
  *
  * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
- * @param[in] dims Dimensions of the matrix @a src and @a dst.
+ * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, a number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
  * @param[in] src	Source matrix.
  * @n must-be-aligned
