@@ -102,7 +102,14 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 /**
  * @~english
  * @brief Initializes Sakura Library
+ *
+ * Initialize libsakura by calling this function before calling any other function of Sakura Library.
+ *
+ * Without calling @ref sakura_CleanUp() , don't call this function again.
+ * @param[in]	allocator	An allocator which is used when Sakura Library needs to allocate memory dynamically. malloc(3) is used if NULL is provided. @ref sakura_UserAllocator
+ * @param[in]	deallocator	A deallocator which is used when Sakura Library needs to free dynamically allocated memory. free(3) is used if NULL is provided. @ref sakura_UserDeallocator
  * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
+ *
  * @~japanese
  * @brief Sakuraライブラリを初期化する
  *
@@ -111,6 +118,7 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  * @ref sakura_CleanUp() の呼び出しを挟まず、複数回この関数を呼び出してはならない。
  * @param[in]	allocator	Sakuraライブラリ内で、メモリーを確保するときに呼び出されるアロケーター。NULLの場合はmalloc(3)が使用される。 @ref sakura_UserAllocator
  * @param[in]	deallocator	Sakuraライブラリ内で、メモリーを開放するときに呼び出されるデアロケーター。NULLの場合はfree(3)が使用される。 @ref sakura_UserDeallocator
+ * @return @a sakura_Status_kOK が返されたときのみ、Sakuraライブラリを使用できる。
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
@@ -120,6 +128,7 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~english
  * @brief Cleans up Sakura Library
+ * When you call this function, no function of Sakura Library must not be running.
  * @~japanese
  * @brief Sakuraライブラリをクリーンアップする
  *
@@ -133,6 +142,9 @@ void LIBSAKURA_SYMBOL(CleanUp)();
 /**
  * @~english
  * @brief Returns the current time.
+ * Precision of the time depends on gettimeofday(2).
+ * @return Current time in seconds since the Epoch.
+ *
  * @~japanese
  * @brief 現在時刻(単位は秒)を返す
  *
@@ -159,10 +171,15 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
 bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
 
 /**
+ * @~english
+ * @brief Returns an alignment that Sakura Library expects for arrays on which vector operations are performed.
+ *
+ * @return An expected alignment for arrays marked as must-be-aligned.
+ *
  * @~japanese
  * @brief Sakuraライブラリがベクトル演算を行う配列に期待するアライメントを返す
  *
- * @return Sakuraライブラリは、戻り値の倍数アドレスにアラインされることを期待する
+ * @return must-be-alignedとマークされた配列に期待されるアライメント
  * @~
  * MT-safe
  */
@@ -290,11 +307,11 @@ typedef struct {
  * @brief Computes statistics. Refer to
  * @ref sakura_StatisticsResultFloat to see what kind of statistics are computed.
  *
- * @param[in] num_data A number of elements of @a data and @a is_valid . @a num_data <= INT32_MAX
- * @param[in] data Data. If corresponding element of @a is_valid is true, the element must not be Inf nor NaN.
+ * @param[in] num_data A number of elements in @a data and @a is_valid . @a num_data <= INT32_MAX
+ * @param[in] data Data. If corresponding element in @a is_valid is true, the element in @a data must not be Inf nor NaN.
  * <br/>must-be-aligned
  * @param[in] is_valid Masks of @a data. If a value of element is false,
- * corresponding element of @a data is ignored.
+ * the corresponding element in @a data is ignored.
  * <br/>must-be-aligned
  * @param[out] result An address where the result should be stored. Some fields may be set to NaN if it is impossible to figure out.
  * If there is more than one occurrence of min or max value, it is undefined which index of the occurrence is selected for @a index_of_min or @a index_of_max.
@@ -321,12 +338,12 @@ typedef struct {
  * @~english
  * @brief Sort only valid data in ascending order.
  *
+ * @param[in] num_data A number of elements in @a data and @a is_valid .
  * @param[in] is_valid Masks of @a data. If a value of element is false,
- * corresponding element of @a data is ignored.
- * @param[in] num_data A number of elements of @a data and @a is_valid .
- * @param[in,out] data Data to be sorted. Since Data is sorted in place, contents of this array are not preserved.
- * If corresponding element of @a is_valid is true, the element must not be Inf nor NaN.
- * @param[out] new_num_data A number of sorted elements that don't include invalid data( <= @a num_data ) is stored in @a new_num_data.
+ * the corresponding element in @a data is ignored.
+ * @param[in,out] data Data to be sorted. Since data is sorted in place, contents of this array are not preserved.
+ * If corresponding element in @a is_valid is true, the element in @a data must not be Inf nor NaN.
+ * @param[out] new_num_data A number of sorted elements that don't include invalid data( <= @a num_data ) is stored here.
  * @return status code
  *
  * @~
