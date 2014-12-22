@@ -5206,9 +5206,6 @@ TEST_F(Baseline, GetNumberOfCoefficientsWithNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	size_t num_coeff = 0;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context,&num_coeff));
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
+			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, &num_coeff));
 }
 

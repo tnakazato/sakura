@@ -204,7 +204,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d   const zero = _mm256_set1_pd(0.);
+	__m256d         const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -825,7 +825,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficen
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t *num_coeff) {
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t *num_coeff) {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	*num_coeff = context->num_bases;
