@@ -64,7 +64,7 @@ extern "C" {
  *
  * Link your application with libsakura by
  * @verbatim
-	cc/c++ your objects -lsakura ...
+	cc/c++ -rdynamic your objects -lsakura ...
 	@endverbatim
  *
  * @section api API
@@ -80,23 +80,41 @@ extern "C" {
  */
 typedef enum {
 	/**
+	 * @~english
+	 * @brief Success or normal end
+	 *
 	 * @~japanese
 	 * @brief 成功または正常
 	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
 	/**
+	 * @~english
+	 * @brief Failure or abnormal end
+	 *
 	 * @~japanese
 	 * @brief 失敗または異常
 	 */LIBSAKURA_SYMBOL(Status_kNG) = 1,
 	/**
+	 * @~english
+	 * @brief Illegal argument(s)
+	 *
+	 * This includes a violation of the must-be-aligned constraint.
+	 *
 	 * @~japanese
 	 * @brief 引数が不正だった
+	 *
 	 * @a must-be-aligned 制約に違反している場合も含む。
 	 */LIBSAKURA_SYMBOL(Status_kInvalidArgument) = 2,
 	/**
+	 * @~english
+	 * @brief No memory
+	 *
 	 * @~japanese
 	 * @brief メモリーが足りない
 	 */LIBSAKURA_SYMBOL(Status_kNoMemory) = 3,
 	/**
+	 * @~english
+	 * @brief Unknown error
+	 *
 	 * @~japanese
 	 * @brief 原因不明のエラー
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
@@ -107,7 +125,9 @@ typedef enum {
  * @brief A type of the allocator function called by Sakura Library.
  *
  * Implementation of function of this type must be reentrant.
- * And it must returns a valid pointer for memory region of size 0 if 0 is passed as @a size parameter.
+ *
+ * @note
+ * It must return a valid pointer to a memory region of size 0 if 0 is passed as @a size parameter.
  *
  * @param[in] size	Size of required memory in bytes
  * @return Allocated memory. NULL if failed to allocate.
@@ -129,7 +149,9 @@ typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
  * @brief A type of the deallocator function called by Sakura Library.
  *
  * Implementation of function of this type must be reentrant.
- * And it must do nothing if NULL is passed as @a pointer parameter.
+ *
+ * @note
+ * It must do nothing if NULL is passed as @a pointer parameter.
  *
  * @param[in] pointer	NULL or an address to be released which was allocated by the allocator of type @ref sakura_UserAllocator .
  *
