@@ -75,6 +75,15 @@ typedef enum {
 }LIBSAKURA_SYMBOL(Status);
 
 /**
+ * @~english
+ * @brief A type of the allocator function called by Sakura Library.
+ *
+ * Implementation of function of this type must be reentrant.
+ * And it must returns a valid pointer for memory region of size 0 if 0 is passed as @a size parameter.
+ *
+ * @param[in] size	Size of required memory in bytes
+ * @return Allocated memory. NULL if failed to allocate.
+ *
  * @~japanese
  * @brief Sakuraライブラリが動的にメモリーを確保するときに呼び出す関数の型
  *
@@ -88,6 +97,14 @@ typedef enum {
 typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
 
 /**
+ * @~english
+ * @brief A type of the deallocator function called by Sakura Library.
+ *
+ * Implementation of function of this type must be reentrant.
+ * And it must do nothing if NULL is passed as @a pointer parameter.
+ *
+ * @param[in] pointer	NULL or an address to be released which was allocated by the allocator of type @ref sakura_UserAllocator .
+ *
  * @~japanese
  * @brief Sakuraライブラリが動的に確保したメモリーを開放するときに呼び出す関数の型
  *
@@ -101,13 +118,13 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 
 /**
  * @~english
- * @brief Initializes Sakura Library
+ * @brief Initializes Sakura Library.
  *
  * Initialize libsakura by calling this function before calling any other function of Sakura Library.
  *
  * Without calling @ref sakura_CleanUp() , don't call this function again.
- * @param[in]	allocator	An allocator which is used when Sakura Library needs to allocate memory dynamically. malloc(3) is used if NULL is provided. @ref sakura_UserAllocator
- * @param[in]	deallocator	A deallocator which is used when Sakura Library needs to free dynamically allocated memory. free(3) is used if NULL is provided. @ref sakura_UserDeallocator
+ * @param[in]	allocator	An allocator which is used when Sakura Library needs to allocate memory dynamically. malloc(3) is used if NULL is provided. See @ref sakura_UserAllocator .
+ * @param[in]	deallocator	A deallocator which is used when Sakura Library needs to free dynamically allocated memory. free(3) is used if NULL is provided. See @ref sakura_UserDeallocator .
  * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
  *
  * @~japanese
@@ -116,8 +133,8 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  * 他の全てのSakuraライブラリAPIの呼び出しに先立って、呼び出すこと。
  * マルチスレッドセーフではないので、単一のスレッドから呼び出すこと。
  * @ref sakura_CleanUp() の呼び出しを挟まず、複数回この関数を呼び出してはならない。
- * @param[in]	allocator	Sakuraライブラリ内で、メモリーを確保するときに呼び出されるアロケーター。NULLの場合はmalloc(3)が使用される。 @ref sakura_UserAllocator
- * @param[in]	deallocator	Sakuraライブラリ内で、メモリーを開放するときに呼び出されるデアロケーター。NULLの場合はfree(3)が使用される。 @ref sakura_UserDeallocator
+ * @param[in]	allocator	Sakuraライブラリ内で、メモリーを確保するときに呼び出されるアロケーター。NULLの場合はmalloc(3)が使用される。 @ref sakura_UserAllocator 参照
+ * @param[in]	deallocator	Sakuraライブラリ内で、メモリーを開放するときに呼び出されるデアロケーター。NULLの場合はfree(3)が使用される。 @ref sakura_UserDeallocator 参照
  * @return @a sakura_Status_kOK が返されたときのみ、Sakuraライブラリを使用できる。
  * @~
  * MT-unsafe
@@ -127,7 +144,8 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
- * @brief Cleans up Sakura Library
+ * @brief Cleans up Sakura Library.
+ *
  * When you call this function, no function of Sakura Library must not be running.
  * @~japanese
  * @brief Sakuraライブラリをクリーンアップする
@@ -141,7 +159,7 @@ void LIBSAKURA_SYMBOL(CleanUp)();
 
 /**
  * @~english
- * @brief Returns the current time.
+ * @brief Returns a current time.
  * Precision of the time depends on gettimeofday(2).
  * @return Current time in seconds since the Epoch.
  *
