@@ -459,7 +459,7 @@ void GetLeastSquareFittingCoefficientsEntry(size_t const num_data,
 		funcs[num_model_bases](num_data, data, mask, num_model_bases,
 				basis_data, lsq_matrix, lsq_vector);
 	} else {
-		::GetLeastSquareFittingCoefficients(num_data, data, mask,
+		GetLeastSquareFittingCoefficients(num_data, data, mask,
 				num_model_bases, basis_data, lsq_matrix, lsq_vector);
 	}
 }
@@ -499,7 +499,7 @@ void UpdateLeastSquareFittingCoefficientsEntry(size_t const num_data,
 		funcs[num_model_bases](num_data, data, num_clipped, clipped_indices,
 				num_model_bases, basis_data, lsq_matrix, lsq_vector);
 	} else {
-		::UpdateLeastSquareFittingCoefficients(num_data, data, num_clipped,
+		UpdateLeastSquareFittingCoefficients(num_data, data, num_clipped,
 				clipped_indices, num_model_bases, basis_data, lsq_matrix,
 				lsq_vector);
 	}
