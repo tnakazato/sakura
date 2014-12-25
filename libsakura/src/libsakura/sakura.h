@@ -1633,13 +1633,43 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @return 終了ステータス。
  *
  * @~english
- * @brief Apply position switch calibration.
- * @param[in] num_scaling_factor
- * @param[in] scaling_factor
- * @param[in] num_data
- * @param[in] target
- * @param[in] reference
- * @param[out] result
+ * @brief Perform position switch calibration.
+ * @details
+ * Perform position switch calibration. Specifically, it will calculate,
+ * @verbatim result = scalinb_factor * (target - reference) / reference @endverbatim
+ * which physically corresponds to
+ * @verbatim calibrated = Tsys * (ON - OFF) / OFF @endverbatim
+ * where Tsys is system temperature, ON and OFF are on source and off source spectra,
+ * respectively.
+ * @n
+ * @n
+ * The function returns result status. For successful run, return value will be
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink.
+ * On the other hand, it will return
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * if any invalid values are passed to arguments.
+ * @n
+ * @n
+ * The function allows in-place calculation, i.e., @a result array can be either @a target or
+ * @a reference. In this case, @a target or @a reference will be overwritten.
+ * @pre
+ * @a num_scaling_factor should be 1 or equal to @a num_data. These values corresponds to the case of
+ * frequency-independent (channel averaged) or frequency-dependent system temperature,
+ * respectively.
+ *
+ * @param[in] num_scaling_factor number of elements of @a scaling_factor. Its value should be
+ * 1 or equal to @a num_data.
+ * @param[in] scaling_factor scaling factor corresponding to system temperature. number of
+ * elements must be @a num_scaling_factor.
+ * must-be-aligned
+ * @param[in] num_data number of data
+ * @param[in] target target (on source) data. number of elements must be @a num_data.
+ * must-be-aligned
+ * @param[in] reference reference (off source) data. number of elements must be @a num_data.
+ * must-be-aligned
+ * @param[out] result resulting (calibrated) data. one can give same array with either
+ * @a target or @a reference for in-place calculation. number of elements must be @a num_data.
+ * must-be-aligned
  *
  * @return status code.
  *
