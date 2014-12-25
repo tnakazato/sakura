@@ -50,30 +50,9 @@ extern "C" {
 #endif
 
 /**
- * @~
- * @mainpage Sakura Library API
+ * @~english
+ * @brief A result of function call.
  *
- * @section intro Introduction
- * Sakura Library(libsakura) is a ...
- *
- * @section link How to link libsakura to your application
- * Include <libsakura/sakura.h> from your sources.
- * @code
- * #include <libsakura/sakura.h>
- * @endcode
- *
- * Link your application with libsakura, for example, by
- * @verbatim
- cc/c++ -rdynamic your objects -L<where libsakura resides> -Wl,-rpath,<where libsakura resides> -lsakura ...
- @endverbatim
- *
- * @section api API
- * Public API of Sakura Library is available @ref sakura.h "here".
- *
- */
-;
-
-/**
  * @~japanese
  * @brief 関数の呼び出し結果を表す
  *
