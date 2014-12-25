@@ -5123,8 +5123,9 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
  * subtract best fit model from input data using input coeff
  */
 TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
-	size_t const num_data(3840);
-	size_t const num_model(400);
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+
 	SIMD_ALIGN
 	float in_data[num_data];
 	for (size_t i = 0; i < num_data; ++i) {
@@ -5149,21 +5150,28 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	size_t num_coeff = context->num_bases;
+
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	for (size_t i = 0; i < num_coeff; ++i) {
 		coeff[i] = 1.0f;
 	}
-	LIBSAKURA_SYMBOL (Status) subbl_status;
-	size_t loop_max = 1000;
+
+	size_t loop_max = 10000000;
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
-		subbl_status = LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-				num_data, in_data, context, num_coeff, coeff, out);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(num_data, in_data,
+			context, num_coeff, coeff, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
 	double end_time = sakura_GetCurrentTime();
 	std::cout << "Elapsed Time: " << end_time - start_time << "sec\n";
+
+	for (size_t i = 0; i < num_data; ++i) {
+		EXPECT_EQ(answer[i], out[i]);
+	}
+
 	if (verbose) {
 		PrintArray("out   ", num_data, out);
 		PrintArray("answer", num_data, answer);
