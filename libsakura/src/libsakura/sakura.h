@@ -1603,7 +1603,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @~
  * MT-safe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrationFloat)(
 		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],

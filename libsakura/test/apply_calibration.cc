@@ -34,7 +34,7 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
-#define APPLYCAL_TEST(NAME) TEST_F(ApplyCalibrationTest, NAME)
+#define APPLYCAL_FLOAT_TEST(NAME) TEST_F(ApplyCalibrationFloatTest, NAME)
 
 namespace {
 void InitializeFloatArray(size_t num_array, float array[], ...) {
@@ -165,7 +165,7 @@ struct IntrinsicsTestInitializer {
 };
 } // anonymous namespace
 
-class ApplyCalibrationTest: public ::testing::Test {
+class ApplyCalibrationFloatTest: public ::testing::Test {
 public:
 	virtual void SetUp() {
 		// Initialize sakura
@@ -218,7 +218,7 @@ public:
 				float *wr = &result[i * num_data];
 				double start = sakura_GetCurrentTime();
 				LIBSAKURA_SYMBOL(Status) result_status =
-				LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
+				LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrationFloat)(
 						num_scaling_factor, ws, num_data, wt, wf, wr);
 				double end = sakura_GetCurrentTime();
 				elapsed_time += end - start;
@@ -294,7 +294,7 @@ public:
 	}
 };
 
-APPLYCAL_TEST(NullPointer) {
+APPLYCAL_FLOAT_TEST(NullPointer) {
 	size_t const num_scaling_factor = 1;
 	size_t const num_data = 1;
 	SIMD_ALIGN
@@ -307,7 +307,7 @@ APPLYCAL_TEST(NullPointer) {
 			false);
 }
 
-APPLYCAL_TEST(InputArrayNotAligned) {
+APPLYCAL_FLOAT_TEST(InputArrayNotAligned) {
 	size_t const num_scaling_factor = 1;
 	size_t const num_data = 1;
 	SIMD_ALIGN
@@ -320,62 +320,62 @@ APPLYCAL_TEST(InputArrayNotAligned) {
 			false);
 }
 
-APPLYCAL_TEST(ZeroLengthData) {
+APPLYCAL_FLOAT_TEST(ZeroLengthData) {
 	RunTest<ZeroLengthDataInitializer<0, 1>, EmptyHelper, 0, 1,
 	false>();
 }
 
-APPLYCAL_TEST(ZeroLengthScalingFactor) {
+APPLYCAL_FLOAT_TEST(ZeroLengthScalingFactor) {
 	RunTest<ZeroLengthScalingFactorInitializer<1, 0>, EmptyHelper, 1, 0,
 	false>(false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
-APPLYCAL_TEST(InvaidNumberOfScalingFactor) {
+APPLYCAL_FLOAT_TEST(InvaidNumberOfScalingFactor) {
 	RunTest<InvalidNumberOfScalingFactorInitializer<3, 2>, EmptyHelper, 3, 2,
 	false>(false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
-APPLYCAL_TEST(ZeroDivision) {
+APPLYCAL_FLOAT_TEST(ZeroDivision) {
 	RunTest<ZeroDivisionTestInitializer<2, 1>, ZeroDivisionTestHelper<2, 1>, 2,
 			1, false>(false);
 }
 
-APPLYCAL_TEST(BasicTest) {
+APPLYCAL_FLOAT_TEST(BasicTest) {
 	RunTest<BasicTestInitializer<2, 2>, EmptyHelper, 2, 2, false>();
 }
 
-APPLYCAL_TEST(InPlaceTest) {
+APPLYCAL_FLOAT_TEST(InPlaceTest) {
 	RunTest<BasicTestInitializer<2, 2>, InPlaceTestHelper<2, 2>, 2, 2, true>();
 }
 
-APPLYCAL_TEST(SingleScalingFactor) {
+APPLYCAL_FLOAT_TEST(SingleScalingFactor) {
 	RunTest<SingleScalingFactorTestInitializer<2, 1>, EmptyHelper, 2, 1, false>();
 }
 
-APPLYCAL_TEST(TooManyScalingFactor) {
+APPLYCAL_FLOAT_TEST(TooManyScalingFactor) {
 	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>();
 }
 
-APPLYCAL_TEST(IntrinsicsTest) {
+APPLYCAL_FLOAT_TEST(IntrinsicsTest) {
 	RunTest<IntrinsicsTestInitializer<10, 10>, EmptyHelper, 10, 10, false>();
 }
 
-APPLYCAL_TEST(PerformanceTestAllAtOnce) {
+APPLYCAL_FLOAT_TEST(PerformanceTestAllAtOnce) {
 	RunPerformanceTest<10, 1, 40000000, 40000000, false>();
 }
 
-APPLYCAL_TEST(PerformanceTestIndividual) {
+APPLYCAL_FLOAT_TEST(PerformanceTestIndividual) {
 	RunPerformanceTest<10, 1000, 40000, 40000, false>();
 }
 
-APPLYCAL_TEST(PerformanceTestSingleScalingFactor) {
+APPLYCAL_FLOAT_TEST(PerformanceTestSingleScalingFactor) {
 	RunPerformanceTest<10, 1, 40000000, 1, false>();
 }
 
-APPLYCAL_TEST(PerformanceTestShareInputOutput) {
+APPLYCAL_FLOAT_TEST(PerformanceTestShareInputOutput) {
 	RunPerformanceTest<50, 1000, 40000, 40000, true>();
 }
 
-APPLYCAL_TEST(PerformanceTestShareInputOutputSingleScalingFactor) {
+APPLYCAL_FLOAT_TEST(PerformanceTestShareInputOutputSingleScalingFactor) {
 	RunPerformanceTest<50, 1000, 40000, 1, true>();
 }
