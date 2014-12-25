@@ -62,9 +62,9 @@ extern "C" {
  * #include <libsakura/sakura.h>
  * @endcode
  *
- * Link your application with libsakura by
+ * Link your application with libsakura, for example, by
  * @verbatim
- cc/c++ -rdynamic your objects -lsakura ...
+ cc/c++ -rdynamic your objects -L<where libsakura resides> -Wl,-rpath,<where libsakura resides> -lsakura ...
  @endverbatim
  *
  * @section api API
