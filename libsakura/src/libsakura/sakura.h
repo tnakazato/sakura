@@ -2427,7 +2427,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[out] out the output data. its length must be @a num_data .
  * @n must-be-aligned
- * @param[out] baseline_status baseline-specific error code.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 		size_t num_data, float const data[/*num_data*/],
@@ -2440,11 +2439,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @brief 最小二乗フィットにより得られたベストフィット係数を返す
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] num_coeff 最小二乗フィットにより得られたベストフィット係数の要素数。
  * @return 終了ステータス
  * @~english
  * @brief return best fit coefficients obtained by least-square fitting.
  * @details
  * @param[in] context an object containing baseline model data.
+ * @param[in] num_coeff number of best fit coefficients obtained by least-square fitting.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
