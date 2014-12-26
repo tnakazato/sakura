@@ -982,13 +982,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
- * @copybrief sakura_OperateBitsUint8And
- * @copydetails sakura_OperateBitsUint8And
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
+ * @copybrief sakura_OperateBitwiseAndUint8
+ * @copydetails sakura_OperateBitwiseAndUint8
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
@@ -1058,13 +1058,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
- * @copybrief sakura_OperateBitsUint8ConverseNonImplication
- * @copydetails sakura_OperateBitsUint8ConverseNonImplication
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
+ * @copybrief sakura_OperateBitwiseConverseNonImplicationUint8
+ * @copydetails sakura_OperateBitwiseConverseNonImplicationUint8
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
@@ -1134,13 +1134,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
- * @copybrief sakura_OperateBitsUint8Implication
- * @copydetails sakura_OperateBitsUint8Implication
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implication)(
+ * @copybrief sakura_OperateBitwiseImplicationUint8
+ * @copydetails sakura_OperateBitwiseImplicationUint8
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
@@ -1193,13 +1193,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(size_t num_data,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(size_t num_data,
 		uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
- * @copybrief sakura_OperateBitsUint8Not
- * @copydetails sakura_OperateBitsUint8Not
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
+ * @copybrief sakura_OperateBitwiseNotUint8
+ * @copydetails sakura_OperateBitwiseNotUint8
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
@@ -1267,13 +1267,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(uint8_t bit_mask,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(uint8_t bit_mask,
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
- * @copybrief sakura_OperateBitsUint8Or
- * @copydetails sakura_OperateBitsUint8Or
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
+ * @copybrief sakura_OperateBitwiseOrUint8
+ * @copydetails sakura_OperateBitwiseOrUint8
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 
@@ -1341,13 +1341,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
- * @copybrief sakura_OperateBitsUint8Xor
- * @copydetails sakura_OperateBitsUint8Xor
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
+ * @copybrief sakura_OperateBitwiseXorUint8
+ * @copydetails sakura_OperateBitwiseXorUint8
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
 

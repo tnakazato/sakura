@@ -453,22 +453,22 @@ class BitOperation32: public BitOperation<uint32_t> {
 
 protected:
 	BitOperation32() {
-		operation_functions[And] = LIBSAKURA_SYMBOL(OperateBitsUint32And);
+		operation_functions[And] = LIBSAKURA_SYMBOL(OperateBitwiseAndUint32);
 		operation_functions[NonImplication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint32And);
+		LIBSAKURA_SYMBOL(OperateBitwiseAndUint32);
 		operation_functions[ConverseNonImplication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication);
+		LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32);
 		operation_functions[Nor] =
-		LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication);
+		LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32);
 		operation_functions[Implication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint32Implication);
+		LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32);
 		operation_functions[Nand] =
-		LIBSAKURA_SYMBOL(OperateBitsUint32Implication);
-		operation_functions[Or] = LIBSAKURA_SYMBOL(OperateBitsUint32Or);
+		LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32);
+		operation_functions[Or] = LIBSAKURA_SYMBOL(OperateBitwiseOrUint32);
 		operation_functions[ConverseImplication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint32Or);
-		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitsUint32Xor);
-		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitsUint32Xor);
+		LIBSAKURA_SYMBOL(OperateBitwiseOrUint32);
+		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint32);
+		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint32);
 		operation_functions[Not] = Not32Wrapper;
 
 		Initialize();
@@ -477,7 +477,7 @@ protected:
 	static LIBSAKURA_SYMBOL(Status) Not32Wrapper(uint32_t bit_mask,
 			size_t num_data, uint32_t const *data, bool const *edit_mask,
 			uint32_t *result) {
-		return LIBSAKURA_SYMBOL(OperateBitsUint32Not)(num_data, data, edit_mask,
+		return LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(num_data, data, edit_mask,
 				result);
 	}
 };
@@ -517,22 +517,22 @@ class BitOperation8: public BitOperation<uint8_t> {
 
 protected:
 	BitOperation8() {
-		operation_functions[And] = LIBSAKURA_SYMBOL(OperateBitsUint8And);
+		operation_functions[And] = LIBSAKURA_SYMBOL(OperateBitwiseAndUint8);
 		operation_functions[NonImplication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint8And);
+		LIBSAKURA_SYMBOL(OperateBitwiseAndUint8);
 		operation_functions[ConverseNonImplication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication);
+		LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8);
 		operation_functions[Nor] =
-		LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication);
+		LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8);
 		operation_functions[Implication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint8Implication);
+		LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8);
 		operation_functions[Nand] =
-		LIBSAKURA_SYMBOL(OperateBitsUint8Implication);
-		operation_functions[Or] = LIBSAKURA_SYMBOL(OperateBitsUint8Or);
+		LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8);
+		operation_functions[Or] = LIBSAKURA_SYMBOL(OperateBitwiseOrUint8);
 		operation_functions[ConverseImplication] =
-		LIBSAKURA_SYMBOL(OperateBitsUint8Or);
-		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitsUint8Xor);
-		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitsUint8Xor);
+		LIBSAKURA_SYMBOL(OperateBitwiseOrUint8);
+		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint8);
+		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint8);
 		operation_functions[Not] = Not8Wrapper;
 
 		Initialize();
@@ -540,7 +540,7 @@ protected:
 	static LIBSAKURA_SYMBOL(Status) Not8Wrapper(uint8_t bit_mask,
 			size_t num_data, uint8_t const *data, bool const *edit_mask,
 			uint8_t *result) {
-		return LIBSAKURA_SYMBOL(OperateBitsUint8Not)(num_data, data, edit_mask,
+		return LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(num_data, data, edit_mask,
 				result);
 	}
 };

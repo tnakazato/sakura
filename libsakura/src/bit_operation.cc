@@ -34,7 +34,7 @@
 namespace {
 
 template<typename DataType>
-inline void OperateBitsAnd(DataType bit_mask, size_t num_data,
+inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 
@@ -62,11 +62,11 @@ inline void OperateBitsAnd(DataType bit_mask, size_t num_data,
 
 }
 //template<typename DataType>
-//inline void OperateBitsAnd(DataType bit_mask, size_t num_data,
+//inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
 //		DataType const *data,
 //		bool const *edit_mask, DataType *result) {
 //
-//	//std::cout << "Invoking OperateBitsAnd()" << std::endl;
+//	//std::cout << "Invoking OperateBitwiseAnd()" << std::endl;
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 //	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
@@ -89,7 +89,7 @@ inline void OperateBitsAnd(DataType bit_mask, size_t num_data,
 //}
 
 template<typename DataType>
-inline void OperateBitsConverseNonImplication(DataType bit_mask,
+inline void OperateBitwiseConverseNonImplication(DataType bit_mask,
 		size_t num_data, DataType const *data, bool const *edit_mask,
 		DataType *result) {
 
@@ -117,7 +117,7 @@ inline void OperateBitsConverseNonImplication(DataType bit_mask,
 }
 
 template<typename DataType>
-inline void OperateBitsImplication(DataType bit_mask, size_t num_data,
+inline void OperateBitwiseImplication(DataType bit_mask, size_t num_data,
 		DataType const *data, bool const *edit_mask, DataType *result) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -144,7 +144,7 @@ inline void OperateBitsImplication(DataType bit_mask, size_t num_data,
 }
 
 template<typename DataType>
-inline void OperateBitsNot(size_t num_data, DataType const *data,
+inline void OperateBitwiseNot(size_t num_data, DataType const *data,
 bool const *edit_mask, DataType *result) {
 
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -168,7 +168,7 @@ bool const *edit_mask, DataType *result) {
 }
 
 template<typename DataType>
-inline void OperateBitsOr(DataType bit_mask, size_t num_data,
+inline void OperateBitwiseOr(DataType bit_mask, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 
@@ -194,7 +194,7 @@ inline void OperateBitsOr(DataType bit_mask, size_t num_data,
 }
 
 template<typename DataType>
-inline void OperateBitsXor(DataType bit_mask, size_t num_data,
+inline void OperateBitwiseXor(DataType bit_mask, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 
@@ -222,7 +222,7 @@ inline void OperateBitsXor(DataType bit_mask, size_t num_data,
 } /* anonymous namespace */
 
 // Bit operation AND
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
@@ -241,7 +241,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 
 	// Now actual operation
 	try {
-		OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -251,7 +251,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8And)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
@@ -270,7 +270,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 
 	// Now actual operation
 	try {
-		OperateBitsAnd(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -281,7 +281,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32And)(
 }
 
 // Bit operation, Converse Nonimplication
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNonImplication)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
@@ -300,7 +300,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNon
 
 	// Now actual operation
 	try {
-		OperateBitsConverseNonImplication(bit_mask, num_data, data,
+		OperateBitwiseConverseNonImplication(bit_mask, num_data, data,
 				edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
@@ -311,7 +311,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8ConverseNon
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNonImplication)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
@@ -330,7 +330,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNo
 
 	// Now actual operation
 	try {
-		OperateBitsConverseNonImplication(bit_mask, num_data, data,
+		OperateBitwiseConverseNonImplication(bit_mask, num_data, data,
 				edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
@@ -342,7 +342,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32ConverseNo
 }
 
 // Bit operation, Material Implication
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
@@ -361,7 +361,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication
 
 	// Now actual operation
 	try {
-		OperateBitsImplication(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -371,7 +371,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Implication
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implication)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
@@ -390,7 +390,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implicatio
 
 	// Now actual operation
 	try {
-		OperateBitsImplication(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -401,7 +401,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Implicatio
 }
 
 // Bit operation NOT
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[], bool const edit_mask[],
 		uint8_t result[]) {
 	// Check parameter arguments.
@@ -420,7 +420,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(
 
 	// Now actual operation
 	try {
-		OperateBitsNot(num_data, data, edit_mask, result);
+		OperateBitwiseNot(num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -430,7 +430,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Not)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[], bool const edit_mask[],
 		uint32_t result[]) {
 	// Check parameter arguments.
@@ -449,7 +449,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
 
 	// Now actual operation
 	try {
-		OperateBitsNot(num_data, data, edit_mask, result);
+		OperateBitwiseNot(num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -460,7 +460,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Not)(
 }
 
 // Bit operation OR
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
@@ -479,7 +479,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
 
 	// Now actual operation
 	try {
-		OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -489,7 +489,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Or)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
@@ -508,7 +508,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
 
 	// Now actual operation
 	try {
-		OperateBitsOr(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -519,7 +519,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Or)(
 }
 
 // Bit operation XOR
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) {
 	// Check parameter arguments.
@@ -538,7 +538,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
 
 	// Now actual operation
 	try {
-		OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -548,7 +548,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint8Xor)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) {
 	// Check parameter arguments.
@@ -567,7 +567,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitsUint32Xor)(
 
 	// Now actual operation
 	try {
-		OperateBitsXor(bit_mask, num_data, data, edit_mask, result);
+		OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
