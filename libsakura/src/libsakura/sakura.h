@@ -2305,6 +2305,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
+ * @param[in] context an object containing baseline model data.
  * @param[in] clip_threshold_sigma the threshold of clipping in unit
  * of sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
