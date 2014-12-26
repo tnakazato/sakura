@@ -31,7 +31,7 @@
 namespace {
 
 template<typename DataType, size_t NUM_BOUNDS>
-inline void SetTrueInRangesInclusiveVector(size_t num_data,
+inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
@@ -49,7 +49,7 @@ inline void SetTrueInRangesInclusiveVector(size_t num_data,
 }
 
 template<typename DataType, size_t NUM_BOUNDS>
-inline void SetTrueInRangesInclusiveScalar(size_t num_data,
+inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
@@ -69,7 +69,7 @@ inline void SetTrueInRangesInclusiveScalar(size_t num_data,
 }
 
 template<typename DataType>
-inline void SetTrueInRangesInclusiveGeneric(size_t num_data,
+inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
@@ -89,7 +89,7 @@ inline void SetTrueInRangesInclusiveGeneric(size_t num_data,
 }
 
 template<typename DataType, size_t NUM_BOUNDS>
-inline void SetTrueInRangesExclusiveScalar(size_t num_data,
+inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
@@ -109,7 +109,7 @@ inline void SetTrueInRangesExclusiveScalar(size_t num_data,
 }
 
 template<typename DataType>
-inline void SetTrueInRangesExclusiveGeneric(size_t num_data,
+inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
@@ -129,7 +129,7 @@ inline void SetTrueInRangesExclusiveGeneric(size_t num_data,
 }
 
 template<typename DataType>
-inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
+inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
 	DataType const zero(static_cast<DataType>(0));
 	auto adata = AssumeAligned(data);
@@ -139,7 +139,7 @@ inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
 	}
 }
 //template<typename DataType>
-//inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
+//inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 //		DataType threshold, bool *result) {
 //	DataType const zero(static_cast<DataType>(0));
 //	for (size_t i = 0; i < num_data; ++i) {
@@ -148,7 +148,7 @@ inline void SetTrueGreaterThan(size_t num_data, DataType const *data,
 //}
 
 template<typename DataType>
-inline void SetTrueGreaterThanOrEquals(size_t num_data, DataType const *data,
+inline void SetTrueIfGreaterThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
@@ -157,7 +157,7 @@ inline void SetTrueGreaterThanOrEquals(size_t num_data, DataType const *data,
 }
 
 template<typename DataType>
-inline void SetTrueLessThan(size_t num_data, DataType const *data,
+inline void SetTrueIfLessThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
@@ -166,7 +166,7 @@ inline void SetTrueLessThan(size_t num_data, DataType const *data,
 }
 
 template<typename DataType>
-inline void SetTrueLessThanOrEquals(size_t num_data, DataType const *data,
+inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
 	DataType const zero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
@@ -217,37 +217,37 @@ inline void InvertBool(size_t num_data, bool const *data, bool *result) {
 }
 
 template<typename DataType>
-void SetTrueInRangesInclusive(
+void SetTrueIfInRangesInclusive(
 		size_t num_data, DataType const data[/*num_data*/],
 		size_t num_condition, DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
-	typedef void (*SetTrueInRangesInclusiveFunc)(size_t num_data,
+	typedef void (*SetTrueIfInRangesInclusiveFunc)(size_t num_data,
 			DataType const *data, DataType const *lower_bounds,
 			DataType const *upper_bounds,
 			bool *result);
 	// Use Scalar version for now
-	static SetTrueInRangesInclusiveFunc const funcs[] = {
-			SetTrueInRangesInclusiveScalar<DataType, 0>,
-			SetTrueInRangesInclusiveScalar<DataType, 1>,
-			SetTrueInRangesInclusiveScalar<DataType, 2>,
-			SetTrueInRangesInclusiveScalar<DataType, 3>,
-			SetTrueInRangesInclusiveScalar<DataType, 4>,
-			SetTrueInRangesInclusiveScalar<DataType, 5>,
-			SetTrueInRangesInclusiveScalar<DataType, 6>,
-			SetTrueInRangesInclusiveScalar<DataType, 7>,
-			SetTrueInRangesInclusiveScalar<DataType, 8>,
-			SetTrueInRangesInclusiveScalar<DataType, 9>,
-			SetTrueInRangesInclusiveScalar<DataType, 10>,
-			SetTrueInRangesInclusiveScalar<DataType, 11>,
-			SetTrueInRangesInclusiveScalar<DataType, 12>,
-			SetTrueInRangesInclusiveScalar<DataType, 13>,
-			SetTrueInRangesInclusiveScalar<DataType, 14>,
-			SetTrueInRangesInclusiveScalar<DataType, 15>,
-			SetTrueInRangesInclusiveScalar<DataType, 16> };
+	static SetTrueIfInRangesInclusiveFunc const funcs[] = {
+			SetTrueIfInRangesInclusiveScalar<DataType, 0>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 1>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 2>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 3>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 4>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 5>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 6>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 7>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 8>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 9>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 10>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 11>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 12>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 13>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 14>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 15>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
-	//std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;
+	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
@@ -265,43 +265,43 @@ void SetTrueInRangesInclusive(
 		funcs[num_condition](num_data, data, lower_bounds, upper_bounds,
 				result);
 	} else {
-		SetTrueInRangesInclusiveGeneric(num_data, data, num_condition,
+		SetTrueIfInRangesInclusiveGeneric(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	}
 }
 
 template<typename DataType>
-void SetTrueInRangesExclusive(
+void SetTrueIfInRangesExclusive(
 		size_t num_data, DataType const data[/*num_data*/],
 		size_t num_condition, DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
-	typedef void (*SetTrueInRangesExclusiveFunc)(size_t num_data,
+	typedef void (*SetTrueIfInRangesExclusiveFunc)(size_t num_data,
 			DataType const *data, DataType const *lower_bounds,
 			DataType const *upper_bounds,
 			bool *result);
 	// Use Scalar version for now
-	static SetTrueInRangesExclusiveFunc const funcs[] = {
-			SetTrueInRangesExclusiveScalar<DataType, 0>,
-			SetTrueInRangesExclusiveScalar<DataType, 1>,
-			SetTrueInRangesExclusiveScalar<DataType, 2>,
-			SetTrueInRangesExclusiveScalar<DataType, 3>,
-			SetTrueInRangesExclusiveScalar<DataType, 4>,
-			SetTrueInRangesExclusiveScalar<DataType, 5>,
-			SetTrueInRangesExclusiveScalar<DataType, 6>,
-			SetTrueInRangesExclusiveScalar<DataType, 7>,
-			SetTrueInRangesExclusiveScalar<DataType, 8>,
-			SetTrueInRangesExclusiveScalar<DataType, 9>,
-			SetTrueInRangesExclusiveScalar<DataType, 10>,
-			SetTrueInRangesExclusiveScalar<DataType, 11>,
-			SetTrueInRangesExclusiveScalar<DataType, 12>,
-			SetTrueInRangesExclusiveScalar<DataType, 13>,
-			SetTrueInRangesExclusiveScalar<DataType, 14>,
-			SetTrueInRangesExclusiveScalar<DataType, 15>,
-			SetTrueInRangesExclusiveScalar<DataType, 16> };
+	static SetTrueIfInRangesExclusiveFunc const funcs[] = {
+			SetTrueIfInRangesExclusiveScalar<DataType, 0>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 1>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 2>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 3>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 4>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 5>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 6>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 7>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 8>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 9>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 10>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 11>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 12>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 13>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 14>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 15>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
-	//std::cout << "Invoking SetTrueInRangesInclusiveDefault()" << std::endl;
+	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(upper_bounds));
@@ -319,7 +319,7 @@ void SetTrueInRangesExclusive(
 		funcs[num_condition](num_data, data, lower_bounds, upper_bounds,
 				result);
 	} else {
-		SetTrueInRangesExclusiveGeneric(num_data, data, num_condition,
+		SetTrueIfInRangesExclusiveGeneric(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	}
 }
@@ -354,7 +354,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveF
 
 	// Now actual operation
 	try {
-		SetTrueInRangesInclusive(num_data, data, num_condition,
+		SetTrueIfInRangesInclusive(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
@@ -393,7 +393,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveI
 
 	// Now actual operation
 	try {
-		SetTrueInRangesInclusive(num_data, data, num_condition,
+		SetTrueIfInRangesInclusive(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
@@ -432,7 +432,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveF
 
 	// Now actual operation
 	try {
-		SetTrueInRangesExclusive(num_data, data, num_condition,
+		SetTrueIfInRangesExclusive(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
@@ -471,7 +471,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveI
 
 	// Now actual operation
 	try {
-		SetTrueInRangesExclusive(num_data, data, num_condition,
+		SetTrueIfInRangesExclusive(num_data, data, num_condition,
 				lower_bounds, upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
@@ -497,7 +497,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 
 	// Now actual operation
 	try {
-		SetTrueGreaterThan(num_data, data, threshold, result);
+		SetTrueIfGreaterThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -522,7 +522,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 
 	// Now actual operation
 	try {
-		SetTrueGreaterThan(num_data, data, threshold, result);
+		SetTrueIfGreaterThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -547,7 +547,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 
 	// Now actual operation
 	try {
-		SetTrueGreaterThanOrEquals(num_data, data, threshold, result);
+		SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -572,7 +572,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 
 	// Now actual operation
 	try {
-		SetTrueGreaterThanOrEquals(num_data, data, threshold, result);
+		SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -597,7 +597,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 
 	// Now actual operation
 	try {
-		SetTrueLessThan(num_data, data, threshold, result);
+		SetTrueIfLessThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -622,7 +622,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 
 	// Now actual operation
 	try {
-		SetTrueLessThan(num_data, data, threshold, result);
+		SetTrueIfLessThan(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -647,7 +647,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFl
 
 	// Now actual operation
 	try {
-		SetTrueLessThanOrEquals(num_data, data, threshold, result);
+		SetTrueIfLessThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -672,7 +672,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsIn
 
 	// Now actual operation
 	try {
-		SetTrueLessThanOrEquals(num_data, data, threshold, result);
+		SetTrueIfLessThanOrEquals(num_data, data, threshold, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
