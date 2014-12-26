@@ -291,37 +291,37 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 typedef struct {
 	/**
 	 * @~
-	 * a number of valid data
+	 * number of valid data
 	 */
 	size_t count;
 	/**
 	 * @~
-	 * a sum of valid data
+	 * sum of valid data
 	 */
 	float sum;
 	/**
 	 * @~
-	 * a mean of valid data
+	 * mean of valid data
 	 */
 	float mean;
 	/**
 	 * @~
-	 * a root-mean-square of valid data
+	 * root-mean-square of valid data
 	 */
 	float rms;
 	/**
 	 * @~
-	 * an stddev of valid data
+	 * stddev of valid data
 	 */
 	float stddev;
 	/**
 	 * @~
-	 * a min value of valid data
+	 * min value of valid data
 	 */
 	float min;
 	/**
 	 * @~
-	 * a max value of valid data
+	 * max value of valid data
 	 */
 	float max;
 	/**
@@ -354,7 +354,7 @@ typedef struct {
  * @brief Computes statistics. Refer to
  * @ref sakura_StatisticsResultFloat to see what kind of statistics are computed.
  *
- * @param[in] num_data A number of elements in @a data and @a is_valid . @a num_data <= INT32_MAX
+ * @param[in] num_data The number of elements in @a data and @a is_valid . @a num_data <= INT32_MAX
  * @param[in] data Data. If corresponding element in @a is_valid is true, the element in @a data must not be Inf nor NaN.
  * <br/>must-be-aligned
  * @param[in] is_valid Masks of @a data. If a value of element is false,
@@ -385,12 +385,12 @@ typedef struct {
  * @~english
  * @brief Sort only valid data in ascending order.
  *
- * @param[in] num_data A number of elements in @a data and @a is_valid .
+ * @param[in] num_data The number of elements in @a data and @a is_valid .
  * @param[in] is_valid Masks of @a data. If a value of element is false,
  * the corresponding element in @a data is ignored.
  * @param[in,out] data Data to be sorted. Since data is sorted in place, contents of this array are not preserved.
  * If corresponding element in @a is_valid is true, the element in @a data must not be Inf nor NaN.
- * @param[out] new_num_data A number of sorted elements that don't include invalid data( <= @a num_data ) is stored here.
+ * @param[out] new_num_data The number of sorted elements that don't include invalid data( <= @a num_data ) is stored here.
  * @return status code
  *
  * @~
@@ -468,8 +468,7 @@ typedef struct {
  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
  * All elements in @a result are set to false when no condition is given, i.e., @a num_condition = 0.
  *
- * @param[in] num_data The number of elements in the arrays, @a data
- * and @a result
+ * @param[in] num_data The number of elements in the arrays, @a data and @a result .
  * @param[in] data An input array of size, @a num_data.
  * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
@@ -1738,7 +1737,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~english
  * @brief create context for convolution
  * @details
- * @param[in] num_data number of data. @a num_data must
+ * @param[in] num_data The number of data. @a num_data must
  * be positive.  0 < num_data < INT32_MAX
  * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
  * @a kernel_type is defined as enum.
@@ -2471,7 +2470,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @endcode
  *
  * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
- * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, a number of elements in @a elements.
+ * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
  * @param[in] src	Source matrix.
  * @n must-be-aligned
@@ -2506,7 +2505,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * @endcode
  *
  * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
- * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, a number of elements in @a elements.
+ * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
  * @param[in] src	Source matrix.
  * @n must-be-aligned
