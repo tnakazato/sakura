@@ -1959,9 +1959,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @n must-be-aligned
  * @param[in] num_model_bases number of model basis functions. it must be a
  * positive number, also it must be equal to or less than @a num_data .
- * @param[in] in set a 1D array containing the vector components previously
- * calculated.
- * @n must-be-aligned
  * @param[in] basis_data a 1D array containing values of all basis functions
  * concatenated. loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
