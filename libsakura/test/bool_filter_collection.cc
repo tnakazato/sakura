@@ -178,7 +178,7 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
  * RESULT:
  * result = [F, T, F, T, F, T, F, T]
  */
@@ -208,7 +208,7 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -222,7 +222,7 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [F, T, F, T, F, T, F, T
@@ -254,7 +254,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveLengthEleven) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -268,7 +268,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
  * with a long array
  * RESULT:
  * result = [F, T, F, T, F, T, F, T, ...]
@@ -301,7 +301,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueFloatInRangesInclusive(num_data, in_data,
+		status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(num_data, in_data,
 				num_range, lower, upper, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -316,7 +316,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -336,14 +336,14 @@ TEST_F(BoolFilterFloat, RangesInclusiveLenghZero) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower, upper, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
  * without bounderies (num_condition=0)
  * RESULT:
  * result = [F, F, F, F, F, F, F, F]
@@ -362,7 +362,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveZeroCondition) {
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -376,7 +376,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveZeroCondition) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
  * RESULT:
  * result = [F, T, F, T, F, T, F, T]
  */
@@ -406,7 +406,7 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -420,7 +420,7 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesInclusive with an array of 11 elements
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt with an array of 11 elements
  * RESULT:
  * result = [F, T, F, T, F, T, F, T,
  *        F, T, F]
@@ -451,7 +451,7 @@ TEST_F(BoolFilterInt, RangesInclusiveLengthEleven) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -465,7 +465,7 @@ TEST_F(BoolFilterInt, RangesInclusiveLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
  * with a long array
  * RESULT:
  * result = [F, T, F, T, F, T, F, T, ...]
@@ -498,7 +498,7 @@ TEST_F(BoolFilterInt, RangesInclusiveLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIntInRangesInclusive(num_data, in_data,
+		status = sakura_SetTrueIfInRangesInclusiveInt(num_data, in_data,
 				num_range, lower, upper, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -513,7 +513,7 @@ TEST_F(BoolFilterInt, RangesInclusiveLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -532,14 +532,14 @@ TEST_F(BoolFilterInt, RangesInclusiveLenghZero) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
  * without bounderies (num_condition=0)
  * RESULT:
  * result = [F, F, F, F, F, F, F, F]
@@ -558,7 +558,7 @@ TEST_F(BoolFilterInt, RangesInclusiveZeroCondition) {
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -574,7 +574,7 @@ TEST_F(BoolFilterInt, RangesInclusiveZeroCondition) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
  * RESULT:
  * result = [F, T, F, T, F, F, F, F]
  */
@@ -604,7 +604,7 @@ TEST_F(BoolFilterFloat, RangesExclusive) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -618,7 +618,7 @@ TEST_F(BoolFilterFloat, RangesExclusive) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [F, T, F, T, F, F, F, F,
@@ -650,7 +650,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveLengthEleven) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -664,7 +664,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
  * with a long array
  * RESULT:
  * result = [F, T, F, T, F, F, F, F, ...]
@@ -697,7 +697,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueFloatInRangesExclusive(num_data, in_data,
+		status = sakura_SetTrueIfInRangesExclusiveFloat(num_data, in_data,
 				num_range, lower, upper, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -712,7 +712,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -732,14 +732,14 @@ TEST_F(BoolFilterFloat, RangesExclusiveLenghZero) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower, upper, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
  * without bounderies (num_condition=0)
  * RESULT:
  * result = [F, F, F, F, F, F, F, F]
@@ -758,7 +758,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveZeroCondition) {
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -772,7 +772,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveZeroCondition) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
  * RESULT:
  * result = [F, T, F, T, F, F, F, F]
  */
@@ -802,7 +802,7 @@ TEST_F(BoolFilterInt, RangesExclusive) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -816,7 +816,7 @@ TEST_F(BoolFilterInt, RangesExclusive) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesExclusive with an array of 11 elements
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt with an array of 11 elements
  * RESULT:
  * result = [F, T, F, T, F, F, F, F,
  *           F, T, F]
@@ -847,7 +847,7 @@ TEST_F(BoolFilterInt, RangesExclusiveLengthEleven) {
 		PrintArray("upper_bound", NUM_RANGE, upper);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -861,7 +861,7 @@ TEST_F(BoolFilterInt, RangesExclusiveLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
  * with a long array
  * RESULT:
  * result = [F, T, F, T, F, F, F, F, ...]
@@ -894,7 +894,7 @@ TEST_F(BoolFilterInt, RangesExclusiveLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIntInRangesExclusive(num_data, in_data,
+		status = sakura_SetTrueIfInRangesExclusiveInt(num_data, in_data,
 				num_range, lower, upper, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -909,7 +909,7 @@ TEST_F(BoolFilterInt, RangesExclusiveLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -928,14 +928,14 @@ TEST_F(BoolFilterInt, RangesExclusiveLenghZero) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntInRangesExclusive
+ * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
  * without bounderies (num_condition=0)
  * RESULT:
  * result = [F, F, F, F, F, F, F, F]
@@ -954,7 +954,7 @@ TEST_F(BoolFilterInt, RangesExclusiveZeroCondition) {
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower, upper, result);
 
 	if (verbose)
@@ -970,7 +970,7 @@ TEST_F(BoolFilterInt, RangesExclusiveZeroCondition) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanFloat
  * RESULT:
  * result = [F, F, F, F, F, T, T, T]
  */
@@ -993,7 +993,7 @@ TEST_F(BoolFilterFloat, GreaterThan) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1007,7 +1007,7 @@ TEST_F(BoolFilterFloat, GreaterThan) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [F, F, F, F, F, T, T, T,
@@ -1031,7 +1031,7 @@ TEST_F(BoolFilterFloat, GreaterThanLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1045,7 +1045,7 @@ TEST_F(BoolFilterFloat, GreaterThanLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanFloat
  * with a long array
  * RESULT:
  * result = [F, F, F, F, F, T, T, T, ...]
@@ -1071,7 +1071,7 @@ TEST_F(BoolFilterFloat, GreaterThanLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueFloatGreaterThan(num_data, in_data, threshold_,
+		status = sakura_SetTrueIfGreaterThanFloat(num_data, in_data, threshold_,
 				result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1086,7 +1086,7 @@ TEST_F(BoolFilterFloat, GreaterThanLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1098,14 +1098,14 @@ TEST_F(BoolFilterFloat, GreaterThanLenghZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanInt
  * RESULT:
  * result = [F, F, F, F, F, T, T, T]
  */
@@ -1128,7 +1128,7 @@ TEST_F(BoolFilterInt, GreaterThan) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1142,7 +1142,7 @@ TEST_F(BoolFilterInt, GreaterThan) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanInt
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [F, F, F, F, F, T, T, T,
@@ -1166,7 +1166,7 @@ TEST_F(BoolFilterInt, GreaterThanLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1180,7 +1180,7 @@ TEST_F(BoolFilterInt, GreaterThanLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanInt
  * with a long array
  * RESULT:
  * result = [F, F, F, F, F, T, T, T, ...]
@@ -1206,7 +1206,7 @@ TEST_F(BoolFilterInt, GreaterThanLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIntGreaterThan(num_data, in_data, threshold_,
+		status = sakura_SetTrueIfGreaterThanInt(num_data, in_data, threshold_,
 				result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1221,7 +1221,7 @@ TEST_F(BoolFilterInt, GreaterThanLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThan
+ * Test bool filter generation sakura_SetTrueIfGreaterThanInt
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1233,7 +1233,7 @@ TEST_F(BoolFilterInt, GreaterThanLengthZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1242,7 +1242,7 @@ TEST_F(BoolFilterInt, GreaterThanLengthZero) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsFloat
  * RESULT:
  * result = [T, F, F, F, T, T, T, T]
  */
@@ -1265,7 +1265,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEquals) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1279,7 +1279,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEquals) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [T, F, F, F, T, T, T, T,
@@ -1303,7 +1303,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1317,7 +1317,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsFloat
  * with a long array
  * RESULT:
  * result = [T, F, F, F, T, T, T, T, ...]
@@ -1343,7 +1343,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueFloatGreaterThanOrEquals(num_data, in_data,
+		status = sakura_SetTrueIfGreaterThanOrEqualsFloat(num_data, in_data,
 				threshold_, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1358,7 +1358,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1370,14 +1370,14 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsLenghZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsInt
  * RESULT:
  * result = [T, F, F, F, T, T, T, T]
  */
@@ -1400,7 +1400,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEquals) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1414,7 +1414,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEquals) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsInt
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [T, F, F, F, T, T, T, T,
@@ -1438,7 +1438,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1452,7 +1452,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsInt
  * with a long array
  * RESULT:
  * result = [T, F, F, F, T, T, T, T, ...]
@@ -1478,7 +1478,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIntGreaterThanOrEquals(num_data, in_data,
+		status = sakura_SetTrueIfGreaterThanOrEqualsInt(num_data, in_data,
 				threshold_, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1493,7 +1493,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntGreaterThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfGreaterThanOrEqualsInt
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1505,7 +1505,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsLenghZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1514,7 +1514,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsLenghZero) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanFloat
  * RESULT:
  * result = [F, T, T, T, F, F, F, F]
  */
@@ -1537,7 +1537,7 @@ TEST_F(BoolFilterFloat, LessThan) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1551,7 +1551,7 @@ TEST_F(BoolFilterFloat, LessThan) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [F, T, T, T, F, F, F, F,
@@ -1575,7 +1575,7 @@ TEST_F(BoolFilterFloat, LessThanLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1589,7 +1589,7 @@ TEST_F(BoolFilterFloat, LessThanLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanFloat
  * with a long array
  * RESULT:
  * result = [F, T, T, T, F, F, F, F, ...]
@@ -1615,7 +1615,7 @@ TEST_F(BoolFilterFloat, LessThanLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueFloatLessThan(num_data, in_data, threshold_,
+		status = sakura_SetTrueIfLessThanFloat(num_data, in_data, threshold_,
 				result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1630,7 +1630,7 @@ TEST_F(BoolFilterFloat, LessThanLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1642,14 +1642,14 @@ TEST_F(BoolFilterFloat, LessThanLenghZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanInt
  * RESULT:
  * result = [F, T, T, T, F, F, F, F]
  */
@@ -1672,7 +1672,7 @@ TEST_F(BoolFilterInt, LessThan) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1686,7 +1686,7 @@ TEST_F(BoolFilterInt, LessThan) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanInt
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [F, T, T, T, F, F, F, F,
@@ -1710,7 +1710,7 @@ TEST_F(BoolFilterInt, LessThanLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
 			in_data, threshold_, result);
 
 	if (verbose)
@@ -1724,7 +1724,7 @@ TEST_F(BoolFilterInt, LessThanLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanInt
  * with a long array
  * RESULT:
  * result = [F, T, T, T, F, F, F, F, ...]
@@ -1750,7 +1750,7 @@ TEST_F(BoolFilterInt, LessThanLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIntLessThan(num_data, in_data, threshold_,
+		status = sakura_SetTrueIfLessThanInt(num_data, in_data, threshold_,
 				result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1765,7 +1765,7 @@ TEST_F(BoolFilterInt, LessThanLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThan
+ * Test bool filter generation sakura_SetTrueIfLessThanInt
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1777,7 +1777,7 @@ TEST_F(BoolFilterInt, LessThanLengthZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
 			in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1786,7 +1786,7 @@ TEST_F(BoolFilterInt, LessThanLengthZero) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsFloat
  * RESULT:
  * result = [T, T, T, T, T, F, F, F]
  */
@@ -1809,7 +1809,7 @@ TEST_F(BoolFilterFloat, LessThanOrEquals) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1823,7 +1823,7 @@ TEST_F(BoolFilterFloat, LessThanOrEquals) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [T, T, T, T, T, F, F, F,
@@ -1847,7 +1847,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1861,7 +1861,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsFloat
  * with a long array
  * RESULT:
  * result = [T, T, T, T, T, F, F, F, ...]
@@ -1887,7 +1887,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueFloatLessThanOrEquals(num_data, in_data,
+		status = sakura_SetTrueIfLessThanOrEqualsFloat(num_data, in_data,
 				threshold_, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -1902,7 +1902,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueFloatLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -1914,14 +1914,14 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsLenghZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsInt
  * RESULT:
  * result = [T, T, T, T, T, F, F, F]
  */
@@ -1944,7 +1944,7 @@ TEST_F(BoolFilterInt, LessThanOrEquals) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1958,7 +1958,7 @@ TEST_F(BoolFilterInt, LessThanOrEquals) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsInt
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [T, T, T, T, T, F, F, F,
@@ -1982,7 +1982,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsLengthEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, in_data, threshold_, result);
 
 	if (verbose)
@@ -1996,7 +1996,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsLengthEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsInt
  * with a long array
  * RESULT:
  * result = [T, T, T, T, T, F, F, F, ...]
@@ -2022,7 +2022,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIntLessThanOrEquals(num_data, in_data,
+		status = sakura_SetTrueIfLessThanOrEqualsInt(num_data, in_data,
 				threshold_, result);
 	}
 	end = sakura_GetCurrentTime();
@@ -2037,7 +2037,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIntLessThanOrEquals
+ * Test bool filter generation sakura_SetTrueIfLessThanOrEqualsInt
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -2049,7 +2049,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsLenghZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, in_data, threshold_, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -2058,7 +2058,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsLenghZero) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
  * RESULT:
  * result = [T, T, F, F, F, T, T, T]
  */
@@ -2088,7 +2088,7 @@ TEST_F(BoolFilterFloat, NanOrInf) {
 		PrintArray("data", num_data, in_data);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			in_data, result);
 
 	if (verbose)
@@ -2102,7 +2102,7 @@ TEST_F(BoolFilterFloat, NanOrInf) {
 }
 
 /*
- * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
  * with an array of 11 elements (num_data=11).
  * RESULT:
  * result = [T, T, F, F, F, T, T, T,
@@ -2136,7 +2136,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
 		cout << "threshold = " << threshold_ << endl;
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			in_data, result);
 
 	if (verbose)
@@ -2150,7 +2150,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
 }
 
 /*
- * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
  * with a long array
  * RESULT:
  * result = [T, T, F, F, F, T, T, T, ...]
@@ -2186,7 +2186,7 @@ TEST_F(BoolFilterFloat, NanOrInfLong) {
 			<< num_data << endl;
 	start = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetFalseFloatIfNanOrInf(num_data, in_data, result);
+		status = sakura_SetFalseIfNanOrInfFloat(num_data, in_data, result);
 	}
 	end = sakura_GetCurrentTime();
 	cout << "Elapse time of actual operation: " << end - start << " sec"
@@ -2200,7 +2200,7 @@ TEST_F(BoolFilterFloat, NanOrInfLong) {
 }
 
 /*
- * Test bool filter generation sakura_SetFalseFloatIfNanOrInf
+ * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
  * with an array of zero elements (num_data=0).
  * RESULT:
  * result = []
@@ -2212,7 +2212,7 @@ TEST_F(BoolFilterFloat, NanOrInfZero) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			in_data, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -2517,7 +2517,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolLenghZero) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatInRangesInclusive
+ * Test failure cases of sakura_SetTrueIfInRangesInclusiveFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -2546,7 +2546,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveFailExchangeBounds) {
 		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, upper, lower, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -2568,7 +2568,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveFailNullData) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, data_null, num_range, lower, upper, result);
 
 	// Verification
@@ -2594,7 +2594,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveFailNullLower) {
 	// Copy bounds to aligned arrays
 	GetBounds(dummy, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower_null, upper, result);
 
 	// Verification
@@ -2620,7 +2620,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveFailNullUpper) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, dummy);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower, upper_null, result);
 
 	// Verification
@@ -2645,7 +2645,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveFailNullResult) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, in_data, num_range, lower, upper, result_null);
 
 	// Verification
@@ -2676,7 +2676,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, data_shift, num_range, lower, upper, result);
 
 	// Verification
@@ -2706,7 +2706,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, data, num_range, lower, upper, result_shift);
 
 	// Verification
@@ -2740,7 +2740,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedLower) {
 	float *lower_shift = &lower[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, data, num_range, lower_shift, upper, result);
 
 	// Verification
@@ -2774,7 +2774,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedUpper) {
 	float *upper_shift = &upper[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 			num_data, data, num_range, lower, upper_shift, result);
 
 	// Verification
@@ -2782,7 +2782,7 @@ TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedUpper) {
 }
 
 /*
- * Test failure cases of sakura_SetTrueIntInRangesInclusive
+ * Test failure cases of sakura_SetTrueIfInRangesInclusiveInt
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -2811,7 +2811,7 @@ TEST_F(BoolFilterInt, RangesInclusiveFailExchangeBounds) {
 		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, upper, lower, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -2834,7 +2834,7 @@ TEST_F(BoolFilterInt, RangesInclusiveFailNullData) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, data_null, num_range, lower, upper, result);
 
 	// Verification
@@ -2860,7 +2860,7 @@ TEST_F(BoolFilterInt, RangesInclusiveFailNullLower) {
 	// Copy bounds to aligned arrays
 	GetBounds(dummy, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower_null, upper, result);
 
 	// Verification
@@ -2886,7 +2886,7 @@ TEST_F(BoolFilterInt, RangesInclusiveFailNullUpper) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, dummy);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower, upper_null, result);
 
 	// Verification
@@ -2911,7 +2911,7 @@ TEST_F(BoolFilterInt, RangesInclusiveFailNullResult) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, in_data, num_range, lower, upper, result_null);
 
 	// Verification
@@ -2942,7 +2942,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedData) {
 	int *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, data_shift, num_range, lower, upper, result);
 
 	// Verification
@@ -2972,7 +2972,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, data, num_range, lower, upper, result_shift);
 
 	// Verification
@@ -3006,7 +3006,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedLower) {
 	int *lower_shift = &lower[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, data, num_range, lower_shift, upper, result);
 
 	// Verification
@@ -3040,7 +3040,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedUpper) {
 	int *upper_shift = &upper[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesInclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
 			num_data, data, num_range, lower, upper_shift, result);
 
 	// Verification
@@ -3050,7 +3050,7 @@ TEST_F(BoolFilterInt, RangesInclusiveNotAlignedUpper) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatInRangesExclusive
+ * Test failure cases of sakura_SetTrueIfInRangesExclusiveFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3079,7 +3079,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveFailExchangeBounds) {
 		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, upper, lower, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -3101,7 +3101,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveFailNullData) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, data_null, num_range, lower, upper, result);
 
 	// Verification
@@ -3127,7 +3127,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveFailNullLower) {
 	// Copy bounds to aligned arrays
 	GetBounds(dummy, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower_null, upper, result);
 
 	// Verification
@@ -3153,7 +3153,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveFailNullUpper) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, dummy);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower, upper_null, result);
 
 	// Verification
@@ -3178,7 +3178,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveFailNullResult) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, in_data, num_range, lower, upper, result_null);
 
 	// Verification
@@ -3209,7 +3209,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, data_shift, num_range, lower, upper, result);
 
 	// Verification
@@ -3239,7 +3239,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, data, num_range, lower, upper, result_shift);
 
 	// Verification
@@ -3273,7 +3273,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedLower) {
 	float *lower_shift = &lower[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, data, num_range, lower_shift, upper, result);
 
 	// Verification
@@ -3307,7 +3307,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedUpper) {
 	float *upper_shift = &upper[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
 			num_data, data, num_range, lower, upper_shift, result);
 
 	// Verification
@@ -3315,7 +3315,7 @@ TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedUpper) {
 }
 
 /*
- * Test failure cases of sakura_SetTrueIntInRangesExclusive
+ * Test failure cases of sakura_SetTrueIfInRangesExclusiveInt
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3344,7 +3344,7 @@ TEST_F(BoolFilterInt, RangesExclusiveFailExchangeBounds) {
 		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, upper, lower, result);
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -3367,7 +3367,7 @@ TEST_F(BoolFilterInt, RangesExclusiveFailNullData) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, data_null, num_range, lower, upper, result);
 
 	// Verification
@@ -3393,7 +3393,7 @@ TEST_F(BoolFilterInt, RangesExclusiveFailNullLower) {
 	// Copy bounds to aligned arrays
 	GetBounds(dummy, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower_null, upper, result);
 
 	// Verification
@@ -3419,7 +3419,7 @@ TEST_F(BoolFilterInt, RangesExclusiveFailNullUpper) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, dummy);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower, upper_null, result);
 
 	// Verification
@@ -3444,7 +3444,7 @@ TEST_F(BoolFilterInt, RangesExclusiveFailNullResult) {
 	// Copy bounds to aligned arrays
 	GetBounds(lower, upper);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, in_data, num_range, lower, upper, result_null);
 
 	// Verification
@@ -3475,7 +3475,7 @@ TEST_F(BoolFilterInt, RangesExclusiveNotAlignedData) {
 	int *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, data_shift, num_range, lower, upper, result);
 
 	// Verification
@@ -3505,7 +3505,7 @@ TEST_F(BoolFilterInt, RangesExclusiveNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, data, num_range, lower, upper, result_shift);
 
 	// Verification
@@ -3539,7 +3539,7 @@ TEST_F(BoolFilterInt, RangesExclusiveNotAlignedLower) {
 	int *lower_shift = &lower[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, data, num_range, lower_shift, upper, result);
 
 	// Verification
@@ -3573,7 +3573,7 @@ TEST_F(BoolFilterInt, RangesExclusiveNotAlignedUpper) {
 	int *upper_shift = &upper[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntInRangesExclusive(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, data, num_range, lower, upper_shift, result);
 
 	// Verification
@@ -3583,7 +3583,7 @@ TEST_F(BoolFilterInt, RangesExclusiveNotAlignedUpper) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatGreaterThan
+ * Test failure cases of sakura_SetTrueIfGreaterThanFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3595,7 +3595,7 @@ TEST_F(BoolFilterFloat, GreaterThanFailNullData) {
 
 	float *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			data_null, threshold_, result);
 
 	// Verification
@@ -3612,7 +3612,7 @@ TEST_F(BoolFilterFloat, GreaterThanFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			in_data, threshold_, result_null);
 
 	// Verification
@@ -3635,7 +3635,7 @@ TEST_F(BoolFilterFloat, GreaterThanNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			data_shift, threshold_, result);
 
 	// Verification
@@ -3658,7 +3658,7 @@ TEST_F(BoolFilterFloat, GreaterThanNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
 			data, threshold_, result_shift);
 
 	// Verification
@@ -3666,7 +3666,7 @@ TEST_F(BoolFilterFloat, GreaterThanNotAlignedResult) {
 }
 
 /*
- * Test failure cases of sakura_SetTrueIntGreaterThan
+ * Test failure cases of sakura_SetTrueIfGreaterThanInt
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3678,7 +3678,7 @@ TEST_F(BoolFilterInt, GreaterThanFailNullData) {
 
 	int *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			data_null, threshold_, result);
 
 	// Verification
@@ -3695,7 +3695,7 @@ TEST_F(BoolFilterInt, GreaterThanFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			in_data, threshold_, result_null);
 
 	// Verification
@@ -3718,7 +3718,7 @@ TEST_F(BoolFilterInt, GreaterThanNotAlignedData) {
 	int *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			data_shift, threshold_, result);
 
 	// Verification
@@ -3741,7 +3741,7 @@ TEST_F(BoolFilterInt, GreaterThanNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
 			data, threshold_, result_shift);
 
 	// Verification
@@ -3751,7 +3751,7 @@ TEST_F(BoolFilterInt, GreaterThanNotAlignedResult) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatGreaterThanOrEquals
+ * Test failure cases of sakura_SetTrueIfGreaterThanOrEqualsFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3763,7 +3763,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsFailNullData) {
 
 	float *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, data_null, threshold_, result);
 
 	// Verification
@@ -3780,7 +3780,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, in_data, threshold_, result_null);
 
 	// Verification
@@ -3803,7 +3803,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, data_shift, threshold_, result);
 
 	// Verification
@@ -3826,7 +3826,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
 			num_data, data, threshold_, result_shift);
 
 	// Verification
@@ -3834,7 +3834,7 @@ TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedResult) {
 }
 
 /*
- * Test failure cases of sakura_SetTrueIntGreaterThanOrEquals
+ * Test failure cases of sakura_SetTrueIfGreaterThanOrEqualsInt
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3846,7 +3846,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsFailNullData) {
 
 	int *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, data_null, threshold_, result);
 
 	// Verification
@@ -3863,7 +3863,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, in_data, threshold_, result_null);
 
 	// Verification
@@ -3886,7 +3886,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedData) {
 	int *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, data_shift, threshold_, result);
 
 	// Verification
@@ -3909,7 +3909,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntGreaterThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
 			num_data, data, threshold_, result_shift);
 
 	// Verification
@@ -3919,7 +3919,7 @@ TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedResult) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatLessThan
+ * Test failure cases of sakura_SetTrueIfLessThanFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -3931,7 +3931,7 @@ TEST_F(BoolFilterFloat, LessThanFailNullData) {
 
 	float *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			data_null, threshold_, result);
 
 	// Verification
@@ -3948,7 +3948,7 @@ TEST_F(BoolFilterFloat, LessThanFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			in_data, threshold_, result_null);
 
 	// Verification
@@ -3971,7 +3971,7 @@ TEST_F(BoolFilterFloat, LessThanNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			data_shift, threshold_, result);
 
 	// Verification
@@ -3994,7 +3994,7 @@ TEST_F(BoolFilterFloat, LessThanNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
 			data, threshold_, result_shift);
 
 	// Verification
@@ -4002,7 +4002,7 @@ TEST_F(BoolFilterFloat, LessThanNotAlignedResult) {
 }
 
 /*
- * Test failure cases of sakura_SetTrueIntLessThan
+ * Test failure cases of sakura_SetTrueIfLessThanInt
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -4014,7 +4014,7 @@ TEST_F(BoolFilterInt, LessThanFailNullData) {
 
 	int *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
 			data_null, threshold_, result);
 
 	// Verification
@@ -4031,7 +4031,7 @@ TEST_F(BoolFilterInt, LessThanFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
 			in_data, threshold_, result_null);
 
 	// Verification
@@ -4054,7 +4054,7 @@ TEST_F(BoolFilterInt, LessThanNotAlignedData) {
 	int *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
 			data_shift, threshold_, result);
 
 	// Verification
@@ -4077,7 +4077,7 @@ TEST_F(BoolFilterInt, LessThanNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThan(num_data, data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data, data,
 			threshold_, result_shift);
 
 	// Verification
@@ -4087,7 +4087,7 @@ TEST_F(BoolFilterInt, LessThanNotAlignedResult) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetTrueFloatLessThanOrEquals
+ * Test failure cases of sakura_SetTrueIfLessThanOrEqualsFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -4099,7 +4099,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsFailNullData) {
 
 	float *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, data_null, threshold_, result);
 
 	// Verification
@@ -4116,7 +4116,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, in_data, threshold_, result_null);
 
 	// Verification
@@ -4139,7 +4139,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, data_shift, threshold_, result);
 
 	// Verification
@@ -4162,7 +4162,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueFloatLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
 			num_data, data, threshold_, result_shift);
 
 	// Verification
@@ -4170,7 +4170,7 @@ TEST_F(BoolFilterFloat, LessThanOrEqualsNotAlignedResult) {
 }
 
 /*
- * Test failure cases of sakura_SetTrueIntLessThanOrEquals
+ * Test failure cases of sakura_SetTrueIfLessThanOrEqualsInt
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -4182,7 +4182,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsFailNullData) {
 
 	int *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, data_null, threshold_, result);
 
 	// Verification
@@ -4199,7 +4199,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, in_data, threshold_, result_null);
 
 	// Verification
@@ -4222,7 +4222,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsNotAlignedData) {
 	int *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, data_shift, threshold_, result);
 
 	// Verification
@@ -4245,7 +4245,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIntLessThanOrEquals(
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
 			num_data, data, threshold_, result_shift);
 
 	// Verification
@@ -4255,7 +4255,7 @@ TEST_F(BoolFilterInt, LessThanOrEqualsNotAlignedResult) {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test failure cases of sakura_SetFalseFloatIfNanOrInf
+ * Test failure cases of sakura_SetFalseIfNanOrInfFloat
  * RESULT:
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
@@ -4267,7 +4267,7 @@ TEST_F(BoolFilterFloat, NanOrInfFailNullData) {
 
 	float *data_null = nullptr;
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			data_null, result);
 
 	// Verification
@@ -4284,7 +4284,7 @@ TEST_F(BoolFilterFloat, NanOrInfFailNullResult) {
 	// Create long input data by repeating data_
 	GetDataInLength(ELEMENTSOF(in_data), in_data);
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			in_data, result_null);
 
 	// Verification
@@ -4307,7 +4307,7 @@ TEST_F(BoolFilterFloat, NanOrInfNotAlignedData) {
 	float *data_shift = &data[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			data_shift, result);
 
 	// Verification
@@ -4330,7 +4330,7 @@ TEST_F(BoolFilterFloat, NanOrInfNotAlignedResult) {
 	bool *result_shift = &result[offset];
 	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
 
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseFloatIfNanOrInf(num_data,
+	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			data, result_shift);
 
 	// Verification
@@ -4899,7 +4899,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 //}
 //
 ///*
-// * Test bool filter generation sakura_SetTrueFloatInRangesInclusive
+// * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
 // * with a long array
 // */
 //TEST_F(BoolFilterFloat, RangesInclusive8conditions) {
@@ -4934,7 +4934,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 //			<< num_data << endl;
 //	start = sakura_GetCurrentTime();
 //	for (size_t i = 0; i < num_repeat; ++i) {
-//		status = sakura_SetTrueFloatInRangesInclusive(
+//		status = sakura_SetTrueIfInRangesInclusiveFloat(
 //				num_data, in_data, num_range, lower, upper, result);
 //	}
 //	end = sakura_GetCurrentTime();
@@ -4946,7 +4946,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 //}
 //
 ///*
-// * Test bool filter generation sakura_SetTrueIntInRangesInclusive
+// * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
 // * with a long array
 // */
 //TEST_F(BoolFilterInt, RangesInclusive8conditions) {
@@ -4981,7 +4981,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 //			<< num_data << endl;
 //	start = sakura_GetCurrentTime();
 //	for (size_t i = 0; i < num_repeat; ++i) {
-//		status = sakura_SetTrueIntInRangesInclusive(
+//		status = sakura_SetTrueIfInRangesInclusiveInt(
 //				num_data, in_data, num_range, lower, upper, result);
 //	}
 //	end = sakura_GetCurrentTime();

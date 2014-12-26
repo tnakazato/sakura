@@ -515,16 +515,16 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesInclusive)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
 		float const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
 
 /**
- * @copybrief sakura_SetTrueFloatInRangesInclusive
- * @copydetails sakura_SetTrueFloatInRangesInclusive
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesInclusive)(
+ * @copybrief sakura_SetTrueIfInRangesInclusiveFloat
+ * @copydetails sakura_SetTrueIfInRangesInclusiveFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt)(
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
@@ -592,16 +592,16 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)(
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
 		float const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]);
 
 /**
- * @copybrief sakura_SetTrueFloatInRangesExclusive
- * @copydetails sakura_SetTrueFloatInRangesExclusive
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)(
+ * @copybrief sakura_SetTrueIfInRangesExclusiveFloat
+ * @copydetails sakura_SetTrueIfInRangesExclusiveFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt)(
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
@@ -650,14 +650,14 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThan)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]);
 
 /**
- * @copybrief sakura_SetTrueFloatGreaterThan
- * @copydetails sakura_SetTrueFloatGreaterThan
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThan)(
+ * @copybrief sakura_SetTrueIfGreaterThanFloat
+ * @copydetails sakura_SetTrueIfGreaterThanFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
@@ -704,14 +704,14 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatGreaterThanOrEquals)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]);
 
 /**
- * @copybrief sakura_SetTrueFloatGreaterThanOrEquals
- * @copydetails sakura_SetTrueFloatGreaterThanOrEquals
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntGreaterThanOrEquals)(
+ * @copybrief sakura_SetTrueIfGreaterThanOrEqualsFloat
+ * @copydetails sakura_SetTrueIfGreaterThanOrEqualsFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
@@ -758,14 +758,14 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThan)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]);
 
 /**
- * @copybrief sakura_SetTrueFloatLessThan
- * @copydetails sakura_SetTrueFloatLessThan
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThan)(size_t num_data,
+ * @copybrief sakura_SetTrueIfLessThanFloat
+ * @copydetails sakura_SetTrueIfLessThanFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(size_t num_data,
 		int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
@@ -812,14 +812,14 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueFloatLessThanOrEquals)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]);
 
 /**
- * @copybrief sakura_SetTrueFloatLessThanOrEquals
- * @copydetails sakura_SetTrueFloatLessThanOrEquals
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIntLessThanOrEquals)(
+ * @copybrief sakura_SetTrueIfLessThanOrEqualsFloat
+ * @copydetails sakura_SetTrueIfLessThanOrEqualsFloat
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
@@ -852,7 +852,7 @@ typedef struct {
  * @return 終了ステータス
  *@~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool result[/*num_data*/]);
 
