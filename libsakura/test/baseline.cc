@@ -1066,6 +1066,89 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
 
+
+/*
+ * Following the test code of sakura_SubtractBaseline
+ * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClipping
+ * successful case that will take a few seconds.
+ * the input data have smooth shape and no spiky feature, and
+ * sakura_GetBestFitBaselineCoeff is executed without doing recursive
+ * clipping.
+ */
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTime) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL);
+	size_t const num_coeff(NUM_MODEL);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0 };
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+	}
+
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status)
+	create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+			&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+
+	LIBSAKURA_SYMBOL (BaselineStatus)
+	subbl_blstatus;
+
+	double start, end;
+	double elapsed_time = 0.0;
+	size_t const num_repeat(2);
+	for (size_t i = 0; i < num_repeat; ++i) {
+		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		LIBSAKURA_SYMBOL (Status)
+		subbl_status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(
+			num_data, in_data, in_mask, context, clipping_threshold_sigma,
+			num_fitting_max, num_coeff, coeff, final_mask, &subbl_blstatus);
+		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		elapsed_time += (end - start);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	}
+	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
+
+
+	for (size_t i = 0; i < num_coeff; ++i) {
+		cout.precision();
+		cout << "diff between coeff_answer and coeff "
+				<< coeff_answer[i] - coeff[i] << endl;
+		ASSERT_EQ((float )coeff_answer[i], (float )coeff[i]);
+	}
+
+	if (verbose) {
+		PrintArray("fmask ", num_data, final_mask);
+		PrintArray("out   ", num_data, out);
+		PrintArray("answer", num_data, answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status)
+	destroy_status = sakura_DestroyBaselineContext(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+}
+
 /*
  * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithDataNotAligned
  * failure case: data is not aligned
