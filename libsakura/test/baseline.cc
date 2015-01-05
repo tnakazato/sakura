@@ -1117,7 +1117,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
 
 	double start, end;
 	double elapsed_time = 0.0;
-	size_t const num_repeat(2);
+	size_t const num_repeat(NUM_REPEAT*200);
 	for (size_t i = 0; i < num_repeat; ++i) {
 		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
