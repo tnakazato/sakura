@@ -463,7 +463,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	}
 }
 
-inline void GetBestFitBaselineCoefficentsFloat(size_t num_data,
+inline void GetBestFitBaselineCoefficientsFloat(size_t num_data,
 		float const *data_arg, bool const *mask_arg,
 		LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
@@ -649,7 +649,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
 		size_t num_data, float const data[], bool const mask[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
@@ -690,7 +690,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficen
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 
 	try {
-		GetBestFitBaselineCoefficentsFloat(num_data, data, mask, context,
+		GetBestFitBaselineCoefficientsFloat(num_data, data, mask, context,
 				clip_threshold_sigma, num_fitting_max,
 				//get_residual,
 				num_coeff, coeff, final_mask,

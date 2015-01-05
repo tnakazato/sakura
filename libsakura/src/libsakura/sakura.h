@@ -2324,7 +2324,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @return status code.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficentsFloat)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
