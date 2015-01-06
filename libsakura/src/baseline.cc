@@ -133,7 +133,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		num_bases = order + 1;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		assert(order > 0);
+		if (order < 1) {
+			throw std::invalid_argument(
+					"order (number of pieces) must be a positive value!");
+		}
 		num_bases = 4;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
@@ -203,7 +206,7 @@ inline void AddMulMatrix(size_t num_bases, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d                   const zero = _mm256_set1_pd(0.);
+	__m256d                    const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
