@@ -45,6 +45,8 @@
 #define NUM_DATA3 4096
 #define NUM_MODEL 3
 #define NUM_REPEAT 20000
+#define NUM_MODEL2 4
+#define NUM_REPEAT2 2000000
 
 using namespace std;
 
@@ -1009,6 +1011,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
+	SIMD_ALIGN
 	float in_data[num_data];
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
@@ -1077,11 +1080,12 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTime) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
+	SIMD_ALIGN
 	float in_data[num_data];
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
@@ -1115,16 +1119,15 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
 	LIBSAKURA_SYMBOL (BaselineStatus)
 	subbl_blstatus;
 
-	double start, end;
 	double elapsed_time = 0.0;
-	size_t const num_repeat(NUM_REPEAT);
+	size_t const num_repeat(NUM_REPEAT2);
 	for (size_t i = 0; i < num_repeat; ++i) {
-		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
 		subbl_status = LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
 			num_data, in_data, in_mask, context, clipping_threshold_sigma,
 			num_fitting_max, num_coeff, coeff, final_mask, &subbl_blstatus);
-		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
