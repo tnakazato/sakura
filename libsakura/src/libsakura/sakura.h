@@ -206,6 +206,11 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
  * memory alignment(for SIMD)
  */
 /**
+ * @~english
+ * @brief Checks if @a ptr is aligned at the boundary Sakura Library requires.
+ *
+ * @param[in] ptr An address to be checked. NULL is allowed.
+ * @return true if the address is aligned, otherwise false
  * @~japanese
  * @brief Sakuraライブラリが想定するアライメントに、@a ptr が合っているか調べる
  *
@@ -233,6 +238,17 @@ bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
 size_t LIBSAKURA_SYMBOL (GetAlignment)();
 
 /**
+ * @~english
+ * @brief Returns an aligned address close to @a arena by adding 0 or minimum offset.
+ *
+ * It returns @a arena if @a arena is already aligned.
+ *
+ * @param[in] arena start address of a memory region
+ * @param[in] size_of_arena size of the memory region
+ * @param[in] size_required required size after alignment
+ * @return aligned address if at least @a size_required bytes are available in @a arena after alignment,
+ * otherwise NULL.
+ *
  * @~japanese
  * @brief @a arena がアラインされていないならば、
  * アドレスを必要最小限増加させ、アラインされたアドレスを返す
