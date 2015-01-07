@@ -148,7 +148,7 @@ protected:
 		}
 		double start = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data, kernel_type,
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kernel_type,
 				kernel_width, use_fft, &context);
 		ASSERT_EQ(expected_status, status);
 		double end = sakura_GetCurrentTime();
@@ -182,7 +182,7 @@ protected:
 		}
 		verbose = false;
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
 		ASSERT_EQ(expected_status, status_Destroy);
 		if (loop_max > 1 && expected_status == sakura_Status_kOK) {
 			std::cout << "use_fft : " << use_fft << std::endl;
@@ -218,10 +218,10 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 }
 
 /*
- * Test creating gaussian kernel by sakura_CreateConvolve1DContext
+ * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
  * RESULT:
  * if num_data = 0,kernel_width = 0, LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = UnknownType,
- * CreateConvolve1DContext will return Status_kInvalidArgument)
+ * CreateConvolve1DContextFloat will return Status_kInvalidArgument)
  */
 TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // num_data > INT_MAX
@@ -313,12 +313,12 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		size_t const kernel_width(NUM_WIDTH);
 		bool use_fft = true;
 		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data,
 				sakura_Convolve1DKernelType_kGaussian, kernel_width, use_fft,
 				nullptr);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 	}
 }
@@ -393,7 +393,7 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		size_t const kernel_width(NUM_WIDTH);
 		bool use_fft = true; // with FFT
 		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContext)(num_data,
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data,
 				sakura_Convolve1DKernelType_kGaussian, kernel_width, use_fft,
 				&context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
@@ -404,14 +404,14 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 				output_data);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(context);
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 }
 
 /*
- * Test creating gaussian kernel by sakura_CreateConvolve1DContext
+ * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
  * and checking kernel shape,value,even,odd.
  * RESULT:
  * intended gaussian kernel shape,value will be obtained.
@@ -717,7 +717,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 
 /*
  * Test Compare result of with/without FFTW for gaussian kernel
- * by sakura_CreateConvolve1DContext
+ * by sakura_CreateConvolve1DContextFloat
  * RESULT:
  * each result will be equal between convolution with/without fft
  */

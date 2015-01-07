@@ -151,7 +151,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	}
 }
 
-inline void CreateConvolve1DContext(size_t num_data,
+inline void CreateConvolve1DContextFloat(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 	assert(context != nullptr);
@@ -324,7 +324,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	}
 }
 
-inline void DestroyConvolve1DContext(
+inline void DestroyConvolve1DContextFloat(
 LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 	if (context != nullptr) {
 		if (context->plan_real_to_complex_float != nullptr) {
@@ -348,7 +348,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 
 } /* anonymous namespace */
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
@@ -370,7 +370,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
-		CreateConvolve1DContext(num_data, kernel_type,
+		CreateConvolve1DContextFloat(num_data, kernel_type,
 				kernel_width, use_fft, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
@@ -417,13 +417,13 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
 LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
-		DestroyConvolve1DContext(context);
+		DestroyConvolve1DContextFloat(context);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);

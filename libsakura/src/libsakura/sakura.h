@@ -1769,7 +1769,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  * @~
  * MT-unsafe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context)
@@ -1827,7 +1827,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @return status code.
  * @~
  * MT-unsafe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContext)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
 
 /**
