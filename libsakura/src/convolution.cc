@@ -42,7 +42,7 @@
 #include <libsakura/memory_manager.h>
 
 extern "C" {
-struct LIBSAKURA_SYMBOL(Convolve1DContext) {
+struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
 	bool use_fft;
 	size_t num_data;
 	size_t kernel_width;
@@ -153,7 +153,7 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 
 inline void CreateConvolve1DContextFloat(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
-bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
+bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 	assert(context != nullptr);
 	if (use_fft) {
 		float *real_kernel_array = nullptr;
@@ -215,10 +215,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 				real_kernel_array);
 		fftwf_execute(plan_real_to_complex_float_kernel);
 		guard_for_fft_plan_kernel.CleanUpNow();
-		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
+		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
 		LIBSAKURA_PREFIX::Memory> work_context(
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(Convolve1DContext)))),
+				static_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat)*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(LIBSAKURA_SYMBOL(Convolve1DContextFloat)))),
 				LIBSAKURA_PREFIX::Memory());
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
@@ -254,10 +254,10 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
 		Create1DKernel(num_kernel, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
-		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContext),
+		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
 		LIBSAKURA_PREFIX::Memory> work_context(
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DContext)*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(Convolve1DContext)))),
+				static_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat)*>(LIBSAKURA_PREFIX::Memory::Allocate(
+						sizeof(LIBSAKURA_SYMBOL(Convolve1DContextFloat)))),
 				LIBSAKURA_PREFIX::Memory());
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
@@ -277,7 +277,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContext)** context) {
 }
 
 inline void Convolve1DFloat(
-LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
 		float output_data_arg[/*num_data*/]) {
 	if (!(context->num_data == num_data)) {
@@ -325,7 +325,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 }
 
 inline void DestroyConvolve1DContextFloat(
-LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
+LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 	if (context != nullptr) {
 		if (context->plan_real_to_complex_float != nullptr) {
 			DestroyFFTPlan(context->plan_real_to_complex_float);
@@ -351,7 +351,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext)* context) {
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
-		LIBSAKURA_SYMBOL(Convolve1DContext) **context) {
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) {
 	if (context == nullptr) {
 		LOG4CXX_ERROR(logger, "context should not be NULL");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -389,7 +389,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
-LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data[/*num_data*/], float output_data[/*num_data*/]) {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -418,7 +418,7 @@ LIBSAKURA_SYMBOL(Convolve1DContext) const *context, size_t num_data,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
-LIBSAKURA_SYMBOL(Convolve1DContext) *context) {
+LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context) {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}

@@ -1719,7 +1719,7 @@ typedef enum {
 /**
  * @brief Context struct for convolution
  */
-struct LIBSAKURA_SYMBOL(Convolve1DContext);
+struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 /**
  * @~japanese
  * @brief コンボリューションに必要なコンテキストを作成する。
@@ -1772,7 +1772,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
-		struct LIBSAKURA_SYMBOL(Convolve1DContext) **context)
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~japanese
@@ -1811,7 +1811,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContext) const *context,
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
 		float output_data[/*num_data*/]);
 /**
@@ -1828,7 +1828,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContext);
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContext) *context);
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context);
 
 /**
  * @~japanese

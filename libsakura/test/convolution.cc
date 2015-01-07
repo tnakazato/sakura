@@ -47,7 +47,7 @@
 #define LOOP_MAX 1000
 
 extern "C" {
-struct LIBSAKURA_SYMBOL(Convolve1DContext) {
+struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
 	bool use_fft;
 	size_t num_data;
 	size_t kernel_width;
@@ -120,7 +120,7 @@ protected:
 			LIBSAKURA_SYMBOL(Status) expected_status,
 			bool align_check,
 			bool verbose, size_t loop_max) {
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[input_data_size];
 		for (size_t i = 0; i < input_data_size; ++i) {
@@ -308,7 +308,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
 	{ // context == nullptr
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		size_t const num_data(NUM_IN);
 		size_t const kernel_width(NUM_WIDTH);
 		bool use_fft = true;
@@ -383,7 +383,7 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		LIBSAKURA_SYMBOL(Status) status_Init = LIBSAKURA_SYMBOL(Initialize)(
 				DummyAlloc, nullptr);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Init);
-		LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[NUM_IN];
 		size_t const num_data(ELEMENTSOF(input_data));
