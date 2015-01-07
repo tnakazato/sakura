@@ -5346,7 +5346,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
  * subtract best fit model from input data using input coeff
  */
 TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
-	size_t const num_data(NUM_DATA2);
+	size_t const num_data(500000);
 	size_t const num_model(NUM_MODEL);
 	size_t const num_coeff(NUM_MODEL);
 
@@ -5377,7 +5377,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	SIMD_ALIGN
 	double coeff[num_coeff] = { 3.0f, 2.0f, 1.0f };
 
-	size_t loop_max = 10000000;
+	size_t loop_max = 1000;
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
 		LIBSAKURA_SYMBOL (Status)
