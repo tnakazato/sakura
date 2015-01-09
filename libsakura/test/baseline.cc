@@ -1073,7 +1073,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTime) {
+TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTime) {
 	size_t const num_data(100000);
 	size_t const num_model(NUM_MODEL2);
 	size_t const num_coeff(NUM_MODEL2);
