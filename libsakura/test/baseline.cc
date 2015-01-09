@@ -48,6 +48,7 @@
 #define NUM_MODEL2 4
 #define NUM_REPEAT2 2000000
 
+
 using namespace std;
 
 /*
@@ -79,7 +80,7 @@ protected:
 		}
 	}
 
-	//Set (3+x+2*x*x) float values into an array
+	//Set (A[0]+A[1]*x+A[2]*x*x+A[3]*x*x*x) float values into an array
 	void SetFloatPolynomial(size_t num_data, float *data,
 			double *coeff_answer) {
 		for (size_t i = 0; i < num_data; ++i) {
@@ -1006,8 +1007,8 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1020,11 +1021,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
-	float out[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
 	double coeff[num_coeff];
-	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1060,8 +1057,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
 	}
 
 	LIBSAKURA_SYMBOL (Status)
@@ -1079,12 +1074,12 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
  * clipping.
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTime) {
-	size_t const num_data(NUM_DATA2);
+	size_t const num_data(100000);
 	size_t const num_model(NUM_MODEL2);
 	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
-	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
+	double coeff_answer[num_coeff] = { pow(10.0,-10), pow(10.0,-10), pow(10.0,-10), pow(10.0,-10) };
 	SIMD_ALIGN
 	float in_data[num_data];
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
@@ -1094,11 +1089,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
-	float out[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
 	double coeff[num_coeff];
-	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
@@ -1107,10 +1098,12 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
 
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+
 	LIBSAKURA_SYMBOL (Status)
 	create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
 			&context);
+
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	float clipping_threshold_sigma = 3.0;
@@ -1118,9 +1111,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
 
 	LIBSAKURA_SYMBOL (BaselineStatus)
 	subbl_blstatus;
-
 	double elapsed_time = 0.0;
-	size_t const num_repeat(NUM_REPEAT2);
+	size_t const num_repeat(1);
 	for (size_t i = 0; i < num_repeat; ++i) {
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status)
@@ -1133,18 +1125,15 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
 	}
 	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
-
 	for (size_t i = 0; i < num_coeff; ++i) {
 		cout.precision();
 		cout << "diff between coeff_answer and coeff "
 				<< coeff_answer[i] - coeff[i] << endl;
-		ASSERT_EQ((float )coeff_answer[i], (float )coeff[i]);
+		EXPECT_LE( coeff_answer[i] - coeff[i], pow(10,-5) );
 	}
 
 	if (verbose) {
 		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
 	}
 
 	LIBSAKURA_SYMBOL (Status)
@@ -1161,8 +1150,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingi_ElapsedTi
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNotAligned) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1221,8 +1210,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1293,8 +1282,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMaskNotAligned) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1354,8 +1343,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNotAligned) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1414,8 +1403,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNullPointer) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	float *in_data = nullptr;
@@ -1468,8 +1457,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1524,8 +1513,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMaskNullPointer) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
@@ -1582,8 +1571,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
  */
 TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNullPointer) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL+1);
-	size_t const num_coeff(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
 
 	SIMD_ALIGN
 	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };

@@ -477,11 +477,13 @@ inline void GetBestFitBaselineCoefficientsFloat(size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(baseline_context->basis_data));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 
+	num_coeff = baseline_context->num_bases;
 	DoSubtractBaseline(num_data, data, mask, baseline_context,
 			clip_threshold_sigma, num_fitting_max_arg, num_coeff, coeff,
 			final_mask, true, nullptr, baseline_status);
