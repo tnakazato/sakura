@@ -18,6 +18,9 @@
  *
  * @section api API
  * Public API of Sakura Library is available @ref sakura.h "here".
+ * All parameters marked as 'must-be-aligned' must be aligned at vector operation word boundary.
+ * You can get the word size by calling @ref sakura_GetAlignment .
+ * You are responsible to serialize calling functions which are not marked as 'MT-safe' as well.
  *
  */
 ;
