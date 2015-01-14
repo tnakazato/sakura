@@ -399,7 +399,7 @@ typedef struct {
  * @return 終了ステータス
  *
  * @~english
- * @brief Sort only valid data in ascending order.
+ * @brief Sorts only valid data in ascending order.
  *
  * @param[in] num_data The number of elements in @a data and @a is_valid .
  * @param[in] is_valid Masks of @a data. If a value of element is false,
@@ -415,12 +415,66 @@ typedef struct {
 		size_t num_data, bool const is_valid[], float data[],
 		size_t *new_num_data) LIBSAKURA_WARN_UNUSED_RESULT;
 /**
+ * @~english
+ * @brief Grids data with convolution.
+ *
+ * This function plot @a value from @a start_spectrum to @a end_spectrum whose location is at (@a x , @a y)
+ * onto @a grid as points which have width represented by @a convolution_table.
+ * The results of 2 * @a support pixels from the edges of the grids are not reliable due to
+ * implementation to gain speed.
+ * Polarizations and channels are mapped by @a polarization_map and @a channel_map when gridding.
+ * All floating-point values passed to this function must not be NaN nor +-Inf.
+ *
+ * @param[in] num_spectra	The number of spectra. It should be  0 <= @a start_spectrum <= @a end_spectrum <= @a num_spectra .
+ * @param[in] start_spectrum	Starting index of spectrum to be processed.
+ * @param[in] end_spectrum	An index next to the last index of spectrum to be processed.
+ * @param[in] spectrum_mask	Masks to each spectrum. The number of elements must be @a num_spectra.
+ * If a value of element is false, the corresponding spectrum is ignored.
+ * <br/>must-be-aligned
+ * @param[in] x	X position of the point projected to 2D plane of the grid.
+ * The number of elements must be @a num_spectra . Each element must be INT32_MIN < @a x[i] < INT32_MAX .
+ * <br/>must-be-aligned
+ * @param[in] y	Y position of the point projected to 2D plane of the grid.
+ * The number of elements must be @a num_spectra . Each element must be INT32_MIN < @a y[i] < INT32_MAX .
+ * <br/>must-be-aligned
+ * @param[in] support	A half width(the number of pixels from center to edge) of convolution kernel on the grid plane of size @a width x @a height. It must be 0 < @a support <= 256 .<br/>
+ * Note that this function may cause stack overflow because it allocates memory of a size proportional to @a support * @a sampling on stack
+ * when @a support * @a sampling is too large.
+ * @param[in] sampling	A resolution of convolution kernel(samples/grid aka samples/pixel). It must be 0 < @a sampling <= INT32_MAX .
+ * @param[in] num_polarizations	The number of polarizations. It must be 0 < @a num_polarizations <= INT32_MAX .
+ * @param[in] polarization_map	The number of elements must be @a num_polarizations. Each element must be in range [0,@a num_polarizations_for_grid).
+ * <br/>must-be-aligned
+ * @param[in] num_channels	The number of channels. It must be 0 < @a num_channels <= INT32_MAX .
+ * @param[in] channel_map	The number of elements must be @a num_channels. Each element must be in range [0,@a num_channels_for_grid).
+ * <br/>must-be-aligned
+ * @param[in] mask	Masks to each @a value . Its memory layout should be [@a num_spectra][@a num_polarizations][@a num_channels].
+ * If a value of element is false, the corresponding combination of the spectrum, polarization and channel is ignored.
+ * <br/>must-be-aligned
+ * @param[in] value	Values to be gridded. Its memory layout should be [@a num_spectra][@a num_polarizations][@a num_channels].
+ * <br/>must-be-aligned
+ * @param[in] weight Weights for @a value. Its memory layout should be [@a num_spectra][@a num_channels].
+ * <br/>must-be-aligned
+ * @param[in] weight_only	True if you want to get a grid of weight itself rather than production of @a value and @a weight. Otherwise false.
+ * @param[in] num_convolution_table	The number of elements of @a convolution_table. It should be ceil(sqrt(2.)*(@a support+1)*@a sampling) <= @a num_convolution_table <= INT32_MAX / 32 .
+ * @param[in] convolution_table	An array which represents convolution kernel. The number of elements must be @a num_convolution_table. The first element corresponds to center of the point.
+ * <br/>must-be-aligned
+ * @param[in] num_polarizations_for_grid	The number of polarizations on the grid. It should be 0 < @a num_polarizations_for_grid <= INT32_MAX .
+ * @param[in] num_channels_for_grid	The number of channels on the grid. It should be 0 < @a num_channels_for_grid <= INT32_MAX .
+ * @param[in] width	Width of the grid . It should be 0 < @a width <= INT32_MAX .
+ * @param[in] height Height of the grid . It should be 0 < @a height <= INT32_MAX .
+ * @param[out] weight_sum	Sum of weights. Its memory layout should be [@a num_polarizations_for_grid][@a num_channels_for_grid].
+ * <br/>must-be-aligned
+ * @param[out] weight_of_grid	Weight for each grid. Its memory layout should be [@a height][@a width][@a num_polarizations_for_grid][@a num_channels_for_grid].
+ * <br/>must-be-aligned
+ * @param[out] grid	The resulting grid. Its memory layout should be [@a height][@a width][@a num_polarizations_for_grid][@a num_channels_for_grid].
+ * <br/>must-be-aligned
+ *
  * @~japanese
  * @brief 畳み込みしながらグリッドする
  *
  * @a start_spectrum から @a end_spectrum までの、@a x , @a y 座標上の @a value の値を
  * @a convolution_table で表される広がりを持った点として、@a grid 上にプロットする。
- * エッジから2*supportピクセル分の値は信頼できない(理由:処理の高速化のため)。
+ * エッジから 2 * @a support ピクセル分の値は信頼できない(理由:処理の高速化のため)。
  * @a grid にプロットする際は、@a polarization_map , @a channel_map によって偏波とチャネルのマッピングが行われる。
  *
  * 各浮動小数点の数値はNaN/+-Infであってはならない。
@@ -432,24 +486,24 @@ typedef struct {
  * @param[in] y 要素数は@a num_spectra 。2次元平面に投射済みのy座標。範囲は、INT32_MIN < y[i] < INT32_MAX<br/>must-be-aligned
  * @param[in] support @a width x @a height 平面における畳み込みカーネルの広がり(中心か らのpixel数)。範囲は、0 < support <= 256<br/>
  * ただし、@a support * @a sampling に比例するサイズの領域をスタック上に確保するので、@a support * @a sampling が大きな値となる場合、スタックオーバーフローを起こす。
- * @param[in] sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < sampling <= INT32_MAX
- * @param[in] num_polarizations 範囲は、0 < num_polarizations <= INT32_MAX
- * @param[in] polarization_map	要素数は、num_polarizations。各要素の値は、[0,num_polarizations_for_grid)でなければならない。<br/>must-be-aligned
- * @param[in] num_channels 範囲は、0 < num_channels <= INT32_MAX
- * @param[in] channel_map	要素数は、num_channels。各要素の値は、[0,num_channels_for_grid)でなければならない。<br/>must-be-aligned
- * @param[in] mask	要素のレイアウトは、[num_spectra][num_polarizations][num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
- * @param[in] value	要素のレイアウトは、[num_spectra][num_polarizations][num_channels]。グリッディングする値。<br/>must-be-aligned
- * @param[in] weight 要素のレイアウトは、[num_spectra][num_channels]。重み。<br/>must-be-aligned
+ * @param[in] sampling 畳み込みカーネルの精度(/pixel)。範囲は、0 < @a sampling <= INT32_MAX
+ * @param[in] num_polarizations 範囲は、0 < @a num_polarizations <= INT32_MAX
+ * @param[in] polarization_map	要素数は、@a num_polarizations 。各要素の値は、[0,@a num_polarizations_for_grid)でなければならない。<br/>must-be-aligned
+ * @param[in] num_channels 範囲は、0 < @a num_channels <= INT32_MAX
+ * @param[in] channel_map	要素数は、@a num_channels 。各要素の値は、[0,@a num_channels_for_grid)でなければならない。<br/>must-be-aligned
+ * @param[in] mask	要素のレイアウトは、[@a num_spectra][@a num_polarizations][@a num_channels]。falseの場合は、該当するスペクトル、偏波、チ ャネルの組み合わせのデータは無視される。<br/>must-be-aligned
+ * @param[in] value	要素のレイアウトは、[@a num_spectra][@a num_polarizations][@a num_channels]。グリッディングする値。<br/>must-be-aligned
+ * @param[in] weight 要素のレイアウトは、[@a num_spectra][@a num_channels]。重み。<br/>must-be-aligned
  * @param[in] weight_only @a value に重みを掛けたものではなく、重み自体をグリッディングする場合は、true。
- * @param[in] num_convolution_table @a convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(support+1)*sampling) <= num_convolution_table <= INT32_MAX / 32
- * @param[in] convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。各要素の値は、NaN,Infであってはならない。要素0が中心を表す。<br/>must-be-aligned
- * @param[in] num_polarizations_for_grid 範囲は、0 < num_polarizations_for_grid <= INT32_MAX
- * @param[in] num_channels_for_grid 範囲は、0 < num_channels_for_grid <= INT32_MAX
- * @param[in] width 範囲は、0 < width <= INT32_MAX
- * @param[in] height 範囲は、0 < height <= INT32_MAX
- * @param[out] weight_sum	要素のレイアウトは、[num_polarizations_for_grid][num_channels_for_grid]。重みの合計。<br/>must-be-aligned
- * @param[out] weight_of_grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
- * @param[out] grid	要素のレイアウトは、[height][width][num_polarizations_for_grid][num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
+ * @param[in] num_convolution_table @a convolution_table の要素数。 範囲は、ceil(sqrt(2.)*(@a support+1)*@a sampling) <= num_convolution_table <= INT32_MAX / 32
+ * @param[in] convolution_table	要素数は、@a num_convolution_table 。畳み込みに使用する重みカーブ。要素0が中心を表す。<br/>must-be-aligned
+ * @param[in] num_polarizations_for_grid 範囲は、0 < @a num_polarizations_for_grid <= INT32_MAX
+ * @param[in] num_channels_for_grid 範囲は、0 < @a num_channels_for_grid <= INT32_MAX
+ * @param[in] width 範囲は、0 < @a width <= INT32_MAX
+ * @param[in] height 範囲は、0 < @a height <= INT32_MAX
+ * @param[out] weight_sum	要素のレイアウトは、[@a num_polarizations_for_grid][@a num_channels_for_grid]。重みの合計。<br/>must-be-aligned
+ * @param[out] weight_of_grid	要素のレイアウトは、[@a height][@a width][@a num_polarizations_for_grid][@a num_channels_for_grid]。グリッドの重み。<br/>must-be-aligned
+ * @param[out] grid	要素のレイアウトは、[@a height][@a width][@a num_polarizations_for_grid][@a num_channels_for_grid]。グリッディング結果。<br/>must-be-aligned
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(
 		size_t num_spectra, size_t start_spectrum, size_t end_spectrum,
 		bool const spectrum_mask[/*num_spectra*/],
