@@ -756,7 +756,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
-		double lsq_matrix[], double lsq_vector[]) {
+		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -774,6 +774,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 	if (basis_data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_lsq_bases == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_lsq_bases > num_model_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (lsq_matrix == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -813,7 +817,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		size_t const num_data, float const data[],
 		size_t const num_exclude_indices, size_t const exclude_indices[],
 		size_t const num_model_bases, double const basis_data[],
-		double lsq_matrix[], double lsq_vector[]) {
+		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -837,6 +841,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 	if (basis_data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_lsq_bases == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_lsq_bases > num_model_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (lsq_matrix == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);

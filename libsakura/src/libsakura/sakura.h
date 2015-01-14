@@ -1902,9 +1902,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] num_model_bases モデルを構成する基底関数の数。正で、且つ、 @a num_data 以下の数でなければならない。
  * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
- * @param[out] lsq_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_model_bases * @a num_model_bases )となる。
+ * @param[in] num_lsq_bases 実際に係数の計算に用いる基底関数の数。正で、且つ、@a num_model_basis以下の数でなければならない。
+ * @param[out] lsq_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_lsq_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( @a num_lsq_bases * @a num_lsq_bases )となる。
  * @n must-be-aligned
- * @param[out] lsq_vector 求める連立方程式の右辺側のベクトル成分を格納する配列。配列の長さは @a num_model_bases となる。
+ * @param[out] lsq_vector 求める連立方程式の右辺側のベクトル成分を格納する配列。配列の長さは @a num_lsq_bases となる。
  * @n must-be-aligned
  * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、マスクされていないデータの数が求める連立方程式の本数に満たない場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
  * @~english
@@ -1940,12 +1941,15 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be
  * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
+ * @param[in] num_lsq_bases the number of model basis functions to be used
+ * in actual fitting. it must be a positive number and must not exceed
+ * @a num_model_bases .
  * @param[out] lsq_matrix a 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
+ * its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
  * loop for columns comes inside that for rows, i.e., the value at the
  * @a m -th row and @a n -th column is stored at @a out [ @a
- * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
+ * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
  * symmetric.
  * @n must-be-aligned
  * @param[out] lsq_vector the values of a vector at the right side of
@@ -1964,8 +1968,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
-		double lsq_matrix[/*num_model_bases*num_model_bases*/],
-		double lsq_vector[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		size_t const num_lsq_bases,
+		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
+		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
@@ -2011,9 +2016,10 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] num_model_bases モデルを構成する基底関数の数。正で、且つ、 @a num_data 以下の数でなければならない。
  * @param[in] basis_data モデルを構成する全ての基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_model_bases * @a num_data )でなければならない。
  * @n must-be-aligned
- * @param[in,out] lsq_matrix 更新するべき連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_model_bases * ( @a m -1) + ( @a n -1)]に格納される。要素数は必ず ( @a num_model_bases * @a num_model_bases ) でなければならない。
+ * @param[in] num_lsq_bases 実際に係数の計算に用いる基底関数の数。正で、且つ、@a num_model_basis以下の数でなければならない。
+ * @param[in,out] lsq_matrix 更新するべき連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_lsq_bases * ( @a m -1) + ( @a n -1)]に格納される。要素数は必ず ( @a num_lsq_bases * @a num_lsq_bases ) でなければならない。
  * @n must-be-aligned
- * @param[in,out] lsq_vector 更新するべき連立方程式の右辺側のベクトル成分を格納する配列。要素数は必ず @a num_model_bases でなければならない。
+ * @param[in,out] lsq_vector 更新するべき連立方程式の右辺側のベクトル成分を格納する配列。要素数は必ず @a num_lsq_bases でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
  * @par 注意:
@@ -2059,17 +2065,19 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be
  * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
+ * @param[in] num_lsq_bases the number of model basis functions to be used
+ * in actual fitting. it must be a positive number and must not exceed
+ * @a num_model_bases .
  * @param[in,out] lsq_matrix a 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_model_bases * @a num_model_bases ).
+ * its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
  * loop for columns comes inside that for rows, i.e., the value at the
  * @a m -th row and @a n -th column is stored at @a out [ @a
- * num_model_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
+ * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
  * symmetric.
- * @n must-be-aligned
  * @param[in,out] lsq_vector the values of a vector at the right side of
  * simultaneous equations for least-square fitting. its length should be
- * equal to @a num_model_bases.
+ * equal to @a num_lsq_bases .
  * @n must-be-aligned
  * @return status code. Status_kOK if finished successfully,
  * Status_kInvalidArgument in case parameters does not meet the above
@@ -2088,8 +2096,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		size_t const exclude_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
-		double lsq_matrix[/*num_model_bases*num_model_bases*/],
-		double lsq_vector[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		size_t const num_lsq_bases,
+		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
+		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2216,7 +2225,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief ベースラインモデル情報を格納するオブジェクトを生成する。
  * @details
  * @param[in] baseline_type ベースラインを表現する関数形。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では最大の次数、スプラインでは最大の分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[in] num_data フィットするデータ点の数。
  * @param[out] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned
@@ -2226,9 +2235,9 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @details
  * @param[in] baseline_type type of basis function.
  * @param[in] order parameter for the specified function.
- * actually it is the order (for polynomial and chebyshev),
- * or number of subsections (for cubic spline), or maximum
- * wave number (for sinusoid). must be positive for cubic
+ * actually it is the maximum order (for polynomial and chebyshev),
+ * or the maximum number of subsections (for cubic spline), or
+ * the maximum wave number (for sinusoid). must be positive for cubic
  * spline, while other models accept zero value. the number
  * of model bases, which is @a order+1 for polynomials or
  * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
@@ -2270,6 +2279,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[out] out 出力される配列。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
  * @n must-be-aligned
  * @param[out] baseline_status ベースライン固有のエラーコード。
@@ -2285,6 +2295,15 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] context an object containing baseline model data.
+ * @param[in] order parameter for the specified function.
+ * actually it is the order (for polynomial and chebyshev),
+ * or the number of subsections (for cubic spline), or
+ * the maximum wave number (for sinusoid). must be positive for cubic
+ * spline, while other models accept zero value. the value should not
+ * exceed the @a order specified in creation of @a context .
+ * the number of model bases, which is @a order+1 for polynomials or
+ * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
+ * must not exceed @a num_data.
  * @param[out] out the best-fit model with length of @a num_data . the
  * pointer of @a out can be identical with that of @a data .
  * @n must-be-aligned
@@ -2296,7 +2315,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float out[/*num_data*/],
+		uint16_t const order, float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2311,6 +2330,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * 値がfalseの要素に対応する入力データはフィッティングに用いられない。
  * @n must-be-aligned
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[in] clip_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
  * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
  * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、
@@ -2335,6 +2355,15 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] mask the input mask data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] context an object containing baseline model data.
+ * @param[in] order parameter for the specified function.
+ * actually it is the order (for polynomial and chebyshev),
+ * or the number of subsections (for cubic spline), or
+ * the maximum wave number (for sinusoid). must be positive for cubic
+ * spline, while other models accept zero value. the value should not
+ * exceed the @a order specified in creation of @a context .
+ * the number of model bases, which is @a order+1 for polynomials or
+ * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
+ * must not exceed @a num_data.
  * @param[in] clip_threshold_sigma the threshold of clipping in unit of
  * sigma. must be positive.
  * @param[in] num_fitting_max the maximum of total number of times
@@ -2359,7 +2388,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/],
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float clip_threshold_sigma, uint16_t num_fitting_max,
+		uint16_t const order, float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
@@ -2559,17 +2588,27 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @brief 最小二乗フィットにより得られたベストフィット係数を返す
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[in] num_coeff 最小二乗フィットにより得られたベストフィット係数の要素数。
  * @return 終了ステータス
  * @~english
  * @brief return best fit coefficients obtained by least-square fitting.
  * @details
  * @param[in] context an object containing baseline model data.
+ * @param[in] order parameter for the specified function.
+ * actually it is the order (for polynomial and chebyshev),
+ * or the number of subsections (for cubic spline), or
+ * the maximum wave number (for sinusoid). must be positive for cubic
+ * spline, while other models accept zero value. the value should not
+ * exceed the @a order specified in creation of @a context .
+ * the number of model bases, which is @a order+1 for polynomials or
+ * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
+ * must not exceed @a num_data.
  * @param[in] num_coeff number of best fit coefficients obtained by least-square fitting.
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t *num_coeff) LIBSAKURA_WARN_UNUSED_RESULT;
+		uint16_t order, size_t *num_coeff) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
