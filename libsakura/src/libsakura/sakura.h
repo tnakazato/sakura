@@ -780,8 +780,8 @@ typedef struct {
 /**
  * @copybrief sakura_SetTrueIfLessThanFloat
  * @copydetails sakura_SetTrueIfLessThanFloat
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(size_t num_data,
-		int const data[/*num_data*/], int threshold,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
+		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]);
 
 /**
@@ -1208,8 +1208,8 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(size_t num_data,
-		uint8_t const data[/*num_data*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
+		size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
  * @copybrief sakura_OperateBitwiseNotUint8
@@ -1282,8 +1282,8 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *@~
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(uint8_t bit_mask,
-		size_t num_data, uint8_t const data[/*num_data*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
 		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
 /**
  * @copybrief sakura_OperateBitwiseOrUint8
@@ -1914,6 +1914,31 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double lsq_vector[/*num_model_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @brief Compute coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+		size_t const num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t const num_pieces,
+		double const boundary[/*num_pieces*/],
+		double const basis_data[/*4*num_data*/],
+		double lsq_matrix[/*(3+num_pieces)**2*/],
+		double lsq_vector[/*3+num_pieces*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @brief Update coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsCubicSplineDouble)(
+		size_t const num_data, float const data[/*num_data*/],
+		size_t const num_exclude_indices,
+		size_t const exclude_indices[/*num_data*/], size_t const num_pieces,
+		double const boundary[/*num_pieces*/],
+		double const basis_data[/*4*num_data*/],
+		double lsq_matrix[/*(3+num_pieces)**2*/],
+		double lsq_vector[/*3+num_pieces*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値を更新する。
  * @details
@@ -2003,8 +2028,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * exclude the same data duplicatedly.
  * @~
  * MT-safe
- */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/],
@@ -2284,6 +2308,35 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @~english
+ * @brief Recursively fit a cubic spline baseline and subtract it from input spectrum.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t num_pieces,
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @brief Extraction of the coefficients of cubic spline fit.
+ * @param[in] num_coeff : output of GetNumberOf[Baseline]CoefficientsCubicSpline(). it should be 4*num_pieces.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t num_pieces,
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
+		double coeff[/*num_coeff*/], double boundary[/*num_pieces*/],
+		bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 

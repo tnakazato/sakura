@@ -184,6 +184,223 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 }
 
+inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
+		size_t num_mask, bool const *mask, size_t num_pieces,
+		double const *boundary, double const *model, double *out) {
+	//
+	size_t num_cubic_bases = 4;
+	size_t num_model_bases = num_cubic_bases - 1 + num_pieces;
+
+	for (size_t i = 0; i < num_model_bases * num_model_bases; ++i) {
+		out[i] = 0;
+	}
+	size_t num_unmasked_data = 0;
+	for (size_t i = 0; i < num_mask; ++i) {
+		if (mask[i]) {
+			auto model_i = &model[i * num_cubic_bases];
+			for (size_t j = 0; j < num_cubic_bases; ++j) {
+				auto out_matrix_j = &out[j * num_model_bases];
+				AddMulVector(num_cubic_bases, model_i[j], model_i,
+						out_matrix_j);
+			}
+			num_unmasked_data++;
+		}
+	}
+
+	if (num_unmasked_data < num_model_bases) {
+		throw std::runtime_error(
+				"GetMatrixCoefficientsForLeastSquareFitting: too many data are masked.");
+	}
+
+	double *aux_data = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*aux_data) * num_mask * num_pieces,
+					&aux_data));
+	size_t idx = 0;
+	for (size_t i = 0; i < num_pieces; ++i) {
+		for (size_t j = 0; j < num_mask; ++j) {
+			double v = static_cast<double>(j) - boundary[i];
+			aux_data[idx] = std::max(v * v * v, 0.0);
+			++idx;
+		}
+	}
+
+	for (size_t i = 0; i < num_cubic_bases - 1; ++i) {
+		for (size_t j = num_cubic_bases; j < num_model_bases; ++j) {
+			size_t start_pidx = j - num_cubic_bases + 1;
+			size_t start_idx = static_cast<size_t>(ceil(
+					boundary[start_pidx]));
+			for (size_t k = start_idx; k < num_mask; ++k) {
+				if (mask[k]) {
+					out[num_model_bases * i + j] += model[num_cubic_bases * k
+							+ i]
+							* aux_data[start_pidx * num_mask + k];
+				}
+			}
+		}
+	}
+
+	for (size_t i = 0; i < num_cubic_bases; ++i) {
+		size_t start_pidx = 1;
+		size_t start_idx = static_cast<size_t>(ceil(boundary[start_pidx]));
+		for (size_t j = start_idx; j < num_mask; ++j) {
+			if (mask[j]) {
+				out[num_model_bases * 3 + i] -= model[num_cubic_bases * j + i]
+						* aux_data[num_mask*start_pidx+j];
+			}
+		}
+	}
+	for (size_t i = num_cubic_bases; i < num_model_bases; ++i) {
+		size_t start_pidx = i - num_cubic_bases + 1;
+		size_t start_idx = static_cast<size_t>(ceil(
+				boundary[start_pidx]));
+		for (size_t j = start_idx; j < num_mask; ++j) {
+			if (mask[j]) {
+				out[num_model_bases * 3 + i] += (model[j * num_cubic_bases
+						+ (num_cubic_bases - 1)] - aux_data[num_mask+j])
+						* aux_data[start_pidx * num_mask + j];
+			}
+		}
+
+	}
+
+	for (size_t i = num_cubic_bases; i < num_model_bases - 1; ++i) {
+		size_t start_pidx1 = i - num_cubic_bases + 1;
+		size_t start_idx1 = static_cast<size_t>(ceil(
+				boundary[start_pidx1]));
+		size_t start_pidx2 = i - num_cubic_bases + 2;
+		size_t start_idx2 = static_cast<size_t>(ceil(
+				boundary[start_pidx2]));
+		for (size_t j = 0; j < num_cubic_bases; ++j) {
+			for (size_t k = start_idx1; k < start_idx2; ++k) {
+				if (mask[k]) {
+					out[num_model_bases * i + j] += model[num_cubic_bases * k
+							+ j] * aux_data[start_pidx1 * num_mask + k];
+				}
+			}
+			for (size_t k = start_idx2; k < num_mask; ++k) {
+				if (mask[k]) {
+					out[num_model_bases * i + j] += model[num_cubic_bases * k
+							+ j]
+							* (aux_data[start_pidx1 * num_mask + k]
+									- aux_data[start_pidx2 * num_mask + k]);
+				}
+			}
+		}
+		for (size_t j = num_cubic_bases; j <= i; ++j) {
+			size_t start_pidx3 = j - num_cubic_bases + 1;
+			for (size_t k = start_idx1; k < start_idx2; ++k) {
+				if (mask[k]) {
+					out[num_model_bases * i + j] += aux_data[start_pidx3
+							* num_mask + k]
+							* aux_data[start_pidx1 * num_mask + k];
+				}
+			}
+			for (size_t k = start_idx2; k < num_mask; ++k) {
+				if (mask[k]) {
+					out[num_model_bases * i + j] += aux_data[start_pidx3
+							* num_mask + k]
+							* (aux_data[start_pidx1 * num_mask + k]
+									- aux_data[start_pidx2 * num_mask + k]);
+				}
+			}
+		}
+		for (size_t j = i + 1; j < num_model_bases; ++j) {
+			size_t start_pidx3 = j - num_cubic_bases + 1;
+			size_t start_idx3 = static_cast<size_t>(ceil(
+					boundary[start_pidx3]));
+			for (size_t k = start_idx3; k < num_mask; ++k) {
+				if (mask[k]) {
+					out[num_model_bases * i + j] += aux_data[start_pidx3
+							* num_mask + k]
+							* (aux_data[start_pidx1 * num_mask + k]
+									- aux_data[start_pidx2 * num_mask + k]);
+				}
+			}
+		}
+	}
+
+	size_t i = num_model_bases - 1;
+	size_t start_pidx1 = num_pieces - 1;
+	size_t start_idx1 = static_cast<size_t>(ceil(
+			boundary[start_pidx1]));
+	for (size_t j = 0; j < num_cubic_bases; ++j) {
+		for (size_t k = start_idx1; k < num_mask; ++k) {
+			if (mask[k]) {
+				out[num_model_bases * i + j] += model[k * num_cubic_bases + j]
+						* aux_data[start_pidx1 * num_mask + k];
+			}
+		}
+	}
+	for (size_t j = num_cubic_bases; j < num_model_bases; ++j) {
+		size_t start_pidx3 = j-num_cubic_bases+1;
+		for (size_t k = start_idx1; k < num_mask; ++k) {
+			if (mask[k]) {
+				out[num_model_bases * i + j] += aux_data[start_pidx3 * num_mask
+						+ k] * aux_data[start_pidx1 * num_mask + k];
+			}
+		}
+	}
+}
+
+inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
+		size_t num_data, float const *data,
+		bool const *mask, size_t num_pieces, double const *boundary,
+		double const *model, double *out) {
+	size_t num_cubic_bases = 4;
+	size_t num_model_bases = num_cubic_bases -1 + num_pieces;
+	for (size_t i = 0; i < num_model_bases; ++i) {
+		out[i] = 0;
+	}
+	for (size_t i = 0; i < num_data; ++i) {
+		if (mask[i]) {
+			auto model_i = &model[i * num_cubic_bases];
+			auto data_i = data[i];
+			AddMulVector(num_cubic_bases, data_i, model_i, out);
+		}
+	}
+	double *aux_data = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*aux_data) * num_data * num_pieces,
+					&aux_data));
+	size_t idx = 0;
+	for (size_t i = 0; i < num_pieces; ++i) {
+		for (size_t j = 0; j < num_data; ++j) {
+			double v = static_cast<double>(j) - boundary[i];
+			aux_data[idx] = std::max(v * v * v, 0.0);
+			++idx;
+		}
+	}
+
+	size_t start_pidx = 1;
+	size_t start_idx = static_cast<size_t>(ceil(boundary[start_pidx]));
+	for (size_t i = start_idx; i < num_data; ++i) {
+		out[num_cubic_bases-1] -= aux_data[num_data*start_pidx+i]*data[i];
+	}
+
+
+	for (size_t i = num_cubic_bases; i < num_model_bases-1; ++i) {
+		size_t start_pidx1 = i-num_cubic_bases+1;
+		size_t start_idx1 = static_cast<size_t>(ceil(boundary[start_pidx1]));
+		size_t start_pidx2 = i-num_cubic_bases+2;
+		size_t start_idx2 = static_cast<size_t>(ceil(boundary[start_pidx2]));
+		for (size_t j = start_idx1; j < start_idx2; ++j) {
+			out[i] += aux_data[num_data*start_pidx1+j]*data[j];
+		}
+		for (size_t j = start_idx2; j < num_data; ++j) {
+			out[i] += (aux_data[num_data*start_pidx1+j]-aux_data[num_data*start_pidx2+j])*data[j];
+		}
+	}
+
+	size_t start_pidx3 = num_pieces-1;
+	size_t start_idx3 = static_cast<size_t>(boundary[start_pidx3]);
+	for (size_t i = start_idx3; i < num_data; ++i) {
+		out[num_model_bases-1] += aux_data[num_data*start_pidx3+i]*data[i];
+	}
+}
+
 template<size_t NUM_MODEL_BASES>
 inline void UpdateMatrixCoefficientsForLeastSquareFittingTemplate(
 		size_t num_clipped, size_t const *clipped_indices_arg,
@@ -352,6 +569,17 @@ inline void GetLeastSquareFittingCoefficients(size_t num_data,
 			num_model_bases, basis, lsq_vector);
 }
 
+inline void GetLeastSquareFittingCoefficientsCubicSpline(size_t num_data,
+		float const *data, bool const *mask, size_t num_pieces,
+		double const *boundary, double const *basis_data,
+		double *lsq_matrix, double *lsq_vector) {
+
+	GetMatrixCoefficientsForLeastSquareFittingCubicSpline(num_data, mask,
+			num_pieces, boundary, basis_data, lsq_matrix);
+	GetVectorCoefficientsForLeastSquareFittingCubicSpline(num_data, data, mask,
+			num_pieces, boundary, basis_data, lsq_vector);
+}
+
 template<size_t NUM_MODEL_BASES>
 inline void UpdateLeastSquareFittingCoefficientsTemplate(size_t const num_data,
 		float const *data_arg, size_t const num_clipped,
@@ -459,8 +687,8 @@ void GetLeastSquareFittingCoefficientsEntry(size_t const num_data,
 		funcs[num_model_bases](num_data, data, mask, num_model_bases,
 				basis_data, lsq_matrix, lsq_vector);
 	} else {
-		GetLeastSquareFittingCoefficients(num_data, data, mask,
-				num_model_bases, basis_data, lsq_matrix, lsq_vector);
+		GetLeastSquareFittingCoefficients(num_data, data, mask, num_model_bases,
+				basis_data, lsq_matrix, lsq_vector);
 	}
 }
 
@@ -506,7 +734,25 @@ void UpdateLeastSquareFittingCoefficientsEntry(size_t const num_data,
 }
 
 } /* anonymous namespace */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+		size_t num_data, float const data[], bool const mask[],
+		size_t num_pieces, double const boundary[],
+		double const basis_data[], double lsq_matrix[], double lsq_vector[]) {
 
+	try {
+		GetLeastSquareFittingCoefficientsCubicSpline(num_data, data, mask,
+				num_pieces, boundary, basis_data, lsq_matrix,
+				lsq_vector);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
@@ -549,6 +795,17 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsCubicSplineDouble)(
+		size_t const num_data, float const data[/*num_data*/],
+		size_t const num_exclude_indices,
+		size_t const exclude_indices[/*num_data*/], size_t const num_pieces,
+		double const boundary[/*num_pieces*/],
+		double const basis_data[/*4*num_data*/],
+		double lsq_matrix[/*(3+num_pieces)**2*/],
+		double lsq_vector[/*3+num_pieces*/]) {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
