@@ -5059,7 +5059,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
  * Test sakura_SubtractBaselineUsingCoefficientsFloatInvalidArguments
  * failure case :  num_data != context->num_basis_data
  * failure case :  num_data < context->num_bases
- * failure case :  num_coeff != context->num_bases
+ * failure case :  num_coeff > context->num_bases
  * returned value : Status_kInvalidArgument
  */
 TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
@@ -5131,7 +5131,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 				sakura_DestroyBaselineContext(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
-	{ // num_coeff != context->num_bases
+	{ // num_coeff > context->num_bases
 		size_t const num_data(NUM_DATA2);
 		size_t const num_model(NUM_MODEL);
 		SIMD_ALIGN
@@ -5156,7 +5156,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		for (size_t i = 0; i < num_coeff; ++i) {
 			coeff[i] = 1.0f;
 		}
-		size_t bad_num_coeff = context->num_bases - 1;
+		size_t bad_num_coeff = context->num_bases + 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 				LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 						num_data, in_data, context, bad_num_coeff, coeff, out);
