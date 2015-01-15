@@ -24,5 +24,6 @@
  * You can get the word size by calling @ref sakura_GetAlignment .
  * You are responsible to serialize calling functions which are not marked as 'MT-safe' as well.
  *
+ * @test
  */
 ;
