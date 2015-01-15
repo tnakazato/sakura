@@ -2610,7 +2610,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
   * @n must-be-aligned
   * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_pieces * 4 でなければならない。
   * @n must-be-aligned
-  * @param[in] num_pieces スプライン曲線の区間の数。
+  * @param[in] num_pieces スプライン曲線の区間の数。0の場合は何も行わない。
   * @param[in] boundary num_pieces個の区間の0番目、1番目、…の先頭の位置。要素数は @a num_pieces - 1 でなければならない。
   * @n must-be-aligned
   * @param[out] out 出力データ。要素数は @a num_data でなければならない。
@@ -2625,7 +2625,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
   * @param[in] context an object containing baseline model data.
   * @param[in] coeff best fit coefficients obtained by least-square fitting. The input data with length of @a num_pieces * 4.
   * @n must-be-aligned
-  * @param[in] num_pieces the number of pieces
+  * @param[in] num_pieces the number of pieces. If 0, nothing will be done.
   * @param[in] boundary the number of elements @a num_pieces - 1 .
   * @param[out] out the output data. its length must be @a num_data .
   * @n must-be-aligned
