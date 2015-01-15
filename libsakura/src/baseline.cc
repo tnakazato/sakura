@@ -50,6 +50,17 @@ namespace {
 
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("baseline");
 
+inline void AllocateMemoryForBasisData(
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
+	size_t num_total_basis_data = context->num_bases * context->num_basis_data;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*context->basis_data) * num_total_basis_data,
+					&context->basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
+	context->basis_data_storage = work_basis_data_storage.release();
+}
+
 inline void SetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
@@ -100,23 +111,39 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(false);
 }
 
-inline void SetBasisData(LIBSAKURA_SYMBOL(BaselineContext) *context) {
+inline void SetBasisData(uint16_t const order,
+		LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	switch (context->baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+		context->num_bases = order + 1;
+		AllocateMemoryForBasisData(context);
 		SetBasisDataPolynomial(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+		context->num_bases = order + 1;
+		AllocateMemoryForBasisData(context);
 		SetBasisDataChebyshev(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		if (order < 1) {
+			throw std::invalid_argument(
+					"order (number of pieces) must be a positive value!");
+		}
+		context->num_bases = 4;
+		AllocateMemoryForBasisData(context);
 		SetBasisDataCubicSpline(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		context->num_bases = 2 * order + 1;
+		AllocateMemoryForBasisData(context);
 		SetBasisDataSinusoid(context);
 		break;
 	default:
 		assert(false);
 		break;
+	}
+	if (context->num_bases > context->num_basis_data) {
+		throw std::invalid_argument("num_bases exceeds num_basis_data!");
 	}
 }
 
@@ -151,12 +178,13 @@ inline void CreateBaselineContext(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_basis_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
+  /*
 	size_t num_bases;
 	GetNumberOfBasesFromOrder(baseline_type, order, &num_bases);
 	if (num_bases > num_basis_data) {
 		throw std::invalid_argument("num_bases exceeds num_basis_data!");
 	}
-
+  */
 	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
 	LIBSAKURA_PREFIX::Memory> work_context(
 			static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -164,22 +192,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	if (work_context == nullptr) {
 		throw std::bad_alloc();
 	}
-
 	work_context->baseline_type = baseline_type;
-	work_context->num_bases = num_bases;
 	work_context->num_basis_data = num_basis_data;
-
-	size_t num_total_basis_data = num_bases * num_basis_data;
-
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*work_context->basis_data) * num_total_basis_data,
-					&work_context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(work_context->basis_data));
-
-	SetBasisData(work_context.get());
-
-	work_context->basis_data_storage = work_basis_data_storage.release();
+	SetBasisData(order, work_context.get());
 	*context = (LIBSAKURA_SYMBOL(BaselineContext) *) work_context.release();
 }
 
