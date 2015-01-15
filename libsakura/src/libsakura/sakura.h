@@ -244,7 +244,7 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
  * It returns @a arena if @a arena is already aligned.
  *
  * @param[in] arena start address of a memory region
- * @param[in] size_of_arena size of the memory region
+ * @param[in] size_of_arena size of the memory region pointed by @a arena
  * @param[in] size_required required size after alignment
  * @return aligned address if at least @a size_required bytes are available in @a arena after alignment,
  * otherwise NULL.
@@ -277,6 +277,18 @@ void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
  * @param[in] elements_required アライン後も利用可能でなければならない要素数
  * @return アラインされたアドレス。もし、 @a elements_required を格納するのに
  * 十分な大きさの@a elements_in_arena が無いならば、 NULL を返す。
+ *
+ * @~english
+ * @brief Returns an aligned address close to @a arena by adding 0 or minimum offset.
+ *
+ * It returns @a arena if @a arena is already aligned.
+ *
+ * @param[in] arena start address of an array
+ * @param[in] elements_in_arena The number of elements in @a arena , not a size in bytes.
+ * @param[in] elements_required required number of elements after alignment
+ * @return aligned address if at least @a elements_required are available in @a arena after alignment,
+ * otherwise NULL.
+ *
  * @~
  * MT-safe
  */
@@ -294,6 +306,10 @@ float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
  * @param[in] elements_required アライン後も利用可能でなければならない要素数
  * @return アラインされたアドレス。もし、 @a elements_required を格納するのに
  * 十分な大きさの@a elements_in_arena が無いならば、 NULL を返す。
+ *
+ * @~english
+ * @brief Same as @ref sakura_AlignFloat except the type of the array's element is double rather than float.
+ *
  * @~
  * MT-safe
  */
