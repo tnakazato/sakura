@@ -3,8 +3,10 @@
  * @mainpage Sakura Library API
  *
  * @section intro Introduction
- * Sakura Library(libsakura) is a ...
+ * Sakura Library(libsakura) is a library that ...
  *
+ * @section getting Getting Sakura Library
+ * 
  * @section link How to link libsakura to your application
  * Include <libsakura/sakura.h> from your sources.
  * @code
