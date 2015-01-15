@@ -2599,6 +2599,44 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_coeff, double const coeff[/*num_data*/],
 		float out[/*num_data*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
+ /**
+  * @~japanese
+  * @brief 入力データに対して、与えられたベースラインモデルと係数からCubicSplineによりベースラインを求め、差し引く。
+  * @details
+  * @param[in] num_data 配列 @a data 、 @a out の要素数。
+  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+  * @n must-be-aligned
+  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+  * @n must-be-aligned
+  * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_pieces * 4 でなければならない。
+  * @n must-be-aligned
+  * @param[in] num_pieces スプライン曲線の区間の数。
+  * @param[in] boundary num_pieces個の区間の0番目、1番目、…の先頭の位置。要素数は @a num_pieces - 1 でなければならない。
+  * @n must-be-aligned
+  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
+  * @n must-be-aligned
+  * @return 終了ステータス
+  * @~english
+  * @brief subtract baseline from input spectrum. baseline is calculated by baseline model and coefficients and number of pieces.
+  * @details
+  * @param[in] num_data the number of elements in the arrays @a data and @a out.
+  * @param[in] data the input data with length of @a num_data .
+  * @n must-be-aligned
+  * @param[in] context an object containing baseline model data.
+  * @param[in] coeff best fit coefficients obtained by least-square fitting. The input data with length of @a num_pieces * 4.
+  * @n must-be-aligned
+  * @param[in] num_pieces the number of pieces
+  * @param[in] boundary the number of elements @a num_pieces - 1 .
+  * @param[out] out the output data. its length must be @a num_data .
+  * @n must-be-aligned
+  * @return status code.
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
+ 		size_t num_data, float const data[/*num_data*/],
+ 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+ 		double const coeff[/*4*num_pieces*/], size_t num_pieces,
+ 		double const boundary[/*num_pieces-1*/], float out[])
+ 				LIBSAKURA_WARN_UNUSED_RESULT;
+
 /**
  * @~japanese
  * @brief 最小二乗フィットにより得られたベストフィット係数を返す
