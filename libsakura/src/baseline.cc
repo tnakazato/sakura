@@ -50,6 +50,33 @@ namespace {
 
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("baseline");
 
+inline size_t GetNumberOfBasesFromOrder(
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
+	size_t num_bases = 0;
+	switch (baseline_type) {
+	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+		num_bases = order + 1;
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+		num_bases = order + 1;
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		if (order < 1) {
+			throw std::invalid_argument(
+					"order (number of pieces) must be a positive value!");
+		}
+		num_bases = 4;
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		num_bases = 2 * order + 1;
+		break;
+	default:
+		assert(false);
+		break;
+	}
+	return num_bases;
+}
+
 inline void AllocateMemoryForBasisData(
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	size_t num_total_basis_data = context->num_bases * context->num_basis_data;
@@ -112,16 +139,15 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 }
 
 inline void SetBasisData(uint16_t const order,
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
+	context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
+			order);
+	AllocateMemoryForBasisData(context);
 	switch (context->baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		context->num_bases = order + 1;
-		AllocateMemoryForBasisData(context);
 		SetBasisDataPolynomial(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		context->num_bases = order + 1;
-		AllocateMemoryForBasisData(context);
 		SetBasisDataChebyshev(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
@@ -129,13 +155,9 @@ inline void SetBasisData(uint16_t const order,
 			throw std::invalid_argument(
 					"order (number of pieces) must be a positive value!");
 		}
-		context->num_bases = 4;
-		AllocateMemoryForBasisData(context);
 		SetBasisDataCubicSpline(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		context->num_bases = 2 * order + 1;
-		AllocateMemoryForBasisData(context);
 		SetBasisDataSinusoid(context);
 		break;
 	default:
@@ -147,44 +169,10 @@ inline void SetBasisData(uint16_t const order,
 	}
 }
 
-inline void GetNumberOfBasesFromOrder(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t *num_bases) {
-	*num_bases = 0;
-	switch (baseline_type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		*num_bases = order + 1;
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		*num_bases = order + 1;
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		if (order < 1) {
-			throw std::invalid_argument(
-					"order (number of pieces) must be a positive value!");
-		}
-		*num_bases = 4;
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		*num_bases = 2 * order + 1;
-		break;
-	default:
-		assert(false);
-		break;
-	}
-}
-
 inline void CreateBaselineContext(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_basis_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
-  /*
-	size_t num_bases;
-	GetNumberOfBasesFromOrder(baseline_type, order, &num_bases);
-	if (num_bases > num_basis_data) {
-		throw std::invalid_argument("num_bases exceeds num_basis_data!");
-	}
-  */
 	std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
 	LIBSAKURA_PREFIX::Memory> work_context(
 			static_cast<LIBSAKURA_SYMBOL(BaselineContext) *>(LIBSAKURA_PREFIX::Memory::Allocate(
@@ -244,7 +232,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d const zero = _mm256_set1_pd(0.);
+	__m256d   const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -286,8 +274,8 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 		size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 		size_t const end = start_idx
-		+ ((end_idx - start_idx) / pack_elements) * pack_elements;
-		__m256d const zero = _mm256_set1_pd(0.);
+				+ ((end_idx - start_idx) / pack_elements) * pack_elements;
+		__m256d   const zero = _mm256_set1_pd(0.);
 		size_t const offset1 = num_bases * 1;
 		size_t const offset2 = num_bases * 2;
 		size_t const offset3 = num_bases * 3;
@@ -327,8 +315,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 	auto basis = AssumeAligned(context->basis_data);
 	auto out = AssumeAligned(out_arg);
 
-	size_t num_coeff;
-	GetNumberOfBasesFromOrder(context->baseline_type, order, &num_coeff);
+	size_t num_coeff = GetNumberOfBasesFromOrder(context->baseline_type, order);
 	size_t num_lsq_matrix = num_coeff * num_coeff;
 	double *lsq_matrix = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
@@ -363,35 +350,6 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 	AddMulMatrix(num_coeff, coeff, num_data, context->num_bases, basis, out);
 }
 
-/*
- inline size_t ClipData(size_t num_data, float const *data_arg,
- bool const *in_mask_arg, float const lower_bound, float const upper_bound,
- bool *out_mask_arg, size_t *clipped_indices_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
- auto data = AssumeAligned(data_arg);
- auto in_mask = AssumeAligned(in_mask_arg);
- auto out_mask = AssumeAligned(out_mask_arg);
- auto clipped_indices = AssumeAligned(clipped_indices_arg);
-
- size_t num_clipped = 0;
-
- for (size_t i = 0; i < num_data; ++i) {
- out_mask[i] = in_mask[i];
- if (in_mask[i]) {
- if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
- out_mask[i] = false;
- clipped_indices[num_clipped] = i;
- num_clipped++;
- }
- }
- }
-
- return num_clipped;
- }
- */
 inline void ClipData(size_t num_data, float const *data_arg,
 bool const *in_mask_arg, float const lower_bound, float const upper_bound,
 bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
@@ -665,11 +623,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
 			float clip_threshold_upper = result.mean + clip_threshold_abs;
-			/*
-			 num_clipped = ClipData(num_data, residual_data, final_mask,
-			 clip_threshold_lower, clip_threshold_upper, final_mask,
-			 clipped_indices);
-			 */
 			size_t num_clipped_sum;
 			ClipDataPiecewise(num_data, residual_data, final_mask,
 					clip_threshold_lower, clip_threshold_upper, final_mask,
@@ -694,7 +647,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 		}
 		throw;
 	}
-} //num_bases  num_unmasked_data
+}
 
 inline void DoSubtractBaseline(size_t num_data, float const *data,
 bool const *mask,
@@ -791,11 +744,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
 			float clip_threshold_upper = result.mean + clip_threshold_abs;
-			/*
-			 num_clipped = ClipData(num_data, residual_data, final_mask,
-			 clip_threshold_lower, clip_threshold_upper, final_mask,
-			 clipped_indices);
-			 */
 			ClipData(num_data, residual_data, final_mask, clip_threshold_lower,
 					clip_threshold_upper, final_mask, clipped_indices,
 					&num_clipped);
@@ -859,9 +807,8 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
-	size_t num_coeff; //baseline_context->num_bases;
-	GetNumberOfBasesFromOrder(baseline_context->baseline_type, order,
-			&num_coeff);
+	size_t num_coeff = GetNumberOfBasesFromOrder(
+			baseline_context->baseline_type, order);
 	double *coeff = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -1163,8 +1110,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		size_t *num_coeff) {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	size_t num_out;
-	GetNumberOfBasesFromOrder(context->baseline_type, order, &num_out);
+	size_t num_out = GetNumberOfBasesFromOrder(context->baseline_type, order);
 	if (num_out > context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	*num_coeff = num_out;
