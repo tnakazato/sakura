@@ -221,6 +221,12 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 
 template <typename T>
 T FMAdd(T const &a, T const &b, T const &c) {
+	assert(false);
+	return T();
+}
+
+template<>
+__m256d FMAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
 #if defined(__AVX2__)
 			return _mm256_fmadd_pd(a, b, c);
 #else
