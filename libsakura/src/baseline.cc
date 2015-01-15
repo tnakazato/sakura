@@ -1269,15 +1269,15 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoeffi
 		size_t num_data, float const data[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 		double const coeff[], float out[]) {
+	if (num_data != context->num_basis_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data < num_coeff)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (context == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data != context->num_basis_data)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data < num_coeff)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_coeff > context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -1307,21 +1307,25 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSpline
 		size_t num_data, float const data[],
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, double const coeff[],
 		size_t num_pieces, double const boundary[], float out[]) {
+	if (num_data != context->num_basis_data)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_data < context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data != context->num_basis_data)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data < context->num_bases)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_pieces >= 1)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (coeff == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(coeff)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_pieces <= INT_MAX)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (boundary == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(boundary)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
