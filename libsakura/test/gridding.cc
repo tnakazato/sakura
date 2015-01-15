@@ -39,11 +39,12 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 
-//#define AVX __attribute__((aligned (32)))
-#define AVX
-
 #define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
 #define STATIC_ASSERT(x) static_assert((x), # x)
+
+#if defined(DISABLE_ALIGNAS)
+# define SIMD_ALIGN /* nothing */
+#endif
 
 using namespace std;
 
@@ -239,7 +240,7 @@ struct SIMD_ALIGN GridBase {
 	SIMD_ALIGN
 	uint32_t polmap[NVISPOL];
 
-// inputs/outputs
+	// inputs/outputs
 	typedef float GridType[NY][NX][NPOL][NCHAN];
 	typedef float GridTypeRef[NPOL][NCHAN][NY][NX];
 	typedef double SumType[NPOL][NCHAN];
@@ -347,8 +348,8 @@ protected:
 
 public:
 	void SetUp() {
-		LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(
-				Initialize)(nullptr, nullptr);
+		LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+				nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 		srand48(0);
 		assert(LIBSAKURA_SYMBOL(IsAligned(this)));
@@ -393,28 +394,28 @@ public:
 		rows_ptr->Init();
 		SIMD_ALIGN RT &rows = *rows_ptr;
 		// OK
-		LIBSAKURA_SYMBOL(
-				Status) result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
-				rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL,
-				polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
+		LIBSAKURA_SYMBOL(Status) result = sakura_GridConvolvingFloat(RT::kNROW,
+				0, RT::kNROW, rows.sp_mask, rows.x, rows.y, SUPPORT, SAMPLING,
+				RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
 				rows.values[0][0], rows.weight[0], false, ELEMENTSOF(convTab),
 				convTab, NPOL, NCHAN, NX, NY, sumwt[0], wgrid[0][0][0],
 				grid[0][0][0]);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
-		result = sakura_GridConvolvingFloat(0, 0, 0, rows.sp_mask, rows.x, rows.y,
-				SUPPORT, SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
-				rows.mask[0][0], rows.values[0][0], rows.weight[0], true,
-				ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
-				wgrid[0][0][0], grid[0][0][0]);
+		result = sakura_GridConvolvingFloat(0, 0, 0, rows.sp_mask, rows.x,
+				rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN,
+				chanmap, rows.mask[0][0], rows.values[0][0], rows.weight[0],
+				true, ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY,
+				sumwt[0], wgrid[0][0][0], grid[0][0][0]);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 		{ // nullptr
-			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW, nullptr,
-					rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL, polmap,
-					RT::kNVISCHAN, chanmap, rows.mask[0][0], rows.values[0][0],
-					rows.weight[0], false, ELEMENTSOF(convTab), convTab, NPOL,
-					NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
+			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
+					nullptr, rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVISPOL,
+					polmap, RT::kNVISCHAN, chanmap, rows.mask[0][0],
+					rows.values[0][0], rows.weight[0], false,
+					ELEMENTSOF(convTab), convTab, NPOL, NCHAN, NX, NY, sumwt[0],
+					wgrid[0][0][0], grid[0][0][0]);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
 			result = sakura_GridConvolvingFloat(RT::kNROW, 0, RT::kNROW,
@@ -866,8 +867,8 @@ public:
 			double start = CurrentTime();
 			for (size_t i = 0; i < RT::kROW_FACTOR; ++i) {
 				LIBSAKURA_SYMBOL(
-						Status) result = sakura_GridConvolvingFloat(RT::kNROW, 0,
-						RT::kNROW, rows->sp_mask, rows->x, rows->y, SUPPORT,
+						Status) result = sakura_GridConvolvingFloat(RT::kNROW,
+						0, RT::kNROW, rows->sp_mask, rows->x, rows->y, SUPPORT,
 						SAMPLING, RT::kNVISPOL, polmap, RT::kNVISCHAN, chanmap,
 						rows->mask[0][0], rows->values[0][0], rows->weight[0],
 						weightOnly, ELEMENTSOF(convTab), convTab, NPOL, NCHAN,
