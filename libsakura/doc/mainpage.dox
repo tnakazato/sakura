@@ -24,6 +24,7 @@
  * You can get the word size by calling @ref sakura_GetAlignment .
  * You are responsible to serialize calling functions which are not marked as 'MT-safe' as well.
  *
- * @test
+ * @section contact Contact us
+ * Please send bug report to #######@alma.nao.ac.jp if you find a bug.
  */
 ;
