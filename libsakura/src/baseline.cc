@@ -219,6 +219,15 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
+template <typename T>
+T FMAdd(T const &a, T const &b, T const &c) {
+#if defined(__AVX2__)
+			return _mm256_fmadd_pd(a, b, c);
+#else
+			return _mm256_add_pd(_mm256_mul_pd(a, b), c);
+#endif
+}
+
 inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 		size_t num_out, size_t num_bases, double const *basis_arg,
 		float *out_arg) {
@@ -241,11 +250,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 			__m256d bs = _mm256_set_pd(bases_row[j + offset3],
 					bases_row[j + offset2], bases_row[j + offset1],
 					bases_row[j]);
-#if defined(__AVX2__)
-			total = _mm256_fmadd_pd(ce, bs, total);
-#else
-			total = _mm256_add_pd(_mm256_mul_pd(ce, bs), total);
-#endif
+			total = FMAdd(ce, bs, total);
 		}
 		_mm_store_ps(&out[i], _mm256_cvtpd_ps(total));
 	}
@@ -288,11 +293,7 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
 				__m256d bs = _mm256_set_pd(bases_row[k + offset3],
 						bases_row[k + offset2], bases_row[k + offset1],
 						bases_row[k]);
-#if defined(__AVX2__)
-				total = _mm256_fmadd_pd(ce, bs, total);
-#else
-				total = _mm256_add_pd(_mm256_mul_pd(ce, bs), total);
-#endif
+				total = FMAdd(ce, bs, total);
 			}
 			_mm_store_ps(&out[j], _mm256_cvtpd_ps(total));
 		}
