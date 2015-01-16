@@ -213,6 +213,7 @@ T FMAdd(T const &a, T const &b, T const &c) {
 	return T();
 }
 
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
 template<>
 __m256d FMAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
 #if defined(__AVX2__)
@@ -221,6 +222,7 @@ __m256d FMAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
 			return _mm256_add_pd(_mm256_mul_pd(a, b), c);
 #endif
 }
+#endif
 
 inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 		size_t num_out, size_t num_bases, double const *basis_arg,
