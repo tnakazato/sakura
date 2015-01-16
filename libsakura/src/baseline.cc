@@ -1030,9 +1030,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (order > context->num_bases)
+	size_t num_bases_from_order(GetNumberOfBasesFromOrder(context->baseline_type, order));
+	if (num_bases_from_order > context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data < order)
+	if (num_data < num_bases_from_order)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (out == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -1137,9 +1138,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (order > context->num_bases)
+	size_t num_bases_from_order(GetNumberOfBasesFromOrder(context->baseline_type, order));
+	if (num_bases_from_order > context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_data < order)
+	if (num_data < num_bases_from_order)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (clip_threshold_sigma <= 0.0f)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
