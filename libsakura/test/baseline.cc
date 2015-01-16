@@ -5029,7 +5029,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 				sakura_DestroyBaselineContext(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
-/*	{ // context is nullpointer
+	{ // context is nullpointer
 		size_t const num_data(NUM_DATA2);
 		SIMD_ALIGN
 		float in_data[num_data];
@@ -5052,7 +5052,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContext(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
-	}*/
+	}
 }
 
 /*
