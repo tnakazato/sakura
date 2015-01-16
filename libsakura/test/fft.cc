@@ -73,7 +73,6 @@ void Print(size_t size, T const p[]) {
 			cout << endl;
 		}
 	}
-	//cout << endl;
 }
 
 template<typename T>
