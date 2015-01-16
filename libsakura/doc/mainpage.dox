@@ -15,7 +15,25 @@
  *
  * Link your application with libsakura, for example, by
  * @verbatim
- cc/c++ -rdynamic your objects -L<where libsakura resides> -Wl,-rpath,<where libsakura resides> -lsakura ...
+ cc/c++ -I<where libsakura resides>/include your sources -rdynamic -L<where libsakura resides>/lib -Wl,-rpath,<where libsakura resides>/lib -lsakura ...
+ @endverbatim
+ *
+ * For example:
+ * @verbatim
+$ cat <<EOF >sample.c
+#include <stdio.h>
+#include <libsakura/sakura.h>
+
+int main() {
+	sakura_Status status = sakura_Initialize(NULL, NULL);
+	if (sakura_Status_kOK != status) return 1;
+	printf("%zu\n", sakura_GetAlignment());
+	sakura_CleanUp ();
+	return 0;
+}
+EOF
+$ cc -I<where libsakura resides>/include sample.c -rdynamic -L <where libsakura resides>/lib -Wl,-rpath,<where libsakura resides>/lib -lsakura
+$ ./a.out
  @endverbatim
  *
  * @section api API
