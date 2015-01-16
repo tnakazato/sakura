@@ -303,7 +303,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, sakura_Convolve1DKernelType_kNumType,
+				use_dummy_num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements),
 				kernel_width, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}

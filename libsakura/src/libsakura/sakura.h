@@ -1468,7 +1468,7 @@ typedef enum {
 	 * @brief 実装されている補間法の個数
 	 * @~english
 	 * @brief Number of interpolation methods implemented
-	 */LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod)
+	 */LIBSAKURA_SYMBOL(InterpolationMethod_kNumElements)
 }LIBSAKURA_SYMBOL(InterpolationMethod);
 
 /**
@@ -1784,7 +1784,7 @@ typedef enum {
 	 * @brief Hamming
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming), /**
 	 * @brief Number of kernel type
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumType)
+	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements)
 }LIBSAKURA_SYMBOL(Convolve1DKernelType);
 /**
  * @brief Context struct for convolution
@@ -2190,7 +2190,7 @@ typedef enum {
 	 * @brief 実装されているエラーコードの個数
 	 * @~english
 	 * @brief Number of error codes implemented
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kNumStatus)
+	 */LIBSAKURA_SYMBOL(BaselineStatus_kNumElements)
 }LIBSAKURA_SYMBOL(BaselineStatus);
 
 /**
@@ -2225,7 +2225,7 @@ typedef enum {
 	 * @brief 実装されている関数形の個数
 	 * @~english
 	 * @brief Number of baseline functions implemented
-	 */LIBSAKURA_SYMBOL(BaselineType_kNumType)
+	 */LIBSAKURA_SYMBOL(BaselineType_kNumElements)
 }LIBSAKURA_SYMBOL(BaselineType);
 
 /**

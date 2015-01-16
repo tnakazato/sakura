@@ -61,7 +61,7 @@ TEST_INTERP_Y(InvalidType) {
 
 	// execute interpolation
 	// Should return InvalidArgument status
-	RunInterpolateArray1D(sakura_InterpolationMethod_kNumMethod, num_base,
+	RunInterpolateArray1D(sakura_InterpolationMethod_kNumElements, num_base,
 			num_interpolated, num_array, sakura_Status_kInvalidArgument, false);
 }
 

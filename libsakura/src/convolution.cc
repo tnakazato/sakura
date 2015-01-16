@@ -361,7 +361,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (!(0 <= kernel_type
-			&& kernel_type < LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumType))) {
+			&& kernel_type < LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements))) {
 		LOG4CXX_ERROR(logger, "Invalid Kernel Type");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}

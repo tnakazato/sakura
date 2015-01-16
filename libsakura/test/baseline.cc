@@ -241,7 +241,7 @@ TEST_F(Baseline, CreateBaselineContextWithInvalidBaselineType) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType_kNumType), order, num_chan, &context);
+			LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 }
 

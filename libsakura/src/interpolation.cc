@@ -1025,13 +1025,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	bool process_data = true;
 
 	// check interpolation_method
-	if (interpolation_method != LIBSAKURA_SYMBOL(InterpolationMethod_kNearest)
-			&& interpolation_method
-					!= LIBSAKURA_SYMBOL(InterpolationMethod_kLinear)
-			&& interpolation_method
-					!= LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial)
-			&& interpolation_method
-					!= LIBSAKURA_SYMBOL(InterpolationMethod_kSpline)) {
+	if ((interpolation_method < 0)
+			&& (interpolation_method
+					>= LIBSAKURA_SYMBOL(InterpolationMethod_kNumElements))) {
 		LOG4CXX_ERROR(logger, "Invalid interpolation method");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		process_data = false;
