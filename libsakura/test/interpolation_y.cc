@@ -904,26 +904,26 @@ TEST_INTERP_Y(SingleBasePerformance) {
 
 // Nearest
 PERFORMANCE_TEST(NearestPerformance, sakura_InterpolationMethod_kNearest, 2,
-		4096, 30000, 0.0, 100.0, 0.0, 100.0, 10)
+		4096, 30000, 0.0, 100.0, 0.0, 100.0, 5)
 PERFORMANCE_TEST(Nearest1DPerformance, sakura_InterpolationMethod_kNearest, 2,
-		20000000, 1, 0.0, 100.0, 0.0, 100.0, 10)
+		20000000, 1, 0.0, 100.0, 0.0, 100.0, 40)
 PERFORMANCE_TEST(NearestDescendingPerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 0.0,
-		100.0, 10)
+		100.0, 5)
 PERFORMANCE_TEST(NearestOpppsitePerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 100.0,
-		-100.0, 3)
+		-100.0, 5)
 
 // Linear
 PERFORMANCE_TEST(LinearPerformance, sakura_InterpolationMethod_kLinear, 2, 4096,
 		30000, 0.0, 100.0, 0.0, 100.0, 5)
 PERFORMANCE_TEST(Linear1DPerformance, sakura_InterpolationMethod_kLinear, 2,
-		20000000, 1, 0.0, 100.0, 0.0, 100.0, 10)
+		20000000, 1, 0.0, 100.0, 0.0, 100.0, 40)
 PERFORMANCE_TEST(LinearDescendingPerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 0.0,
-		100.0, 10)
+		100.0, 5)
 PERFORMANCE_TEST(LinearOpppsitePerformance, sakura_InterpolationMethod_kNearest,
-		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 3)
+		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 5)
 
 // Polynomial
 PERFORMANCE_TEST(PolynomialOrder2FullPerformance,
@@ -931,7 +931,7 @@ PERFORMANCE_TEST(PolynomialOrder2FullPerformance,
 		200.0, 2)
 PERFORMANCE_TEST(Polynomial1DOrder2FullPerformance,
 		sakura_InterpolationMethod_kPolynomial, 3, 10000000, 1, 0.0, 200.0, 0.0,
-		200.0, 3)
+		200.0, 10)
 PERFORMANCE_TEST(PolynomialOrder2FullDescendingPerformance,
 		sakura_InterpolationMethod_kPolynomial, 3, 4096, 10000, 200.0, 0.0, 0.0,
 		200.0, 2)
@@ -941,14 +941,14 @@ PERFORMANCE_TEST(PolynomialOrder2FullOppositePerformance,
 
 // Spline
 PERFORMANCE_TEST(SplinePerformance, sakura_InterpolationMethod_kSpline, 2, 4096,
-		30000, 0.0, 100.0, 0.0, 100.0, 3)
+		30000, 0.0, 100.0, 0.0, 100.0, 5)
 PERFORMANCE_TEST(Spline1DPerformance, sakura_InterpolationMethod_kSpline, 2,
-		20000000, 1, 0.0, 100.0, 0.0, 100.0, 4)
+		20000000, 1, 0.0, 100.0, 0.0, 100.0, 20)
 PERFORMANCE_TEST(SplineDescendingPerformance,
 		sakura_InterpolationMethod_kSpline, 2, 4096, 30000, 100.0, 0.0, 0.0,
-		100.0, 3)
+		100.0, 5)
 PERFORMANCE_TEST(SplineOpppsitePerformance, sakura_InterpolationMethod_kSpline,
-		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 2)
+		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 5)
 
 // AasapSplinePerformance
 // Test performance of asap spline interpolator.
