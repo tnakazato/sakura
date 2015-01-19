@@ -207,13 +207,14 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+
 template <typename T>
 T FMAdd(T const &a, T const &b, T const &c) {
 	assert(false);
 	return T();
 }
 
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
 template<>
 __m256d FMAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
 #if defined(__AVX2__)
@@ -222,6 +223,7 @@ __m256d FMAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
 			return _mm256_add_pd(_mm256_mul_pd(a, b), c);
 #endif
 }
+
 #endif
 
 inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
@@ -234,7 +236,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / pack_elements) * pack_elements;
-	__m256d   const zero = _mm256_set1_pd(0.);
+	auto const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
@@ -277,7 +279,7 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
 		size_t const pack_elements = sizeof(__m256d) / sizeof(double);
 		size_t const end = start_idx
 				+ ((end_idx - start_idx) / pack_elements) * pack_elements;
-		__m256d   const zero = _mm256_set1_pd(0.);
+		auto const zero = _mm256_set1_pd(0.);
 		size_t const offset1 = num_bases * 1;
 		size_t const offset2 = num_bases * 2;
 		size_t const offset3 = num_bases * 3;
