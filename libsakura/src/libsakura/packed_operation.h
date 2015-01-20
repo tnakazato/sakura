@@ -1151,6 +1151,118 @@ public:
 	}
 };
 
+struct LIBSAKURA_SYMBOL(FMA) {
+	template<typename PACKET, typename T>
+	struct GetType {
+		typedef void type;
+	};
+	template<typename PACKET>
+	struct GetType<PACKET, float> {
+		typedef typename PACKET::RawFloat type;
+	};
+	template<typename PACKET>
+	struct GetType<PACKET, double> {
+		typedef typename PACKET::RawDouble type;
+	};
+	template<typename PACKET, typename T>
+	static typename GetType<PACKET, T>::type MultiplyAdd(
+			typename GetType<PACKET, T>::type const &a,
+			typename GetType<PACKET, T>::type const &b,
+			typename GetType<PACKET, T>::type const &c) {
+		assert(false); // not defined for this type.
+		return typename GetType<PACKET, T>::type();
+	}
+
+	template<typename PACKET, typename T>
+	static typename GetType<PACKET, T>::type MultiplySub(
+			typename GetType<PACKET, T>::type const &a,
+			typename GetType<PACKET, T>::type const &b,
+			typename GetType<PACKET, T>::type const &c) {
+		assert(false); // not defined for this type.
+		return typename GetType<PACKET, T>::type();
+	}
+};
+
+template<>
+__m256d LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketAVX),
+		double>(__m256d const &a, __m256d const &b, __m256d const &c) {
+#if defined(__AVX2__)
+	return _mm256_fmadd_pd(a, b, c);
+#else
+	return _mm256_add_pd(_mm256_mul_pd(a, b), c);
+#endif
+}
+
+template<>
+__m256d LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketAVX),
+		double>(__m256d const &a, __m256d const &b, __m256d const &c) {
+#if defined(__AVX2__)
+	return _mm256_fmsub_pd(a, b, c);
+#else
+	return _mm256_sub_pd(_mm256_mul_pd(a, b), c);
+#endif
+}
+
+template<>
+__m256 LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketAVX), float>(
+		__m256 const &a, __m256 const &b, __m256 const &c) {
+#if defined(__AVX2__)
+	return _mm256_fmadd_ps(a, b, c);
+#else
+	return _mm256_add_ps(_mm256_mul_ps(a, b), c);
+#endif
+}
+
+template<>
+__m256 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketAVX), float>(
+		__m256 const &a, __m256 const &b, __m256 const &c) {
+#if defined(__AVX2__)
+	return _mm256_fmsub_ps(a, b, c);
+#else
+	return _mm256_sub_ps(_mm256_mul_ps(a, b), c);
+#endif
+}
+
+template<>
+__m128d LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketSSE),
+		double>(__m128d const &a, __m128d const &b, __m128d const &c) {
+#if defined(__AVX2__)
+	return _mm_fmadd_pd(a, b, c);
+#else
+	return _mm_add_pd(_mm_mul_pd(a, b), c);
+#endif
+}
+
+template<>
+__m128d LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE),
+		double>(__m128d const &a, __m128d const &b, __m128d const &c) {
+#if defined(__AVX2__)
+	return _mm_fmsub_pd(a, b, c);
+#else
+	return _mm_sub_pd(_mm_mul_pd(a, b), c);
+#endif
+}
+
+template<>
+__m128 LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketSSE),
+		float>(__m128 const &a, __m128 const &b, __m128 const &c) {
+#if defined(__AVX2__)
+	return _mm_fmadd_ps(a, b, c);
+#else
+	return _mm_add_ps(_mm_mul_ps(a, b), c);
+#endif
+}
+
+template<>
+__m128 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE), float>(
+		__m128 const &a, __m128 const &b, __m128 const &c) {
+#if defined(__AVX2__)
+	return _mm_fmsub_ps(a, b, c);
+#else
+	return _mm_sub_ps(_mm_mul_ps(a, b), c);
+#endif
+}
+
 #endif /* defined(__AVX__) */
 
 /**

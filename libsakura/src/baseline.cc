@@ -44,6 +44,10 @@
 #include "libsakura/localdef.h"
 #include "libsakura/memory_manager.h"
 #include "libsakura/logger.h"
+#include "libsakura/packed_type.h"
+namespace {
+#include "libsakura/packed_operation.h"
+}
 #include "baseline.h"
 
 namespace {
@@ -207,25 +211,6 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
-
-template <typename T>
-T FMAdd(T const &a, T const &b, T const &c) {
-	assert(false);
-	return T();
-}
-
-template<>
-__m256d FMAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
-#if defined(__AVX2__)
-			return _mm256_fmadd_pd(a, b, c);
-#else
-			return _mm256_add_pd(_mm256_mul_pd(a, b), c);
-#endif
-}
-
-#endif
-
 inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 		size_t num_out, size_t num_bases, double const *basis_arg,
 		float *out_arg) {
@@ -241,14 +226,14 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
 	for (i = 0; i < end; i += pack_elements) {
-		__m256d total = zero;
+		auto total = zero;
 		auto bases_row = &basis[num_bases * i];
 		for (size_t j = 0; j < num_coeff; ++j) {
-			__m256d ce = _mm256_set1_pd(coeff[j]);
-			__m256d bs = _mm256_set_pd(bases_row[j + offset3],
+			auto ce = _mm256_set1_pd(coeff[j]);
+			auto bs = _mm256_set_pd(bases_row[j + offset3],
 					bases_row[j + offset2], bases_row[j + offset1],
 					bases_row[j]);
-			total = FMAdd(ce, bs, total);
+			total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 		}
 		_mm_store_ps(&out[i], _mm256_cvtpd_ps(total));
 	}
@@ -284,14 +269,14 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
 		size_t const offset2 = num_bases * 2;
 		size_t const offset3 = num_bases * 3;
 		for (j = start_idx; j < end; j += pack_elements) {
-			__m256d total = zero;
+			auto total = zero;
 			auto bases_row = &basis[num_bases * j];
 			for (size_t k = 0; k < num_bases; ++k) {
-				__m256d ce = _mm256_set1_pd(coeff[k + coffset]);
-				__m256d bs = _mm256_set_pd(bases_row[k + offset3],
+				auto ce = _mm256_set1_pd(coeff[k + coffset]);
+				auto bs = _mm256_set_pd(bases_row[k + offset3],
 						bases_row[k + offset2], bases_row[k + offset1],
 						bases_row[k]);
-				total = FMAdd(ce, bs, total);
+				total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 			}
 			_mm_store_ps(&out[j], _mm256_cvtpd_ps(total));
 		}

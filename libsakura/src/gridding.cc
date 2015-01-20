@@ -30,6 +30,7 @@
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
+#include "libsakura/packed_type.h"
 
 namespace {
 #include "libsakura/packed_operation.h"
