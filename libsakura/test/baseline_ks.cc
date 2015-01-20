@@ -185,8 +185,69 @@ protected:
 
 TEST_F(BaselineKS, SubtractBaselineOrder) {
 	size_t const num_data(NUM_DATA2);
-	size_t const offset(1);
-	size_t const num_model(NUM_MODEL + offset);
+	SIMD_ALIGN
+	float in_data[num_data];
+	double coeff[] = { 4., 1., -1., 0.25 };
+	STATIC_ASSERT(ELEMENTSOF(coeff)==4); // SetFloatPolynomial requires 4 elements array
+	SetFloatPolynomial(num_data, in_data, coeff);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	size_t const gen_order(5);
+	size_t const in_order(3);
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
+			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+					BaselineType_kChebyshev) };
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+		cout << "order (context) = " << gen_order << endl;
+		cout << "order (fitting) = " << in_order << endl;
+	}
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 1;
+	bool get_residual = true;
+
+	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
+		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
+		cout << "Testing baseline type = " << type << endl;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				type, gen_order, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
+		LIBSAKURA_SYMBOL (Status) op_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask,
+				context, in_order, clipping_threshold_sigma, num_fitting_max,
+				get_residual, final_mask, out, &op_blstatus);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), op_status);
+		for (size_t i = 0; i < num_data; ++i) {
+			ASSERT_EQ(answer[i], out[i]);
+		}
+
+		if (verbose) {
+			PrintArray("fmask ", num_data, final_mask);
+			PrintArray("out   ", num_data, out);
+			PrintArray("answer", num_data, answer);
+		}
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+}
+
+TEST_F(BaselineKS, SubtractBaselineBadOrder) {
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
 	SetFloatPolynomial(num_data, in_data);
@@ -199,97 +260,140 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
 	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	size_t const gen_order(5);
+	size_t const in_order(6);
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
+			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+					BaselineType_kChebyshev) };
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
-		cout << "num_order = " << num_model << endl;
+		cout << "order (context) = " << gen_order << endl;
+		cout << "order (fitting) = " << in_order << endl;
 	}
-
-	size_t order = num_model - 1;
-	cout << "order (context) = " << order << endl;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data,
-			&context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	float clipping_threshold_sigma = 3.0;
 	uint16_t num_fitting_max = 1;
 	bool get_residual = true;
 
-	order -= offset;
-	cout << "order (fitting) = " << order << endl;
-	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
-	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask, context,
-			order, clipping_threshold_sigma, num_fitting_max, get_residual,
-			final_mask, out, &subbl_blstatus);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
-	}
+	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
+		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
+		cout << "Testing baseline type = " << type << endl;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				type, gen_order, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
+		LIBSAKURA_SYMBOL (Status) op_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask,
+				context, in_order, clipping_threshold_sigma, num_fitting_max,
+				get_residual, final_mask, out, &op_blstatus);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), op_status);
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
-
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
+
 TEST_F(BaselineKS, GetBestFitBaselineOrder) {
-	size_t const num_data(NUM_DATA);
+	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
-	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
-	in_data[3] = 130.0;
+	double coeff[] = { 4., 1., -1., 0.25 };
+	STATIC_ASSERT(ELEMENTSOF(coeff)==4); // SetFloatPolynomial requires 4 elements array
+	SetFloatPolynomial(num_data, in_data, coeff);
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i)
+		answer[i] = in_data[i];
+	in_data[3] = 130.0; // add a spurious to input data
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
-	in_mask[3] = false;
-	size_t offset(2);
-	size_t const num_model(NUM_MODEL + offset);
+	in_mask[3] = false; // flag the spurious channel
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)];
-	SetFloatPolynomial(ELEMENTSOF(in_data), answer);
+	size_t const gen_order(5);
+	size_t const in_order(3);
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
+			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+					BaselineType_kChebyshev) };
+
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
 		PrintArray("in_mask", num_data, in_mask);
-		cout << "num_order = " << num_model << endl;
+		cout << "order (context) = " << gen_order << endl;
+		cout << "order (fitting) = " << in_order << endl;
 	}
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	size_t order = num_model - 1;
-	cout << "order (context) = " << order << endl;
-	LIBSAKURA_SYMBOL (Status) create_status =
-	LIBSAKURA_SYMBOL(CreateBaselineContext)(
-			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
-			&context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
+		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
+		cout << "Testing baseline type = " << type << endl;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), gen_order, num_data,
+				&context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	order -= offset;
-	cout << "order (fitting) = " << order << endl;
-	LIBSAKURA_SYMBOL (BaselineStatus) getbl_blstatus;
-	LIBSAKURA_SYMBOL (Status) getbl_status =
-	LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
-			context, order, out, &getbl_blstatus);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
+		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
+		LIBSAKURA_SYMBOL (Status) op_status =
+		LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+				context, in_order, out, &op_blstatus);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), op_status);
 
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
+		for (size_t i = 0; i < num_data; ++i) {
+			ASSERT_EQ(answer[i], out[i]);
+		}
+		if (verbose) {
+			PrintArray("out   ", num_data, out);
+			PrintArray("answer", num_data, answer);
+		}
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+		LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
+}
+
+TEST_F(BaselineKS, GetBestFitBaselineBadOrder) {
+	size_t const num_data(NUM_DATA2);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	size_t const gen_order(5);
+	size_t const in_order(6);
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
+			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+					BaselineType_kChebyshev) };
+
 	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		cout << "order (context) = " << gen_order << endl;
+		cout << "order (fitting) = " << in_order << endl;
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
+		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
+		cout << "Testing baseline type = " << type << endl;
+		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), gen_order, num_data,
+				&context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
+		LIBSAKURA_SYMBOL (Status) op_status =
+		LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
+				context, in_order, out, &op_blstatus);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), op_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+		LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
 
 /*
@@ -307,10 +411,10 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 	answers[LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)] = 4;
 	answers[LIBSAKURA_SYMBOL(BaselineType_kSinusoid)] = 2 * test_order + 1;
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
-			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
-					LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
-					LIBSAKURA_SYMBOL(BaselineType_kCubicSpline),
-					LIBSAKURA_SYMBOL(BaselineType_kSinusoid)};
+			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+					BaselineType_kChebyshev), LIBSAKURA_SYMBOL(
+					BaselineType_kCubicSpline), LIBSAKURA_SYMBOL(
+					BaselineType_kSinusoid) };
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
@@ -340,11 +444,11 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
 	size_t const num_data(NUM_DATA2);
 	size_t gen_order = 5; // the order to generate a context
 	size_t test_order = 6; // the order to test
-	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
-			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
-					LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] = { LIBSAKURA_SYMBOL(
+			BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+			BaselineType_kChebyshev),
 //					LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), // this never fails
-					LIBSAKURA_SYMBOL(BaselineType_kSinusoid)};
+			LIBSAKURA_SYMBOL(BaselineType_kSinusoid) };
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
