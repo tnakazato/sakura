@@ -1312,7 +1312,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSpline
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(coeff)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_pieces <= INT_MAX)
+	if (!(num_pieces <= INT_MAX))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (boundary == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
