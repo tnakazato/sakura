@@ -62,7 +62,7 @@ class BaselineKS: public ::testing::Test {
 protected:
 
 	BaselineKS() :
-			verbose(true) {
+			verbose(false) {
 	}
 
 	virtual void SetUp() {
