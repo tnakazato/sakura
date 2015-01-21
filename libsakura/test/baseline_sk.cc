@@ -190,8 +190,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 	size_t const num_model(NUM_MODEL);
 
 	SIMD_ALIGN
-	float in_data[num_data] = { 2, 2.838888889, 4.144444444, 5, 3.425925926,
-			5.907407407, 11.35, 20.65926 };
+	float in_data[num_data] = { 1, 1.5, 3, 8.5, 21, 43.5, 79, 130.5 };
 
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -213,8 +212,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 
 	SIMD_ALIGN
 	size_t num_pieces = 2;
-	double coeff[8] = { 2, 0.3, 0.691666667, -0.152777778, 5, 0.325,
-			-0.783333333, 0.150925926 };
+	double coeff[8] = { 1.0, 1.0, -1.0, 0.5, 1.0, 1.0, -1.0, 0.5 };
 
 	double boundary[3] = { 0.0f, 4.0f };
 
