@@ -231,9 +231,7 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
 		LIBSAKURA_SYMBOL (Status) op_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask,
-				context, in_order, clipping_threshold_sigma, num_fitting_max,
-				get_residual, final_mask, out, &op_blstatus);
+		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, in_order, num_data, in_data, in_mask, clipping_threshold_sigma, num_fitting_max, get_residual, final_mask, out, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), op_status);
 		for (size_t i = 0; i < num_data; ++i) {
 			ASSERT_EQ(answer[i], out[i]);
@@ -291,9 +289,7 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
 		LIBSAKURA_SYMBOL (Status) op_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_data, in_data, in_mask,
-				context, in_order, clipping_threshold_sigma, num_fitting_max,
-				get_residual, final_mask, out, &op_blstatus);
+		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, in_order, num_data, in_data, in_mask, clipping_threshold_sigma, num_fitting_max, get_residual, final_mask, out, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), op_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContext(context);
@@ -347,8 +343,7 @@ TEST_F(BaselineKS, GetBestFitBaselineOrder) {
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
 		LIBSAKURA_SYMBOL (Status) op_status =
-		LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
-				context, in_order, out, &op_blstatus);
+		LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(context, in_order, num_data, in_data, in_mask, out, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), op_status);
 
 		for (size_t i = 0; i < num_data; ++i) {
@@ -400,8 +395,7 @@ TEST_F(BaselineKS, GetBestFitBaselineBadOrder) {
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
 		LIBSAKURA_SYMBOL (Status) op_status =
-		LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(num_data, in_data, in_mask,
-				context, in_order, out, &op_blstatus);
+		LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(context, in_order, num_data, in_data, in_mask, out, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), op_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
