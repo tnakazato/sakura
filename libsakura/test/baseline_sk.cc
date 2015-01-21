@@ -237,8 +237,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
  * subtract best fit model from input data using input coeff
  */
 TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceTest) {
-	size_t const num_data(10000);
-	size_t const num_pieces(2500);
+	size_t const num_data(300000);
+	size_t const num_pieces(75000);
 	SIMD_ALIGN
 	float in_data[num_data];
 	for (size_t i = 0; i < num_data; ++i) {
@@ -278,7 +278,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 	if (verbose) {
 	PrintArray("boundary", num_pieces, boundary);
 	}
-	size_t loop_max = 50000;
+	size_t loop_max = 1000;
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
 		LIBSAKURA_SYMBOL (Status) subbl_status = LIBSAKURA_SYMBOL(
