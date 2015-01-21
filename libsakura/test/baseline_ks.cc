@@ -260,16 +260,12 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
-	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 	size_t const gen_order(5);
 	size_t const in_order(6);
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
@@ -378,10 +374,8 @@ TEST_F(BaselineKS, GetBestFitBaselineBadOrder) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
-	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	size_t const gen_order(5);
