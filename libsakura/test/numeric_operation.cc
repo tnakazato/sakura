@@ -148,11 +148,11 @@ protected:
 
 	// Set reference values
 	void SetAnswers(size_t const num_data, float const *data,
-			size_t const num_model, double const *model, double *answer_matrix,
-			double *answer_vector) {
+			size_t const num_model, double const *model, size_t const num_coeff,
+			double *answer_matrix, double *answer_vector) {
 		size_t idx = 0;
-		for (size_t i = 0; i < num_model; ++i) {
-			for (size_t j = 0; j < num_model; ++j) {
+		for (size_t i = 0; i < num_coeff; ++i) {
+			for (size_t j = 0; j < num_coeff; ++j) {
 				double val = 0.0;
 				for (size_t k = 0; k < num_data; ++k) {
 					val += model[num_model * k + i] * model[num_model * k + j];
@@ -161,7 +161,7 @@ protected:
 				idx++;
 			}
 		}
-		for (size_t i = 0; i < num_model; ++i) {
+		for (size_t i = 0; i < num_coeff; ++i) {
 			double val = 0.0;
 			for (size_t j = 0; j < num_data; ++j) {
 				val += model[num_model * j + i] * data[j];
@@ -172,11 +172,11 @@ protected:
 
 	// Set reference values for testing Update
 	void SetAnswers(size_t const num_data, float const *data, bool const *mask,
-			size_t const num_model, double const *model, double *answer_matrix,
-			double *answer_vector) {
+			size_t const num_model, double const *model, size_t const num_coeff,
+			double *answer_matrix, double *answer_vector) {
 		size_t idx = 0;
-		for (size_t i = 0; i < num_model; ++i) {
-			for (size_t j = 0; j < num_model; ++j) {
+		for (size_t i = 0; i < num_coeff; ++i) {
+			for (size_t j = 0; j < num_coeff; ++j) {
 				double val = 0.0;
 				for (size_t k = 0; k < num_data; ++k) {
 					if (mask[k]) {
@@ -188,7 +188,7 @@ protected:
 				idx++;
 			}
 		}
-		for (size_t i = 0; i < num_model; ++i) {
+		for (size_t i = 0; i < num_coeff; ++i) {
 			double val = 0.0;
 			for (size_t j = 0; j < num_data; ++j) {
 				if (mask[j]) {
@@ -354,7 +354,8 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficients) {
 	SetInputData(num_data, in_data);
 	SetBoolConstant(true, num_data, in_mask);
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, answer, answer_vector);
+	SetAnswers(num_data, in_data, num_model, model, num_model, answer,
+			answer_vector);
 
 	if (verbose) {
 		PrintArray("in_mask", num_data, in_mask);
@@ -850,8 +851,8 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficients) {
 		PrintArray("model  ", num_data, num_model, model);
 	}
 
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix_orig,
-			in_lsq_vector_orig);
+	SetAnswers(num_data, in_data, num_model, model, num_model,
+			in_lsq_matrix_orig, in_lsq_vector_orig);
 
 	size_t const num_repeat(NUM_REPEAT2);
 	double elapsed_time = 0.0;
@@ -934,7 +935,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsNumDataZero) {
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -973,7 +974,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithDataNullPointer
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1013,8 +1014,8 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithDataNotAligned)
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data_unaligned, num_model, model, in_lsq_matrix,
-			in_lsq_vector);
+	SetAnswers(num_data, in_data_unaligned, num_model, model, num_model,
+			in_lsq_matrix, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
 			sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data,
@@ -1053,7 +1054,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithExcludeIndicesN
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1093,7 +1094,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithExcludeIndicesN
 		in_mask[exclude_indices_unaligned[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1133,7 +1134,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithNumExcludeIndic
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1173,7 +1174,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithExcludeIndicesH
 	}
 	exclude_indices[0] = num_data;
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1213,7 +1214,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithExcludeIndicesH
 	}
 	exclude_indices[0] = num_data + 1;
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1253,7 +1254,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithNumModelBasisZe
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1293,7 +1294,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithNumModelBasisGr
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1333,7 +1334,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithBasisDataNullPo
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1373,8 +1374,8 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithBasisDataNotAli
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model_unaligned);
-	SetAnswers(num_data, in_data, num_model, model_unaligned, in_lsq_matrix,
-			in_lsq_vector);
+	SetAnswers(num_data, in_data, num_model, model_unaligned, num_model,
+			in_lsq_matrix, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
 			sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data, in_data,
@@ -1413,7 +1414,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithLsqMatrixNullPo
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1453,8 +1454,8 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithLsqMatrixNotAli
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix_unaligned,
-			in_lsq_vector);
+	SetAnswers(num_data, in_data, num_model, model, num_model,
+			in_lsq_matrix_unaligned, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
 			sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data, in_data,
@@ -1493,7 +1494,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithLsqVectorNullPo
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1533,7 +1534,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsWithLsqVectorNotAli
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, in_lsq_matrix,
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
 			in_lsq_vector_unaligned);
 
 	LIBSAKURA_SYMBOL (Status) status =
@@ -1693,8 +1694,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNullPointer) 
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
-			lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, num_model,
+			lsq_matrix, lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLUDouble(num_model, in_matrix_np,
@@ -1727,7 +1728,7 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInMatrixNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model,
+	SetAnswers(num_data, in_data, in_mask, num_model, model, num_model,
 			lsq_matrix_unaligned, lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) solve_status =
@@ -1761,8 +1762,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNullPointer) 
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
-			lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, num_model,
+			lsq_matrix, lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLUDouble(num_model, lsq_matrix,
@@ -1795,8 +1796,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithInVectorNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
-			in_vector_unaligned);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, num_model,
+			lsq_matrix, in_vector_unaligned);
 
 	LIBSAKURA_SYMBOL (Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLUDouble(num_model, lsq_matrix,
@@ -1827,8 +1828,8 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
-			lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, num_model,
+			lsq_matrix, lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLUDouble(num_model, lsq_matrix,
@@ -1861,11 +1862,246 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUWithOutNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
-	SetAnswers(num_data, in_data, in_mask, num_model, model, lsq_matrix,
-			lsq_vector);
+	SetAnswers(num_data, in_data, in_mask, num_model, model, num_model,
+			lsq_matrix, lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) solve_status =
 			sakura_SolveSimultaneousEquationsByLUDouble(num_model, lsq_matrix,
 					lsq_vector, out_unaligned);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), solve_status);
 }
+
+/*
+ * Test sakura_GetLeastSquareFittingCoefficients
+ * successful case with num_lsq_bases < num_model
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsOrder) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL2 + 1);
+	size_t const num_coeff(NUM_MODEL2);
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double model[num_model * ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double out_vector[num_coeff];
+	SIMD_ALIGN
+	double out[ELEMENTSOF(out_vector) * ELEMENTSOF(out_vector)];
+	SIMD_ALIGN
+	double answer_vector[ELEMENTSOF(out_vector)];
+	SIMD_ALIGN
+	double answer[ELEMENTSOF(out)];
+
+	SetInputData(num_data, in_data);
+	SetBoolConstant(true, num_data, in_mask);
+	SetChebyshevModel(num_data, num_model, model);
+	SetAnswers(num_data, in_data, num_model, model, num_coeff, answer,
+			answer_vector);
+
+	if (verbose) {
+		PrintArray("in_mask", num_data, in_mask);
+		PrintArray("model  ", num_data, num_model, model);
+	}
+
+	cout << "number of fitting coefficients = " << num_coeff << " (model = "
+			<< num_model << ")" << endl;
+	LIBSAKURA_SYMBOL (Status) status =
+			sakura_GetLeastSquareFittingCoefficientsDouble(num_data, in_data,
+					in_mask, num_model, model, num_coeff, out, out_vector);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
+		CheckAlmostEqual(answer[i], out[i], 1e-10);
+	}
+	for (size_t i = 0; i < ELEMENTSOF(out_vector); ++i) {
+		CheckAlmostEqual(answer_vector[i], out_vector[i], 1e-10);
+	}
+
+	if (verbose) {
+		PrintArray("out   ", num_coeff, num_coeff, out);
+		PrintArray("answer", num_coeff, num_coeff, answer);
+	}
+}
+
+/*
+ * Test sakura_GetLeastSquareFittingCoefficients
+ * failure case with
+ * num_lsq_bases > num_model
+ * num_lsq_bases = 0
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsBadOrder) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL2);
+	size_t const bad_coeffs[] = { NUM_MODEL2 + 1, 0 };
+
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double model[num_model * ELEMENTSOF(in_data)];
+
+	for (size_t i = 0; i < ELEMENTSOF(bad_coeffs); ++i) {
+		size_t num_coeff = bad_coeffs[i];
+		SIMD_ALIGN
+		double out[num_coeff * num_coeff];
+		SIMD_ALIGN
+		double out_vector[num_coeff];
+		cout << "number of fitting coefficients = " << num_coeff << " (model = "
+				<< num_model << ")" << endl;
+		LIBSAKURA_SYMBOL (Status) status =
+				sakura_GetLeastSquareFittingCoefficientsDouble(num_data,
+						in_data, in_mask, num_model, model, num_coeff, out,
+						out_vector);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+	}
+}
+
+/*
+ * Test sakura_UpdateLeastSquareFittingCoefficients
+ * successful case with num_coeff < num_model
+ */
+TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsOrder) {
+	size_t const num_data(NUM_DATA);
+	size_t const num_model(NUM_MODEL+1);
+	size_t const num_coeff(NUM_MODEL);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	size_t const num_exclude_indices(NUM_EXCLUDE);
+	SIMD_ALIGN
+	size_t exclude_indices[NUM_EXCLUDE];
+	SIMD_ALIGN
+	double model[num_model * ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double in_lsq_vector[num_coeff];
+	SIMD_ALIGN
+	double in_lsq_vector_orig[ELEMENTSOF(in_lsq_vector)];
+	SIMD_ALIGN
+	double in_lsq_matrix[ELEMENTSOF(in_lsq_vector) * ELEMENTSOF(in_lsq_vector)];
+	SIMD_ALIGN
+	double in_lsq_matrix_orig[ELEMENTSOF(in_lsq_matrix)];
+	SIMD_ALIGN
+	double answer[ELEMENTSOF(in_lsq_matrix)];
+	SIMD_ALIGN
+	double answer_vector[ELEMENTSOF(in_lsq_vector)];
+
+	SetInputData(ELEMENTSOF(in_data), in_data);
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	for (size_t i = 0; i < num_exclude_indices; ++i) {
+		exclude_indices[i] = i * i;
+		in_mask[exclude_indices[i]] = false;
+	}
+	SetChebyshevModel(num_data, num_model, model);
+	LIBSAKURA_SYMBOL (Status) status_getlsq =
+			sakura_GetLeastSquareFittingCoefficientsDouble(num_data, in_data,
+					in_mask, num_model, model, num_coeff, answer,
+					answer_vector);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_getlsq);
+
+	if (verbose) {
+		PrintArray("in_mask", ELEMENTSOF(in_mask), in_mask);
+		PrintArray("model  ", num_data, num_model, model);
+	}
+	cout << "number of fitting coefficients = " << num_coeff << " (model = "
+			<< num_model << ")" << endl;
+
+	SetAnswers(num_data, in_data, num_model, model, num_coeff,
+			in_lsq_matrix_orig, in_lsq_vector_orig);
+
+	for (size_t j = 0; j < ELEMENTSOF(in_lsq_matrix); ++j) {
+		in_lsq_matrix[j] = in_lsq_matrix_orig[j];
+	}
+	for (size_t j = 0; j < ELEMENTSOF(in_lsq_vector); ++j) {
+		in_lsq_vector[j] = in_lsq_vector_orig[j];
+	}
+	LIBSAKURA_SYMBOL (Status) status =
+			sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data, in_data,
+					num_exclude_indices, exclude_indices, num_model, model,
+					num_coeff, in_lsq_matrix, in_lsq_vector);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+		double deviation;
+		if (answer[i] != 0.0) {
+			deviation = fabs((in_lsq_matrix[i] - answer[i]) / answer[i]);
+		} else if (in_lsq_matrix[i] != 0.0) {
+			deviation = fabs((in_lsq_matrix[i] - answer[i]) / in_lsq_matrix[i]);
+		} else {
+			deviation = fabs(in_lsq_matrix[i] - answer[i]);
+		}
+		ASSERT_LE(deviation, 1e-7);
+	}
+	for (size_t i = 0; i < ELEMENTSOF(answer_vector); ++i) {
+		double deviation;
+		if (answer_vector[i] != 0.0) {
+			deviation = fabs(
+					(in_lsq_vector[i] - answer_vector[i]) / answer_vector[i]);
+		} else if (in_lsq_vector[i] != 0.0) {
+			deviation = fabs(
+					(in_lsq_vector[i] - answer_vector[i]) / in_lsq_vector[i]);
+		} else {
+			deviation = fabs(in_lsq_vector[i] - answer_vector[i]);
+		}
+		ASSERT_LE(deviation, 1e-7);
+	}
+
+	if (verbose) {
+		PrintArray("out   ", num_coeff, num_coeff, in_lsq_matrix);
+		PrintArray("answer", num_coeff, num_coeff, answer);
+	}
+}
+
+/*
+ * Test sakura_UpdateLeastSquareFittingCoefficients
+ * failure case with
+ * num_coeff > num_model
+ * num_coeff = 0
+ */
+TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsBadOrder) {
+	size_t const num_data(NUM_DATA);
+	size_t const num_model(NUM_MODEL);
+	size_t const bad_coeffs[] = {num_model+1, 0};
+	size_t const good_coeff(num_model);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	size_t const num_exclude_indices(NUM_EXCLUDE);
+	SIMD_ALIGN
+	size_t exclude_indices[NUM_EXCLUDE];
+	SIMD_ALIGN
+	double model[num_model * ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	double in_lsq_vector[good_coeff];
+	SIMD_ALIGN
+	double in_lsq_matrix[ELEMENTSOF(in_lsq_vector) * ELEMENTSOF(in_lsq_vector)];
+
+	SetInputData(ELEMENTSOF(in_data), in_data);
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SetChebyshevModel(num_data, num_model, model);
+	LIBSAKURA_SYMBOL (Status) status_getlsq =
+			sakura_GetLeastSquareFittingCoefficientsDouble(num_data, in_data,
+					in_mask, num_model, model, good_coeff, in_lsq_matrix, in_lsq_vector);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_getlsq);
+
+	if (verbose) {
+		PrintArray("in_mask", ELEMENTSOF(in_mask), in_mask);
+		PrintArray("model  ", num_data, num_model, model);
+	}
+	for (size_t i = 0; i < ELEMENTSOF(bad_coeffs); ++i){
+		size_t num_coeff(bad_coeffs[i]);
+		cout << "number of fitting coefficients = " << num_coeff << " (model = "
+				<< num_model << ")" << endl;
+
+		LIBSAKURA_SYMBOL (Status) status =
+				sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data, in_data,
+						num_exclude_indices, exclude_indices, num_model, model,
+						num_coeff, in_lsq_matrix, in_lsq_vector);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+	}
+}
+
