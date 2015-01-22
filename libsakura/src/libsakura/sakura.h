@@ -2423,20 +2423,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Extraction of the coefficients of cubic spline fit.
- * @param[in] num_coeff : output of GetNumberOf[Baseline]CoefficientsCubicSpline(). it should be 4*num_pieces.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t num_boundary, size_t num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/], float clip_threshold_sigma,
-		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
-		double boundary[/*num_boundary*/], bool final_mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
-
-/**
  * @~japanese
  * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、係数を返す。
  * @details
@@ -2495,6 +2481,20 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
 		bool final_mask[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @brief Extraction of the coefficients of cubic spline fit.
+ * @param[out] coeff the coefficients of cubic spline fit. its length must be 4*num_pieces.
+ * @~
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, size_t num_pieces,
+		double coeff[/*4*num_piece*/], bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2564,13 +2564,12 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~japanese
  * @brief 入力データに対して、与えられたベースラインモデルと係数からベースラインを求め、差し引く。
  * @details
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @param[in] num_data 配列 @a data 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] num_coeff 配列 @a coeff の要素数。
  * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_coeff でなければならない。
- * @n must-be-aligned
- * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @n must-be-aligned
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -2578,10 +2577,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief subtract baseline from input spectrum. baseline is calculated by baseline model and coefficients.
  * @details
+ * @param[in] context an object containing baseline model data.
  * @param[in] num_data the number of elements in the arrays @a data and @a out.
  * @param[in] data the input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] context an object containing baseline model data.
  * @param[in] num_coeff the number of elements in the arrays @a coeff
  * @param[in] coeff best fit coefficients obtained by least-square fitting. The input data with length of @a num_coeff.
  * @n must-be-aligned
@@ -2589,8 +2588,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-		size_t num_data, float const data[/*num_data*/],
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t num_data, float const data[/*num_data*/],
 		size_t num_coeff, double const coeff[/*num_data*/],
 		float out[/*num_data*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2598,15 +2597,14 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~japanese
  * @brief 入力データに対して、与えられたベースラインモデルと係数からCubicSplineによりベースラインを求め、差し引く。
  * @details
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
  * @param[in] num_data 配列 @a data 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @n must-be-aligned
+ * @param[in] num_pieces スプライン曲線の区間の数。0の場合は何も行わない。
  * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_pieces * 4 でなければならない。
  * @n must-be-aligned
- * @param[in] num_pieces スプライン曲線の区間の数。0の場合は何も行わない。
- * @param[in] boundary num_pieces個の区間の0番目、1番目、…の先頭の位置。要素数は @a num_pieces - 1 でなければならない。
+ * @param[in] boundary num_pieces個の区間の0番目、1番目、…の先頭の位置。要素数は @a num_pieces でなければならない。
  * @n must-be-aligned
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -2614,22 +2612,23 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief subtract baseline from input spectrum. baseline is calculated by baseline model and coefficients and number of pieces.
  * @details
+ * @param[in] context an object containing baseline model data.
  * @param[in] num_data the number of elements in the arrays @a data and @a out.
  * @param[in] data the input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] context an object containing baseline model data.
+ * @param[in] num_pieces the number of pieces. If 0, nothing will be done.
  * @param[in] coeff best fit coefficients obtained by least-square fitting. The input data with length of @a num_pieces * 4.
  * @n must-be-aligned
- * @param[in] num_pieces the number of pieces. If 0, nothing will be done.
- * @param[in] boundary the number of elements @a num_pieces - 1 .
+ * @param[in] boundary the number of elements @a num_pieces .
+ * @n must-be-aligned
  * @param[out] out the output data. its length must be @a num_data .
  * @n must-be-aligned
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-		size_t num_data, float const data[/*num_data*/],
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		double const coeff[/*4*num_pieces*/], size_t num_pieces,
-		double const boundary[/*num_pieces-1*/], float out[])
+		size_t num_data, float const data[/*num_data*/],
+		size_t num_pieces, double const coeff[/*4*num_pieces*/],
+		double const boundary[/*num_pieces*/], float out[])
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
