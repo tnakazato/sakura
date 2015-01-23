@@ -73,6 +73,7 @@ add_executable(testApplyCalibration      apply_calibration.cc)
 add_executable(testBaseline              baseline.cc)
 add_executable(testBaselineKS            baseline_ks.cc)
 add_executable(testBaselineSK            baseline_sk.cc)
+add_executable(testBaselineWK            baseline_wk.cc)
 add_executable(testBitOperation          bit_operation.cc)
 add_executable(testBoolFilterCollection  bool_filter_collection.cc)
 add_executable(testConvolution           convolution.cc)
@@ -89,6 +90,7 @@ target_link_libraries (testApplyCalibration      ${GTEST_MAIN_LIBRARIES} ${GTEST
 target_link_libraries (testBaseline              ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaselineKS            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaselineSK            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testBaselineWK            ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBitOperation          ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBoolFilterCollection  ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testConvolution           ${GTEST_MAIN_LIBRARIES} ${GTEST_LIBRARIES} -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
@@ -107,6 +109,7 @@ add_custom_target(testApplyCalibrationRun      COMMAND ./testApplyCalibration   
 add_custom_target(testBaselineRun              COMMAND ./testBaseline              DEPENDS testBaseline)
 add_custom_target(testBaselineKSRun            COMMAND ./testBaselineKS            DEPENDS testBaselineKS)
 add_custom_target(testBaselineSKRun            COMMAND ./testBaselineSK            DEPENDS testBaselineSK)
+add_custom_target(testBaselineWKRun            COMMAND ./testBaselineWK            DEPENDS testBaselineWK)
 add_custom_target(testBitOperationRun          COMMAND ./testBitOperation          DEPENDS testBitOperation)
 add_custom_target(testBoolFilterCollectionRun  COMMAND ./testBoolFilterCollection  DEPENDS testBoolFilterCollection)
 add_custom_target(testConvolutionRun           COMMAND ./testConvolution           DEPENDS testConvolution)
@@ -136,6 +139,7 @@ add_custom_target(test
 	COMMAND ./testBaseline
 	COMMAND ./testBaselineKS
 	COMMAND ./testBaselineSK
+	COMMAND ./testBaselineWK
 	COMMAND ./testGridding
 	COMMAND ./testInterpolationX
 	COMMAND ./testInterpolationY
