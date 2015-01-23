@@ -1262,11 +1262,13 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data < num_coeff)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_coeff == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_coeff > context->num_bases)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_coeff > context->num_bases)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (coeff == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
