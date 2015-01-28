@@ -40,6 +40,10 @@ public:
 		delete[] reinterpret_cast<char *>(p);
 	}
 
+	static void operator delete(void *p, size_t realSize) {
+		delete[] reinterpret_cast<char *>(p);
+	}
+
 	static AlignedMemory *newAlignedMemory(size_t size) {
 		AlignedMemory *p = new (size) AlignedMemory();
 		return p;
