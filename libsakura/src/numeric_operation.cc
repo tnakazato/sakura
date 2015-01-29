@@ -47,6 +47,8 @@ using ::Eigen::Map;
 using ::Eigen::MatrixXd;
 using ::Eigen::VectorXd;
 using ::Eigen::Aligned;
+using ::Eigen::Stride;
+using ::Eigen::Dynamic;
 
 namespace {
 
@@ -61,7 +63,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d const &a, __m256d const &b, __m256d const &c) {
+__m256d NegMultiplyAdd(__m256d    const &a, __m256d    const &b, __m256d    const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -82,7 +84,7 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-						LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
 						_mm256_loadu_pd(&out[i])));
 	}
 #endif
@@ -100,7 +102,8 @@ void SubMulVectorTemplate(double k, double const *vec, double *out) {
 	auto coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i], NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
+		_mm256_storeu_pd(&out[i],
+				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 #endif
 	for (; i < NUM_BASES; ++i) {
@@ -137,7 +140,8 @@ inline void SubMulVector(size_t const num_model_bases, double k,
 	auto coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i], NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
+		_mm256_storeu_pd(&out[i],
+				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 #endif
 	for (; i < num_model_bases; ++i) {
@@ -206,7 +210,7 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 		size_t num_mask, bool const *mask, size_t num_boundary,
 		double const *boundary, double const *model, double *out) {
-	//
+	if (num_boundary == 0) num_boundary = 1;
 	size_t num_cubic_bases = 4;
 	size_t num_model_bases = num_cubic_bases - 1 + num_boundary;
 
@@ -230,6 +234,8 @@ inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 		throw std::runtime_error(
 				"GetMatrixCoefficientsForLeastSquareFitting: too many data are masked.");
 	}
+
+	if (num_boundary < 2) return;
 
 	double *aux_data = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
@@ -359,6 +365,7 @@ inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
 		size_t num_data, float const *data,
 		bool const *mask, size_t num_boundary, double const *boundary,
 		double const *model, double *out) {
+	if (num_boundary == 0) num_boundary = 1;
 	size_t num_cubic_bases = 4;
 	size_t num_model_bases = num_cubic_bases - 1 + num_boundary;
 	for (size_t i = 0; i < num_model_bases; ++i) {
@@ -371,6 +378,9 @@ inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
 			AddMulVector(num_cubic_bases, data_i, model_i, out);
 		}
 	}
+
+	if (num_boundary < 2) return;
+
 	double *aux_data = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -647,9 +657,9 @@ inline void SolveSimultaneousEquationsByLUDouble(size_t num_equations,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map < MatrixXd, Aligned
-			> in_matrix(const_cast<double *>(in_matrix_arg), num_equations,
-					num_equations);
+	Map<MatrixXd, Aligned, Stride<Dynamic, Dynamic> > in_matrix(
+			const_cast<double *>(in_matrix_arg), num_equations, num_equations,
+			Stride<Dynamic, Dynamic>(1, num_equations));
 	Map < VectorXd, Aligned
 			> in_vector(const_cast<double *>(in_vector_arg), num_equations);
 
@@ -758,7 +768,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_boundary, double const boundary[], double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) {
-
+	if (num_boundary == 0) num_boundary = 1;
 	try {
 		GetLeastSquareFittingCoefficientsCubicSpline(num_data, data, mask,
 				num_boundary, boundary, basis_data, lsq_matrix, lsq_vector);

@@ -33,6 +33,7 @@
 #include <cstddef>
 #include <climits>
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 
@@ -263,13 +264,25 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
 		size_t j = start_idx;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 		size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-		size_t const end = start_idx
-				+ ((end_idx - start_idx) / pack_elements) * pack_elements;
+		size_t const start =
+				(start_idx % pack_elements == 0) ?
+						start_idx :
+						(pack_elements
+								+ (start_idx / pack_elements) * pack_elements);
+		for (j = start_idx; j < start; ++j) {
+			double out_double = 0.0;
+			for (size_t k = 0; k < num_bases; ++k) {
+				out_double += coeff[k + coffset] * basis[num_bases * j + k];
+			}
+			out[j] = out_double;
+		}
+		size_t const end = start
+				+ ((end_idx - start) / pack_elements) * pack_elements;
 		auto const zero = _mm256_set1_pd(0.);
 		size_t const offset1 = num_bases * 1;
 		size_t const offset2 = num_bases * 2;
 		size_t const offset3 = num_bases * 3;
-		for (j = start_idx; j < end; j += pack_elements) {
+		for (j = start; j < end; j += pack_elements) {
 			auto total = zero;
 			auto bases_row = &basis[num_bases * j];
 			for (size_t k = 0; k < num_bases; ++k) {
@@ -594,6 +607,18 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				throw std::runtime_error(
 						"failed in GetLeastSquareFittingCoefficients.");
 			}
+
+			/*
+			for (size_t j = 0; j < num_bases; ++j) {
+				std::cout << " | ";
+				for (size_t k = 0; k < num_bases; ++k) {
+					std::cout << std::setw(8) << std::right
+							<< lsq_matrix[j * num_bases + k] << "  ";
+				}
+				std::cout << " | " << std::setw(8) << std::right
+						<< lsq_vector[j] << std::endl;
+			}
+			*/
 			/*
 			 if (num_unmasked_data <= num_clipped) {
 			 LIBSAKURA_SYMBOL(Status) coeff_status =
@@ -624,8 +649,22 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 						"failed in SolveSimultaneousEquationsByLU.");
 			}
 
-			GetFullCubicSplineCoefficients(num_pieces, boundary, coeff_raw,
-					coeff);
+			/*
+			for (size_t j = 0; j < num_bases; ++j) {
+				std::cout << "#### coeff_raw[" << j << "] = " << coeff_raw[j]
+						<< std::endl;
+			}
+			*/
+			GetFullCubicSplineCoefficients(num_pieces, boundary, coeff_raw, coeff);
+			/*
+			for (size_t j = 0; j < num_pieces; ++j) {
+				std::cout << "   [ ";
+				for (size_t k = 0; k < 4; ++k) {
+					std::cout << coeff[4 * j + k] << ", ";
+				}
+				std::cout << " ]" << std::endl << std::flush;
+			}
+			*/
 			GetBestFitModelAndResidualCubicSpline(num_data, data,
 					baseline_context, coeff, num_pieces, boundary,
 					best_fit_model, residual_data);
