@@ -48,17 +48,17 @@ INT Round(REAL v) {
 }
 
 // To overload conj(complex), the name starts with lower case
-inline float conj(float v) {
+inline constexpr float conj(float v) {
 	return v;
 }
 
-inline size_t At2(size_t B, integer a, integer b) {
+inline constexpr size_t At2(size_t B, integer a, integer b) {
 	return a * B + b;
 }
-inline size_t At3(size_t B, size_t C, integer a, integer b, integer c) {
+inline constexpr size_t At3(size_t B, size_t C, integer a, integer b, integer c) {
 	return a * (B * C) + At2(C, b, c);
 }
-inline size_t At4(size_t B, size_t C, size_t D, integer a, integer b, integer c,
+inline constexpr size_t At4(size_t B, size_t C, size_t D, integer a, integer b, integer c,
 		integer d) {
 	return a * (B * C * D) + At3(C, D, b, c, d);
 }
@@ -88,19 +88,19 @@ inline bool OnGrid(double const xy[/*2*/], integer width, integer height,
 }
 
 struct WeightOnly {
-	static inline float func(float weight, float value) {
+	static inline constexpr float func(float weight, float value) {
 		return weight;
 	}
 };
 
 struct WeightedValue {
-	static inline float func(float weight, float value) {
+	static inline constexpr float func(float weight, float value) {
 		return weight * conj(value);
 	}
 };
 
 struct VWeightOnly {
-	static inline LIBSAKURA_SYMBOL(SimdPacketNative) func(
+	static inline constexpr LIBSAKURA_SYMBOL(SimdPacketNative) func(
 	LIBSAKURA_SYMBOL(SimdPacketNative) weight,
 	LIBSAKURA_SYMBOL(SimdPacketNative) value) {
 		return weight;
