@@ -995,6 +995,7 @@ inline void SubtractBaselineCubicSplineUsingCoefficientsFloat(
 LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_data,
 		float const *data_arg, size_t num_pieces, double const *coeff_arg,
 		double const *boundary_arg, float *out_arg) {
+	if (num_pieces < 1) return;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));

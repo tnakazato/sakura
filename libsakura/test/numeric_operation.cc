@@ -86,8 +86,25 @@ protected:
 		}
 	}
 
+	//Set (A[0]+A[1]*x+A[2]*x*x+A[3]*x*x*x) float values into an array
+	void SetFloatPolynomial(size_t num_data, float *data,
+			double *coeff_answer) {
+		for (size_t i = 0; i < num_data; ++i) {
+			double x = (double) i;
+			data[i] = (float) (coeff_answer[0] + coeff_answer[1] * x
+					+ coeff_answer[2] * x * x + coeff_answer[3] * x * x * x);
+		}
+	}
+
 	// Set constant float values into an array
 	void SetFloatConstant(float value, size_t const num_data, float *data) {
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = value;
+		}
+	}
+
+	// Set constant double values into an array
+	void SetDoubleConstant(double value, size_t const num_data, double *data) {
 		for (size_t i = 0; i < num_data; ++i) {
 			data[i] = value;
 		}
@@ -199,21 +216,138 @@ protected:
 		}
 	}
 
+	// Set reference values for Cubic Spline
+	void SetAnswersCubicSpline(size_t const num_data, float const *data,
+	bool const *mask, size_t const num_boundary, double const *boundary,
+			double *answer_matrix, double *answer_vector) {
+		size_t num_vector = 3 + num_boundary;
+		double *basis_data = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> storage_for_basisdata(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*basis_data) * num_data * 4, &basis_data));
+		if (basis_data == nullptr) {
+			throw bad_alloc();
+		}
+		for (size_t i = 0; i < num_data; ++i) {
+			double x = (double) i;
+			basis_data[i] = 1.0;
+			basis_data[i + num_data] = x;
+			basis_data[i + num_data * 2] = x * x;
+			basis_data[i + num_data * 3] = x * x * x;
+		}
+		double *aux_data = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> storage_for_auxdata(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*aux_data) * num_data * num_boundary,
+						&aux_data));
+		if (aux_data == nullptr) {
+			throw bad_alloc();
+		}
+		for (size_t i = 0; i < num_data; ++i) {
+			for (size_t j = 0; j < num_boundary; ++j) {
+				double x = (double) i - boundary[j];
+				aux_data[i + num_data * j] = max(x * x * x, 0.0);
+			}
+		}
+
+		for (size_t i = 0; i < num_vector; ++i) {
+			// computing vector components
+			double vec = 0.0;
+			if (i < 3) {
+				double *basis_data_i = &basis_data[num_data * i];
+				for (size_t j = 0; j < num_data; ++j) {
+					if (mask[j]) {
+						vec += basis_data_i[j] * data[j];
+					}
+				}
+			} else if (i == num_vector - 1) {
+				size_t bidx = i - 3;
+				double *aux_data_bidx = &aux_data[num_data * bidx];
+				for (size_t j = 0; j < num_data; ++j) {
+					if (mask[j]) {
+						vec += aux_data_bidx[j] * data[j];
+					}
+				}
+			} else if (num_boundary > 1) {
+				size_t bidx = i - 3;
+				double *aux_data_bidx = &aux_data[num_data * bidx];
+				double *aux_data_bidxr = &aux_data[num_data * (bidx + 1)];
+				for (size_t j = 0; j < num_data; ++j) {
+					if (mask[j]) {
+						vec += (aux_data_bidx[j] - aux_data_bidxr[j]) * data[j];
+					}
+				}
+			}
+			answer_vector[i] = vec;
+			// computing matrix components
+			double *answer_matrix_i = &answer_matrix[num_vector * i];
+			for (size_t icol = 0; icol < num_vector; ++icol) {
+				double mtx = 0.0;
+				if (i < 3) {
+					double *basis_data_i = &basis_data[num_data * i];
+					double *basis_data_icol = &basis_data[num_data * icol];
+					if (icol < 4) {
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += basis_data_i[j] * basis_data_icol[j];
+						}
+					} else {
+						size_t bidx2 = icol - 3;
+						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += basis_data_i[j] * aux_data_bidx2[j];
+						}
+					}
+				} else if (i == num_vector - 1) {
+					size_t bidx = i - 3;
+					double *aux_data_bidx = &aux_data[num_data * bidx];
+					double *basis_data_icol = &basis_data[num_data * icol];
+					if (icol < 4) {
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += aux_data_bidx[j] * basis_data_icol[j];
+						}
+					} else {
+						size_t bidx2 = icol - 3;
+						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += aux_data_bidx[j] * aux_data_bidx2[j];
+						}
+					}
+				} else if (num_boundary > 1) {
+					size_t bidx = i - 3;
+					double *aux_data_bidx = &aux_data[num_data * bidx];
+					double *aux_data_bidxr = &aux_data[num_data * (bidx + 1)];
+					double *basis_data_icol = &basis_data[num_data * icol];
+					if (icol < 4) {
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
+										* basis_data_icol[j];
+						}
+					} else {
+						size_t bidx2 = icol - 3;
+						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
+										* aux_data_bidx2[j];
+						}
+
+					}
+				}
+				answer_matrix_i[icol] = mtx;
+			}
+		}
+	}
+
 	// Check if the expected and actual values are enough close to each other
 	void CheckAlmostEqual(double expected, double actual, double tolerance) {
 		double deviation = fabs(actual - expected);
 		double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
 		ASSERT_LE(deviation, val);
-		/*
-		 if (deviation > tolerance) {
-		 if (expected != 0.0) {
-		 deviation = fabs((actual - expected) / expected);
-		 } else if (actual != 0.0) {
-		 deviation = fabs((actual - expected) / actual);
-		 }
-		 }
-		 ASSERT_LE(deviation, tolerance);
-		 */
 	}
 
 	//1D float array
@@ -1966,7 +2100,7 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsBadOrder) {
  */
 TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsOrder) {
 	size_t const num_data(NUM_DATA);
-	size_t const num_model(NUM_MODEL+1);
+	size_t const num_model(NUM_MODEL + 1);
 	size_t const num_coeff(NUM_MODEL);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -2064,7 +2198,7 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsOrder) {
 TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsBadOrder) {
 	size_t const num_data(NUM_DATA);
 	size_t const num_model(NUM_MODEL);
-	size_t const bad_coeffs[] = {num_model+1, 0};
+	size_t const bad_coeffs[] = { num_model + 1, 0 };
 	size_t const good_coeff(num_model);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -2085,23 +2219,407 @@ TEST_F(NumericOperation, UpdateLeastSquareFittingCoefficientsBadOrder) {
 	SetChebyshevModel(num_data, num_model, model);
 	LIBSAKURA_SYMBOL (Status) status_getlsq =
 			sakura_GetLeastSquareFittingCoefficientsDouble(num_data, in_data,
-					in_mask, num_model, model, good_coeff, in_lsq_matrix, in_lsq_vector);
+					in_mask, num_model, model, good_coeff, in_lsq_matrix,
+					in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_getlsq);
 
 	if (verbose) {
 		PrintArray("in_mask", ELEMENTSOF(in_mask), in_mask);
 		PrintArray("model  ", num_data, num_model, model);
 	}
-	for (size_t i = 0; i < ELEMENTSOF(bad_coeffs); ++i){
+	for (size_t i = 0; i < ELEMENTSOF(bad_coeffs); ++i) {
 		size_t num_coeff(bad_coeffs[i]);
 		cout << "number of fitting coefficients = " << num_coeff << " (model = "
 				<< num_model << ")" << endl;
 
 		LIBSAKURA_SYMBOL (Status) status =
-				sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data, in_data,
-						num_exclude_indices, exclude_indices, num_model, model,
-						num_coeff, in_lsq_matrix, in_lsq_vector);
+				sakura_UpdateLeastSquareFittingCoefficientsDouble(num_data,
+						in_data, num_exclude_indices, exclude_indices,
+						num_model, model, num_coeff, in_lsq_matrix,
+						in_lsq_vector);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+	}
+}
+
+/*
+ * Test GetLeastSquareFittingCoefficientsCubicSpline
+ * successful case
+ * compute the best-fit baseline coefficients for cubic spline
+ * for cases of combination of two conditions: one is num_boundary
+ * variation (1,2,3) and the other is boundary position (just on
+ * or between data positions)
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplineSuccessfulCase) {
+	for (size_t num_boundary = 1; num_boundary <= 3; ++num_boundary) {
+		cout << "    Testing for num_boundary = " << num_boundary
+				<< " cases: num_data = ";
+		size_t ipos_max = 0;
+		if (num_boundary > 1)
+			ipos_max = 1;
+		for (size_t ipos = 0; ipos <= ipos_max; ++ipos) {
+			// -------------------------------------------
+			// ipos==0 : boundary on data points
+			// ipos==1 : boundary between data points
+			// -------------------------------------------
+			SIMD_ALIGN
+			double coeff[4 * num_boundary];
+			SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+			size_t const num_data(ELEMENTSOF(coeff));
+			SIMD_ALIGN
+			float in_data[num_data];
+			SetFloatPolynomial(num_data, in_data, coeff);
+			SIMD_ALIGN
+			bool mask[ELEMENTSOF(in_data)];
+			SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+			if (ipos == 0)
+				cout << num_data;
+			if ((ipos == 0) || (ipos < ipos_max))
+				cout << ", ";
+			SIMD_ALIGN
+			double boundary[num_boundary];
+			for (size_t i = 0; i < num_boundary; ++i) {
+				boundary[i] = floor(
+						(double) i * (double) ELEMENTSOF(in_data)
+								/ (double) num_boundary);
+				if ((ipos > 0) && (i > 0))
+					boundary[i] += 0.5;
+			}
+			cout << ((ipos == 0) ? "boundary =  " : "") << "[";
+			for (size_t i = 0; i < num_boundary; ++i) {
+				cout << boundary[i] << ((i < num_boundary - 1) ? ", " : "");
+			}
+			cout << "]" << ((ipos < ipos_max) ? ", " : "");
+			SIMD_ALIGN
+			double basis_data[4 * ELEMENTSOF(in_data)];
+			size_t num_vector(3 + num_boundary);
+			SIMD_ALIGN
+			double out_vector[num_vector];
+			SIMD_ALIGN
+			double out_matrix[num_vector * num_vector];
+			double answer_vector[ELEMENTSOF(out_vector)];
+			double answer_matrix[ELEMENTSOF(out_matrix)];
+			SetAnswersCubicSpline(num_data, in_data, mask, num_boundary,
+					boundary, answer_matrix, answer_vector);
+			SetPolynomialModel(num_data, 4, basis_data);
+			LIBSAKURA_SYMBOL (Status) coeff_status =
+					LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+							num_data, in_data, mask, num_boundary, boundary,
+							basis_data, out_matrix, out_vector);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+
+			for (size_t i = 0; i < ELEMENTSOF(answer_vector); ++i) {
+				CheckAlmostEqual(answer_vector[i], out_vector[i], 1.0e-6);
+			}
+			for (size_t i = 0; i < ELEMENTSOF(answer_matrix); ++i) {
+				CheckAlmostEqual(answer_matrix[i], out_matrix[i], 1.0e-6);
+			}
+
+			if (verbose) {
+				PrintArray("data       ", num_data, in_data);
+				PrintArray("vector:out ", ELEMENTSOF(answer_vector),
+						out_vector);
+				PrintArray("vector:ans ", ELEMENTSOF(answer_vector),
+						answer_vector);
+				PrintArray("matrix:out ", ELEMENTSOF(answer_matrix),
+						out_matrix);
+				PrintArray("matrix:ans ", ELEMENTSOF(answer_matrix),
+						answer_matrix);
+			}
+
+		}
+		cout << endl;
+	}
+}
+
+/*
+ * Test GetLeastSquareFittingCoefficientsCubicSpline
+ * time-consuming successful case for performance measurement
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplinePerformanceTest) {
+	size_t const num_repeat(300);
+	size_t const num_boundary(2);
+	SIMD_ALIGN
+	double coeff[4 * num_boundary];
+	for (size_t i = 0; i < ELEMENTSOF(coeff); i += 4) {
+		coeff[i] = 1.0;
+		coeff[i + 1] = 1e-4;
+		coeff[i + 2] = 1e-8;
+		coeff[i + 3] = 1e-12;
+	}
+	size_t const num_data(70000);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+	SIMD_ALIGN
+	double boundary[num_boundary];
+	for (size_t i = 0; i < num_boundary; ++i) {
+		boundary[i] = floor(
+				(double) i * (double) ELEMENTSOF(in_data)
+						/ (double) num_boundary);
+	}
+	SIMD_ALIGN
+	double basis_data[4 * ELEMENTSOF(in_data)];
+	SetPolynomialModel(num_data, 4, basis_data);
+	size_t num_vector(3 + num_boundary);
+	SIMD_ALIGN
+	double out_vector[num_vector];
+	SIMD_ALIGN
+	double out_matrix[num_vector * num_vector];
+	LIBSAKURA_SYMBOL (Status) coeff_status;
+	for (size_t i = 0; i < num_repeat; ++i) {
+		coeff_status =
+		LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+				num_data, in_data, mask, num_boundary, boundary, basis_data,
+				out_matrix, out_vector);
+	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+}
+
+/*
+ * Test GetLeastSquareFittingCoefficientsCubicSpline
+ * erroneous cases: null pointer cases
+ * parameters to be tested include data, mask, boundary, basis_data, out_matrix and out_vector.
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplineErroneousCasesNullPointer) {
+	enum NPItems {
+		NP_kData,
+		NP_kMask,
+		NP_kBoundary,
+		NP_kBasisData,
+		NP_kOutMatrix,
+		NP_kOutVector,
+		NP_kNumElems
+	};
+	vector<string> np_param_names = { "data", "mask", "boundary", "basis_data",
+			"out_matrix", "out_vector" };
+	cout << "    Testing for ";
+
+	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
+			static_cast<NPItems>(item + 1)) {
+		cout << np_param_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+		size_t const num_boundary(2);
+		size_t const num_data(10);
+		double coeff[4];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatPolynomial(num_data, in_data, coeff);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		double boundary[num_boundary];
+		for (size_t i = 0; i < num_boundary; ++i) {
+			boundary[i] = floor(
+					(double) i * (double) ELEMENTSOF(in_data)
+							/ (double) num_boundary);
+		}
+		SIMD_ALIGN
+		double basis_data[4 * ELEMENTSOF(in_data)];
+		SetPolynomialModel(num_data, 4, basis_data);
+		size_t num_vector(3 + num_boundary);
+		SIMD_ALIGN
+		double out_vector[num_vector];
+		SIMD_ALIGN
+		double out_matrix[num_vector * num_vector];
+
+		float *in_data_ptr = in_data;
+		bool *mask_ptr = mask;
+		double *boundary_ptr = boundary;
+		double *basis_data_ptr = basis_data;
+		double *out_matrix_ptr = out_matrix;
+		double *out_vector_ptr = out_vector;
+
+		switch (item) {
+		case NP_kData:
+			in_data_ptr = nullptr;
+			break;
+		case NP_kMask:
+			mask_ptr = nullptr;
+			break;
+		case NP_kBoundary:
+			boundary_ptr = nullptr;
+			break;
+		case NP_kBasisData:
+			basis_data_ptr = nullptr;
+			break;
+		case NP_kOutMatrix:
+			out_matrix_ptr = nullptr;
+			break;
+		case NP_kOutVector:
+			out_vector_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) coeff_status =
+		LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+				num_data, in_data_ptr, mask_ptr, num_boundary, boundary_ptr,
+				basis_data_ptr, out_matrix_ptr, out_vector_ptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test GetLeastSquareFittingCoefficientsCubicSpline
+ * erroneous cases: unaligned cases
+ * parameters to be tested include data, mask, boundary, basis_data, out_matrix and out_vector.
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplineErroneousCasesUnaligned) {
+	enum UAItems {
+		UA_kData,
+		UA_kMask,
+		UA_kBoundary,
+		UA_kBasisData,
+		UA_kOutMatrix,
+		UA_kOutVector,
+		UA_kNumElems
+	};
+	vector<string> ua_param_names = { "data", "mask", "boundary", "basis_data",
+			"out_matrix", "out_vector" };
+	cout << "    Testing for ";
+
+	for (UAItems item = static_cast<UAItems>(0); item < UA_kNumElems; item =
+			static_cast<UAItems>(item + 1)) {
+		cout << ua_param_names[item] << ((item < UA_kNumElems - 1) ? ", " : "");
+		size_t const num_boundary(2);
+		size_t const num_data(10);
+		double coeff[4];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data+1];
+		SetFloatPolynomial(num_data, in_data, coeff);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		double boundary[num_boundary+1];
+		for (size_t i = 0; i < num_boundary; ++i) {
+			boundary[i] = floor(
+					(double) i * (double) ELEMENTSOF(in_data)
+							/ (double) num_boundary);
+		}
+		SIMD_ALIGN
+		double basis_data[4 * ELEMENTSOF(in_data)+1];
+		SetPolynomialModel(num_data, 4, basis_data);
+		size_t num_vector(3 + num_boundary);
+		SIMD_ALIGN
+		double out_vector[num_vector+1];
+		SIMD_ALIGN
+		double out_matrix[num_vector * num_vector + 1];
+
+		float *in_data_ptr = in_data;
+		bool *mask_ptr = mask;
+		double *boundary_ptr = boundary;
+		double *basis_data_ptr = basis_data;
+		double *out_matrix_ptr = out_matrix;
+		double *out_vector_ptr = out_vector;
+
+		switch (item) {
+		case UA_kData:
+			++in_data_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_ptr));
+			break;
+		case UA_kMask:
+			++mask_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(mask_ptr));
+			break;
+		case UA_kBoundary:
+			++boundary_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(boundary_ptr));
+			break;
+		case UA_kBasisData:
+			++basis_data_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(basis_data_ptr));
+			break;
+		case UA_kOutMatrix:
+			++out_matrix_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(out_matrix_ptr));
+			break;
+		case UA_kOutVector:
+			++out_vector_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(out_vector_ptr));
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) coeff_status =
+		LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+				num_data, in_data_ptr, mask_ptr, num_boundary, boundary_ptr,
+				basis_data_ptr, out_matrix_ptr, out_vector_ptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test GetLeastSquareFittingCoefficientsCubicSpline
+ * erroneous cases: bad parameter value cases as follows:
+ *     (1) num_data == 0
+ *     (2) num_boundary == 0
+ */
+TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplineErroneousCasesBadParameterValue) {
+	enum BVItems {
+		BV_kNumDataZero,
+		BV_kNumBoundaryZero,
+		BV_kNumElems
+	};
+	vector<string> bv_param_names = { "(num_data == 0)", "(num_boundary == 0)" };
+	cout << "    Testing for cases " << endl;
+
+	for (BVItems item = static_cast<BVItems>(0); item < BV_kNumElems; item =
+			static_cast<BVItems>(item + 1)) {
+		cout << "        " << bv_param_names[item]
+				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
+		size_t num_boundary = 1;
+		size_t num_data = 10;
+		switch (item) {
+		case BV_kNumDataZero:
+			num_data = 0;
+			break;
+		case BV_kNumBoundaryZero:
+			num_boundary = 0;
+			break;
+		default:
+			assert(false);
+		}
+		SIMD_ALIGN
+		double coeff[4];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatPolynomial(num_data, in_data, coeff);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		double boundary[num_boundary];
+		for (size_t i = 0; i < num_boundary; ++i) {
+			boundary[i] = floor(
+					(double) i * (double) ELEMENTSOF(in_data)
+							/ (double) num_boundary);
+		}
+		SIMD_ALIGN
+		double basis_data[4 * ELEMENTSOF(in_data)];
+		SetPolynomialModel(num_data, 4, basis_data);
+		size_t num_vector(3 + num_boundary);
+		SIMD_ALIGN
+		double out_vector[num_vector];
+		SIMD_ALIGN
+		double out_matrix[num_vector * num_vector];
+
+		LIBSAKURA_SYMBOL (Status) coeff_status =
+		LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+				num_data, in_data, mask, num_boundary, boundary,
+				basis_data, out_matrix, out_vector);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
+
 	}
 }
 

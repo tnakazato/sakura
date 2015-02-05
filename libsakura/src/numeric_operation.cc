@@ -768,7 +768,35 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_boundary, double const boundary[], double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) {
-	if (num_boundary == 0) num_boundary = 1;
+	if (num_data == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (mask == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_boundary == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (boundary == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(boundary)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (basis_data == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (lsq_matrix == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (lsq_vector == nullptr)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_vector)))
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+
 	try {
 		GetLeastSquareFittingCoefficientsCubicSpline(num_data, data, mask,
 				num_boundary, boundary, basis_data, lsq_matrix, lsq_vector);
