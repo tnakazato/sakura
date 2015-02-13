@@ -457,24 +457,22 @@ protected:
 
 	// Long test of various bit operations with with a large array
 	void RunMiscOpLongTests(size_t const num_long, size_t const num_repeat) {
-		// todo: assertion
-		if (num_long > 0 && num_repeat > 0) {
-			size_t const num_large(num_long);
-			SIMD_ALIGN
-			DataType data[num_large];
-			SIMD_ALIGN
-			bool edit_mask[ELEMENTSOF(data)];
-			SIMD_ALIGN
-			DataType result[ELEMENTSOF(data)];
-			//size_t const num_repeat = 20000;
+		assert(num_long > 0);
+		assert(num_repeat > 0);
+		size_t const num_large(num_long);
+		SIMD_ALIGN
+		DataType data[num_large];
+		SIMD_ALIGN
+		bool edit_mask[ELEMENTSOF(data)];
+		SIMD_ALIGN
+		DataType result[ELEMENTSOF(data)];
+		//size_t const num_repeat = 20000;
 
-			// Loop over num_repeat times for each operation type (Standard set)
-			cout << "[Long tests]" << endl;
-			RunBitOperationTest(num_large, data, edit_mask, result,
-					num_standard_test, misc_kit, LIBSAKURA_SYMBOL(Status_kOK),
-					num_repeat);
-
-		}
+		// Loop over num_repeat times for each operation type (Standard set)
+		cout << "[Long tests]" << endl;
+		RunBitOperationTest(num_large, data, edit_mask, result,
+				num_standard_test, misc_kit, LIBSAKURA_SYMBOL(Status_kOK),
+				num_repeat);
 	}
 
 	// Test failure cases of various bit operations: NULL data, mask, or result array
@@ -678,8 +676,8 @@ protected:
  * Test various bit operations with an Uint8 array of length 8, 11 and zero
  */
 //TEST_F(BitOperation, VariousLength) {
-//	BitOperation<uint8_t>::RunVariousLength();
-//	BitOperation<uint32_t>::RunVariousLength();
+//	BitOperation<uint8_t>::RunVariousLengthTests();
+//	BitOperation<uint32_t>::RunVariousLengthTests();
 //}
 TEST_F(BitOperation8, VariousLength) {
 	RunVariousLengthTests();
@@ -733,15 +731,11 @@ TEST_F(BitOperation32, MiscOpFailNotAlignedArray) {
  * Long test of various bit operations with with a large Uint8 array
  */
 TEST_F(BitOperation8, MiscOpLong) {
-	size_t const num_large(NUM_IN_LONG);
-	size_t const num_repeat = 20000;
-	RunMiscOpLongTests(num_large, num_repeat);
+	RunMiscOpLongTests(NUM_IN_LONG, 20000); // array_length, repeat
 }
 
 TEST_F(BitOperation32, MiscOpLong) {
-	size_t const num_large(NUM_IN_LONG);
-	size_t const num_repeat = 20000;
-	RunMiscOpLongTests(num_large, num_repeat);
+	RunMiscOpLongTests(NUM_IN_LONG, 20000); // array_length, repeat
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
