@@ -58,9 +58,6 @@ protected:
 	typedef LIBSAKURA_SYMBOL(Status) (*function_ptr_t)(DataType, size_t,
 			DataType const*, bool const*, DataType*);
 
-//	virtual LIBSAKURA_SYMBOL(Status) NotWrapper(DataType bit_mask, size_t num_data,
-//			DataType const *data, bool const *edit_mask, DataType *result) = 0;
-
 // Types of operation
 	enum operation_type {
 		And = 0,
@@ -95,6 +92,10 @@ protected:
 		// Clean-up sakura
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
+
+	static LIBSAKURA_SYMBOL(Status) NotWrapper(DataType bit_mask,
+			size_t num_data, DataType const *data, bool const *edit_mask,
+			DataType *result);
 
 	testKit GetTestKit(operation_type const operation) {
 		testKit ret_kit;
@@ -543,6 +544,22 @@ protected:
 
 };
 
+template<>
+LIBSAKURA_SYMBOL(Status) BitOperation<uint32_t>::NotWrapper(uint32_t bit_mask,
+		size_t num_data, uint32_t const *data, bool const *edit_mask,
+		uint32_t *result) {
+	return LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(num_data, data,
+			edit_mask, result);
+}
+
+template<>
+LIBSAKURA_SYMBOL(Status) BitOperation<uint8_t>::NotWrapper(uint8_t bit_mask,
+		size_t num_data, uint8_t const *data, bool const *edit_mask,
+		uint8_t *result) {
+	return LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(num_data, data,
+			edit_mask, result);
+}
+
 /*
  * Tests various bit operations (except for NOT) of an uint32_t value and array
  * INPUTS:
@@ -595,17 +612,11 @@ protected:
 				OperateBitwiseOrUint32);
 		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint32);
 		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint32);
-		operation_functions[Not] = Not32Wrapper;
+		operation_functions[Not] = NotWrapper;
 
 		Initialize();
 	}
 
-	static LIBSAKURA_SYMBOL(Status) Not32Wrapper(uint32_t bit_mask,
-			size_t num_data, uint32_t const *data, bool const *edit_mask,
-			uint32_t *result) {
-		return LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(num_data, data,
-				edit_mask, result);
-	}
 };
 
 /*
@@ -659,15 +670,9 @@ protected:
 				OperateBitwiseOrUint8);
 		operation_functions[Xor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint8);
 		operation_functions[Xnor] = LIBSAKURA_SYMBOL(OperateBitwiseXorUint8);
-		operation_functions[Not] = Not8Wrapper;
+		operation_functions[Not] = NotWrapper;
 
 		Initialize();
-	}
-	static LIBSAKURA_SYMBOL(Status) Not8Wrapper(uint8_t bit_mask,
-			size_t num_data, uint8_t const *data, bool const *edit_mask,
-			uint8_t *result) {
-		return LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(num_data, data,
-				edit_mask, result);
 	}
 };
 
