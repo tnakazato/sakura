@@ -497,6 +497,9 @@ protected:
 
 };
 
+/*
+ * Initialization of base input data
+ */
 template<typename DataType>
 DataType BitOperation<DataType>::bit_mask_ = 2; /* bit pattern of 0...010 */
 template<typename DataType>
