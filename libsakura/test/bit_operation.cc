@@ -150,8 +150,8 @@ TestComponent ExtendedTestCase[] {
 
 
 /*
- * Helper unctions to select proper (FuncAndAnswer) from
- *  TestComponents by data type and return test kit consits of
+ * Helper functions to select proper (FuncAndAnswer) from
+ *  TestComponents by data type and return test kit consists of
  * - name of bit operation
  * - whether or not invert bit pattern
  * - sakura function to test and the answer (FuncAndAnswer structure) for the given data type.
@@ -509,7 +509,7 @@ protected:
 };
 
 /*
- * Initialization of base input data
+ * Initialization of static input data templates
  */
 template<typename DataType>
 DataType BitOperation<DataType>::bit_mask_ = 2; /* bit pattern of 0...010 */
