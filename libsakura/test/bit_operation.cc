@@ -38,8 +38,8 @@
 #define UNALIGN_OFFSET 1 // should be != ALIGNMENT
 using namespace std;
 
-// Wrapper functions of OperateBitwideNot
-//template<uint32_t>
+// Wrapper functions of OperateBitwiseNot to align
+// interface with the other bit operation functions.
 static LIBSAKURA_SYMBOL(Status) NotWrapper32(uint32_t bit_mask,
 		size_t num_data, uint32_t const *data, bool const *edit_mask,
 		uint32_t *result) {
@@ -47,7 +47,6 @@ static LIBSAKURA_SYMBOL(Status) NotWrapper32(uint32_t bit_mask,
 			edit_mask, result);
 }
 
-//template<uint8_t>
 static LIBSAKURA_SYMBOL(Status) NotWrapper8(uint8_t bit_mask,
 		size_t num_data, uint8_t const *data, bool const *edit_mask,
 		uint8_t *result) {
@@ -71,6 +70,12 @@ struct TestComponent {
 		FuncAndAnswer<uint32_t> uint32kit;
 };
 
+/*
+ * Define a list of test cases (TestComponent structure)
+ * - name of bit operation
+ * - whether or not invert bit pattern
+ * - sakura function to test and the answer (FuncAndAnswer structure) for each data type.
+ */
 //uint8_t const bit_pattern1_8 = (~static_cast<uint8_t>(0)); // 11...111
 //uint32_t const bit_pattern1_32 = (~static_cast<uint32_t>(0)); // 11...111
 //uint8_t const bit_pattern00_8 = (~static_cast<uint8_t>(0) << 2); // 11...100
@@ -144,7 +149,13 @@ TestComponent ExtendedTestCase[] {
 };
 
 
-// Functions to select proper FuncAndAnswer from TestComponents by data type and return test kit
+/*
+ * Helper unctions to select proper (FuncAndAnswer) from
+ *  TestComponents by data type and return test kit consits of
+ * - name of bit operation
+ * - whether or not invert bit pattern
+ * - sakura function to test and the answer (FuncAndAnswer structure) for the given data type.
+ */
 template<typename DataType>
 struct TestCase {
 	typedef tuple< string, bool, FuncAndAnswer<DataType> > TestKit;
@@ -594,7 +605,6 @@ TEST_F(BitOperation8, VariousLength) {
 TEST_F(BitOperation32, VariousLength) {
 	RunVariousLengthTests();
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 /*
  * Test various in-place (&out == &in) bit operations with an Uint8 array of length 10
@@ -619,7 +629,6 @@ TEST_F(BitOperation8, MiscOpFailNullArray) {
 TEST_F(BitOperation32, MiscOpFailNullArray) {
 	RunMiscOpFailNullArrayTests();
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
  * Test failure cases of various bit operations: Unaligned data array
@@ -633,7 +642,6 @@ TEST_F(BitOperation8, MiscOpFailNotAlignedArray) {
 TEST_F(BitOperation32, MiscOpFailNotAlignedArray) {
 	RunMiscOpFailNotAlignedArrayTests();
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
  * Long test of various bit operations with with a large Uint8 array
@@ -645,5 +653,4 @@ TEST_F(BitOperation8, MiscOpLong) {
 TEST_F(BitOperation32, MiscOpLong) {
 	RunMiscOpLongTests(NUM_IN_LONG, 20000); // array_length, repeat
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////
