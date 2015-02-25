@@ -178,7 +178,8 @@ protected:
 
 	BitOperation() :
 			verbose(false) {
-		Initialize();
+		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN);
+		STATIC_ASSERT(ELEMENTSOF(edit_mask_)==NUM_IN);
 	}
 
 	virtual void SetUp() {
@@ -193,18 +194,8 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	void Initialize() {
-		// Initialize data template
-		size_t const ntype(4);
-		bit_mask_ = 2; /* bit pattern of 0...010 */
-		for (size_t i = 0; i < NUM_IN; ++i) {
-			data_[i] = i % ntype; /* repeat bit pattern of *00, *01, *10, *11,... */
-			edit_mask_[i] = (i / ntype % 2 == 1); /*{F, F, F, F, T, T, T, T, (repeated)};*/
-		}
-	}
-
 // Create arbitrary length of input data and edit mask by repeating in_[] and edit_mask_[]
-	void GetInputDataInLength(size_t num_data, DataType *data, bool *mask) {
+	static void GetInputDataInLength(size_t num_data, DataType *data, bool *mask) {
 		size_t const num_in(NUM_IN);
 		for (size_t i = 0; i < num_data; ++i) {
 			data[i] = data_[i % num_in];
@@ -297,11 +288,12 @@ protected:
 	/*
 	 * A function to run a list of bit operations and compare result with expected answer.
 	 */
+	template<typename InitializeAction>
 	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask,
 			DataType *out_data, size_t num_operation, TestComponent const *test_components,
 			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
 
-		bool in_place(in_data == out_data);
+		//bool in_place(in_data == out_data);
 		PrepareInputs(num_data, in_data, mask);
 		if (verbose) {
 			PrintArray("in", num_data, in_data);
@@ -321,8 +313,7 @@ protected:
 			start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Need to refresh data for in-place operation
-				if (in_place)
-					PrepareInputs(num_data, in_data, mask);
+				InitializeAction::reinitialize(num_data, in_data, mask);
 				// Actual execution of bit operation function
 				status = (std::get<2>(kit).function)(
 						(std::get<1>(kit) ? ~bit_mask_ : bit_mask_), num_data,
@@ -347,7 +338,18 @@ protected:
 		} // end of bit operation loop
 	}
 
-	void PrepareInputs(size_t num_data, DataType *data, bool *mask) {
+	struct InPlaceAction {
+		static void reinitialize(size_t num_data, DataType *data, bool *mask) {
+			PrepareInputs(num_data, data, mask);
+		}
+	};
+
+	struct OutOfPlaceAction {
+		static void reinitialize(size_t num_data, DataType *data, bool *mask) {
+			// no need to initialize
+		}
+	};
+	static void PrepareInputs(size_t num_data, DataType *data, bool *mask) {
 		// Handling of nullptr array
 		DataType dummy_data[num_data];
 		bool dummy_mask[ELEMENTSOF(dummy_data)];
@@ -357,12 +359,12 @@ protected:
 		GetInputDataInLength(num_data, data_ptr, mask_ptr);
 	}
 
-	DataType data_[NUM_IN];
+	static DataType data_[];//[NUM_IN];
 
-	bool edit_mask_[NUM_IN];
+	static bool edit_mask_[];//[NUM_IN];
 
 	bool verbose;
-	DataType bit_mask_;
+	static DataType bit_mask_;
 	static size_t const bit_size = sizeof(DataType) * 8;
 
 
@@ -386,9 +388,9 @@ protected:
 			size_t const num_data(array_length[irun]);
 			// Loop over operation types  (ALL operations)
 			cout << "[Tests with array length = " << num_data << "]" << endl;
-			RunBitOperationTest(num_data, data, edit_mask, result,
+			RunBitOperationTest<OutOfPlaceAction>(num_data, data, edit_mask, result,
 					ELEMENTSOF(StandardTestCase), StandardTestCase, LIBSAKURA_SYMBOL(Status_kOK));
-			RunBitOperationTest(num_data, data, edit_mask, result,
+			RunBitOperationTest<OutOfPlaceAction>(num_data, data, edit_mask, result,
 					ELEMENTSOF(ExtendedTestCase), ExtendedTestCase, LIBSAKURA_SYMBOL(Status_kOK));
 		}
 	}
@@ -403,7 +405,7 @@ protected:
 
 		// Loop over minimum set of operation types  (Standard tests)
 		cout << "[In-place bit operations]" << endl;
-		RunBitOperationTest(num_data, data, edit_mask, data, ELEMENTSOF(StandardTestCase),
+		RunBitOperationTest<InPlaceAction>(num_data, data, edit_mask, data, ELEMENTSOF(StandardTestCase),
 				StandardTestCase, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 
@@ -422,7 +424,7 @@ protected:
 
 		// Loop over num_repeat times for each operation type (Standard set)
 		cout << "[Long tests]" << endl;
-		RunBitOperationTest(num_large, data, edit_mask, result,
+		RunBitOperationTest<OutOfPlaceAction>(num_large, data, edit_mask, result,
 				ELEMENTSOF(StandardTestCase), StandardTestCase, LIBSAKURA_SYMBOL(Status_kOK),
 				num_repeat);
 	}
@@ -442,17 +444,17 @@ protected:
 
 		// Loop over operation types  (Standard tests)
 		cout << "[Test NULL data array]" << endl;
-		RunBitOperationTest(num_data, data_null, edit_mask, result,
+		RunBitOperationTest<OutOfPlaceAction>(num_data, data_null, edit_mask, result,
 				ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 
 		cout << "[Test NULL mask array]" << endl;
-		RunBitOperationTest(num_data, data, mask_null, result,
+		RunBitOperationTest<OutOfPlaceAction>(num_data, data, mask_null, result,
 				ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 
 		cout << "[Test NULL result array]" << endl;
-		RunBitOperationTest(num_data, data, edit_mask, data_null,
+		RunBitOperationTest<OutOfPlaceAction>(num_data, data, edit_mask, data_null,
 				ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 	}
@@ -478,22 +480,29 @@ protected:
 
 		// Loop over operation types  (Standard tests)
 		cout << "[Test unaligned data array]" << endl;
-		RunBitOperationTest(num_data, data_shift, edit_mask, result,
+		RunBitOperationTest<OutOfPlaceAction>(num_data, data_shift, edit_mask, result,
 				ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 
 		cout << "[Test unaligned mask array]" << endl;
-		RunBitOperationTest(num_data, data, mask_shift, result,
+		RunBitOperationTest<OutOfPlaceAction>(num_data, data, mask_shift, result,
 				ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 
 		cout << "[Test unaligned result array]" << endl;
-		RunBitOperationTest(num_data, data, edit_mask, data_shift,
+		RunBitOperationTest<OutOfPlaceAction>(num_data, data, edit_mask, data_shift,
 				ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 	}
 
 };
+
+template<typename DataType>
+DataType BitOperation<DataType>::bit_mask_ = 2; /* bit pattern of 0...010 */
+template<typename DataType>
+DataType BitOperation<DataType>::data_[] = {0, 1, 2, 3, 0, 1, 2, 3}; /* repeat bit pattern of *00, *01, *10, *11,... */
+template<typename DataType>
+bool BitOperation<DataType>::edit_mask_[] = {false, false, false, false, true, true, true, true}; /*{F, F, F, F, T, T, T, T, (repeated)};*/
 
 /*
  * Tests various bit operations of an uint32_t value and array
