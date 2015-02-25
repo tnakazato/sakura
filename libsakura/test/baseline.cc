@@ -89,17 +89,11 @@ protected:
 		}
 	}
 
-	// Set constant float values into an array
-	void SetFloatConstant(float value, size_t const num_data, float *data) {
+	// Set constant XXX type values into an array
+	template<typename T>
+	void Set_XXX_Constant(T value, size_t const num_data, T *data){
 		for (size_t i = 0; i < num_data; ++i) {
-			data[i] = value;
-		}
-	}
-
-	// Set constant boolean values into an array
-	void SetBoolConstant(bool value, size_t const num_data, bool *data) {
-		for (size_t i = 0; i < num_data; ++i) {
-			data[i] = value;
+					data[i] = value;
 		}
 	}
 
@@ -110,8 +104,9 @@ protected:
 		ASSERT_LE(deviation, val);
 	}
 
-	//1D float array
-	void PrintArray(char const *name, size_t print_length, float const *data,
+	//1D float array, 1D double array, 1D bool array
+	template<typename T>
+	void Print1DArray(char const *name, size_t print_length, T const *data,
 			size_t start_idx = 0, bool print_name = true, bool newline = true) {
 		if (print_name)
 			cout << name << " = ";
@@ -123,39 +118,14 @@ protected:
 		if (newline)
 			cout << endl;
 	}
-	//1D double array
-	void PrintArray(char const *name, size_t print_length, double const *data,
-			size_t start_idx = 0, bool print_name = true, bool newline = true) {
-		if (print_name)
-			cout << name << " = ";
-		cout << "[";
-		for (size_t i = start_idx; i < start_idx + print_length - 1; ++i)
-			cout << data[i] << ", ";
-		cout << data[start_idx + print_length - 1];
-		cout << " ]";
-		if (newline)
-			cout << endl;
-	}
-	//1D bool array
-	void PrintArray(char const *name, size_t print_length, bool const *data,
-			size_t start_idx = 0, bool print_name = true, bool newline = true) {
-		if (print_name)
-			cout << name << " = ";
-		cout << "[";
-		for (size_t i = start_idx; i < start_idx + print_length - 1; ++i)
-			cout << (data[i] ? "T" : "F") << ", ";
-		cout << (data[start_idx + print_length - 1] ? "T" : "F");
-		cout << " ]";
-		if (newline)
-			cout << endl;
-	}
+
 	//given as 1D float array but actually stores (num_row * num_column) 2D data
 	//for which column loop comes inside row loop.
 	void PrintArray(char const *name, size_t num_row, size_t num_column,
 			float const *data) {
 		cout << name << " = [";
 		for (size_t i = 0; i < num_row; ++i) {
-			PrintArray(name, num_column, data, num_column * i, false, false);
+			Print1DArray(name, num_column, data, num_column * i, false, false);
 			if (i < num_row - 1)
 				cout << ", " << endl;
 		}
@@ -167,7 +137,7 @@ protected:
 			double const *data) {
 		cout << name << " = [";
 		for (size_t i = 0; i < num_row; ++i) {
-			PrintArray(name, num_column, data, num_column * i, false, false);
+			Print1DArray(name, num_column, data, num_column * i, false, false);
 			if (i < num_row - 1)
 				cout << ", " << endl;
 		}
@@ -177,6 +147,13 @@ protected:
 	bool verbose;
 
 };
+
+void Destroy(LIBSAKURA_SYMBOL(BaselineContext) *context, size_t status){
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+				context);
+	EXPECT_EQ(status, destroy_status);
+	std::cout << "Destroy Status : " << destroy_status << std::endl;
+}
 
 /*
  * Test sakura_CreateBaselineContextWithPolynomial
@@ -200,9 +177,8 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 }
@@ -224,9 +200,7 @@ TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -279,9 +253,7 @@ TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
 			&context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /*
@@ -326,9 +298,7 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	size_t num_basis_data = context->num_basis_data;
 	ASSERT_EQ(num_chan, num_basis_data);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -372,9 +342,7 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 		CheckAlmostEqual(answer[i], context->basis_data[i], 1e-10);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -412,9 +380,8 @@ TEST_F(Baseline, DestroyBaselineContext) {
  */
 TEST_F(Baseline, DestroyBaselineContextWithContextNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
+
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 /*
@@ -429,7 +396,7 @@ TEST_F(Baseline, GetBestFitBaseline) {
 	in_data[3] = 130.0;
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
@@ -438,8 +405,8 @@ TEST_F(Baseline, GetBestFitBaseline) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -460,13 +427,11 @@ TEST_F(Baseline, GetBestFitBaseline) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -482,7 +447,7 @@ TEST_F(Baseline, GetBestFitBaselineBigDataBigModel) {
 	in_data[3] = 130.0;
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL * 100);
 	SIMD_ALIGN
@@ -491,8 +456,8 @@ TEST_F(Baseline, GetBestFitBaselineBigDataBigModel) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -513,13 +478,11 @@ TEST_F(Baseline, GetBestFitBaselineBigDataBigModel) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), getbl_status);
 
 	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -532,14 +495,14 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNullPointer) {
 	float *in_data = nullptr;
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_mask)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -557,9 +520,7 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNullPointer) {
 			in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -576,15 +537,15 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNotAligned) {
 	SetFloatPolynomial(num_data, in_data_unaligned);
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_mask)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -601,9 +562,7 @@ TEST_F(Baseline, GetBestFitBaselineWithDataNotAligned) {
 			in_data_unaligned, in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -622,8 +581,8 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNullPointer) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -640,9 +599,7 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNullPointer) {
 			in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -659,15 +616,15 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data) + 1];
 	bool *in_mask_unaligned = in_mask + 1;
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask_unaligned);
 	in_mask_unaligned[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -684,9 +641,7 @@ TEST_F(Baseline, GetBestFitBaselineWithMaskNotAligned) {
 			in_mask_unaligned, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -701,15 +656,15 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineContextNullPointer) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	uint16_t order(1);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -733,15 +688,15 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataNumBasisDataNotIdentical) 
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -759,9 +714,7 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataNumBasisDataNotIdentical) 
 			in_data, in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -776,15 +729,15 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataLessThanNumBases) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -802,9 +755,7 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineNumDataLessThanNumBases) {
 			in_data, in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -819,14 +770,14 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNullPointer) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	float *out = nullptr;
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -843,9 +794,7 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNullPointer) {
 			in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -860,7 +809,7 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
@@ -869,8 +818,8 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -887,9 +836,7 @@ TEST_F(Baseline, GetBestFitBaselineWithOutNotAligned) {
 			in_mask, out_unaligned, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -904,15 +851,15 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineStatusNullPointer) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	in_mask[3] = false;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -929,9 +876,7 @@ TEST_F(Baseline, GetBestFitBaselineWithBaselineStatusNullPointer) {
 			in_mask, out, getbl_blstatus_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -946,7 +891,7 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(false, ELEMENTSOF(in_data), in_mask);
 	in_mask[0] = true;
 	in_mask[ELEMENTSOF(in_data) - 1] = true;
 	size_t const num_model(NUM_MODEL);
@@ -954,8 +899,8 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -972,9 +917,7 @@ TEST_F(Baseline, GetBestFitBaselineWithTooManyMaskedData) {
 			in_mask, out, &getbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), getbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status =
-	LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -997,15 +940,15 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	double coeff[num_coeff];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1034,12 +977,10 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
+		Print1DArray("fmask ", num_data, final_mask);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1063,15 +1004,15 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTim
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	double coeff[num_coeff];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1109,12 +1050,10 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTim
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
+		Print1DArray("fmask ", num_data, final_mask);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1138,17 +1077,16 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 	SetFloatPolynomial(num_data, in_data_unaligned, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data_unaligned)];
-	SetBoolConstant(true, ELEMENTSOF(in_data_unaligned), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data_unaligned), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data_unaligned)];
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	float answer[ELEMENTSOF(in_data_unaligned)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data_unaligned), answer);
-
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data_unaligned), answer);
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data_unaligned);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data_unaligned);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1169,9 +1107,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1195,18 +1132,18 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 	bool in_mask[ELEMENTSOF(in_data) + 1];
 	bool *in_mask_unaligned = in_mask + 1;
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask_unaligned);
 	in_mask_unaligned[3] = false;
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1235,13 +1172,11 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1263,7 +1198,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data) + 1];
 	bool *final_mask_unaligned = final_mask + 1;
@@ -1271,11 +1206,11 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1296,9 +1231,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_final_mask_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1320,7 +1253,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
@@ -1328,11 +1261,11 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
 	double *coeff_unaligned = coeff + 1;
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_unaligned));
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1353,9 +1286,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1374,17 +1305,17 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
 	float *in_data = nullptr;
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_mask)];
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1405,9 +1336,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_data_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1434,11 +1363,12 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1459,9 +1389,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1483,17 +1411,17 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	SIMD_ALIGN
 	bool *final_mask = nullptr;
 	SIMD_ALIGN
 	double coeff[num_coeff];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1515,9 +1443,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1539,17 +1465,17 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNu
 	SetFloatPolynomial(num_data, in_data, coeff_answer);
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	double *coeff = nullptr;
 	SIMD_ALIGN
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1570,9 +1496,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNu
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1592,17 +1516,17 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1627,14 +1551,12 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1654,17 +1576,17 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1695,14 +1617,12 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1724,17 +1644,17 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1761,14 +1681,12 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1799,13 +1717,13 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 	}
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 	for (size_t i = 0; i < num_data; ++i) {
 		if (i == 3)
 			answer[i] += 1000.0f;
@@ -1816,8 +1734,8 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 	}
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1844,14 +1762,12 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1866,14 +1782,14 @@ TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 	float *in_data = nullptr;
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_mask)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_mask)];
 
 	if (verbose) {
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1895,9 +1811,7 @@ TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1916,15 +1830,15 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 	SetFloatPolynomial(num_data, in_data_unaligned);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -1946,9 +1860,7 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -1970,7 +1882,7 @@ TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
+		Print1DArray("in_data", num_data, in_data);
 	}
 
 	size_t order = num_model - 1;
@@ -1992,9 +1904,7 @@ TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2013,15 +1923,15 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data) + 1];
 	bool *in_mask_unaligned = in_mask + 1;
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask_unaligned);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask_unaligned);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask_unaligned);
 	}
 
 	size_t order = num_model - 1;
@@ -2043,9 +1953,7 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 			get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -2061,7 +1969,7 @@ TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
@@ -2069,8 +1977,8 @@ TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
 	uint16_t order(1);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -2102,15 +2010,15 @@ TEST_F(Baseline, SubtractBaselineWithNumDataNumBasisDataNotEqual) {
 	SetFloatPolynomial(num_data_for_context, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data_for_context, in_data);
-		PrintArray("in_mask", num_data_for_context, in_mask);
+		Print1DArray("in_data", num_data_for_context, in_data);
+		Print1DArray("in_mask", num_data_for_context, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2133,9 +2041,7 @@ TEST_F(Baseline, SubtractBaselineWithNumDataNumBasisDataNotEqual) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -2152,15 +2058,15 @@ TEST_F(Baseline, SubtractBaselineWithNumDataLessThanNumBases) {
 	SetFloatPolynomial(num_data_for_context, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data_for_context, in_data);
-		PrintArray("in_mask", num_data_for_context, in_mask);
+		Print1DArray("in_data", num_data_for_context, in_data);
+		Print1DArray("in_mask", num_data_for_context, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2183,9 +2089,7 @@ TEST_F(Baseline, SubtractBaselineWithNumDataLessThanNumBases) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2202,14 +2106,14 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	bool *final_mask = nullptr;
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2231,9 +2135,7 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -2250,7 +2152,7 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data) + 1];
 	bool *final_mask_unaligned = final_mask + 1;
@@ -2259,8 +2161,8 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2282,9 +2184,7 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 			final_mask_unaligned, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2301,14 +2201,14 @@ TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	float *out = nullptr;
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2330,9 +2230,7 @@ TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2349,7 +2247,7 @@ TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
@@ -2358,8 +2256,8 @@ TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2381,9 +2279,7 @@ TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 			final_mask, out_unaligned, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2400,15 +2296,15 @@ TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2430,9 +2326,7 @@ TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 			final_mask, out, subbl_blstatus_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -2449,15 +2343,15 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2479,9 +2373,7 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -2498,15 +2390,15 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2528,9 +2420,7 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2552,17 +2442,17 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2589,14 +2479,12 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2619,17 +2507,17 @@ TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2656,14 +2544,12 @@ TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2680,7 +2566,7 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(false, ELEMENTSOF(in_data), in_mask);
 	in_mask[0] = true;
 	in_mask[ELEMENTSOF(in_data) - 1] = true;
 
@@ -2700,8 +2586,8 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
@@ -2711,9 +2597,7 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), subbl_status);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2732,8 +2616,7 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 			173.5, 90.5, 111.5, 132.5, 157.0, 182.5, 211.5 };
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
-
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	size_t order = 3;
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
@@ -2750,8 +2633,8 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
@@ -2762,9 +2645,7 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData), subbl_blstatus);
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -2784,15 +2665,15 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2808,9 +2689,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClipping) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -2833,15 +2714,15 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClippingBigDataB
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2865,9 +2746,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithoutClippingBigDataB
 	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -2891,15 +2772,15 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2917,9 +2798,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSmoothDataWithClipping) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -2951,11 +2832,11 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 	}
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 	for (size_t i = 0; i < num_data; ++i) {
 		if (i == 3)
 			answer[i] += 1000.0f;
@@ -2966,8 +2847,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 	}
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -2985,9 +2866,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialFromSpikyDataWithClipping) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -2999,18 +2880,18 @@ TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
-	SetFloatConstant(1.0f, ELEMENTSOF(in_data), in_data);
+	Set_XXX_Constant(1.0f, ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = 0;
@@ -3028,9 +2909,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialZeroOrder) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -3047,13 +2928,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialNumDataEqualToOrder) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_data;
@@ -3081,13 +2962,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialNumDataLessThanOrder) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_data + 1;
@@ -3114,13 +2995,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithDataNullPointer) {
 	float *in_data = nullptr;
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_mask)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3151,13 +3032,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithDataNotAligned) {
 	SetFloatPolynomial(num_data, in_data_unaligned);
 	SIMD_ALIGN
 	bool in_mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(in_mask), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data_unaligned);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data_unaligned);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3190,8 +3071,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNullPointer) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3222,13 +3103,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithMaskNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data) + 1];
 	bool *in_mask_unaligned = in_mask + 1;
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(in_mask_unaligned));
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask_unaligned);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask_unaligned);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask_unaligned);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask_unaligned);
 	}
 
 	size_t order = num_model - 1;
@@ -3258,13 +3139,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3292,13 +3173,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithFinalMaskNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3330,12 +3211,12 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithOutNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	float *out = nullptr;
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3364,15 +3245,15 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithOutNotAligned) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data) + 1];
 	float *out_unaligned = out + 1;
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3402,13 +3283,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithBaselineStatusNullPointer) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3437,13 +3318,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3458,8 +3339,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroClipThreshold) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
 	}
 }
 
@@ -3477,13 +3358,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3498,8 +3379,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeClipThreshold) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
 	}
 }
 
@@ -3520,15 +3401,15 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3546,9 +3427,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithZeroNumFittingMax) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -3569,7 +3450,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 	SetFloatPolynomial(num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
@@ -3578,8 +3459,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 	}
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3597,9 +3478,9 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithNegativeNumFittingMax) {
 		ASSERT_EQ(answer[i], out[i]);
 	}
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 }
 
@@ -3615,7 +3496,7 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 	SetFloatPolynomial(ELEMENTSOF(in_data), in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(false, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(false, ELEMENTSOF(in_data), in_mask);
 	in_mask[0] = true;
 	in_mask[5] = true;
 	size_t const num_model(NUM_MODEL);
@@ -3623,8 +3504,8 @@ TEST_F(Baseline, SubtractBaselinePolynomialWithTooManyMaskedData) {
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = num_model - 1;
@@ -3655,13 +3536,13 @@ TEST_F(Baseline, SubtractBaselinePolynomialTooManyDataClipped) {
 			173.5, 90.5, 111.5, 132.5, 157.0, 182.5, 211.5 };
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	size_t order = 3;
@@ -4657,13 +4538,13 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	}
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
-	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	size_t order = num_model - 1;
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
@@ -4677,8 +4558,8 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	bool get_residual = true;
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
-		PrintArray("in_mask", num_data, in_mask);
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
 	}
 
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
@@ -4698,14 +4579,12 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	}
 
 	if (verbose) {
-		PrintArray("fmask ", num_data, final_mask);
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("fmask ", num_data, final_mask);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -4728,10 +4607,10 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloat) {
 	float out[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
+		Print1DArray("in_data", num_data, in_data);
 	}
 
 	size_t order = num_model - 1;
@@ -4753,13 +4632,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloat) {
 	}
 
 	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -4786,10 +4663,10 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 		float out[ELEMENTSOF(in_data_unaligned)];
 		SIMD_ALIGN
 		float answer[ELEMENTSOF(in_data_unaligned)];
-		SetFloatConstant(0.0f, ELEMENTSOF(in_data_unaligned), answer);
+		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data_unaligned), answer);
 
 		if (verbose) {
-			PrintArray("in_data_unaligned", num_data, in_data_unaligned);
+			Print1DArray("in_data_unaligned", num_data, in_data_unaligned);
 		}
 
 		size_t order = num_model - 2;
@@ -4810,9 +4687,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 				num_data, in_data_unaligned, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	{ // coeff is not aligned
 		size_t const num_data(NUM_DATA2);
@@ -4828,10 +4703,10 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 		float out[ELEMENTSOF(in_data)];
 		SIMD_ALIGN
 		float answer[ELEMENTSOF(in_data)];
-		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 		if (verbose) {
-			PrintArray("in_data", num_data, in_data);
+			Print1DArray("in_data", num_data, in_data);
 		}
 
 		size_t order = num_model - 2;
@@ -4874,10 +4749,10 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 		assert(!LIBSAKURA_SYMBOL(IsAligned)(out_unaligned));
 		SIMD_ALIGN
 		float answer[ELEMENTSOF(in_data)];
-		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 		if (verbose) {
-			PrintArray("in_data", num_data, in_data);
+			Print1DArray("in_data", num_data, in_data);
 		}
 
 		size_t order = num_model - 2;
@@ -4899,9 +4774,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 				num_data, in_data, num_coeff, coeff, out_unaligned);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 }
 
@@ -4934,9 +4807,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 				num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	{ // coeff is nullpointer
 		size_t const num_data(NUM_DATA2);
@@ -4963,9 +4834,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 				num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 	}
 	{ // out is nullpointer
 		size_t const num_data(NUM_DATA2);
@@ -4993,9 +4862,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 				num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	{ // context is nullpointer
 		size_t const num_data(NUM_DATA2);
@@ -5017,9 +4884,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
 				num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
+
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 	}
 }
 
@@ -5044,7 +4910,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		float out[ELEMENTSOF(in_data)];
 		SIMD_ALIGN
 		float answer[ELEMENTSOF(in_data)];
-		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 		size_t order = num_model - 2;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
@@ -5061,9 +4927,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
 				bad_num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	{ // num_data < context->num_bases
 		size_t const num_data(NUM_DATA2);
@@ -5077,7 +4942,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		float out[ELEMENTSOF(in_data)];
 		SIMD_ALIGN
 		float answer[ELEMENTSOF(in_data)];
-		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 		size_t order = num_model - 2;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
@@ -5095,9 +4960,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
 				bad_num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 	}
 	{ // num_coeff > context->num_bases
 		size_t const num_data(NUM_DATA2);
@@ -5111,7 +4975,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		float out[ELEMENTSOF(in_data)];
 		SIMD_ALIGN
 		float answer[ELEMENTSOF(in_data)];
-		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 		size_t order = num_model - 2;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
@@ -5129,9 +4993,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
 				num_data, in_data, bad_num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 	}
 }
 
@@ -5150,13 +5013,13 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
 	}
 	SIMD_ALIGN
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
+		Print1DArray("in_data", num_data, in_data);
 	}
 
 	size_t order = num_model - 1;
@@ -5181,14 +5044,13 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	if (verbose) {
-		PrintArray("out", num_data, out);
+		Print1DArray("out", num_data, out);
 	}
 	for (size_t i = 0; i < num_data; ++i) {
 		EXPECT_EQ(answer[i], out[i]);
 	}
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
 }
 
 /*
@@ -5211,10 +5073,10 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	float out[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float answer[ELEMENTSOF(in_data)];
-	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
-		PrintArray("in_data", num_data, in_data);
+		Print1DArray("in_data", num_data, in_data);
 	}
 
 	size_t order = num_model - 1;
@@ -5243,13 +5105,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	}
 
 	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
+		Print1DArray("out   ", num_data, out);
+		Print1DArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -5270,9 +5130,8 @@ TEST_F(Baseline, GetNumberOfCoefficients) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
 			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, order, &num_coeff));
 	EXPECT_EQ(num_coeff, context->num_bases);
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
