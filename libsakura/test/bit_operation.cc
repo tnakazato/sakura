@@ -594,10 +594,6 @@ class BitOperation8: public BitOperation<uint8_t> {
 /*
  * Test various bit operations with an Uint8 array of length 8, 11 and zero
  */
-//TEST_F(BitOperation, VariousLength) {
-//	BitOperation<uint8_t>::RunVariousLengthTests();
-//	BitOperation<uint32_t>::RunVariousLengthTests();
-//}
 TEST_F(BitOperation8, VariousLength) {
 	RunVariousLengthTests();
 }
