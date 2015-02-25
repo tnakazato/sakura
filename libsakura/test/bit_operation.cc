@@ -71,12 +71,14 @@ struct TestComponent {
 		FuncAndAnswer<uint32_t> uint32kit;
 };
 
-//DataType const base_pattern1 = (~static_cast<DataType>(0)); // 11...111
-//DataType const base_pattern00 = (~static_cast<DataType>(0) << 2); // 11...100
-uint8_t const bit_pattern1_8 = (~static_cast<uint8_t>(0)); // 11...111
-uint32_t const bit_pattern1_32 = (~static_cast<uint32_t>(0)); // 11...111
-uint8_t const bit_pattern00_8 = (~static_cast<uint8_t>(0) << 2); // 11...100
-uint32_t const bit_pattern00_32 = (~static_cast<uint32_t>(0) << 2); // 11...100
+//uint8_t const bit_pattern1_8 = (~static_cast<uint8_t>(0)); // 11...111
+//uint32_t const bit_pattern1_32 = (~static_cast<uint32_t>(0)); // 11...111
+//uint8_t const bit_pattern00_8 = (~static_cast<uint8_t>(0) << 2); // 11...100
+//uint32_t const bit_pattern00_32 = (~static_cast<uint32_t>(0) << 2); // 11...100
+template<typename DataType>
+DataType const bit1(~static_cast<DataType>(0)); // 11...111
+template<typename DataType>
+DataType const bit00(~static_cast<DataType>(0) << 2); // 11...100
 
 TestComponent StandardTestCase[] {
 		{"AND", false,
@@ -87,11 +89,11 @@ TestComponent StandardTestCase[] {
 				{LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32), { 0, 1, 2, 3, 2, 2, 0, 0 }}},
 		{"Material Implication", false,
 				{LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8),
-						{ 0, 1, 2, 3, bit_pattern1_8, static_cast<uint8_t>(bit_pattern1_8 << 1),
-								bit_pattern1_8, static_cast<uint8_t>(bit_pattern1_8 << 1) }},
+						{ 0, 1, 2, 3, bit1<uint8_t>, static_cast<uint8_t>(bit1<uint8_t> << 1),
+								bit1<uint8_t>, static_cast<uint8_t>(bit1<uint8_t> << 1) }},
 				{LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32),
-						{ 0, 1, 2, 3, bit_pattern1_32, static_cast<uint32_t>(bit_pattern1_32 << 1),
-								bit_pattern1_32, static_cast<uint32_t>(bit_pattern1_32 << 1)}}},
+						{ 0, 1, 2, 3, bit1<uint32_t>, static_cast<uint32_t>(bit1<uint32_t> << 1),
+								bit1<uint32_t>, static_cast<uint32_t>(bit1<uint32_t> << 1)}}},
 		{"OR", false,
 				{LIBSAKURA_SYMBOL(OperateBitwiseOrUint8), { 0, 1, 2, 3, 2, 3, 2, 3 }},
 				{LIBSAKURA_SYMBOL(OperateBitwiseOrUint32), { 0, 1, 2, 3, 2, 3, 2, 3 }}},
@@ -100,11 +102,11 @@ TestComponent StandardTestCase[] {
 				{LIBSAKURA_SYMBOL(OperateBitwiseXorUint32), { 0, 1, 2, 3, 2, 3, 0, 1}}},
 		{"NOT", false,
 				{NotWrapper8,
-						{ 0, 1, 2, 3, static_cast<uint8_t>(bit_pattern00_8 + 3), static_cast<uint8_t>(bit_pattern00_8 + 2),
-								static_cast<uint8_t>(bit_pattern00_8 + 1), bit_pattern00_8 }},
+						{ 0, 1, 2, 3, static_cast<uint8_t>(bit00<uint8_t> + 3), static_cast<uint8_t>(bit00<uint8_t> + 2),
+								static_cast<uint8_t>(bit00<uint8_t> + 1), bit00<uint8_t> }},
 				{NotWrapper32,
-						{ 0, 1, 2, 3, static_cast<uint32_t>(bit_pattern00_32 + 3), static_cast<uint32_t>(bit_pattern00_32 + 2),
-								static_cast<uint32_t>(bit_pattern00_32 + 1), bit_pattern00_32 }}}
+						{ 0, 1, 2, 3, static_cast<uint32_t>(bit00<uint32_t> + 3), static_cast<uint32_t>(bit00<uint32_t> + 2),
+								static_cast<uint32_t>(bit00<uint32_t> + 1), bit00<uint32_t> }}}
 };
 
 TestComponent ExtendedTestCase[] {
@@ -113,32 +115,32 @@ TestComponent ExtendedTestCase[] {
 				{LIBSAKURA_SYMBOL(OperateBitwiseAndUint32), { 0, 1, 2, 3, 0, 1, 0, 1 }}},
 		{"NOR", true,
 				{LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8),
-						{ 0, 1, 2, 3, static_cast<uint8_t>(bit_pattern00_8 + 1), bit_pattern00_8,
-								static_cast<uint8_t>(bit_pattern00_8 + 1), bit_pattern00_8 }},
+						{ 0, 1, 2, 3, static_cast<uint8_t>(bit00<uint8_t> + 1), bit00<uint8_t>,
+								static_cast<uint8_t>(bit00<uint8_t> + 1), bit00<uint8_t> }},
 				{LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32),
-						{ 0, 1, 2, 3, static_cast<uint32_t>(bit_pattern00_32 + 1), bit_pattern00_32,
-								static_cast<uint32_t>(bit_pattern00_32 + 1), bit_pattern00_32 }}},
+						{ 0, 1, 2, 3, static_cast<uint32_t>(bit00<uint32_t> + 1), bit00<uint32_t>,
+								static_cast<uint32_t>(bit00<uint32_t> + 1), bit00<uint32_t> }}},
 		{"NAND", true,
 				{LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8),
-						{ 0, 1, 2, 3, bit_pattern1_8, bit_pattern1_8,
-								static_cast<uint8_t>(bit_pattern1_8 - 2), static_cast<uint8_t>(bit_pattern1_8 - 2) }},
+						{ 0, 1, 2, 3, bit1<uint8_t>, bit1<uint8_t>,
+								static_cast<uint8_t>(bit1<uint8_t> - 2), static_cast<uint8_t>(bit1<uint8_t> - 2) }},
 				{LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32),
-						{ 0, 1, 2, 3, bit_pattern1_32, bit_pattern1_32,
-								static_cast<uint32_t>(bit_pattern1_32 - 2), static_cast<uint32_t>(bit_pattern1_32 - 2) }}},
+						{ 0, 1, 2, 3, bit1<uint32_t>, bit1<uint32_t>,
+								static_cast<uint32_t>(bit1<uint32_t> - 2), static_cast<uint32_t>(bit1<uint32_t> - 2) }}},
 		{"Converse Implication", true,
 				{LIBSAKURA_SYMBOL(OperateBitwiseOrUint8),
-						{ 0, 1, 2, 3, static_cast<uint8_t>(bit_pattern1_8 - 2), static_cast<uint8_t>(bit_pattern1_8 - 2),
-								bit_pattern1_8, bit_pattern1_8 }},
+						{ 0, 1, 2, 3, static_cast<uint8_t>(bit1<uint8_t> - 2), static_cast<uint8_t>(bit1<uint8_t> - 2),
+								bit1<uint8_t>, bit1<uint8_t> }},
 				{LIBSAKURA_SYMBOL(OperateBitwiseOrUint32),
-						{ 0, 1, 2, 3, static_cast<uint32_t>(bit_pattern1_32 - 2), static_cast<uint32_t>(bit_pattern1_32 - 2),
-								bit_pattern1_32, bit_pattern1_32 }}},
+						{ 0, 1, 2, 3, static_cast<uint32_t>(bit1<uint32_t> - 2), static_cast<uint32_t>(bit1<uint32_t> - 2),
+								bit1<uint32_t>, bit1<uint32_t> }}},
 		{"XNOR", true,
 				{LIBSAKURA_SYMBOL(OperateBitwiseXorUint8),
-						{ 0, 1, 2, 3,static_cast<uint8_t>(bit_pattern1_8 - 2), static_cast<uint8_t>(bit_pattern1_8 << 2),
-								bit_pattern1_8,static_cast<uint8_t>(bit_pattern1_8 << 1) }},
+						{ 0, 1, 2, 3,static_cast<uint8_t>(bit1<uint8_t> - 2), static_cast<uint8_t>(bit1<uint8_t> << 2),
+								bit1<uint8_t>,static_cast<uint8_t>(bit1<uint8_t> << 1) }},
 				{LIBSAKURA_SYMBOL(OperateBitwiseXorUint32),
-						{ 0, 1, 2, 3,static_cast<uint32_t>(bit_pattern1_32 - 2), static_cast<uint32_t>(bit_pattern1_32 << 2),
-								bit_pattern1_32,static_cast<uint32_t>(bit_pattern1_32 << 1) }}},
+						{ 0, 1, 2, 3,static_cast<uint32_t>(bit1<uint32_t> - 2), static_cast<uint32_t>(bit1<uint32_t> << 2),
+								bit1<uint32_t>,static_cast<uint32_t>(bit1<uint32_t> << 1) }}},
 };
 
 
