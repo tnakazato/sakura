@@ -143,15 +143,15 @@ struct TestComponent {
 // 11...111
 template<typename DataType>
 constexpr DataType bit111(){return (~static_cast<DataType>(0));};
-// 11...100
-template<typename DataType>
-constexpr DataType bit100(){return (~static_cast<DataType>(0) << 2);};
 // 11...110
 template<typename DataType>
-constexpr DataType bit110(){return (~static_cast<DataType>(0) << 1);};
+constexpr DataType bit110(){return (~static_cast<DataType>(1));};
 // 11...101
 template<typename DataType>
-constexpr DataType bit101(){return static_cast<DataType>((~static_cast<DataType>(0) << 2)+1);};
+constexpr DataType bit101(){return (~static_cast<DataType>(2));};
+// 11...100
+template<typename DataType>
+constexpr DataType bit100(){return (~static_cast<DataType>(3));};
 
 TestComponent StandardTestCase[] {
 		{"AND", false,
