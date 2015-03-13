@@ -35,7 +35,7 @@ template<typename Visitor_, typename Derived_, typename OtherDerived,
 struct BinaryVisitorImpl {
 	enum {
 		col = (UnrollCount - 1) / Derived_::RowsAtCompileTime,
-		row = (UnrollCount - 1) % Derived::RowsAtCompileTime
+		row = (UnrollCount - 1) % Derived_::RowsAtCompileTime
 	};
 
 	static inline void Run(const Derived_ &mat, const OtherDerived &mat2,

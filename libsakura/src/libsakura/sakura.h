@@ -330,22 +330,22 @@ typedef struct {
 	 * @~
 	 * sum of valid data
 	 */
-	float sum;
+	double sum;
 	/**
 	 * @~
 	 * mean of valid data
 	 */
-	float mean;
+	double mean;
 	/**
 	 * @~
 	 * root-mean-square of valid data
 	 */
-	float rms;
+	double rms;
 	/**
 	 * @~
 	 * stddev of valid data
 	 */
-	float stddev;
+	double stddev;
 	/**
 	 * @~
 	 * min value of valid data
