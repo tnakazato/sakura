@@ -31,11 +31,221 @@
 
 #define FORCE_EIGEN 0
 
+namespace {
+
+template<size_t kUnitSize, size_t kBlockSize, typename Reducer>
+typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
+		int levels, size_t stride, size_t num_blocks, size_t full_blocks,
+		typename Reducer::MiddleLevelAccumulator const &residual,
+		Reducer *reducer) {
+	//cout << "stride = " << stride << endl;
+	typename Reducer::MiddleLevelAccumulator acc_stack[levels + 1][kUnitSize];
+	acc_stack[0][0].clear();
+	typename Reducer::MiddleLevelAccumulator (*acc)[kUnitSize] = &acc_stack[1];
+
+	size_t indices_stack[levels + 1];
+	indices_stack[0] = 0;
+	size_t *indices = &indices_stack[1];
+	size_t start = offset;
+
+	int leaf = levels - 1;
+	int level = 0;
+	indices[level] = 0;
+	auto const upper_limit = offset + num_blocks * kBlockSize;
+	while (level >= 0) {
+		//cout << "level: " << level << ", i: " << indices[level] << " full_blocks: " << full_blocks << " limit: " << upper_limit << endl;
+		assert(0 <= level && level < levels);
+		if (level >= leaf) {
+			auto &accumlator = acc[level - 1][indices[level - 1]];
+			accumlator.clear();
+			if (start == offset) {
+				reducer->MiddleLevelReduce(residual, accumlator);
+			}
+			auto delta = start;
+			for (size_t i = 0; i < full_blocks; ++i) {
+				for (size_t j = 0; j < kUnitSize; ++j) {
+					reducer->LastLevelReduce(delta + j * stride, kBlockSize,
+							accumlator);
+				}
+				delta += stride * kUnitSize;
+			}
+			for (size_t j = 0; j < kUnitSize; ++j) {
+				auto index = delta + j * stride;
+				if (index >= upper_limit) {
+					break;
+				}
+				reducer->LastLevelReduce(index, kBlockSize, accumlator);
+			}
+			start += kBlockSize;
+			--level;
+			++indices[level];
+		} else {
+			if (indices[level] < kUnitSize) {
+				++level;
+				indices[level] = 0;
+			} else {
+				auto &accumlator = acc[level - 1][indices[level - 1]];
+				accumlator = acc[level][0];
+				auto acc_local = acc[level];
+				for (size_t j = 1; j < kUnitSize; ++j) {
+					reducer->MiddleLevelReduce(acc_local[j], accumlator);
+				}
+				--level;
+				++indices[level];
+			}
+		}
+	}
+	return acc_stack[0][0];
+}
+
+template<size_t kUnitSize, size_t kBlockSize, typename Reducer>
+typename Reducer::TopLevelAccumulator Traverse(size_t offset,
+		size_t const num_data, Reducer *reducer) {
+	STATIC_ASSERT(kUnitSize > 1 && kBlockSize > 0);
+	typename Reducer::TopLevelAccumulator top_level_result;
+	top_level_result.clear();
+
+	auto num_blocks = num_data / kBlockSize;
+	int levels = 0;
+	size_t n = 1;
+	auto stride = kBlockSize;
+	while (n * kUnitSize <= num_blocks) {
+		++levels;
+		n *= kUnitSize;
+		stride *= kUnitSize;
+	}
+	auto full_blocks = num_blocks / n;
+
+	typename Reducer::MiddleLevelAccumulator residual;
+	residual.clear();
+	{
+		if (levels == 0) {
+			num_blocks = 0;
+		}
+		auto rest = num_data - num_blocks * kBlockSize;
+		reducer->SequentialReduce(offset + num_blocks * kBlockSize, rest,
+				residual);
+	}
+
+	if (levels > 0) {
+		stride /= kUnitSize;
+		reducer->TopLevelReduce(
+				reducer->TopLevelReduce(
+						BlockWiseTraverse<kUnitSize, kBlockSize, Reducer>(
+								offset, levels, stride, num_blocks, full_blocks,
+								residual, reducer)), top_level_result);
+	} else {
+		reducer->TopLevelReduce(reducer->TopLevelReduce(residual),
+				top_level_result);
+	}
+	return top_level_result;
+}
+
+template<typename Scalar, typename Accumulator>
+struct ScalarStats {
+	Scalar const *data;bool const *mask;
+	ScalarStats(Scalar const *data_arg, bool const *mask_arg) :
+			data(data_arg), mask(mask_arg) {
+	}
+	struct SIMD_ALIGN TopLevelAccumulator {
+		size_t count;
+		Accumulator sum;
+		Accumulator square_sum;
+		Scalar min, max;
+		int index_of_min, index_of_max;
+
+		void clear() {
+			count = 0;
+			sum = 0.;
+			square_sum = 0.;
+			min = max = NAN;
+			index_of_min = index_of_max = -1;
+		}
+	};
+
+	typedef TopLevelAccumulator MiddleLevelAccumulator;
+
+	void TopLevelReduce(TopLevelAccumulator const &increment,
+			TopLevelAccumulator&accumulator) {
+		accumulator.count += increment.count;
+		accumulator.sum += increment.sum;
+		accumulator.square_sum += increment.square_sum;
+		if (accumulator.index_of_min < 0) {
+			accumulator.index_of_min = increment.index_of_min;
+			accumulator.index_of_max = increment.index_of_max;
+			accumulator.min = increment.min;
+			accumulator.max = increment.max;
+		} else {
+			if (increment.min < accumulator.min) {
+				accumulator.index_of_min = increment.index_of_min;
+				accumulator.min = increment.min;
+			}
+			if (increment.max > accumulator.max) {
+				accumulator.index_of_max = increment.index_of_max;
+				accumulator.max = increment.max;
+			}
+		}
+	}
+
+	TopLevelAccumulator TopLevelReduce(
+			MiddleLevelAccumulator const &accumulator) {
+		return accumulator;
+	}
+
+	void MiddleLevelReduce(MiddleLevelAccumulator const &increment,
+			MiddleLevelAccumulator &accumulator) {
+		TopLevelReduce(increment, accumulator);
+	}
+
+	void Reduce(size_t pos, MiddleLevelAccumulator &accumulator) {
+#if 1
+		if (mask[pos]) {
+			++accumulator.count;
+			Accumulator v = data[pos];
+			accumulator.sum += v;
+			accumulator.square_sum += v * v;
+			if (accumulator.index_of_min < 0) {
+				accumulator.index_of_min = accumulator.index_of_max = pos;
+				accumulator.min = accumulator.max = data[pos];
+			} else {
+				if (data[pos] < accumulator.min) {
+					accumulator.index_of_min = pos;
+					accumulator.min = data[pos];
+				}
+				if (data[pos] > accumulator.max) {
+					accumulator.index_of_max = pos;
+					accumulator.max = data[pos];
+				}
+			}
+		}
+#else
+		accumulator.sum += pos;
+#endif
+	}
+
+	void LastLevelReduce(size_t position, size_t block_size,
+			MiddleLevelAccumulator &accumulator) {
+		for (size_t i = 0; i < block_size; ++i) {
+			Reduce(position + i, accumulator);
+		}
+	}
+
+	void SequentialReduce(size_t offset, size_t elements,
+			MiddleLevelAccumulator &accumulator) {
+		for (size_t i = 0; i < elements; ++i) {
+			Reduce(offset + i, accumulator);
+		}
+	}
+};
+
+}
+
 #if defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
 #include <immintrin.h>
 #include <cstdint>
 
 namespace {
+
 #include "libsakura/packed_operation.h"
 
 union m256 {
@@ -46,6 +256,120 @@ union m256 {
 	double doublev[4];
 	int32_t intv[8];
 	char charv[32];
+};
+
+template<typename Scalar, typename Accumulator>
+struct SIMDStats {
+	Scalar const *data;
+	bool const *mask;
+	SIMDStats(Scalar const *data_arg, bool const *mask_arg) :
+			data(data_arg), mask(mask_arg) {
+	}
+	struct SIMD_ALIGN TopLevelAccumulator {
+		size_t count;
+		Accumulator sum;
+		Accumulator square_sum;
+		Scalar min, max;
+		int index_of_min, index_of_max;
+
+		void clear() {
+			count = 0;
+			sum = 0.;
+			square_sum = 0.;
+			min = max = NAN;
+			index_of_min = index_of_max = -1;
+		}
+	};
+
+	struct SIMD_ALIGN MiddleLevelAccumulator {
+		m256 count;
+		m256 sum;
+		m256 square_sum;
+		m256 min, max;
+		m256 index_of_min, index_of_max;
+
+		void clear() {
+			count.m256 = _mm256_setzero_ps();
+#if 0
+			sum = 0.;
+			square_sum = 0.;
+			min = max = NAN;
+			index_of_min = index_of_max = -1;
+#endif
+		}
+	};
+
+	void TopLevelReduce(TopLevelAccumulator const &increment,
+			TopLevelAccumulator&accumulator) {
+		accumulator.count += increment.count;
+		accumulator.sum += increment.sum;
+		accumulator.square_sum += increment.square_sum;
+		if (accumulator.index_of_min < 0) {
+			accumulator.index_of_min = increment.index_of_min;
+			accumulator.index_of_max = increment.index_of_max;
+			accumulator.min = increment.min;
+			accumulator.max = increment.max;
+		} else {
+			if (increment.min < accumulator.min) {
+				accumulator.index_of_min = increment.index_of_min;
+				accumulator.min = increment.min;
+			}
+			if (increment.max > accumulator.max) {
+				accumulator.index_of_max = increment.index_of_max;
+				accumulator.max = increment.max;
+			}
+		}
+	}
+
+	TopLevelAccumulator TopLevelReduce(
+			MiddleLevelAccumulator const &accumulator) {
+		return accumulator;
+	}
+
+	void MiddleLevelReduce(MiddleLevelAccumulator const &increment,
+			MiddleLevelAccumulator &accumulator) {
+		TopLevelReduce(increment, accumulator);
+	}
+
+	void Reduce(size_t pos, MiddleLevelAccumulator &accumulator) {
+#if 1
+		if (mask[pos]) {
+			++accumulator.count;
+			Accumulator v = data[pos];
+			accumulator.sum += v;
+			accumulator.square_sum += v * v;
+			if (accumulator.index_of_min < 0) {
+				accumulator.index_of_min = accumulator.index_of_max = pos;
+				accumulator.min = accumulator.max = data[pos];
+			} else {
+				if (data[pos] < accumulator.min) {
+					accumulator.index_of_min = pos;
+					accumulator.min = data[pos];
+				}
+				if (data[pos] > accumulator.max) {
+					accumulator.index_of_max = pos;
+					accumulator.max = data[pos];
+				}
+			}
+		}
+#else
+		accumulator.sum += pos;
+#endif
+	}
+
+	void LastLevelReduce(size_t position, size_t block_size,
+			MiddleLevelAccumulator &accumulator) {
+		for (size_t i = 0; i < block_size; ++i) {
+			Reduce(position + i, accumulator);
+		}
+	}
+
+	void SequentialReduce(size_t offset, size_t elements,
+			MiddleLevelAccumulator &accumulator) {
+		for (size_t i = 0; i < elements; ++i) {
+			Reduce(offset + i, accumulator);
+		}
+	}
 };
 
 inline float AddHorizontally(__m256 packed_values) {
@@ -368,6 +692,37 @@ void ComputeStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 #endif
 }
 
+template<typename T, typename Result>
+void ComputeAccurateStatistics(T const data[],
+bool const is_valid[], size_t elements, Result *result) {
+	assert(("Not yet implemented", false));
+}
+
+template<>
+void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
+		float const data[],
+		bool const is_valid[], size_t elements,
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+	ScalarStats<float, double> reducer(data, is_valid);
+	auto stats = Traverse<4u, 8u, decltype(reducer)>(0u, elements, &reducer);
+
+	result->count = stats.count;
+	result->sum = stats.sum;
+	result->min = stats.min;
+	result->index_of_min = stats.index_of_min;
+	result->max = stats.max;
+	result->index_of_max = stats.index_of_max;
+	double mean = NAN;
+	double rms2 = NAN;
+	if (stats.count != 0) {
+		mean = stats.sum / stats.count;
+		rms2 = stats.square_sum / stats.count;
+	}
+	result->mean = mean;
+	result->rms = std::sqrt(rms2);
+	result->stddev = std::sqrt(std::abs(rms2 - mean * mean));
+
+}
 } /* anonymous namespace */
 
 #define CHECK_ARGS(x) do { \
@@ -376,7 +731,9 @@ void ComputeStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 	} \
 } while (false)
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
+template<typename Func>
+LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(
+		Func func,
 		size_t elements, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 	CHECK_ARGS(elements <= INT32_MAX);
@@ -387,12 +744,28 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 	CHECK_ARGS(result != nullptr);
 
 	try {
-		ComputeStatistics(data, is_valid, elements, result);
+		func(/*data, is_valid, elements, result*/);
 	} catch (...) {
 		assert(false); // no exception should not be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
+		size_t elements, float const data[], bool const is_valid[],
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+	return ComputeStatisticsFloatGateKeeper(
+			[=] {ComputeStatistics(data, is_valid, elements, result);}, elements,
+			data, is_valid, result);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
+		size_t elements, float const data[], bool const is_valid[],
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+	return ComputeStatisticsFloatGateKeeper(
+			[=] {ComputeAccurateStatistics(data, is_valid, elements, result);}, elements,
+			data, is_valid, result);
 }
 
 namespace {
