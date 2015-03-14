@@ -261,9 +261,9 @@ union m256 {
 template<typename Scalar, typename Accumulator>
 struct SIMDStats {
 	Scalar const *data;
-	bool const *mask;
+	bool const *is_valid;
 	SIMDStats(Scalar const *data_arg, bool const *mask_arg) :
-			data(data_arg), mask(mask_arg) {
+			data(data_arg), is_valid(mask_arg) {
 	}
 	struct SIMD_ALIGN TopLevelAccumulator {
 		size_t count;
@@ -289,13 +289,16 @@ struct SIMDStats {
 		m256 index_of_min, index_of_max;
 
 		void clear() {
-			count.m256 = _mm256_setzero_ps();
-#if 0
-			sum = 0.;
-			square_sum = 0.;
-			min = max = NAN;
-			index_of_min = index_of_max = -1;
-#endif
+			auto const zero = _mm256_setzero_ps();
+			count.m256 = zero;
+			sum.m256 = zero;
+			square_sum.m256 = zero;
+			auto const nan = _mm256_set1_ps(NAN);
+			min.m256 = nan;
+			max.m256 = nan;
+			auto const neg1 = _mm256_set1_epi32(-1);
+			index_of_min.m256i = neg1;
+			index_of_max.m256i = neg1;
 		}
 	};
 
@@ -333,7 +336,7 @@ struct SIMDStats {
 
 	void Reduce(size_t pos, MiddleLevelAccumulator &accumulator) {
 #if 1
-		if (mask[pos]) {
+		if (is_valid[pos]) {
 			++accumulator.count;
 			Accumulator v = data[pos];
 			accumulator.sum += v;
@@ -359,8 +362,74 @@ struct SIMDStats {
 
 	void LastLevelReduce(size_t position, size_t block_size,
 			MiddleLevelAccumulator &accumulator) {
-		for (size_t i = 0; i < block_size; ++i) {
-			Reduce(position + i, accumulator);
+		__m256 const *data_ = AssumeAligned(
+				reinterpret_cast<__m256 const *>(data));
+		__m256 const zero = _mm256_setzero_ps();
+#if defined(__AVX2__)
+		__m256i const zero256i = _mm256_setzero_si256();
+		__m256 const nan = _mm256_set1_ps(NAN);
+		double const *mask_ = AssumeAligned(
+				reinterpret_cast<double const *>(is_valid));
+#else
+		__m128i const zero128i = _mm_setzero_si128();
+		float const *mask_ = AssumeAligned(reinterpret_cast<float const *>(is_valid));
+#endif
+		for (size_t j = 0; j < block_size; ++j) {
+			auto i = position + j;
+			STATIC_ASSERT(sizeof(double) == 8);
+#if defined(__AVX2__)
+			__m256i mask8 = _mm256_cvtepi8_epi32(
+					_mm_castpd_si128(_mm_load1_pd(&mask_[i])));
+			accumulator.count = _mm256_add_epi32(accumulator.count, mask8);
+			mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
+#else
+			__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
+			__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
+			mask0 = _mm_cvtepu8_epi32(mask0);
+			mask1 = _mm_cvtepu8_epi32(mask1);
+			accumulator.count = _mm_add_epi32(_mm_add_epi32(accumulator.count, mask0), mask1);
+
+			mask0 = _mm_cmpeq_epi32(mask0, zero128i);
+			mask1 = _mm_cmpeq_epi32(mask1, zero128i);
+			__m256i mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask0),
+					mask1, 1);
+#endif
+			__m256 maskf = _mm256_cvtepi32_ps(mask8);
+			/* maskf: 0xffffffff means invalid data, 0 means valid data. */
+
+			__m256 value = data_[i];
+			accumulator.min = _mm256_min_ps(accumulator.min,
+					_mm256_blendv_ps(value, accumulator.min, maskf));
+			accumulator.max = _mm256_max_ps(accumulator.max,
+					_mm256_blendv_ps(value, accumulator.max, maskf));
+
+			{
+				__m256 value_nan = _mm256_blendv_ps(value, nan, maskf);
+				__m256i   const index = _mm256_set1_epi32(i);
+				accumulator.index_of_min = _mm256_castps_si256(
+						_mm256_blendv_ps(_mm256_castsi256_ps(index),
+								_mm256_castsi256_ps(accumulator.index_of_min),
+								_mm256_cmp_ps(accumulator.min, value_nan,
+										_CMP_NEQ_UQ)));
+				accumulator.index_of_max = _mm256_castps_si256(
+						_mm256_blendv_ps(_mm256_castsi256_ps(index),
+								_mm256_castsi256_ps(accumulator.index_of_max),
+								_mm256_cmp_ps(accumulator.max, value_nan,
+										_CMP_NEQ_UQ)));
+			}
+
+			value = _mm256_blendv_ps(value, zero, maskf);
+			__m256d v = _mm256_cvtps_pd(_mm256_castps256_ps128(value));
+			accumulator.sum = _mm256_add_pd(accumulator.sum, v);
+			accumulator.square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v,
+					accumulator.square_sum);
+
+			v = _mm256_cvtps_pd(_mm256_extractf128_ps(value, 1));
+			accumulator.sum = _mm256_add_pd(accumulator.sum, v);
+			accumulator.square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v,
+					accumulator.square_sum);
 		}
 	}
 
