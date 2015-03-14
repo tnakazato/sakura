@@ -444,7 +444,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 				+ double(base + 7) * double(base + 7)
 				+ double(base + 13) * double(base + 13)
 				+ double(base + 16) * double(base + 16)) / 4.;
-		constexpr auto rms = float(sqrt(rms2));
+		auto rms = float(sqrt(rms2));
 		EXPECT_NEAR(rms, result.rms, 0.00006);
 		constexpr double variance = ((4. - 10.) * (4. - 10.)
 				+ (7. - 10.) * (7. - 10.) + (13. - 10.) * (13. - 10.)
