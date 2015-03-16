@@ -284,6 +284,27 @@ TEST(Statistics, ComputeStatistics) {
 		EXPECT_TRUE(std::isnan(result.mean));
 		EXPECT_TRUE(std::isnan(result.rms));
 		EXPECT_TRUE(std::isnan(result.stddev));
+
+		for (size_t end = ELEMENTSOF(data) - 128; end < ELEMENTSOF(data);
+				++end) {
+			for (size_t pos = end - 128; pos < end; ++pos) {
+				is_valid[pos] = true;
+				status = LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(end, data,
+						is_valid, &result);
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				EXPECT_EQ(1, result.count);
+				EXPECT_EQ(pos, result.index_of_max);
+				EXPECT_EQ(pos, result.index_of_min);
+				EXPECT_EQ(data[pos], result.max);
+				EXPECT_EQ(data[pos], result.min);
+				EXPECT_EQ(data[pos], result.sum);
+				EXPECT_EQ(data[pos], result.mean);
+				EXPECT_EQ(data[pos], result.rms);
+				EXPECT_EQ(data[pos], result.rms);
+				EXPECT_EQ(0., result.stddev);
+				is_valid[pos] = false;
+			}
+		}
 	}
 	{
 		SIMD_ALIGN
@@ -332,6 +353,42 @@ TEST(Statistics, ComputeStatistics) {
 				static_cast<int>(1000 * result.rms));
 		EXPECT_EQ(static_cast<int>(1000 * std::sqrt(rms2 - mean * mean)),
 				static_cast<int>(1000 * result.stddev));
+	}
+	{
+		SIMD_ALIGN
+		static float data[256];
+		SIMD_ALIGN
+		static bool is_valid[ELEMENTSOF(data)];
+		for (size_t end = ELEMENTSOF(data) - 64; end < ELEMENTSOF(data);
+				++end) {
+			for (size_t i = 0; i < end; ++i) {
+				is_valid[i] = true;
+			}
+			for (size_t peak = 0; peak < end; ++peak) {
+				for (size_t i = 0; i < end; ++i) {
+					float v = i;
+					data[i] = (v - peak) * (v - peak) + 1;
+				}
+				LIBSAKURA_SYMBOL (StatisticsResultFloat) result;
+				LIBSAKURA_SYMBOL(Status) status =
+				LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(end, data, is_valid,
+						&result);
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				EXPECT_EQ(peak, result.index_of_min);
+				EXPECT_EQ(1, result.min);
+
+				for (size_t i = 0; i < end; ++i) {
+					float v = i;
+					data[i] = -(v - peak) * (v - peak) - 1;
+				}
+				status =
+				LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(end, data, is_valid,
+						&result);
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				EXPECT_EQ(peak, result.index_of_max);
+				EXPECT_EQ(-1, result.max);
+			}
+		}
 	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
@@ -445,7 +502,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 				+ double(base + 13) * double(base + 13)
 				+ double(base + 16) * double(base + 16)) / 4.;
 		auto rms = float(sqrt(rms2));
-		EXPECT_NEAR(rms, result.rms, 0.00006);
+		EXPECT_NEAR(rms, result.rms, 0.000146);
 		constexpr double variance = ((4. - 10.) * (4. - 10.)
 				+ (7. - 10.) * (7. - 10.) + (13. - 10.) * (13. - 10.)
 				+ (16. - 10.) * (16. - 10.)) / 4.;
@@ -455,7 +512,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					is_valid, &stddev);
 		//std::cout << std::setprecision(16) << sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
 		EXPECT_DOUBLE_EQ(sqrt(variance), stddev);
-		EXPECT_NEAR(sqrt(variance), result.stddev, 5.5);
+		EXPECT_NEAR(sqrt(variance), result.stddev, 11.46);
 	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
@@ -478,7 +535,7 @@ TEST(Statistics, ComputeStatistics_Performance) {
 		{
 			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 
-			for (size_t i = 0; i < 20000; ++i) {
+			for (size_t i = 0; i < 15000; ++i) {
 				LIBSAKURA_SYMBOL(Status) status =
 				LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(ELEMENTSOF(data), data,
 						is_valid, &result);

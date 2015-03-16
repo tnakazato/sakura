@@ -38,7 +38,7 @@ typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 		int levels, size_t stride, size_t num_blocks, size_t full_blocks,
 		typename Reducer::MiddleLevelAccumulator const &residual,
 		Reducer *reducer) {
-	//cout << "stride = " << stride << endl;
+	//std::cout << "stride = " << stride << std::endl;
 	typename Reducer::MiddleLevelAccumulator acc_stack[levels + 1][kUnitSize];
 	acc_stack[0][0].clear();
 	typename Reducer::MiddleLevelAccumulator (*acc)[kUnitSize] = &acc_stack[1];
@@ -53,7 +53,7 @@ typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 	indices[level] = 0;
 	auto const upper_limit = offset + num_blocks * kBlockSize;
 	while (level >= 0) {
-		//cout << "level: " << level << ", i: " << indices[level] << " full_blocks: " << full_blocks << " limit: " << upper_limit << endl;
+		//std::cout << "level: " << level << ", i: " << indices[level] << " full_blocks: " << full_blocks << " limit: " << upper_limit << std::endl;
 		assert(0 <= level && level < levels);
 		if (level >= leaf) {
 			auto &accumlator = acc[level - 1][indices[level - 1]];
@@ -165,7 +165,7 @@ struct ScalarStats {
 
 	typedef TopLevelAccumulator MiddleLevelAccumulator;
 
-	void TopLevelReduce(TopLevelAccumulator const &increment,
+	static void StaticTopLevelReduce(TopLevelAccumulator const &increment,
 			TopLevelAccumulator&accumulator) {
 		accumulator.count += increment.count;
 		accumulator.sum += increment.sum;
@@ -187,6 +187,11 @@ struct ScalarStats {
 		}
 	}
 
+	void TopLevelReduce(TopLevelAccumulator const &increment,
+			TopLevelAccumulator&accumulator) {
+		StaticTopLevelReduce(increment, accumulator);
+	}
+
 	TopLevelAccumulator TopLevelReduce(
 			MiddleLevelAccumulator const &accumulator) {
 		return accumulator;
@@ -197,30 +202,37 @@ struct ScalarStats {
 		TopLevelReduce(increment, accumulator);
 	}
 
-	void Reduce(size_t pos, MiddleLevelAccumulator &accumulator) {
-#if 1
-		if (mask[pos]) {
-			++accumulator.count;
-			Accumulator v = data[pos];
-			accumulator.sum += v;
-			accumulator.square_sum += v * v;
-			if (accumulator.index_of_min < 0) {
-				accumulator.index_of_min = accumulator.index_of_max = pos;
-				accumulator.min = accumulator.max = data[pos];
-			} else {
-				if (data[pos] < accumulator.min) {
-					accumulator.index_of_min = pos;
-					accumulator.min = data[pos];
-				}
-				if (data[pos] > accumulator.max) {
-					accumulator.index_of_max = pos;
-					accumulator.max = data[pos];
-				}
+	template<typename T>
+	static void Accumulate(size_t pos, size_t negative_offset, Scalar value,
+			T &count, int32_t &index_of_min, int32_t &index_of_max,
+			Scalar &min, Scalar &max, Accumulator &sum,
+			Accumulator &square_sum) {
+		++count;
+		Accumulator v = value;
+		sum += v;
+		square_sum += v * v;
+		if (index_of_min < 0) {
+			index_of_min = index_of_max = pos - negative_offset;
+			min = max = value;
+		} else {
+			if (value < min) {
+				index_of_min = pos - negative_offset;
+				min = value;
+			}
+			if (value > max) {
+				index_of_max = pos - negative_offset;
+				max = value;
 			}
 		}
-#else
-		accumulator.sum += pos;
-#endif
+	}
+
+	void Reduce(size_t pos, MiddleLevelAccumulator &accumulator) {
+		if (mask[pos]) {
+			Accumulate(pos, 0u, data[pos], accumulator.count,
+					accumulator.index_of_min, accumulator.index_of_max,
+					accumulator.min, accumulator.max, accumulator.sum,
+					accumulator.square_sum);
+		}
 	}
 
 	void LastLevelReduce(size_t position, size_t block_size,
@@ -258,188 +270,110 @@ union m256 {
 	char charv[32];
 };
 
-template<typename Scalar, typename Accumulator>
-struct SIMDStats {
-	Scalar const *data;
-	bool const *is_valid;
-	SIMDStats(Scalar const *data_arg, bool const *mask_arg) :
-			data(data_arg), is_valid(mask_arg) {
-	}
-	struct SIMD_ALIGN TopLevelAccumulator {
-		size_t count;
-		Accumulator sum;
-		Accumulator square_sum;
-		Scalar min, max;
-		int index_of_min, index_of_max;
+union m128 {
+	__m128 m128;
+	__m128i m128i;
+	__m128d m128d;
+	float floatv[4];
+	double doublev[2];
+	int32_t intv[4];
+	char charv[16];
+};
 
-		void clear() {
-			count = 0;
-			sum = 0.;
-			square_sum = 0.;
-			min = max = NAN;
-			index_of_min = index_of_max = -1;
-		}
-	};
-
-	struct SIMD_ALIGN MiddleLevelAccumulator {
-		m256 count;
-		m256 sum;
-		m256 square_sum;
-		m256 min, max;
-		m256 index_of_min, index_of_max;
-
-		void clear() {
-			auto const zero = _mm256_setzero_ps();
-			count.m256 = zero;
-			sum.m256 = zero;
-			square_sum.m256 = zero;
-			auto const nan = _mm256_set1_ps(NAN);
-			min.m256 = nan;
-			max.m256 = nan;
-			auto const neg1 = _mm256_set1_epi32(-1);
-			index_of_min.m256i = neg1;
-			index_of_max.m256i = neg1;
-		}
-	};
-
-	void TopLevelReduce(TopLevelAccumulator const &increment,
-			TopLevelAccumulator&accumulator) {
-		accumulator.count += increment.count;
-		accumulator.sum += increment.sum;
-		accumulator.square_sum += increment.square_sum;
-		if (accumulator.index_of_min < 0) {
-			accumulator.index_of_min = increment.index_of_min;
-			accumulator.index_of_max = increment.index_of_max;
-			accumulator.min = increment.min;
-			accumulator.max = increment.max;
-		} else {
-			if (increment.min < accumulator.min) {
-				accumulator.index_of_min = increment.index_of_min;
-				accumulator.min = increment.min;
-			}
-			if (increment.max > accumulator.max) {
-				accumulator.index_of_max = increment.index_of_max;
-				accumulator.max = increment.max;
-			}
-		}
-	}
-
-	TopLevelAccumulator TopLevelReduce(
-			MiddleLevelAccumulator const &accumulator) {
-		return accumulator;
-	}
-
-	void MiddleLevelReduce(MiddleLevelAccumulator const &increment,
-			MiddleLevelAccumulator &accumulator) {
-		TopLevelReduce(increment, accumulator);
-	}
-
-	void Reduce(size_t pos, MiddleLevelAccumulator &accumulator) {
-#if 1
-		if (is_valid[pos]) {
-			++accumulator.count;
-			Accumulator v = data[pos];
-			accumulator.sum += v;
-			accumulator.square_sum += v * v;
-			if (accumulator.index_of_min < 0) {
-				accumulator.index_of_min = accumulator.index_of_max = pos;
-				accumulator.min = accumulator.max = data[pos];
-			} else {
-				if (data[pos] < accumulator.min) {
-					accumulator.index_of_min = pos;
-					accumulator.min = data[pos];
-				}
-				if (data[pos] > accumulator.max) {
-					accumulator.index_of_max = pos;
-					accumulator.max = data[pos];
-				}
-			}
-		}
-#else
-		accumulator.sum += pos;
-#endif
-	}
-
-	void LastLevelReduce(size_t position, size_t block_size,
-			MiddleLevelAccumulator &accumulator) {
-		__m256 const *data_ = AssumeAligned(
-				reinterpret_cast<__m256 const *>(data));
-		__m256 const zero = _mm256_setzero_ps();
 #if defined(__AVX2__)
-		__m256i const zero256i = _mm256_setzero_si256();
-		__m256 const nan = _mm256_set1_ps(NAN);
-		double const *mask_ = AssumeAligned(
-				reinterpret_cast<double const *>(is_valid));
-#else
-		__m128i const zero128i = _mm_setzero_si128();
-		float const *mask_ = AssumeAligned(reinterpret_cast<float const *>(is_valid));
-#endif
-		for (size_t j = 0; j < block_size; ++j) {
-			auto i = position + j;
-			STATIC_ASSERT(sizeof(double) == 8);
-#if defined(__AVX2__)
-			__m256i mask8 = _mm256_cvtepi8_epi32(
-					_mm_castpd_si128(_mm_load1_pd(&mask_[i])));
-			accumulator.count = _mm256_add_epi32(accumulator.count, mask8);
-			mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
-#else
-			__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
-			__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
-			mask0 = _mm_cvtepu8_epi32(mask0);
-			mask1 = _mm_cvtepu8_epi32(mask1);
-			accumulator.count = _mm_add_epi32(_mm_add_epi32(accumulator.count, mask0), mask1);
-
-			mask0 = _mm_cmpeq_epi32(mask0, zero128i);
-			mask1 = _mm_cmpeq_epi32(mask1, zero128i);
-			__m256i mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask0),
-					mask1, 1);
-#endif
-			__m256 maskf = _mm256_cvtepi32_ps(mask8);
-			/* maskf: 0xffffffff means invalid data, 0 means valid data. */
-
-			__m256 value = data_[i];
-			accumulator.min = _mm256_min_ps(accumulator.min,
-					_mm256_blendv_ps(value, accumulator.min, maskf));
-			accumulator.max = _mm256_max_ps(accumulator.max,
-					_mm256_blendv_ps(value, accumulator.max, maskf));
-
-			{
-				__m256 value_nan = _mm256_blendv_ps(value, nan, maskf);
-				__m256i   const index = _mm256_set1_epi32(i);
-				accumulator.index_of_min = _mm256_castps_si256(
-						_mm256_blendv_ps(_mm256_castsi256_ps(index),
-								_mm256_castsi256_ps(accumulator.index_of_min),
-								_mm256_cmp_ps(accumulator.min, value_nan,
-										_CMP_NEQ_UQ)));
-				accumulator.index_of_max = _mm256_castps_si256(
-						_mm256_blendv_ps(_mm256_castsi256_ps(index),
-								_mm256_castsi256_ps(accumulator.index_of_max),
-								_mm256_cmp_ps(accumulator.max, value_nan,
-										_CMP_NEQ_UQ)));
-			}
-
-			value = _mm256_blendv_ps(value, zero, maskf);
-			__m256d v = _mm256_cvtps_pd(_mm256_castps256_ps128(value));
-			accumulator.sum = _mm256_add_pd(accumulator.sum, v);
-			accumulator.square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v,
-					accumulator.square_sum);
-
-			v = _mm256_cvtps_pd(_mm256_extractf128_ps(value, 1));
-			accumulator.sum = _mm256_add_pd(accumulator.sum, v);
-			accumulator.square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v,
-					accumulator.square_sum);
-		}
+struct SIMDWordForInt {
+	m256 value;
+	auto intValue() const -> decltype(value.m256i) {
+		return value.m256i;
 	}
-
-	void SequentialReduce(size_t offset, size_t elements,
-			MiddleLevelAccumulator &accumulator) {
-		for (size_t i = 0; i < elements; ++i) {
-			Reduce(offset + i, accumulator);
-		}
+	void clear() {
+		value.m256 = _mm256_setzero_ps();
+	}
+	void add(decltype(value.m256i) const &v) {
+		value.m256i += v;
 	}
 };
+#else
+struct SIMDWordForInt {
+	m128 value;
+	auto intValue() const -> decltype(value.m128i) {
+		return value.m128i;
+	}
+	void clear() {
+		value.m128 = _mm_setzero_ps();
+	}
+	void add(decltype(value.m128i) const &v) {
+		value.m128i += v;
+	}
+};
+#endif
+
+inline void StatsBlock(size_t i, __m256 const *data_arg,
+		double const *mask_arg,
+		SIMDWordForInt &count, __m256d &sum, __m256d &square_sum, __m256 &min,
+		__m256 &max, __m256i &index_of_min, __m256i &index_of_max) {
+	auto const data = AssumeAligned(data_arg);
+
+	auto const zero = _mm256_setzero_ps();
+	auto const nan = _mm256_set1_ps(NAN);
+
+#if defined(__AVX2__)
+	auto const mask = AssumeAligned(mask_arg);
+	auto const zero256i = _mm256_setzero_si256();
+	auto mask8 = _mm256_cvtepi8_epi32(_mm_castpd_si128(_mm_load1_pd(&mask[0])));
+	count.add(mask8);
+	mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
+#else
+	auto const mask = AssumeAligned(reinterpret_cast<float const *>(mask_arg), sizeof(decltype(count.intValue())));
+	auto const zero128i = _mm_setzero_si128();
+	auto mask0 = _mm_castps_si128(_mm_load_ss(&mask[0]));
+	auto mask1 = _mm_castps_si128(_mm_load_ss(&mask[1]));
+	mask0 = _mm_cvtepu8_epi32(mask0);
+	mask1 = _mm_cvtepu8_epi32(mask1);
+	count.add(_mm_add_epi32(mask0, mask1));
+
+	mask0 = _mm_cmpeq_epi32(mask0, zero128i);
+	mask1 = _mm_cmpeq_epi32(mask1, zero128i);
+	auto mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask0),
+			mask1, 1);
+#endif
+	auto maskf = _mm256_cvtepi32_ps(mask8);
+	/* maskf: 0xffffffff means invalid data, 0 means valid data. */
+
+	auto value = _mm256_blendv_ps(data[0], nan, maskf);
+	auto const index = _mm256_castps_si256(
+			_mm256_blendv_ps(_mm256_castsi256_ps(_mm256_set1_epi32(i)), maskf,
+					maskf));
+	{
+		auto take_increment = _mm256_or_ps(
+				_mm256_cmp_ps(value, min, _CMP_LT_OQ),
+				_mm256_castsi256_ps(index_of_min));
+		min = _mm256_blendv_ps(min, value, take_increment);
+		index_of_min = _mm256_castps_si256(
+				_mm256_blendv_ps(_mm256_castsi256_ps(index_of_min),
+						_mm256_castsi256_ps(index), take_increment));
+	}
+	{
+		auto take_increment = _mm256_or_ps(
+				_mm256_cmp_ps(value, max, _CMP_GT_OQ),
+				_mm256_castsi256_ps(index_of_max));
+		max = _mm256_blendv_ps(max, value, take_increment);
+		index_of_max = _mm256_castps_si256(
+				_mm256_blendv_ps(_mm256_castsi256_ps(index_of_max),
+						_mm256_castsi256_ps(index), take_increment));
+	}
+
+	value = _mm256_blendv_ps(value, zero, maskf);
+	auto v = _mm256_cvtps_pd(_mm256_castps256_ps128(value));
+	sum = _mm256_add_pd(sum, v);
+	square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+	LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v, square_sum);
+
+	v = _mm256_cvtps_pd(_mm256_extractf128_ps(value, 1));
+	sum = _mm256_add_pd(sum, v);
+	square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+	LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v, square_sum);
+}
 
 inline float AddHorizontally(__m256 packed_values) {
 	packed_values = _mm256_hadd_ps(packed_values, packed_values);
@@ -482,82 +416,193 @@ inline int32_t AddHorizontally128(__m128i packed_values) {
 	return total;
 }
 
+template<typename Scalar, typename Accumulator>
+struct SIMDStats {
+};
+
+template<>
+struct SIMDStats<float, double> {
+	typedef float Scalar;
+	typedef double Accumulator;
+	typedef ScalarStats<Scalar, Accumulator> ScalarVersion;
+
+	Scalar const *data;bool const *is_valid;
+	SIMDStats(Scalar const *data_arg, bool const *mask_arg) :
+			data(data_arg), is_valid(mask_arg) {
+	}
+
+	typedef ScalarVersion::TopLevelAccumulator TopLevelAccumulator;
+
+	struct SIMD_ALIGN MiddleLevelAccumulator {
+		SIMDWordForInt count;
+		m256 sum;
+		m256 square_sum;
+		m256 min, max;
+		m256 index_of_min, index_of_max;
+
+		void clear() {
+			auto const zero = _mm256_setzero_ps();
+			count.clear();
+			sum.m256 = zero;
+			square_sum.m256 = zero;
+			auto const nan = _mm256_set1_ps(NAN);
+			min.m256 = nan;
+			max.m256 = nan;
+			auto const neg1 = _mm256_set1_epi32(-1);
+			index_of_min.m256i = neg1;
+			index_of_max.m256i = neg1;
+		}
+	};
+
+	void TopLevelReduce(TopLevelAccumulator const &increment,
+			TopLevelAccumulator&accumulator) {
+		ScalarVersion::StaticTopLevelReduce(increment, accumulator);
+	}
+
+	TopLevelAccumulator TopLevelReduce(
+			MiddleLevelAccumulator const &accumulator) {
+		TopLevelAccumulator result;
+#if defined(__AVX2__)
+		result.count = static_cast<size_t>(AddHorizontally(
+				accumulator.count.intValue()));
+#else
+		result.count = static_cast<size_t>(AddHorizontally128(accumulator.count.intValue()));
+#endif
+
+		result.sum = AddHorizontally(accumulator.sum.m256d);
+		result.square_sum = AddHorizontally(accumulator.square_sum.m256d);
+
+		{
+			m256 tmp;
+			tmp.m256 = accumulator.min.m256;
+			m256 tmp_index;
+			tmp_index.m256i = accumulator.index_of_min.m256i;
+
+			float r = tmp.floatv[0];
+			int result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
+			for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
+				if (!std::isnan(tmp.floatv[i])) {
+					if (std::isnan(r) || tmp.floatv[i] < r) {
+						r = tmp.floatv[i];
+						result_index = tmp_index.intv[i] + i;
+					}
+				}
+			}
+			result.min = r;
+			result_index = std::max(-1, result_index);
+			result.index_of_min = result_index;
+		}
+		{
+			m256 tmp;
+			tmp.m256 = accumulator.max.m256;
+			m256 tmp_index;
+			tmp_index.m256i = accumulator.index_of_max.m256i;
+
+			float r = tmp.floatv[0];
+			int result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
+			for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
+				if (!std::isnan(tmp.floatv[i])) {
+					if (std::isnan(r) || tmp.floatv[i] > r) {
+						r = tmp.floatv[i];
+						result_index = tmp_index.intv[i] + i;
+					}
+				}
+			}
+			result.max = r;
+			result_index = std::max(-1, result_index);
+			result.index_of_max = result_index;
+		}
+		return result;
+	}
+
+	void MiddleLevelReduce(MiddleLevelAccumulator const &increment,
+			MiddleLevelAccumulator &accumulator) {
+		accumulator.count.add(increment.count.intValue());
+		accumulator.sum.m256d += increment.sum.m256d;
+		accumulator.square_sum.m256d += increment.square_sum.m256d;
+
+		{
+			auto take_increment = _mm256_or_ps(
+					_mm256_cmp_ps(increment.min.m256, accumulator.min.m256,
+							_CMP_LT_OQ),
+					_mm256_castsi256_ps(accumulator.index_of_min.m256i));
+			accumulator.min.m256 = _mm256_blendv_ps(accumulator.min.m256,
+					increment.min.m256, take_increment);
+			accumulator.index_of_min.m256i = _mm256_castps_si256(
+					_mm256_blendv_ps(
+							_mm256_castsi256_ps(accumulator.index_of_min.m256i),
+							_mm256_castsi256_ps(increment.index_of_min.m256i),
+							take_increment));
+		}
+		{
+			auto take_increment = _mm256_or_ps(
+					_mm256_cmp_ps(increment.max.m256, accumulator.max.m256,
+							_CMP_GT_OQ),
+					_mm256_castsi256_ps(accumulator.index_of_max.m256i));
+			accumulator.max.m256 = _mm256_blendv_ps(accumulator.max.m256,
+					increment.max.m256, take_increment);
+			accumulator.index_of_max.m256i = _mm256_castps_si256(
+					_mm256_blendv_ps(
+							_mm256_castsi256_ps(accumulator.index_of_max.m256i),
+							_mm256_castsi256_ps(increment.index_of_max.m256i),
+							take_increment));
+		}
+	}
+
+	void LastLevelReduce(size_t position, size_t block_size,
+			MiddleLevelAccumulator &accumulator) {
+		auto mask_ = reinterpret_cast<double const *>(&is_valid[position]);
+		StatsBlock(position, reinterpret_cast<__m256 const *>(&data[position]),
+				mask_, accumulator.count, accumulator.sum.m256d,
+				accumulator.square_sum.m256d, accumulator.min.m256,
+				accumulator.max.m256, accumulator.index_of_min.m256i,
+				accumulator.index_of_max.m256i);
+		//std::cout << position << " - " << position + 7 << std::endl;
+	}
+
+	void SequentialReduce(size_t offset, size_t elements,
+			MiddleLevelAccumulator &accumulator) {
+		for (size_t j = 0; j < elements; ++j) {
+			auto pos = offset + j;
+			if (is_valid[pos]) {
+				auto i_float = j % ELEMENTSOF(accumulator.min.floatv);
+				auto i_double = j % ELEMENTSOF(accumulator.min.doublev);
+				ScalarStats<Scalar, Accumulator>::Accumulate(pos, j, data[pos],
+						accumulator.count.value.intv[i_float],
+						accumulator.index_of_min.intv[i_float],
+						accumulator.index_of_max.intv[i_float],
+						accumulator.min.floatv[i_float],
+						accumulator.max.floatv[i_float],
+						accumulator.sum.doublev[i_double],
+						accumulator.square_sum.doublev[i_double]);
+			}
+		}
+	}
+};
+
 void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 		size_t elements, LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_arg) {
 	STATIC_ASSERT(sizeof(m256) == sizeof(__m256 ));
-	__m256d const zero_d = _mm256_setzero_pd();
-	__m256d sum = zero_d;
-	__m256d square_sum = zero_d;
-	__m256 const zero = _mm256_setzero_ps();
-	__m256 const nan = _mm256_set1_ps(NAN);
-	__m256 min = nan;
-	__m256 max = nan;
-	__m256i index_of_min = _mm256_set1_epi32(-1);
-	__m256i index_of_max = _mm256_set1_epi32(-1);
-#if defined(__AVX2__)
-	__m256i const zero256i = _mm256_setzero_si256();
-	__m256i count = zero256i;
-	double const *mask_ = AssumeAligned(
-			reinterpret_cast<double const *>(is_valid));
-#else
-	__m128i const zero128i = _mm_setzero_si128();
-	__m128i count = zero128i;
-	float const *mask_ = AssumeAligned(reinterpret_cast<float const *>(is_valid));
-#endif
-	__m256 const *data_ = AssumeAligned(reinterpret_cast<__m256  const *>(data));
+	auto const zero_d = _mm256_setzero_pd();
+	auto sum = zero_d;
+	auto square_sum = zero_d;
+	auto const nan = _mm256_set1_ps(NAN);
+	auto min = nan;
+	auto max = nan;
+	auto index_of_min = _mm256_set1_epi32(-1);
+	auto index_of_max = _mm256_set1_epi32(-1);
+	SIMDWordForInt count;
+	count.clear();
+	double const *mask_ = reinterpret_cast<double const *>(is_valid);
+	auto const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
-#if defined(__AVX2__)
-		__m256i mask8 = _mm256_cvtepi8_epi32(
-				_mm_castpd_si128(_mm_load1_pd(&mask_[i])));
-		count = _mm256_add_epi32(count, mask8);
-		mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
-#else
-		__m128i mask0 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2]));
-		__m128i mask1 = _mm_castps_si128(_mm_load_ss(&mask_[i * 2 + 1]));
-		mask0 = _mm_cvtepu8_epi32(mask0);
-		mask1 = _mm_cvtepu8_epi32(mask1);
-		count = _mm_add_epi32(_mm_add_epi32(count, mask0), mask1);
-
-		mask0 = _mm_cmpeq_epi32(mask0, zero128i);
-		mask1 = _mm_cmpeq_epi32(mask1, zero128i);
-		__m256i mask8 = _mm256_insertf128_si256(_mm256_castsi128_si256(mask0),
-				mask1, 1);
-#endif
-		__m256 maskf = _mm256_cvtepi32_ps(mask8);
-		/* maskf: 0xffffffff means invalid data, 0 means valid data. */
-
-		__m256 value = data_[i];
-		min = _mm256_min_ps(min, _mm256_blendv_ps(value, min, maskf));
-		max = _mm256_max_ps(max, _mm256_blendv_ps(value, max, maskf));
-
-		{
-			__m256 value_nan = _mm256_blendv_ps(value, nan, maskf);
-			__m256i  const index = _mm256_set1_epi32(i);
-			index_of_min = _mm256_castps_si256(
-					_mm256_blendv_ps(_mm256_castsi256_ps(index),
-							_mm256_castsi256_ps(index_of_min),
-							_mm256_cmp_ps(min, value_nan, _CMP_NEQ_UQ)));
-			index_of_max = _mm256_castps_si256(
-					_mm256_blendv_ps(_mm256_castsi256_ps(index),
-							_mm256_castsi256_ps(index_of_max),
-							_mm256_cmp_ps(max, value_nan, _CMP_NEQ_UQ)));
-		}
-
-		value = _mm256_blendv_ps(value, zero, maskf);
-		__m256d v = _mm256_cvtps_pd(_mm256_castps256_ps128(value));
-		sum = _mm256_add_pd(sum, v);
-		square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v, square_sum);
-
-		v = _mm256_cvtps_pd(_mm256_extractf128_ps(value, 1));
-		sum = _mm256_add_pd(sum, v);
-		square_sum = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v, square_sum);
+		StatsBlock(i, &data_[i], &mask_[i], count, sum, square_sum, min, max,
+				index_of_min, index_of_max);
 	}
 #if defined(__AVX2__)
-	size_t counted = static_cast<size_t>(AddHorizontally(count));
+	size_t counted = static_cast<size_t>(AddHorizontally(count.intValue()));
 #else
-	size_t counted = static_cast<size_t>(AddHorizontally128(count));
+	size_t counted = static_cast<size_t>(AddHorizontally128(count.intValue()));
 #endif
 
 	double total = AddHorizontally(sum);
@@ -571,12 +616,15 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 		tmp_index.m256i = index_of_min;
 
 		float r = tmp.floatv[0];
-		int result_index = tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
+		int result_index =
+				tmp_index.intv[0] == -1 ?
+						-1 : tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
-			if (std::isnan(r)
-					|| (!std::isnan(tmp.floatv[i]) && tmp.floatv[i] < r)) {
-				r = tmp.floatv[i];
-				result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
+			if (!std::isnan(tmp.floatv[i])) {
+				if (std::isnan(r) || tmp.floatv[i] < r) {
+					r = tmp.floatv[i];
+					result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
+				}
 			}
 		}
 		result.min = r;
@@ -591,12 +639,15 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 		tmp_index.m256i = index_of_max;
 
 		float r = tmp.floatv[0];
-		int result_index = tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
+		int result_index =
+				tmp_index.intv[0] == -1 ?
+						-1 : tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
-			if (std::isnan(r)
-					|| (!std::isnan(tmp.floatv[i]) && tmp.floatv[i] > r)) {
-				r = tmp.floatv[i];
-				result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
+			if (!std::isnan(tmp.floatv[i])) {
+				if (std::isnan(r) || tmp.floatv[i] > r) {
+					r = tmp.floatv[i];
+					result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
+				}
 			}
 		}
 		result.max = r;
@@ -611,15 +662,15 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 			++counted;
 			total += data[i];
 			square_total += double(data[i]) * double(data[i]);
-			if (std::isnan(result.min)
-					|| (!std::isnan(data[i]) && data[i] < result.min)) {
-				result.min = data[i];
-				result.index_of_min = i;
-			}
-			if (std::isnan(result.max)
-					|| (!std::isnan(data[i]) && data[i] > result.max)) {
-				result.max = data[i];
-				result.index_of_max = i;
+			if (!std::isnan(data[i])) {
+				if (std::isnan(result.min) || data[i] < result.min) {
+					result.min = data[i];
+					result.index_of_min = i;
+				}
+				if (std::isnan(result.max) || data[i] > result.max) {
+					result.max = data[i];
+					result.index_of_max = i;
+				}
 			}
 		}
 	}
@@ -754,7 +805,7 @@ void ComputeStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 		float const data[],
 		bool const is_valid[], size_t elements,
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
-#if defined( __AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
+#if defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
 	ComputeStatisticsSimdFloat(data, is_valid, elements, result);
 #else
 	ComputeStatisticsEigen<double, float>(data, is_valid, elements, result);
@@ -772,7 +823,11 @@ void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 		float const data[],
 		bool const is_valid[], size_t elements,
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	SIMDStats<float, double> reducer(data, is_valid);
+#else
 	ScalarStats<float, double> reducer(data, is_valid);
+#endif
 	auto stats = Traverse<4u, 8u, decltype(reducer)>(0u, elements, &reducer);
 
 	result->count = stats.count;
@@ -790,8 +845,8 @@ void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 	result->mean = mean;
 	result->rms = std::sqrt(rms2);
 	result->stddev = std::sqrt(std::abs(rms2 - mean * mean));
-
 }
+
 } /* anonymous namespace */
 
 #define CHECK_ARGS(x) do { \
@@ -801,8 +856,7 @@ void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 } while (false)
 
 template<typename Func>
-LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(
-		Func func,
+LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(Func func,
 		size_t elements, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 	CHECK_ARGS(elements <= INT32_MAX);
@@ -825,16 +879,16 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 		size_t elements, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 	return ComputeStatisticsFloatGateKeeper(
-			[=] {ComputeStatistics(data, is_valid, elements, result);}, elements,
-			data, is_valid, result);
+			[=] {ComputeStatistics(data, is_valid, elements, result);},
+			elements, data, is_valid, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
 		size_t elements, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 	return ComputeStatisticsFloatGateKeeper(
-			[=] {ComputeAccurateStatistics(data, is_valid, elements, result);}, elements,
-			data, is_valid, result);
+			[=] {ComputeAccurateStatistics(data, is_valid, elements, result);},
+			elements, data, is_valid, result);
 }
 
 namespace {

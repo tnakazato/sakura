@@ -402,7 +402,19 @@ typedef struct {
 		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result)
 				LIBSAKURA_WARN_UNUSED_RESULT;
-/**
+
+ /**
+ * @copybrief sakura_ComputeStatisticsFloat
+ * @copydetails sakura_ComputeStatisticsFloat
+ * @~
+ * The result of this function is more accurate than that of @ref sakura_ComputeStatisticsFloat if
+ * num_data is large. This function is slower than @ref sakura_ComputeStatisticsFloat .
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
+		size_t num_data, float const data[], bool const is_valid[],
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result)
+				LIBSAKURA_WARN_UNUSED_RESULT;
+
+ /**
  * @~japanese
  * @brief validな値のみを先頭に詰めて昇順にソートする
  *
