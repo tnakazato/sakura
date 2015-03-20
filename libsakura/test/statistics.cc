@@ -71,15 +71,6 @@ void ExpectRealEQ(T const &ref, T const &result) {
 }
 
 template<>
-void ExpectRealEQ<float>(float const &ref, float const &result) {
-	if (std::isnan(ref)) {
-		EXPECT_TRUE(isnan(result));
-	} else {
-		EXPECT_FLOAT_EQ(ref, result);
-	}
-}
-
-template<>
 void ExpectRealEQ<double>(double const &ref, double const &result) {
 	if (std::isnan(ref)) {
 		EXPECT_TRUE(isnan(result));
@@ -534,8 +525,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
 			ExpectRealEQ(ref.mean, result.mean);
-			EXPECT_NEAR(ref.rms, result.rms, 0.000033);
-			EXPECT_NEAR(ref.stddev, result.stddev, 0.00007);
+			EXPECT_NEAR(ref.rms, result.rms, 7.283e-05);
+			EXPECT_NEAR(ref.stddev, result.stddev, 0.00014565);
 		};
 		auto compare_accurate =
 				[](LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
@@ -596,8 +587,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
 			ExpectRealEQ(ref.mean, result.mean);
-			EXPECT_NEAR(ref.rms, result.rms, 7.004e-05);
-			EXPECT_NEAR(ref.stddev, result.stddev, 5.5);
+			EXPECT_NEAR(ref.rms, result.rms, 0.0001332);
+			EXPECT_NEAR(ref.stddev, result.stddev, 11.4505);
 		};
 		auto compare_accurate =
 				[](LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
@@ -680,8 +671,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
 			ExpectRealEQ(ref.mean, result.mean);
-			EXPECT_NEAR(ref.rms, result.rms, 3.08e-05);
-			EXPECT_NEAR(ref.stddev, result.stddev, 3.08e-05);
+			EXPECT_NEAR(ref.rms, result.rms, 0.0001459);
+			EXPECT_NEAR(ref.stddev, result.stddev, 0.0001459);
 		};
 		auto compare_accurate =
 				[](LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
@@ -693,8 +684,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectEQ(ref.min, result.min);
 					ExpectRealEQ(ref.sum, result.sum);
 					ExpectRealEQ(ref.mean, result.mean);
-					ExpectRealEQ(ref.rms, result.rms);
-					ExpectRealEQ(ref.stddev, result.stddev);
+					EXPECT_NEAR(ref.rms, result.rms, 1.6008e-10);
+					EXPECT_NEAR(ref.stddev, result.stddev, 1.6008e-10);
 				};
 
 		CallAndTestResult(ref, elements, data, is_valid, compare,

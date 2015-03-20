@@ -375,14 +375,6 @@ inline void StatsBlock(size_t i, __m256 const *data_arg,
 	LIBSAKURA_SYMBOL(SimdPacketAVX), double>(v, v, square_sum);
 }
 
-inline float AddHorizontally(__m256 packed_values) {
-	packed_values = _mm256_hadd_ps(packed_values, packed_values);
-	packed_values = _mm256_hadd_ps(packed_values, packed_values);
-	__m128 sum2 = _mm256_extractf128_ps(packed_values, 1);
-	return _mm_cvtss_f32(
-			_mm_add_ss(_mm256_castps256_ps128(packed_values), sum2));
-}
-
 inline double AddHorizontally(__m256d packed_values) {
 	packed_values = _mm256_hadd_pd(packed_values, packed_values);
 	__m128d sum2 = _mm256_extractf128_pd(packed_values, 1);
@@ -390,31 +382,22 @@ inline double AddHorizontally(__m256d packed_values) {
 			_mm_add_sd(_mm256_castpd256_pd128(packed_values), sum2));
 }
 
-inline int32_t AddHorizontally(__m256i packed_values) {
 #if defined(__AVX2__)
+inline int32_t AddHorizontally(__m256i packed_values) {
 	packed_values = _mm256_hadd_epi32(packed_values, packed_values);
 	packed_values = _mm256_hadd_epi32(packed_values, packed_values);
 	__m128i sum2 = _mm256_extractf128_si256(packed_values, 1);
 	return _mm_cvtsi128_si32(
 			_mm_add_epi32(_mm256_castsi256_si128(packed_values), sum2));
-#else
-	__m128i count2 = _mm256_castsi256_si128(
-			_mm256_permute2f128_si256(packed_values, packed_values, 1));
-	__m128i count4w = _mm_hadd_epi32(_mm256_castsi256_si128(packed_values),
-			count2);
-	count4w = _mm_hadd_epi32(count4w, count4w);
-	count4w = _mm_hadd_epi32(count4w, count4w);
-	int32_t total = _mm_extract_epi32(count4w, 0);
-	return total;
-#endif
 }
-
+#else
 inline int32_t AddHorizontally128(__m128i packed_values) {
 	packed_values = _mm_hadd_epi32(packed_values, packed_values);
 	packed_values = _mm_hadd_epi32(packed_values, packed_values);
 	int32_t total = _mm_extract_epi32(packed_values, 0);
 	return total;
 }
+#endif
 
 template<typename Scalar, typename Accumulator>
 struct SIMDStats {
@@ -568,7 +551,8 @@ struct SIMDStats<float, double> {
 				auto i_float = j % ELEMENTSOF(accumulator.min.floatv);
 				auto i_double = j % ELEMENTSOF(accumulator.min.doublev);
 				ScalarStats<Scalar, Accumulator>::Accumulate(pos, j, data[pos],
-						accumulator.count.value.intv[i_float],
+						accumulator.count.value.intv[i_float
+								% ELEMENTSOF(accumulator.count.value.intv)],
 						accumulator.index_of_min.intv[i_float],
 						accumulator.index_of_max.intv[i_float],
 						accumulator.min.floatv[i_float],
