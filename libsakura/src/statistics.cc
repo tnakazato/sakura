@@ -891,6 +891,49 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFl
 			elements, data, is_valid, result);
 }
 
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
+		size_t count, double mean, size_t elements, float const data[],
+		bool const is_valid[], double *result) {
+	CHECK_ARGS(elements <= INT32_MAX);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(is_valid != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+	CHECK_ARGS(result != nullptr);
+
+#if 1
+	double sq_diff = 0.;
+	for (size_t i = 0; i < elements; ++i) {
+		if (is_valid[i]) {
+			double diff = data[i] - mean;
+			sq_diff += diff * diff;
+		}
+	}
+	*result = sqrt(sq_diff / count);
+#else
+	{
+		size_t n = 0;
+		double mean = 0;
+		double M2 = 0;
+
+		for (size_t i = 0; i < elements; ++i) {
+			if (is_valid[i]) {
+				++n;
+				double delta = data[i] - mean;
+				mean += delta / n;
+				M2 += delta * (data[i] - mean);
+			}
+		}
+
+		if (n < 2) {
+			*result = 0.;
+		}
+		*result = M2 / (n - 1);
+	}
+#endif
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
 namespace {
 
 template<typename T, typename COMPARATOR>
