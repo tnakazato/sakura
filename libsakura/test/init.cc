@@ -27,9 +27,12 @@
  *      Author: kohji
  */
 
+#include <iostream>
 #include <libsakura/sakura.h>
 #include "loginit.h"
 #include "gtest/gtest.h"
+
+using namespace std;
 
 TEST(Global, Init) {
 	sakura_Status result = sakura_Initialize(nullptr, nullptr);
@@ -46,6 +49,8 @@ TEST(Global, Init) {
 TEST(Global, Align) {
 	sakura_Status result = sakura_Initialize(nullptr, nullptr);
 	EXPECT_EQ(result, sakura_Status_kOK);
+
+	cout << "Alignment is " << sakura_GetAlignment() << endl;
 
 	static_assert(sizeof(uint64_t) >= sizeof(void *), "");
 	{
