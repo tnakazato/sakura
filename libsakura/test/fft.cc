@@ -380,20 +380,28 @@ void TestsError() {
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
 		SIMD_ALIGN
-		T const src[] = { 1, 1 };
+		struct {
+			char dummy[1];
+			T array[1];
+		} src;
 		SIMD_ALIGN
-		T dst[] = { 1, 1 };
-		auto result = TestTarget<T>::Flip(Flag, dims, elements, &src[1], dst);
+		T dst[1];
+		auto result = TestTarget<T>::Flip(Flag, dims, elements,
+				reinterpret_cast<T const *>(&src.dummy[1]), dst);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 	{
 		static size_t const elements[] = { 1 };
 		const size_t dims = ELEMENTSOF(elements);
 		SIMD_ALIGN
-		T const src[] = { 1, 1 };
+		T const src[] = { 1 };
 		SIMD_ALIGN
-		T dst[] = { 1, 1 };
-		auto result = TestTarget<T>::Flip(Flag, dims, elements, src, &dst[1]);
+		struct {
+			char dummy[1];
+			T array[1];
+		} dst;
+		auto result = TestTarget<T>::Flip(Flag, dims, elements, src,
+				reinterpret_cast<T *>(&dst.dummy[1]));
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 	}
 }
