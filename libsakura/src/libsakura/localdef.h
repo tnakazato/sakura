@@ -72,7 +72,15 @@
 /*
  * ALIGNMENT must be a power of 2.
  */
-#define LIBSAKURA_ALIGNMENT (256u/* avx 256bits */ / 8u)
+#define LIBSAKURA_ALIGNMENT (64u/* double(or mmx) 64bits */ / 8u)
+#if defined(__SSE__)
+# undef LIBSAKURA_ALIGNMENT
+# define LIBSAKURA_ALIGNMENT (128u/* sse 128bits */ / 8u)
+#endif
+#if !defined(__AVX__)
+# undef LIBSAKURA_ALIGNMENT
+# define LIBSAKURA_ALIGNMENT (256u/* avx 256bits */ / 8u)
+#endif
 
 #if defined(__cplusplus)
 

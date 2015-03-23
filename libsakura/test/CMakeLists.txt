@@ -27,6 +27,7 @@ find_package(OpenMP)
 find_package(FFTW3)
 find_package(Log4Cxx)
 find_library(pthread pthread)
+include(SetArchFlags)
 
 message("GTEST_INCLUDE_DIRS was set to ${GTEST_INCLUDE_DIRS}")
 message("GTEST_LIBRARIES was set to ${GTEST_LIBRARIES}")
@@ -49,6 +50,9 @@ set(CMAKE_BUILD_TYPE Debug)
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall ${PROF_MODE} -pipe")
+set_cxx_flags_from_arch(${SIMD_ARCH})
+message("CMAKE_CXX_FLAGS is ${CMAKE_CXX_FLAGS}")
+
 set(LIBS "-lsakura ${LOG4CXX_LIB} -lpthread")
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	set(LIBS "${LIBS} -lc++abi")
