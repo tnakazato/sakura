@@ -77,7 +77,7 @@
 # undef LIBSAKURA_ALIGNMENT
 # define LIBSAKURA_ALIGNMENT (128u/* sse 128bits */ / 8u)
 #endif
-#if !defined(__AVX__)
+#if defined(__AVX__)
 # undef LIBSAKURA_ALIGNMENT
 # define LIBSAKURA_ALIGNMENT (256u/* avx 256bits */ / 8u)
 #endif
