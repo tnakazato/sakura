@@ -671,10 +671,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_data, residual_data,
+			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data, residual_data,
 					final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in ComputeStatisticsFloat.");
+				throw std::runtime_error("failed in ComputeAccurateStatisticsFloat.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
@@ -792,10 +792,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(num_data, residual_data,
+			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data, residual_data,
 					final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in ComputeStatisticsFloat.");
+				throw std::runtime_error("failed in ComputeAccurateStatisticsFloat.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
