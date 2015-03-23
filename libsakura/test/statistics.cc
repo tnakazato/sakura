@@ -105,8 +105,9 @@ void DisplayDiff(char const str[], T const &ref, T const &fast,
 				<< std::abs(ref - accurate) * 100 / ref << "%\n";
 	}
 }
+
 template<typename CompareFast, typename CompareAccurate>
-void CallAndTestResult(LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
+bool CallAndTestResult(LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
 		size_t num_data, float const data[], bool const is_valid[],
 		CompareFast compare_fast, CompareAccurate compare_accurate) {
 	//std::cout << "Fast\n";
@@ -129,13 +130,74 @@ void CallAndTestResult(LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
 		compare_accurate(ref, result_accurate);
 	}
 
-	if (false) { // for debug
-		std::cout << "error ratio: \n";
-		DisplayDiff("sum", ref.sum, result.sum, result_accurate.sum);
-		DisplayDiff("rms", ref.rms, result.rms, result_accurate.rms);
-		DisplayDiff("stddev", ref.stddev, result.stddev,
-				result_accurate.stddev);
+	auto min_ptr = &decltype(result)::min;
+	auto min_index_ptr = &decltype(result)::index_of_min;
+	auto min_max_test =
+			[&data, &result, &result_accurate](decltype(min_ptr) attr, decltype(min_index_ptr) index) {
+				if (isnan(result.*attr)) {
+					EXPECT_TRUE(isnan(result_accurate.*attr));
+					EXPECT_EQ(-1, result.*index);
+					EXPECT_EQ(-1, result_accurate.*index);
+				} else {
+					EXPECT_FALSE(isnan(result_accurate.*attr));
+					EXPECT_EQ(result.*attr, result_accurate.*attr);
+					EXPECT_LE(0, result.*index);
+					EXPECT_LE(0, result_accurate.*index);
+					EXPECT_EQ(result.*attr, data[result.*index]);
+					EXPECT_EQ(data[result.*index], data[result_accurate.*index]);
+				}
+				if (result.*index < 0) {
+					EXPECT_EQ(result.*index, result_accurate.*index);
+				} else {
+					EXPECT_LE(0, result.*index);
+					EXPECT_EQ(result.*attr, data[result.*index]);
+					EXPECT_EQ(data[result.*index], data[result_accurate.*index]);
+				}
+			};
+	min_max_test(min_ptr, min_index_ptr);
+	auto max_ptr = &decltype(result)::max;
+	auto max_index_ptr = &decltype(result)::index_of_max;
+	min_max_test(max_ptr, max_index_ptr);
+	EXPECT_EQ(result.count, result_accurate.count);
+	auto value_test =
+			[&result, &result_accurate](decltype(&decltype(result)::sum) attr) {
+				if (isnan(result.*attr)) {
+					EXPECT_TRUE(isnan(result_accurate.*attr));
+				} else {
+					EXPECT_TRUE(!isnan(result_accurate.*attr));
+				}
+			};
+	value_test(&decltype(result)::sum);
+	value_test(&decltype(result)::rms);
+	value_test(&decltype(result)::stddev);
+
+	if ((!isnan(result.sum) && !isnan(result_accurate.sum)
+			&& result.sum != result_accurate.sum)
+			|| (!isnan(result.rms) && !isnan(result_accurate.rms)
+					&& result.rms != result_accurate.rms)
+			|| (!isnan(result.stddev) && !isnan(result_accurate.stddev)
+					&& result.stddev != result_accurate.stddev)) {
+		if (false) { // for debug
+			std::cout << "error ratio: \n";
+			DisplayDiff("sum", ref.sum, result.sum, result_accurate.sum);
+			DisplayDiff("rms", ref.rms, result.rms, result_accurate.rms);
+			DisplayDiff("stddev", ref.stddev, result.stddev,
+					result_accurate.stddev);
+		}
+		return true;
 	}
+	return false;
+}
+
+void TestResultNop(LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
+LIBSAKURA_SYMBOL(StatisticsResultFloat) const &result) {
+}
+
+bool CallAndIsDifferent(size_t num_data, float const data[],
+bool const is_valid[]) {
+	static LIBSAKURA_SYMBOL(StatisticsResultFloat) const ref = {0};
+	return CallAndTestResult(ref, num_data, data, is_valid, TestResultNop,
+			TestResultNop);
 }
 
 }
@@ -606,6 +668,16 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 
 		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, compare,
 				compare_accurate);
+
+		constexpr size_t start = 10000;
+		for (auto i = start; i < ELEMENTSOF(data); ++i) {
+			if (CallAndIsDifferent(i, data, is_valid)) {
+				//std::cout << "ERROR index: " << i << std::endl;
+				EXPECT_LT(start, i); // if this fails, make 'start' more smaller value.
+				EXPECT_LE(11000, i);
+				break;
+			}
+		}
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 		{
