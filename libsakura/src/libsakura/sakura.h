@@ -2683,7 +2683,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * as some FFT library expects.
  *
  * @details
- * When you provide @a innerMostUntouched = false, @a elements = {3, 4} and @a src = {
+ * When you provide @a inner_most_untouched = false, @a elements = {3, 4} and @a src = {
  * @code
  *   1,   2,   3,
  *   4,   5,   6,
@@ -2698,7 +2698,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  *   6,   4,   5,
  * @endcode
  *
- * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
+ * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
  * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
  * @param[in] src	Source matrix.
@@ -2710,7 +2710,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * MT-safe
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]);
 
 /**
@@ -2718,7 +2718,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * @brief Copy elements in the @a src matrix into the @a dst matrix with unflipping elements to the original order.
  *
  * @details
- * When you provide @a innerMostUntouched = false, @a elements = {3, 4} and @a src = {
+ * When you provide @a inner_most_untouched = false, @a elements = {3, 4} and @a src = {
  * @code
  *   9,   7,   8,
  *  12,  10,  11,
@@ -2733,7 +2733,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  *  10,  11,  12,
  * @endcode
  *
- * @param[in] innerMostUntouched If true, the order of the inner most dimension is untouched.
+ * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
  * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
  * @param[in] src	Source matrix.
@@ -2745,7 +2745,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * MT-safe
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]);
 
 /**
@@ -2753,7 +2753,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the matrixes.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]);
 
 /**
@@ -2761,7 +2761,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the matrixes.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]);
 
 /**
@@ -2769,7 +2769,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the matrixes.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]);
 
 /**
@@ -2777,7 +2777,7 @@ bool innerMostUntouched, size_t dims, size_t const elements[],
  * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the matrixes.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]);
 
 #ifdef __cplusplus

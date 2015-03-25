@@ -48,28 +48,28 @@ typedef union {
 
 template<typename T>
 struct LastDimFlip {
-	static void flip(size_t len, size_t dstPos, T const src[], T dst[]) {
-		auto srcAligned = AssumeAligned(src, sizeof(T));
-		auto dstAligned = AssumeAligned(dst, sizeof(T));
+	static void Flip(size_t len, size_t dst_pos, T const src[], T dst[]) {
+		auto src_aligned = AssumeAligned(src, sizeof(T));
+		auto dst_aligned = AssumeAligned(dst, sizeof(T));
 		size_t i;
-		size_t end = len - dstPos;
-		for (i = 0; i < end; ++i, ++dstPos) {
-			dstAligned[dstPos] = srcAligned[i];
+		size_t end = len - dst_pos;
+		for (i = 0; i < end; ++i, ++dst_pos) {
+			dst_aligned[dst_pos] = src_aligned[i];
 		}
-		dstPos = 0;
-		for (; i < len; ++i, ++dstPos) {
-			dstAligned[dstPos] = srcAligned[i];
+		dst_pos = 0;
+		for (; i < len; ++i, ++dst_pos) {
+			dst_aligned[dst_pos] = src_aligned[i];
 		}
 	}
 };
 
 template<typename T>
 struct LastDimNoFlip {
-	static void flip(size_t len, size_t dstPos, T const src[], T dst[]) {
-		auto srcAligned = AssumeAligned(src, sizeof(T));
-		auto dstAligned = AssumeAligned(dst, sizeof(T));
+	static void Flip(size_t len, size_t dst_pos, T const src[], T dst[]) {
+		auto src_aligned = AssumeAligned(src, sizeof(T));
+		auto dst_aligned = AssumeAligned(dst, sizeof(T));
 		for (size_t i = 0; i < len; ++i) {
-			dstAligned[i] = srcAligned[i];
+			dst_aligned[i] = src_aligned[i];
 		}
 	}
 };
@@ -77,19 +77,18 @@ struct LastDimNoFlip {
 #if defined(__SSE2__) && !defined(ARCH_SCALAR)
 template<>
 struct LastDimFlip<Type16> {
-	static void flip(size_t len, size_t dstPos,
-	Type16 const src[],
-	Type16 dst[]) {
+	static void Flip(size_t len, size_t dst_pos, Type16 const src[],
+			Type16 dst[]) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
 		size_t i;
-		size_t end = len - dstPos;
-		for (i = 0; i < end; ++i, ++dstPos) {
-			_mm_store_pd(reinterpret_cast<double*>(&dst[dstPos]),
+		size_t end = len - dst_pos;
+		for (i = 0; i < end; ++i, ++dst_pos) {
+			_mm_store_pd(reinterpret_cast<double*>(&dst[dst_pos]),
 			_mm_load_pd(reinterpret_cast<double const*>(&src[i])));
 		}
-		dstPos = 0;
-		for (; i < len; ++i, ++dstPos) {
-			_mm_store_pd(reinterpret_cast<double*>(&dst[dstPos]),
+		dst_pos = 0;
+		for (; i < len; ++i, ++dst_pos) {
+			_mm_store_pd(reinterpret_cast<double*>(&dst[dst_pos]),
 			_mm_load_pd(reinterpret_cast<double const*>(&src[i])));
 		}
 	}
@@ -97,8 +96,7 @@ struct LastDimFlip<Type16> {
 
 template<>
 struct LastDimNoFlip<Type16> {
-	static void flip(size_t len, size_t dstPos,
-			Type16 const src[],
+	static void Flip(size_t len, size_t dst_pos, Type16 const src[],
 			Type16 dst[]) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
 		for (size_t i = 0; i < len; ++i) {
@@ -110,49 +108,51 @@ struct LastDimNoFlip<Type16> {
 
 #endif
 
-template<typename T, typename LastDim, size_t Extra>
-void flip_(size_t lowerPlaneElements, size_t dim, size_t const len[],
+template<typename T, typename LastDim, size_t kExtra>
+void FlipLowLevel(size_t lower_plane_elements, size_t dim, size_t const len[],
 		T const src[], T dst[]) {
 	if (dim <= 0)
 		return;
-	size_t curLen = len[dim - 1];
-	size_t dstPos = (curLen + Extra) / 2;
+	size_t current_len = len[dim - 1];
+	size_t dst_pos = (current_len + kExtra) / 2;
 	if (dim == 1) {
-		LastDim::flip(curLen, dstPos, src, dst);
+		LastDim::Flip(current_len, dst_pos, src, dst);
 	} else {
-		size_t lowerElements = lowerPlaneElements / len[dim - 2];
-		for (size_t i = 0; i < curLen; ++i) {
-			flip_<T, LastDim, Extra>(lowerElements, dim - 1, &len[0],
-					&src[i * lowerPlaneElements],
-					&dst[dstPos * lowerPlaneElements]);
-			dstPos = (dstPos + 1) % curLen;
+		size_t lower_elements = lower_plane_elements / len[dim - 2];
+		for (size_t i = 0; i < current_len; ++i) {
+			FlipLowLevel<T, LastDim, kExtra>(lower_elements, dim - 1, &len[0],
+					&src[i * lower_plane_elements],
+					&dst[dst_pos * lower_plane_elements]);
+			dst_pos = (dst_pos + 1) % current_len;
 		}
 	}
 }
 
 template<typename T>
-void flip(bool reverse, bool innerMostUntouched, size_t dim, size_t const len[],
-		T const src[], T dst[]) {
+void Flip(bool reverse, bool inner_most_untouched, size_t dim,
+		size_t const len[], T const src[], T dst[]) {
 	STATIC_ASSERT(
 			sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8
 					|| sizeof(T) == 16 || sizeof(T) == 32);
-	size_t lowerPlaneElements = 1;
+	size_t lower_plane_elements = 1;
 	for (size_t i = 0; i + 1 < dim; ++i) {
-		lowerPlaneElements *= len[i];
+		lower_plane_elements *= len[i];
 	}
 	if (reverse) {
-		if (innerMostUntouched) {
-			flip_<T, LastDimNoFlip<T>, 1>(lowerPlaneElements, dim, len, src,
-					dst);
+		if (inner_most_untouched) {
+			FlipLowLevel<T, LastDimNoFlip<T>, 1>(lower_plane_elements, dim, len,
+					src, dst);
 		} else {
-			flip_<T, LastDimFlip<T>, 1>(lowerPlaneElements, dim, len, src, dst);
+			FlipLowLevel<T, LastDimFlip<T>, 1>(lower_plane_elements, dim, len,
+					src, dst);
 		}
 	} else {
-		if (innerMostUntouched) {
-			flip_<T, LastDimNoFlip<T>, 0>(lowerPlaneElements, dim, len, src,
-					dst);
+		if (inner_most_untouched) {
+			FlipLowLevel<T, LastDimNoFlip<T>, 0>(lower_plane_elements, dim, len,
+					src, dst);
 		} else {
-			flip_<T, LastDimFlip<T>, 0>(lowerPlaneElements, dim, len, src, dst);
+			FlipLowLevel<T, LastDimFlip<T>, 0>(lower_plane_elements, dim, len,
+					src, dst);
 		}
 	}
 }
@@ -169,9 +169,9 @@ namespace {
 
 template<typename T>
 LIBSAKURA_SYMBOL(Status) FlipMatrix(
-		bool reverse,
-		bool innerMostUntouched, size_t dims, size_t const elements[],
-		T const src[], T dst[]) {
+bool reverse,
+bool inner_most_untouched, size_t dims, size_t const elements[], T const src[],
+		T dst[]) {
 	CHECK_ARGS(elements != nullptr);
 	CHECK_ARGS(src != nullptr);
 	CHECK_ARGS(dst != nullptr);
@@ -180,7 +180,7 @@ LIBSAKURA_SYMBOL(Status) FlipMatrix(
 
 	try {
 		STATIC_ASSERT(sizeof(src[0]) == sizeof(T));
-		flip<T>(reverse, innerMostUntouched, dims, elements,
+		Flip<T>(reverse, inner_most_untouched, dims, elements,
 				reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 	} catch (...) {
 		assert(false); // no exception should not be raised for the current implementation.
@@ -192,61 +192,55 @@ LIBSAKURA_SYMBOL(Status) FlipMatrix(
 } // namespace
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) {
 	typedef Type4 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
-	return FlipMatrix<T>(false,
-			innerMostUntouched, dims, elements,
+	return FlipMatrix<T>(false, inner_most_untouched, dims, elements,
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) {
 	typedef Type4 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
-	return FlipMatrix<T>(true,
-			innerMostUntouched, dims, elements,
+	return FlipMatrix<T>(true, inner_most_untouched, dims, elements,
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) {
 	typedef Type8 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
-	return FlipMatrix<T>(false,
-			innerMostUntouched, dims, elements,
+	return FlipMatrix<T>(false, inner_most_untouched, dims, elements,
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) {
 	typedef Type8 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
-	return FlipMatrix<T>(true,
-			innerMostUntouched, dims, elements,
+	return FlipMatrix<T>(true, inner_most_untouched, dims, elements,
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) {
 	typedef Type16 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
-	return FlipMatrix<T>(false,
-			innerMostUntouched, dims, elements,
+	return FlipMatrix<T>(false, inner_most_untouched, dims, elements,
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
-bool innerMostUntouched, size_t dims, size_t const elements[],
+bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) {
 	typedef Type16 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
-	return FlipMatrix<T>(true,
-			innerMostUntouched, dims, elements,
+	return FlipMatrix<T>(true, inner_most_untouched, dims, elements,
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
