@@ -89,13 +89,13 @@ T Product(size_t n, T const data[]) {
 template<typename T>
 struct TestTarget {
 	static LIBSAKURA_SYMBOL(Status) Flip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			T const src[], T dst[]) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kNG);
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			T const src[], T dst[]) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -105,15 +105,15 @@ struct TestTarget {
 template<>
 struct TestTarget<float> {
 	static LIBSAKURA_SYMBOL(Status) Flip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			float const src[], float dst[]) {
-		return LIBSAKURA_SYMBOL(FlipMatrixFloat)(innerMostUntouched, dims,
+		return LIBSAKURA_SYMBOL(FlipMatrixFloat)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			float const src[], float dst[]) {
-		return LIBSAKURA_SYMBOL(UnflipMatrixFloat)(innerMostUntouched, dims,
+		return LIBSAKURA_SYMBOL(UnflipMatrixFloat)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 };
@@ -121,15 +121,15 @@ struct TestTarget<float> {
 template<>
 struct TestTarget<double> {
 	static LIBSAKURA_SYMBOL(Status) Flip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			double const src[], double dst[]) {
-		return LIBSAKURA_SYMBOL(FlipMatrixDouble)(innerMostUntouched, dims,
+		return LIBSAKURA_SYMBOL(FlipMatrixDouble)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			double const src[], double dst[]) {
-		return LIBSAKURA_SYMBOL(UnflipMatrixDouble)(innerMostUntouched, dims,
+		return LIBSAKURA_SYMBOL(UnflipMatrixDouble)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 };
@@ -137,79 +137,79 @@ struct TestTarget<double> {
 template<>
 struct TestTarget<complex<double> > {
 	static LIBSAKURA_SYMBOL(Status) Flip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			complex<double> const src[], complex<double> dst[]) {
-		return LIBSAKURA_SYMBOL(FlipMatrixDouble2)(innerMostUntouched, dims,
+		return LIBSAKURA_SYMBOL(FlipMatrixDouble2)(inner_most_untouched, dims,
 				elements, reinterpret_cast<double const (*)[2]>(src),
 				reinterpret_cast<double (*)[2]>(dst));
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
-	bool innerMostUntouched, size_t dims, size_t const elements[],
+	bool inner_most_untouched, size_t dims, size_t const elements[],
 			complex<double> const src[], complex<double> dst[]) {
-		return LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(innerMostUntouched, dims,
+		return LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(inner_most_untouched, dims,
 				elements, reinterpret_cast<double const (*)[2]>(src),
 				reinterpret_cast<double (*)[2]>(dst));
 	}
 };
 
-template<typename T, size_t COL, bool timing = false, int repeat = 1>
-void TestGeneric(bool innerMostUntouched, size_t dims, size_t const elements[],
+template<typename T, size_t COL, bool kTiming = false, int kRepeat = 1>
+void TestGeneric(bool inner_most_untouched, size_t dims, size_t const elements[],
 		T const ref[]) {
 	const size_t prod = Product(dims, elements);
 	T *data = nullptr;
-	unique_ptr<void, DefaultAlignedMemory> dataStorage(
+	unique_ptr<void, DefaultAlignedMemory> data_storage(
 			DefaultAlignedMemory::AlignedAllocateOrException(
 					sizeof(data[0]) * prod, &data));
 	InitArray(prod, data);
-	if (!timing) {
+	if (!kTiming) {
 		Print<T, COL>(prod, data);
 	}
 
-	T *flippedData = nullptr;
-	unique_ptr<void, DefaultAlignedMemory> flippedDataStorage(
+	T *flipped_data = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> flipped_data_storage(
 			DefaultAlignedMemory::AlignedAllocateOrException(
-					sizeof(flippedData[0]) * prod, &flippedData));
+					sizeof(flipped_data[0]) * prod, &flipped_data));
 	LIBSAKURA_SYMBOL(Status) result;
 	{
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-		for (int i = 0; i < repeat; ++i) {
-			result = TestTarget<T>::Flip(innerMostUntouched, dims, elements,
-					data, flippedData);
+		for (int i = 0; i < kRepeat; ++i) {
+			result = TestTarget<T>::Flip(inner_most_untouched, dims, elements,
+					data, flipped_data);
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-		if (timing) {
+		if (kTiming) {
 			cout << "Flip time: " << end - start << " sec" << endl;
 		}
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
-	if (!timing) {
-		Print<T, COL>(prod, flippedData);
+	if (!kTiming) {
+		Print<T, COL>(prod, flipped_data);
 	}
 	if (ref) {
-		EXPECT_TRUE(IsEqual(prod, ref, flippedData));
+		EXPECT_TRUE(IsEqual(prod, ref, flipped_data));
 	}
 
-	T *revData = nullptr;
-	unique_ptr<void, DefaultAlignedMemory> revDataStorage(
+	T *rev_data = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> rev_data_storage(
 			DefaultAlignedMemory::AlignedAllocateOrException(
-					sizeof(revData[0]) * prod, &revData));
+					sizeof(rev_data[0]) * prod, &rev_data));
 
 	{
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-		for (int i = 0; i < repeat; ++i) {
-			result = TestTarget<T>::Unflip(innerMostUntouched, dims, elements,
-					flippedData, revData);
+		for (int i = 0; i < kRepeat; ++i) {
+			result = TestTarget<T>::Unflip(inner_most_untouched, dims, elements,
+					flipped_data, rev_data);
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-		if (timing) {
+		if (kTiming) {
 			cout << "Unflip time: " << end - start << " sec" << endl;
 		}
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
-	if (!timing) {
-		Print<T, COL>(prod, revData);
+	if (!kTiming) {
+		Print<T, COL>(prod, rev_data);
 	}
-	EXPECT_TRUE(IsEqual(prod, data, revData));
+	EXPECT_TRUE(IsEqual(prod, data, rev_data));
 
 }
 

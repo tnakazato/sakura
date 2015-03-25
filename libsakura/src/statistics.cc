@@ -40,7 +40,7 @@ typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 		Reducer *reducer) {
 	//std::cout << "stride = " << stride << std::endl;
 	typename Reducer::MiddleLevelAccumulator acc_stack[levels + 1][kUnitSize];
-	acc_stack[0][0].clear();
+	acc_stack[0][0].Clear();
 	typename Reducer::MiddleLevelAccumulator (*acc)[kUnitSize] = &acc_stack[1];
 
 	size_t indices_stack[levels + 1];
@@ -57,7 +57,7 @@ typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 		assert(0 <= level && level < levels);
 		if (level >= leaf) {
 			auto &accumlator = acc[level - 1][indices[level - 1]];
-			accumlator.clear();
+			accumlator.Clear();
 			if (start == offset) {
 				reducer->MiddleLevelReduce(residual, accumlator);
 			}
@@ -103,7 +103,7 @@ typename Reducer::TopLevelAccumulator Traverse(size_t offset,
 		size_t const num_data, Reducer *reducer) {
 	STATIC_ASSERT(kUnitSize > 1 && kBlockSize > 0);
 	typename Reducer::TopLevelAccumulator top_level_result;
-	top_level_result.clear();
+	top_level_result.Clear();
 
 	auto num_blocks = num_data / kBlockSize;
 	int levels = 0;
@@ -117,7 +117,7 @@ typename Reducer::TopLevelAccumulator Traverse(size_t offset,
 	auto full_blocks = num_blocks / n;
 
 	typename Reducer::MiddleLevelAccumulator residual;
-	residual.clear();
+	residual.Clear();
 	{
 		if (levels == 0) {
 			num_blocks = 0;
@@ -154,7 +154,7 @@ struct ScalarStats {
 		Scalar min, max;
 		int index_of_min, index_of_max;
 
-		void clear() {
+		void Clear() {
 			count = 0;
 			sum = 0.;
 			square_sum = 0.;
@@ -283,26 +283,26 @@ union m128 {
 #if defined(__AVX2__)
 struct SIMDWordForInt {
 	m256 value;
-	auto intValue() const -> decltype(value.m256i) {
+	auto IntValue() const -> decltype(value.m256i) {
 		return value.m256i;
 	}
-	void clear() {
+	void Clear() {
 		value.m256 = _mm256_setzero_ps();
 	}
-	void add(decltype(value.m256i) const &v) {
+	void Add(decltype(value.m256i) const &v) {
 		value.m256i += v;
 	}
 };
 #else
 struct SIMDWordForInt {
 	m128 value;
-	auto intValue() const -> decltype(value.m128i) {
+	auto IntValue() const -> decltype(value.m128i) {
 		return value.m128i;
 	}
-	void clear() {
+	void Clear() {
 		value.m128 = _mm_setzero_ps();
 	}
-	void add(decltype(value.m128i) const &v) {
+	void Add(decltype(value.m128i) const &v) {
 		value.m128i += v;
 	}
 };
@@ -321,16 +321,16 @@ inline void StatsBlock(size_t i, __m256 const *data_arg,
 	auto const mask = AssumeAligned(mask_arg);
 	auto const zero256i = _mm256_setzero_si256();
 	auto mask8 = _mm256_cvtepi8_epi32(_mm_castpd_si128(_mm_load1_pd(&mask[0])));
-	count.add(mask8);
+	count.Add(mask8);
 	mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
 #else
-	auto const mask = AssumeAligned(reinterpret_cast<float const *>(mask_arg), sizeof(decltype(count.intValue())));
+	auto const mask = AssumeAligned(reinterpret_cast<float const *>(mask_arg), sizeof(decltype(count.IntValue())));
 	auto const zero128i = _mm_setzero_si128();
 	auto mask0 = _mm_castps_si128(_mm_load_ss(&mask[0]));
 	auto mask1 = _mm_castps_si128(_mm_load_ss(&mask[1]));
 	mask0 = _mm_cvtepu8_epi32(mask0);
 	mask1 = _mm_cvtepu8_epi32(mask1);
-	count.add(_mm_add_epi32(mask0, mask1));
+	count.Add(_mm_add_epi32(mask0, mask1));
 
 	mask0 = _mm_cmpeq_epi32(mask0, zero128i);
 	mask1 = _mm_cmpeq_epi32(mask1, zero128i);
@@ -423,9 +423,9 @@ struct SIMDStats<float, double> {
 		m256 min, max;
 		m256 index_of_min, index_of_max;
 
-		void clear() {
+		void Clear() {
 			auto const zero = _mm256_setzero_ps();
-			count.clear();
+			count.Clear();
 			sum.m256 = zero;
 			square_sum.m256 = zero;
 			auto const nan = _mm256_set1_ps(NAN);
@@ -447,9 +447,9 @@ struct SIMDStats<float, double> {
 		TopLevelAccumulator result;
 #if defined(__AVX2__)
 		result.count = static_cast<size_t>(AddHorizontally(
-				accumulator.count.intValue()));
+				accumulator.count.IntValue()));
 #else
-		result.count = static_cast<size_t>(AddHorizontally128(accumulator.count.intValue()));
+		result.count = static_cast<size_t>(AddHorizontally128(accumulator.count.IntValue()));
 #endif
 
 		result.sum = AddHorizontally(accumulator.sum.m256d);
@@ -500,7 +500,7 @@ struct SIMDStats<float, double> {
 
 	void MiddleLevelReduce(MiddleLevelAccumulator const &increment,
 			MiddleLevelAccumulator &accumulator) {
-		accumulator.count.add(increment.count.intValue());
+		accumulator.count.Add(increment.count.IntValue());
 		accumulator.sum.m256d += increment.sum.m256d;
 		accumulator.square_sum.m256d += increment.square_sum.m256d;
 
@@ -576,7 +576,7 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 	auto index_of_min = _mm256_set1_epi32(-1);
 	auto index_of_max = _mm256_set1_epi32(-1);
 	SIMDWordForInt count;
-	count.clear();
+	count.Clear();
 	double const *mask_ = reinterpret_cast<double const *>(is_valid);
 	auto const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
@@ -584,9 +584,9 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 				index_of_min, index_of_max);
 	}
 #if defined(__AVX2__)
-	size_t counted = static_cast<size_t>(AddHorizontally(count.intValue()));
+	size_t counted = static_cast<size_t>(AddHorizontally(count.IntValue()));
 #else
-	size_t counted = static_cast<size_t>(AddHorizontally128(count.intValue()));
+	size_t counted = static_cast<size_t>(AddHorizontally128(count.IntValue()));
 #endif
 
 	double total = AddHorizontally(sum);
