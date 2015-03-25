@@ -186,9 +186,9 @@ protected:
 		assert(num_coeff <= context->num_bases);
 		SetFloatConstant(0, num_data, in_data);
 		size_t const num_bases(context->num_bases);
-		for (size_t i = 0; i < num_data; ++i){
+		for (size_t i = 0; i < num_data; ++i) {
 			for (size_t k = 0; k < num_coeff; ++k) {
-				in_data[i] += coeff[k] * context->basis_data[i*num_bases+k];
+				in_data[i] += coeff[k] * context->basis_data[i * num_bases + k];
 			}
 		}
 	}
@@ -451,15 +451,20 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				type, gen_order, num_data, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-		size_t reference(answers[type]);
-		size_t num_coeff = 0;
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
-				LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, test_order, &num_coeff));
-		EXPECT_EQ(num_coeff, reference);
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+			// Sinusoid must fail until implemented (2015/3/25 WK)
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+		} else {
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+			size_t reference(answers[type]);
+			size_t num_coeff = 0;
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK),
+					LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, test_order, &num_coeff));
+			EXPECT_EQ(num_coeff, reference);
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		}
 	}
 }
 
@@ -483,14 +488,19 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				type, gen_order, num_data, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-		size_t num_coeff = 0;
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-				LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, test_order, &num_coeff));
-		EXPECT_EQ(num_coeff, 0);
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+			// Sinusoid must fail until implemented (2015/3/25 WK)
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+		} else {
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+			size_t num_coeff = 0;
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+					LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, test_order, &num_coeff));
+			EXPECT_EQ(num_coeff, 0);
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+		}
 	}
 }
 
@@ -516,37 +526,43 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatNumCoeff) {
 	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] = { LIBSAKURA_SYMBOL(
-			BaselineType_kPolynomial), LIBSAKURA_SYMBOL(BaselineType_kChebyshev) };
+			BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+			BaselineType_kChebyshev), LIBSAKURA_SYMBOL(BaselineType_kSinusoid) };
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				type, order, num_data, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+			// Sinusoid must fail until implemented (2015/3/25 WK)
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+		} else {
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-		// generate input data from basis in context
-		GenerateFromContext(context, num_data, in_data, num_coeff, coeff);
-		if (verbose) {
-			PrintArray("in_data", num_data, in_data);
+			// generate input data from basis in context
+			GenerateFromContext(context, num_data, in_data, num_coeff, coeff);
+			if (verbose) {
+				PrintArray("in_data", num_data, in_data);
+			}
+			cout << "Fitting with num_coeff = " << num_coeff << " (num_bases = "
+					<< context->num_bases << ")" << endl;
+			LIBSAKURA_SYMBOL (Status) subbl_status =
+			LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
+					num_data, in_data, num_coeff, coeff, out);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+			for (size_t i = 0; i < num_data; ++i) {
+				CheckAlmostEqual(answer[i], out[i], 1.0e-6);
+				//EXPECT_EQ(answer[i], out[i]);
+			}
+			if (verbose) {
+				PrintArray("out   ", num_data, out);
+				PrintArray("answer", num_data, answer);
+			}
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 		}
-		cout << "Fitting with num_coeff = " << num_coeff << " (num_bases = "
-				<< context->num_bases << ")" << endl;
-		LIBSAKURA_SYMBOL (Status) subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
-				num_data, in_data, num_coeff, coeff, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-		for (size_t i = 0; i < num_data; ++i) {
-			CheckAlmostEqual(answer[i], out[i], 1.0e-6);
-			//EXPECT_EQ(answer[i], out[i]);
-		}
-		if (verbose) {
-			PrintArray("out   ", num_data, out);
-			PrintArray("answer", num_data, answer);
-		}
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
 
@@ -568,9 +584,9 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
 
-	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
-			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
-					BaselineType_kChebyshev) };
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] = { LIBSAKURA_SYMBOL(
+			BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+			BaselineType_kChebyshev), LIBSAKURA_SYMBOL(BaselineType_kSinusoid) };
 
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
@@ -578,19 +594,26 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				type, order, num_data, &context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-		for (size_t j = 0; j < ELEMENTSOF(bad_coeffs); ++j) {
-			size_t num_coeff = bad_coeffs[j];
-			cout << "Fitting with num_coeff = " << num_coeff << " (num_bases = "
-					<< context->num_bases << ")" << endl;
-			LIBSAKURA_SYMBOL (Status) subbl_status =
-			LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(context,
-					num_data, in_data, num_coeff, coeff, out);
-			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
+		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+			// Sinusoid must fail until implemented (2015/3/25 WK)
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+		} else {
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+			for (size_t j = 0; j < ELEMENTSOF(bad_coeffs); ++j) {
+				size_t num_coeff = bad_coeffs[j];
+				cout << "Fitting with num_coeff = " << num_coeff
+						<< " (num_bases = " << context->num_bases << ")"
+						<< endl;
+				LIBSAKURA_SYMBOL (Status) subbl_status =
+				LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
+						context, num_data, in_data, num_coeff, coeff, out);
+				ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+						subbl_status);
+			}
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 		}
-		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
 
