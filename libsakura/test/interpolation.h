@@ -193,8 +193,8 @@ protected:
 			// Value check
 			for (size_t index = 0; index < num_interpolated * num_array;
 					++index) {
-				std::cout << "Expected value at index " << index << ": "
-						<< y_expected_[index] << std::endl;
+				//std::cout << "Expected value at index " << index << ": "
+				//		<< y_expected_[index] << std::endl;
 				EXPECT_FLOAT_EQ(y_expected_[index], y_interpolated_[index])
 						<< "interpolated value differs from expected value at "
 						<< index << ": " << y_expected_[index] << ", "
@@ -205,8 +205,8 @@ protected:
 		if (check_mask && (expected_status == result_status)) {
 			for (size_t index = 0; index < num_interpolated * num_array;
 					++index) {
-				std::cout << "Expected mask at index " << index << ": "
-						<< mask_expected_[index] << std::endl;
+				//std::cout << "Expected mask at index " << index << ": "
+				//		<< mask_expected_[index] << std::endl;
 				EXPECT_EQ(mask_expected_[index], mask_interpolated_[index])
 						<< "interpolated mask differs from expected value at "
 						<< index << ": " << mask_expected_[index] << ", "
