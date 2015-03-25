@@ -74,9 +74,8 @@ public:
 template<typename Arch, typename ElementType>
 struct LIBSAKURA_SYMBOL(SimdScalarType) {
 	typedef ElementType Type;
-	enum LIBSAKURA_SYMBOL(SimdElementsInPacket) {
-		kElementsInPacket = Arch::PacketType::kSize / sizeof(Type)
-	};
+	static constexpr unsigned kElementsInPacket = Arch::PacketType::kSize
+			/ sizeof(Type);
 };
 
 /**
@@ -1312,7 +1311,7 @@ template<typename Arch, typename ScalarType, typename PacketAction,
 void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 		Context *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	size_t const kUnit =
+	constexpr size_t kUnit =
 	LIBSAKURA_SYMBOL(SimdScalarType)<Arch, ScalarType>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
 	auto ptr =
@@ -1382,7 +1381,7 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 		ScalarType2 data2[], Context *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
-	size_t const kUnit =
+	constexpr size_t kUnit =
 	LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
 	auto ptr1 =
@@ -1458,7 +1457,7 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data1));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data3));
-	size_t const kUnit =
+	constexpr size_t kUnit =
 	LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
 	auto ptr1 =
@@ -1490,7 +1489,7 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data2));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data3));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data4));
-	size_t const kUnit =
+	constexpr size_t kUnit =
 	LIBSAKURA_SYMBOL(SimdScalarType)<Arch1, ScalarType1>::kElementsInPacket;
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
 	auto ptr1 =
