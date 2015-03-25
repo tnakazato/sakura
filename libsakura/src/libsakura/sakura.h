@@ -319,6 +319,10 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 /**
  * @~japanese
  * @brief @ref sakura_ComputeStatisticsFloat の結果を格納する構造体
+ *
+ * @~english
+ * @brief A structure to which the result of @ref sakura_ComputeStatisticsFloat and @ref sakura_ComputeAccurateStatisticsFloat is stored.
+ *
  */
 typedef struct {
 	/**
@@ -333,27 +337,27 @@ typedef struct {
 	double sum;
 	/**
 	 * @~
-	 * mean of valid data
+	 * mean of valid data. NaN if no valid data.
 	 */
 	double mean;
 	/**
 	 * @~
-	 * root-mean-square of valid data
+	 * root-mean-square of valid data. NaN if no valid data.
 	 */
 	double rms;
 	/**
 	 * @~
-	 * stddev of valid data
+	 * stddev of valid data. NaN if no valid data.
 	 */
 	double stddev;
 	/**
 	 * @~
-	 * min value of valid data
+	 * min value of valid data. NaN if no valid data.
 	 */
 	float min;
 	/**
 	 * @~
-	 * max value of valid data
+	 * max value of valid data. NaN if no valid data.
 	 */
 	float max;
 	/**
@@ -367,6 +371,7 @@ typedef struct {
 	 */
 	int index_of_max;
 }LIBSAKURA_SYMBOL(StatisticsResultFloat);
+
 /**
  * @~japanese
  * @brief 統計値を計算する。どのような統計値を算出するかは
@@ -2680,7 +2685,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @details
  * When you provide @a innerMostUntouched = false, @a elements = {3, 4} and @a src = {
  * @code
- 1,   2,   3,
+ *   1,   2,   3,
  *   4,   5,   6,
  *   7,   8,   9,
  *  10,  11,  12,
