@@ -27,24 +27,24 @@
 #include <cstdint>
 #include <cassert>
 
-template<size_t ALIGN>
+template<size_t kAlign>
 class AlignedMemory {
-	char buf[ALIGN - 1];
+	char buf[kAlign - 1];
 public:
 	AlignedMemory() = default;
-	static void *operator new(size_t size, size_t realSize) {
-		void *p = new char[size + realSize];
+	static void *operator new(size_t size, size_t real_size) {
+		void *p = new char[size + real_size];
 		return p;
 	}
 	static void operator delete(void *p) {
 		delete[] reinterpret_cast<char *>(p);
 	}
 
-	static void operator delete(void *p, size_t realSize) {
+	static void operator delete(void *p, size_t real_size) {
 		delete[] reinterpret_cast<char *>(p);
 	}
 
-	static AlignedMemory *newAlignedMemory(size_t size) {
+	static AlignedMemory *NewAlignedMemory(size_t size) {
 		AlignedMemory *p = new (size) AlignedMemory();
 		return p;
 	}
@@ -57,16 +57,16 @@ public:
 	static inline void *AlignedAllocateOrException(size_t size_in_bytes,
 			T **aligned_address) throw (std::bad_alloc) {
 		assert(aligned_address != nullptr);
-		auto ptr = newAlignedMemory(size_in_bytes);
-		*aligned_address = ptr->template memory<T>();
+		auto ptr = NewAlignedMemory(size_in_bytes);
+		*aligned_address = ptr->template Memory<T>();
 		assert(*aligned_address != nullptr);
 		return reinterpret_cast<void *>(ptr);
 	}
 
 	template<typename T>
-	T *memory() {
-		uintptr_t addr = reinterpret_cast<uintptr_t>(&buf[ALIGN - 1]);
-		addr &= ~(ALIGN - 1);
+	T *Memory() {
+		uintptr_t addr = reinterpret_cast<uintptr_t>(&buf[kAlign - 1]);
+		addr &= ~(kAlign - 1);
 		return reinterpret_cast<T *>(addr);
 	}
 };
