@@ -28,22 +28,57 @@
  */
 
 #include <iostream>
+#include <cstdlib>
 #include <libsakura/sakura.h>
 #include "loginit.h"
 #include "gtest/gtest.h"
 
 using namespace std;
 
+namespace {
+
+size_t alloc_count = 0;
+size_t free_count = 0;
+
+void *MyAllocate(size_t size) {
+	++alloc_count;
+	return malloc(size);
+}
+
+void MyFree(void *ptr) {
+	++free_count;
+	free(ptr);
+}
+
+}
+
 TEST(Global, Init) {
-	sakura_Status result = sakura_Initialize(nullptr, nullptr);
+	sakura_Status result = LIBSAKURA_SYMBOL(Initialize)(nullptr, nullptr);
 	EXPECT_EQ(result, sakura_Status_kOK);
+	LIBSAKURA_SYMBOL(CleanUp)();
 
-	sakura_CleanUp();
-
-	result = sakura_Initialize(nullptr, nullptr);
+	result = LIBSAKURA_SYMBOL(Initialize)(nullptr, nullptr);
 	EXPECT_EQ(result, sakura_Status_kOK);
+	LIBSAKURA_SYMBOL(CleanUp)();
 
-	sakura_CleanUp();
+	result = LIBSAKURA_SYMBOL(Initialize)(MyAllocate, MyFree);
+	EXPECT_EQ(result, sakura_Status_kOK);
+	{
+		alloc_count = 0;
+		free_count = 0;
+
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		auto status = LIBSAKURA_SYMBOL(CreateBaselineContext )(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 5, 100, &context);
+		EXPECT_EQ(status, sakura_Status_kOK);
+		EXPECT_NE(nullptr, context);
+		status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
+		EXPECT_EQ(status, sakura_Status_kOK);
+		EXPECT_LT(0, alloc_count);
+		EXPECT_LT(0, free_count);
+		EXPECT_EQ(alloc_count, free_count);
+	}
+	LIBSAKURA_SYMBOL(CleanUp)();
 }
 
 TEST(Global, Align) {
