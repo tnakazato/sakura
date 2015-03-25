@@ -221,61 +221,39 @@ protected:
 	bool const *mask, size_t const num_boundary, double const *boundary,
 			double *answer_matrix, double *answer_vector) {
 		size_t num_vector = 3 + num_boundary;
-		double *basis_data = nullptr;
+		double *model = nullptr;
 		unique_ptr<void, DefaultAlignedMemory> storage_for_basisdata(
 				DefaultAlignedMemory::AlignedAllocateOrException(
-						sizeof(*basis_data) * num_data * 4, &basis_data));
-		if (basis_data == nullptr) {
+						sizeof(*model) * num_data * num_vector, &model));
+		if (model == nullptr) {
 			throw bad_alloc();
 		}
 		for (size_t i = 0; i < num_data; ++i) {
 			double x = (double) i;
-			basis_data[i] = 1.0;
-			basis_data[i + num_data] = x;
-			basis_data[i + num_data * 2] = x * x;
-			basis_data[i + num_data * 3] = x * x * x;
-		}
-		double *aux_data = nullptr;
-		unique_ptr<void, DefaultAlignedMemory> storage_for_auxdata(
-				DefaultAlignedMemory::AlignedAllocateOrException(
-						sizeof(*aux_data) * num_data * num_boundary,
-						&aux_data));
-		if (aux_data == nullptr) {
-			throw bad_alloc();
-		}
-		for (size_t i = 0; i < num_data; ++i) {
-			for (size_t j = 0; j < num_boundary; ++j) {
-				double x = (double) i - boundary[j];
-				aux_data[i + num_data * j] = max(x * x * x, 0.0);
+			model[i] = 1.0;
+			model[i + num_data] = x;
+			model[i + num_data * 2] = x * x;
+			if (num_boundary < 2) {
+				model[i + num_data * 3] = x * x * x;
+			} else {
+				double x1 = x - boundary[1];
+				model[i + num_data * 3] = x * x * x - max(x1 * x1 * x1, 0.0);
+				for (size_t j = 1; j < num_boundary-1; ++j) {
+					double xj = x - boundary[j];
+					double xk = x - boundary[j+1];
+					model[i + num_data * (j+3)] = max(0.0, (xj*xj*xj-max(0.0, xk*xk*xk)));
+				}
+				double xn = x - boundary[num_boundary-1];
+				model[i + num_data * (num_boundary+2)] = max(0.0, xn * xn * xn);
 			}
 		}
-
 		for (size_t i = 0; i < num_vector; ++i) {
 			// computing vector components
 			double vec = 0.0;
-			if (i < 3) {
-				double *basis_data_i = &basis_data[num_data * i];
-				for (size_t j = 0; j < num_data; ++j) {
-					if (mask[j]) {
-						vec += basis_data_i[j] * data[j];
-					}
-				}
-			} else if (i == num_vector - 1) {
-				size_t bidx = i - 3;
-				double *aux_data_bidx = &aux_data[num_data * bidx];
-				for (size_t j = 0; j < num_data; ++j) {
-					if (mask[j]) {
-						vec += aux_data_bidx[j] * data[j];
-					}
-				}
-			} else if (num_boundary > 1) {
-				size_t bidx = i - 3;
-				double *aux_data_bidx = &aux_data[num_data * bidx];
-				double *aux_data_bidxr = &aux_data[num_data * (bidx + 1)];
-				for (size_t j = 0; j < num_data; ++j) {
-					if (mask[j]) {
-						vec += (aux_data_bidx[j] - aux_data_bidxr[j]) * data[j];
-					}
+			double *model_i = &model[num_data * i];
+			for (size_t j = 0; j < num_data; ++j) {
+				if (mask[j]) {
+					vec += model_i[j] * data[j];
 				}
 			}
 			answer_vector[i] = vec;
@@ -283,62 +261,41 @@ protected:
 			double *answer_matrix_i = &answer_matrix[num_vector * i];
 			for (size_t icol = 0; icol < num_vector; ++icol) {
 				double mtx = 0.0;
-				if (i < 3) {
-					double *basis_data_i = &basis_data[num_data * i];
-					double *basis_data_icol = &basis_data[num_data * icol];
-					if (icol < 4) {
-						for (size_t j = 0; j < num_data; ++j) {
-							if (mask[j])
-								mtx += basis_data_i[j] * basis_data_icol[j];
-						}
-					} else {
-						size_t bidx2 = icol - 3;
-						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
-						for (size_t j = 0; j < num_data; ++j) {
-							if (mask[j])
-								mtx += basis_data_i[j] * aux_data_bidx2[j];
-						}
-					}
-				} else if (i == num_vector - 1) {
-					size_t bidx = i - 3;
-					double *aux_data_bidx = &aux_data[num_data * bidx];
-					double *basis_data_icol = &basis_data[num_data * icol];
-					if (icol < 4) {
-						for (size_t j = 0; j < num_data; ++j) {
-							if (mask[j])
-								mtx += aux_data_bidx[j] * basis_data_icol[j];
-						}
-					} else {
-						size_t bidx2 = icol - 3;
-						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
-						for (size_t j = 0; j < num_data; ++j) {
-							if (mask[j])
-								mtx += aux_data_bidx[j] * aux_data_bidx2[j];
-						}
-					}
-				} else if (num_boundary > 1) {
-					size_t bidx = i - 3;
-					double *aux_data_bidx = &aux_data[num_data * bidx];
-					double *aux_data_bidxr = &aux_data[num_data * (bidx + 1)];
-					double *basis_data_icol = &basis_data[num_data * icol];
-					if (icol < 4) {
-						for (size_t j = 0; j < num_data; ++j) {
-							if (mask[j])
-								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
-										* basis_data_icol[j];
-						}
-					} else {
-						size_t bidx2 = icol - 3;
-						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
-						for (size_t j = 0; j < num_data; ++j) {
-							if (mask[j])
-								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
-										* aux_data_bidx2[j];
-						}
-
+				double *model_i = &model[num_data * i];
+				double *model_icol = &model[num_data * icol];
+				for (size_t j = 0; j < num_data; ++j) {
+					if (mask[j]) {
+						mtx += model_i[j] * model_icol[j];
 					}
 				}
 				answer_matrix_i[icol] = mtx;
+			}
+		}
+	}
+
+	// Compute auxiliary model data used for cubic spline fitting.
+	void GetAuxModelDataForCubicSpline(size_t num_pieces, size_t num_data,
+			double const *boundary, double *aux_data) {
+		auto cb = [](double v) {return v * v * v;};
+		auto p = [](double v) {return std::max(0.0, v);};
+		auto pcb = [&](double v) {return p(cb(v));};
+		if (num_pieces < 2) {
+			for (size_t i = 0; i < num_data; ++i) {
+				aux_data[i] = cb(static_cast<double>(i));
+			}
+		} else {
+			size_t idx = 0;
+			for (size_t i = 0; i < num_data; ++i) {
+				double val = static_cast<double>(i);
+				aux_data[idx] = cb(val) - pcb(val - boundary[1]);
+				++idx;
+				for (size_t j = 1; j < num_pieces - 1; ++j) {
+					aux_data[idx] = p(
+							cb(val - boundary[j]) - pcb(val - boundary[j + 1]));
+					++idx;
+				}
+				aux_data[idx] = pcb(val - boundary[num_pieces - 1]);
+				++idx;
 			}
 		}
 	}
@@ -2291,6 +2248,8 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplineSuccessfulC
 			cout << "]" << ((ipos < ipos_max) ? ", " : "");
 			SIMD_ALIGN
 			double basis_data[4 * ELEMENTSOF(in_data)];
+			SIMD_ALIGN
+			double aux_data[num_boundary * ELEMENTSOF(in_data)];
 			size_t num_vector(3 + num_boundary);
 			SIMD_ALIGN
 			double out_vector[num_vector];
@@ -2301,10 +2260,12 @@ TEST_F(NumericOperation, GetLeastSquareFittingCoefficientsCubicSplineSuccessfulC
 			SetAnswersCubicSpline(num_data, in_data, mask, num_boundary,
 					boundary, answer_matrix, answer_vector);
 			SetPolynomialModel(num_data, 4, basis_data);
+			GetAuxModelDataForCubicSpline(num_boundary, num_data, boundary, aux_data);
 			LIBSAKURA_SYMBOL (Status) coeff_status =
 					LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
-							num_data, in_data, mask, num_boundary, boundary,
-							basis_data, out_matrix, out_vector);
+							num_data, in_data, mask, num_boundary,
+							basis_data, aux_data, out_matrix, out_vector);
+
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 
 			for (size_t i = 0; i < ELEMENTSOF(answer_vector); ++i) {

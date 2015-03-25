@@ -483,6 +483,32 @@ bool const *mask, size_t num_pieces, double *boundary) {
 	}
 }
 
+inline void GetAuxModelDataForCubicSpline(size_t num_pieces, size_t num_data,
+		double const *boundary, double *aux_data) {
+	auto cb = [](double v) {return v * v * v;};
+	auto p = [](double v) {return std::max(0.0, v);};
+	auto pcb = [&](double v) {return p(cb(v));};
+	if (num_pieces < 2) {
+		for (size_t i = 0; i < num_data; ++i) {
+			aux_data[i] = cb(static_cast<double>(i));
+		}
+	} else {
+		size_t idx = 0;
+		for (size_t i = 0; i < num_data; ++i) {
+			double val = static_cast<double>(i);
+			aux_data[idx] = cb(val) - pcb(val - boundary[1]);
+			++idx;
+			for (size_t j = 1; j < num_pieces - 1; ++j) {
+				aux_data[idx] = p(
+						cb(val - boundary[j]) - pcb(val - boundary[j + 1]));
+				++idx;
+			}
+			aux_data[idx] = pcb(val - boundary[num_pieces - 1]);
+			++idx;
+		}
+	}
+}
+
 inline void GetUnmaskedDataNumbers(size_t num_data, float const *data,
 bool const *mask, size_t num_pieces, double const *boundary,
 		size_t *num_clipped) {
@@ -510,13 +536,13 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		size_t ioffset = num_bases * i;
 		size_t ioffset_prev = ioffset - num_bases;
 		size_t j = num_bases - 1 + i;
+		auto c = coeff_raw[j] - coeff[ioffset_prev + 3];
 		coeff[ioffset] = coeff[ioffset_prev]
-				- boundary[i] * boundary[i] * boundary[i] * coeff_raw[j];
+				- boundary[i] * boundary[i] * boundary[i] * c;
 		coeff[ioffset + 1] = coeff[ioffset_prev + 1]
-				+ 3.0 * boundary[i] * boundary[i] * coeff_raw[j];
-		coeff[ioffset + 2] = coeff[ioffset_prev + 2]
-				- 3.0 * boundary[i] * coeff_raw[j];
-		coeff[ioffset + 3] = coeff[ioffset_prev + 3] + coeff_raw[j];
+				+ 3.0 * boundary[i] * boundary[i] * c;
+		coeff[ioffset + 2] = coeff[ioffset_prev + 2] - 3.0 * boundary[i] * c;
+		coeff[ioffset + 3] = coeff_raw[j];
 	}
 }
 
@@ -556,6 +582,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_raw(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff_raw) * num_coeff_raw, &coeff_raw));
+	double *aux_data = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*aux_data) * num_pieces * num_data, &aux_data));
+	GetAuxModelDataForCubicSpline(num_pieces, num_data, boundary, aux_data);
 
 	uint16_t num_fitting_max = std::max((uint16_t) 1, num_fitting_max_arg);
 
@@ -600,8 +631,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			LIBSAKURA_SYMBOL(Status) coeff_status =
 					LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
-							num_data, data, final_mask, num_pieces, boundary,
-							baseline_context->basis_data, lsq_matrix,
+							num_data, data, final_mask, num_pieces,
+							baseline_context->basis_data, aux_data, lsq_matrix,
 							lsq_vector);
 			if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
@@ -609,16 +640,16 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			/*
-			for (size_t j = 0; j < num_bases; ++j) {
-				std::cout << " | ";
-				for (size_t k = 0; k < num_bases; ++k) {
-					std::cout << std::setw(8) << std::right
-							<< lsq_matrix[j * num_bases + k] << "  ";
-				}
-				std::cout << " | " << std::setw(8) << std::right
-						<< lsq_vector[j] << std::endl;
-			}
-			*/
+			 for (size_t j = 0; j < num_bases; ++j) {
+			 std::cout << " | ";
+			 for (size_t k = 0; k < num_bases; ++k) {
+			 std::cout << std::setw(8) << std::right
+			 << lsq_matrix[j * num_bases + k] << "  ";
+			 }
+			 std::cout << " | " << std::setw(8) << std::right
+			 << lsq_vector[j] << std::endl;
+			 }
+			 */
 			/*
 			 if (num_unmasked_data <= num_clipped) {
 			 LIBSAKURA_SYMBOL(Status) coeff_status =
@@ -650,21 +681,22 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			/*
-			for (size_t j = 0; j < num_bases; ++j) {
-				std::cout << "#### coeff_raw[" << j << "] = " << coeff_raw[j]
-						<< std::endl;
-			}
-			*/
-			GetFullCubicSplineCoefficients(num_pieces, boundary, coeff_raw, coeff);
+			 for (size_t j = 0; j < num_bases; ++j) {
+			 std::cout << "#### coeff_raw[" << j << "] = " << coeff_raw[j]
+			 << std::endl;
+			 }
+			 */
+			GetFullCubicSplineCoefficients(num_pieces, boundary, coeff_raw,
+					coeff);
 			/*
-			for (size_t j = 0; j < num_pieces; ++j) {
-				std::cout << "   [ ";
-				for (size_t k = 0; k < 4; ++k) {
-					std::cout << coeff[4 * j + k] << ", ";
-				}
-				std::cout << " ]" << std::endl << std::flush;
-			}
-			*/
+			 for (size_t j = 0; j < num_pieces; ++j) {
+			 std::cout << "   [ ";
+			 for (size_t k = 0; k < 4; ++k) {
+			 std::cout << coeff[4 * j + k] << ", ";
+			 }
+			 std::cout << " ]" << std::endl << std::flush;
+			 }
+			 */
 			GetBestFitModelAndResidualCubicSpline(num_data, data,
 					baseline_context, coeff, num_pieces, boundary,
 					best_fit_model, residual_data);
@@ -995,7 +1027,8 @@ inline void SubtractBaselineCubicSplineUsingCoefficientsFloat(
 LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_data,
 		float const *data_arg, size_t num_pieces, double const *coeff_arg,
 		double const *boundary_arg, float *out_arg) {
-	if (num_pieces < 1) return;
+	if (num_pieces < 1)
+		return;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
