@@ -313,7 +313,7 @@ inline void Grid(integer locx, integer locy, integer const doubled_support,
 						weight, mask_local, value_local, num_channels_for_grid,
 						weight_sum_local, grid_local, weight_of_grid_local);
 			} // ipol
-			ir++;
+			++ir;
 		} // ix
 	} // iy
 }

@@ -469,7 +469,7 @@ TEST(Statistics, ComputeStatistics) {
 			data[i] = i;
 			is_valid[i] = i % 7 == 0;
 			if (is_valid[i]) {
-				count++;
+				++count;
 				double v = data[i];
 				sum += v;
 				sqsum += v * v;
