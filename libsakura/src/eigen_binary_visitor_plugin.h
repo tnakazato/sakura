@@ -31,16 +31,16 @@
 #define LIBSAKURA_LIBSAKURA_EIGENBINARYVISITORPLUGIN_H_
 
 template<typename Visitor_, typename Derived_, typename OtherDerived,
-		int UnrollCount>
+		int kUnrollCount>
 struct BinaryVisitorImpl {
-	enum {
-		col = (UnrollCount - 1) / Derived_::RowsAtCompileTime,
-		row = (UnrollCount - 1) % Derived_::RowsAtCompileTime
-	};
+	static constexpr decltype(Derived_::RowsAtCompileTime) col = (kUnrollCount
+			- 1) / Derived_::RowsAtCompileTime;
+	static constexpr decltype(col) row = (kUnrollCount - 1)
+			% Derived_::RowsAtCompileTime;
 
 	static inline void Run(const Derived_ &mat, const OtherDerived &mat2,
 			Visitor_& visitor) {
-		BinaryVisitorImpl<Visitor_, Derived_, OtherDerived, UnrollCount - 1>::run(
+		BinaryVisitorImpl<Visitor_, Derived_, OtherDerived, kUnrollCount - 1>::run(
 				mat, mat2, visitor);
 		visitor(mat.coeff(row, col), mat2.coeff(row, col), row, col);
 	}
