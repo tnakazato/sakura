@@ -492,27 +492,6 @@ inline void GridConvolving(size_t num_spectra,
 			weight_sum, weight_of_grid, grid);
 }
 
-#if 0
-void Transform(integer ny, integer nx,
-		integer nchan, integer npol,
-		Gridding::value_t grid_from/*[ny][nx][nchan]*/[/*npol*/],
-		float wgrid_from/*[ny][nx][nchan]*/[/*npol*/],
-		Gridding::value_t gridTo/*[nchan][npol][ny]*/[/*nx*/],
-		float wgridTo/*[nchan][npol][ny]*/[/*nx*/]) const {
-	for (integer iy = 0; iy < ny; ++iy) {
-		for (integer ix = 0; ix < nx; ++ix) {
-			for (integer ichan = 0; ichan < nchan; ++ichan) {
-				for (integer ipol = 0; ipol < npol; ++ipol) {
-					gridTo[At4(npol, ny, nx, ichan, ipol, iy, ix)] =
-					grid_from[At4(nx, nchan, npol, iy, ix, ichan, ipol)];
-					wgridTo[At4(npol, ny, nx, ichan, ipol, iy, ix)] =
-					wgrid_from[At4(nx, nchan, npol, iy, ix, ichan, ipol)];
-				}
-			}
-		}
-	}
-}
-#endif
 }
 
 #define CHECK_ARGS(x) do { \
