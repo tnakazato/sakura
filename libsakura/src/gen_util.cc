@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string>
+#include <memory>
 #include <algorithm>
 
 #if LIBSAKURA_HAS_LOG4CXX
@@ -49,7 +50,10 @@ namespace {
 auto memory_logger = LIBSAKURA_PREFIX::Logger::GetLogger("memory");
 
 void *DefaultAllocator(size_t size) {
-	return malloc(std::max(static_cast<size_t>(1), size));
+	void *mem_ptr = nullptr;
+	auto result = posix_memalign(&mem_ptr, LIBSAKURA_ALIGNMENT,
+			std::max(static_cast<size_t>(1), size));
+	return result == 0 ? mem_ptr : nullptr;
 }
 
 void DefaultFree(void *ptr) {
@@ -124,16 +128,17 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 		return nullptr;
 	}
 
-	// If gcc supports std::align,
-	// 	return std::align(LIBSAKURA_ALIGNMENT, size_required, vp, size_of_arena);
-
+#if GCC_SUPPORTS_STD_ALIGN // If gcc starts supporting std::align,
+	return std::align(LIBSAKURA_ALIGNMENT, size_required, vp, size_of_arena);
+#else
 	uintptr_t addr = (uintptr_t) vp;
-	uintptr_t max_padding = LIBSAKURA_ALIGNMENT - 1u;
-	uintptr_t new_addr = (addr + max_padding) & ~max_padding;
-	if (size_of_arena - (size_t) (new_addr - addr) < size_required) {
+	constexpr uintptr_t kMaxPadding = LIBSAKURA_ALIGNMENT - 1u;
+	uintptr_t new_addr = (addr + kMaxPadding) & ~kMaxPadding;
+	if (size_of_arena - size_t(new_addr - addr) < size_required) {
 		return nullptr;
 	}
 	return (void *) new_addr;
+#endif
 }
 
 extern "C" float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
