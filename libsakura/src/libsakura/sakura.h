@@ -2012,8 +2012,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_boundary,
+		double const boundary[/*num_boundary*/],
 		double const basis_data[/*4*num_data*/],
-		double const aux_data[/*num_boundary*num_data*/],
 		double lsq_matrix[/*(3+num_boundary)**2*/],
 		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2025,8 +2025,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		size_t const num_data, float const data[/*num_data*/],
 		size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/], size_t const num_boundary,
+		double const boundary[/*num_boundary*/],
 		double const basis_data[/*4*num_data*/],
-		double const aux_data[/*num_boundary*num_data*/],
 		double lsq_matrix[/*(3+num_boundary)**2*/],
 		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_WARN_UNUSED_RESULT;
 
