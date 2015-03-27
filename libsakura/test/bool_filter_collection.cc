@@ -193,12 +193,14 @@ protected:
 			size_t num_operation, BoundaryTestComponent const *test_components,
 			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
 
-		// Create long input data by repeating data_
-		GetDataInLength(num_data, in_data);
 		//verbose = true;
-		if (verbose) {
-			PrintArray("data", num_data, in_data);
-			cout << "threshold = " << threshold_ << endl;
+		if (in_data != nullptr)	{
+			// Create long input data by repeating data_
+			GetDataInLength(num_data, in_data);
+			if (verbose) {
+				PrintArray("data", num_data, in_data);
+				cout << "threshold = " << threshold_ << endl;
+			}
 		}
 
 		if (num_repeat > 1)
@@ -228,13 +230,16 @@ protected:
 					cout << "sakura_Status = " << status << endl;
 			}
 			// Verification
-			bool const *answer = test_components[iop].answer;//std::get<2>(kit);
-			size_t const num_answer = ELEMENTSOF(std::get<2>(kit));
-			PrintArray("answer", num_answer, answer);
-			PrintArray("kit answer", num_answer, std::get<2>(kit));
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-			for (size_t i = 0; i < num_data; ++i) {
-				ASSERT_EQ(answer[i % num_answer], result[i]);
+			EXPECT_EQ(return_value, status);
+			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
+				auto *answer = test_components[iop].answer;//std::get<2>(kit);
+				size_t const num_answer = ELEMENTSOF(std::get<2>(kit));
+				PrintArray("answer", num_answer, answer);
+				PrintArray("kit answer", num_answer, std::get<2>(kit));
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				for (size_t i = 0; i < num_data; ++i) {
+					ASSERT_EQ(answer[i % num_answer], result[i]);
+				}
 			}
 		} // end of operation loop
 	}
@@ -251,14 +256,14 @@ protected:
 
 		for (size_t irun = 0; irun < num_test; ++irun) {
 			size_t const num_data(array_length[irun]);
-			// Loop over operation types  (ALL operations)
+			// Loop over sakura functions with a threshold
 			cout << "[Tests with array length = " << num_data << "]" << endl;
 			RunBoundaryTest(num_data, data, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 					LIBSAKURA_SYMBOL(Status_kOK));
 		}
 	}
 
-	// Long test of various bit operations with with a large array
+	// Long test of various bool filter functions using a threshold value with a large array
 	void RunBoundaryLongTest(size_t const num_long, size_t const num_repeat) {
 		assert(num_long > 0);
 		assert(num_repeat > 0);
@@ -267,12 +272,49 @@ protected:
 		DataType data[num_large];
 		SIMD_ALIGN
 		bool result[ELEMENTSOF(data)];
-		//size_t const num_repeat = 20000;
 
-		// Loop over num_repeat times for each operation type (Standard set)
+		// Loop over sakura functions with a threshold
 		cout << "[Long tests]" << endl;
 		RunBoundaryTest(num_large, data, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 							LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
+	}
+	/*
+	 * Failure cases of various bool filter functions using a threshold value
+	 * Testing null pointer array and unaligned arrays.
+	 * RESULT:
+	 *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+	 */
+	void RunBoundaryFailTest() {
+		size_t offset(UNALIGN_OFFSET);
+		size_t const num_data(NUM_IN);
+		size_t const num_elements(num_data + offset);
+		SIMD_ALIGN
+		DataType data[num_elements];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+		// For null array tests
+		DataType *data_null = nullptr;
+		bool *result_null = nullptr;
+		// Define unaligned array
+		DataType *data_shift = &data[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+		bool *result_shift = &result[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+		// Null pointer array
+		cout << "[Test NULL data array]" << endl;
+		RunBoundaryTest(num_data, data_null, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test NULL result array]" << endl;
+		RunBoundaryTest(num_data, data, result_null, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		// Unaligned array
+		cout << "[Test unaligned data array]" << endl;
+		RunBoundaryTest(num_data, data_shift, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test unaligned result array]" << endl;
+		RunBoundaryTest(num_data, data, result_shift, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 	}
 
 };
@@ -1151,6 +1193,17 @@ TEST_F(BoolFilterFloat, BoundaryLong) {
 
 TEST_F(BoolFilterInt, BoundaryLong) {
 	RunBoundaryLongTest(NUM_IN_LONG, 20000); // array_length, repeat
+}
+
+/*
+ * Test failure case of bool filter generation using a boundary value
+ */
+TEST_F(BoolFilterFloat, BoundaryFail) {
+	RunBoundaryFailTest();
+}
+
+TEST_F(BoolFilterInt, BoundaryFail) {
+	RunBoundaryFailTest();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -2673,678 +2726,6 @@ TEST_F(BoolFilterInt, RangesExclusiveNotAlignedUpper) {
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
 			num_data, data, num_range, lower, upper_shift, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_SetTrueIfGreaterThanFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, GreaterThanFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	float *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
-			data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, GreaterThanFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
-			in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, GreaterThanNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
-			data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, GreaterThanNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanFloat(num_data,
-			data, threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfGreaterThanInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterInt, GreaterThanFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	int *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
-			data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, GreaterThanFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
-			in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterInt, GreaterThanNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
-			data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, GreaterThanNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanInt(num_data,
-			data, threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_SetTrueIfGreaterThanOrEqualsFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, GreaterThanOrEqualsFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	float *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
-			num_data, data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, GreaterThanOrEqualsFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
-			num_data, in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
-			num_data, data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, GreaterThanOrEqualsNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsFloat(
-			num_data, data, threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfGreaterThanOrEqualsInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterInt, GreaterThanOrEqualsFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	int *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
-			num_data, data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, GreaterThanOrEqualsFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
-			num_data, in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
-			num_data, data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, GreaterThanOrEqualsNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfGreaterThanOrEqualsInt(
-			num_data, data, threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_SetTrueIfLessThanFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, LessThanFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	float *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
-			data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, LessThanFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
-			in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, LessThanNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
-			data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, LessThanNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanFloat(num_data,
-			data, threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfLessThanInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterInt, LessThanFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	int *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
-			data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, LessThanFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
-			in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterInt, LessThanNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data,
-			data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, LessThanNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanInt(num_data, data,
-			threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_SetTrueIfLessThanOrEqualsFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, LessThanOrEqualsFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	float *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
-			num_data, data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, LessThanOrEqualsFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
-			num_data, in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, LessThanOrEqualsNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
-			num_data, data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, LessThanOrEqualsNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsFloat(
-			num_data, data, threshold_, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfLessThanOrEqualsInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterInt, LessThanOrEqualsFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	int *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
-			num_data, data_null, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, LessThanOrEqualsFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
-			num_data, in_data, threshold_, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterInt, LessThanOrEqualsNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
-			num_data, data_shift, threshold_, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, LessThanOrEqualsNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfLessThanOrEqualsInt(
-			num_data, data, threshold_, result_shift);
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
