@@ -228,8 +228,8 @@ public:
 					// Value check
 					for (size_t index = i * num_data;
 							index < (i + 1) * num_data; ++index) {
-						std::cout << "Expected value at index " << index << ": "
-								<< expected[index] << std::endl;
+						//std::cout << "Expected value at index " << index << ": "
+						//		<< expected[index] << std::endl;
 						EXPECT_FLOAT_EQ(expected[index], result[index])
 								<< "calibrated value differs from expected value at "
 								<< index << ": " << expected[index] << ", "
