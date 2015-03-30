@@ -328,7 +328,7 @@ void SetTrueIfInRangesExclusive(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 		size_t num_data, float const data[], size_t num_condition,
-		float const lower_bounds[], float const upper_bounds[], bool result[]) {
+		float const lower_bounds[], float const upper_bounds[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -367,7 +367,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveF
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt)(
 		size_t num_data, int const data[], size_t num_condition,
-		int const lower_bounds[], int const upper_bounds[], bool result[]) {
+		int const lower_bounds[], int const upper_bounds[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -406,7 +406,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveI
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)(
 		size_t num_data, float const data[], size_t num_condition,
-		float const lower_bounds[], float const upper_bounds[], bool result[]) {
+		float const lower_bounds[], float const upper_bounds[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -445,7 +445,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveF
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt)(
 		size_t num_data, int const data[], size_t num_condition,
-		int const lower_bounds[], int const upper_bounds[], bool result[]) {
+		int const lower_bounds[], int const upper_bounds[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -484,7 +484,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveI
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 		size_t num_data, float const data[], float threshold,
-		bool result[]) {
+		bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -509,7 +509,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]) {
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -534,7 +534,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
 		size_t num_data, float const data[], float threshold,
-		bool result[]) {
+		bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -559,7 +559,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]) {
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -584,7 +584,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 		size_t num_data, float const data[], float threshold,
-		bool result[]) {
+		bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -609,7 +609,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]) {
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -634,7 +634,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
 		size_t num_data, float const data[], float threshold,
-		bool result[]) {
+		bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -659,7 +659,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFl
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]) {
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -684,7 +684,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsIn
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data,
-		float const data[], bool result[]) {
+		float const data[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -708,7 +708,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
-		size_t num_data, uint8_t const data[], bool result[]) {
+		size_t num_data, uint8_t const data[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -732,7 +732,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
-		size_t num_data, uint32_t const data[], bool result[]) {
+		size_t num_data, uint32_t const data[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -757,7 +757,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
 		size_t num_data,
-		bool const data[], bool result[]) {
+		bool const data[], bool result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
