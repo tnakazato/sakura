@@ -35,6 +35,7 @@
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
+#include <array>
 #include <algorithm>
 
 #include <libsakura/sakura.h>
@@ -195,7 +196,7 @@ LIBSAKURA_SYMBOL(StatisticsResultFloat) const &result) {
 
 bool CallAndIsDifferent(size_t num_data, float const data[],
 bool const is_valid[]) {
-	static LIBSAKURA_SYMBOL(StatisticsResultFloat) const ref = {0};
+	static LIBSAKURA_SYMBOL(StatisticsResultFloat) const ref = { 0 };
 	return CallAndTestResult(ref, num_data, data, is_valid, TestResultNop,
 			TestResultNop);
 }
@@ -279,30 +280,30 @@ TEST(Statistics, ComputeStatistics) {
 
 	{
 		SIMD_ALIGN
-		static float data[256];
+		static std::array<float, 256> data;
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)];
+		static std::array<bool, data.size()> is_valid;
 		{
-			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+			is_valid.fill(true);
+			for (size_t i = 0; i < data.size(); ++i) {
 				data[i] = i;
-				is_valid[i] = true;
 			}
-			assert(ELEMENTSOF(data) % 2 == 0);
+			assert(data.size() % 2 == 0);
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-			ref.count = ELEMENTSOF(data);
+			ref.count = data.size();
 			ref.index_of_min = 0;
 			ref.min = 0;
-			ref.index_of_max = ELEMENTSOF(data) - 1;
-			ref.max = ELEMENTSOF(data) - 1;
-			ref.sum = (ELEMENTSOF(data) - 1) * (ELEMENTSOF(data) / 2);
-			ref.mean = (ELEMENTSOF(data) - 1) / 2.;
-			auto rms2 = Rms2(ELEMENTSOF(data), data,
-					is_valid) / ELEMENTSOF(data);
+			ref.index_of_max = data.size() - 1;
+			ref.max = data.size() - 1;
+			ref.sum = (data.size() - 1) * (data.size() / 2);
+			ref.mean = (data.size() - 1) / 2.;
+			auto rms2 = Rms2(data.size(), data.data(), is_valid.data())
+					/ data.size();
 			ref.rms = sqrt(rms2);
 			ref.stddev = sqrt(rms2 - ref.mean * ref.mean);
 
-			CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, TestResult,
-					TestResult);
+			CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+					TestResult, TestResult);
 		}
 		size_t min_max_index[16][2];
 		for (size_t i = 0; i < ELEMENTSOF(min_max_index); ++i) {
@@ -310,7 +311,7 @@ TEST(Statistics, ComputeStatistics) {
 			min_max_index[i][1] = 127 - i;
 		}
 		std::fill(std::begin(data), std::end(data), 0.f);
-		assert(ELEMENTSOF(data) % 2 == 0);
+		assert(data.size() % 2 == 0);
 		std::for_each(std::begin(min_max_index), std::end(min_max_index),
 				[](size_t const (&idx)[2]) {
 					size_t max_index = idx[0];
@@ -319,23 +320,23 @@ TEST(Statistics, ComputeStatistics) {
 					data[min_index] = -120.f;
 
 					LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-					ref.count = ELEMENTSOF(data);
+					ref.count = data.size();
 					ref.index_of_min = min_index;
 					ref.min = data[min_index];
 					ref.index_of_max = max_index;
 					ref.max = data[max_index];
 					ref.sum = data[max_index] + data[min_index];
-					ref.mean = double(data[max_index] + data[min_index]) / ELEMENTSOF(data);
+					ref.mean = double(data[max_index] + data[min_index]) / data.size();
 
 					double v = data[max_index];
 					auto rms2 = v * v;
 					v = data[min_index];
 					rms2 += v * v;
-					rms2 /= ELEMENTSOF(data);
+					rms2 /= data.size();
 					ref.rms = sqrt(rms2);
 					ref.stddev = sqrt(rms2 - ref.mean * ref.mean);
 
-					CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, TestResult, TestResult);
+					CallAndTestResult(ref, data.size(), data.data(), is_valid.data(), TestResult, TestResult);
 
 					data[max_index] = 0;
 					data[min_index] = 0;
@@ -343,49 +344,49 @@ TEST(Statistics, ComputeStatistics) {
 	}
 	{
 		SIMD_ALIGN
-		static float data[4];
+		static std::array<float, 4> data;
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)];
-		for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+		static std::array<bool, data.size()> is_valid;
+		is_valid.fill(true);
+		for (size_t i = 0; i < data.size(); ++i) {
 			data[i] = i;
-			is_valid[i] = true;
 		}
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-		ref.count = ELEMENTSOF(data);
+		ref.count = data.size();
 		ref.index_of_min = 0;
 		ref.min = 0;
-		ref.index_of_max = ELEMENTSOF(data) - 1;
-		ref.max = ELEMENTSOF(data) - 1;
-		ref.sum = (ELEMENTSOF(data) - 1) * (ELEMENTSOF(data) / 2);
-		ref.mean = (ELEMENTSOF(data) - 1) / 2.;
-		auto rms2 = Rms2(ELEMENTSOF(data), data, is_valid) / ELEMENTSOF(data);
+		ref.index_of_max = data.size() - 1;
+		ref.max = data.size() - 1;
+		ref.sum = (data.size() - 1) * (data.size() / 2);
+		ref.mean = (data.size() - 1) / 2.;
+		auto rms2 = Rms2(data.size(), data.data(), is_valid.data())
+				/ data.size();
 		ref.rms = sqrt(rms2);
 		ref.stddev = sqrt(rms2 - ref.mean * ref.mean);
 
-		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, TestResult,
-				TestResult);
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				TestResult, TestResult);
 	}
-
 	{
 		SIMD_ALIGN
-		static float data[1] = { 3.f };
+		static std::array<float, 1> data = { 3.f };
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)] = { true };
+		static std::array<bool, data.size()> is_valid = { true };
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-		ref.count = ELEMENTSOF(data);
+		ref.count = data.size();
 		ref.index_of_min = 0;
 		ref.min = data[0];
-		ref.index_of_max = ELEMENTSOF(data) - 1;
+		ref.index_of_max = data.size() - 1;
 		ref.max = data[0];
 		ref.sum = data[0];
 		ref.mean = data[0];
 		ref.rms = data[0];
 		ref.stddev = 0.;
 
-		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, TestResult,
-				TestResult);
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				TestResult, TestResult);
 	}
 	{
 		SIMD_ALIGN
@@ -409,12 +410,12 @@ TEST(Statistics, ComputeStatistics) {
 	}
 	{
 		SIMD_ALIGN
-		static float data[1024];
+		static std::array<float, 1024> data;
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)];
-		for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+		static std::array<bool, data.size()> is_valid;
+		is_valid.fill(false);
+		for (size_t i = 0; i < data.size(); ++i) {
 			data[i] = i;
-			is_valid[i] = false;
 		}
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
@@ -428,11 +429,10 @@ TEST(Statistics, ComputeStatistics) {
 		ref.rms = NAN;
 		ref.stddev = NAN;
 
-		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, TestResult,
-				TestResult);
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				TestResult, TestResult);
 
-		for (size_t end = ELEMENTSOF(data) - 128; end < ELEMENTSOF(data);
-				++end) {
+		for (size_t end = data.size() - 128; end < data.size(); ++end) {
 			for (size_t pos = end - 128; pos < end; ++pos) {
 				is_valid[pos] = true;
 
@@ -446,8 +446,8 @@ TEST(Statistics, ComputeStatistics) {
 				ref.rms = data[pos];
 				ref.stddev = 0.;
 
-				CallAndTestResult(ref, end, data, is_valid, TestResult,
-						TestResult);
+				CallAndTestResult(ref, end, data.data(), is_valid.data(),
+						TestResult, TestResult);
 
 				is_valid[pos] = false;
 			}
@@ -455,17 +455,17 @@ TEST(Statistics, ComputeStatistics) {
 	}
 	{
 		SIMD_ALIGN
-		static float data[1024];
+		static std::array<float, 1024> data;
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)];
+		static std::array<bool, data.size()> is_valid;
 		size_t count = 0;
 		float sum = 0;
 		float max = -1;
-		float min = ELEMENTSOF(data) + 1;
+		float min = data.size() + 1;
 		size_t max_idx = -1;
 		size_t min_idx = -1;
 		double sqsum = 0.;
-		for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+		for (size_t i = 0; i < data.size(); ++i) {
 			data[i] = i;
 			is_valid[i] = i % 7 == 0;
 			if (is_valid[i]) {
@@ -497,14 +497,14 @@ TEST(Statistics, ComputeStatistics) {
 		ref.rms = std::sqrt(rms2);
 		ref.stddev = std::sqrt(rms2 - mean * mean);
 
-		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, TestResult,
-				TestResult);
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				TestResult, TestResult);
 	}
 	{
 		SIMD_ALIGN
-		static float data[256];
+		static std::array<float, 256> data;
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)];
+		static std::array<bool, data.size()> is_valid;
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.min = 1.;
 		ref.max = -1.;
@@ -521,7 +521,7 @@ TEST(Statistics, ComputeStatistics) {
 					EXPECT_EQ(ref.index_of_max, result.index_of_max);
 					EXPECT_EQ(ref.max, result.max);
 				};
-		for (size_t end = ELEMENTSOF(data) / 2; end < ELEMENTSOF(data); ++end) {
+		for (size_t end = data.size() / 2; end < data.size(); ++end) {
 			for (size_t i = 0; i < end; ++i) {
 				is_valid[i] = true;
 			}
@@ -531,16 +531,16 @@ TEST(Statistics, ComputeStatistics) {
 					data[i] = (v - peak) * (v - peak) + 1;
 				}
 				ref.index_of_min = peak;
-				CallAndTestResult(ref, end, data, is_valid, compare_min,
-						compare_min);
+				CallAndTestResult(ref, end, data.data(), is_valid.data(),
+						compare_min, compare_min);
 
 				for (size_t i = 0; i < end; ++i) {
 					float v = i;
 					data[i] = -(v - peak) * (v - peak) - 1;
 				}
 				ref.index_of_max = peak;
-				CallAndTestResult(ref, end, data, is_valid, compare_max,
-						compare_max);
+				CallAndTestResult(ref, end, data.data(), is_valid.data(),
+						compare_max, compare_max);
 			}
 		}
 	}
@@ -557,21 +557,20 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 	SIMD_ALIGN
-	static float data[8192 * 10000];
-	STATIC_ASSERT(ELEMENTSOF(data) <= INT32_MAX);
+	static std::array<float, 8192LU * 10000> data;
 	SIMD_ALIGN
-	static bool is_valid[ELEMENTSOF(data)];
+	static std::array<bool, data.size()> is_valid;
 	{
-		for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-			data[i] = i - float(ELEMENTSOF(data) + 8);
+		for (size_t i = 0; i < data.size(); ++i) {
+			data[i] = i - float(data.size() + 8);
 			is_valid[i] = i % 2 != 0;
 		}
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-		assert(ELEMENTSOF(data) % 4 == 0);
-		ref.count = ELEMENTSOF(data) / 2;
+		assert(data.size() % 4 == 0);
+		ref.count = data.size() / 2;
 		ref.index_of_min = 1;
 		ref.min = data[ref.index_of_min];
-		ref.index_of_max = ELEMENTSOF(data) - 1 - 2;
+		ref.index_of_max = data.size() - 1 - 2;
 		ref.max = data[ref.index_of_max];
 		ref.sum = -1677721927680000.; // double(ref.max) + double(ref.min) * ref.count / 2.;
 		ref.mean = -40960008; // (double(ref.max) + double(ref.min)) / 2.;
@@ -604,13 +603,13 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectRealEQ(ref.stddev, result.stddev);
 				};
 
-		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, compare,
-				compare_accurate);
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				compare, compare_accurate);
 	}
 	{
-		STATIC_ASSERT(ELEMENTSOF(data) % 4 == 0);
+		STATIC_ASSERT(data.size() % 4 == 0);
 		constexpr float base = 9.0e+5f;
-		for (size_t i = 0; i < ELEMENTSOF(data); i += 4) {
+		for (size_t i = 0; i < data.size(); i += 4) {
 			data[i] = base + 4;
 			data[i + 1] = base + 7;
 			data[i + 2] = base + 13;
@@ -622,14 +621,14 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		}
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-		assert(ELEMENTSOF(data) % 4 == 0);
-		ref.count = ELEMENTSOF(data);
+		assert(data.size() % 4 == 0);
+		ref.count = data.size();
 		ref.index_of_min = 0;
 		ref.min = data[ref.index_of_min];
 		ref.index_of_max = 3;
 		ref.max = data[ref.index_of_max];
 		ref.mean = base + 10;
-		ref.sum = ref.mean * ELEMENTSOF(data);
+		ref.sum = ref.mean * data.size();
 		constexpr double rms2 = (double(base + 4) * double(base + 4)
 				+ double(base + 7) * double(base + 7)
 				+ double(base + 13) * double(base + 13)
@@ -666,12 +665,12 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectRealEQ(ref.stddev, result.stddev);
 				};
 
-		CallAndTestResult(ref, ELEMENTSOF(data), data, is_valid, compare,
-				compare_accurate);
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				compare, compare_accurate);
 
 		constexpr size_t start = 10000;
-		for (auto i = start; i < ELEMENTSOF(data); ++i) {
-			if (CallAndIsDifferent(i, data, is_valid)) {
+		for (auto i = start; i < data.size(); ++i) {
+			if (CallAndIsDifferent(i, data.data(), is_valid.data())) {
 				//std::cout << "ERROR index: " << i << std::endl;
 				EXPECT_LT(start, i); // if this fails, make 'start' more smaller value.
 				EXPECT_LE(11000, i);
@@ -682,19 +681,19 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 		{
 			LIBSAKURA_SYMBOL(Status) status =
-			LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(ELEMENTSOF(data),
-					data, is_valid, &result);
+			LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(data.size(),
+					data.data(), is_valid.data(), &result);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
 
 		double stddev = 0;
 		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, result.mean,
-				ELEMENTSOF(data), data, is_valid, &stddev);
+				data.size(), data.data(), is_valid.data(), &stddev);
 		//std::cout << std::setprecision(16) << sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
 		EXPECT_DOUBLE_EQ(sqrt(variance), stddev);
 	}
 	{
-		size_t elements = ELEMENTSOF(data) - 4 + 1;
+		size_t elements = data.size() - 4 + 1;
 		size_t spike_pos = elements - 1;
 		for (size_t i = 0; i < spike_pos; i += 4) {
 			data[i] = -3;
@@ -760,47 +759,47 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					EXPECT_NEAR(ref.stddev, result.stddev, 1.6008e-10);
 				};
 
-		CallAndTestResult(ref, elements, data, is_valid, compare,
+		CallAndTestResult(ref, elements, data.data(), is_valid.data(), compare,
 				compare_accurate);
 
 		std::swap(data[0], data[spike_pos]);
 		spike_pos = 0;
 		ref.index_of_max = spike_pos;
-		CallAndTestResult(ref, elements, data, is_valid, compare,
+		CallAndTestResult(ref, elements, data.data(), is_valid.data(), compare,
 				compare_accurate);
 
 		size_t pos = elements / 2;
 		std::swap(data[pos], data[spike_pos]);
 		spike_pos = pos;
 		ref.index_of_max = spike_pos;
-		CallAndTestResult(ref, elements, data, is_valid, compare,
+		CallAndTestResult(ref, elements, data.data(), is_valid.data(), compare,
 				compare_accurate);
 
 		pos = elements / 2 + 13;
 		std::swap(data[pos], data[spike_pos]);
 		spike_pos = pos;
 		ref.index_of_max = spike_pos;
-		CallAndTestResult(ref, elements, data, is_valid, compare,
+		CallAndTestResult(ref, elements, data.data(), is_valid.data(), compare,
 				compare_accurate);
 
 		pos = elements / 4 - 13;
 		std::swap(data[pos], data[spike_pos]);
 		spike_pos = pos;
 		ref.index_of_max = spike_pos;
-		CallAndTestResult(ref, elements, data, is_valid, compare,
+		CallAndTestResult(ref, elements, data.data(), is_valid.data(), compare,
 				compare_accurate);
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 		{
 			LIBSAKURA_SYMBOL(Status) status =
-			LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(elements, data,
-					is_valid, &result);
+			LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(elements,
+					data.data(), is_valid.data(), &result);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
 
 		double stddev = 0;
 		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, result.mean,
-				elements, data, is_valid, &stddev);
+				elements, data.data(), is_valid.data(), &stddev);
 		//std::cout << std::setprecision(16) << sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
 		//EXPECT_DOUBLE_EQ(sqrt(variance), stddev);
 		EXPECT_NEAR(sqrt(variance), stddev, 3.89e-05);
@@ -831,22 +830,22 @@ TEST(Statistics, ComputeStatistics_Performance) {
 
 	{
 		SIMD_ALIGN
-		static float data[8192 * 10000];
+		static std::array<float, 8192LU * 10000> data;
 		SIMD_ALIGN
-		static bool is_valid[ELEMENTSOF(data)];
-		for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+		static std::array<bool, data.size()> is_valid;
+		for (size_t i = 0; i < data.size(); ++i) {
 			data[i] = i;
 			is_valid[i] = i % 2 == 0;
 		}
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 		Timing("ComputeStatisticsFloat",
-				[&]() {return LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(ELEMENTSOF(data), data,
-							is_valid, &result);});
+				[&]() {return LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(data.size(), data.data(),
+							is_valid.data(), &result);});
 		Timing("ComputeAccurateStatisticsFloat",
-				[&]() {return LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(ELEMENTSOF(data), data,
-							is_valid, &result);});
-		assert(ELEMENTSOF(data) % 2 == 0);
-		EXPECT_EQ(ELEMENTSOF(data) / 2, result.count);
+				[&]() {return LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(data.size(), data.data(),
+							is_valid.data(), &result);});
+		assert(data.size() % 2 == 0);
+		EXPECT_EQ(data.size() / 2, result.count);
 	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
