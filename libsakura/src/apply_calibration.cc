@@ -90,9 +90,9 @@ inline void ApplyPositionSwitchCalibrationSimd(size_t num_scaling_factor,
 		DataType const target[/*num_data*/],
 		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
 	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
+		DataType const kConstantScalingFactor = scaling_factor[0];
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = constant_scaling_factor * (target[i] - reference[i])
+			result[i] = kConstantScalingFactor * (target[i] - reference[i])
 					/ reference[i];
 		}
 	} else {
@@ -162,8 +162,8 @@ inline void ApplyPositionSwitchCalibrationEigen(size_t num_scaling_factor,
 	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
 			const_cast<DataType *>(reference), num_data);
 	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
-		eigen_result = constant_scaling_factor
+		DataType const kConstantScalingFactor = scaling_factor[0];
+		eigen_result = kConstantScalingFactor
 				* (eigen_target - eigen_reference) / eigen_reference;
 	} else {
 		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
@@ -185,9 +185,9 @@ inline void ApplyPositionSwitchCalibrationDefault(size_t num_scaling_factor,
 	DataType const *__restrict reference = AssumeAligned(reference_arg);
 	DataType *__restrict result = AssumeAligned(result_arg);
 	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
+		DataType const kConstantScalingFactor = scaling_factor[0];
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = constant_scaling_factor * (target[i] - reference[i])
+			result[i] = kConstantScalingFactor * (target[i] - reference[i])
 					/ reference[i];
 		}
 	} else {
