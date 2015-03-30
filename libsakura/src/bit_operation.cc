@@ -224,7 +224,7 @@ inline void OperateBitwiseXor(DataType bit_mask, size_t num_data,
 // Bit operation AND
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
-		bool const edit_mask[], uint8_t result[]) {
+		bool const edit_mask[], uint8_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -253,7 +253,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
-		bool const edit_mask[], uint32_t result[]) {
+		bool const edit_mask[], uint32_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -283,7 +283,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 // Bit operation, Converse Nonimplication
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
-		bool const edit_mask[], uint8_t result[]) {
+		bool const edit_mask[], uint8_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -313,7 +313,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonIm
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
-		bool const edit_mask[], uint32_t result[]) {
+		bool const edit_mask[], uint32_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -344,7 +344,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonIm
 // Bit operation, Material Implication
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
-		bool const edit_mask[], uint8_t result[]) {
+		bool const edit_mask[], uint8_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -373,7 +373,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUi
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
-		bool const edit_mask[], uint32_t result[]) {
+		bool const edit_mask[], uint32_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -403,7 +403,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUi
 // Bit operation NOT
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[], bool const edit_mask[],
-		uint8_t result[]) {
+		uint8_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -432,7 +432,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[], bool const edit_mask[],
-		uint32_t result[]) {
+		uint32_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -462,7 +462,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 // Bit operation OR
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
-		bool const edit_mask[], uint8_t result[]) {
+		bool const edit_mask[], uint8_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -491,7 +491,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
-		bool const edit_mask[], uint32_t result[]) {
+		bool const edit_mask[], uint32_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -521,7 +521,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 // Bit operation XOR
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
-		bool const edit_mask[], uint8_t result[]) {
+		bool const edit_mask[], uint8_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -550,7 +550,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
-		bool const edit_mask[], uint32_t result[]) {
+		bool const edit_mask[], uint32_t result[]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);

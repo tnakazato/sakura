@@ -351,7 +351,7 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
-		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) {
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) noexcept {
 	if (context == nullptr) {
 		LOG4CXX_ERROR(logger, "context should not be NULL");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -370,8 +370,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	try {
-		CreateConvolve1DContextFloat(num_data, kernel_type,
-				kernel_width, use_fft, context);
+		CreateConvolve1DContextFloat(num_data, kernel_type, kernel_width,
+				use_fft, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -390,7 +390,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
-		float const input_data[/*num_data*/], float output_data[/*num_data*/]) {
+		float const input_data[/*num_data*/], float output_data[/*num_data*/])
+				noexcept {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -420,7 +421,7 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
-LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context) {
+LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context) noexcept {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}

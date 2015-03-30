@@ -861,7 +861,7 @@ LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(Func func,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 		size_t elements, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) noexcept {
 	return ComputeStatisticsFloatGateKeeper(
 			[=] {ComputeStatistics(data, is_valid, elements, result);},
 			elements, data, is_valid, result);
@@ -869,7 +869,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
 		size_t elements, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) noexcept {
 	return ComputeStatisticsFloatGateKeeper(
 			[=] {ComputeAccurateStatistics(data, is_valid, elements, result);},
 			elements, data, is_valid, result);
@@ -877,7 +877,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFl
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
 		size_t count, double mean, size_t elements, float const data[],
-		bool const is_valid[], double *result) {
+		bool const is_valid[], double *result) noexcept {
 	CHECK_ARGS(elements <= INT32_MAX);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
@@ -957,7 +957,7 @@ public:
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
 		size_t elements, bool const is_valid[], float data[],
-		size_t *new_elements) {
+		size_t *new_elements) noexcept {
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
 	CHECK_ARGS(new_elements != nullptr);

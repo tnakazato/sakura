@@ -235,7 +235,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
-		float result[/*num_data*/]) {
+		float result[/*num_data*/]) noexcept {
 	if (num_data == 0) {
 		// Nothing to do
 		return LIBSAKURA_SYMBOL(Status_kOK);

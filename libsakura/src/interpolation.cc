@@ -1207,7 +1207,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		bool const mask_base[/*num_x_base*num_y*/], size_t num_x_interpolated,
 		double const x_interpolated[/*num_x_interpolated*/],
 		float data_interpolated[/*num_x_interpolated*num_y*/],
-		bool mask_interpolated[/*num_x_interpolated*num_y*/]) {
+		bool mask_interpolated[/*num_x_interpolated*num_y*/]) noexcept {
 
 	return DoInterpolate(
 			ExecuteInterpolate1D<XInterpolatorHelper<double, float>, double,
@@ -1239,7 +1239,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		bool const mask_base[/*num_y_base*num_x*/], size_t num_y_interpolated,
 		double const y_interpolated[/*num_y_interpolated*/],
 		float data_interpolated[/*num_y_interpolated*num_x*/],
-		bool mask_interpolated[/*num_y_interpolated*num_x*/]) {
+		bool mask_interpolated[/*num_y_interpolated*num_x*/]) noexcept {
 
 	return DoInterpolate(
 			ExecuteInterpolate1D<YInterpolatorHelper<double, float>, double,

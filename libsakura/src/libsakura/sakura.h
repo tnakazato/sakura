@@ -47,6 +47,9 @@
 
 #ifdef __cplusplus
 extern "C" {
+# define LIBSAKURA_NOEXCEPT noexcept
+#else
+# define LIBSAKURA_NOEXCEPT /* noexcept */
 #endif
 
 /**
@@ -169,7 +172,7 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
 LIBSAKURA_SYMBOL(UserAllocator) allocator,
-LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_WARN_UNUSED_RESULT;
+LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -184,7 +187,7 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_WARN_UNUSED_RESULT;
  * @~
  * MT-unsafe
  */
-void LIBSAKURA_SYMBOL(CleanUp)();
+void LIBSAKURA_SYMBOL(CleanUp)() LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -200,7 +203,7 @@ void LIBSAKURA_SYMBOL(CleanUp)();
  * @~
  * MT-safe
  */
-double LIBSAKURA_SYMBOL(GetCurrentTime)();
+double LIBSAKURA_SYMBOL(GetCurrentTime)() LIBSAKURA_NOEXCEPT;
 
 /*
  * memory alignment(for SIMD)
@@ -220,7 +223,7 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)();
  * MT-safe
  */
 
-bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
+bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -235,7 +238,7 @@ bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr);
  * @~
  * MT-safe
  */
-size_t LIBSAKURA_SYMBOL (GetAlignment)();
+size_t LIBSAKURA_SYMBOL (GetAlignment)() LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -264,7 +267,7 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)();
  * MT-safe
  */
 void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
-		size_t size_required);
+		size_t size_required) LIBSAKURA_NOEXCEPT;
 /**
  * @~japanese
  * @brief @a arena がアラインされていないならば、
@@ -293,7 +296,7 @@ void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
  * MT-safe
  */
 float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
-		size_t elements_required);
+		size_t elements_required) LIBSAKURA_NOEXCEPT;
 /**
  * @~japanese
  * @brief @a arena がアラインされていないならば、
@@ -314,7 +317,7 @@ float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
  * MT-safe
  */
 double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
-		size_t elements_required);
+		size_t elements_required) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -405,7 +408,7 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 		size_t num_data, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result)
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
  /**
@@ -416,7 +419,7 @@ typedef struct {
  * num_data is large. This function is slower than @ref sakura_ComputeStatisticsFloat .
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
 		size_t num_data, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result)
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT
 				LIBSAKURA_WARN_UNUSED_RESULT;
 
  /**
@@ -446,7 +449,7 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
 		size_t num_data, bool const is_valid[], float data[],
-		size_t *new_num_data) LIBSAKURA_WARN_UNUSED_RESULT;
+		size_t *new_num_data) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 /**
  * @~english
  * @brief Grids data with convolution.
@@ -554,7 +557,7 @@ typedef struct {
 		double weight_sum/*[num_polarizations_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarizations_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarizations_for_grid]*/[/*num_channels_for_grid*/])
-				LIBSAKURA_WARN_UNUSED_RESULT;
+		 LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -621,7 +624,7 @@ typedef struct {
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
 		float const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfInRangesInclusiveFloat
@@ -630,7 +633,7 @@ typedef struct {
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -698,7 +701,7 @@ typedef struct {
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
 		float const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfInRangesExclusiveFloat
@@ -707,7 +710,7 @@ typedef struct {
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -754,14 +757,14 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfGreaterThanFloat
  * @copydetails sakura_SetTrueIfGreaterThanFloat
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -808,14 +811,14 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfGreaterThanOrEqualsFloat
  * @copydetails sakura_SetTrueIfGreaterThanOrEqualsFloat
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -862,14 +865,14 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfLessThanFloat
  * @copydetails sakura_SetTrueIfLessThanFloat
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -916,14 +919,14 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfLessThanOrEqualsFloat
  * @copydetails sakura_SetTrueIfLessThanOrEqualsFloat
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -956,7 +959,7 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
-		bool result[/*num_data*/]);
+		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -985,13 +988,13 @@ typedef struct {
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_data,
-		uint8_t const data[/*num_data*/], bool result[/*num_data*/]);
+		uint8_t const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_Uint8ToBool
  * @copydetails sakura_Uint8ToBool
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_data,
-		uint32_t const data[/*num_data*/], bool result[/*num_data*/]);
+		uint32_t const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1018,7 +1021,7 @@ typedef struct {
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_data,
-bool const data[/*num_data*/], bool result[/*num_data*/]);
+bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1086,13 +1089,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseAndUint8
  * @copydetails sakura_OperateBitwiseAndUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1162,13 +1165,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseConverseNonImplicationUint8
  * @copydetails sakura_OperateBitwiseConverseNonImplicationUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1238,13 +1241,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseImplicationUint8
  * @copydetails sakura_OperateBitwiseImplicationUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1297,13 +1300,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseNotUint8
  * @copydetails sakura_OperateBitwiseNotUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1371,13 +1374,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseOrUint8
  * @copydetails sakura_OperateBitwiseOrUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1445,13 +1448,13 @@ bool const data[/*num_data*/], bool result[/*num_data*/]);
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseXorUint8
  * @copydetails sakura_OperateBitwiseXorUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]);
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -1673,7 +1676,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolate_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
-		bool interpolated_mask[/*num_interpolated*num_array*/]);
+		bool interpolated_mask[/*num_interpolated*num_array*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_IntepolateXAxisFloat
@@ -1686,7 +1689,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolate_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
-		bool interpolated_mask[/*num_interpolated*num_array*/]);
+		bool interpolated_mask[/*num_interpolated*num_array*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -1782,7 +1785,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrationFloat)(
 		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
-		float result[/*num_data*/]);
+		float result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -1860,8 +1863,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
-				LIBSAKURA_WARN_UNUSED_RESULT;
-/**
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+ /**
  * @~japanese
  * @brief コンボリューションを行う。
  * @details sakura_CreateConvolve1DContextで設定した条件に従い、入力データに対してカーネルによるコンボリューションを行う。
@@ -1900,7 +1904,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
-		float output_data[/*num_data*/]);
+		float output_data[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @~japanese
  * @brief コンボリューションのために生成したコンテキストを破棄する。
@@ -1915,7 +1919,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context);
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -2003,7 +2007,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
-		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
@@ -2015,7 +2019,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double const boundary[/*num_boundary*/],
 		double const basis_data[/*4*num_data*/],
 		double lsq_matrix[/*(3+num_boundary)**2*/],
-		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Update coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
@@ -2028,7 +2032,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double const boundary[/*num_boundary*/],
 		double const basis_data[/*4*num_data*/],
 		double lsq_matrix[/*(3+num_boundary)**2*/],
-		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2131,7 +2135,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
-		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2178,7 +2182,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		size_t num_equations,
 		double const in_matrix[/*num_equations*num_equations*/],
 		double const in_vector[/*num_equations*/],
-		double out[/*num_equations*/]) LIBSAKURA_WARN_UNUSED_RESULT;
+		double out[/*num_equations*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2284,7 +2288,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2300,7 +2304,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
-		struct LIBSAKURA_SYMBOL(BaselineContext) *context);
+		struct LIBSAKURA_SYMBOL(BaselineContext) *context) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -2349,7 +2353,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t const order, size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2423,7 +2427,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -2437,7 +2441,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2499,7 +2503,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
 		bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Extraction of the coefficients of cubic spline fit.
@@ -2513,7 +2517,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*4*num_piece*/], bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2575,7 +2579,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		float clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2610,7 +2614,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
 		double const coeff[/*num_data*/], float out[/*num_data*/])
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2648,7 +2652,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*4*num_pieces*/],
 		double const boundary[/*num_pieces*/], float out[])
-				LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2675,7 +2679,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @return status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
-		size_t *num_coeff) LIBSAKURA_WARN_UNUSED_RESULT;
+		size_t *num_coeff) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -2711,7 +2715,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		float const src[], float dst[]);
+		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -2746,7 +2750,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		float const src[], float dst[]);
+		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -2754,7 +2758,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[], double dst[]);
+		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -2762,7 +2766,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[], double dst[]);
+		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -2770,7 +2774,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[][2], double dst[][2]);
+		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -2778,7 +2782,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[][2], double dst[][2]);
+		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 #ifdef __cplusplus
 }

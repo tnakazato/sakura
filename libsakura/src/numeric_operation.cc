@@ -767,7 +767,7 @@ void UpdateLeastSquareFittingCoefficientsEntry(size_t const num_data,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_boundary, double const boundary[], double const basis_data[],
-		double lsq_matrix[], double lsq_vector[]) {
+		double lsq_matrix[], double lsq_vector[]) noexcept {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -813,7 +813,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
-		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) {
+		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) noexcept {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -867,7 +867,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		double const boundary[/*num_boundary*/],
 		double const basis_data[/*4*num_data*/],
 		double lsq_matrix[/*(3+num_boundary)**2*/],
-		double lsq_vector[/*3+num_boundary*/]) {
+		double lsq_vector[/*3+num_boundary*/]) noexcept {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -875,7 +875,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		size_t const num_data, float const data[],
 		size_t const num_exclude_indices, size_t const exclude_indices[],
 		size_t const num_model_bases, double const basis_data[],
-		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) {
+		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) noexcept {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -927,7 +927,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 		size_t num_equations, double const in_matrix[],
-		double const in_vector[], double out[]) {
+		double const in_vector[], double out[]) noexcept {
 	if (in_matrix == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_matrix)))

@@ -117,7 +117,7 @@ public:
 private:
 	friend ::LIBSAKURA_SYMBOL(Status) (::LIBSAKURA_SYMBOL(Initialize))(
 			::LIBSAKURA_SYMBOL(UserAllocator) allocator,
-			::LIBSAKURA_SYMBOL(UserDeallocator) deallocator);
+			::LIBSAKURA_SYMBOL(UserDeallocator) deallocator) noexcept;
 	static ::LIBSAKURA_SYMBOL(UserAllocator) allocator_;
 	static ::LIBSAKURA_SYMBOL(UserDeallocator) deallocator_;
 };

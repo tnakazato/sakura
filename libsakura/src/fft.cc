@@ -193,7 +193,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[], T const src[],
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		float const src[], float dst[]) {
+		float const src[], float dst[]) noexcept {
 	typedef Type4 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
 	return FlipMatrix<T>(false, inner_most_untouched, dims, elements,
@@ -202,7 +202,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		float const src[], float dst[]) {
+		float const src[], float dst[]) noexcept {
 	typedef Type4 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
 	return FlipMatrix<T>(true, inner_most_untouched, dims, elements,
@@ -211,7 +211,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[], double dst[]) {
+		double const src[], double dst[]) noexcept {
 	typedef Type8 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
 	return FlipMatrix<T>(false, inner_most_untouched, dims, elements,
@@ -220,7 +220,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[], double dst[]) {
+		double const src[], double dst[]) noexcept {
 	typedef Type8 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
 	return FlipMatrix<T>(true, inner_most_untouched, dims, elements,
@@ -229,7 +229,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[][2], double dst[][2]) {
+		double const src[][2], double dst[][2]) noexcept {
 	typedef Type16 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
 	return FlipMatrix<T>(false, inner_most_untouched, dims, elements,
@@ -238,7 +238,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
-		double const src[][2], double dst[][2]) {
+		double const src[][2], double dst[][2]) noexcept {
 	typedef Type16 T;
 	STATIC_ASSERT(sizeof(*src) == sizeof(T) && sizeof(*dst) == sizeof(T));
 	return FlipMatrix<T>(true, inner_most_untouched, dims, elements,

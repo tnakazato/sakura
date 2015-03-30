@@ -94,7 +94,7 @@ void Memory::Free(void *ptr) noexcept {
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
 LIBSAKURA_SYMBOL(UserAllocator) allocator,
-LIBSAKURA_SYMBOL(UserDeallocator) deallocator) {
+LIBSAKURA_SYMBOL(UserDeallocator) deallocator) noexcept {
 	LIBSAKURA_PREFIX::Memory::allocator_ =
 			allocator == nullptr ? DefaultAllocator : allocator;
 	LIBSAKURA_PREFIX::Memory::deallocator_ =
@@ -103,27 +103,27 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator) {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" void LIBSAKURA_SYMBOL(CleanUp)() {
+extern "C" void LIBSAKURA_SYMBOL(CleanUp)() noexcept {
 }
 
-extern "C" double LIBSAKURA_SYMBOL(GetCurrentTime)() {
+extern "C" double LIBSAKURA_SYMBOL(GetCurrentTime)() noexcept {
 	struct timeval tv;
 	int result = gettimeofday(&tv, NULL);
 	(void) (0 && result); // to avoid warning
 	return tv.tv_sec + ((double) tv.tv_usec) / 1000000.;
 }
 
-extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() {
+extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() noexcept {
 	return LIBSAKURA_ALIGNMENT;
 }
 
-extern "C" bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) {
+extern "C" bool LIBSAKURA_SYMBOL(IsAligned)(void const *ptr) noexcept {
 	uintptr_t addr = (uintptr_t) ptr;
 	return addr % LIBSAKURA_ALIGNMENT == 0;
 }
 
 extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
-		size_t size_required) {
+		size_t size_required) noexcept {
 	if (vp == nullptr) {
 		return nullptr;
 	}
@@ -142,14 +142,14 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 }
 
 extern "C" float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena,
-		float *fp, size_t elements_required) {
+		float *fp, size_t elements_required) noexcept {
 	return static_cast<float *>(LIBSAKURA_SYMBOL(AlignAny)(
 			elements_in_arena * sizeof(float), fp,
 			elements_required * sizeof(float)));
 }
 
 extern "C" double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena,
-		double *dp, size_t elements_required) {
+		double *dp, size_t elements_required) noexcept {
 	return static_cast<double *>(LIBSAKURA_SYMBOL(AlignAny)(
 			elements_in_arena * sizeof(double), dp,
 			elements_required * sizeof(double)));

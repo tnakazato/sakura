@@ -1023,7 +1023,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_data,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_data,
-		LIBSAKURA_SYMBOL(BaselineContext) **context) {
+		LIBSAKURA_SYMBOL(BaselineContext) **context) noexcept {
 	if (baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 		//--- fails for sinusoid until sinusoidal fitting is implemented (2015/3/25 WK)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -1054,7 +1054,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
-LIBSAKURA_SYMBOL(BaselineContext) *context) {
+LIBSAKURA_SYMBOL(BaselineContext) *context) noexcept {
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
@@ -1071,7 +1071,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		size_t num_data, float const data[], bool const mask[], float out[],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	size_t num_bases_from_order(
@@ -1118,7 +1118,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[], bool const mask[], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[],
 		bool final_mask[],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)
@@ -1168,7 +1168,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*4*num_piece*/], bool final_mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)
@@ -1215,7 +1215,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
-		size_t *num_coeff) {
+		size_t *num_coeff) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	size_t num_out = GetNumberOfBasesFromOrder(context->baseline_type, order);
@@ -1230,7 +1230,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		size_t num_data, float const data[], bool const mask[],
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool final_mask[], float out[],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	size_t num_bases_from_order(
@@ -1284,7 +1284,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		size_t num_data, float const data[], bool const mask[],
 		float clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[], float out[],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data < context->num_bases)
@@ -1333,7 +1333,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialF
 		size_t num_data, float const data[], bool const mask[], uint16_t order,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, bool final_mask[], float out[],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	if (num_data <= order)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -1377,7 +1377,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialF
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[], size_t num_coeff, double const coeff[],
-		float out[]) {
+		float out[]) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)
@@ -1417,7 +1417,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[], size_t num_pieces, double const coeff[],
-		double const boundary[], float out[]) {
+		double const boundary[], float out[]) noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)

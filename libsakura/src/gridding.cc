@@ -516,7 +516,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(
 		size_t width, size_t height,
 		double weight_sum/*[num_polarization_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/],
-		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) {
+		float grid/*[height][width][num_polarization_for_grid]*/[/*num_channels_for_grid*/]) noexcept {
 	CHECK_ARGS(spectrum_mask != nullptr);
 	CHECK_ARGS(x != nullptr);
 	CHECK_ARGS(y != nullptr);
