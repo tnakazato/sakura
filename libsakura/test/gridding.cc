@@ -217,6 +217,12 @@ struct SIMD_ALIGN RowBase {
 	}
 };
 
+template<typename MessageType>
+void ReportBenchmark(MessageType const &key, double sec) {
+	std::cout << std::setprecision(5) << "#x# benchmark " << key << " " << sec
+			<< std::endl;
+}
+
 template<size_t kNVisChanArg, size_t kNVisPolArg, size_t kNChanArg, size_t kNPolArg,
 		size_t SAMPLING, size_t SUPPORT, size_t kNXArg, size_t kNYArg,
 		typename InitFuncs>
@@ -791,15 +797,6 @@ public:
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 
 		}
-#if 0
-		result = LIBSAKURA_SYMBOL(GridConvolvingFloat)(RT::kNRow, 0, RT::kNRow, rows.sp_mask,
-				rows.x, rows.y, SUPPORT, SAMPLING, RT::kNVisPol, polmap,
-				RT::kNVisChan, chanmap, rows.mask[0][0], rows.values[0][0],
-				rows.weight[0], false, ELEMENTSOF(conv_tab), conv_tab, NPOL,
-				NCHAN, NX, NY, sumwt[0], wgrid[0][0][0], grid[0][0][0]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-#endif
-
 	}
 
 	template<typename T, typename F>
@@ -859,11 +856,11 @@ public:
 	template<typename RT>
 	void TrySpeed(bool do_verify, bool weight_only, RT *rows,
 			double (*sumwt2)[kNPol][kNChan], float (*wgrid2)[kNY][kNX][kNPol][kNChan],
-			float (*grid2)[kNY][kNX][kNPol][kNChan]) {
+			float (*grid2)[kNY][kNX][kNPol][kNChan], char const *key = nullptr) {
 		STATIC_ASSERT(RT::kNVisChan == kNVisChan);
 		STATIC_ASSERT(RT::kNVisPol == kNVisPol);
 		{
-			cout << "Gridding by C++ ... " << flush;
+			cout << "Gridding ... " << flush;
 			double start = CurrentTime();
 			for (size_t i = 0; i < RT::kRowFactor; ++i) {
 				LIBSAKURA_SYMBOL(
@@ -876,8 +873,11 @@ public:
 				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 			}
 			double end = CurrentTime();
-			double new_time = end - start;
-			cout << "done. " << new_time << " sec\n";
+			double time_diff = end - start;
+			cout << "done. \n";
+			if (key) {
+				ReportBenchmark(key, time_diff);
+			}
 		}
 		if (do_verify) {
 			EXPECT_TRUE(CmpSumwt(&sumwt, sumwt2));
@@ -1722,7 +1722,7 @@ TEST(Gridding, Typical) {
 					rows->SetXY(pos, pos);
 					fill_n(tc->conv_tab, ELEMENTSOF(tc->conv_tab), 11);
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2);
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Typical_1");
 
 					double wsum = rows->kNRow;
 					wsum *= rows->weight[0][0] * tc->conv_tab[0];
@@ -1778,7 +1778,7 @@ TEST(Gridding, Typical) {
 					rows->SetRandomXYInt(2 * TestCase::kSupport, TestCase::kNX - 2 * TestCase::kSupport,
 							2 * TestCase::kSupport, TestCase::kNY - 2 * TestCase::kSupport);
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2);
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Typical_2");
 					ASSERT_DOUBLE_EQ(86829.7941513061523438, tc->sumwt[0][0]);
 					ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][1]);
 					EXPECT_TRUE(all_of(&tc->sumwt[0][2], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
@@ -1842,7 +1842,7 @@ TEST(Gridding, Odd) {
 					tc->chanmap[0] = 1;
 					fill_n(tc->conv_tab, ELEMENTSOF(tc->conv_tab), 11);
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2);
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Odd_1");
 
 					double wsum = rows->kNRow;
 					wsum *= rows->weight[0][0] * tc->conv_tab[0];
@@ -1904,7 +1904,7 @@ TEST(Gridding, Odd) {
 					rows->SetRandomXYInt(2 * TestCase::kSupport, TestCase::kNX - 2 * TestCase::kSupport,
 							2 * TestCase::kSupport, TestCase::kNY - 2 * TestCase::kSupport);
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2);
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Odd_2");
 					ASSERT_DOUBLE_EQ(0, tc->sumwt[0][0]);
 					ASSERT_DOUBLE_EQ(173489.9988609105348587, tc->sumwt[0][1]);
 					ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][2]);
@@ -1970,7 +1970,7 @@ TEST(Gridding, SpeedVectorized) {
 							-2. * TestCase::kSupport,
 							TestCase::kNY + 2 * TestCase::kSupport);
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2);
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Vectorized");
 				}
 			});
 }
@@ -1997,7 +1997,7 @@ TEST(Gridding, SpeedScalar) {
 							-2. * TestCase::kSupport, TestCase::kNY + 2 * TestCase::kSupport);
 					tc->chanmap[0] = 1;
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2);
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Scalar");
 				}
 			});
 }

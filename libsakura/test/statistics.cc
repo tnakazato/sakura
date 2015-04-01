@@ -801,6 +801,12 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 
 namespace {
 
+template<typename MessageType>
+void ReportBenchmark(MessageType const &key, double sec) {
+	std::cout << std::setprecision(5) << "#x# benchmark " << key << " " << sec
+			<< std::endl;
+}
+
 template<typename T>
 void Timing(char const str[], T stats_func) {
 	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
@@ -810,7 +816,7 @@ void Timing(char const str[], T stats_func) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	std::cout << str << end - start << std::endl;
+	ReportBenchmark(str, end - start);
 }
 
 }
@@ -830,10 +836,10 @@ TEST(Statistics, ComputeStatistics_Performance) {
 			is_valid[i] = i % 2 == 0;
 		}
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
-		Timing("#x# benchmark ComputeStatisticsFloat ",
+		Timing("ComputeStatisticsFloat",
 				[&]() {return LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(data.size(), data.data(),
 							is_valid.data(), &result);});
-		Timing("#x# benchmark ComputeAccurateStatisticsFloat ",
+		Timing("ComputeAccurateStatisticsFloat",
 				[&]() {return LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(data.size(), data.data(),
 							is_valid.data(), &result);});
 		assert(data.size() % 2 == 0);
