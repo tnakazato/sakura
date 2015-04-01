@@ -27,7 +27,6 @@
  *      Author: kohji
  */
 
-#include <sys/time.h>
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
@@ -35,6 +34,7 @@
 #include <string>
 #include <memory>
 #include <algorithm>
+#include <chrono>
 
 #if LIBSAKURA_HAS_LOG4CXX
 #include <log4cxx/propertyconfigurator.h>
@@ -107,10 +107,9 @@ extern "C" void LIBSAKURA_SYMBOL(CleanUp)() noexcept {
 }
 
 extern "C" double LIBSAKURA_SYMBOL(GetCurrentTime)() noexcept {
-	struct timeval tv;
-	int result = gettimeofday(&tv, NULL);
-	(void) (0 && result); // to avoid warning
-	return tv.tv_sec + ((double) tv.tv_usec) / 1000000.;
+	using namespace std::chrono;
+	auto now = system_clock::now().time_since_epoch();
+	return duration_cast<duration<double, seconds::period>>(now).count();
 }
 
 extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() noexcept {
