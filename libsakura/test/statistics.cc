@@ -285,9 +285,7 @@ TEST(Statistics, ComputeStatistics) {
 		static std::array<bool, data.size()> is_valid;
 		{
 			is_valid.fill(true);
-			for (size_t i = 0; i < data.size(); ++i) {
-				data[i] = i;
-			}
+			std::iota(data.begin(), data.end(), 0);
 			assert(data.size() % 2 == 0);
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 			ref.count = data.size();
@@ -348,9 +346,7 @@ TEST(Statistics, ComputeStatistics) {
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
 		is_valid.fill(true);
-		for (size_t i = 0; i < data.size(); ++i) {
-			data[i] = i;
-		}
+		std::iota(data.begin(), data.end(), 0);
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = data.size();
@@ -414,9 +410,7 @@ TEST(Statistics, ComputeStatistics) {
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
 		is_valid.fill(false);
-		for (size_t i = 0; i < data.size(); ++i) {
-			data[i] = i;
-		}
+		std::iota(data.begin(), data.end(), 0);
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = 0;
@@ -465,8 +459,8 @@ TEST(Statistics, ComputeStatistics) {
 		size_t max_idx = -1;
 		size_t min_idx = -1;
 		double sqsum = 0.;
-		for (size_t i = 0; i < data.size(); ++i) {
-			data[i] = i;
+		std::iota(data.begin(), data.end(), 0);
+		for (size_t i = 0; i < is_valid.size(); ++i) {
 			is_valid[i] = i % 7 == 0;
 			if (is_valid[i]) {
 				++count;
@@ -521,10 +515,8 @@ TEST(Statistics, ComputeStatistics) {
 					EXPECT_EQ(ref.index_of_max, result.index_of_max);
 					EXPECT_EQ(ref.max, result.max);
 				};
+		is_valid.fill(true);
 		for (size_t end = data.size() / 2; end < data.size(); ++end) {
-			for (size_t i = 0; i < end; ++i) {
-				is_valid[i] = true;
-			}
 			for (size_t peak = 0; peak < end; ++peak) {
 				for (size_t i = 0; i < end; ++i) {
 					float v = i;
@@ -833,8 +825,8 @@ TEST(Statistics, ComputeStatistics_Performance) {
 		static std::array<float, 8192LU * 10000> data;
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
-		for (size_t i = 0; i < data.size(); ++i) {
-			data[i] = i;
+		std::iota(data.begin(), data.end(), 0);
+		for (size_t i = 0; i < is_valid.size(); ++i) {
 			is_valid[i] = i % 2 == 0;
 		}
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
