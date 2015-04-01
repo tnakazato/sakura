@@ -31,6 +31,8 @@
 #include <iomanip>
 #include <memory>
 #include <complex>
+#include <functional>
+#include <numeric>
 
 #include <libsakura/sakura.h>
 
@@ -79,11 +81,7 @@ template<typename T>
 T Product(size_t n, T const data[]) {
 	if (n == 0)
 		return 0;
-	T result = 1;
-	for (size_t i = 0; i < n; ++i) {
-		result *= data[i];
-	}
-	return result;
+	return accumulate(&data[0], &data[n], T(1), multiplies<T>());
 }
 
 template<typename T>
@@ -152,9 +150,14 @@ struct TestTarget<complex<double> > {
 	}
 };
 
-template<typename T, size_t COL, bool kTiming = false, int kRepeat = 1>
-void TestGeneric(bool inner_most_untouched, size_t dims, size_t const elements[],
-		T const ref[]) {
+void ReportNone(double sec, char const action[]) {
+}
+
+template<typename T, size_t COL, bool kTiming = false, int kRepeat = 1,
+		typename Func = decltype(ReportNone)>
+void TestGeneric(bool inner_most_untouched, size_t dims,
+		size_t const elements[], T const ref[],
+		Func timingReporter = ReportNone) {
 	const size_t prod = Product(dims, elements);
 	T *data = nullptr;
 	unique_ptr<void, DefaultAlignedMemory> data_storage(
@@ -178,7 +181,7 @@ void TestGeneric(bool inner_most_untouched, size_t dims, size_t const elements[]
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		if (kTiming) {
-			cout << "Flip time: " << end - start << " sec" << endl;
+			timingReporter(end - start, "Flip");
 		}
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -202,7 +205,7 @@ void TestGeneric(bool inner_most_untouched, size_t dims, size_t const elements[]
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		if (kTiming) {
-			cout << "Unflip time: " << end - start << " sec" << endl;
+			timingReporter(end - start, "Unflip");
 		}
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -406,17 +409,29 @@ void TestsError() {
 	}
 }
 
+template<typename MessageType>
+void ReportBenchmark(MessageType const &key, double sec) {
+	cout << "#x# benchmark " << key << " " << sec << endl;
+}
+
 template<typename T>
-void TestsSpeed() {
+void TestsSpeed(char const key_base[]) {
+	auto inner_most_untouched = "_touched";
+	auto reporter =
+			[key_base, &inner_most_untouched](double sec, char const action[]) {
+				string key(action);
+				ReportBenchmark(key + key_base + inner_most_untouched, sec);
+			};
 	{
 		static size_t const elements[] = { 128, 1024, 512 };
 		const size_t dims = ELEMENTSOF(elements);
-		TestGeneric<T, 512, true, 8>(false, dims, elements, nullptr);
+		TestGeneric<T, 512, true, 8>(false, dims, elements, nullptr, reporter);
 	}
+	inner_most_untouched = "_untouched";
 	{
 		static size_t const elements[] = { 128, 1024, 512 };
 		const size_t dims = ELEMENTSOF(elements);
-		TestGeneric<T, 512, true, 8>(true, dims, elements, nullptr);
+		TestGeneric<T, 512, true, 8>(true, dims, elements, nullptr, reporter);
 	}
 }
 
@@ -461,11 +476,11 @@ TEST(FFT, Performance) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 
 	cout << "float:\n";
-	TestsSpeed<float>();
+	TestsSpeed<float>("MatrixFloat");
 	cout << "double:\n";
-	TestsSpeed<double>();
+	TestsSpeed<double>("MatrixDouble");
 	cout << "complex<double>:\n";
-	TestsSpeed<complex<double> >();
+	TestsSpeed<complex<double> >("MatrixDouble2");
 
 	LIBSAKURA_SYMBOL(CleanUp)();
 }

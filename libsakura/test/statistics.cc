@@ -810,7 +810,7 @@ void Timing(char const str[], T stats_func) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-	std::cout << str << " time: " << end - start << std::endl;
+	std::cout << str << end - start << std::endl;
 }
 
 }
@@ -830,10 +830,10 @@ TEST(Statistics, ComputeStatistics_Performance) {
 			is_valid[i] = i % 2 == 0;
 		}
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
-		Timing("ComputeStatisticsFloat",
+		Timing("#x# benchmark ComputeStatisticsFloat ",
 				[&]() {return LIBSAKURA_SYMBOL (ComputeStatisticsFloat)(data.size(), data.data(),
 							is_valid.data(), &result);});
-		Timing("ComputeAccurateStatisticsFloat",
+		Timing("#x# benchmark ComputeAccurateStatisticsFloat ",
 				[&]() {return LIBSAKURA_SYMBOL (ComputeAccurateStatisticsFloat)(data.size(), data.data(),
 							is_valid.data(), &result);});
 		assert(data.size() % 2 == 0);
