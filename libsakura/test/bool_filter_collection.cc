@@ -40,7 +40,86 @@ using namespace std;
 
 
 /*
- * Tests by a threshold value
+ * Test of generating a boolean filter using ranges
+ * Inputs (float):
+ * - data = [0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5]
+ * - ranges: lower = [-0.75, 0.5], upper = [-0.25, 0.75]
+ * Inputs (int):
+ * - data = [0, -5, -10, -5, 0, 5, 10, 5]
+ * - ranges: lower = [-7, 5], upper = [-3, 7]
+ * RESULT:
+ * - RangesInclusive  = [F, T, F, T, F, T, T, T]
+ * - RangesExclusive = [F, T, F, T, F, F, F, F]
+ * results should be [F, F, F, F, F, F, F, F] if lower or upper is empty
+ */
+// Generalize function type for boundary tests
+template<typename DataType>
+struct RangesFunction{
+	typedef LIBSAKURA_SYMBOL(Status) (*ranges_func_ptr_t)(size_t,
+			DataType const*, size_t, DataType const*, DataType const*, bool*);
+	ranges_func_ptr_t function;
+};
+struct NumConditionAndAnswer{
+	size_t num_condition;
+	bool answer[NUM_IN];     // answer array
+};
+// a struct to store test parameters for both uint8 and uint32
+struct RangesTestComponent {
+	string name;               // name of operation
+	RangesFunction<float> funcfloat;
+	RangesFunction<int> funcint;
+	NumConditionAndAnswer num_condition_answer[2];
+	static size_t GetNumTest() {return ELEMENTSOF(num_condition_answer);};
+};
+
+RangesTestComponent RangesTestCase[] {
+		{"Inclusive Ranges",
+				{ LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat) },
+				{ LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt) },
+				{ { NUM_RANGE, { false, true, false, true, false, true, false, true } },
+					{ 0, { false, false, false, false, false, false, false, false } } } },
+		{"Exclusive Ranges",
+				{ LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat) },
+						{ LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt) },
+						{ {NUM_RANGE, { false, true, false, true, false, false, false, false }},
+							{0, { false, false, false, false, false, false, false, false } } }},
+};
+
+/*
+ * Helper functions to select proper ranges_func_ptr_t from
+ *  BoundaryTestComponent by data type and return test kit consists of
+ * - name of bit operation
+ * - sakura function to test, number of ranges, and the answer for the given data type.
+ */
+template<typename DataType>
+struct RangesTestHelper {
+	typedef tuple<string, RangesFunction<DataType>, NumConditionAndAnswer> RangesTestKit;
+	static RangesTestKit GetItem(size_t num_components,
+			RangesTestComponent const *test_components, size_t i, size_t j);
+};
+
+template<>
+RangesTestHelper<float>::RangesTestKit RangesTestHelper<float>::GetItem(size_t num_components,
+		RangesTestComponent const *test_components, size_t i, size_t j) {
+	assert(i < num_components);
+	auto testcase = test_components[i];
+	assert(j < testcase.GetNumTest());
+	return RangesTestKit(testcase.name, testcase.funcfloat,
+			testcase.num_condition_answer[j]);
+}
+
+template<>
+RangesTestHelper<int>::RangesTestKit RangesTestHelper<int>::GetItem(size_t num_components,
+		RangesTestComponent const *test_components, size_t i, size_t j) {
+	assert(i < num_components);
+	auto testcase = test_components[i];
+	assert(j < testcase.GetNumTest());
+	return RangesTestKit(testcase.name, testcase.funcint,
+			testcase.num_condition_answer[j]);
+}
+
+/*
+ * Test of generating a boolean filter using a threshold value
  * Inputs:
  * -  data = [0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5] (float)
  *        or [0, -5, -10, -5, 0, 5, 10, 5] (int)
@@ -83,6 +162,7 @@ BoundaryTestComponent BoundaryTestCase[] {
 				{ LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt) },
 				{ true, true, true, true, true, false, false, false } }
 };
+
 /*
  * Helper functions to select proper boundary_func_ptr_t from
  *  BoundaryTestComponent by data type and return test kit consists of
@@ -101,9 +181,9 @@ BoundaryTestHelper<float>::BoundaryTestKit BoundaryTestHelper<float>::GetItem(si
 		BoundaryTestComponent const *test_components, size_t i) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
-	cout << "answer = ";
-	for (size_t i = 0; i < ELEMENTSOF(testcase.answer); ++i) cout << testcase.answer[i];
-	cout << endl;
+//	cout << "answer = ";
+//	for (size_t i = 0; i < ELEMENTSOF(testcase.answer); ++i) cout << testcase.answer[i];
+//	cout << endl;
 	return BoundaryTestKit(testcase.name, testcase.funcfloat, testcase.answer);
 }
 
@@ -189,6 +269,89 @@ protected:
 	/*
 	 * Actual test definitions
 	 */
+	void RunRangesTest(size_t num_data, DataType *in_data,
+			size_t num_condition, DataType *lower_bounds, DataType *upper_bounds,
+			bool *result, size_t num_operation, RangesTestComponent const *test_components,
+			LIBSAKURA_SYMBOL(Status) return_value, size_t num_num_condition=1, size_t num_repeat = 1) {
+
+		//verbose = true;
+		if (in_data != nullptr)	{
+			// Create long input data by repeating data_
+			GetDataInLength(num_data, in_data);
+			if (verbose) {
+				PrintArray("data", num_data, in_data);
+			}
+		}
+		// Copy bounds to aligned arrays
+		if (upper_bounds != nullptr) {
+			if (lower_bounds != nullptr) {
+				GetBounds(lower_bounds, upper_bounds);
+				if (verbose) {
+					PrintArray("lower_bound", num_condition, lower_bounds);
+				}
+			} else {
+				DataType dummy[num_condition];
+				GetBounds(dummy, upper_bounds);
+			}
+			if (verbose) {
+				PrintArray("upper_bound", num_condition, upper_bounds);
+			}
+		} else if (lower_bounds != nullptr) {
+			DataType dummy[num_condition];
+			GetBounds(lower_bounds, dummy);
+			if (verbose) {
+				PrintArray("lower_bound", num_condition, lower_bounds);
+			}
+		}
+
+		if (num_repeat > 1)
+			cout << "Iterating " << num_repeat
+					<< " loops for each operation. The length of arrays is "
+					<< num_data << endl;
+
+		RangesTestHelper<DataType> my_testcase;
+		for (size_t iop = 0; iop < num_operation; ++iop) {
+			size_t const num_test = test_components[iop].GetNumTest();
+			// make sure number of elements for variation of conditions in RangesTestComponent
+			// is sufficient for iteration
+			assert(num_num_condition <= num_test);
+			for (size_t jc = 0; jc < num_num_condition; ++jc){
+				auto kit = my_testcase.GetItem(num_operation, test_components, iop, jc);
+				NumConditionAndAnswer num_and_ans = std::get<2>(kit);
+				cout << "Testing: " << std::get<0>(kit) << " (number of ranges = "
+						<< num_and_ans.num_condition << ")" << endl;
+				LIBSAKURA_SYMBOL(Status) status;
+				double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+				for (size_t irun = 0; irun < num_repeat; ++irun) {
+					// Actual execution of bit operation function
+					status = (std::get<1>(kit).function)(num_data, in_data,
+							num_and_ans.num_condition, lower_bounds, upper_bounds, result);
+				} // end of num_repeat loop
+				double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+				if (num_repeat > 1)
+					cout << "Elapse time of operation: " << end - start << " sec"
+							<< endl;
+
+				if (verbose) {
+					if (status == LIBSAKURA_SYMBOL(Status_kOK))
+						PrintArray("result", num_data, result);
+					else
+						cout << "sakura_Status = " << status << endl;
+				}
+				// Verification
+				EXPECT_EQ(return_value, status);
+				if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
+					auto *answer = num_and_ans.answer;
+					size_t const num_answer = ELEMENTSOF(num_and_ans.answer);
+					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+					for (size_t i = 0; i < num_data; ++i) {
+						ASSERT_EQ(answer[i % num_answer], result[i]);
+					}
+				}
+			}
+		} // end of operation loop
+	}
+
 	void RunBoundaryTest(size_t num_data, DataType *in_data, bool *result,
 			size_t num_operation, BoundaryTestComponent const *test_components,
 			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
@@ -234,8 +397,8 @@ protected:
 			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
 				auto *answer = test_components[iop].answer;//std::get<2>(kit);
 				size_t const num_answer = ELEMENTSOF(std::get<2>(kit));
-				PrintArray("answer", num_answer, answer);
-				PrintArray("kit answer", num_answer, std::get<2>(kit));
+//				PrintArray("answer", num_answer, answer);
+//				PrintArray("kit answer", num_answer, std::get<2>(kit));
 				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 				for (size_t i = 0; i < num_data; ++i) {
 					ASSERT_EQ(answer[i % num_answer], result[i]);
@@ -243,6 +406,121 @@ protected:
 			}
 		} // end of operation loop
 	}
+
+	void RunRangesVariousLengthTest() {
+		size_t const array_length[] = { NUM_IN, 11, 0 };
+		size_t const num_test(ELEMENTSOF(array_length));
+		size_t const num_max(11);
+		//num_max = max(array_length);
+		SIMD_ALIGN
+		DataType data[num_max];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+		SIMD_ALIGN
+		DataType lower[NUM_RANGE];
+		SIMD_ALIGN
+		DataType upper[ELEMENTSOF(lower)];
+		size_t const num_range(ELEMENTSOF(lower));
+
+		for (size_t irun = 0; irun < num_test; ++irun) {
+			size_t const num_data(array_length[irun]);
+			// Loop over sakura functions and number of conditions
+			cout << "[Tests with array length = " << num_data << "]" << endl;
+			RunRangesTest(num_data, data, num_range, lower, upper, result,
+					ELEMENTSOF(RangesTestCase), RangesTestCase, LIBSAKURA_SYMBOL(Status_kOK), num_data==NUM_IN ? 2 : 1);
+		}
+	}
+
+	void RunRangesLongTest(size_t const num_long, size_t const num_repeat) {
+		size_t const num_large(num_long);
+		SIMD_ALIGN
+		DataType data[num_large];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+		SIMD_ALIGN
+		DataType lower[NUM_RANGE];
+		SIMD_ALIGN
+		DataType upper[ELEMENTSOF(lower)];
+		size_t const num_range(ELEMENTSOF(lower));
+
+		// Loop over sakura functions and number of conditions
+		cout << "[Long tests]" << endl;
+		RunRangesTest(num_long, data, num_range, lower, upper, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase, LIBSAKURA_SYMBOL(Status_kOK), 1, num_repeat);
+	}
+
+	/*
+	 * Failure cases of various bool filter functions using ranges.
+	 * Testing null pointer array and unaligned arrays.
+	 * RESULT:
+	 *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+	 */
+	void RunRangesFailTest() {
+		size_t offset(UNALIGN_OFFSET);
+		size_t const num_data(NUM_IN);
+		size_t const num_elements(num_data + offset);
+		size_t const num_range_elements(NUM_RANGE + offset);
+		SIMD_ALIGN
+		DataType data[num_elements];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+		SIMD_ALIGN
+		DataType lower[num_range_elements];
+		SIMD_ALIGN
+		DataType upper[ELEMENTSOF(lower)];
+		size_t const num_range(ELEMENTSOF(lower));
+		// For null array tests
+		DataType *datatype_null = nullptr;
+		bool *result_null = nullptr;
+		// Define unaligned array
+		DataType *data_shift = &data[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+		bool *result_shift = &result[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+		DataType *range_shift = &lower[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(range_shift));
+
+//		// lower > upper
+//		cout << "[Test lower_bounds > upper_bounds]" << endl;
+//		RunRangesTest(num_data, data, num_range, upper, lower, result,
+//				ELEMENTSOF(RangesTestCase), RangesTestCase,
+//				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		// Null pointer array
+		cout << "[Test NULL data array]" << endl;
+		RunRangesTest(num_data, datatype_null, num_range, upper, lower, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test NULL lowerr_bounds array]" << endl;
+		RunRangesTest(num_data, data, num_range, datatype_null, upper, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test NULL uppe_bounds array]" << endl;
+		RunRangesTest(num_data, data, num_range, lower, datatype_null, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test NULL result array]" << endl;
+		RunRangesTest(num_data, data, num_range, lower, upper, result_null,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		// Unaligned array
+		cout << "[Test unaligned data array]" << endl;
+		RunRangesTest(num_data, data_shift, num_range, lower, upper,
+				result, ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test unaligned lower_bounds array]" << endl;
+		RunRangesTest(num_data, data, num_range, data_shift, upper,
+				result, ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test unaligned upper_bounds array]" << endl;
+		RunRangesTest(num_data, data, num_range, lower, data_shift,
+				result, ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test unaligned result array]" << endl;
+		RunRangesTest(num_data, data, num_range, lower, upper,
+				result_shift, ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+	}
+
 
 	void RunBoundaryVariousLengthTest() {
 		size_t const array_length[] = { NUM_IN, 11, 0 };
@@ -383,11 +661,40 @@ protected:
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
- * RESULT:
- * result = [F, T, F, T, F, T, F, T]
+ * Test bool filter generation using ranges for an array of length 8, 11 and zero
  */
-TEST_F(BoolFilterFloat, RangesInclusive) {
+TEST_F(BoolFilterFloat, RangesVariousLength) {
+	RunRangesVariousLengthTest();
+}
+
+TEST_F(BoolFilterInt, RangesVariousLength) {
+	RunRangesVariousLengthTest();
+}
+
+/*
+ * Test bool filter generation using ranges for an array for a large array
+ */
+TEST_F(BoolFilterFloat, RangesLong) {
+	RunRangesLongTest(NUM_IN_LONG, 2000);
+}
+
+TEST_F(BoolFilterInt, RangesLong) {
+	RunRangesLongTest(NUM_IN_LONG, 2000);
+}
+
+/*
+ * Test failure cases of bool filter generation using ranges
+ */
+TEST_F(BoolFilterFloat, RangesFail) {
+	RunRangesFailTest();
+}
+
+TEST_F(BoolFilterInt, RangesFail) {
+	RunRangesFailTest();
+}
+
+/* lower_bound > upper_bound */
+TEST_F(BoolFilterFloat, RangesInclusiveFailExchangeBounds) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -399,9 +706,6 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 	float upper[ELEMENTSOF(lower)];
 	size_t const num_range(ELEMENTSOF(lower));
 
-	bool answer[] = { false, true, false, true, false, true, false, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 	// Copy bounds to aligned arrays
@@ -409,183 +713,24 @@ TEST_F(BoolFilterFloat, RangesInclusive) {
 
 	if (verbose) {
 		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
+		// Exchange upper and lower bounds
+		PrintArray("lower_bound", NUM_RANGE, upper);
+		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
+			num_data, in_data, num_range, upper, lower, result);
 	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
- * with an array of 11 elements (num_data=11).
+ * Test failure cases of sakura_SetTrueIfInRangesInclusiveInt
  * RESULT:
- * result = [F, T, F, T, F, T, F, T
- *        F, T, F]
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
-TEST_F(BoolFilterFloat, RangesInclusiveLengthEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, true, false, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
- * with a long array
- * RESULT:
- * result = [F, T, F, T, F, T, F, T, ...]
- */
-TEST_F(BoolFilterFloat, RangesInclusiveLong) {
-	size_t const num_data(NUM_IN_LONG);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, true, false, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	double start, end;
-	size_t const num_repeat = 2000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_data << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(num_data, in_data,
-				num_range, lower, upper, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
- * with an array of zero elements (num_data=0).
- * RESULT:
- * result = []
- */
-TEST_F(BoolFilterFloat, RangesInclusiveLenghZero) {
-	size_t const num_data(0);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower, upper, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveFloat
- * without bounderies (num_condition=0)
- * RESULT:
- * result = [F, F, F, F, F, F, F, F]
- */
-TEST_F(BoolFilterFloat, RangesInclusiveZeroCondition) {
-	size_t const num_data(NUM_IN), num_range(0);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[num_range];
-	SIMD_ALIGN
-	float upper[num_range];
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_FALSE(result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
- * RESULT:
- * result = [F, T, F, T, F, T, F, T]
- */
-TEST_F(BoolFilterInt, RangesInclusive) {
+/* lower_bound > upper_bound */
+TEST_F(BoolFilterInt, RangesInclusiveFailExchangeBounds) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	int in_data[num_data];
@@ -597,9 +742,6 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 	int upper[ELEMENTSOF(lower)];
 	size_t const num_range(ELEMENTSOF(lower));
 
-	bool answer[] = { false, true, false, true, false, true, false, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 	// Copy bounds to aligned arrays
@@ -607,183 +749,19 @@ TEST_F(BoolFilterInt, RangesInclusive) {
 
 	if (verbose) {
 		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
+		// Exchange upper and lower bounds
+		PrintArray("lower_bound", NUM_RANGE, upper);
+		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
+			num_data, in_data, num_range, upper, lower, result);
 	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt with an array of 11 elements
- * RESULT:
- * result = [F, T, F, T, F, T, F, T,
- *        F, T, F]
- */
-TEST_F(BoolFilterInt, RangesInclusiveLengthEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, true, false, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
- * with a long array
- * RESULT:
- * result = [F, T, F, T, F, T, F, T, ...]
- */
-TEST_F(BoolFilterInt, RangesInclusiveLong) {
-	size_t const num_data(NUM_IN_LONG);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, true, false, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	double start, end;
-	size_t const num_repeat = 2000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_data << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIfInRangesInclusiveInt(num_data, in_data,
-				num_range, lower, upper, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
- * with an array of zero elements (num_data=0).
- * RESULT:
- * result = []
- */
-TEST_F(BoolFilterInt, RangesInclusiveLenghZero) {
-	size_t const num_data(0), num_range(NUM_RANGE);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[num_range];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesInclusiveInt
- * without bounderies (num_condition=0)
- * RESULT:
- * result = [F, F, F, F, F, F, F, F]
- */
-TEST_F(BoolFilterInt, RangesInclusiveZeroCondition) {
-	size_t const num_data(NUM_IN), num_range(0);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[num_range];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_FALSE(result[i]);
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
- * RESULT:
- * result = [F, T, F, T, F, F, F, F]
- */
-TEST_F(BoolFilterFloat, RangesExclusive) {
+/* lower_bound > upper_bound */
+TEST_F(BoolFilterFloat, RangesExclusiveFailExchangeBounds) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -795,9 +773,6 @@ TEST_F(BoolFilterFloat, RangesExclusive) {
 	float upper[ELEMENTSOF(lower)];
 	size_t const num_range(ELEMENTSOF(lower));
 
-	bool answer[] = { false, true, false, true, false, false, false, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 	// Copy bounds to aligned arrays
@@ -805,183 +780,24 @@ TEST_F(BoolFilterFloat, RangesExclusive) {
 
 	if (verbose) {
 		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
+		// Exchange upper and lower bounds
+		PrintArray("lower_bound", NUM_RANGE, upper);
+		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
+			num_data, in_data, num_range, upper, lower, result);
 	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
 /*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
- * with an array of 11 elements (num_data=11).
+ * Test failure cases of sakura_SetTrueIfInRangesExclusiveInt
  * RESULT:
- * result = [F, T, F, T, F, F, F, F,
- *           F, T, F]
+ *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
-TEST_F(BoolFilterFloat, RangesExclusiveLengthEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, false, false, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
- * with a long array
- * RESULT:
- * result = [F, T, F, T, F, F, F, F, ...]
- */
-TEST_F(BoolFilterFloat, RangesExclusiveLong) {
-	size_t const num_data(NUM_IN_LONG);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, false, false, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	double start, end;
-	size_t const num_repeat = 2000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_data << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIfInRangesExclusiveFloat(num_data, in_data,
-				num_range, lower, upper, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
- * with an array of zero elements (num_data=0).
- * RESULT:
- * result = []
- */
-TEST_F(BoolFilterFloat, RangesExclusiveLenghZero) {
-	size_t const num_data(0);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower, upper, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveFloat
- * without bounderies (num_condition=0)
- * RESULT:
- * result = [F, F, F, F, F, F, F, F]
- */
-TEST_F(BoolFilterFloat, RangesExclusiveZeroCondition) {
-	size_t const num_data(NUM_IN), num_range(0);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[num_range];
-	SIMD_ALIGN
-	float upper[num_range];
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_FALSE(result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
- * RESULT:
- * result = [F, T, F, T, F, F, F, F]
- */
-TEST_F(BoolFilterInt, RangesExclusive) {
+/* lower_bound > upper_bound */
+TEST_F(BoolFilterInt, RangesExclusiveFailExchangeBounds) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	int in_data[num_data];
@@ -993,9 +809,6 @@ TEST_F(BoolFilterInt, RangesExclusive) {
 	int upper[ELEMENTSOF(lower)];
 	size_t const num_range(ELEMENTSOF(lower));
 
-	bool answer[] = { false, true, false, true, false, false, false, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
 	// Create long input data by repeating data_
 	GetDataInLength(num_data, in_data);
 	// Copy bounds to aligned arrays
@@ -1003,178 +816,20 @@ TEST_F(BoolFilterInt, RangesExclusive) {
 
 	if (verbose) {
 		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
+		// Exchange upper and lower bounds
+		PrintArray("lower_bound", NUM_RANGE, upper);
+		PrintArray("upper_bound", NUM_RANGE, lower);
 	}
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
+			num_data, in_data, num_range, upper, lower, result);
 	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt with an array of 11 elements
- * RESULT:
- * result = [F, T, F, T, F, F, F, F,
- *           F, T, F]
- */
-TEST_F(BoolFilterInt, RangesExclusiveLengthEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, false, false, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		PrintArray("lower_bound", NUM_RANGE, lower);
-		PrintArray("upper_bound", NUM_RANGE, upper);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
- * with a long array
- * RESULT:
- * result = [F, T, F, T, F, F, F, F, ...]
- */
-TEST_F(BoolFilterInt, RangesExclusiveLong) {
-	size_t const num_data(NUM_IN_LONG);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool answer[] = { false, true, false, true, false, false, false, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	double start, end;
-	size_t const num_repeat = 2000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_data << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetTrueIfInRangesExclusiveInt(num_data, in_data,
-				num_range, lower, upper, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
- * with an array of zero elements (num_data=0).
- * RESULT:
- * result = []
- */
-TEST_F(BoolFilterInt, RangesExclusiveLenghZero) {
-	size_t const num_data(0), num_range(NUM_RANGE);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[num_range];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/*
- * Test bool filter generation sakura_SetTrueIfInRangesExclusiveInt
- * without bounderies (num_condition=0)
- * RESULT:
- * result = [F, F, F, F, F, F, F, F]
- */
-TEST_F(BoolFilterInt, RangesExclusiveZeroCondition) {
-	size_t const num_data(NUM_IN), num_range(0);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[num_range];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower, upper, result);
-
-	if (verbose)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_FALSE(result[i]);
-	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
- * Test bool filter generation using a boundary value for an array of length 8, 11 and zero
+ * Test bool filter generation using a threshold value for an array of length 8, 11 and zero
  */
 TEST_F(BoolFilterFloat, BoundaryVariousLength) {
 	RunBoundaryVariousLengthTest();
@@ -1663,1072 +1318,6 @@ TEST_F(BoolFilterOther, Uint32ToBoolLenghZero) {
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_SetTrueIfInRangesInclusiveFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterFloat, RangesInclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, RangesInclusiveFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	float *data_null = nullptr;
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, data_null, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesInclusiveFailNullLower) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float upper[NUM_RANGE];
-
-	float dummy[ELEMENTSOF(upper)];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	float *lower_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower_null, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesInclusiveFailNullUpper) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-
-	float dummy[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	float *upper_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower, upper_null, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesInclusiveFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, lower, upper, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, data_shift, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, data, num_range, lower, upper, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedLower) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE + offset];
-	SIMD_ALIGN
-	float upper[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	float dummy[ELEMENTSOF(upper)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-	// Initialize lower
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		lower[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	float *lower_shift = &lower[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, data, num_range, lower_shift, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesInclusiveNotAlignedUpper) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(lower));
-	SIMD_ALIGN
-	float upper[NUM_RANGE + offset];
-
-	float dummy[ELEMENTSOF(lower)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-	// Initialize upper
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		upper[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	float *upper_shift = &upper[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, data, num_range, lower, upper_shift, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfInRangesInclusiveInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterInt, RangesInclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Null pointer arrays */
-TEST_F(BoolFilterInt, RangesInclusiveFailNullData) {
-	size_t const num_data(NUM_IN);
-
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	int *data_null = nullptr;
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, data_null, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesInclusiveFailNullLower) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int upper[NUM_RANGE];
-
-	int dummy[ELEMENTSOF(upper)];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	int *lower_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower_null, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesInclusiveFailNullUpper) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-
-	int dummy[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	int *upper_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower, upper_null, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesInclusiveFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, lower, upper, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterInt, RangesInclusiveNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, data_shift, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesInclusiveNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, data, num_range, lower, upper, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesInclusiveNotAlignedLower) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE + offset];
-	SIMD_ALIGN
-	int upper[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	int dummy[ELEMENTSOF(upper)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-	// Initialize lower
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		lower[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	int *lower_shift = &lower[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, data, num_range, lower_shift, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesInclusiveNotAlignedUpper) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(lower));
-	SIMD_ALIGN
-	int upper[NUM_RANGE + offset];
-
-	int dummy[ELEMENTSOF(lower)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-	// Initialize upper
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		upper[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	int *upper_shift = &upper[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, data, num_range, lower, upper_shift, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_SetTrueIfInRangesExclusiveFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterFloat, RangesExclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, RangesExclusiveFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	float *data_null = nullptr;
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, data_null, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesExclusiveFailNullLower) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float upper[NUM_RANGE];
-
-	float dummy[ELEMENTSOF(upper)];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	float *lower_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower_null, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesExclusiveFailNullUpper) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-
-	float dummy[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	float *upper_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower, upper_null, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesExclusiveFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, lower, upper, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, data_shift, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, data, num_range, lower, upper, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedLower) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE + offset];
-	SIMD_ALIGN
-	float upper[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	float dummy[ELEMENTSOF(upper)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-	// Initialize lower
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		lower[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	float *lower_shift = &lower[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, data, num_range, lower_shift, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterFloat, RangesExclusiveNotAlignedUpper) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(lower));
-	SIMD_ALIGN
-	float upper[NUM_RANGE + offset];
-
-	float dummy[ELEMENTSOF(lower)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-	// Initialize upper
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		upper[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	float *upper_shift = &upper[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, data, num_range, lower, upper_shift, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfInRangesExclusiveInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterInt, RangesExclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Null pointer arrays */
-TEST_F(BoolFilterInt, RangesExclusiveFailNullData) {
-	size_t const num_data(NUM_IN);
-
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	int *data_null = nullptr;
-
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, data_null, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesExclusiveFailNullLower) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int upper[NUM_RANGE];
-
-	int dummy[ELEMENTSOF(upper)];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	int *lower_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower_null, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesExclusiveFailNullUpper) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-
-	int dummy[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	int *upper_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower, upper_null, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesExclusiveFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, lower, upper, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterInt, RangesExclusiveNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	int *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, data_shift, num_range, lower, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesExclusiveNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, data, num_range, lower, upper, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesExclusiveNotAlignedLower) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE + offset];
-	SIMD_ALIGN
-	int upper[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(upper));
-
-	int dummy[ELEMENTSOF(upper)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(dummy, upper);
-	// Initialize lower
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		lower[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	int *lower_shift = &lower[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(lower_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, data, num_range, lower_shift, upper, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterInt, RangesExclusiveNotAlignedUpper) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	size_t const num_range(ELEMENTSOF(lower));
-	SIMD_ALIGN
-	int upper[NUM_RANGE + offset];
-
-	int dummy[ELEMENTSOF(lower)];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, dummy);
-	// Initialize upper
-	for (size_t i = 0; i < ELEMENTSOF(dummy); ++i) {
-		upper[i + offset] = dummy[i];
-	}
-	// Define unaligned array
-	int *upper_shift = &upper[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(upper_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, data, num_range, lower, upper_shift, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
