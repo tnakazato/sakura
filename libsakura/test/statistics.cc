@@ -37,6 +37,7 @@
 #include <iomanip>
 #include <array>
 #include <algorithm>
+#include <numeric>
 
 #include <libsakura/sakura.h>
 
@@ -366,9 +367,9 @@ TEST(Statistics, ComputeStatistics) {
 	}
 	{
 		SIMD_ALIGN
-		static std::array<float, 1> data = { 3.f };
+		static std::array<float, 1> data = { { 3.f } };
 		SIMD_ALIGN
-		static std::array<bool, data.size()> is_valid = { true };
+		static std::array<bool, data.size()> is_valid = { { true } };
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = data.size();
