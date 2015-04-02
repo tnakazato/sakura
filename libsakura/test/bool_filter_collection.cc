@@ -272,35 +272,37 @@ protected:
 	void RunRangesTest(size_t num_data, DataType *in_data,
 			size_t num_condition, DataType *lower_bounds, DataType *upper_bounds,
 			bool *result, size_t num_operation, RangesTestComponent const *test_components,
-			LIBSAKURA_SYMBOL(Status) return_value, size_t num_num_condition=1, size_t num_repeat = 1) {
-
+			LIBSAKURA_SYMBOL(Status) return_value, bool initialize = true,
+			size_t num_num_condition=1, size_t num_repeat = 1) {
 		//verbose = true;
-		if (in_data != nullptr)	{
-			// Create long input data by repeating data_
-			GetDataInLength(num_data, in_data);
-			if (verbose) {
-				PrintArray("data", num_data, in_data);
+		if (initialize) {
+			if (in_data != nullptr)	{
+				// Create long input data by repeating data_
+				GetDataInLength(num_data, in_data);
+				if (verbose) {
+					PrintArray("data", num_data, in_data);
+				}
 			}
-		}
-		// Copy bounds to aligned arrays
-		if (upper_bounds != nullptr) {
-			if (lower_bounds != nullptr) {
-				GetBounds(lower_bounds, upper_bounds);
+			// Copy bounds to aligned arrays
+			if (upper_bounds != nullptr) {
+				if (lower_bounds != nullptr) {
+					GetBounds(lower_bounds, upper_bounds);
+					if (verbose) {
+						PrintArray("lower_bound", num_condition, lower_bounds);
+					}
+				} else {
+					DataType dummy[num_condition];
+					GetBounds(dummy, upper_bounds);
+				}
+				if (verbose) {
+					PrintArray("upper_bound", num_condition, upper_bounds);
+				}
+			} else if (lower_bounds != nullptr) {
+				DataType dummy[num_condition];
+				GetBounds(lower_bounds, dummy);
 				if (verbose) {
 					PrintArray("lower_bound", num_condition, lower_bounds);
 				}
-			} else {
-				DataType dummy[num_condition];
-				GetBounds(dummy, upper_bounds);
-			}
-			if (verbose) {
-				PrintArray("upper_bound", num_condition, upper_bounds);
-			}
-		} else if (lower_bounds != nullptr) {
-			DataType dummy[num_condition];
-			GetBounds(lower_bounds, dummy);
-			if (verbose) {
-				PrintArray("lower_bound", num_condition, lower_bounds);
 			}
 		}
 
@@ -427,7 +429,9 @@ protected:
 			// Loop over sakura functions and number of conditions
 			cout << "[Tests with array length = " << num_data << "]" << endl;
 			RunRangesTest(num_data, data, num_range, lower, upper, result,
-					ELEMENTSOF(RangesTestCase), RangesTestCase, LIBSAKURA_SYMBOL(Status_kOK), num_data==NUM_IN ? 2 : 1);
+					ELEMENTSOF(RangesTestCase), RangesTestCase,
+					LIBSAKURA_SYMBOL(Status_kOK), true,
+					num_data==NUM_IN ? 2 : 1);
 		}
 	}
 
@@ -446,7 +450,8 @@ protected:
 		// Loop over sakura functions and number of conditions
 		cout << "[Long tests]" << endl;
 		RunRangesTest(num_long, data, num_range, lower, upper, result,
-				ELEMENTSOF(RangesTestCase), RangesTestCase, LIBSAKURA_SYMBOL(Status_kOK), 1, num_repeat);
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kOK), true, 1, num_repeat);
 	}
 
 	/*
@@ -480,11 +485,6 @@ protected:
 		DataType *range_shift = &lower[offset];
 		assert(! LIBSAKURA_SYMBOL(IsAligned)(range_shift));
 
-//		// lower > upper
-//		cout << "[Test lower_bounds > upper_bounds]" << endl;
-//		RunRangesTest(num_data, data, num_range, upper, lower, result,
-//				ELEMENTSOF(RangesTestCase), RangesTestCase,
-//				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		// Null pointer array
 		cout << "[Test NULL data array]" << endl;
 		RunRangesTest(num_data, datatype_null, num_range, upper, lower, result,
@@ -519,6 +519,18 @@ protected:
 		RunRangesTest(num_data, data, num_range, lower, upper,
 				result_shift, ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		// lower > upper
+		cout << "[Test lower_bounds > upper_bounds]" << endl;
+		GetDataInLength(num_data, data);
+		GetBounds(lower, upper);
+		if (verbose) {
+			PrintArray("data", num_data, data);
+			PrintArray("lower", num_range, lower);
+			PrintArray("upper", num_range, upper);
+		}
+		RunRangesTest(num_data, data, num_range, upper, lower, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument), false);
 	}
 
 
@@ -691,140 +703,6 @@ TEST_F(BoolFilterFloat, RangesFail) {
 
 TEST_F(BoolFilterInt, RangesFail) {
 	RunRangesFailTest();
-}
-
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterFloat, RangesInclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfInRangesInclusiveInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterInt, RangesInclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesInclusiveInt(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterFloat, RangesExclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float lower[NUM_RANGE];
-	SIMD_ALIGN
-	float upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveFloat(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_SetTrueIfInRangesExclusiveInt
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* lower_bound > upper_bound */
-TEST_F(BoolFilterInt, RangesExclusiveFailExchangeBounds) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	int in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	int lower[NUM_RANGE];
-	SIMD_ALIGN
-	int upper[ELEMENTSOF(lower)];
-	size_t const num_range(ELEMENTSOF(lower));
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// Copy bounds to aligned arrays
-	GetBounds(lower, upper);
-
-	if (verbose) {
-		PrintArray("data", num_data, in_data);
-		// Exchange upper and lower bounds
-		PrintArray("lower_bound", NUM_RANGE, upper);
-		PrintArray("upper_bound", NUM_RANGE, lower);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetTrueIfInRangesExclusiveInt(
-			num_data, in_data, num_range, upper, lower, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
