@@ -21,11 +21,11 @@
  * @SAKURA_LICENSE_HEADER_END@
  */
 #include <cassert>
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
-#include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
+#include "libsakura/sakura.h"
 
 // Vectorization by Compiler
 namespace {
@@ -36,13 +36,13 @@ inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 		DataType const *upper_bounds,
 		bool *result) {
 	uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 
 	for (size_t i = 0; i < num_data; ++i) {
 		uint8_t is_in_range = 0;
 		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
 			is_in_range |= static_cast<uint8_t>((data[i] - lower_bounds[j])
-					* (upper_bounds[j] - data[i]) >= zero);
+					* (upper_bounds[j] - data[i]) >= kZero);
 		}
 		result_alias[i] = is_in_range;
 	}
@@ -53,13 +53,13 @@ inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
 			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
-					>= zero)) {
+					>= kZero)) {
 				is_in_range = true;
 				break;
 			}
@@ -73,13 +73,13 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
 			DataType lower_value = lower_bounds[j];
 			DataType upper_value = upper_bounds[j];
-			if (((data[i] - lower_value) * (upper_value - data[i]) >= zero)) {
+			if (((data[i] - lower_value) * (upper_value - data[i]) >= kZero)) {
 				is_in_range = true;
 				break;
 			}
@@ -93,13 +93,13 @@ inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
 			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
-					> zero)) {
+					> kZero)) {
 				is_in_range = true;
 				break;
 			}
@@ -113,13 +113,13 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
 			DataType lower_value = lower_bounds[j];
 			DataType upper_value = upper_bounds[j];
-			if (((data[i] - lower_value) * (upper_value - data[i]) > zero)) {
+			if (((data[i] - lower_value) * (upper_value - data[i]) > kZero)) {
 				is_in_range = true;
 				break;
 			}
@@ -131,46 +131,46 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 template<typename DataType>
 inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	auto adata = AssumeAligned(data);
 	auto aresult = AssumeAligned(result);
 	for (size_t i = 0; i < num_data; ++i) {
-		aresult[i] = (adata[i] - threshold) > zero;
+		aresult[i] = (adata[i] - threshold) > kZero;
 	}
 }
 //template<typename DataType>
 //inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 //		DataType threshold, bool *result) {
-//	DataType const zero(static_cast<DataType>(0));
+//	constexpr DataType kZero(static_cast<DataType>(0));
 //	for (size_t i = 0; i < num_data; ++i) {
-//		result[i] = (data[i] - threshold) > zero;
+//		result[i] = (data[i] - threshold) > kZero;
 //	}
 //}
 
 template<typename DataType>
 inline void SetTrueIfGreaterThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] - threshold) >= zero;
+		result[i] = (data[i] - threshold) >= kZero;
 	}
 }
 
 template<typename DataType>
 inline void SetTrueIfLessThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (threshold - data[i]) > zero;
+		result[i] = (threshold - data[i]) > kZero;
 	}
 }
 
 template<typename DataType>
 inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (threshold - data[i]) >= zero;
+		result[i] = (threshold - data[i]) >= kZero;
 	}
 }
 
@@ -188,31 +188,29 @@ bool *result) {
 
 template<typename DataType>
 inline void ToBool(size_t num_data, DataType const *data, bool *result) {
-//	std::cout << "Invoking ToBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	DataType const zero(static_cast<DataType>(0));
+	constexpr DataType kZero(static_cast<DataType>(0));
 	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] != zero);
+		result[i] = (data[i] != kZero);
 	}
 }
 
 inline void InvertBool(size_t num_data, bool const *data, bool *result) {
-//	std::cout << "Invoking InvertBoolDefault()" << std::endl;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 
 	uint8_t const *data8 = reinterpret_cast<uint8_t const *>(data);
 	uint8_t *result8 = reinterpret_cast<uint8_t *>(result);
-	uint8_t true8(static_cast<uint8_t>(true));
+	constexpr uint8_t kTrue8(static_cast<uint8_t>(true));
 	STATIC_ASSERT(sizeof(data8[0]) == sizeof(data[0]));
 	STATIC_ASSERT(sizeof(result8[0]) == sizeof(result[0]));
-	STATIC_ASSERT(sizeof(data[0]) == sizeof(true8));
+	STATIC_ASSERT(sizeof(data[0]) == sizeof(kTrue8));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 	// No operation is done when num_data==0.
 	for (size_t i = 0; i < num_data; ++i) {
-		result8[i] = (data8[i] ^ true8);
+		result8[i] = (data8[i] ^ kTrue8);
 	}
 }
 
