@@ -20,14 +20,14 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <sys/time.h>
-#include <algorithm>
 #include <tuple>
 
-#include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
+#include <libsakura/sakura.h>
 #include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
@@ -73,34 +73,33 @@ using namespace std;
 
 // Wrapper functions of OperateBitwiseNot to align
 // interface with the other bit operation functions.
-static LIBSAKURA_SYMBOL(Status) NotWrapper32(uint32_t bit_mask,
-		size_t num_data, uint32_t const *data, bool const *edit_mask,
-		uint32_t *result) {
-	return LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(num_data, data,
-			edit_mask, result);
+static LIBSAKURA_SYMBOL(Status) NotWrapper32(uint32_t bit_mask, size_t num_data,
+		uint32_t const *data, bool const *edit_mask, uint32_t *result) {
+	return LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(num_data, data, edit_mask,
+			result);
 }
 
-static LIBSAKURA_SYMBOL(Status) NotWrapper8(uint8_t bit_mask,
-		size_t num_data, uint8_t const *data, bool const *edit_mask,
-		uint8_t *result) {
-	return LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(num_data, data,
-			edit_mask, result);
+static LIBSAKURA_SYMBOL(Status) NotWrapper8(uint8_t bit_mask, size_t num_data,
+		uint8_t const *data, bool const *edit_mask, uint8_t *result) {
+	return LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(num_data, data, edit_mask,
+			result);
 }
 
 // a struct to store the combination of a sakura function and answer array
 template<typename DataType>
 struct FuncAndAnswer {
-	typedef LIBSAKURA_SYMBOL(Status) (*FuncType)(DataType, size_t, DataType const *, bool const *, DataType *);
+	typedef LIBSAKURA_SYMBOL(Status) (*FuncType)(DataType, size_t,
+			DataType const *, bool const *, DataType *);
 	FuncType function;               // function
 	DataType answer[NUM_IN];     // answer array
 };
 
 // a struct to store test parameters for both uint8 and uint32
 struct TestComponent {
-		string name;               // name of operation
-		bool invert_mask;          // is operation needs inverting mask
-		FuncAndAnswer<uint8_t> uint8kit;
-		FuncAndAnswer<uint32_t> uint32kit;
+	string name;               // name of operation
+	bool invert_mask;          // is operation needs inverting mask
+	FuncAndAnswer<uint8_t> uint8_kit;
+	FuncAndAnswer<uint32_t> uint32_kit;
 };
 
 /*
@@ -142,16 +141,28 @@ struct TestComponent {
  */
 // 11...111
 template<typename DataType>
-constexpr DataType bit111(){return (~static_cast<DataType>(0));};
+constexpr DataType bit111() {
+	return (~static_cast<DataType>(0));
+}
+;
 // 11...110
 template<typename DataType>
-constexpr DataType bit110(){return (~static_cast<DataType>(1));};
+constexpr DataType bit110() {
+	return (~static_cast<DataType>(1));
+}
+;
 // 11...101
 template<typename DataType>
-constexpr DataType bit101(){return (~static_cast<DataType>(2));};
+constexpr DataType bit101() {
+	return (~static_cast<DataType>(2));
+}
+;
 // 11...100
 template<typename DataType>
-constexpr DataType bit100(){return (~static_cast<DataType>(3));};
+constexpr DataType bit100() {
+	return (~static_cast<DataType>(3));
+}
+;
 
 TestComponent StandardTestCase[] {
 		{"AND", false,
@@ -257,7 +268,7 @@ TestCase<uint8_t>::TestKit TestCase<uint8_t>::GetItem(size_t num_components,
 		TestComponent const *test_components, size_t i) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
-	return TestKit(testcase.name, testcase.invert_mask, testcase.uint8kit);
+	return TestKit(testcase.name, testcase.invert_mask, testcase.uint8_kit);
 }
 
 template<>
@@ -265,7 +276,7 @@ TestCase<uint32_t>::TestKit TestCase<uint32_t>::GetItem(size_t num_components,
 		TestComponent const *test_components, size_t i) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
-	return TestKit(testcase.name, testcase.invert_mask, testcase.uint32kit);
+	return TestKit(testcase.name, testcase.invert_mask, testcase.uint32_kit);
 }
 
 /*
@@ -278,9 +289,8 @@ TestCase<uint32_t>::TestKit TestCase<uint32_t>::GetItem(size_t num_components,
 template<typename DataType>
 class BitOperation: public ::testing::Test {
 protected:
-
 	BitOperation() :
-			verbose(false) {
+			verbose_(false) {
 		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN);
 		STATIC_ASSERT(ELEMENTSOF(edit_mask_)==NUM_IN);
 	}
@@ -296,179 +306,6 @@ protected:
 		// Clean-up sakura
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
-
-	// Create arbitrary length of input data and edit mask by repeating in_[] and edit_mask_[]
-	static void GetInputDataInLength(size_t num_data, DataType *data,
-			bool *mask) {
-		size_t const num_in(NUM_IN);
-		for (size_t i = 0; i < num_data; ++i) {
-			data[i] = data_[i % num_in];
-			mask[i] = edit_mask_[i % num_in];
-		}
-	}
-
-	/* Converts an input value to a bit pattern.*/
-	string BToS(DataType value) {
-		char buff[bit_size + 1];
-		buff[bit_size] = '\0';
-		for (size_t i = 0; i < bit_size; ++i) {
-			if ((value >> i) % 2 == 0)
-				buff[bit_size - 1 - i] = '0';
-			else
-				buff[bit_size - 1 - i] = '1';
-		}
-		return string(buff);
-	}
-
-	/* Converts an bit pattern (char) to a value of DataType.*/
-	DataType SToB(char* bit_pattern) {
-		DataType result(0);
-		size_t i = 0;
-		while (bit_pattern[i] != '\0') {
-			//result = result * 2 + ((uint8_t) in_string[i]);
-			result <<= 1;
-			if (bit_pattern[i] == '1')
-				result += 1;
-			++i;
-		}
-		return result;
-	}
-
-	void PrintInputs() {
-		cout << "bit_mask = " << BToS(bit_mask_);
-		cout << endl;
-		PrintArray("data", NUM_IN, data_);
-	}
-
-	void PrintArray(char const *name, size_t num_data, DataType *data_array) {
-		size_t max_length(20);
-		cout << name << " = ";
-		if (data_array == nullptr) { // array is nullptr
-			cout << "NULL" << endl;
-		} else if (num_data > max_length) { // long array (just show the length)
-			cout << num_data << " elements" << endl;
-		} else { // normal array
-			cout << "[ ";
-			if (num_data > 0) {
-				for (size_t i = 0; i < num_data - 1; ++i)
-					cout << BToS(data_array[i]) << ", ";
-				cout << BToS(data_array[num_data - 1]);
-			}
-			cout << " ]" << endl;
-		}
-	}
-
-	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
-		size_t max_length(20);
-		cout << name << " = ";
-		if (data_array == nullptr) { // array is nullptr
-			cout << "NULL" << endl;
-		} else if (num_data > max_length) { // long array (just show the length)
-			cout << num_data << " elements" << endl;
-		} else { // normal array
-			cout << "[ ";
-			if (num_data > 0) {
-				for (size_t i = 0; i < num_data - 1; ++i)
-					cout << (data_array[i] ? "T" : "F") << ", ";
-				cout << (data_array[num_data - 1] ? "T" : "F");
-			}
-			cout << " ]" << endl;
-		}
-	}
-
-	/*
-	 * Compare data with reference array, and assert values of corresponding
-	 * elements are the exact match.
-	 * If num_data > num_reference, elements of reference_array
-	 * are repeated from the beginning as many times as necessary.
-	 */
-	void ExactCompare(size_t num_data, DataType const *data_array,
-			size_t num_reference, DataType const *reference_array) {
-		for (size_t i = 0; i < num_data; ++i) {
-			ASSERT_EQ(reference_array[i % num_reference], data_array[i]);
-		}
-	}
-
-	/*
-	 * A function to run a list of bit operations and compare result with expected answer.
-	 */
-	template<typename InitializeAction>
-	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask,
-			DataType *out_data, size_t num_operation,
-			TestComponent const *test_components,
-			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
-
-		PrepareInputs(num_data, in_data, mask);
-		if (verbose) {
-			PrintArray("in", num_data, in_data);
-			PrintArray("mask", num_data, mask);
-		}
-
-		if (num_repeat > 1)
-			cout << "Iterating " << num_repeat
-					<< " loops for each operation. The length of arrays is "
-					<< num_data << endl;
-		TestCase<DataType> my_testcase;
-		for (size_t iop = 0; iop < num_operation; ++iop) {
-			auto kit = my_testcase.GetItem(num_operation, test_components, iop);
-			LIBSAKURA_SYMBOL(Status) status;
-			cout << "Testing bit operation: " << std::get<0>(kit) << endl;
-			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			for (size_t irun = 0; irun < num_repeat; ++irun) {
-				// Need to refresh data for in-place operation
-				InitializeAction::reinitialize(num_data, in_data, mask);
-				// Actual execution of bit operation function
-				status = (std::get<2>(kit).function)(
-						(std::get<1>(kit) ? ~bit_mask_ : bit_mask_), num_data,
-						in_data, mask, out_data);
-			} // end of num_repeat loop
-			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			if (num_repeat > 1)
-				cout << "Elapse time of operation: " << end - start << " sec"
-						<< endl;
-
-			if (verbose) {
-				if (status == LIBSAKURA_SYMBOL(Status_kOK))
-					PrintArray("result", num_data, out_data);
-				else
-					cout << "sakura_Status = " << status << endl;
-			}
-			// Verification
-			EXPECT_EQ(return_value, status);
-			if (status == LIBSAKURA_SYMBOL(Status_kOK))
-				ExactCompare(num_data, out_data,
-						ELEMENTSOF(std::get<2>(kit).answer),
-						std::get<2>(kit).answer);
-		} // end of bit operation loop
-	}
-
-	struct InPlaceAction {
-		static void reinitialize(size_t num_data, DataType *data, bool *mask) {
-			PrepareInputs(num_data, data, mask);
-		}
-	};
-
-	struct OutOfPlaceAction {
-		static void reinitialize(size_t num_data, DataType *data, bool *mask) {
-			// no need to initialize
-		}
-	};
-
-	static void PrepareInputs(size_t num_data, DataType *data, bool *mask) {
-		// Handling of nullptr array
-		DataType dummy_data[num_data];
-		bool dummy_mask[ELEMENTSOF(dummy_data)];
-		DataType *data_ptr = (data != nullptr) ? data : dummy_data;
-		bool *mask_ptr = (mask != nullptr) ? mask : dummy_mask;
-		// Get array with length, num_data
-		GetInputDataInLength(num_data, data_ptr, mask_ptr);
-	}
-
-	static DataType data_[]; //[NUM_IN];
-	static bool edit_mask_[]; //[NUM_IN];
-	bool verbose;
-	static DataType bit_mask_;
-	static size_t const bit_size = sizeof(DataType) * 8;
 
 	/*
 	 * Actual test definitions
@@ -486,6 +323,7 @@ protected:
 		SIMD_ALIGN
 		DataType result[ELEMENTSOF(data)];
 
+		// Loop over various array length
 		for (size_t irun = 0; irun < num_test; ++irun) {
 			size_t const num_data(array_length[irun]);
 			// Loop over operation types  (ALL operations)
@@ -576,11 +414,10 @@ protected:
 		SIMD_ALIGN
 		DataType result[ELEMENTSOF(data)];
 
-		// Define unaligned array
+		// Define unaligned arrays
 		DataType *data_shift = &data[offset];
-		assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-		// Define unaligned array
 		bool *mask_shift = &edit_mask[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 		assert(! LIBSAKURA_SYMBOL(IsAligned)(mask_shift));
 
 		// Loop over operation types  (Standard tests)
@@ -599,18 +436,193 @@ protected:
 				data_shift, ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 	}
+
+private:
+	// Set values to an arbitrary length of input data and edit mask.
+	// Handle nullptr case properly.
+	static void PrepareInputs(size_t num_data, DataType *data, bool *mask) {
+		// Handling of nullptr array
+		DataType dummy_data[num_data];
+		bool dummy_mask[ELEMENTSOF(dummy_data)];
+		DataType *data_ptr = (data != nullptr) ? data : dummy_data;
+		bool *mask_ptr = (mask != nullptr) ? mask : dummy_mask;
+		// Get array with length, num_data
+		GetInputDataInLength(num_data, data_ptr, mask_ptr);
+	}
+	// Set values to an arbitrary length of input data and edit mask arrays
+	// by repeating data_[] and edit_mask_[]
+	static void GetInputDataInLength(size_t num_data, DataType *data,
+	bool *mask) {
+		size_t const num_in(NUM_IN);
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = data_[i % num_in];
+			mask[i] = edit_mask_[i % num_in];
+		}
+	}
+
+	/* Converts an input value to a bit pattern.*/
+	string ConvertToBitPattern(DataType value) {
+		char buff[bit_size_ + 1];
+		buff[bit_size_] = '\0';
+		for (size_t i = 0; i < bit_size_; ++i) {
+			if ((value >> i) % 2 == 0)
+				buff[bit_size_ - 1 - i] = '0';
+			else
+				buff[bit_size_ - 1 - i] = '1';
+		}
+		return string(buff);
+	}
+//	/* Converts an bit pattern (char) to a value of DataType.*/
+//	DataType ConvertBitPaternToNumber(char* bit_pattern) {
+//		DataType result(0);
+//		size_t i = 0;
+//		while (bit_pattern[i] != '\0') {
+//			//result = result * 2 + ((uint8_t) in_string[i]);
+//			result <<= 1;
+//			if (bit_pattern[i] == '1')
+//				result += 1;
+//			++i;
+//		}
+//		return result;
+//	}
+
+	// Convert an array to a string formatted for printing. Convert numeric values to bit patterns.
+	void PrintArray(char const *name, size_t num_data, DataType *data_array) {
+		constexpr size_t kMaxLength(20);
+		cout << name << " = ";
+		if (data_array == nullptr) { // array is nullptr
+			cout << "NULL" << endl;
+		} else if (num_data > kMaxLength) { // long array (just show the length)
+			cout << num_data << " elements" << endl;
+		} else { // normal array
+			cout << "[ ";
+			if (num_data > 0) {
+				for (size_t i = 0; i < num_data - 1; ++i)
+					cout << ConvertToBitPattern(data_array[i]) << ", ";
+				cout << ConvertToBitPattern(data_array[num_data - 1]);
+			}
+			cout << " ]" << endl;
+		}
+	}
+	// Convert an array to a string formatted for printing. Convert booleans to T/F strings.
+	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
+		constexpr size_t kMaxLength(20);
+		cout << name << " = ";
+		if (data_array == nullptr) { // array is nullptr
+			cout << "NULL" << endl;
+		} else if (num_data > kMaxLength) { // long array (just show the length)
+			cout << num_data << " elements" << endl;
+		} else { // normal array
+			cout << "[ ";
+			if (num_data > 0) {
+				for (size_t i = 0; i < num_data - 1; ++i)
+					cout << (data_array[i] ? "T" : "F") << ", ";
+				cout << (data_array[num_data - 1] ? "T" : "F");
+			}
+			cout << " ]" << endl;
+		}
+	}
+
+	/*
+	 * Compare data with reference array, and assert values of corresponding
+	 * elements are the exact match.
+	 * If num_data > num_reference, elements of reference_array
+	 * are repeated from the beginning as many times as necessary.
+	 */
+	void ExactCompare(size_t num_data, DataType const *data_array,
+			size_t num_reference, DataType const *reference_array) {
+		for (size_t i = 0; i < num_data; ++i) {
+			ASSERT_EQ(reference_array[i % num_reference], data_array[i]);
+		}
+	}
+
+	/*
+	 * A function to run a list of bit operations and compare result with expected answer.
+	 */
+	template<typename InitializeAction>
+	void RunBitOperationTest(size_t num_data, DataType *in_data, bool *mask,
+			DataType *out_data, size_t num_operation,
+			TestComponent const *test_components,
+			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
+
+		PrepareInputs(num_data, in_data, mask);
+		if (verbose_) {
+			PrintArray("data", num_data, in_data);
+			PrintArray("mask", num_data, mask);
+		}
+
+		if (num_repeat > 1)
+			cout << "Iterating " << num_repeat
+					<< " loops for each operation. The length of arrays is "
+					<< num_data << endl;
+		TestCase<DataType> my_testcase;
+		for (size_t iop = 0; iop < num_operation; ++iop) {
+			auto kit = my_testcase.GetItem(num_operation, test_components, iop);
+			LIBSAKURA_SYMBOL(Status) status;
+			cout << "Testing bit operation: " << std::get<0>(kit) << endl;
+			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			for (size_t irun = 0; irun < num_repeat; ++irun) {
+				// Need to refresh data for in-place operation
+				InitializeAction::reinitialize(num_data, in_data, mask);
+				// Actual execution of bit operation function
+				status = (std::get<2>(kit).function)(
+						(std::get<1>(kit) ? ~bit_mask_ : bit_mask_), num_data,
+						in_data, mask, out_data);
+			} // end of num_repeat loop
+			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			if (num_repeat > 1)
+				cout << "Elapse time of operation: " << end - start << " sec"
+						<< endl;
+
+			if (verbose_) {
+				if (status == LIBSAKURA_SYMBOL(Status_kOK))
+					PrintArray("result", num_data, out_data);
+				else
+					cout << "sakura_Status = " << status << endl;
+			}
+			// Verification
+			EXPECT_EQ(return_value, status);
+			if (status == LIBSAKURA_SYMBOL(Status_kOK))
+				ExactCompare(num_data, out_data,
+						ELEMENTSOF(std::get<2>(kit).answer),
+						std::get<2>(kit).answer);
+		} // end of bit operation loop
+	}
+	// Re-initialization of input data and mask for the case of in-place operation.
+	struct InPlaceAction {
+		static void reinitialize(size_t num_data, DataType *data, bool *mask) {
+			PrepareInputs(num_data, data, mask);
+		}
+	};
+	// Dummy function (does nothing) for re-initialization for the case of out-of-place operation.
+	struct OutOfPlaceAction {
+		static void reinitialize(size_t num_data, DataType *data, bool *mask) {
+			// no need to initialize
+		}
+	};
+
+	// Member variables
+	static DataType data_[]; //[NUM_IN];
+	static bool edit_mask_[]; //[NUM_IN];
+	bool verbose_;
+	static DataType bit_mask_;
+	static constexpr size_t bit_size_ = sizeof(DataType) * 8;
+
 };
 
 /*
  * Initialization of static input data templates
  */
+/* bit pattern of 0...010 */
 template<typename DataType>
-DataType BitOperation<DataType>::bit_mask_ = 2; /* bit pattern of 0...010 */
+DataType BitOperation<DataType>::bit_mask_ = 2;
+/* repeat bit pattern of *00, *01, *10, *11,... */
 template<typename DataType>
-DataType BitOperation<DataType>::data_[] = { 0, 1, 2, 3, 0, 1, 2, 3 }; /* repeat bit pattern of *00, *01, *10, *11,... */
+DataType BitOperation<DataType>::data_[] = { 0, 1, 2, 3, 0, 1, 2, 3 };
+/* boolean array of {F, F, F, F, T, T, T, T} */
 template<typename DataType>
 bool BitOperation<DataType>::edit_mask_[] = { false, false, false, false, true,
-		true, true, true }; /*{F, F, F, F, T, T, T, T, (repeated)};*/
+true, true, true };
 
 /*
  * Tests various bit operations of an uint32_t value and array
