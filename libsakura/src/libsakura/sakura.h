@@ -1025,7 +1025,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
- * @brief Invoke bit operation AND between a a bit mask and an array.
+ * @brief Invoke bit operation AND between a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
  * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
@@ -1310,7 +1310,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
- * @brief Invoke bit operation OR between a a bit mask and an array.
+ * @brief Invoke bit operation OR between a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
  * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
