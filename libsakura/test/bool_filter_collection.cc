@@ -21,14 +21,14 @@
  * @SAKURA_LICENSE_HEADER_END@
  */
 #include <iostream>
+#include <math.h>
 #include <string>
 #include <sys/time.h>
-#include <math.h>
 
-#include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
-#include "loginit.h"
+#include <libsakura/sakura.h>
 #include "aligned_memory.h"
+#include "loginit.h"
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
@@ -37,7 +37,6 @@
 #define NUM_IN_LONG (1 << 18) //2**18
 #define UNALIGN_OFFSET 1 // should be != ALIGNMENT
 using namespace std;
-
 
 /*
  * Test of generating a boolean filter using ranges
@@ -54,12 +53,12 @@ using namespace std;
  */
 // Generalize function type for boundary tests
 template<typename DataType>
-struct RangesFunction{
-	typedef LIBSAKURA_SYMBOL(Status) (*ranges_func_ptr_t)(size_t,
+struct RangesFunction {
+	typedef LIBSAKURA_SYMBOL(Status) (*RangesFuncType)(size_t,
 			DataType const*, size_t, DataType const*, DataType const*, bool*);
-	ranges_func_ptr_t function;
+	RangesFuncType function;
 };
-struct NumConditionAndAnswer{
+struct NumConditionAndAnswer {
 	size_t num_condition;
 	bool answer[NUM_IN];     // answer array
 };
@@ -69,7 +68,10 @@ struct RangesTestComponent {
 	RangesFunction<float> funcfloat;
 	RangesFunction<int> funcint;
 	NumConditionAndAnswer num_condition_answer[2];
-	static size_t GetNumTest() {return ELEMENTSOF(num_condition_answer);};
+	static size_t GetNumTest() {
+		return ELEMENTSOF(num_condition_answer);
+	}
+	;
 };
 
 RangesTestComponent RangesTestCase[] {
@@ -99,8 +101,9 @@ struct RangesTestHelper {
 };
 
 template<>
-RangesTestHelper<float>::RangesTestKit RangesTestHelper<float>::GetItem(size_t num_components,
-		RangesTestComponent const *test_components, size_t i, size_t j) {
+RangesTestHelper<float>::RangesTestKit RangesTestHelper<float>::GetItem(
+		size_t num_components, RangesTestComponent const *test_components,
+		size_t i, size_t j) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
 	assert(j < testcase.GetNumTest());
@@ -109,8 +112,9 @@ RangesTestHelper<float>::RangesTestKit RangesTestHelper<float>::GetItem(size_t n
 }
 
 template<>
-RangesTestHelper<int>::RangesTestKit RangesTestHelper<int>::GetItem(size_t num_components,
-		RangesTestComponent const *test_components, size_t i, size_t j) {
+RangesTestHelper<int>::RangesTestKit RangesTestHelper<int>::GetItem(
+		size_t num_components, RangesTestComponent const *test_components,
+		size_t i, size_t j) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
 	assert(j < testcase.GetNumTest());
@@ -132,16 +136,17 @@ RangesTestHelper<int>::RangesTestKit RangesTestHelper<int>::GetItem(size_t num_c
  */
 // Generalize function type for boundary tests
 template<typename DataType>
-struct BoundaryFunction{
-	typedef LIBSAKURA_SYMBOL(Status) (*boundary_func_ptr_t)(size_t, DataType const*, DataType, bool*);
-	boundary_func_ptr_t function;
+struct BoundaryFunction {
+	typedef LIBSAKURA_SYMBOL(Status) (*BoundaryFuncType)(size_t,
+			DataType const*, DataType, bool*);
+	BoundaryFuncType function;
 };
 // a struct to store test parameters for both uint8 and uint32
 struct BoundaryTestComponent {
-		string name;               // name of operation
-		BoundaryFunction<float> funcfloat;
-		BoundaryFunction<int> funcint;
-		bool answer[NUM_IN];     // answer array
+	string name;               // name of operation
+	BoundaryFunction<float> funcfloat;
+	BoundaryFunction<int> funcint;
+	bool answer[NUM_IN];     // answer array
 };
 
 BoundaryTestComponent BoundaryTestCase[] {
@@ -171,14 +176,15 @@ BoundaryTestComponent BoundaryTestCase[] {
  */
 template<typename DataType>
 struct BoundaryTestHelper {
-	typedef tuple<string, BoundaryFunction<DataType>, bool* > BoundaryTestKit;
+	typedef tuple<string, BoundaryFunction<DataType>, bool*> BoundaryTestKit;
 	static BoundaryTestKit GetItem(size_t num_components,
 			BoundaryTestComponent const *test_components, size_t i);
 };
 
 template<>
-BoundaryTestHelper<float>::BoundaryTestKit BoundaryTestHelper<float>::GetItem(size_t num_components,
-		BoundaryTestComponent const *test_components, size_t i) {
+BoundaryTestHelper<float>::BoundaryTestKit BoundaryTestHelper<float>::GetItem(
+		size_t num_components, BoundaryTestComponent const *test_components,
+		size_t i) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
 //	cout << "answer = ";
@@ -188,13 +194,13 @@ BoundaryTestHelper<float>::BoundaryTestKit BoundaryTestHelper<float>::GetItem(si
 }
 
 template<>
-BoundaryTestHelper<int>::BoundaryTestKit BoundaryTestHelper<int>::GetItem(size_t num_components,
-		BoundaryTestComponent const *test_components, size_t i) {
+BoundaryTestHelper<int>::BoundaryTestKit BoundaryTestHelper<int>::GetItem(
+		size_t num_components, BoundaryTestComponent const *test_components,
+		size_t i) {
 	assert(i < num_components);
 	auto testcase = test_components[i];
 	return BoundaryTestKit(testcase.name, testcase.funcint, testcase.answer);
 }
-
 
 /*
  * A super class to test various bit operation of an value and array
@@ -202,9 +208,8 @@ BoundaryTestHelper<int>::BoundaryTestKit BoundaryTestHelper<int>::GetItem(size_t
 template<typename DataType>
 class BoolFilter: public ::testing::Test {
 protected:
-
 	BoolFilter() :
-			verbose(false) {
+			verbose_(false) {
 	}
 
 	virtual void SetUp() {
@@ -212,7 +217,7 @@ protected:
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 				nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		PrepareInputs();
+		InitializeInputs();
 	}
 
 	virtual void TearDown() {
@@ -220,197 +225,11 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	virtual void PrepareInputs() = 0;
-
-	// Create arbitrary length of input data by repeating values of data_[]
-	void GetDataInLength(size_t num_out, DataType *out_data) {
-		size_t const num_data(ELEMENTSOF(data_));
-		for (size_t i = 0; i < num_out; ++i) {
-			out_data[i] = data_[i % num_data];
-		}
-	}
-
-	void GetBounds(DataType *lower, DataType *upper) {
-		EXPECT_EQ(NUM_RANGE, ELEMENTSOF(lower));
-		EXPECT_EQ(NUM_RANGE, ELEMENTSOF(upper));
-		for (size_t i = 0; i < NUM_RANGE; ++i) {
-			lower[i] = lower_[i];
-			upper[i] = upper_[i];
-		}
-	}
-
-	// Convert an array to a string formatted for printing.
-	void PrintArray(char const *name, size_t num_data,
-			DataType const *data_array) {
-		cout << name << " = [ ";
-		if (num_data>0) {
-			for (size_t i = 0; i < num_data - 1; ++i)
-				cout << data_array[i] << ", ";
-			cout << data_array[num_data - 1];
-		}
-		cout << " ]" << endl;
-	}
-	// Convert an array to a string formatted for printing. Convert booleans to T/F strings.
-	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
-		cout << name << " = [ ";
-		if (num_data>0) {
-			for (size_t i = 0; i < num_data - 1; ++i)
-				cout << (data_array[i] ? "T" : "F") << ", ";
-			cout << (data_array[num_data - 1] ? "T" : "F");
-		}
-		cout << " ]" << endl;
-	}
-
-	// Member variables
-	bool verbose;
-	DataType data_[NUM_IN];
-	DataType upper_[NUM_RANGE];
-	DataType lower_[NUM_RANGE];
-	DataType threshold_;
+	virtual void InitializeInputs() = 0;
 
 	/*
 	 * Actual test definitions
 	 */
-	void RunRangesTest(size_t num_data, DataType *in_data,
-			size_t num_condition, DataType *lower_bounds, DataType *upper_bounds,
-			bool *result, size_t num_operation, RangesTestComponent const *test_components,
-			LIBSAKURA_SYMBOL(Status) return_value, bool initialize = true,
-			size_t num_num_condition=1, size_t num_repeat = 1) {
-		//verbose = true;
-		if (initialize) {
-			if (in_data != nullptr)	{
-				// Create long input data by repeating data_
-				GetDataInLength(num_data, in_data);
-				if (verbose) {
-					PrintArray("data", num_data, in_data);
-				}
-			}
-			// Copy bounds to aligned arrays
-			if (upper_bounds != nullptr) {
-				if (lower_bounds != nullptr) {
-					GetBounds(lower_bounds, upper_bounds);
-					if (verbose) {
-						PrintArray("lower_bound", num_condition, lower_bounds);
-					}
-				} else {
-					DataType dummy[num_condition];
-					GetBounds(dummy, upper_bounds);
-				}
-				if (verbose) {
-					PrintArray("upper_bound", num_condition, upper_bounds);
-				}
-			} else if (lower_bounds != nullptr) {
-				DataType dummy[num_condition];
-				GetBounds(lower_bounds, dummy);
-				if (verbose) {
-					PrintArray("lower_bound", num_condition, lower_bounds);
-				}
-			}
-		}
-
-		if (num_repeat > 1)
-			cout << "Iterating " << num_repeat
-					<< " loops for each operation. The length of arrays is "
-					<< num_data << endl;
-
-		RangesTestHelper<DataType> my_testcase;
-		for (size_t iop = 0; iop < num_operation; ++iop) {
-			size_t const num_test = test_components[iop].GetNumTest();
-			// make sure number of elements for variation of conditions in RangesTestComponent
-			// is sufficient for iteration
-			assert(num_num_condition <= num_test);
-			for (size_t jc = 0; jc < num_num_condition; ++jc){
-				auto kit = my_testcase.GetItem(num_operation, test_components, iop, jc);
-				NumConditionAndAnswer num_and_ans = std::get<2>(kit);
-				cout << "Testing: " << std::get<0>(kit) << " (number of ranges = "
-						<< num_and_ans.num_condition << ")" << endl;
-				LIBSAKURA_SYMBOL(Status) status;
-				double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-				for (size_t irun = 0; irun < num_repeat; ++irun) {
-					// Actual execution of bit operation function
-					status = (std::get<1>(kit).function)(num_data, in_data,
-							num_and_ans.num_condition, lower_bounds, upper_bounds, result);
-				} // end of num_repeat loop
-				double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-				if (num_repeat > 1)
-					cout << "Elapse time of operation: " << end - start << " sec"
-							<< endl;
-
-				if (verbose) {
-					if (status == LIBSAKURA_SYMBOL(Status_kOK))
-						PrintArray("result", num_data, result);
-					else
-						cout << "sakura_Status = " << status << endl;
-				}
-				// Verification
-				EXPECT_EQ(return_value, status);
-				if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
-					auto *answer = num_and_ans.answer;
-					size_t const num_answer = ELEMENTSOF(num_and_ans.answer);
-					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-					for (size_t i = 0; i < num_data; ++i) {
-						ASSERT_EQ(answer[i % num_answer], result[i]);
-					}
-				}
-			}
-		} // end of operation loop
-	}
-
-	void RunBoundaryTest(size_t num_data, DataType *in_data, bool *result,
-			size_t num_operation, BoundaryTestComponent const *test_components,
-			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
-
-		//verbose = true;
-		if (in_data != nullptr)	{
-			// Create long input data by repeating data_
-			GetDataInLength(num_data, in_data);
-			if (verbose) {
-				PrintArray("data", num_data, in_data);
-				cout << "threshold = " << threshold_ << endl;
-			}
-		}
-
-		if (num_repeat > 1)
-			cout << "Iterating " << num_repeat
-					<< " loops for each operation. The length of arrays is "
-					<< num_data << endl;
-
-		BoundaryTestHelper<DataType> my_testcase;
-		for (size_t iop = 0; iop < num_operation; ++iop) {
-			auto kit = my_testcase.GetItem(num_operation, test_components, iop);
-			LIBSAKURA_SYMBOL(Status) status;
-			cout << "Testing: " << std::get<0>(kit) << endl;
-			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			for (size_t irun = 0; irun < num_repeat; ++irun) {
-				// Actual execution of bit operation function
-				status = (std::get<1>(kit).function)(num_data, in_data, threshold_, result);
-			} // end of num_repeat loop
-			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			if (num_repeat > 1)
-				cout << "Elapse time of operation: " << end - start << " sec"
-						<< endl;
-
-			if (verbose) {
-				if (status == LIBSAKURA_SYMBOL(Status_kOK))
-					PrintArray("result", num_data, result);
-				else
-					cout << "sakura_Status = " << status << endl;
-			}
-			// Verification
-			EXPECT_EQ(return_value, status);
-			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
-				auto *answer = test_components[iop].answer;//std::get<2>(kit);
-				size_t const num_answer = ELEMENTSOF(std::get<2>(kit));
-//				PrintArray("answer", num_answer, answer);
-//				PrintArray("kit answer", num_answer, std::get<2>(kit));
-				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-				for (size_t i = 0; i < num_data; ++i) {
-					ASSERT_EQ(answer[i % num_answer], result[i]);
-				}
-			}
-		} // end of operation loop
-	}
-
 	void RunRangesVariousLengthTest() {
 		size_t const array_length[] = { NUM_IN, 11, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
@@ -433,7 +252,7 @@ protected:
 			RunRangesTest(num_data, data, num_range, lower, upper, result,
 					ELEMENTSOF(RangesTestCase), RangesTestCase,
 					LIBSAKURA_SYMBOL(Status_kOK), true,
-					num_data==NUM_IN ? 2 : 1);
+					num_data == NUM_IN ? 2 : 1);
 		}
 	}
 
@@ -506,35 +325,28 @@ protected:
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		// Unaligned array
 		cout << "[Test unaligned data array]" << endl;
-		RunRangesTest(num_data, data_shift, num_range, lower, upper,
-				result, ELEMENTSOF(RangesTestCase), RangesTestCase,
+		RunRangesTest(num_data, data_shift, num_range, lower, upper, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		cout << "[Test unaligned lower_bounds array]" << endl;
-		RunRangesTest(num_data, data, num_range, data_shift, upper,
-				result, ELEMENTSOF(RangesTestCase), RangesTestCase,
+		RunRangesTest(num_data, data, num_range, data_shift, upper, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		cout << "[Test unaligned upper_bounds array]" << endl;
-		RunRangesTest(num_data, data, num_range, lower, data_shift,
-				result, ELEMENTSOF(RangesTestCase), RangesTestCase,
+		RunRangesTest(num_data, data, num_range, lower, data_shift, result,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		cout << "[Test unaligned result array]" << endl;
-		RunRangesTest(num_data, data, num_range, lower, upper,
-				result_shift, ELEMENTSOF(RangesTestCase), RangesTestCase,
+		RunRangesTest(num_data, data, num_range, lower, upper, result_shift,
+				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		// lower > upper
 		cout << "[Test lower_bounds > upper_bounds]" << endl;
 		GetDataInLength(num_data, data);
-		GetBounds(lower, upper);
-		if (verbose) {
-			PrintArray("data", num_data, data);
-			PrintArray("lower", num_range, lower);
-			PrintArray("upper", num_range, upper);
-		}
 		RunRangesTest(num_data, data, num_range, upper, lower, result,
 				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument), false);
 	}
-
 
 	void RunBoundaryVariousLengthTest() {
 		size_t const array_length[] = { NUM_IN, 11, 0 };
@@ -550,7 +362,8 @@ protected:
 			size_t const num_data(array_length[irun]);
 			// Loop over sakura functions with a threshold
 			cout << "[Tests with array length = " << num_data << "]" << endl;
-			RunBoundaryTest(num_data, data, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+			RunBoundaryTest(num_data, data, result,
+					ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 					LIBSAKURA_SYMBOL(Status_kOK));
 		}
 	}
@@ -567,8 +380,8 @@ protected:
 
 		// Loop over sakura functions with a threshold
 		cout << "[Long tests]" << endl;
-		RunBoundaryTest(num_large, data, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
-							LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
+		RunBoundaryTest(num_large, data, result, ELEMENTSOF(BoundaryTestCase),
+				BoundaryTestCase, LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
 	}
 	/*
 	 * Failure cases of various bool filter functions using a threshold value
@@ -595,19 +408,211 @@ protected:
 
 		// Null pointer array
 		cout << "[Test NULL data array]" << endl;
-		RunBoundaryTest(num_data, data_null, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+		RunBoundaryTest(num_data, data_null, result,
+				ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		cout << "[Test NULL result array]" << endl;
-		RunBoundaryTest(num_data, data, result_null, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+		RunBoundaryTest(num_data, data, result_null,
+				ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		// Unaligned array
 		cout << "[Test unaligned data array]" << endl;
-		RunBoundaryTest(num_data, data_shift, result, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+		RunBoundaryTest(num_data, data_shift, result,
+				ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		cout << "[Test unaligned result array]" << endl;
-		RunBoundaryTest(num_data, data, result_shift, ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
+		RunBoundaryTest(num_data, data, result_shift,
+				ELEMENTSOF(BoundaryTestCase), BoundaryTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 	}
+
+	void RunRangesTest(size_t num_data, DataType *in_data, size_t num_condition,
+			DataType *lower_bounds, DataType *upper_bounds,
+			bool *result, size_t num_operation,
+			RangesTestComponent const *test_components,
+			LIBSAKURA_SYMBOL(Status) return_value, bool initialize = true,
+			size_t num_num_condition = 1, size_t num_repeat = 1) {
+		// initialize input data only if asked
+		if (initialize) {
+			GetDataInLength(num_data, in_data);
+			GetBounds(lower_bounds, upper_bounds);
+		}
+		if (verbose_) {
+			PrintArray("data", num_data, in_data);
+			PrintArray("lower_bound", num_condition, lower_bounds);
+			PrintArray("upper_bound", num_condition, upper_bounds);
+		}
+
+		if (num_repeat > 1)
+			cout << "Iterating " << num_repeat
+					<< " loops for each operation. The length of arrays is "
+					<< num_data << endl;
+
+		RangesTestHelper<DataType> my_testcase;
+		for (size_t iop = 0; iop < num_operation; ++iop) {
+			size_t const num_test = test_components[iop].GetNumTest();
+			// make sure number of elements for variation of conditions in RangesTestComponent
+			// is sufficient for iteration
+			assert(num_num_condition <= num_test);
+			for (size_t jc = 0; jc < num_num_condition; ++jc) {
+				auto kit = my_testcase.GetItem(num_operation, test_components,
+						iop, jc);
+				NumConditionAndAnswer num_and_ans = std::get<2>(kit);
+				cout << "Testing: " << std::get<0>(kit)
+						<< " (number of ranges = " << num_and_ans.num_condition
+						<< ")" << endl;
+				LIBSAKURA_SYMBOL(Status) status;
+				double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+				for (size_t irun = 0; irun < num_repeat; ++irun) {
+					// Actual execution of bit operation function
+					status = (std::get<1>(kit).function)(num_data, in_data,
+							num_and_ans.num_condition, lower_bounds,
+							upper_bounds, result);
+				} // end of num_repeat loop
+				double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+				if (num_repeat > 1)
+					cout << "Elapse time of operation: " << end - start
+							<< " sec" << endl;
+
+				if (verbose_) {
+					if (status == LIBSAKURA_SYMBOL(Status_kOK))
+						PrintArray("result", num_data, result);
+					else
+						cout << "sakura_Status = " << status << endl;
+				}
+				// Verification
+				EXPECT_EQ(return_value, status);
+				if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
+					auto *answer = num_and_ans.answer;
+					size_t const num_answer = ELEMENTSOF(num_and_ans.answer);
+					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+					for (size_t i = 0; i < num_data; ++i) {
+						ASSERT_EQ(answer[i % num_answer], result[i]);
+					}
+				}
+			}
+		} // end of operation loop
+	}
+
+	void RunBoundaryTest(size_t num_data, DataType *in_data, bool *result,
+			size_t num_operation, BoundaryTestComponent const *test_components,
+			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
+
+		GetDataInLength(num_data, in_data);
+		if (verbose_) {
+			PrintArray("data", num_data, in_data);
+			cout << "threshold = " << threshold_ << endl;
+		}
+
+		if (num_repeat > 1)
+			cout << "Iterating " << num_repeat
+					<< " loops for each operation. The length of arrays is "
+					<< num_data << endl;
+
+		BoundaryTestHelper<DataType> my_testcase;
+		for (size_t iop = 0; iop < num_operation; ++iop) {
+			auto kit = my_testcase.GetItem(num_operation, test_components, iop);
+			LIBSAKURA_SYMBOL(Status) status;
+			cout << "Testing: " << std::get<0>(kit) << endl;
+			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			for (size_t irun = 0; irun < num_repeat; ++irun) {
+				// Actual execution of bit operation function
+				status = (std::get<1>(kit).function)(num_data, in_data,
+						threshold_, result);
+			} // end of num_repeat loop
+			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			if (num_repeat > 1)
+				cout << "Elapse time of operation: " << end - start << " sec"
+						<< endl;
+
+			if (verbose_) {
+				if (status == LIBSAKURA_SYMBOL(Status_kOK))
+					PrintArray("result", num_data, result);
+				else
+					cout << "sakura_Status = " << status << endl;
+			}
+			// Verification
+			EXPECT_EQ(return_value, status);
+			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
+				auto *answer = test_components[iop].answer; //std::get<2>(kit);
+				size_t const num_answer = ELEMENTSOF(std::get<2>(kit));
+//				PrintArray("answer", num_answer, answer);
+//				PrintArray("kit answer", num_answer, std::get<2>(kit));
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				for (size_t i = 0; i < num_data; ++i) {
+					ASSERT_EQ(answer[i % num_answer], result[i]);
+				}
+			}
+		} // end of operation loop
+	}
+
+	// Create arbitrary length of input data by repeating values of data_[]
+	void GetDataInLength(size_t num_out, DataType *out_data) {
+		// Handling of nullptr array
+		if (out_data==nullptr) return;
+		size_t const num_data(ELEMENTSOF(data_));
+		for (size_t i = 0; i < num_out; ++i) {
+			out_data[i] = data_[i % num_data];
+		}
+	}
+	// Copy values of lower and upper bounds to given arrays from lower_[] and upper_[]
+	void GetBounds(DataType *lower, DataType *upper) {
+		// Handling of nullptr array
+		DataType dummy_bound[NUM_RANGE];
+		DataType *lower_ptr = (lower != nullptr) ? lower : dummy_bound;
+		DataType *upper_ptr = (upper != nullptr) ? upper : dummy_bound;
+		EXPECT_EQ(NUM_RANGE, ELEMENTSOF(lower_ptr));
+		EXPECT_EQ(NUM_RANGE, ELEMENTSOF(upper_ptr));
+		for (size_t i = 0; i < NUM_RANGE; ++i) {
+			lower_ptr[i] = lower_[i];
+			upper_ptr[i] = upper_[i];
+		}
+	}
+
+	// Convert an array to a string formatted for printing.
+	void PrintArray(char const *name, size_t num_data,
+			DataType const *data_array) {
+		constexpr size_t kMaxLength(20);
+		cout << name << " = ";
+		if (data_array == nullptr) { // array is nullptr
+			cout << "NULL" << endl;
+		} else if (num_data > kMaxLength) { // long array (just show the length)
+			cout << num_data << " elements" << endl;
+		} else { // normal array
+			cout << "[ ";
+			if (num_data > 0) {
+				for (size_t i = 0; i < num_data - 1; ++i)
+					cout << data_array[i] << ", ";
+				cout << data_array[num_data - 1];
+			}
+			cout << " ]" << endl;
+		}
+	}
+	// Convert an array to a string formatted for printing. Convert booleans to T/F strings.
+	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
+		constexpr size_t kMaxLength(20);
+		cout << name << " = ";
+		if (data_array == nullptr) { // array is nullptr
+			cout << "NULL" << endl;
+		} else if (num_data > kMaxLength) { // long array (just show the length)
+			cout << num_data << " elements" << endl;
+		} else { // normal array
+			cout << "[ ";
+			if (num_data > 0) {
+				for (size_t i = 0; i < num_data - 1; ++i)
+					cout << (data_array[i] ? "T" : "F") << ", ";
+				cout << (data_array[num_data - 1] ? "T" : "F");
+			}
+			cout << " ]" << endl;
+		}
+	}
+
+	// Member variables
+	bool verbose_;
+	DataType data_[NUM_IN];
+	DataType upper_[NUM_RANGE];
+	DataType lower_[NUM_RANGE];
+	DataType threshold_;
 
 };
 
@@ -620,7 +625,7 @@ protected:
  */
 class BoolFilterFloat: public BoolFilter<float> {
 protected:
-	virtual void PrepareInputs() {
+	virtual void InitializeInputs() {
 		threshold_ = 0.;
 		float const base_input[] = { 0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
 		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
@@ -644,7 +649,7 @@ protected:
  */
 class BoolFilterInt: public BoolFilter<int> {
 protected:
-	virtual void PrepareInputs() {
+	virtual void InitializeInputs() {
 		threshold_ = 0;
 		int const base_input[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
 		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
@@ -668,7 +673,7 @@ protected:
  */
 class BoolFilterOther: public BoolFilter<int> {
 protected:
-	virtual void PrepareInputs() {
+	virtual void InitializeInputs() {
 	}
 };
 
@@ -770,14 +775,14 @@ TEST_F(BoolFilterFloat, NanOrInf) {
 		}
 	}
 
-	if (verbose) {
+	if (verbose_) {
 		PrintArray("data", num_data, in_data);
 	}
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			in_data, result);
 
-	if (verbose)
+	if (verbose_)
 		PrintArray("result", num_data, result);
 
 	// Verification
@@ -817,7 +822,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
 		}
 	}
 
-	if (verbose) {
+	if (verbose_) {
 		PrintArray("data", num_data, in_data);
 		cout << "threshold = " << threshold_ << endl;
 	}
@@ -825,7 +830,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
 	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
 			in_data, result);
 
-	if (verbose)
+	if (verbose_)
 		PrintArray("result", num_data, result);
 
 	// Verification
@@ -923,12 +928,12 @@ TEST_F(BoolFilterOther, InvertBool) {
 	bool answer[] = { false, true, true, false };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
 
-	if (verbose)
+	if (verbose_)
 		PrintArray("data", num_data, data);
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, result);
 
-	if (verbose)
+	if (verbose_)
 		PrintArray("result", num_data, result);
 
 	// Verification
@@ -1022,12 +1027,12 @@ TEST_F(BoolFilterOther, Uint8ToBool) {
 	bool answer[] = { false, true, true, true, true, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
 
-//	if (verbose) PrintArray("data", num_data, in);
+//	if (verbose_) PrintArray("data", num_data, in);
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data,
 			result);
 
-	if (verbose)
+	if (verbose_)
 		PrintArray("result", num_data, result);
 
 	// Verification
@@ -1119,12 +1124,12 @@ TEST_F(BoolFilterOther, Uint32ToBool) {
 	bool answer[] = { false, true, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
 
-//	if (verbose) PrintArray("data", num_data, in);
+//	if (verbose_) PrintArray("data", num_data, in);
 
 	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data,
 			result);
 
-	if (verbose)
+	if (verbose_)
 		PrintArray("result", num_data, result);
 
 	// Verification
