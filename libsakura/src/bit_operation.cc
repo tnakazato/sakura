@@ -20,15 +20,15 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
-#include <cassert>
-#include <cstddef>
-#include <cmath>
-#include <climits>
 #include <algorithm>
+#include <cassert>
+#include <climits>
+#include <cmath>
+#include <cstddef>
 #include <iostream>
 
-#include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
+#include "libsakura/sakura.h"
 
 // Vectorization by Compiler
 namespace {
