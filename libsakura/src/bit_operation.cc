@@ -103,15 +103,15 @@ inline void OperateBitwiseConverseNonImplication(DataType bit_mask,
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 
-	/* edit_mask = true: X = (mask8 - 1) = 00...0
+	/* edit_mask = true: x = (mask8 - 1) = 00...0
 	 *                   -> (bit_mask | 00...0) = bit_mask,
-	 *                   ~X = 11...1 -> (data[i] ^ ~X) = ~data[i]
-	 *           = false: X = (mask8 - 1) = 11...1
+	 *                   ~x = 11...1 -> (data[i] ^ ~x) = ~data[i]
+	 *           = false: x = (mask8 - 1) = 11...1
 	 *                   -> (bit_mask | 11...1) = 11...1
-	 *                   ~X = 00...0 -> (data[i] ^ ~X) = data[i] */
+	 *                   ~x = 00...0 -> (data[i] ^ ~x) = data[i] */
 	for (size_t i = 0; i < num_data; ++i) {
-		DataType X = (static_cast<DataType>(mask8[i]) - 1);
-		result[i] = (data[i] ^ ~X) & (bit_mask | X);
+		DataType x = (static_cast<DataType>(mask8[i]) - 1);
+		result[i] = (data[i] ^ ~x) & (bit_mask | x);
 	}
 
 }
@@ -130,15 +130,15 @@ inline void OperateBitwiseImplication(DataType bit_mask, size_t num_data,
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
 
-	/* edit_mask = true: X = ~(mask8 - 1) = 11...1
+	/* edit_mask = true: x = ~(mask8 - 1) = 11...1
 	 *                   -> (bit_mask & 11...1) = bit_mask,
 	 *                   -> (data[i] ^ 11...1) = ~data[i]
-	 *           = false: X = ~(mask8 - 1) = 00...0
+	 *           = false: x = ~(mask8 - 1) = 00...0
 	 *                   -> (bit_mask & 00...0) = 00...0
 	 *                   (data[i] ^ 00...0) = data[i] */
 	for (size_t i = 0; i < num_data; ++i) {
-		DataType X = ~(static_cast<DataType>(mask8[i]) - 1);
-		result[i] = (data[i] ^ X) | (bit_mask & X);
+		DataType x = ~(static_cast<DataType>(mask8[i]) - 1);
+		result[i] = (data[i] ^ x) | (bit_mask & x);
 	}
 
 }
