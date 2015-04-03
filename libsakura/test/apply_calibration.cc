@@ -163,6 +163,25 @@ struct IntrinsicsTestInitializer {
 		}
 	}
 };
+
+class TestLogger {
+public:
+	static void LogElapsed(const char const *name, size_t num_segments,
+			size_t iteration, double elapsed_time) {
+		std::cout << name << ": Elapsed time (" << num_segments
+				<< " segments with " << iteration << " iterations) "
+				<< elapsed_time << " sec" << std::endl;
+	}
+};
+
+class PerformanceTestLogger {
+public:
+	static void LogElapsed(const char const *name, size_t /*num_segments*/,
+			size_t /*iteration*/, double elapsed_time) {
+		std::cout << "#x# benchmark " << name << " " << elapsed_time
+				<< std::endl;
+	}
+};
 } // anonymous namespace
 
 class ApplyCalibrationFloatTest: public ::testing::Test {
@@ -176,10 +195,12 @@ public:
 	virtual void TearDown() {
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
-	virtual void PerformTest(LIBSAKURA_SYMBOL(Status) expected_status,
-			size_t num_scaling_factor, float const scaling_factor[],
-			size_t num_data, size_t num_segments, float const target[],
-			float const reference[], float result[], float const expected[],
+	template<typename Logger>
+	void PerformTest(const char *name,
+	LIBSAKURA_SYMBOL(Status) expected_status, size_t num_scaling_factor,
+			float const scaling_factor[], size_t num_data, size_t num_segments,
+			float const target[], float const reference[], float result[],
+			float const expected[],
 			bool check_result, size_t iteration = 1) {
 		size_t memory_size = (num_scaling_factor
 				+ num_data * num_segments * ((target == result) ? 2 : 3)) * 4; // bytes
@@ -238,13 +259,11 @@ public:
 				}
 			}
 		}
-		std::cout << "Elapsed time (" << num_segments << " segments with "
-				<< iteration << " iterations) " << elapsed_time << " sec"
-				<< std::endl;
+		Logger::LogElapsed(name, num_segments, iteration, elapsed_time);
 	}
 	template<size_t ITER, size_t NUM_ARRAY, size_t NUM_CHAN, size_t NUM_SCALING,
 	bool IN_PLACE>
-	void RunPerformanceTest() {
+	void RunPerformanceTest(const char *name) {
 		size_t const num_data = NUM_CHAN * NUM_ARRAY;
 		size_t const num_scaling_factor =
 				(NUM_SCALING == 1) ? NUM_SCALING : num_data;
@@ -275,21 +294,22 @@ public:
 		if (IN_PLACE) {
 			EXPECT_EQ(target, result);
 		}
-		PerformTest(LIBSAKURA_SYMBOL(Status_kOK), NUM_SCALING, scaling_factor,
-				NUM_CHAN, NUM_ARRAY, target, reference, result, nullptr,
+		PerformTest<PerformanceTestLogger>(name, LIBSAKURA_SYMBOL(Status_kOK),
+				NUM_SCALING, scaling_factor, NUM_CHAN, NUM_ARRAY, target,
+				reference, result, nullptr,
 				false, ITER);
 	}
 	template<typename Initializer, typename Helper, size_t NUM_DATA,
 			size_t NUM_SCALING, bool IN_PLACE>
-	void RunTest(bool check_result = true,
+	void RunTest(const char *name, bool check_result = true,
 	LIBSAKURA_SYMBOL(Status) expected_status = LIBSAKURA_SYMBOL(Status_kOK)) {
 		SIMD_ALIGN
 		float scaling_factor[NUM_SCALING], target[NUM_DATA],
 				reference[NUM_DATA], result[NUM_DATA], expected[NUM_DATA];
 		Initializer::Initialize(scaling_factor, target, reference, expected);
-		PerformTest(expected_status, NUM_SCALING, scaling_factor, NUM_DATA, 1,
-				target, reference, (IN_PLACE) ? target : result, expected,
-				check_result);
+		PerformTest<TestLogger>(name, expected_status, NUM_SCALING,
+				scaling_factor, NUM_DATA, 1, target, reference,
+				(IN_PLACE) ? target : result, expected, check_result);
 		Helper::AdditionalTest(target, result, expected);
 	}
 };
@@ -302,7 +322,8 @@ APPLYCAL_FLOAT_TEST(NullPointer) {
 	InitializeFloatArray(num_scaling_factor, scaling_factor, 1.0);
 	InitializeFloatArray(num_data, target, 1.0);
 
-	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
+	PerformTest<TestLogger>("NullPointer",
+	LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
 			scaling_factor, num_data, 1, target, nullptr, target, nullptr,
 			false);
 }
@@ -315,67 +336,76 @@ APPLYCAL_FLOAT_TEST(InputArrayNotAligned) {
 	InitializeFloatArray(num_scaling_factor, scaling_factor, 1.0);
 	InitializeFloatArray(num_data + 1, target, 1.0, 1.0);
 
-	PerformTest(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
+	PerformTest<TestLogger>("InputArrayNotAligned",
+	LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
 			scaling_factor, num_data, 1, &target[1], target, target, nullptr,
 			false);
 }
 
 APPLYCAL_FLOAT_TEST(ZeroLengthData) {
 	RunTest<ZeroLengthDataInitializer<0, 1>, EmptyHelper, 0, 1,
-	false>();
+	false>("ZeroLengthData");
 }
 
 APPLYCAL_FLOAT_TEST(ZeroLengthScalingFactor) {
 	RunTest<ZeroLengthScalingFactorInitializer<1, 0>, EmptyHelper, 1, 0,
-	false>(false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+	false>("ZeroLengthScalingFactor", false,
+	LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 APPLYCAL_FLOAT_TEST(InvaidNumberOfScalingFactor) {
 	RunTest<InvalidNumberOfScalingFactorInitializer<3, 2>, EmptyHelper, 3, 2,
-	false>(false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+	false>("InvalidNumberOfScalingFactor", false,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 APPLYCAL_FLOAT_TEST(ZeroDivision) {
 	RunTest<ZeroDivisionTestInitializer<2, 1>, ZeroDivisionTestHelper<2, 1>, 2,
-			1, false>(false);
+			1,
+			false>("ZeroDivision", false);
 }
 
 APPLYCAL_FLOAT_TEST(BasicTest) {
-	RunTest<BasicTestInitializer<2, 2>, EmptyHelper, 2, 2, false>();
+	RunTest<BasicTestInitializer<2, 2>, EmptyHelper, 2, 2, false>("Basic");
 }
 
 APPLYCAL_FLOAT_TEST(InPlaceTest) {
-	RunTest<BasicTestInitializer<2, 2>, InPlaceTestHelper<2, 2>, 2, 2, true>();
+	RunTest<BasicTestInitializer<2, 2>, InPlaceTestHelper<2, 2>, 2, 2, true>(
+			"InPlace");
 }
 
 APPLYCAL_FLOAT_TEST(SingleScalingFactor) {
-	RunTest<SingleScalingFactorTestInitializer<2, 1>, EmptyHelper, 2, 1, false>();
+	RunTest<SingleScalingFactorTestInitializer<2, 1>, EmptyHelper, 2, 1, false>(
+			"SingleScalingFactor");
 }
 
 APPLYCAL_FLOAT_TEST(TooManyScalingFactor) {
-	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>();
+	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>(
+			"TooManyScalingFactor");
 }
 
 APPLYCAL_FLOAT_TEST(IntrinsicsTest) {
-	RunTest<IntrinsicsTestInitializer<10, 10>, EmptyHelper, 10, 10, false>();
+	RunTest<IntrinsicsTestInitializer<10, 10>, EmptyHelper, 10, 10, false>(
+			"Intrinsics");
 }
 
 APPLYCAL_FLOAT_TEST(PerformanceTestAllAtOnce) {
-	RunPerformanceTest<10, 1, 40000000, 40000000, false>();
+	RunPerformanceTest<10, 1, 40000000, 40000000, false>("AllAtOnce");
 }
 
 APPLYCAL_FLOAT_TEST(PerformanceTestIndividual) {
-	RunPerformanceTest<10, 1000, 40000, 40000, false>();
+	RunPerformanceTest<10, 1000, 40000, 40000, false>("ProcessIndividual");
 }
 
 APPLYCAL_FLOAT_TEST(PerformanceTestSingleScalingFactor) {
-	RunPerformanceTest<10, 1, 40000000, 1, false>();
+	RunPerformanceTest<10, 1, 40000000, 1, false>("SingleScalingFactor");
 }
 
 APPLYCAL_FLOAT_TEST(PerformanceTestShareInputOutput) {
-	RunPerformanceTest<50, 1000, 40000, 40000, true>();
+	RunPerformanceTest<50, 1000, 40000, 40000, true>("ShareInputOutput");
 }
 
 APPLYCAL_FLOAT_TEST(PerformanceTestShareInputOutputSingleScalingFactor) {
-	RunPerformanceTest<50, 1000, 40000, 1, true>();
+	RunPerformanceTest<50, 1000, 40000, 1, true>(
+			"ShareInputOoutputSingleScalingFactor");
 }
