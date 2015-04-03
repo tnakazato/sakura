@@ -239,6 +239,7 @@ protected:
 		}
 	}
 
+	// Convert an array to a string formatted for printing.
 	void PrintArray(char const *name, size_t num_data,
 			DataType const *data_array) {
 		cout << name << " = [ ";
@@ -249,7 +250,7 @@ protected:
 		}
 		cout << " ]" << endl;
 	}
-
+	// Convert an array to a string formatted for printing. Convert booleans to T/F strings.
 	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
 		cout << name << " = [ ";
 		if (num_data>0) {
@@ -260,6 +261,7 @@ protected:
 		cout << " ]" << endl;
 	}
 
+	// Member variables
 	bool verbose;
 	DataType data_[NUM_IN];
 	DataType upper_[NUM_RANGE];
