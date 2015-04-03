@@ -166,7 +166,7 @@ struct IntrinsicsTestInitializer {
 
 class TestLogger {
 public:
-	static void LogElapsed(const char const *name, size_t num_segments,
+	static void LogElapsed(const char *name, size_t num_segments,
 			size_t iteration, double elapsed_time) {
 		std::cout << name << ": Elapsed time (" << num_segments
 				<< " segments with " << iteration << " iterations) "
@@ -176,7 +176,7 @@ public:
 
 class PerformanceTestLogger {
 public:
-	static void LogElapsed(const char const *name, size_t /*num_segments*/,
+	static void LogElapsed(const char *name, size_t /*num_segments*/,
 			size_t /*iteration*/, double elapsed_time) {
 		std::cout << "#x# benchmark " << name << " " << elapsed_time
 				<< std::endl;
