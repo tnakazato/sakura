@@ -217,15 +217,12 @@ protected:
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 				nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		InitializeInputs();
 	}
 
 	virtual void TearDown() {
 		// Clean-up sakura
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
-
-	virtual void InitializeInputs() = 0;
 
 	/*
 	 * Actual test definitions
@@ -609,10 +606,10 @@ protected:
 
 	// Member variables
 	bool verbose_;
-	DataType data_[NUM_IN];
-	DataType upper_[NUM_RANGE];
-	DataType lower_[NUM_RANGE];
-	DataType threshold_;
+	static DataType data_[NUM_IN];
+	static DataType upper_[NUM_RANGE];
+	static DataType lower_[NUM_RANGE];
+	static DataType threshold_;
 
 };
 
@@ -624,21 +621,16 @@ protected:
  * - upper_bound = [-0.25, 0.75]
  */
 class BoolFilterFloat: public BoolFilter<float> {
-protected:
-	virtual void InitializeInputs() {
-		threshold_ = 0.;
-		float const base_input[] = { 0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
-		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
-		STATIC_ASSERT(NUM_RANGE == 2);
-		lower_[0] = -0.75;
-		lower_[1] = 0.5;
-		upper_[0] = -0.25;
-		upper_[1] = 0.75;
-		for (size_t i = 0; i < NUM_IN; ++i) {
-			data_[i] = base_input[i];
-		}
-	}
+
 };
+template<>
+float BoolFilter<float>::threshold_ = 0.0;
+template<>
+float BoolFilter<float>::data_[] = { 0.0, -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
+template<>
+float BoolFilter<float>::lower_[] = { -0.75, 0.5 };
+template<>
+float BoolFilter<float>::upper_[] = { -0.25, 0.75 };
 
 /*
  * Tests various bool filter generation using int array
@@ -648,21 +640,16 @@ protected:
  * - upper_bound = [-3, 7]
  */
 class BoolFilterInt: public BoolFilter<int> {
-protected:
-	virtual void InitializeInputs() {
-		threshold_ = 0;
-		int const base_input[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
-		STATIC_ASSERT(ELEMENTSOF(base_input) == NUM_IN);
-		STATIC_ASSERT(NUM_RANGE == 2);
-		lower_[0] = -7;
-		lower_[1] = 5;
-		upper_[0] = -3;
-		upper_[1] = 7;
-		for (size_t i = 0; i < NUM_IN; ++i) {
-			data_[i] = base_input[i];
-		}
-	}
+
 };
+template<>
+int BoolFilter<int>::threshold_ = 0;
+template<>
+int BoolFilter<int>::data_[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
+template<>
+int BoolFilter<int>::lower_[] = { -7, 5 };
+template<>
+int BoolFilter<int>::upper_[] = { -3, 7 };
 
 /*
  * Tests various bool filter generation using int array
@@ -671,10 +658,8 @@ protected:
  * - lower_bound = [-7, 5]
  * - upper_bound = [-3, 7]
  */
-class BoolFilterOther: public BoolFilter<int> {
-protected:
-	virtual void InitializeInputs() {
-	}
+class BoolFilterOther: public BoolFilter<float> {
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
