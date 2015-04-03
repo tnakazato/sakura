@@ -176,7 +176,7 @@ inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
 
 template<typename DataType>
 inline void SetFalseIfNanOrInf(size_t num_data, DataType const *data,
-		bool *result) {
+bool *result) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 
@@ -217,9 +217,9 @@ inline void InvertBool(size_t num_data, bool const *data, bool *result) {
 }
 
 template<typename DataType>
-void SetTrueIfInRangesInclusive(
-		size_t num_data, DataType const data[/*num_data*/],
-		size_t num_condition, DataType const lower_bounds[/*num_condition*/],
+void SetTrueIfInRangesInclusive(size_t num_data,
+		DataType const data[/*num_data*/], size_t num_condition,
+		DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
 	typedef void (*SetTrueIfInRangesInclusiveFunc)(size_t num_data,
@@ -271,9 +271,9 @@ void SetTrueIfInRangesInclusive(
 }
 
 template<typename DataType>
-void SetTrueIfInRangesExclusive(
-		size_t num_data, DataType const data[/*num_data*/],
-		size_t num_condition, DataType const lower_bounds[/*num_condition*/],
+void SetTrueIfInRangesExclusive(size_t num_data,
+		DataType const data[/*num_data*/], size_t num_condition,
+		DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
 	typedef void (*SetTrueIfInRangesExclusiveFunc)(size_t num_data,
@@ -327,8 +327,10 @@ void SetTrueIfInRangesExclusive(
 } /* anonymous namespace */
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
-		size_t num_data, float const data[], size_t num_condition,
-		float const lower_bounds[], float const upper_bounds[], bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/], size_t num_condition,
+		float const lower_bounds[/*num_condition*/],
+		float const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -354,8 +356,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveF
 
 	// Now actual operation
 	try {
-		SetTrueIfInRangesInclusive(num_data, data, num_condition,
-				lower_bounds, upper_bounds, result);
+		SetTrueIfInRangesInclusive(num_data, data, num_condition, lower_bounds,
+				upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -366,8 +368,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveF
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt)(
-		size_t num_data, int const data[], size_t num_condition,
-		int const lower_bounds[], int const upper_bounds[], bool result[]) noexcept {
+		size_t num_data, int const data[/*num_data*/], size_t num_condition,
+		int const lower_bounds[/*num_condition*/],
+		int const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -393,8 +397,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveI
 
 	// Now actual operation
 	try {
-		SetTrueIfInRangesInclusive(num_data, data, num_condition,
-				lower_bounds, upper_bounds, result);
+		SetTrueIfInRangesInclusive(num_data, data, num_condition, lower_bounds,
+				upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -405,8 +409,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveI
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)(
-		size_t num_data, float const data[], size_t num_condition,
-		float const lower_bounds[], float const upper_bounds[], bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/], size_t num_condition,
+		float const lower_bounds[/*num_condition*/],
+		float const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -432,8 +438,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveF
 
 	// Now actual operation
 	try {
-		SetTrueIfInRangesExclusive(num_data, data, num_condition,
-				lower_bounds, upper_bounds, result);
+		SetTrueIfInRangesExclusive(num_data, data, num_condition, lower_bounds,
+				upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -444,8 +450,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveF
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt)(
-		size_t num_data, int const data[], size_t num_condition,
-		int const lower_bounds[], int const upper_bounds[], bool result[]) noexcept {
+		size_t num_data, int const data[/*num_data*/], size_t num_condition,
+		int const lower_bounds[/*num_condition*/],
+		int const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -471,8 +479,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveI
 
 	// Now actual operation
 	try {
-		SetTrueIfInRangesExclusive(num_data, data, num_condition,
-				lower_bounds, upper_bounds, result);
+		SetTrueIfInRangesExclusive(num_data, data, num_condition, lower_bounds,
+				upper_bounds, result);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -483,8 +491,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveI
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
-		size_t num_data, float const data[], float threshold,
-		bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -533,8 +541,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
-		size_t num_data, float const data[], float threshold,
-		bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -583,8 +591,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
-		size_t num_data, float const data[], float threshold,
-		bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -633,8 +641,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
-		size_t num_data, float const data[], float threshold,
-		bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/], float threshold,
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -683,8 +691,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsIn
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
-		size_t num_data,
-		float const data[], bool result[]) noexcept {
+		size_t num_data, float const data[/*num_data*/],
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -708,7 +716,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
-		size_t num_data, uint8_t const data[], bool result[]) noexcept {
+		size_t num_data, uint8_t const data[/*num_data*/],
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -732,7 +741,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
-		size_t num_data, uint32_t const data[], bool result[]) noexcept {
+		size_t num_data, uint32_t const data[/*num_data*/],
+		bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -757,7 +767,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
 		size_t num_data,
-		bool const data[], bool result[]) noexcept {
+		bool const data[/*num_data*/], bool result[/*num_data*/]) noexcept {
 	// Check parameter arguments.
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
