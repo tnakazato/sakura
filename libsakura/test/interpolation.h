@@ -58,6 +58,10 @@ inline void EquallySpacedGrid(size_t const num_grid, T const start, T const end,
 	}
 }
 
+void LogElapsed(const char *test_name, double elapsed) {
+	std::cout << "#x# benchmark " << test_name << " " << elapsed << std::endl;
+}
+
 template<typename T>
 class InterpolateFloatTestBase: public ::testing::Test {
 protected:
@@ -70,12 +74,12 @@ protected:
 	virtual void TearDown() {
 		sakura_CleanUp();
 	}
-	void RunInterpolateArray1D(sakura_InterpolationMethod interpolation_method,
+	double RunInterpolateArray1D(sakura_InterpolationMethod interpolation_method,
 			size_t num_base, size_t num_interpolated, size_t num_array,
 			sakura_Status expected_status, bool check_result, bool check_mask =
 					false, size_t iteration = 1) {
 		// sakura must be properly initialized
-		ASSERT_EQ(sakura_Status_kOK, initialize_result_)
+		EXPECT_EQ(sakura_Status_kOK, initialize_result_)
 				<< "sakura must be properly initialized!";
 
 		// execute interpolation
@@ -91,7 +95,8 @@ protected:
 			InspectResult(expected_status, result, num_interpolated, num_array,
 					check_result, check_mask);
 		}
-		std::cout << "Elapsed time " << elapsed << " sec" << std::endl;
+		//std::cout << "Elapsed time " << elapsed << " sec" << std::endl;
+		return elapsed;
 	}
 	void InitializePointers() {
 		x_base_ = nullptr;
