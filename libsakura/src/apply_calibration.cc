@@ -51,9 +51,9 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
 
 template<typename Arch, typename DataType, typename Context>
 struct PacketAction {
-	static inline void prologue(Context *context) {
+	static inline void Prologue(Context *context) {
 	}
-	static inline void action(size_t idx,
+	static inline void Action(size_t idx,
 			typename Arch::PacketType const *scaling_factor,
 			typename Arch::PacketType const *target,
 			typename Arch::PacketType const *reference,
@@ -67,20 +67,20 @@ struct PacketAction {
 		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Sub(*target, *reference)),
 				*reference);
 	}
-	static inline void epilogue(Context *context) {
+	static inline void Epilogue(Context *context) {
 	}
 };
 
 template<typename ScalarType, typename Context>
 struct ScalarAction {
-	static inline void prologue(Context *context) {
+	static inline void Prologue(Context *context) {
 	}
-	static inline void action(size_t idx, ScalarType const*scaling_factor,
+	static inline void Action(size_t idx, ScalarType const*scaling_factor,
 			ScalarType const*target, ScalarType const*reference,
 			ScalarType *result, Context *context) {
 		*result = *scaling_factor * (*target - *reference) / *reference;
 	}
-	static inline void epilogue(Context *context) {
+	static inline void Epilogue(Context *context) {
 	}
 };
 

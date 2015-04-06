@@ -1270,9 +1270,9 @@ __m128 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE), float
  *
  * 次のように処理することで、@a data 配列を処理する。
  *
- * @a PacketAction::prologueを1回、@a PacketAction::action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::epilogueを一回呼ぶ。
+ * @a PacketAction::Prologueを1回、@a PacketAction::Action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::Epilogueを一回呼ぶ。
  *
- * 次に、@a ScalarAction::prologueを1回、@a ScalarAction::action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::epilogueを一回呼ぶ。
+ * 次に、@a ScalarAction::Prologueを1回、@a ScalarAction::Action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::Epilogueを一回呼ぶ。
  *
  * @tparam Arch	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
  *  @ref sakura_SimdArchAVX or @ref sakura_SimdArchSSE or @ref sakura_SimdArchMMX
@@ -1281,11 +1281,11 @@ __m128 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE), float
  * <pre>
  * template &lt;typename Arch, typename Context&gt;
  * struct PacketAction {
- * 	static inline void prologue(Context *context) {
+ * 	static inline void Prologue(Context *context) {
  * 	}
- * 	static inline void action(size_t idx, typename Arch::PacketType *data, Context *context) {
+ * 	static inline void Action(size_t idx, typename Arch::PacketType *data, Context *context) {
  * 	}
- * 	static inline void epilogue(Context *context) {
+ * 	static inline void Epilogue(Context *context) {
  * 	}
  * };
  * </pre>
@@ -1293,11 +1293,11 @@ __m128 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE), float
  * <pre>
  * template &lt;typename ScalarType, typename Context&gt;
  * struct ScalarAction {
- * 	static inline void prologue(Context *context) {
+ * 	static inline void Prologue(Context *context) {
  * 	}
- * 	static inline void action(size_t idx, ScalarType *data, Context *context) {
+ * 	static inline void Action(size_t idx, ScalarType *data, Context *context) {
  * 	}
- * 	static inline void epilogue(Context *context) {
+ * 	static inline void Epilogue(Context *context) {
  * 	}
  * };
  * </pre>
@@ -1316,16 +1316,16 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
 	size_t const packet_count = elements >= kUnit * 1 ? elements / kUnit : 0;
 	auto ptr =
 			const_cast<typename Arch::PacketType *>(reinterpret_cast<typename Arch::PacketType const *>(data));
-	PacketAction::prologue(context);
+	PacketAction::Prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
-		PacketAction::action(i, &ptr[i], context);
+		PacketAction::Action(i, &ptr[i], context);
 	}
-	PacketAction::epilogue(context);
-	ScalarAction::prologue(context);
+	PacketAction::Epilogue(context);
+	ScalarAction::Prologue(context);
 	for (size_t i = packet_count * kUnit; i < elements; ++i) {
-		ScalarAction::action(i, &data[i], context);
+		ScalarAction::Action(i, &data[i], context);
 	}
-	ScalarAction::epilogue(context);
+	ScalarAction::Epilogue(context);
 }
 
 /**
@@ -1334,9 +1334,9 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
  *
  * 次のように処理することで、@a data 配列を処理する。
  *
- * @a PacketAction::prologueを1回、@a PacketAction::action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::epilogueを一回呼ぶ。
+ * @a PacketAction::Prologueを1回、@a PacketAction::Action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::Epilogueを一回呼ぶ。
  *
- * 次に、@a ScalarAction::prologueを1回、@a ScalarAction::action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::epilogueを一回呼ぶ。
+ * 次に、@a ScalarAction::Prologueを1回、@a ScalarAction::Action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::Epilogueを一回呼ぶ。
  *
  * @tparam Arch1	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
  *  @ref sakura_SimdArchAVX or @ref sakura_SimdArchSSE or @ref sakura_SimdArchMMX。
@@ -1348,11 +1348,11 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
  * <pre>
  * template &lt;typename Arch1, typename Arch2, typename Context&gt;
  * struct PacketAction {
- * 	static inline void prologue(Context *context) {
+ * 	static inline void Prologue(Context *context) {
  * 	}
- * 	static inline void action(size_t idx, typename Arch1::PacketType *data1, typename Arch2::PacketType *data2, Context *context) {
+ * 	static inline void Action(size_t idx, typename Arch1::PacketType *data1, typename Arch2::PacketType *data2, Context *context) {
  * 	}
- * 	static inline void epilogue(Context *context) {
+ * 	static inline void Epilogue(Context *context) {
  * 	}
  * };
  * </pre>
@@ -1360,11 +1360,11 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType data[],
  * <pre>
  * template &lt;typename ScalarType1, typename ScalarType2, typename Context&gt;
  * struct ScalarAction {
- * 	static inline void prologue(Context *context) {
+ * 	static inline void Prologue(Context *context) {
  * 	}
- * 	static inline void action(size_t idx, ScalarType1 *data1, ScalarType2 *data2, Context *context) {
+ * 	static inline void Action(size_t idx, ScalarType1 *data1, ScalarType2 *data2, Context *context) {
  * 	}
- * 	static inline void epilogue(Context *context) {
+ * 	static inline void Epilogue(Context *context) {
  * 	}
  * };
  * </pre>
@@ -1388,16 +1388,16 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 			const_cast<typename Arch1::PacketType *>(reinterpret_cast<typename Arch1::PacketType const *>(data1));
 	auto ptr2 =
 			const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
-	PacketAction::prologue(context);
+	PacketAction::Prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
-		PacketAction::action(i, &ptr1[i], &ptr2[i], context);
+		PacketAction::Action(i, &ptr1[i], &ptr2[i], context);
 	}
-	PacketAction::epilogue(context);
-	ScalarAction::prologue(context);
+	PacketAction::Epilogue(context);
+	ScalarAction::Prologue(context);
 	for (size_t i = packet_count * kUnit; i < elements; ++i) {
-		ScalarAction::action(i, &data1[i], &data2[i], context);
+		ScalarAction::Action(i, &data1[i], &data2[i], context);
 	}
-	ScalarAction::epilogue(context);
+	ScalarAction::Epilogue(context);
 }
 
 /**
@@ -1406,9 +1406,9 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
  *
  * 次のように処理することで、@a data 配列を処理する。
  *
- * @a PacketAction::prologueを1回、@a PacketAction::action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::epilogueを一回呼ぶ。
+ * @a PacketAction::Prologueを1回、@a PacketAction::Action をn回(elementsが一定数(実装依存)以上あり、SIMDによる速度改善が見込める場合は n &gt; 0、そうでない場合は n = 0)、@a PacketAction::Epilogueを一回呼ぶ。
  *
- * 次に、@a ScalarAction::prologueを1回、@a ScalarAction::action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::epilogueを一回呼ぶ。
+ * 次に、@a ScalarAction::Prologueを1回、@a ScalarAction::Action をn回(パケット単位で処理できない端数がある場合は n &gt; 0、そうでない場合は n = 0)、@a ScalarAction::Epilogueを一回呼ぶ。
  *
  * @tparam Arch1	SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
  *  @ref sakura_SimdArchAVX or @ref sakura_SimdArchSSE or @ref sakura_SimdArchMMX。
@@ -1422,11 +1422,11 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
  * <pre>
  * template &lt;typename Arch1, typename Arch2, typename Arch3, typename Context&gt;
  * struct PacketAction {
- * 	static inline void prologue(Context *context) {
+ * 	static inline void Prologue(Context *context) {
  * 	}
- * 	static inline void action(size_t idx, typename Arch1::PacketType *data1, typename Arch2::PacketType *data2, typename Arch3::PacketType *data3, Context *context) {
+ * 	static inline void Action(size_t idx, typename Arch1::PacketType *data1, typename Arch2::PacketType *data2, typename Arch3::PacketType *data3, Context *context) {
  * 	}
- * 	static inline void epilogue(Context *context) {
+ * 	static inline void Epilogue(Context *context) {
  * 	}
  * };
  * </pre>
@@ -1434,11 +1434,11 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
  * <pre>
  * template &lt;typename ScalarType1, typename ScalarType2, typename ScalarType3, typename Context&gt;
  * struct ScalarAction {
- * 	static inline void prologue(Context *context) {
+ * 	static inline void Prologue(Context *context) {
  * 	}
- * 	static inline void action(size_t idx, ScalarType1 *data1, ScalarType2 *data2, ScalarType3 *data3, Context *context) {
+ * 	static inline void Action(size_t idx, ScalarType1 *data1, ScalarType2 *data2, ScalarType3 *data3, Context *context) {
  * 	}
- * 	static inline void epilogue(Context *context) {
+ * 	static inline void Epilogue(Context *context) {
  * 	}
  * };
  * </pre>
@@ -1466,16 +1466,16 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 			const_cast<typename Arch2::PacketType *>(reinterpret_cast<typename Arch2::PacketType const *>(data2));
 	auto ptr3 =
 			const_cast<typename Arch3::PacketType *>(reinterpret_cast<typename Arch3::PacketType const *>(data3));
-	PacketAction::prologue(context);
+	PacketAction::Prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
-		PacketAction::action(i, &ptr1[i], &ptr2[i], &ptr3[i], context);
+		PacketAction::Action(i, &ptr1[i], &ptr2[i], &ptr3[i], context);
 	}
-	PacketAction::epilogue(context);
-	ScalarAction::prologue(context);
+	PacketAction::Epilogue(context);
+	ScalarAction::Prologue(context);
 	for (size_t i = packet_count * kUnit; i < elements; ++i) {
-		ScalarAction::action(i, &data1[i], &data2[i], &data3[i], context);
+		ScalarAction::Action(i, &data1[i], &data2[i], &data3[i], context);
 	}
-	ScalarAction::epilogue(context);
+	ScalarAction::Epilogue(context);
 }
 
 template<typename Arch1, typename ScalarType1, typename Arch2,
@@ -1500,18 +1500,18 @@ void LIBSAKURA_SYMBOL(SimdIterate)(size_t elements, ScalarType1 data1[],
 			const_cast<typename Arch3::PacketType *>(reinterpret_cast<typename Arch3::PacketType const *>(data3));
 	auto ptr4 =
 			const_cast<typename Arch4::PacketType *>(reinterpret_cast<typename Arch4::PacketType const *>(data4));
-	PacketAction::prologue(context);
+	PacketAction::Prologue(context);
 	for (size_t i = 0; i < packet_count; ++i) {
-		PacketAction::action(i, &ptr1[i], &ptr2[i], &ptr3[i], &ptr4[i],
+		PacketAction::Action(i, &ptr1[i], &ptr2[i], &ptr3[i], &ptr4[i],
 				context);
 	}
-	PacketAction::epilogue(context);
-	ScalarAction::prologue(context);
+	PacketAction::Epilogue(context);
+	ScalarAction::Prologue(context);
 	for (size_t i = packet_count * kUnit; i < elements; ++i) {
-		ScalarAction::action(i, &data1[i], &data2[i], &data3[i], &data4[i],
+		ScalarAction::Action(i, &data1[i], &data2[i], &data3[i], &data4[i],
 				context);
 	}
-	ScalarAction::epilogue(context);
+	ScalarAction::Epilogue(context);
 }
 
 //} /* namespace */
