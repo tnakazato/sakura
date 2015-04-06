@@ -135,21 +135,6 @@ public:
 	typedef typename Base::const_reference const_reference;
 	typedef typename Base::value_type value_type;
 
-	pointer allocate(size_type n, const void* = nullptr) {
-		if (n > this->max_size()) {
-			throw std::bad_alloc();
-		}
-		pointer memory = Memory::Allocate(n);
-		if (memory == nullptr) {
-			throw std::bad_alloc();
-		}
-		return static_cast<T*>(memory);
-	}
-
-	void deallocate(pointer p, size_type) {
-		pointer memory = Memory::Free(p);
-	}
-
 	Allocator() noexcept {
 	}
 
@@ -161,6 +146,21 @@ public:
 	: std::allocator<T>(other) {}
 
 	~Allocator() noexcept {}
+
+	pointer allocate(size_type size, const void* = nullptr) {
+		if (size > this->max_size()) {
+			throw std::bad_alloc();
+		}
+		pointer memory = Memory::Allocate(size);
+		if (memory == nullptr) {
+			throw std::bad_alloc();
+		}
+		return memory;
+	}
+
+	void deallocate(pointer ptr, size_type) {
+		pointer memory = Memory::Free(ptr);
+	}
 };
 
 } /* namespace LIBSAKURA_PREFIX */
