@@ -291,8 +291,6 @@ class BitOperation: public ::testing::Test {
 protected:
 	BitOperation() :
 			verbose_(false) {
-		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN);
-		STATIC_ASSERT(ELEMENTSOF(edit_mask_)==NUM_IN);
 	}
 
 	virtual void SetUp() {
@@ -453,7 +451,14 @@ private:
 	// by repeating data_[] and edit_mask_[]
 	static void GetInputDataInLength(size_t num_data, DataType *data,
 	bool *mask) {
-		size_t const num_in(NUM_IN);
+		/* repeat bit pattern of *00, *01, *10, *11,... */
+		static constexpr DataType data_[] = { 0, 1, 2, 3, 0, 1, 2, 3 };
+		/* boolean array of {F, F, F, F, T, T, T, T} */
+		static constexpr bool edit_mask_[] = { false, false, false, false, true, true, true, true };
+		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN);
+		STATIC_ASSERT(ELEMENTSOF(edit_mask_)==ELEMENTSOF(data_));
+
+		size_t const num_in(ELEMENTSOF(data_));
 		for (size_t i = 0; i < num_data; ++i) {
 			data[i] = data_[i % num_in];
 			mask[i] = edit_mask_[i % num_in];
@@ -545,6 +550,9 @@ private:
 			TestComponent const *test_components,
 			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
 
+		/* bit pattern of 0...010 */
+		static constexpr DataType bit_mask_ = 2;
+
 		PrepareInputs(num_data, in_data, mask);
 		if (verbose_) {
 			PrintArray("data", num_data, in_data);
@@ -602,27 +610,27 @@ private:
 	};
 
 	// Member variables
-	static DataType data_[]; //[NUM_IN];
-	static bool edit_mask_[]; //[NUM_IN];
+//	static constexpr DataType bit_mask_ = 2;
+//	static DataType data_[]; //[NUM_IN];
+//	static bool edit_mask_[]; //[NUM_IN];
 	bool verbose_;
-	static DataType bit_mask_;
 	static constexpr size_t bit_size_ = sizeof(DataType) * 8;
 
 };
 
-/*
- * Initialization of static input data templates
- */
-/* bit pattern of 0...010 */
-template<typename DataType>
-DataType BitOperation<DataType>::bit_mask_ = 2;
-/* repeat bit pattern of *00, *01, *10, *11,... */
-template<typename DataType>
-DataType BitOperation<DataType>::data_[] = { 0, 1, 2, 3, 0, 1, 2, 3 };
-/* boolean array of {F, F, F, F, T, T, T, T} */
-template<typename DataType>
-bool BitOperation<DataType>::edit_mask_[] = { false, false, false, false, true,
-true, true, true };
+///*
+// * Initialization of static input data templates
+// */
+///* bit pattern of 0...010 */
+//template<typename DataType>
+//DataType BitOperation<DataType>::bit_mask_ = 2;
+///* repeat bit pattern of *00, *01, *10, *11,... */
+//template<typename DataType>
+//DataType BitOperation<DataType>::data_[] = { 0, 1, 2, 3, 0, 1, 2, 3 };
+///* boolean array of {F, F, F, F, T, T, T, T} */
+//template<typename DataType>
+//bool BitOperation<DataType>::edit_mask_[] = { false, false, false, false, true,
+//true, true, true };
 
 /*
  * Tests various bit operations of an uint32_t value and array
