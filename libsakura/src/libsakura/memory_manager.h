@@ -39,6 +39,7 @@
 #define LIBSAKURA_LIBSAKURA_MEMORY_MANAGER_H_
 
 #include <new>
+#include <memory>
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
 
@@ -120,6 +121,46 @@ private:
 			::LIBSAKURA_SYMBOL(UserDeallocator) deallocator) noexcept;
 	static ::LIBSAKURA_SYMBOL(UserAllocator) allocator_;
 	static ::LIBSAKURA_SYMBOL(UserDeallocator) deallocator_;
+};
+
+template<typename T>
+class Allocator: public std::allocator<T> {
+	typedef std::allocator<T> Base;
+public:
+	typedef typename Base::size_type size_type;
+	typedef typename Base::difference_type difference_type;
+	typedef typename Base::pointer pointer;
+	typedef typename Base::const_pointer const_pointer;
+	typedef typename Base::reference reference;
+	typedef typename Base::const_reference const_reference;
+	typedef typename Base::value_type value_type;
+
+	pointer allocate(size_type n, const void* = nullptr) {
+		if (n > this->max_size()) {
+			throw std::bad_alloc();
+		}
+		pointer memory = Memory::Allocate(n);
+		if (memory == nullptr) {
+			throw std::bad_alloc();
+		}
+		return static_cast<T*>(memory);
+	}
+
+	void deallocate(pointer p, size_type) {
+		pointer memory = Memory::Free(p);
+	}
+
+	Allocator() noexcept {
+	}
+
+	Allocator(Allocator const &other) noexcept
+	: std::allocator<T>(other) {}
+
+	template<typename Other>
+	Allocator(Allocator<Other> const &other) noexcept
+	: std::allocator<T>(other) {}
+
+	~Allocator() noexcept {}
 };
 
 } /* namespace LIBSAKURA_PREFIX */
