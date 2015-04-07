@@ -40,7 +40,7 @@ struct BinaryVisitorImpl {
 
 	static inline void Run(const Derived_ &mat, const OtherDerived &mat2,
 			Visitor_& visitor) {
-		BinaryVisitorImpl<Visitor_, Derived_, OtherDerived, kUnrollCount - 1>::run(
+		BinaryVisitorImpl<Visitor_, Derived_, OtherDerived, kUnrollCount - 1>::Run(
 				mat, mat2, visitor);
 		visitor(mat.coeff(row, col), mat2.coeff(row, col), row, col);
 	}
