@@ -163,19 +163,19 @@ template<class DataType>
 struct PolynomialWorkingData {
 	void InitializePolynomial(uint8_t order, size_t num_base, size_t array_size,
 			size_t num_array) {
-		polynomial_order_ =
+		polynomial_order =
 				(order + 1u >= num_base) ?
 						static_cast<uint8_t>(num_base - 1) : order;
-		num_elements_ = polynomial_order_ + 1;
-		xholder_.resize(array_size);
+		num_elements = polynomial_order + 1;
+		xholder.resize(array_size);
 		for (size_t i = 0; i < array_size; ++i) {
-			AllocateAndAlign<DataType>(num_elements_ * num_array,
-					&(xholder_[i]));
+			AllocateAndAlign<DataType>(num_elements * num_array,
+					&(xholder[i]));
 		}
 	}
-	uint8_t polynomial_order_;
-	size_t num_elements_;
-	std::vector<StorageAndAlignedPointer<DataType> > xholder_;
+	uint8_t polynomial_order;
+	size_t num_elements;
+	std::vector<StorageAndAlignedPointer<DataType> > xholder;
 };
 
 template<class XDataType, class YDataType>
@@ -473,8 +473,8 @@ struct PolynomialXInterpolatorImpl: public InterpolatorInterface<
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t const location[], size_t k,
 			size_t left_index, WorkingData *work_data) {
-		int left_edge1 = left_index - work_data->polynomial_order_ / 2;
-		size_t left_edge2 = num_base - work_data->num_elements_;
+		int left_edge1 = left_index - work_data->polynomial_order / 2;
+		size_t left_edge2 = num_base - work_data->num_elements;
 		size_t left_edge =
 				static_cast<size_t>((left_edge1 > 0) ? left_edge1 : 0);
 		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
@@ -499,21 +499,21 @@ private:
 		YDataType const *y_ptr =
 				&(base_data[num_base * array_index + left_index]);
 
-		XDataType *c = work_data->xholder_[0].pointer;
-		XDataType *d = work_data->xholder_[1].pointer;
+		XDataType *c = work_data->xholder[0].pointer;
+		XDataType *d = work_data->xholder[1].pointer;
 
-		for (size_t i = 0; i < work_data->num_elements_; ++i) {
+		for (size_t i = 0; i < work_data->num_elements; ++i) {
 			c[i] = static_cast<XDataType>(y_ptr[i]);
 			d[i] = c[i];
 		}
 
 		// Neville's algorithm
 		XDataType work = c[0];
-		for (size_t m = 1; m < work_data->num_elements_; ++m) {
+		for (size_t m = 1; m < work_data->num_elements; ++m) {
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 			// d[n-m-1].
-			for (size_t i = m; i < work_data->num_elements_; ++i) {
+			for (size_t i = m; i < work_data->num_elements; ++i) {
 				XDataType cd = c[i + 1 - m] - d[i - m];
 				XDataType dx = x_ptr[i - m] - x_ptr[i];
 				assert(dx != 0);
@@ -544,8 +544,8 @@ struct PolynomialYInterpolatorImpl: public InterpolatorInterface<
 			size_t num_interpolated, XDataType const interpolated_position[],
 			YDataType interpolated_data[], size_t const location[], size_t k,
 			size_t left_index, WorkingData *work_data) {
-		int left_edge1 = left_index - work_data->polynomial_order_ / 2;
-		size_t left_edge2 = num_base - work_data->num_elements_;
+		int left_edge1 = left_index - work_data->polynomial_order / 2;
+		size_t left_edge2 = num_base - work_data->num_elements;
 		size_t left_edge =
 				static_cast<size_t>((left_edge1 > 0) ? left_edge1 : 0);
 		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
@@ -562,12 +562,12 @@ private:
 			YDataType interpolated_data[], WorkingData *work_data) {
 		// working pointers
 		XDataType const *x_ptr = &(base_position[left_index]);
-		XDataType *c = work_data->xholder_[0].pointer;
-		XDataType *d = work_data->xholder_[1].pointer;
-		XDataType *work = work_data->xholder_[2].pointer;
+		XDataType *c = work_data->xholder[0].pointer;
+		XDataType *d = work_data->xholder[1].pointer;
+		XDataType *work = work_data->xholder[2].pointer;
 
 		size_t start = left_index * num_array;
-		size_t num_elements = work_data->num_elements_ * num_array;
+		size_t num_elements = work_data->num_elements * num_array;
 		for (size_t i = 0; i < num_elements; ++i) {
 			c[i] = static_cast<XDataType>(base_data[start + i]);
 			d[i] = c[i];
@@ -577,11 +577,11 @@ private:
 		for (size_t i = 0; i < num_array; ++i) {
 			work[i] = c[i];
 		}
-		for (size_t m = 1; m < work_data->num_elements_; ++m) {
+		for (size_t m = 1; m < work_data->num_elements; ++m) {
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 			// d[n-m-1].
-			for (size_t i = m; i < work_data->num_elements_; ++i) {
+			for (size_t i = m; i < work_data->num_elements; ++i) {
 				XDataType dx = x_ptr[i - m] - x_ptr[i];
 				assert(dx != 0);
 				size_t offset = (i - m) * num_array;
