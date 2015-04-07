@@ -78,16 +78,18 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 
 inline void Create1DGaussianKernel(size_t num_kernel, size_t use_fft,
 		size_t kernel_width, float* kernel) {
+	assert((2*num_kernel-1)>=0);
 	size_t num_data_for_gauss = 2 * num_kernel - 1;
 	if (use_fft) {
 		num_data_for_gauss = num_kernel;
 	}
+	assert(kernel_width != 0);
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ kernel_width; // sqrt(log(16)) / kernel_width
-	float const height = .939437278699651333772340328410 / kernel_width; // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-	float center = (num_data_for_gauss) / 2.f;
+	float const height = .939437278699651333772340328410 / static_cast<float>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
+	float center = static_cast<float>(num_data_for_gauss) / 2.f;
 	if (num_data_for_gauss % 2 != 0) {
-		center = (num_data_for_gauss - 1) / 2.f;
+		center = static_cast<float>(num_data_for_gauss - 1) / 2.f;
 	}
 	size_t middle = (num_data_for_gauss) / 2;
 	size_t loop_max = middle;
@@ -137,6 +139,8 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	auto input_data = AssumeAligned(input_data_arg);
 	auto kernel = AssumeAligned(kernel_arg);
 	auto output_data = AssumeAligned(output_data_arg);
+
+	/*
 	for (size_t i = 0; i < num_data; ++i) {
 		float value = 0.0;
 		size_t jmax = std::min(num_kernel, num_data - i);
@@ -149,11 +153,27 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 		}
 		output_data[i] = value;
 	}
+	*/
+
+	for (size_t i = 1; i < (num_data + 1); ++i) {
+		float value = 0.0;
+		size_t jmax = std::min(num_kernel, num_data - (i - 1));
+		for (size_t j = 1; j < jmax+1; ++j) {
+			value += input_data[i - 1 + j - 1] * kernel[j - 1];
+		}
+		jmax = std::min(num_kernel, i);
+		for (size_t j = 1; j < jmax; ++j) {
+			value += input_data[i - 1 - j] * kernel[j];
+		}
+		output_data[i - 1] = value;
+	}
+
 }
 
 inline void CreateConvolve1DContextFloat(size_t num_data,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
+
 	assert(context != nullptr);
 	if (use_fft) {
 		float *real_kernel_array = nullptr;
@@ -301,26 +321,27 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		fftwf_execute_dft_r2c(context->plan_real_to_complex_float,
 				const_cast<float*>(input_data),
 				fft_applied_complex_input_data.get());
-		float scale = 1.0 / num_data;
-		for (size_t i = 0; i < num_data / 2 + 1; ++i) {
-			multiplied_complex_data[i][0] =
-					(context->fft_applied_complex_kernel[i][0]
-							* fft_applied_complex_input_data[i][0]
-							- context->fft_applied_complex_kernel[i][1]
-									* fft_applied_complex_input_data[i][1])
+		float scale = 1.0f / static_cast<float>(num_data);
+		for (size_t i = 1; i < num_data / 2 + 1 + 1; ++i) {
+			multiplied_complex_data[i-1][0] =
+					(context->fft_applied_complex_kernel[i-1][0]
+							* fft_applied_complex_input_data[i-1][0]
+							- context->fft_applied_complex_kernel[i-1][1]
+									* fft_applied_complex_input_data[i-1][1])
 							* scale;
-			multiplied_complex_data[i][1] =
-					(context->fft_applied_complex_kernel[i][0]
-							* fft_applied_complex_input_data[i][1]
-							+ context->fft_applied_complex_kernel[i][1]
-									* fft_applied_complex_input_data[i][0])
+			multiplied_complex_data[i-1][1] =
+					(context->fft_applied_complex_kernel[i-1][0]
+							* fft_applied_complex_input_data[i-1][1]
+							+ context->fft_applied_complex_kernel[i-1][1]
+									* fft_applied_complex_input_data[i-1][0])
 							* scale;
 		}
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
 		ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
-				context->kernel_width, context->real_kernel_array, output_data);
+				context->kernel_width,
+				context->real_kernel_array, output_data);
 	}
 }
 
