@@ -110,7 +110,7 @@ inline void ApplyPositionSwitchCalibrationSimd<float>(size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) {
-	size_t const kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
+	constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
 	size_t num_packed_operation = num_data / kNumFloat;
 	size_t num_data_packed = num_packed_operation * kNumFloat;
 	if (num_scaling_factor == 1) {
