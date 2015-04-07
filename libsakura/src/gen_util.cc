@@ -133,7 +133,7 @@ extern "C" void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *vp,
 	uintptr_t addr = (uintptr_t) vp;
 	constexpr uintptr_t kMaxPadding = LIBSAKURA_ALIGNMENT - 1u;
 	uintptr_t new_addr = (addr + kMaxPadding) & ~kMaxPadding;
-	if (size_of_arena - size_t(new_addr - addr) < size_required) {
+	if (size_of_arena < size_required + size_t(new_addr - addr)) {
 		return nullptr;
 	}
 	return (void *) new_addr;
