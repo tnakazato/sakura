@@ -80,6 +80,40 @@ struct LIBSAKURA_SYMBOL(SimdScalarType) {
 
 /**
  * @~japanese
+ * ポータブルな FMAdd/FMSub 機能を提供する
+ */
+struct LIBSAKURA_SYMBOL(FMA) {
+	template<typename Packet, typename T>
+	struct GetType {
+		typedef void type;
+	};
+	template<typename Packet>
+	struct GetType<Packet, float> {
+		typedef typename Packet::RawFloat type;
+	};
+	template<typename Packet>
+	struct GetType<Packet, double> {
+		typedef typename Packet::RawDouble type;
+	};
+	template<typename Packet, typename T>
+	static typename GetType<Packet, T>::type MultiplyAdd(
+			typename GetType<Packet, T>::type const &a,
+			typename GetType<Packet, T>::type const &b,
+			typename GetType<Packet, T>::type const &c) {
+		return (a * b) + c;	// compiler select fmadd instruction if possible
+	}
+
+	template<typename Packet, typename T>
+	static typename GetType<Packet, T>::type MultiplySub(
+			typename GetType<Packet, T>::type const &a,
+			typename GetType<Packet, T>::type const &b,
+			typename GetType<Packet, T>::type const &c) {
+		return (a * b) - c;	// compiler select fmsub instruction if possible
+	}
+};
+
+/**
+ * @~japanese
  *
  * @tparam Arch SIMDアーキテクチャーを識別する型。通常は、@ref sakura_SimdArchNative を指定すれば良い。
  * @tparam ElementType ベクトル演算する要素の型。float or double or int32_t or int64_t
@@ -152,6 +186,16 @@ public:
 		assert(false);
 		typename Arch::PacketType result = { 0 };
 		return result;
+	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Add(Mul(lhs, rhs), diff);
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Sub(Mul(lhs, rhs), diff);
 	}
 	static inline typename Arch::PacketType Div(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
@@ -234,6 +278,16 @@ public:
 			result.v_float.v[i] = lhs.v_float.v[i] * rhs.v_float.v[i];
 		}
 		return result;
+	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Add(Mul(lhs, rhs), diff);
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Sub(Mul(lhs, rhs), diff);
 	}
 	static inline typename Arch::PacketType Div(typename Arch::PacketType lhs,
 			typename Arch::PacketType rhs) {
@@ -516,6 +570,16 @@ public:
 		}
 		return result;
 	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Add(Mul(lhs, rhs), diff);
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Sub(Mul(lhs, rhs), diff);
+	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -580,6 +644,16 @@ public:
 		result.raw_int32 = _mm_mul_epi32(lhs.raw_int32, rhs.raw_int32);
 		return result;
 	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Add(Mul(lhs, rhs), diff);
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Sub(Mul(lhs, rhs), diff);
+	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -643,6 +717,24 @@ public:
 		result.raw_float = _mm_mul_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_float = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+				typename Arch::PacketType, Type>(lhs.raw_float, rhs.raw_float,
+				diff.raw_float);
+		return result;
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_float = LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+				typename Arch::PacketType, Type>(lhs.raw_float, rhs.raw_float,
+				diff.raw_float);
+		return result;
+	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -677,6 +769,24 @@ public:
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
 		result.raw_double = _mm_mul_pd(lhs.raw_double, rhs.raw_double);
+		return result;
+	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_double = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+				typename Arch::PacketType, Type>(lhs.raw_double, rhs.raw_double,
+				diff.raw_double);
+		return result;
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_double = LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+				typename Arch::PacketType, Type>(lhs.raw_double, rhs.raw_double,
+				diff.raw_double);
 		return result;
 	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
@@ -922,6 +1032,16 @@ public:
 #endif
 		return result;
 	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Add(Mul(lhs, rhs), diff);
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		return Sub(Mul(lhs, rhs), diff);
+	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -985,6 +1105,24 @@ public:
 		result.raw_float = _mm256_mul_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_float = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+				typename Arch::PacketType, Type>(lhs.raw_float, rhs.raw_float,
+				diff.raw_float);
+		return result;
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_float = LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+				typename Arch::PacketType, Type>(lhs.raw_float, rhs.raw_float,
+				diff.raw_float);
+		return result;
+	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
@@ -1019,6 +1157,24 @@ public:
 			Arch::PacketType const &rhs) {
 		Arch::PacketType result;
 		result.raw_double = _mm256_mul_pd(lhs.raw_double, rhs.raw_double);
+		return result;
+	}
+	static inline typename Arch::PacketType MulAdd(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_double = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+				typename Arch::PacketType, Type>(lhs.raw_double, rhs.raw_double,
+				diff.raw_double);
+		return result;
+	}
+	static inline typename Arch::PacketType MulSub(
+			typename Arch::PacketType lhs, typename Arch::PacketType rhs,
+			typename Arch::PacketType diff) {
+		Arch::PacketType result;
+		result.raw_double = LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+				typename Arch::PacketType, Type>(lhs.raw_double, rhs.raw_double,
+				diff.raw_double);
 		return result;
 	}
 	static inline Arch::PacketType Div(Arch::PacketType lhs,
@@ -1149,118 +1305,6 @@ public:
 		return result;
 	}
 };
-
-struct LIBSAKURA_SYMBOL(FMA) {
-	template<typename PACKET, typename T>
-	struct GetType {
-		typedef void type;
-	};
-	template<typename PACKET>
-	struct GetType<PACKET, float> {
-		typedef typename PACKET::RawFloat type;
-	};
-	template<typename PACKET>
-	struct GetType<PACKET, double> {
-		typedef typename PACKET::RawDouble type;
-	};
-	template<typename PACKET, typename T>
-	static typename GetType<PACKET, T>::type MultiplyAdd(
-			typename GetType<PACKET, T>::type const &a,
-			typename GetType<PACKET, T>::type const &b,
-			typename GetType<PACKET, T>::type const &c) {
-		assert(false); // not defined for this type.
-		return typename GetType<PACKET, T>::type();
-	}
-
-	template<typename PACKET, typename T>
-	static typename GetType<PACKET, T>::type MultiplySub(
-			typename GetType<PACKET, T>::type const &a,
-			typename GetType<PACKET, T>::type const &b,
-			typename GetType<PACKET, T>::type const &c) {
-		assert(false); // not defined for this type.
-		return typename GetType<PACKET, T>::type();
-	}
-};
-
-template<>
-__m256d LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketAVX),
-		double>(__m256d const &a, __m256d const &b, __m256d const &c) {
-#if defined(__AVX2__)
-	return _mm256_fmadd_pd(a, b, c);
-#else
-	return _mm256_add_pd(_mm256_mul_pd(a, b), c);
-#endif
-}
-
-template<>
-__m256d LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketAVX),
-		double>(__m256d const &a, __m256d const &b, __m256d const &c) {
-#if defined(__AVX2__)
-	return _mm256_fmsub_pd(a, b, c);
-#else
-	return _mm256_sub_pd(_mm256_mul_pd(a, b), c);
-#endif
-}
-
-template<>
-__m256 LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketAVX), float>(
-		__m256 const &a, __m256 const &b, __m256 const &c) {
-#if defined(__AVX2__)
-	return _mm256_fmadd_ps(a, b, c);
-#else
-	return _mm256_add_ps(_mm256_mul_ps(a, b), c);
-#endif
-}
-
-template<>
-__m256 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketAVX), float>(
-		__m256 const &a, __m256 const &b, __m256 const &c) {
-#if defined(__AVX2__)
-	return _mm256_fmsub_ps(a, b, c);
-#else
-	return _mm256_sub_ps(_mm256_mul_ps(a, b), c);
-#endif
-}
-
-template<>
-__m128d LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketSSE),
-		double>(__m128d const &a, __m128d const &b, __m128d const &c) {
-#if defined(__AVX2__)
-	return _mm_fmadd_pd(a, b, c);
-#else
-	return _mm_add_pd(_mm_mul_pd(a, b), c);
-#endif
-}
-
-template<>
-__m128d LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE),
-		double>(__m128d const &a, __m128d const &b, __m128d const &c) {
-#if defined(__AVX2__)
-	return _mm_fmsub_pd(a, b, c);
-#else
-	return _mm_sub_pd(_mm_mul_pd(a, b), c);
-#endif
-}
-
-template<>
-__m128 LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<LIBSAKURA_SYMBOL(SimdPacketSSE),
-		float>(__m128 const &a, __m128 const &b, __m128 const &c) {
-#if defined(__AVX2__)
-	return _mm_fmadd_ps(a, b, c);
-#else
-	return _mm_add_ps(_mm_mul_ps(a, b), c);
-#endif
-}
-
-template<>
-__m128 LIBSAKURA_SYMBOL(FMA)::MultiplySub<LIBSAKURA_SYMBOL(SimdPacketSSE), float>(
-		__m128 const &a, __m128 const &b, __m128 const &c) {
-#if defined(__AVX2__)
-	return _mm_fmsub_ps(a, b, c);
-#else
-	return _mm_sub_ps(_mm_mul_ps(a, b), c);
-#endif
-}
 
 #endif /* defined(__AVX__) */
 

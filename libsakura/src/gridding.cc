@@ -88,31 +88,34 @@ inline bool OnGrid(double const xy[/*2*/], integer width, integer height,
 }
 
 struct WeightOnly {
-	static inline constexpr float func(float weight, float value) {
-		return weight;
+	static inline constexpr float func(float weight, float value, float accumulator) {
+		return weight + accumulator;
 	}
 };
 
 struct WeightedValue {
-	static inline constexpr float func(float weight, float value) {
-		return weight * conj(value);
+	static inline constexpr float func(float weight, float value, float accumulator) {
+		return weight * conj(value) + accumulator;
 	}
 };
 
 struct VWeightOnly {
-	static inline constexpr LIBSAKURA_SYMBOL(SimdPacketNative) func(
+	static inline LIBSAKURA_SYMBOL(SimdPacketNative) func(
 	LIBSAKURA_SYMBOL(SimdPacketNative) weight,
-	LIBSAKURA_SYMBOL(SimdPacketNative) value) {
-		return weight;
+	LIBSAKURA_SYMBOL(SimdPacketNative) value,
+	LIBSAKURA_SYMBOL(SimdPacketNative) accumulator) {
+		return LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchNative),
+				float>::Add(weight, accumulator);
 	}
 };
 
 struct VWeightedValue {
 	static inline LIBSAKURA_SYMBOL(SimdPacketNative) func(
 	LIBSAKURA_SYMBOL(SimdPacketNative) weight,
-	LIBSAKURA_SYMBOL(SimdPacketNative) value) {
+	LIBSAKURA_SYMBOL(SimdPacketNative) value,
+	LIBSAKURA_SYMBOL(SimdPacketNative) accumulator) {
 		return LIBSAKURA_SYMBOL(SimdMath)<LIBSAKURA_SYMBOL(SimdArchNative),
-				float>::Mul(weight, value);
+				float>::MulAdd(weight, value, accumulator);
 	}
 };
 
@@ -134,8 +137,7 @@ struct ScalarImpl {
 			if (mask[ichan]) {
 				integer out_chan = channel_map[ichan];
 				float the_weight = weight[ichan] * convolution_factor;
-				float nvalue = WeightFunc::func(the_weight, value[ichan]);
-				grid[out_chan] += nvalue;
+				grid[out_chan] = WeightFunc::func(the_weight, value[ichan], grid[out_chan]);
 				weight_of_grid[out_chan] += the_weight;
 				weight_sum[out_chan] += the_weight;
 			}
@@ -210,11 +212,8 @@ struct VectorizedImpl {
 			pweight = LIBSAKURA_SYMBOL(SimdMath)<
 			LIBSAKURA_SYMBOL(SimdArchNative), float>::Mul(pweight, *vweight);
 			++vweight;
-			LIBSAKURA_SYMBOL(SimdPacketNative) pvalue = WeightFunc::func(
-					pweight, *vvalue);
+			*vgrid = WeightFunc::func(pweight, *vvalue, *vgrid);
 			++vvalue;
-			*vgrid = LIBSAKURA_SYMBOL(SimdMath)<
-			LIBSAKURA_SYMBOL(SimdArchNative), float>::Add(*vgrid, pvalue);
 			++vgrid;
 
 			*vweight_of_grid = LIBSAKURA_SYMBOL(SimdMath)<
