@@ -46,9 +46,12 @@ typedef union {
 	} x;
 } Type16;
 
+#define RESTRICT __restrict
+
 template<typename T>
 struct LastDimFlip {
-	static void Flip(size_t len, size_t dst_pos, T const src[], T dst[]) {
+	static void Flip(size_t len, size_t dst_pos, T const *RESTRICT src,
+			T *RESTRICT dst) {
 		auto src_aligned = AssumeAligned(src, sizeof(T));
 		auto dst_aligned = AssumeAligned(dst, sizeof(T));
 		size_t i;
@@ -65,7 +68,8 @@ struct LastDimFlip {
 
 template<typename T>
 struct LastDimNoFlip {
-	static void Flip(size_t len, size_t dst_pos, T const src[], T dst[]) {
+	static void Flip(size_t len, size_t dst_pos, T const *RESTRICT src,
+			T *RESTRICT dst) {
 		auto src_aligned = AssumeAligned(src, sizeof(T));
 		auto dst_aligned = AssumeAligned(dst, sizeof(T));
 		for (size_t i = 0; i < len; ++i) {
@@ -77,8 +81,8 @@ struct LastDimNoFlip {
 #if defined(__SSE2__) && !defined(ARCH_SCALAR)
 template<>
 struct LastDimFlip<Type16> {
-	static void Flip(size_t len, size_t dst_pos, Type16 const src[],
-			Type16 dst[]) {
+	static void Flip(size_t len, size_t dst_pos, Type16 const *RESTRICT src,
+			Type16 *RESTRICT dst) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
 		size_t i;
 		size_t end = len - dst_pos;
@@ -96,8 +100,8 @@ struct LastDimFlip<Type16> {
 
 template<>
 struct LastDimNoFlip<Type16> {
-	static void Flip(size_t len, size_t dst_pos, Type16 const src[],
-			Type16 dst[]) {
+	static void Flip(size_t len, size_t dst_pos, Type16 const *RESTRICT src,
+			Type16 *RESTRICT dst) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
 		for (size_t i = 0; i < len; ++i) {
 			_mm_store_pd(reinterpret_cast<double*>(&dst[i]),
@@ -183,7 +187,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[], T const src[],
 		Flip<T>(reverse, inner_most_untouched, dims, elements,
 				reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
+		assert(false); // No exception should be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);

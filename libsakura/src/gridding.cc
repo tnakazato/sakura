@@ -391,10 +391,9 @@ inline bool IsVectorOperationApplicable(size_t num_channels,
 #if !defined(__AVX__) || defined(ARCH_SCALAR)
 	return false;
 #endif
-	size_t elements_in_packet = LIBSAKURA_SYMBOL(GetAlignment)()
-			/ sizeof(float);
-	if (num_channels % elements_in_packet != 0
-			|| num_channels < elements_in_packet) {
+	constexpr size_t kElementsInPacket = LIBSAKURA_ALIGNMENT / sizeof(float);
+	if (num_channels % kElementsInPacket != 0
+			|| num_channels < kElementsInPacket) {
 		return false;
 	}
 
@@ -577,7 +576,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(
 				num_polarization_for_grid, num_channels_for_grid, width, height,
 				weight_sum, weight_of_grid, grid);
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
+		assert(false); // No exception should be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);

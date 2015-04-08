@@ -853,7 +853,7 @@ LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(Func func,
 	try {
 		func(/*data, is_valid, elements, result*/);
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
+		assert(false); // No exception should be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -977,7 +977,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat
 		QuickSort<float, AscendingOrder<float> >(data, valid_count);
 		*new_elements = valid_count;
 	} catch (...) {
-		assert(false); // no exception should not be raised for the current implementation.
+		assert(false); // No exception should be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
