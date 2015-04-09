@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include <Eigen/Core>
+
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
 #include "libsakura/logger.h"
@@ -34,7 +36,6 @@
 namespace {
 #include "libsakura/packed_operation.h"
 }
-#include <Eigen/Core>
 
 using ::Eigen::Map;
 using ::Eigen::Array;

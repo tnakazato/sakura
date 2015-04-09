@@ -20,19 +20,20 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+#include <libsakura/sakura.h>
+
+#include <stdarg.h>
+
 #include <iostream>
 #include <memory>
 #include <cmath>
 #include <string>
-#include <stdarg.h>
 
-#include <libsakura/sakura.h>
+#include "gtest/gtest.h"
+//#include "asap/CubicSplineInterpolator1D.h"
 
 #include "loginit.h"
-#include "gtest/gtest.h"
 #include "interpolation.h"
-
-//#include "asap/CubicSplineInterpolator1D.h"
 
 #define TEST_INTERP_Y(name) TEST_F( InterpolateArray1DFloatTest, name)
 

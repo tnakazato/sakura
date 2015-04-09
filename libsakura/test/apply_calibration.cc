@@ -20,19 +20,22 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
-#include <iostream>
-#include <string>
+#include <libsakura/sakura.h>
+#include <libsakura/localdef.h>
+
 #include <sys/time.h>
 #include <stdarg.h>
 #include <math.h>
+
+#include <iostream>
+#include <string>
 #include <cfloat>
 #include <memory>
 
-#include <libsakura/sakura.h>
-#include <libsakura/localdef.h>
+#include "gtest/gtest.h"
+
 #include "loginit.h"
 #include "aligned_memory.h"
-#include "gtest/gtest.h"
 
 #define APPLYCAL_FLOAT_TEST(NAME) TEST_F(ApplyCalibrationFloatTest, NAME)
 
