@@ -967,11 +967,11 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	XDataType const *x1 = interpolated_position;
 	if (!is_interp_ascending) {
 		AllocateAndAlign(num_interpolated, &x1_storage);
-		x1 = x1_storage.pointer;
-		XDataType *_x = const_cast<XDataType *>(x1);
+		XDataType *x_writable = x1_storage.pointer;
 		for (size_t i = 0; i < num_interpolated; ++i) {
-			_x[i] = interpolated_position[num_interpolated - 1 - i];
+			x_writable[i] = interpolated_position[num_interpolated - 1 - i];
 		}
+		x1 = x_writable;
 	}
 	AllocateAndAlign(num_interpolated, &y1_storage);
 	YDataType *y1 = y1_storage.pointer;
