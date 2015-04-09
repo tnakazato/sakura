@@ -52,10 +52,10 @@ struct StorageAndAlignedPointer {
 };
 
 template<class DataType>
-inline void AllocateAndAlign(size_t num_array,
+inline void AllocateAndAlign(size_t num_elements,
 		StorageAndAlignedPointer<DataType> *holder) {
 	holder->storage = LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-			num_array * sizeof(DataType), &(holder->pointer));
+			num_elements * sizeof(DataType), &(holder->pointer));
 }
 
 // Locator
