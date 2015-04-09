@@ -1086,7 +1086,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 }
 
 // basic check of arguments
-bool CheckArguments(
+bool IsValidArguments(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_interpolation_axis,
 		double const base[], size_t num_array, float const data_base[],
@@ -1155,7 +1155,7 @@ LIBSAKURA_SYMBOL(
 		bool mask_interpolated[/*num_x_interpolated*num_y*/]) {
 	// check arguments
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!CheckArguments(interpolation_method, polynomial_order, num_base, base,
+	if (!IsValidArguments(interpolation_method, polynomial_order, num_base, base,
 			num_array, data_base, mask_base, num_interpolated, interpolated,
 			data_interpolated, mask_interpolated, &status)) {
 		return status;
