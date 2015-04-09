@@ -1094,23 +1094,20 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		double const interpolated[], float const data_interpolated[],
 		bool const mask_interpolated[], LIBSAKURA_SYMBOL(
 				Status)*status) {
-
-	bool process_data = true;
-
 	// check interpolation_method
 	if ((interpolation_method < 0)
 			&& (interpolation_method
 					>= LIBSAKURA_SYMBOL(InterpolationMethod_kNumElements))) {
 		LOG4CXX_ERROR(logger, "Invalid interpolation method");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-		process_data = false;
+		return false;
 	}
 
 	// num_base must be non-zero
 	if (num_interpolation_axis == 0) {
 		LOG4CXX_ERROR(logger, "num_base must be >0");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-		process_data = false;
+		return false;
 	}
 
 	// no interpolation will be done
@@ -1119,7 +1116,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		LOG4CXX_INFO(logger,
 				"Nothing has been done since num_interpolated is 0");
 		*status = LIBSAKURA_SYMBOL(Status_kOK);
-		process_data = false;
+		return false;
 	}
 
 	// input arrays are not aligned
@@ -1129,7 +1126,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
 		LOG4CXX_ERROR(logger, "input arrays are not aligned");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-		process_data = false;
+		return false;
 	}
 
 	// input arrays are null
@@ -1138,9 +1135,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			|| mask_interpolated == nullptr) {
 		LOG4CXX_ERROR(logger, "input arrays are null");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-		process_data = false;
+		return false;
 	}
-	return process_data;
+	return true;
 }
 
 template<typename Func>
