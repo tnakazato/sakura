@@ -506,6 +506,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	for (size_t i = 0; i < num_bases; ++i) {
 		coeff[i] = coeff_raw[i];
 	}
+	/*
 	for (size_t i = 1; i < num_pieces; ++i) {
 		size_t ioffset = num_bases * i;
 		size_t ioffset_prev = ioffset - num_bases;
@@ -517,6 +518,19 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		coeff[ioffset + 2] = coeff[ioffset_prev + 2]
 				- 3.0 * boundary[i] * coeff_raw[j];
 		coeff[ioffset + 3] = coeff[ioffset_prev + 3] + coeff_raw[j];
+	}
+	*/
+	for (size_t i = 1; i < num_pieces; ++i) {
+		size_t ioffset = num_bases * i;
+		size_t ioffset_prev = ioffset - num_bases;
+		size_t j = num_bases - 1 + i;
+		auto c = coeff_raw[j] - coeff[ioffset_prev + 3];
+		coeff[ioffset] = coeff[ioffset_prev]
+				- boundary[i] * boundary[i] * boundary[i] * c;
+		coeff[ioffset + 1] = coeff[ioffset_prev + 1]
+				+ 3.0 * boundary[i] * boundary[i] * c;
+		coeff[ioffset + 2] = coeff[ioffset_prev + 2] - 3.0 * boundary[i] * c;
+		coeff[ioffset + 3] = coeff_raw[j];
 	}
 }
 

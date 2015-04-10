@@ -286,34 +286,50 @@ protected:
 				if (i < 3) {
 					double *basis_data_i = &basis_data[num_data * i];
 					double *basis_data_icol = &basis_data[num_data * icol];
-					if (icol < 4) {
+					if (icol < 3) {
 						for (size_t j = 0; j < num_data; ++j) {
 							if (mask[j])
 								mtx += basis_data_i[j] * basis_data_icol[j];
 						}
-					} else {
+					} else if (icol == num_vector - 1) {
 						size_t bidx2 = icol - 3;
 						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
 						for (size_t j = 0; j < num_data; ++j) {
 							if (mask[j])
 								mtx += basis_data_i[j] * aux_data_bidx2[j];
 						}
+					} else if (num_boundary > 1) {
+						size_t bidx2 = icol - 3;
+						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
+						double *aux_data_bidx2r = &aux_data[num_data * (bidx2 + 1)];
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += basis_data_i[j] * (aux_data_bidx2[j] - aux_data_bidx2r[j]);
+						}
 					}
 				} else if (i == num_vector - 1) {
 					size_t bidx = i - 3;
 					double *aux_data_bidx = &aux_data[num_data * bidx];
 					double *basis_data_icol = &basis_data[num_data * icol];
-					if (icol < 4) {
+					if (icol < 3) {
 						for (size_t j = 0; j < num_data; ++j) {
 							if (mask[j])
 								mtx += aux_data_bidx[j] * basis_data_icol[j];
 						}
-					} else {
+					} else if (icol == num_vector - 1) {
 						size_t bidx2 = icol - 3;
 						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
 						for (size_t j = 0; j < num_data; ++j) {
 							if (mask[j])
 								mtx += aux_data_bidx[j] * aux_data_bidx2[j];
+						}
+					} else if (num_boundary > 1) {
+						size_t bidx2 = icol - 3;
+						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
+						double *aux_data_bidx2r = &aux_data[num_data * (bidx2 + 1)];
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += aux_data_bidx[j] * (aux_data_bidx2[j] - aux_data_bidx2r[j]);
 						}
 					}
 				} else if (num_boundary > 1) {
@@ -321,13 +337,13 @@ protected:
 					double *aux_data_bidx = &aux_data[num_data * bidx];
 					double *aux_data_bidxr = &aux_data[num_data * (bidx + 1)];
 					double *basis_data_icol = &basis_data[num_data * icol];
-					if (icol < 4) {
+					if (icol < 3) {
 						for (size_t j = 0; j < num_data; ++j) {
 							if (mask[j])
 								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
 										* basis_data_icol[j];
 						}
-					} else {
+					} else if (icol == num_vector - 1) {
 						size_t bidx2 = icol - 3;
 						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
 						for (size_t j = 0; j < num_data; ++j) {
@@ -335,7 +351,15 @@ protected:
 								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
 										* aux_data_bidx2[j];
 						}
-
+					} else if (num_boundary > 1) {
+						size_t bidx2 = icol - 3;
+						double *aux_data_bidx2 = &aux_data[num_data * bidx2];
+						double *aux_data_bidx2r = &aux_data[num_data * (bidx2 + 1)];
+						for (size_t j = 0; j < num_data; ++j) {
+							if (mask[j])
+								mtx += (aux_data_bidx[j] - aux_data_bidxr[j])
+										* (aux_data_bidx2[j] - aux_data_bidx2r[j]);
+						}
 					}
 				}
 				answer_matrix_i[icol] = mtx;

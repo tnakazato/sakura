@@ -212,7 +212,35 @@ inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 		double const *boundary, double const *model, double *out) {
 	if (num_boundary == 0) num_boundary = 1;
 	size_t num_cubic_bases = 4;
-	size_t num_model_bases = num_cubic_bases - 1 + num_boundary;
+	size_t num_cubic_bases_minus1 = num_cubic_bases - 1;
+	size_t num_model_bases = num_cubic_bases_minus1 + num_boundary;
+
+	double *aux_model = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*aux_model) * num_mask * num_boundary, &aux_model));
+	auto cb = [](double v) {return v * v * v;};
+	auto p = [](double v) {return std::max(0.0, v);};
+	auto pcb = [&](double v) {return p(cb(v));};
+	if (num_boundary < 2) {
+		for (size_t i = 0; i < num_mask; ++i) {
+			aux_model[i] = cb(static_cast<double>(i));
+		}
+	} else {
+		size_t idx = 0;
+		for (size_t i = 0; i < num_mask; ++i) {
+			double val = static_cast<double>(i);
+			aux_model[idx] = cb(val) - pcb(val - boundary[1]);
+			++idx;
+			for (size_t j = 1; j < num_boundary - 1; ++j) {
+				aux_model[idx] = p(
+						cb(val - boundary[j]) - pcb(val - boundary[j + 1]));
+				++idx;
+			}
+			aux_model[idx] = pcb(val - boundary[num_boundary - 1]);
+			++idx;
+		}
+	}
 
 	for (size_t i = 0; i < num_model_bases * num_model_bases; ++i) {
 		out[i] = 0;
@@ -221,9 +249,24 @@ inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (mask[i]) {
 			auto model_i = &model[i * num_cubic_bases];
-			for (size_t j = 0; j < num_cubic_bases; ++j) {
+			auto aux_model_i = &aux_model[i * num_boundary];
+			for (size_t j = 0; j < num_cubic_bases_minus1; ++j) {
 				auto out_matrix_j = &out[j * num_model_bases];
-				AddMulVector(num_cubic_bases, model_i[j], model_i,
+				AddMulVector(num_cubic_bases_minus1, model_i[j], model_i,
+						out_matrix_j);
+				out_matrix_j =
+						&out[j * num_model_bases + num_cubic_bases_minus1];
+				AddMulVector(num_boundary, model_i[j], aux_model_i,
+						out_matrix_j);
+			}
+			for (size_t j = 0; j < num_boundary; ++j) {
+				auto out_matrix_j = &out[(num_cubic_bases_minus1 + j)
+						* num_model_bases];
+				AddMulVector(num_cubic_bases_minus1, aux_model_i[j], model_i,
+						out_matrix_j);
+				out_matrix_j = &out[(num_cubic_bases_minus1 + j)
+						* num_model_bases + num_cubic_bases_minus1];
+				AddMulVector(num_boundary, aux_model_i[j], aux_model_i,
 						out_matrix_j);
 			}
 			num_unmasked_data++;
@@ -234,131 +277,6 @@ inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 		throw std::runtime_error(
 				"GetMatrixCoefficientsForLeastSquareFitting: too many data are masked.");
 	}
-
-	if (num_boundary < 2) return;
-
-	double *aux_data = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*aux_data) * num_mask * num_boundary, &aux_data));
-	size_t idx = 0;
-	for (size_t i = 0; i < num_boundary; ++i) {
-		for (size_t j = 0; j < num_mask; ++j) {
-			double v = static_cast<double>(j) - boundary[i];
-			aux_data[idx] = std::max(v * v * v, 0.0);
-			++idx;
-		}
-	}
-
-	for (size_t i = 0; i < num_cubic_bases - 1; ++i) {
-		for (size_t j = num_cubic_bases; j < num_model_bases; ++j) {
-			size_t start_pidx = j - num_cubic_bases + 1;
-			size_t start_idx = static_cast<size_t>(ceil(boundary[start_pidx]));
-			for (size_t k = start_idx; k < num_mask; ++k) {
-				if (mask[k]) {
-					out[num_model_bases * i + j] += model[num_cubic_bases * k
-							+ i] * aux_data[start_pidx * num_mask + k];
-				}
-			}
-		}
-	}
-
-	for (size_t i = 0; i < num_cubic_bases; ++i) {
-		size_t start_pidx = 1;
-		size_t start_idx = static_cast<size_t>(ceil(boundary[start_pidx]));
-		for (size_t j = start_idx; j < num_mask; ++j) {
-			if (mask[j]) {
-				out[num_model_bases * 3 + i] -= model[num_cubic_bases * j + i]
-						* aux_data[num_mask * start_pidx + j];
-			}
-		}
-	}
-	for (size_t i = num_cubic_bases; i < num_model_bases; ++i) {
-		size_t start_pidx = i - num_cubic_bases + 1;
-		size_t start_idx = static_cast<size_t>(ceil(boundary[start_pidx]));
-		for (size_t j = start_idx; j < num_mask; ++j) {
-			if (mask[j]) {
-				out[num_model_bases * 3 + i] += (model[j * num_cubic_bases
-						+ (num_cubic_bases - 1)] - aux_data[num_mask + j])
-						* aux_data[start_pidx * num_mask + j];
-			}
-		}
-
-	}
-
-	for (size_t i = num_cubic_bases; i < num_model_bases - 1; ++i) {
-		size_t start_pidx1 = i - num_cubic_bases + 1;
-		size_t start_idx1 = static_cast<size_t>(ceil(boundary[start_pidx1]));
-		size_t start_pidx2 = i - num_cubic_bases + 2;
-		size_t start_idx2 = static_cast<size_t>(ceil(boundary[start_pidx2]));
-		for (size_t j = 0; j < num_cubic_bases; ++j) {
-			for (size_t k = start_idx1; k < start_idx2; ++k) {
-				if (mask[k]) {
-					out[num_model_bases * i + j] += model[num_cubic_bases * k
-							+ j] * aux_data[start_pidx1 * num_mask + k];
-				}
-			}
-			for (size_t k = start_idx2; k < num_mask; ++k) {
-				if (mask[k]) {
-					out[num_model_bases * i + j] += model[num_cubic_bases * k
-							+ j]
-							* (aux_data[start_pidx1 * num_mask + k]
-									- aux_data[start_pidx2 * num_mask + k]);
-				}
-			}
-		}
-		for (size_t j = num_cubic_bases; j <= i; ++j) {
-			size_t start_pidx3 = j - num_cubic_bases + 1;
-			for (size_t k = start_idx1; k < start_idx2; ++k) {
-				if (mask[k]) {
-					out[num_model_bases * i + j] += aux_data[start_pidx3
-							* num_mask + k]
-							* aux_data[start_pidx1 * num_mask + k];
-				}
-			}
-			for (size_t k = start_idx2; k < num_mask; ++k) {
-				if (mask[k]) {
-					out[num_model_bases * i + j] += aux_data[start_pidx3
-							* num_mask + k]
-							* (aux_data[start_pidx1 * num_mask + k]
-									- aux_data[start_pidx2 * num_mask + k]);
-				}
-			}
-		}
-		for (size_t j = i + 1; j < num_model_bases; ++j) {
-			size_t start_pidx3 = j - num_cubic_bases + 1;
-			size_t start_idx3 = static_cast<size_t>(ceil(boundary[start_pidx3]));
-			for (size_t k = start_idx3; k < num_mask; ++k) {
-				if (mask[k]) {
-					out[num_model_bases * i + j] += aux_data[start_pidx3
-							* num_mask + k]
-							* (aux_data[start_pidx1 * num_mask + k]
-									- aux_data[start_pidx2 * num_mask + k]);
-				}
-			}
-		}
-	}
-
-	size_t i = num_model_bases - 1;
-	size_t start_pidx1 = num_boundary - 1;
-	size_t start_idx1 = static_cast<size_t>(ceil(boundary[start_pidx1]));
-	for (size_t j = 0; j < num_cubic_bases; ++j) {
-		for (size_t k = start_idx1; k < num_mask; ++k) {
-			if (mask[k]) {
-				out[num_model_bases * i + j] += model[k * num_cubic_bases + j]
-						* aux_data[start_pidx1 * num_mask + k];
-			}
-		}
-	}
-	for (size_t j = num_cubic_bases; j < num_model_bases; ++j) {
-		size_t start_pidx3 = j - num_cubic_bases + 1;
-		for (size_t k = start_idx1; k < num_mask; ++k) {
-			if (mask[k]) {
-				out[num_model_bases * i + j] += aux_data[start_pidx3 * num_mask
-						+ k] * aux_data[start_pidx1 * num_mask + k];
-			}
-		}
-	}
 }
 
 inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
@@ -367,60 +285,48 @@ inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
 		double const *model, double *out) {
 	if (num_boundary == 0) num_boundary = 1;
 	size_t num_cubic_bases = 4;
-	size_t num_model_bases = num_cubic_bases - 1 + num_boundary;
+	size_t num_cubic_bases_minus1 = num_cubic_bases - 1;
+	size_t num_model_bases = num_cubic_bases_minus1 + num_boundary;
+	double *aux_model = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*aux_model) * num_data * num_boundary, &aux_model));
+	auto cb = [](double v) {return v * v * v;};
+	auto p = [](double v) {return std::max(0.0, v);};
+	auto pcb = [&](double v) {return p(cb(v));};
+	if (num_boundary < 2) {
+		for (size_t i = 0; i < num_data; ++i) {
+			aux_model[i] = cb(static_cast<double>(i));
+		}
+	} else {
+		size_t idx = 0;
+		for (size_t i = 0; i < num_data; ++i) {
+			double val = static_cast<double>(i);
+			aux_model[idx] = cb(val) - pcb(val - boundary[1]);
+			++idx;
+			for (size_t j = 1; j < num_boundary - 1; ++j) {
+				aux_model[idx] = p(
+						cb(val - boundary[j]) - pcb(val - boundary[j + 1]));
+				++idx;
+			}
+			aux_model[idx] = pcb(val - boundary[num_boundary - 1]);
+			++idx;
+		}
+	}
 	for (size_t i = 0; i < num_model_bases; ++i) {
 		out[i] = 0;
 	}
 	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
-			auto model_i = &model[i * num_cubic_bases];
 			auto data_i = data[i];
-			AddMulVector(num_cubic_bases, data_i, model_i, out);
+			auto model_i = &model[i * num_cubic_bases];
+			AddMulVector(num_cubic_bases_minus1, data_i, model_i, out);
+			auto aux_model_i = &aux_model[i * num_boundary];
+			AddMulVector(num_boundary, data_i, aux_model_i,
+					&out[num_cubic_bases_minus1]);
 		}
 	}
 
-	if (num_boundary < 2) return;
-
-	double *aux_data = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*aux_data) * num_data * num_boundary, &aux_data));
-	size_t idx = 0;
-	for (size_t i = 0; i < num_boundary; ++i) {
-		for (size_t j = 0; j < num_data; ++j) {
-			double v = static_cast<double>(j) - boundary[i];
-			aux_data[idx] = std::max(v * v * v, 0.0);
-			++idx;
-		}
-	}
-
-	size_t start_pidx = 1;
-	size_t start_idx = static_cast<size_t>(ceil(boundary[start_pidx]));
-	for (size_t i = start_idx; i < num_data; ++i) {
-		out[num_cubic_bases - 1] -= aux_data[num_data * start_pidx + i]
-				* data[i];
-	}
-
-	for (size_t i = num_cubic_bases; i < num_model_bases - 1; ++i) {
-		size_t start_pidx1 = i - num_cubic_bases + 1;
-		size_t start_idx1 = static_cast<size_t>(ceil(boundary[start_pidx1]));
-		size_t start_pidx2 = i - num_cubic_bases + 2;
-		size_t start_idx2 = static_cast<size_t>(ceil(boundary[start_pidx2]));
-		for (size_t j = start_idx1; j < start_idx2; ++j) {
-			out[i] += aux_data[num_data * start_pidx1 + j] * data[j];
-		}
-		for (size_t j = start_idx2; j < num_data; ++j) {
-			out[i] += (aux_data[num_data * start_pidx1 + j]
-					- aux_data[num_data * start_pidx2 + j]) * data[j];
-		}
-	}
-
-	size_t start_pidx3 = num_boundary - 1;
-	size_t start_idx3 = static_cast<size_t>(boundary[start_pidx3]);
-	for (size_t i = start_idx3; i < num_data; ++i) {
-		out[num_model_bases - 1] += aux_data[num_data * start_pidx3 + i]
-				* data[i];
-	}
 }
 
 template<size_t NUM_BASES>
