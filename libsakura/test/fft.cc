@@ -411,7 +411,7 @@ void TestsError() {
 
 template<typename MessageType>
 void ReportBenchmark(MessageType const &key, double sec) {
-	std::cout << std::setprecision(5) << "#x# benchmark " << key << " " << sec
+	std::cout << std::setprecision(5) << "#x# benchmark FFT_" << key << " " << sec
 			<< std::endl;
 }
 
