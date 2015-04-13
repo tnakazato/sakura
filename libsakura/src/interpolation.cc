@@ -976,17 +976,17 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	AllocateAndAlign(num_interpolated, &y1_storage);
 	YDataType *y1 = y1_storage.pointer;
 
-	for (size_t i = 0; i < num_array; ++i) {
-		size_t const n = Helper::FillDataAsAscending(num_base, num_array, i,
+	for (size_t iarray = 0; iarray < num_array; ++iarray) {
+		size_t const n = Helper::FillDataAsAscending(num_base, num_array, iarray,
 				base_position, base_data, base_mask, is_base_ascending, x0, y0);
 		if (n == 0) {
 			// cannot perform interpolation, mask all data
-			Helper::MaskAll(num_interpolated, num_array, i, interpolated_mask);
+			Helper::MaskAll(num_interpolated, num_array, iarray, interpolated_mask);
 		} else if (n == 1) {
 			// no need to interpolate, just substitute single base data
 			// to all elements in interpolated data, keep input mask
 			Helper::SubstituteSingleBaseDataPerArray(num_interpolated,
-					num_array, i, y0[0], interpolated_data);
+					num_array, iarray, y0[0], interpolated_data);
 		} else {
 			// perform interpolation, keep input mask
 
@@ -1010,7 +1010,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			// Between base_position[0] and base_position[num_base-1]
 			size_t offset = 0;
 			if (x0[0] < x1[0]) {
-				for (size_t i = 1; i < n; ++i) {
+				for (size_t itmp = 1; itmp < n; ++itmp) {
 					if (x0[offset + 1] < x1[0]) {
 						offset++;
 					} else {
@@ -1026,7 +1026,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					location_base[num_location_base - 1], n, 1,
 					num_interpolated, y0, y1);
 
-			Helper::FillResult(num_interpolated, num_array, i,
+			Helper::FillResult(num_interpolated, num_array, iarray,
 					is_interp_ascending, y1, interpolated_data);
 		}
 	}
