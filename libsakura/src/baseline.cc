@@ -466,7 +466,8 @@ bool const *mask, size_t num_pieces, double *boundary) {
 		if (mask[i])
 			++num_unmasked_data;
 	}
-	size_t idx = 0;
+	boundary[0] = 0.0; // the first value of boundary[] must always point the first element.
+	size_t idx = 1;
 	size_t count_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (idx == num_pieces)
