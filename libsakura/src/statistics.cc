@@ -781,7 +781,7 @@ namespace {
 template<typename T, typename Result>
 void ComputeStatistics(T const data[],
 bool const is_valid[], size_t elements, Result *result) {
-	assert(("Not yet implemented", false));
+	assert(((void)"Not yet implemented", false));
 }
 
 template<>
@@ -799,7 +799,7 @@ void ComputeStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 template<typename T, typename Result>
 void ComputeAccurateStatistics(T const data[],
 bool const is_valid[], size_t elements, Result *result) {
-	assert(("Not yet implemented", false));
+	assert(((void)"Not yet implemented", false));
 }
 
 template<>
