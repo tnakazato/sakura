@@ -248,7 +248,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
-	if (1 < num_scaling_factor && num_scaling_factor < num_data) {
+	if (num_scaling_factor != 1 && num_scaling_factor != num_data) {
 		// scaling factor must be given
 		LOG4CXX_ERROR(logger,
 				"Invalid number of scaling factor. num_scaling_factor must be 1 or >= num_data");

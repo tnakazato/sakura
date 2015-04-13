@@ -384,7 +384,7 @@ APPLYCAL_FLOAT_TEST(SingleScalingFactor) {
 
 APPLYCAL_FLOAT_TEST(TooManyScalingFactor) {
 	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>(
-			"TooManyScalingFactor");
+			"TooManyScalingFactor", false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
 
 APPLYCAL_FLOAT_TEST(IntrinsicsTest) {
