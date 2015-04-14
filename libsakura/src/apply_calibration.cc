@@ -45,16 +45,6 @@ namespace {
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
 
 template<class DataType>
-inline DataType FeedScalar(DataType const *factor, size_t index) {
-	return factor[0];
-}
-
-template<class DataType>
-inline DataType FeedArray(DataType const *factor, size_t index) {
-	return factor[index];
-}
-
-template<class DataType>
 struct InPlaceImpl {
 	static void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 			DataType const scaling_factor[/*num_scaling_factor*/],
@@ -77,7 +67,6 @@ struct InPlaceImpl {
 	}
 };
 
-//#define __AVX__
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 #include <immintrin.h>
 
@@ -92,49 +81,49 @@ struct InPlaceImpl<float> {
 		size_t num_data_packed = num_packed_operation * kNumFloat;
 		assert(num_data_packed <= num_data);
 		size_t num_extra = num_data - num_data_packed;
-		auto const packed_reference = reinterpret_cast<SimdType const *>(reference);
+		auto const packed_reference =
+				reinterpret_cast<SimdType const *>(reference);
 		auto packed_result = reinterpret_cast<SimdType *>(result);
 		auto const reference_extra = &reference[num_data_packed];
 		auto result_extra = &result[num_data_packed];
 		if (num_scaling_factor == 1) {
-			SimdType packed_scalar_factor[] = { _mm256_broadcast_ss(
+			SimdType const packed_scalar_factor[] = { _mm256_broadcast_ss(
 					scaling_factor) };
-//		auto packed_scalar_factor = _mm256_set1_ps(scaling_factor[0]);
-			IterateSimd(FeedScalar<SimdType>, packed_scalar_factor,
+			IterateSimd(
+					[packed_scalar_factor] (size_t i) {return packed_scalar_factor[0];},
 					num_packed_operation, packed_reference, packed_result);
-			IterateExtra(FeedScalar<float>, scaling_factor, num_extra,
-					reference_extra, result_extra);
+			IterateExtra(
+					[scaling_factor] (size_t i) {return scaling_factor[0];},
+					num_extra, reference_extra, result_extra);
 		} else {
 			assert(num_scaling_factor == num_data);
 			auto const packed_factor =
 					reinterpret_cast<SimdType const *>(scaling_factor);
-			IterateSimd(FeedArray<SimdType>, packed_factor,
+			IterateSimd([packed_factor] (size_t i) {return packed_factor[i];},
 					num_packed_operation, packed_reference, packed_result);
 			auto const factor_extra = &scaling_factor[num_data_packed];
-			IterateExtra(FeedArray<float>, factor_extra, num_extra,
-					reference_extra, result_extra);
+			IterateExtra([factor_extra] (size_t i) {return factor_extra[i];},
+					num_extra, reference_extra, result_extra);
 		}
 	}
 private:
 	template<class Feeder>
-	static void IterateExtra(Feeder feeder, float const *scaling_factor,
-			size_t num_data, float const *reference, float *result) {
+	static void IterateExtra(Feeder feeder, size_t num_data,
+			float const *reference, float *result) {
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = feeder(scaling_factor, i) * (result[i] - reference[i])
-					/ reference[i];
+			result[i] = feeder(i) * (result[i] - reference[i]) / reference[i];
 		}
 	}
 
 	template<class Feeder>
-	static void IterateSimd(Feeder feeder,
-			SimdType const *packed_scaling_factor, size_t num_data,
+	static void IterateSimd(Feeder feeder, size_t num_data,
 			SimdType const *packed_reference, SimdType *packed_result) {
 		for (size_t i = 0; i < num_data; ++i) {
 			// Here, we don't use _mm256_rcp_ps with _mm256_mul_ps instead of
 			// _mm256_div_ps since the former loses accuracy (worse than
 			// documented).
 			packed_result[i] = _mm256_div_ps(
-					_mm256_mul_ps(feeder(packed_scaling_factor, i),
+					_mm256_mul_ps(feeder(i),
 							_mm256_sub_ps(packed_result[i],
 									packed_reference[i])), packed_reference[i]);
 		}
@@ -149,27 +138,25 @@ struct DefaultImpl {
 			DataType const *target, DataType const *reference,
 			DataType *result) {
 		if (num_scaling_factor == 1) {
-			Iterate(FeedScalar<DataType>, scaling_factor, num_data, target,
-					reference, result);
+			Iterate([scaling_factor] (size_t i) {return scaling_factor[0];},
+					num_data, target, reference, result);
 		} else {
 			assert(num_scaling_factor == num_data);
-			Iterate(FeedArray<DataType>, scaling_factor, num_data, target,
-					reference, result);
+			Iterate([scaling_factor] (size_t i) {return scaling_factor[i];},
+					num_data, target, reference, result);
 		}
 	}
 private:
 	template<class Feeder>
-	static void Iterate(Feeder feeder, DataType const *scaling_factor_arg,
-			size_t num_data, DataType const *target_arg,
-			DataType const *reference_arg, DataType *result_arg) {
-		DataType const *__restrict scaling_factor = AssumeAligned(
-				scaling_factor_arg);
+	static void Iterate(Feeder feeder, size_t num_data,
+			DataType const *target_arg, DataType const *reference_arg,
+			DataType *result_arg) {
 		DataType const *__restrict target = AssumeAligned(target_arg);
 		DataType const *__restrict reference = AssumeAligned(reference_arg);
 		DataType *__restrict result = AssumeAligned(result_arg);
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = feeder(scaling_factor, i) * (target[i] - reference[i])
-					/ reference[i];
+			result[i] = feeder(/*scaling_factor,*/i)
+					* (target[i] - reference[i]) / reference[i];
 		}
 	}
 };
