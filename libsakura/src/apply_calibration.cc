@@ -92,10 +92,10 @@ struct InPlaceImpl<float> {
 		size_t num_data_packed = num_packed_operation * kNumFloat;
 		assert(num_data_packed <= num_data);
 		size_t num_extra = num_data - num_data_packed;
-		auto packed_reference = reinterpret_cast<SimdType const *>(reference);
+		auto const packed_reference = reinterpret_cast<SimdType const *>(reference);
 		auto packed_result = reinterpret_cast<SimdType *>(result);
-		float const *reference_extra = &reference[num_data_packed];
-		float *result_extra = &result[num_data_packed];
+		auto const reference_extra = &reference[num_data_packed];
+		auto result_extra = &result[num_data_packed];
 		if (num_scaling_factor == 1) {
 			SimdType packed_scalar_factor[] = { _mm256_broadcast_ss(
 					scaling_factor) };
@@ -106,11 +106,11 @@ struct InPlaceImpl<float> {
 					reference_extra, result_extra);
 		} else {
 			assert(num_scaling_factor == num_data);
-			auto packed_factor =
+			auto const packed_factor =
 					reinterpret_cast<SimdType const *>(scaling_factor);
 			IterateSimd(FeedArray<SimdType>, packed_factor,
 					num_packed_operation, packed_reference, packed_result);
-			float const *factor_extra = &scaling_factor[num_data_packed];
+			auto const factor_extra = &scaling_factor[num_data_packed];
 			IterateExtra(FeedArray<float>, factor_extra, num_extra,
 					reference_extra, result_extra);
 		}
