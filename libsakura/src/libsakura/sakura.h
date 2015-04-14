@@ -1741,7 +1741,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @brief Perform position switch calibration.
  * @details
  * Perform position switch calibration. Specifically, it will calculate,
- * @verbatim result = scalinb_factor * (target - reference) / reference @endverbatim
+ * @verbatim result = scaling_factor * (target - reference) / reference @endverbatim
  * which physically corresponds to
  * @verbatim calibrated = Tsys * (ON - OFF) / OFF @endverbatim
  * where Tsys is system temperature, ON and OFF are on source and off source spectra,
