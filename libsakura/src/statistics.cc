@@ -961,8 +961,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
 	CHECK_ARGS(new_num_data != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
 
 	try {
 		size_t valid_count = 0;

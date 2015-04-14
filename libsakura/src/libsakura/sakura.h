@@ -426,11 +426,11 @@ typedef struct {
  * @~japanese
  * @brief validな値のみを先頭に詰めて昇順にソートする
  *
+ * @param[in] num_data @a data 及び@a is_valid の要素の数
  * @param[in] is_valid データのマスク。この値が false だと、
  * 対応する@a data の要素が無視される
- * @param[in] num_data @a data 及び@a is_valid の要素の数
  * @param[in,out] data ソート対象のデータ。In placeでソートするので、この配列内の順序は変更される。
- * 対応する@a is_valid がtrueの場合、NaNであってはならない。
+ * 対応する@a is_valid がtrueの場合、InfやNaNであってはならない。
  * @param[out] new_num_data (validでないデータを除いた)ソートされた要素数( <= @a num_data ) の格納先
  * @return 終了ステータス
  *

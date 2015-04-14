@@ -271,6 +271,19 @@ TEST(Statistics, SortValidValuesDensely) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
 		EXPECT_EQ(static_cast<size_t>(-1), new_elements);
 	}
+	{
+		SIMD_ALIGN
+		static float data[] = { 2.f, -2.f, 3.f, 0.f, -2.f, -1.f };
+		SIMD_ALIGN
+		static bool const is_valid[] = { true, false, true, false, true, true };
+		size_t new_elements = static_cast<size_t>(-1);
+		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
+		ELEMENTSOF(data) - 1, &is_valid[1], &data[1], &new_elements);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+		EXPECT_EQ(-2.f, data[1]);
+		EXPECT_EQ(-1.f, data[2]);
+		EXPECT_EQ(3.f, data[3]);
+	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
 
