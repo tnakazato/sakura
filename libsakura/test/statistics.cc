@@ -804,7 +804,7 @@ namespace {
 
 template<typename MessageType>
 void ReportBenchmark(MessageType const &key, double sec) {
-	std::cout << std::setprecision(5) << "#x# benchmark " << key << " " << sec
+	std::cout << std::setprecision(5) << "#x# benchmark Stat_" << key << " " << sec
 			<< std::endl;
 }
 
