@@ -321,7 +321,7 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 
 /**
  * @~japanese
- * @brief @ref sakura_ComputeStatisticsFloat の結果を格納する構造体
+ * @brief @ref sakura_ComputeStatisticsFloat と @ref sakura_ComputeAccurateStatisticsFloat の結果を格納する構造体
  *
  * @~english
  * @brief A structure to which the result of @ref sakura_ComputeStatisticsFloat and @ref sakura_ComputeAccurateStatisticsFloat is stored.
