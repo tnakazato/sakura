@@ -921,9 +921,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
 namespace {
 
 template<typename T, typename COMPARATOR>
-void QuickSort(T data[], size_t elements) {
+void QuickSort(size_t num_data, T data[]) {
 	// TODO implement quick sort using expression template to avoid overhead of calling COMPARATOR.
-	qsort(data, elements, sizeof(T),
+	qsort(data, num_data, sizeof(T),
 			reinterpret_cast<int (*)(void const*,
 					void const*)>(COMPARATOR::Compare));}
 
@@ -974,7 +974,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat
 			}
 		}
 
-		QuickSort<float, AscendingOrder<float> >(data, valid_count);
+		QuickSort<float, AscendingOrder<float> >(valid_count, data);
 		*new_num_data = valid_count;
 	} catch (...) {
 		assert(false); // No exception should be raised for the current implementation.
