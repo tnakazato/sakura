@@ -76,13 +76,14 @@ struct InPlaceImpl<float> {
 	static void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 			float const reference[/*num_data*/], float result[/*num_data*/]) {
-		constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
+		constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)
+		::kNumFloat;
 		size_t num_packed_operation = num_data / kNumFloat;
 		size_t num_data_packed = num_packed_operation * kNumFloat;
 		assert(num_data_packed <= num_data);
 		size_t num_extra = num_data - num_data_packed;
 		auto const packed_reference =
-		reinterpret_cast<SimdType const *>(reference);
+				reinterpret_cast<SimdType const *>(reference);
 		auto packed_result = reinterpret_cast<SimdType *>(result);
 		auto const reference_extra = &reference[num_data_packed];
 		auto result_extra = &result[num_data_packed];
@@ -98,7 +99,7 @@ struct InPlaceImpl<float> {
 		} else {
 			assert(num_scaling_factor == num_data);
 			auto const packed_factor =
-			reinterpret_cast<SimdType const *>(scaling_factor);
+					reinterpret_cast<SimdType const *>(scaling_factor);
 			IterateSimd([packed_factor] (size_t i) {return packed_factor[i];},
 					num_packed_operation, packed_reference, packed_result);
 			auto const factor_extra = &scaling_factor[num_data_packed];
@@ -111,7 +112,8 @@ private:
 	static void IterateExtra(Feeder factor_feeder, size_t num_data,
 			float const *reference, float *result) {
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = factor_feeder(i) * (result[i] - reference[i]) / reference[i];
+			result[i] = factor_feeder(i) * (result[i] - reference[i])
+					/ reference[i];
 		}
 	}
 
