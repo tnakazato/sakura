@@ -114,28 +114,44 @@ inline void ApplyPositionSwitchCalibrationInPlace<float>(
 #endif
 
 template<class DataType>
-inline void ApplyPositionSwitchCalibrationDefault(size_t num_scaling_factor,
-		DataType const *scaling_factor_arg, size_t num_data,
-		DataType const *target_arg, DataType const *reference_arg,
-		DataType *result_arg) {
-	DataType const *__restrict scaling_factor = AssumeAligned(
-			scaling_factor_arg);
-	DataType const *__restrict target = AssumeAligned(target_arg);
-	DataType const *__restrict reference = AssumeAligned(reference_arg);
-	DataType *__restrict result = AssumeAligned(result_arg);
-	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
-		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = constant_scaling_factor * (target[i] - reference[i])
-					/ reference[i];
+struct DefaultImpl {
+	static void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
+			DataType const *scaling_factor, size_t num_data,
+			DataType const *target, DataType const *reference,
+			DataType *result) {
+		if (num_scaling_factor == 1) {
+			Iterate(FeedScalar, num_scaling_factor, scaling_factor, num_data,
+					target, reference, result);
+		} else {
+			Iterate(FeedArray, num_scaling_factor, scaling_factor, num_data,
+					target, reference, result);
 		}
-	} else {
+	}
+private:
+	static DataType FeedScalar(DataType const *factor, size_t index) {
+		return factor[0];
+	}
+
+	static DataType FeedArray(DataType const *factor, size_t index) {
+		return factor[index];
+	}
+
+	template<class Feeder>
+	static void Iterate(Feeder feeder, size_t num_scaling_factor,
+			DataType const *scaling_factor_arg, size_t num_data,
+			DataType const *target_arg, DataType const *reference_arg,
+			DataType *result_arg) {
+		DataType const *__restrict scaling_factor = AssumeAligned(
+				scaling_factor_arg);
+		DataType const *__restrict target = AssumeAligned(target_arg);
+		DataType const *__restrict reference = AssumeAligned(reference_arg);
+		DataType *__restrict result = AssumeAligned(result_arg);
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = scaling_factor[i] * (target[i] - reference[i])
+			result[i] = feeder(scaling_factor, i) * (target[i] - reference[i])
 					/ reference[i];
 		}
 	}
-}
+};
 
 template<class DataType>
 void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
@@ -156,8 +172,9 @@ void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 		ApplyPositionSwitchCalibrationInPlace(num_scaling_factor,
 				scaling_factor, num_data, target, reference, result);
 	} else {
-		ApplyPositionSwitchCalibrationDefault(num_scaling_factor,
-				scaling_factor, num_data, target, reference, result);
+		DefaultImpl<DataType>::ApplyPositionSwitchCalibration(
+				num_scaling_factor, scaling_factor, num_data, target, reference,
+				result);
 	}
 }
 
