@@ -33,9 +33,6 @@
 #include "libsakura/localdef.h"
 #include "libsakura/logger.h"
 #include "libsakura/packed_type.h"
-namespace {
-#include "libsakura/packed_operation.h"
-}
 
 using ::Eigen::Map;
 using ::Eigen::Array;
@@ -47,67 +44,33 @@ namespace {
 // a logger for this module
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
 
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
-#include <immintrin.h>
-
-template<typename Arch, typename DataType, typename Context>
-struct PacketAction {
-	static inline void Prologue(Context *context) {
-	}
-	static inline void Action(size_t idx,
-			typename Arch::PacketType const *scaling_factor,
-			typename Arch::PacketType const *target,
-			typename Arch::PacketType const *reference,
-			typename Arch::PacketType *result, Context *context) {
-//		*result = LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(
-//		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(*scaling_factor,
-//		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Sub(*target, *reference)),
-//		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Reciprocal(*reference));
-		*result = LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Div(
-		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Mul(*scaling_factor,
-		LIBSAKURA_SYMBOL(SimdMath)<Arch, DataType>::Sub(*target, *reference)),
-				*reference);
-	}
-	static inline void Epilogue(Context *context) {
-	}
-};
-
-template<typename ScalarType, typename Context>
-struct ScalarAction {
-	static inline void Prologue(Context *context) {
-	}
-	static inline void Action(size_t idx, ScalarType const*scaling_factor,
-			ScalarType const*target, ScalarType const*reference,
-			ScalarType *result, Context *context) {
-		*result = *scaling_factor * (*target - *reference) / *reference;
-	}
-	static inline void Epilogue(Context *context) {
-	}
-};
-
 template<class DataType>
-inline void ApplyPositionSwitchCalibrationSimd(size_t num_scaling_factor,
+inline void ApplyPositionSwitchCalibrationInPlace(size_t num_scaling_factor,
 		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		DataType const target[/*num_data*/],
 		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
+	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result, num_data);
+	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_target(
+			const_cast<DataType *>(target), num_data);
+	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
+			const_cast<DataType *>(reference), num_data);
 	if (num_scaling_factor == 1) {
 		DataType const constant_scaling_factor = scaling_factor[0];
-		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = constant_scaling_factor * (target[i] - reference[i])
-					/ reference[i];
-		}
+		eigen_result = constant_scaling_factor
+				* (eigen_target - eigen_reference) / eigen_reference;
 	} else {
-		typedef LIBSAKURA_SYMBOL(SimdArchNative) Arch;
-		LIBSAKURA_SYMBOL(SimdIterate)<Arch, DataType const, Arch,
-				DataType const, Arch, DataType const, Arch, DataType,
-				PacketAction<Arch, DataType, void>,
-				ScalarAction<DataType, void>, void>(num_data, scaling_factor,
-				target, reference, result, (void*) nullptr);
+		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
+				const_cast<DataType *>(scaling_factor), num_data);
+		eigen_result = eigen_scaling_factor * (eigen_target - eigen_reference)
+				/ eigen_reference;
 	}
 }
 
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+#include <immintrin.h>
+
 template<>
-inline void ApplyPositionSwitchCalibrationSimd<float>(size_t num_scaling_factor,
+inline void ApplyPositionSwitchCalibrationInPlace<float>(size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) {
@@ -153,28 +116,6 @@ inline void ApplyPositionSwitchCalibrationSimd<float>(size_t num_scaling_factor,
 #endif
 
 template<class DataType>
-inline void ApplyPositionSwitchCalibrationEigen(size_t num_scaling_factor,
-		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-		DataType const target[/*num_data*/],
-		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
-	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result, num_data);
-	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_target(
-			const_cast<DataType *>(target), num_data);
-	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
-			const_cast<DataType *>(reference), num_data);
-	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
-		eigen_result = constant_scaling_factor
-				* (eigen_target - eigen_reference) / eigen_reference;
-	} else {
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
-				const_cast<DataType *>(scaling_factor), num_data);
-		eigen_result = eigen_scaling_factor * (eigen_target - eigen_reference)
-				/ eigen_reference;
-	}
-}
-
-template<class DataType>
 inline void ApplyPositionSwitchCalibrationDefault(size_t num_scaling_factor,
 		DataType const *scaling_factor_arg, size_t num_data,
 		DataType const *target_arg,
@@ -207,7 +148,7 @@ void ApplyPositionSwitchCalibration(
 		DataType const reference[/*num_data*/],
 		DataType result[/*num_data*/]) {
 	assert(num_scaling_factor > 0);
-	assert(num_scaling_factor == 1 || num_scaling_factor >= num_data);
+	assert(num_scaling_factor == 1 || num_scaling_factor == num_data);
 	assert(scaling_factor != nullptr);
 	assert(target != nullptr);
 	assert(reference != nullptr);
@@ -217,13 +158,8 @@ void ApplyPositionSwitchCalibration(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(reference));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	if (target == result) {
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
-		ApplyPositionSwitchCalibrationSimd(num_scaling_factor, scaling_factor,
+		ApplyPositionSwitchCalibrationInPlace(num_scaling_factor, scaling_factor,
 				num_data, target, reference, result);
-#else
-		ApplyPositionSwitchCalibrationEigen(num_scaling_factor, scaling_factor,
-				num_data, target, reference, result);
-#endif
 	} else {
 		ApplyPositionSwitchCalibrationDefault(num_scaling_factor,
 				scaling_factor, num_data, target, reference, result);
