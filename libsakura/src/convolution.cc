@@ -86,7 +86,8 @@ inline void Create1DGaussianKernel(size_t num_kernel, size_t use_fft,
 	assert(kernel_width != 0);
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ kernel_width; // sqrt(log(16)) / kernel_width
-	float const height = .939437278699651333772340328410 / static_cast<float>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
+	float const height = .939437278699651333772340328410
+			/ static_cast<float>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	float center = static_cast<float>(num_data_for_gauss) / 2.f;
 	if (num_data_for_gauss % 2 != 0) {
 		center = static_cast<float>(num_data_for_gauss - 1) / 2.f;
@@ -140,25 +141,10 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	auto kernel = AssumeAligned(kernel_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 
-	/*
-	for (size_t i = 0; i < num_data; ++i) {
-		float value = 0.0;
-		size_t jmax = std::min(num_kernel, num_data - i);
-		for (size_t j = 0; j < jmax; ++j) {
-			value += input_data[i + j] * kernel[j];
-		}
-		jmax = std::min(num_kernel, i + 1);
-		for (size_t j = 1; j < jmax; ++j) {
-			value += input_data[i - j] * kernel[j];
-		}
-		output_data[i] = value;
-	}
-	*/
-
 	for (size_t i = 1; i < (num_data + 1); ++i) {
 		float value = 0.0;
 		size_t jmax = std::min(num_kernel, num_data - (i - 1));
-		for (size_t j = 1; j < jmax+1; ++j) {
+		for (size_t j = 1; j < jmax + 1; ++j) {
 			value += input_data[i - 1 + j - 1] * kernel[j - 1];
 		}
 		jmax = std::min(num_kernel, i);
@@ -323,25 +309,24 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 				fft_applied_complex_input_data.get());
 		float scale = 1.0f / static_cast<float>(num_data);
 		for (size_t i = 1; i < num_data / 2 + 1 + 1; ++i) {
-			multiplied_complex_data[i-1][0] =
-					(context->fft_applied_complex_kernel[i-1][0]
-							* fft_applied_complex_input_data[i-1][0]
-							- context->fft_applied_complex_kernel[i-1][1]
-									* fft_applied_complex_input_data[i-1][1])
+			multiplied_complex_data[i - 1][0] =
+					(context->fft_applied_complex_kernel[i - 1][0]
+							* fft_applied_complex_input_data[i - 1][0]
+							- context->fft_applied_complex_kernel[i - 1][1]
+									* fft_applied_complex_input_data[i - 1][1])
 							* scale;
-			multiplied_complex_data[i-1][1] =
-					(context->fft_applied_complex_kernel[i-1][0]
-							* fft_applied_complex_input_data[i-1][1]
-							+ context->fft_applied_complex_kernel[i-1][1]
-									* fft_applied_complex_input_data[i-1][0])
+			multiplied_complex_data[i - 1][1] =
+					(context->fft_applied_complex_kernel[i - 1][0]
+							* fft_applied_complex_input_data[i - 1][1]
+							+ context->fft_applied_complex_kernel[i - 1][1]
+									* fft_applied_complex_input_data[i - 1][0])
 							* scale;
 		}
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
 		ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
-				context->kernel_width,
-				context->real_kernel_array, output_data);
+				context->kernel_width, context->real_kernel_array, output_data);
 	}
 }
 
