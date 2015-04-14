@@ -82,15 +82,15 @@ struct InPlaceImpl<float> {
 		assert(num_data_packed <= num_data);
 		size_t num_extra = num_data - num_data_packed;
 		auto const packed_reference =
-				reinterpret_cast<SimdType const *>(reference);
+		reinterpret_cast<SimdType const *>(reference);
 		auto packed_result = reinterpret_cast<SimdType *>(result);
 		auto const reference_extra = &reference[num_data_packed];
 		auto result_extra = &result[num_data_packed];
 		if (num_scaling_factor == 1) {
-			SimdType const packed_scalar_factor[] = { _mm256_broadcast_ss(
-					scaling_factor) };
+			SimdType const packed_scalar_factor = _mm256_broadcast_ss(
+					scaling_factor);
 			IterateSimd(
-					[packed_scalar_factor] (size_t i) {return packed_scalar_factor[0];},
+					[packed_scalar_factor] (size_t i) {return packed_scalar_factor;},
 					num_packed_operation, packed_reference, packed_result);
 			IterateExtra(
 					[scaling_factor] (size_t i) {return scaling_factor[0];},
@@ -98,7 +98,7 @@ struct InPlaceImpl<float> {
 		} else {
 			assert(num_scaling_factor == num_data);
 			auto const packed_factor =
-					reinterpret_cast<SimdType const *>(scaling_factor);
+			reinterpret_cast<SimdType const *>(scaling_factor);
 			IterateSimd([packed_factor] (size_t i) {return packed_factor[i];},
 					num_packed_operation, packed_reference, packed_result);
 			auto const factor_extra = &scaling_factor[num_data_packed];
@@ -108,22 +108,22 @@ struct InPlaceImpl<float> {
 	}
 private:
 	template<class Feeder>
-	static void IterateExtra(Feeder feeder, size_t num_data,
+	static void IterateExtra(Feeder factor_feeder, size_t num_data,
 			float const *reference, float *result) {
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = feeder(i) * (result[i] - reference[i]) / reference[i];
+			result[i] = factor_feeder(i) * (result[i] - reference[i]) / reference[i];
 		}
 	}
 
 	template<class Feeder>
-	static void IterateSimd(Feeder feeder, size_t num_data,
+	static void IterateSimd(Feeder factor_feeder, size_t num_data,
 			SimdType const *packed_reference, SimdType *packed_result) {
 		for (size_t i = 0; i < num_data; ++i) {
 			// Here, we don't use _mm256_rcp_ps with _mm256_mul_ps instead of
 			// _mm256_div_ps since the former loses accuracy (worse than
 			// documented).
 			packed_result[i] = _mm256_div_ps(
-					_mm256_mul_ps(feeder(i),
+					_mm256_mul_ps(factor_feeder(i),
 							_mm256_sub_ps(packed_result[i],
 									packed_reference[i])), packed_reference[i]);
 		}
@@ -148,15 +148,15 @@ struct DefaultImpl {
 	}
 private:
 	template<class Feeder>
-	static void Iterate(Feeder feeder, size_t num_data,
+	static void Iterate(Feeder factor_feeder, size_t num_data,
 			DataType const *target_arg, DataType const *reference_arg,
 			DataType *result_arg) {
 		DataType const *__restrict target = AssumeAligned(target_arg);
 		DataType const *__restrict reference = AssumeAligned(reference_arg);
 		DataType *__restrict result = AssumeAligned(result_arg);
 		for (size_t i = 0; i < num_data; ++i) {
-			result[i] = feeder(/*scaling_factor,*/i)
-					* (target[i] - reference[i]) / reference[i];
+			result[i] = factor_feeder(i) * (target[i] - reference[i])
+					/ reference[i];
 		}
 	}
 };
