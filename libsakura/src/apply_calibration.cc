@@ -70,42 +70,40 @@ inline void ApplyPositionSwitchCalibrationInPlace(size_t num_scaling_factor,
 #include <immintrin.h>
 
 template<>
-inline void ApplyPositionSwitchCalibrationInPlace<float>(size_t num_scaling_factor,
+inline void ApplyPositionSwitchCalibrationInPlace<float>(
+		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		float const target[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) {
 	constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
 	size_t num_packed_operation = num_data / kNumFloat;
 	size_t num_data_packed = num_packed_operation * kNumFloat;
+	auto packed_target = reinterpret_cast<__m256 const *>(target);
+	auto packed_reference = reinterpret_cast<__m256 const *>(reference);
+	auto packed_result = reinterpret_cast<__m256 *>(result);
 	if (num_scaling_factor == 1) {
-		__m256 s = _mm256_broadcast_ss(scaling_factor);
-//		__m256 s = _mm256_set1_ps(scaling_factor[0]);
-		__m256  const *tar_m256 = reinterpret_cast<__m256  const *>(target);
-		__m256  const *ref_m256 = reinterpret_cast<__m256  const *>(reference);
-		__m256 *res_m256 = reinterpret_cast<__m256 *>(result);
+		auto packed_scalar_factor = _mm256_broadcast_ss(scaling_factor);
+//		auto packed_scalar_factor = _mm256_set1_ps(scaling_factor[0]);
 		for (size_t i = 0; i < num_packed_operation; ++i) {
-			res_m256[i] = _mm256_div_ps(
-					_mm256_mul_ps(s, _mm256_sub_ps(tar_m256[i], ref_m256[i])),
-					ref_m256[i]);
+			packed_result[i] = _mm256_div_ps(
+					_mm256_mul_ps(packed_scalar_factor,
+							_mm256_sub_ps(packed_target[i],
+									packed_reference[i])), packed_reference[i]);
 		}
 		for (size_t i = num_data_packed; i < num_data; ++i) {
 			result[i] = scaling_factor[0] * (target[i] - reference[i])
 					/ reference[i];
 		}
 	} else {
-		__m256  const *sca_m256 =
-				reinterpret_cast<__m256  const *>(scaling_factor);
-		__m256  const *tar_m256 = reinterpret_cast<__m256  const *>(target);
-		__m256  const *ref_m256 = reinterpret_cast<__m256  const *>(reference);
-		__m256 *res_m256 = reinterpret_cast<__m256 *>(result);
+		auto packed_factor = reinterpret_cast<__m256 const *>(scaling_factor);
 		for (size_t i = 0; i < num_packed_operation; ++i) {
 			// Here, we don't use _mm256_rcp_ps with _mm256_mul_ps instead of
 			// _mm256_div_ps since the former loses accuracy (worse than
 			// documented).
-			res_m256[i] = _mm256_div_ps(
-					_mm256_mul_ps(sca_m256[i],
-							_mm256_sub_ps(tar_m256[i], ref_m256[i])),
-					ref_m256[i]);
+			packed_result[i] = _mm256_div_ps(
+					_mm256_mul_ps(packed_factor[i],
+							_mm256_sub_ps(packed_target[i],
+									packed_reference[i])), packed_reference[i]);
 		}
 		for (size_t i = num_data_packed; i < num_data; ++i) {
 			result[i] = scaling_factor[i] * (target[i] - reference[i])
@@ -118,8 +116,7 @@ inline void ApplyPositionSwitchCalibrationInPlace<float>(size_t num_scaling_fact
 template<class DataType>
 inline void ApplyPositionSwitchCalibrationDefault(size_t num_scaling_factor,
 		DataType const *scaling_factor_arg, size_t num_data,
-		DataType const *target_arg,
-		DataType const *reference_arg,
+		DataType const *target_arg, DataType const *reference_arg,
 		DataType *result_arg) {
 	DataType const *__restrict scaling_factor = AssumeAligned(
 			scaling_factor_arg);
@@ -141,12 +138,10 @@ inline void ApplyPositionSwitchCalibrationDefault(size_t num_scaling_factor,
 }
 
 template<class DataType>
-void ApplyPositionSwitchCalibration(
-		size_t num_scaling_factor,
+void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
 		DataType const target[/*num_data*/],
-		DataType const reference[/*num_data*/],
-		DataType result[/*num_data*/]) {
+		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
 	assert(num_scaling_factor > 0);
 	assert(num_scaling_factor == 1 || num_scaling_factor == num_data);
 	assert(scaling_factor != nullptr);
@@ -158,8 +153,8 @@ void ApplyPositionSwitchCalibration(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(reference));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	if (target == result) {
-		ApplyPositionSwitchCalibrationInPlace(num_scaling_factor, scaling_factor,
-				num_data, target, reference, result);
+		ApplyPositionSwitchCalibrationInPlace(num_scaling_factor,
+				scaling_factor, num_data, target, reference, result);
 	} else {
 		ApplyPositionSwitchCalibrationDefault(num_scaling_factor,
 				scaling_factor, num_data, target, reference, result);
@@ -208,8 +203,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrat
 	}
 
 	try {
-		ApplyPositionSwitchCalibration(num_scaling_factor,
-				scaling_factor, num_data, target, reference, result);
+		ApplyPositionSwitchCalibration(num_scaling_factor, scaling_factor,
+				num_data, target, reference, result);
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	} catch (...) {
 		// any exception is thrown during interpolation
