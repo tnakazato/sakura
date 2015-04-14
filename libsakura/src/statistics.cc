@@ -956,26 +956,26 @@ public:
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
-		size_t elements, bool const is_valid[], float data[],
-		size_t *new_elements) noexcept {
+		size_t num_data, bool const is_valid[], float data[],
+		size_t *new_num_data) noexcept {
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
-	CHECK_ARGS(new_elements != nullptr);
+	CHECK_ARGS(new_num_data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
 
 	try {
 		size_t valid_count = 0;
-		for (size_t i = 0; i < elements; ++i) {
+		for (size_t i = 0; i < num_data; ++i) {
 			if (is_valid[i]) {
-				assert(!std::isnan(data[i]));
+				assert(!std::isnan(data[i]) && !std::isinf(data[i]));
 				data[valid_count] = data[i];
 				++valid_count;
 			}
 		}
 
 		QuickSort<float, AscendingOrder<float> >(data, valid_count);
-		*new_elements = valid_count;
+		*new_num_data = valid_count;
 	} catch (...) {
 		assert(false); // No exception should be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
