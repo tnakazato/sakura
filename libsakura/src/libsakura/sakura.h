@@ -106,7 +106,7 @@ typedef enum {
  * @~english
  * @brief A type of the allocator function called by Sakura Library.
  *
- * Implementation of function of this type must be reentrant.
+ * Implementation of the function of this type must be reentrant.
  *
  * @note
  * It must return a valid pointer to a memory region of size 0 if 0 is passed as @a size parameter.
@@ -130,7 +130,7 @@ typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
  * @~english
  * @brief A type of the deallocator function called by Sakura Library.
  *
- * Implementation of function of this type must be reentrant.
+ * Implementation of the function of this type must be reentrant.
  *
  * @note
  * It must do nothing if NULL is passed as @a pointer parameter.
@@ -365,12 +365,12 @@ typedef struct {
 	float max;
 	/**
 	 * @~
-	 * one of index for min value. -1 if there is no valid data.
+	 * index for one of min value. -1 if there is no valid data.
 	 */
 	int index_of_min;
 	/**
 	 * @~
-	 * one of index for max value. -1 if there is no valid data.
+	 * index for one of max value. -1 if there is no valid data.
 	 */
 	int index_of_max;
 }LIBSAKURA_SYMBOL(StatisticsResultFloat);
