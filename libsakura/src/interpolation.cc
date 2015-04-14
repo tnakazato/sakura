@@ -698,6 +698,14 @@ inline size_t FillDataAsAscendingImpl(PositionIndexer pi, DataIndexer di,
 	return n;
 }
 
+template<class YDataType, class Indexer>
+inline void FillResultImpl(Indexer indexer, size_t num_interpolated,
+		size_t num_array, size_t iarray, YDataType y1[], YDataType data[]) {
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		data[indexer(i)] = y1[i];
+	}
+}
+
 template<class XDataType, class YDataType>
 struct XInterpolatorHelper {
 //	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
@@ -736,14 +744,13 @@ struct XInterpolatorHelper {
 			YDataType data[]) {
 		assert(iarray < num_array);
 		if (is_ascending) {
-			for (size_t i = 0; i < num_interpolated; ++i) {
-				data[i + iarray * num_interpolated] = y1[i];
-			}
+			FillResultImpl(
+					[&] (size_t i) {return i + iarray * num_interpolated;},
+					num_interpolated, num_array, iarray, y1, data);
 		} else {
-			for (size_t i = 0; i < num_interpolated; ++i) {
-				data[num_interpolated - 1 - i + num_interpolated * iarray] =
-						y1[i];
-			}
+			FillResultImpl(
+					[&](size_t i) {return num_interpolated - 1 - i + num_interpolated * iarray;},
+					num_interpolated, num_array, iarray, y1, data);
 		}
 
 	}
@@ -839,13 +846,12 @@ struct YInterpolatorHelper {
 			YDataType data[]) {
 		assert(iarray < num_array);
 		if (is_ascending) {
-			for (size_t i = 0; i < num_interpolated; ++i) {
-				data[iarray + i * num_array] = y1[i];
-			}
+			FillResultImpl([&](size_t i) {return iarray + i * num_array;},
+					num_interpolated, num_array, iarray, y1, data);
 		} else {
-			for (size_t i = 0; i < num_interpolated; ++i) {
-				data[num_array * (num_interpolated - 1 - i) + iarray] = y1[i];
-			}
+			FillResultImpl(
+					[&](size_t i) {return num_array * (num_interpolated - 1 - i) + iarray;},
+					num_interpolated, num_array, iarray, y1, data);
 		}
 	}
 
@@ -960,13 +966,13 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 				x0, y0);
 		if (n == 0) {
 			// cannot perform interpolation, mask all data
-			Helper::FillOneRowWithValue(num_interpolated, num_array, false, iarray,
-					interpolated_mask);
+			Helper::FillOneRowWithValue(num_interpolated, num_array, false,
+					iarray, interpolated_mask);
 		} else if (n == 1) {
 			// no need to interpolate, just substitute single base data
 			// to all elements in interpolated data, keep input mask
-			Helper::FillOneRowWithValue(num_interpolated,
-					num_array, y0[0], iarray, interpolated_data);
+			Helper::FillOneRowWithValue(num_interpolated, num_array, y0[0],
+					iarray, interpolated_data);
 		} else {
 			// perform interpolation, keep input mask
 
