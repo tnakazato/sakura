@@ -45,72 +45,101 @@ namespace {
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
 
 template<class DataType>
-inline void ApplyPositionSwitchCalibrationInPlace(size_t num_scaling_factor,
-		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-		DataType const target[/*num_data*/],
-		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
-	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result, num_data);
-	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_target(
-			const_cast<DataType *>(target), num_data);
-	Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
-			const_cast<DataType *>(reference), num_data);
-	if (num_scaling_factor == 1) {
-		DataType const constant_scaling_factor = scaling_factor[0];
-		eigen_result = constant_scaling_factor
-				* (eigen_target - eigen_reference) / eigen_reference;
-	} else {
-		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
-				const_cast<DataType *>(scaling_factor), num_data);
-		eigen_result = eigen_scaling_factor * (eigen_target - eigen_reference)
-				/ eigen_reference;
-	}
+inline DataType FeedScalar(DataType const *factor, size_t index) {
+	return factor[0];
 }
 
+template<class DataType>
+inline DataType FeedArray(DataType const *factor, size_t index) {
+	return factor[index];
+}
+
+template<class DataType>
+struct InPlaceImpl {
+	static void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
+			DataType const scaling_factor[/*num_scaling_factor*/],
+			size_t num_data, DataType const reference[/*num_data*/],
+			DataType result[/*num_data*/]) {
+		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result,
+				num_data);
+		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
+				const_cast<DataType *>(reference), num_data);
+		if (num_scaling_factor == 1) {
+			DataType const constant_scaling_factor = scaling_factor[0];
+			eigen_result = constant_scaling_factor
+					* (eigen_result - eigen_reference) / eigen_reference;
+		} else {
+			Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
+					const_cast<DataType *>(scaling_factor), num_data);
+			eigen_result = eigen_scaling_factor
+					* (eigen_result - eigen_reference) / eigen_reference;
+		}
+	}
+};
+
+//#define __AVX__
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 #include <immintrin.h>
 
 template<>
-inline void ApplyPositionSwitchCalibrationInPlace<float>(
-		size_t num_scaling_factor,
-		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-		float const target[/*num_data*/], float const reference[/*num_data*/],
-		float result[/*num_data*/]) {
-	constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
-	size_t num_packed_operation = num_data / kNumFloat;
-	size_t num_data_packed = num_packed_operation * kNumFloat;
-	auto packed_target = reinterpret_cast<__m256 const *>(target);
-	auto packed_reference = reinterpret_cast<__m256 const *>(reference);
-	auto packed_result = reinterpret_cast<__m256 *>(result);
-	if (num_scaling_factor == 1) {
-		auto packed_scalar_factor = _mm256_broadcast_ss(scaling_factor);
+struct InPlaceImpl<float> {
+	typedef __m256 SimdType;
+	static void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
+			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+			float const reference[/*num_data*/], float result[/*num_data*/]) {
+		constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
+		size_t num_packed_operation = num_data / kNumFloat;
+		size_t num_data_packed = num_packed_operation * kNumFloat;
+		assert(num_data_packed <= num_data);
+		size_t num_extra = num_data - num_data_packed;
+		auto packed_reference = reinterpret_cast<SimdType const *>(reference);
+		auto packed_result = reinterpret_cast<SimdType *>(result);
+		float const *reference_extra = &reference[num_data_packed];
+		float *result_extra = &result[num_data_packed];
+		if (num_scaling_factor == 1) {
+			SimdType packed_scalar_factor[] = { _mm256_broadcast_ss(
+					scaling_factor) };
 //		auto packed_scalar_factor = _mm256_set1_ps(scaling_factor[0]);
-		for (size_t i = 0; i < num_packed_operation; ++i) {
-			packed_result[i] = _mm256_div_ps(
-					_mm256_mul_ps(packed_scalar_factor,
-							_mm256_sub_ps(packed_target[i],
-									packed_reference[i])), packed_reference[i]);
+			IterateSimd(FeedScalar<SimdType>, packed_scalar_factor,
+					num_packed_operation, packed_reference, packed_result);
+			IterateExtra(FeedScalar<float>, scaling_factor, num_extra,
+					reference_extra, result_extra);
+		} else {
+			assert(num_scaling_factor == num_data);
+			auto packed_factor =
+					reinterpret_cast<SimdType const *>(scaling_factor);
+			IterateSimd(FeedArray<SimdType>, packed_factor,
+					num_packed_operation, packed_reference, packed_result);
+			float const *factor_extra = &scaling_factor[num_data_packed];
+			IterateExtra(FeedArray<float>, factor_extra, num_extra,
+					reference_extra, result_extra);
 		}
-		for (size_t i = num_data_packed; i < num_data; ++i) {
-			result[i] = scaling_factor[0] * (target[i] - reference[i])
+	}
+private:
+	template<class Feeder>
+	static void IterateExtra(Feeder feeder, float const *scaling_factor,
+			size_t num_data, float const *reference, float *result) {
+		for (size_t i = 0; i < num_data; ++i) {
+			result[i] = feeder(scaling_factor, i) * (result[i] - reference[i])
 					/ reference[i];
 		}
-	} else {
-		auto packed_factor = reinterpret_cast<__m256 const *>(scaling_factor);
-		for (size_t i = 0; i < num_packed_operation; ++i) {
+	}
+
+	template<class Feeder>
+	static void IterateSimd(Feeder feeder,
+			SimdType const *packed_scaling_factor, size_t num_data,
+			SimdType const *packed_reference, SimdType *packed_result) {
+		for (size_t i = 0; i < num_data; ++i) {
 			// Here, we don't use _mm256_rcp_ps with _mm256_mul_ps instead of
 			// _mm256_div_ps since the former loses accuracy (worse than
 			// documented).
 			packed_result[i] = _mm256_div_ps(
-					_mm256_mul_ps(packed_factor[i],
-							_mm256_sub_ps(packed_target[i],
+					_mm256_mul_ps(feeder(packed_scaling_factor, i),
+							_mm256_sub_ps(packed_result[i],
 									packed_reference[i])), packed_reference[i]);
 		}
-		for (size_t i = num_data_packed; i < num_data; ++i) {
-			result[i] = scaling_factor[i] * (target[i] - reference[i])
-					/ reference[i];
-		}
 	}
-}
+};
 #endif
 
 template<class DataType>
@@ -120,27 +149,19 @@ struct DefaultImpl {
 			DataType const *target, DataType const *reference,
 			DataType *result) {
 		if (num_scaling_factor == 1) {
-			Iterate(FeedScalar, num_scaling_factor, scaling_factor, num_data,
-					target, reference, result);
+			Iterate(FeedScalar<DataType>, scaling_factor, num_data, target,
+					reference, result);
 		} else {
-			Iterate(FeedArray, num_scaling_factor, scaling_factor, num_data,
-					target, reference, result);
+			assert(num_scaling_factor == num_data);
+			Iterate(FeedArray<DataType>, scaling_factor, num_data, target,
+					reference, result);
 		}
 	}
 private:
-	static DataType FeedScalar(DataType const *factor, size_t index) {
-		return factor[0];
-	}
-
-	static DataType FeedArray(DataType const *factor, size_t index) {
-		return factor[index];
-	}
-
 	template<class Feeder>
-	static void Iterate(Feeder feeder, size_t num_scaling_factor,
-			DataType const *scaling_factor_arg, size_t num_data,
-			DataType const *target_arg, DataType const *reference_arg,
-			DataType *result_arg) {
+	static void Iterate(Feeder feeder, DataType const *scaling_factor_arg,
+			size_t num_data, DataType const *target_arg,
+			DataType const *reference_arg, DataType *result_arg) {
 		DataType const *__restrict scaling_factor = AssumeAligned(
 				scaling_factor_arg);
 		DataType const *__restrict target = AssumeAligned(target_arg);
@@ -169,8 +190,9 @@ void ApplyPositionSwitchCalibration(size_t num_scaling_factor,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(reference));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	if (target == result) {
-		ApplyPositionSwitchCalibrationInPlace(num_scaling_factor,
-				scaling_factor, num_data, target, reference, result);
+		InPlaceImpl<DataType>::ApplyPositionSwitchCalibration(
+				num_scaling_factor, scaling_factor, num_data, reference,
+				result);
 	} else {
 		DefaultImpl<DataType>::ApplyPositionSwitchCalibration(
 				num_scaling_factor, scaling_factor, num_data, target, reference,
