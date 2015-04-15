@@ -20,16 +20,13 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+
+#include "libsakura/sakura.h"
+
 #include <cassert>
-#include <cstddef>
-#include <cmath>
-#include <climits>
-#include <algorithm>
-#include <iostream>
 
 #include <Eigen/Core>
 
-#include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
 #include "libsakura/logger.h"
 #include "libsakura/packed_type.h"

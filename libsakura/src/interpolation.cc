@@ -20,14 +20,14 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+#include <libsakura/sakura.h>
+
 #include <cassert>
-#include <sstream>
+#include <climits>
 #include <memory>
 #include <utility>
 #include <vector>
-#include <climits>
 
-#include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
 #include <libsakura/logger.h>
 #include <libsakura/memory_manager.h>
