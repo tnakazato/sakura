@@ -945,6 +945,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(base_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(interpolated_position));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(interpolated_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(base_mask));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(interpolated_mask));
 
 	// basic check
 	bool const is_base_ascending = (base_position[num_base - 1]
@@ -1128,7 +1130,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	if (!LIBSAKURA_SYMBOL(IsAligned)(base)
 			|| !LIBSAKURA_SYMBOL(IsAligned)(data_base) || !LIBSAKURA_SYMBOL(
 					IsAligned)(interpolated)
-			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)) {
+			|| !LIBSAKURA_SYMBOL(IsAligned)(data_interpolated)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(mask_base)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(mask_interpolated)) {
 		LOG4CXX_ERROR(logger, "input arrays are not aligned");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
