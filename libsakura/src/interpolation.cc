@@ -705,8 +705,8 @@ struct SplineYInterpolatorImpl: public InterpolatorInterface<
 
 template<class XDataType, class YDataType>
 inline size_t FillDataAsAscendingImpl(size_t position_index_start,
-		ssize_t position_index_increment, size_t data_index_start,
-		ssize_t data_index_increment, size_t num_base,
+		long long position_index_increment, size_t data_index_start,
+		long long data_index_increment, size_t num_base,
 		XDataType const position[], YDataType const data[],
 		bool const mask[], XDataType x[], YDataType y[]) {
 	size_t n = 0;
@@ -724,7 +724,7 @@ inline size_t FillDataAsAscendingImpl(size_t position_index_start,
 }
 
 template<class YDataType>
-inline void FillResultImpl(size_t index_start, ssize_t index_increment,
+inline void FillResultImpl(size_t index_start, long long index_increment,
 		size_t num_interpolated, YDataType y1[], YDataType data[]) {
 	for (size_t i = 0; i < num_interpolated; ++i) {
 		data[index_start + i * index_increment] = y1[i];
@@ -744,7 +744,7 @@ struct XInterpolatorHelper {
 			YDataType y[]) {
 		assert(iarray < num_array);
 		size_t position_index_start = is_ascending ? 0 : num_base - 1;
-		ssize_t index_increment = is_ascending ? 1LL : -1LL;
+		long long index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
 				is_ascending ? iarray * num_base : num_base * (iarray + 1) - 1;
 		return FillDataAsAscendingImpl(position_index_start, index_increment,
@@ -769,7 +769,7 @@ struct XInterpolatorHelper {
 				is_ascending ?
 						iarray * num_interpolated :
 						num_interpolated * (iarray + 1) - 1;
-		ssize_t increment = is_ascending ? 1LL : -1LL;
+		long long increment = is_ascending ? 1LL : -1LL;
 		FillResultImpl(start, increment, num_interpolated, y1, data);
 	}
 
@@ -840,11 +840,11 @@ struct YInterpolatorHelper {
 		assert(iarray < num_array);
 		assert(num_base > 0);
 		size_t position_index_start = is_ascending ? 0 : num_base - 1;
-		ssize_t position_index_increment = is_ascending ? 1LL : -1LL;
+		long long position_index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
 				is_ascending ? iarray : num_array * (num_base - 1) + iarray;
-		assert(num_array <= SSIZE_MAX);
-		ssize_t data_index_increment = is_ascending ? num_array : -num_array;
+		assert(num_array <= LLONG_MAX);
+		long long data_index_increment = is_ascending ? num_array : -num_array;
 		return FillDataAsAscendingImpl(position_index_start,
 				position_index_increment, data_index_start,
 				data_index_increment, num_base, position, data, mask, x, y);
@@ -867,8 +867,8 @@ struct YInterpolatorHelper {
 		size_t start =
 				is_ascending ?
 						iarray : num_array * (num_interpolated - 1) + iarray;
-		assert(num_array < SSIZE_MAX);
-		ssize_t increment = is_ascending ? num_array : -num_array;
+		assert(num_array < LLONG_MAX);
+		long long increment = is_ascending ? num_array : -num_array;
 		FillResultImpl(start, increment, num_interpolated, y1, data);
 	}
 
