@@ -171,9 +171,9 @@ struct PolynomialWorkingData {
 			AllocateAndAlign<DataType>(num_elements * num_array, &(xholder[i]));
 		}
 	}
-	uint8_t polynomial_order;
-	size_t num_elements;
 	std::vector<StorageAndAlignedPointer<DataType> > xholder;
+	size_t num_elements;
+	uint8_t polynomial_order;
 };
 
 template<class XDataType, class YDataType>
