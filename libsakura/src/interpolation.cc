@@ -25,6 +25,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <climits>
 
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
@@ -679,15 +680,17 @@ struct SplineYInterpolatorImpl: public InterpolatorInterface<
 	}
 };
 
-template<class XDataType, class YDataType, class PositionIndexer,
-		class DataIndexer>
-inline size_t FillDataAsAscendingImpl(PositionIndexer pi, DataIndexer di,
-		size_t num_base, XDataType const position[], YDataType const data[],
+template<class XDataType, class YDataType>
+inline size_t FillDataAsAscendingImpl(size_t position_index_start,
+		long long position_index_increment, size_t data_index_start,
+		long long data_index_increment, size_t num_base,
+		XDataType const position[], YDataType const data[],
 		bool const mask[], XDataType x[], YDataType y[]) {
 	size_t n = 0;
 	for (size_t i = 0; i < num_base; ++i) {
-		size_t data_index = di(i);
-		size_t position_index = pi(i);
+		size_t data_index = data_index_start + data_index_increment * i;
+		size_t position_index = position_index_start
+				+ position_index_increment * i;
 		if (mask[data_index]) {
 			x[n] = position[position_index];
 			y[n] = data[data_index];
@@ -697,11 +700,11 @@ inline size_t FillDataAsAscendingImpl(PositionIndexer pi, DataIndexer di,
 	return n;
 }
 
-template<class YDataType, class Indexer>
-inline void FillResultImpl(Indexer indexer, size_t num_interpolated,
-		size_t num_array, size_t iarray, YDataType y1[], YDataType data[]) {
+template<class YDataType>
+inline void FillResultImpl(size_t index_start, long long index_increment,
+		size_t num_interpolated, YDataType y1[], YDataType data[]) {
 	for (size_t i = 0; i < num_interpolated; ++i) {
-		data[indexer(i)] = y1[i];
+		data[index_start + i * index_increment] = y1[i];
 	}
 }
 
@@ -717,16 +720,13 @@ struct XInterpolatorHelper {
 			bool const mask[], bool is_ascending, XDataType x[],
 			YDataType y[]) {
 		assert(iarray < num_array);
-		if (is_ascending) {
-			return FillDataAsAscendingImpl([&](size_t i) {return i;},
-					[&] (size_t i) {return i + iarray * num_base;}, num_base,
-					position, data, mask, x, y);
-		} else {
-			return FillDataAsAscendingImpl(
-					[&](size_t i) {return num_base - 1 - i;},
-					[&] (size_t i) {return num_base - 1 - i + iarray * num_base;},
-					num_base, position, data, mask, x, y);
-		}
+		size_t position_index_start = is_ascending ? 0 : num_base - 1;
+		long long index_increment = is_ascending ? 1ll : -1ll;
+		size_t data_index_start =
+				is_ascending ? iarray * num_base : num_base * (iarray + 1) - 1;
+		return FillDataAsAscendingImpl(position_index_start, index_increment,
+				data_index_start, index_increment, num_base, position, data,
+				mask, x, y);
 	}
 
 	template<class T>
@@ -742,16 +742,12 @@ struct XInterpolatorHelper {
 			size_t iarray, bool is_ascending, YDataType y1[],
 			YDataType data[]) {
 		assert(iarray < num_array);
-		if (is_ascending) {
-			FillResultImpl(
-					[&] (size_t i) {return i + iarray * num_interpolated;},
-					num_interpolated, num_array, iarray, y1, data);
-		} else {
-			FillResultImpl(
-					[&](size_t i) {return num_interpolated - 1 - i + num_interpolated * iarray;},
-					num_interpolated, num_array, iarray, y1, data);
-		}
-
+		size_t start =
+				is_ascending ?
+						iarray * num_interpolated :
+						num_interpolated * (iarray + 1) - 1;
+		long long increment = is_ascending ? 1ll : -1ll;
+		FillResultImpl(start, increment, num_interpolated, y1, data);
 	}
 
 	template<class DataType>
@@ -819,16 +815,16 @@ struct YInterpolatorHelper {
 			bool const mask[], bool is_ascending, XDataType x[],
 			YDataType y[]) {
 		assert(iarray < num_array);
-		if (is_ascending) {
-			return FillDataAsAscendingImpl([&](size_t i) {return i;},
-					[&] (size_t i) {return num_array * i + iarray;},
-					num_base, position, data, mask, x, y);
-		} else {
-			return FillDataAsAscendingImpl(
-					[&](size_t i) {return num_base - 1 - i;},
-					[&] (size_t i) {return num_array * (num_base - 1 - i) + iarray;},
-					num_base, position, data, mask, x, y);
-		}
+		assert(num_base > 1);
+		size_t position_index_start = is_ascending ? 0 : num_base - 1;
+		long long position_index_increment = is_ascending ? 1ll : -1ll;
+		size_t data_index_start =
+				is_ascending ? iarray : num_array * (num_base - 1) + iarray;
+		assert(num_array <= LLONG_MAX);
+		long long data_index_increment = is_ascending ? num_array : -num_array;
+		return FillDataAsAscendingImpl(position_index_start,
+				position_index_increment, data_index_start,
+				data_index_increment, num_base, position, data, mask, x, y);
 	}
 
 	template<class T>
@@ -844,14 +840,13 @@ struct YInterpolatorHelper {
 			size_t iarray, bool is_ascending, YDataType y1[],
 			YDataType data[]) {
 		assert(iarray < num_array);
-		if (is_ascending) {
-			FillResultImpl([&](size_t i) {return iarray + i * num_array;},
-					num_interpolated, num_array, iarray, y1, data);
-		} else {
-			FillResultImpl(
-					[&](size_t i) {return num_array * (num_interpolated - 1 - i) + iarray;},
-					num_interpolated, num_array, iarray, y1, data);
-		}
+		assert(num_interpolated > 1);
+		size_t start =
+				is_ascending ?
+						iarray : num_array * (num_interpolated - 1) + iarray;
+		assert(num_array < LLONG_MAX);
+		long long increment = is_ascending ? num_array : -num_array;
+		FillResultImpl(start, increment, num_interpolated, y1, data);
 	}
 
 	template<class DataType>
