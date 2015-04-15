@@ -1671,7 +1671,7 @@ typedef enum {
  * must-be-aligned
  * @param[in] num_interpolated number of elements for points that wants to get
  * interpolated value. Its value must be greater than 0.
- * @param[in] interpolate_position x-coordinate of points that wants to get interpolated
+ * @param[in] interpolated_position x-coordinate of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * must-be-aligned
  * @param[out] interpolated_data storage for interpolation result. Its length must be
@@ -1690,7 +1690,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		double const base_position[/*num_base*/], size_t num_array,
 		float const base_data[/*num_base*num_array*/],
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
-		double const interpolate_position[/*num_interpolated*/],
+		double const interpolated_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/])
 				LIBSAKURA_NOEXCEPT;
