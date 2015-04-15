@@ -93,7 +93,7 @@ size_t LocateData(size_t start_position, size_t end_position, size_t num_base,
 		// do bisection
 		size_t left_index = start_position;
 		size_t right_index = end_position;
-		while (right_index > left_index + 1) {
+		while (left_index + 1 < right_index) {
 			size_t const middle_index = (right_index + left_index) / 2;
 			if (located_position > base_position[middle_index]) {
 				left_index = middle_index;
