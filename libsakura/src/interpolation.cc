@@ -111,19 +111,7 @@ size_t Locate(size_t num_base, size_t num_located,
 		size_t location_list[]) {
 	// input arrays must be sorted in ascending order
 	size_t num_location_list = 0;
-	if (num_base == 1) {
-		if (located_position[num_located - 1] <= base_position[0]) {
-			num_location_list = 1;
-			location_list[0] = 0;
-		} else if (located_position[0] >= base_position[0]) {
-			num_location_list = 1;
-			location_list[0] = 1;
-		} else {
-			num_location_list = 2;
-			location_list[0] = 0;
-			location_list[1] = 1;
-		}
-	} else if (located_position[num_located - 1] <= base_position[0]) {
+	if (located_position[num_located - 1] <= base_position[0]) {
 		// all located_position's are on the left (lower) side of base_position
 		num_location_list = 1;
 		location_list[0] = 0;
@@ -131,6 +119,10 @@ size_t Locate(size_t num_base, size_t num_located,
 		// all located_position's are on the right (upper) side of base_position
 		num_location_list = 1;
 		location_list[0] = num_base;
+	} else if (num_base == 1) {
+			num_location_list = 2;
+			location_list[0] = 0;
+			location_list[1] = 1;
 	} else {
 		size_t start_position = 0;
 		size_t end_position = num_base - 1;
@@ -1095,8 +1087,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 // basic check of arguments
 bool IsValidArguments(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		uint8_t polynomial_order, size_t num_base,
-		double const base_position[], size_t num_array, float const base_data[],
+		uint8_t polynomial_order, size_t num_base, double const base_position[],
+		size_t num_array, float const base_data[],
 		bool const base_mask[], size_t num_interpolated,
 		double const interpolated_position[], float const interpolated_data[],
 		bool const interpolated_mask[], LIBSAKURA_SYMBOL(
@@ -1139,9 +1131,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	}
 
 	// input arrays are null
-	if (base_position == nullptr || base_data == nullptr || interpolated_position == nullptr
-			|| interpolated_data == nullptr || base_mask == nullptr
-			|| interpolated_mask == nullptr) {
+	if (base_position == nullptr || base_data == nullptr
+			|| interpolated_position == nullptr || interpolated_data == nullptr
+			|| base_mask == nullptr || interpolated_mask == nullptr) {
 		LOG4CXX_ERROR(logger, "input arrays are null");
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
@@ -1153,8 +1145,8 @@ template<typename Func>
 LIBSAKURA_SYMBOL(Status) DoInterpolate(Func func,
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interpolation_method, uint8_t polynomial_order,
-		size_t num_base, double const base_position[/*num_base*/], size_t num_array,
-		float const base_data[/*num_base*num_array*/],
+		size_t num_base, double const base_position[/*num_base*/],
+		size_t num_array, float const base_data[/*num_base*num_array*/],
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolated_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
@@ -1163,14 +1155,15 @@ LIBSAKURA_SYMBOL(
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
 	if (!IsValidArguments(interpolation_method, polynomial_order, num_base,
 			base_position, num_array, base_data, base_mask, num_interpolated,
-			interpolated_position, interpolated_data, interpolated_mask, &status)) {
+			interpolated_position, interpolated_data, interpolated_mask,
+			&status)) {
 		return status;
 	}
 
 	try {
-		func(interpolation_method, polynomial_order, num_base, base_position, num_array,
-				base_data, base_mask, num_interpolated, interpolated_position,
-				interpolated_data, interpolated_mask);
+		func(interpolation_method, polynomial_order, num_base, base_position,
+				num_array, base_data, base_mask, num_interpolated,
+				interpolated_position, interpolated_data, interpolated_mask);
 	} catch (const std::bad_alloc &e) {
 // failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
