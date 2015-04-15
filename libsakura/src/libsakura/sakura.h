@@ -2403,7 +2403,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @brief 与えられたデータに対して、同じく与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求める。
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
+ * @param[in] order モデルのパラメータ。多項式(polynomial, chebyshev)では次数、三角関数では最大の波数。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[in] num_data 配列 @a data 、 @a mask 、 @a out 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -2419,16 +2419,12 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] context An object containing baseline model data.
  * @param[in] order Parameter for the specified function.
  * It is the order for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or the number of spline
- * pieces for sakura_BaselineType_kCubicSpline, or the maximum
- * wave number for sakura_BaselineType_kSinusoid. It must be
- * positive for sakura_BaselineType_kCubicSpline, while other
- * models accept zero value. The value should not exceed the
- * @a order specified in creation of @a context .
+ * sakura_BaselineType_kChebyshev, or the maximum wave number
+ * for sakura_BaselineType_kSinusoid. The value should not exceed
+ * the @a order specified in creation of @a context .
  * The number of model bases, which is @a order+1 for
  * sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or @a order+3 for
- * sakura_BaselineType_kCubicSpline or @a order*2+1 for
+ * sakura_BaselineType_kChebyshev, or @a order*2+1 for
  * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a out , and also the number of elements in each model data
@@ -2456,7 +2452,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、差し引く。
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
+ * @param[in] order モデルのパラメータ。多項式(polynomial, chebyshev)では次数、三角関数では最大の波数。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
  * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
@@ -2483,16 +2479,12 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] context An object containing baseline model data.
  * @param[in] order Parameter for the specified function.
  * It is the order for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or the number of spline pieces for
- * sakura_BaselineType_kCubicSpline, or the maximum wave number for
- * sakura_BaselineType_kSinusoid. It must be positive for
- * sakura_BaselineType_kCubicSpline, while other models accept zero
- * value. The value should not exceed the @a order specified in creation
- * of @a context .
+ * sakura_BaselineType_kChebyshev, or the maximum wave number
+ * for sakura_BaselineType_kSinusoid. The value should not exceed
+ * the @a order specified in creation of @a context .
  * The number of model bases, which is @a order+1 for
  * sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or @a order+3 for
- * sakura_BaselineType_kCubicSpline or @a order*2+1 for
+ * sakura_BaselineType_kChebyshev, or @a order*2+1 for
  * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out.
@@ -2530,8 +2522,61 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @~japanese
+ * @brief 入力データに対して、与えられた個数の区分からなる3次スプライン曲線を最小二乗フィットし、差し引く。
+ * @details
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] num_pieces スプライン曲線の区分の数。正値、かつ、( @a num_data / 4) 以下の数でなければならない。
+ * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask 、 @a out の要素数。
+ * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。
+ * 値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
+ * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
+ * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、
+ * 残差データのσを計算し、残差がその値の± @a clip_threshold_sigma
+ * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
+ * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * もし 0 が渡された場合は、自動的に 1 に変更される。
+ * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
+ * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[out] out 出力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[out] baseline_status ベースライン固有のエラーコード。
+ * @return 終了ステータス。
  * @~english
  * @brief Recursively fit a cubic spline baseline and subtract it from input spectrum.
+ * @details
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_pieces Number of spline pieces. It must be positive
+ * and also must not exceed ( @a num_data * 4 ).
+ * @param[in] num_data The number of elements in the arrays @a data,
+ * @a mask, @a final_mask, and @a out.
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask The input mask data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit of
+ * sigma. must be positive.
+ * @param[in] num_fitting_max The maximum of total number of times
+ * baseline fitting is performed recursively. In case n is given, after
+ * the first baseline fitting, subsequent clipping and baseline fitting
+ * based on the updated mask are executed (n-1) times at maximum.
+ * The default is 1 (i.e., baseline fitting done just once and no
+ * clipping applied). In case zero is given, @a num_fitting_max will be
+ * automatically changed to 1.
+ * @param[in] get_residual Set the output to be (input - best-fit) if true,
+ * or the best-fit value if false.
+ * @param[out] final_mask The final mask data after recursive clipping
+ * procedure. its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] out The output data. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
@@ -2548,7 +2593,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、係数を返す。
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @param[in] num_data 配列 @a data 、 @a mask 、and @a final_mask
+ * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。
@@ -2570,30 +2615,31 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief Extraction of the coefficients of the polynomial fit.
  * @details
- * @param[in] context an object containing baseline model data.
- * @param[in] num_data the number of elements in the arrays @a data,
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask.
- * @param[in] data the input data with length of @a num_data .
+ * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask the input mask data with length of @a num_data .
+ * @param[in] mask The input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] clip_threshold_sigma the threshold of clipping in unit
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. must be positive.
- * @param[in] num_fitting_max the maximum of total number of times
+ * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
  * The default is 1 (i.e., baseline fitting done just once and no
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
- * @param[in] num_coeff the number of elements in the arrays @a coeff.
- * @param[out] coeff the coefficients of the polynomial fit. its length must be @a num_coeff.
+ * @param[in] num_coeff The number of elements in the arrays @a coeff.
+ * @param[out] coeff The coefficients of the polynomial fit. Its length
+ * must be @a num_coeff .
  * @n must-be-aligned
- * @param[out] final_mask the final mask data after recursive clipping
- * procedure. its length must be @a num_data .
+ * @param[out] final_mask The final mask data after recursive clipping
+ * procedure. Its length must be @a num_data .
  * @n must-be-aligned
- * @param[out] baseline_status baseline-specific error code.
- * @return status code.
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
@@ -2606,8 +2652,58 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @~japanese
+ * @brief 入力データに対して、与えられた個数の区分からなる3次スプライン曲線を最小二乗フィットし、係数を返す。
+ * @details
+ * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask の要素数。
+ * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。
+ * 値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
+ * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
+ * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、
+ * 残差データのσを計算し、残差がその値の± @a clip_threshold_sigma
+ * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
+ * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
+ * もし 0 が渡された場合は、自動的に 1 に変更される。
+ * @param[in] num_pieces スプライン曲線の区分の数。正値、かつ、( @a num_data / 4 ) 以下の数でなければならない。
+ * @param[out] coeff 出力データ。左端の区分から、0次、1次、2次、3次の順に係数値が入る。要素数は ( @a num_pieces * 4 ) でなければならない。
+ * @n must-be-aligned
+ * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[out] baseline_status ベースライン固有のエラーコード。
+ * @return 終了ステータス。
+ * @~english
  * @brief Extraction of the coefficients of cubic spline fit.
- * @param[out] coeff the coefficients of cubic spline fit. its length must be 4*num_pieces.
+ * @details
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_data The number of elements in the arrays @a data,
+ * @a mask, and @a final_mask.
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask The input mask data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit
+ * of sigma. must be positive.
+ * @param[in] num_fitting_max The maximum of total number of times
+ * baseline fitting is performed recursively. In case n is given, after
+ * the first baseline fitting, subsequent clipping and baseline fitting
+ * based on the updated mask are executed (n-1) times at maximum.
+ * The default is 1 (i.e., baseline fitting done just once and no
+ * clipping applied). In case zero is given, @a num_fitting_max will be
+ * automatically changed to 1.
+ * @param[in] num_pieces The number of spline pieces.
+ * @param[out] coeff The coefficients of the best-fit cubic spline curve.
+ * Its length must be @a num_pieces * 4 .
+ * @n must-be-aligned
+ * @param[out] final_mask The final mask data after recursive clipping
+ * procedure. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
@@ -2645,32 +2741,32 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief Fit a baseline and subtract it from input data.
  * @details
- * @param[in] num_data the number of elements in the arrays @a data,
+ * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out.
- * @param[in] data the input data with length of @a num_data .
+ * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask the input mask data with length of @a num_data .
+ * @param[in] mask The input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] order order of polynomial model. must be equal or smaller
- * than @a num_data-1 .
- * @param[in] clip_threshold_sigma the threshold of clipping in unit
- * of sigma. must be positive.
- * @param[in] num_fitting_max the maximum of total number of times
+ * @param[in] order Order of polynomial model. It must be equal or
+ * smaller than @a num_data-1 .
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit
+ * of sigma. It must be positive.
+ * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
  * The default is 1 (i.e., baseline fitting done just once and no
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
- * @param[in] get_residual set the output to be (input - best-fit) if true,
+ * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
- * @param[out] final_mask the final mask data after recursive clipping
- * procedure. its length must be @a num_data .
+ * @param[out] final_mask The final mask data after recursive clipping
+ * procedure. Its length must be @a num_data .
  * @n must-be-aligned
- * @param[out] out the output data. its length must be @a num_data .
+ * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
- * @param[out] baseline_status baseline-specific error code.
- * @return status code.
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(
@@ -2691,25 +2787,27 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[in] num_coeff 配列 @a coeff の要素数。値は正値でなくてはならない。
  * また、値は@a context が持つベースラインモデルの基底関数の数より大きな数になってはならない。
- * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_coeff でなければならない。
+ * @param[in] coeff ベースラインの係数。要素数は @a num_coeff でなければならない。
  * @n must-be-aligned
  * @param[out] out 出力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
  * @return 終了ステータス
  * @~english
- * @brief subtract baseline from input spectrum. baseline is calculated by baseline model and coefficients.
+ * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
  * @details
- * @param[in] context an object containing baseline model data.
- * @param[in] num_data the number of elements in the arrays @a data and @a out.
- * @param[in] data the input data with length of @a num_data .
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_data The number of elements in @a data and @a out.
+ * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_coeff the number of elements in the arrays @a coeff .
- * The value must be positive and must not exceed the number of model bases defined in @a context .
- * @param[in] coeff best fit coefficients obtained by least-square fitting. The input data with length of @a num_coeff.
+ * @param[in] num_coeff The number of elements in @a coeff .
+ * The value must be positive and must not exceed the number of
+ * model bases defined in @a context .
+ * @param[in] coeff Coefficients of model data. Its length must
+ * be @a num_coeff.
  * @n must-be-aligned
- * @param[out] out the output data. its length must be @a num_data .
+ * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
@@ -2718,14 +2816,14 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @~japanese
- * @brief 入力データに対して、与えられたベースラインモデルと係数からCubicSplineによりベースラインを求め、差し引く。
+ * @brief 入力データに対して、与えられた係数から3次スプライン曲線によりベースラインを求め、差し引く。
  * @details
- * @param[in] context ベースラインモデルに関する情報を格納する構造体。
+ * @param[in] context 3次曲線モデルに関する情報を格納する構造体。
  * @param[in] num_data 配列 @a data 、 @a out の要素数。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
  * @n must-be-aligned
- * @param[in] num_pieces スプライン曲線の区間の数。0の場合は何も行わない。
- * @param[in] coeff 最小二乗フィットにより得られたベストフィット係数。要素数は @a num_pieces * 4 でなければならない。
+ * @param[in] num_pieces スプライン曲線の区間の数。0の場合は差し引きを行わない。
+ * @param[in] coeff 3次スプライン曲線の係数。左端の区分から、0次、1次、2次、3次の順に係数値が入る。要素数は @a num_pieces * 4 でなければならない。
  * @n must-be-aligned
  * @param[in] boundary num_pieces個の区間の0番目、1番目、…の先頭の位置。要素数は @a num_pieces でなければならない。
  * @n must-be-aligned
@@ -2733,20 +2831,24 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @return 終了ステータス
  * @~english
- * @brief subtract baseline from input spectrum. baseline is calculated by baseline model and coefficients and number of pieces.
+ * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
  * @details
- * @param[in] context an object containing baseline model data.
- * @param[in] num_data the number of elements in the arrays @a data and @a out.
- * @param[in] data the input data with length of @a num_data .
+ * @param[in] context An object containing model data of cubic curve.
+ * @param[in] num_data The number of elements in @a data and @a out .
+ * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_pieces the number of pieces. If 0, nothing will be done.
- * @param[in] coeff best fit coefficients obtained by least-square fitting. The input data with length of @a num_pieces * 4.
+ * @param[in] num_pieces The number of spline pieces. If zero is
+ * given, no subtraction executed.
+ * @param[in] coeff Coefficients of cubic spline curve. Its length
+ * must be @a num_pieces * 4.
  * @n must-be-aligned
- * @param[in] boundary the number of elements @a num_pieces .
+ * @param[in] boundary A 1D array containing the left edge positions of
+ * pieces of the spline curve. The values should be stored in
+ * left-to-right order. Its length must be @a num_pieces .
  * @n must-be-aligned
- * @param[out] out the output data. its length must be @a num_data .
+ * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
@@ -2756,27 +2858,26 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @~japanese
- * @brief 最小二乗フィットにより得られたベストフィット係数を返す
+ * @brief ベースラインのモデル基底関数の個数を返す
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @param[in] order モデルのパラメータ。多項式(poly, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order+3 （三次自然スプライン）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
- * @param[in] num_coeff 最小二乗フィットにより得られたベストフィット係数の要素数。
+ * @param[in] order モデルのパラメータ。多項式(polynomial, chebyshev)では次数、スプラインでは分割数、三角関数では最大の波数。スプラインの場合は正値でなければならない。それ以外のモデルではゼロも許される。値は@a context を生成したときに指定した@a order より大きな数になってはならない。
+ * @param[in] num_coeff ベースラインのモデル基底関数の個数。
  * @return 終了ステータス
  * @~english
- * @brief return best fit coefficients obtained by least-square fitting.
+ * @brief Return the number of basis functions composing baseline model.
  * @details
- * @param[in] context an object containing baseline model data.
- * @param[in] order parameter for the specified function.
- * actually it is the order (for polynomial and chebyshev),
- * or the number of subsections (for cubic spline), or
- * the maximum wave number (for sinusoid). must be positive for cubic
- * spline, while other models accept zero value. the value should not
- * exceed the @a order specified in creation of @a context .
- * the number of model bases, which is @a order+1 for polynomials or
- * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
- * must not exceed @a num_data.
- * @param[in] num_coeff number of best fit coefficients obtained by least-square fitting.
- * @return status code.
+ * @param[in] context An object containing baseline model data.
+ * @param[in] order Parameter for the specified function.
+ * It is the order (for sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev), or the number of pieces (for
+ * sakura_BaselineType_kCubicSpline), or the maximum wave number
+ * (for sakura_BaselineType_kSinusoid). It must be positive for
+ * sakura_BaselineType_kCubicSpline, while other models accept
+ * zero value. The value should not exceed the @a order specified
+ * in creation of @a context .
+ * @param[in] num_coeff Number of basis functions.
+ * @return Status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
 		size_t *num_coeff) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
