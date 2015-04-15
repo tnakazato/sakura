@@ -374,12 +374,9 @@ struct NearestXInterpolatorImpl: public InterpolatorInterface<
 					+ 1];
 			YDataType *work = &interpolated_data[j * num_interpolated];
 			for (size_t i = location[k - 1]; i < location[k]; ++i) {
-				if ((interpolated_position[i] != midpoint)
-						& ((interpolated_position[i] > midpoint))) {
-					work[i] = right_value;
-				} else {
-					work[i] = left_value;
-				}
+				work[i] =
+						(interpolated_position[i] > midpoint) ?
+								right_value : left_value;
 			}
 		}
 	}
@@ -400,11 +397,7 @@ struct NearestYInterpolatorImpl: public InterpolatorInterface<
 		XDataType const midpoint = 0.5
 				* (base_position[left_index + 1] + base_position[left_index]);
 		for (size_t i = location[k - 1]; i < location[k]; ++i) {
-			size_t offset_index = 0;
-			if ((interpolated_position[i] != midpoint)
-					& ((interpolated_position[i] > midpoint))) {
-				offset_index = 1;
-			}
+			size_t offset_index = (interpolated_position[i] > midpoint) ? 0 : 1;
 			YDataType *work = &interpolated_data[num_array * i];
 			YDataType const * const nearest = &base_data[num_array
 					* (left_index + offset_index)];
