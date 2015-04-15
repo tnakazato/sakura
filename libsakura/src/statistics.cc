@@ -577,10 +577,12 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 	auto index_of_max = _mm256_set1_epi32(-1);
 	SIMDWordForInt count;
 	count.Clear();
-	double const *mask_ = reinterpret_cast<double const *>(is_valid);
+	STATIC_ASSERT(
+			true == 1 && false == 0 && sizeof(bool) == 1 && sizeof(bool) * 8 == sizeof(double));
+	double const *mask_ptr = reinterpret_cast<double const *>(is_valid);
 	auto const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 	for (size_t i = 0; i < num_data / (sizeof(__m256 ) / sizeof(float)); ++i) {
-		StatsBlock(i, &data_[i], &mask_[i], count, sum, square_sum, min, max,
+		StatsBlock(i, &data_[i], &mask_ptr[i], count, sum, square_sum, min, max,
 				index_of_min, index_of_max);
 	}
 #if defined(__AVX2__)
