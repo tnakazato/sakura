@@ -308,8 +308,7 @@ struct SIMDWordForInt {
 };
 #endif
 
-inline void StatsBlock(size_t i, __m256 const *data_arg,
-		double const *mask_arg,
+inline void StatsBlock(size_t i, __m256 const *data_arg, double const *mask_arg,
 		SIMDWordForInt &count, __m256d &sum, __m256d &square_sum, __m256 &min,
 		__m256 &max, __m256i &index_of_min, __m256i &index_of_max) {
 	auto const data = AssumeAligned(data_arg);
@@ -564,8 +563,9 @@ struct SIMDStats<float, double> {
 	}
 };
 
-void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
-		size_t elements, LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_arg) {
+void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
+		bool const is_valid[],
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_arg) {
 	STATIC_ASSERT(sizeof(m256) == sizeof(__m256 ));
 	auto const zero_d = _mm256_setzero_pd();
 	auto sum = zero_d;
@@ -579,7 +579,7 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 	count.Clear();
 	double const *mask_ = reinterpret_cast<double const *>(is_valid);
 	auto const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
-	for (size_t i = 0; i < elements / (sizeof(__m256 ) / sizeof(float)); ++i) {
+	for (size_t i = 0; i < num_data / (sizeof(__m256 ) / sizeof(float)); ++i) {
 		StatsBlock(i, &data_[i], &mask_[i], count, sum, square_sum, min, max,
 				index_of_min, index_of_max);
 	}
@@ -638,10 +638,10 @@ void ComputeStatisticsSimdFloat(float const data[], bool const is_valid[],
 		result_index = std::max(-1, result_index);
 		result.index_of_max = result_index;
 	}
-	int start = (elements / (sizeof(__m256 ) / sizeof(float)))
+	int start = (num_data / (sizeof(__m256 ) / sizeof(float)))
 			* (sizeof(__m256 ) / sizeof(float));
-	assert(elements <= INT32_MAX);
-	for (int32_t i = start; i < static_cast<int32_t>(elements); ++i) {
+	assert(num_data <= INT32_MAX);
+	for (int32_t i = start; i < static_cast<int32_t>(num_data); ++i) {
 		if (is_valid[i]) {
 			++counted;
 			total += data[i];
@@ -687,90 +687,89 @@ using ::Eigen::Aligned;
 
 namespace {
 
-	template<typename Accumulator, typename Scalar, typename ScararOther,
-	typename Index>
-	class StatVisitor {
-	public:
-		StatVisitor() :
-		count(0), sum(0), square_sum(0), min(NAN), max(NAN), index_of_min(
-				-1), index_of_max(-1) {
-		}
-// called for the first coefficient
-		inline bool Init(const Scalar& value_f, const ScararOther &is_valid,
-				int i, int j) {
-			assert(j == 0); // support only 1 dimension array
-			if (!is_valid) {
-				return false;
-			}
-			Accumulator const value = Accumulator(value_f);
-			count = 1;
-			sum = value;
-			min = max = value_f;
-			square_sum = value * value;
-			index_of_min = index_of_max = i;
-			return true;
-		}
-// called for all other coefficients
-		inline void operator()(const Scalar& value_f,
-				const ScararOther & is_valid, int i, int j) {
-			assert(j == 0); // support only 1 dimension array
-			if (is_valid) {
-				Accumulator const value = Accumulator(value_f);
-				++count;
-				assert(!std::isnan(value));
-				sum += value;
-				square_sum += Accumulator(value) * Accumulator(value);
-				if (value_f < min) {
-					min = value_f;
-					index_of_min = i;
-				}
-				if (value_f > max) {
-					max = value_f;
-					index_of_max = i;
-				}
-			}
-		}
-
-		size_t count;
-		Accumulator sum;
-		Accumulator square_sum;
-		Scalar min, max;
-		int index_of_min, index_of_max;
-	};
-
-	template<typename InternalDataType, typename DataType>
-	inline void ComputeStatisticsEigen(DataType const *data, bool const *is_valid,
-			size_t elements,
-			LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_) {
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) &result = *result_;
-
-		assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-		Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
-				elements);
-
-		assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
-		Map<Array<bool, Dynamic, 1>, Aligned> is_valid_(
-				const_cast<bool *>(is_valid), elements);
-
-		StatVisitor<InternalDataType, DataType, bool,
-		typename Map<Array<DataType, Dynamic, 1>, Aligned>::Index> visitor;
-		data_.VisitWith(is_valid_, visitor);
-		result.count = visitor.count;
-		result.sum = visitor.sum;
-		result.min = visitor.min;
-		result.index_of_min = visitor.index_of_min;
-		result.max = visitor.max;
-		result.index_of_max = visitor.index_of_max;
-		InternalDataType mean = NAN;
-		InternalDataType rms2 = NAN;
-		if (visitor.count != 0) {
-			mean = visitor.sum / result.count;
-			rms2 = visitor.square_sum / result.count;
-		}
-		result.mean = mean;
-		result.rms = std::sqrt(rms2);
-		result.stddev = std::sqrt(std::abs(rms2 - mean * mean));
+template<typename Accumulator, typename Scalar, typename ScararOther,
+		typename Index>
+struct StatVisitor {
+	StatVisitor() :
+			count(0), sum(0), square_sum(0), min(NAN), max(NAN), index_of_min(
+					-1), index_of_max(-1) {
 	}
+// called for the first coefficient
+	inline bool Init(const Scalar& value_f, const ScararOther &is_valid, int i,
+			int j) {
+		assert(j == 0); // support only 1 dimension array
+		if (!is_valid) {
+			return false;
+		}
+		Accumulator const value = Accumulator(value_f);
+		count = 1;
+		sum = value;
+		min = max = value_f;
+		square_sum = value * value;
+		index_of_min = index_of_max = i;
+		return true;
+	}
+// called for all other coefficients
+	inline void operator()(const Scalar& value_f, const ScararOther & is_valid,
+			int i, int j) {
+		assert(j == 0); // support only 1 dimension array
+		if (is_valid) {
+			Accumulator const value = Accumulator(value_f);
+			++count;
+			assert(!std::isnan(value));
+			sum += value;
+			square_sum += Accumulator(value) * Accumulator(value);
+			if (value_f < min) {
+				min = value_f;
+				index_of_min = i;
+			}
+			if (value_f > max) {
+				max = value_f;
+				index_of_max = i;
+			}
+		}
+	}
+
+	size_t count;
+	Accumulator sum;
+	Accumulator square_sum;
+	Scalar min, max;
+	int index_of_min, index_of_max;
+};
+
+template<typename InternalDataType, typename DataType>
+inline void ComputeStatisticsEigen(size_t num_data, DataType const *data,
+bool const *is_valid,
+LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_) {
+	LIBSAKURA_SYMBOL(StatisticsResultFloat) &result = *result_;
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	Map<Array<DataType, Dynamic, 1>, Aligned> data_(const_cast<float *>(data),
+			num_data);
+
+	assert(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+	Map<Array<bool, Dynamic, 1>, Aligned> is_valid_(
+			const_cast<bool *>(is_valid), num_data);
+
+	StatVisitor<InternalDataType, DataType, bool,
+			typename Map<Array<DataType, Dynamic, 1>, Aligned>::Index> visitor;
+	data_.VisitWith(is_valid_, visitor);
+	result.count = visitor.count;
+	result.sum = visitor.sum;
+	result.min = visitor.min;
+	result.index_of_min = visitor.index_of_min;
+	result.max = visitor.max;
+	result.index_of_max = visitor.index_of_max;
+	InternalDataType mean = NAN;
+	InternalDataType rms2 = NAN;
+	if (visitor.count != 0) {
+		mean = visitor.sum / result.count;
+		rms2 = visitor.square_sum / result.count;
+	}
+	result.mean = mean;
+	result.rms = std::sqrt(rms2);
+	result.stddev = std::sqrt(std::abs(rms2 - mean * mean));
+}
 
 } /* anonymous namespace */
 
@@ -779,40 +778,40 @@ namespace {
 namespace {
 
 template<typename T, typename Result>
-void ComputeStatistics(T const data[],
-bool const is_valid[], size_t elements, Result *result) {
+void ComputeStatistics(size_t num_data, T const data[],
+bool const is_valid[], Result *result) {
 	assert(((void)"Not yet implemented", false));
 }
 
 template<>
 void ComputeStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
-		float const data[],
-		bool const is_valid[], size_t elements,
+		size_t num_data, float const data[],
+		bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
 #if defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
-	ComputeStatisticsSimdFloat(data, is_valid, elements, result);
+	ComputeStatisticsSimdFloat(num_data, data, is_valid, result);
 #else
-	ComputeStatisticsEigen<double, float>(data, is_valid, elements, result);
+	ComputeStatisticsEigen<double, float>(num_data, data, is_valid, result);
 #endif
 }
 
 template<typename T, typename Result>
-void ComputeAccurateStatistics(T const data[],
-bool const is_valid[], size_t elements, Result *result) {
+void ComputeAccurateStatistics(size_t num_data, T const data[],
+bool const is_valid[], Result *result) {
 	assert(((void)"Not yet implemented", false));
 }
 
 template<>
 void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
-		float const data[],
-		bool const is_valid[], size_t elements,
+		size_t num_data, float const data[],
+		bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
+#if defined(__AVX__) && !defined(ARCH_SCALAR) && (! FORCE_EIGEN)
 	SIMDStats<float, double> reducer(data, is_valid);
 #else
 	ScalarStats<float, double> reducer(data, is_valid);
 #endif
-	auto stats = Traverse<4u, 8u, decltype(reducer)>(0u, elements, &reducer);
+	auto stats = Traverse<4u, 8u, decltype(reducer)>(0u, num_data, &reducer);
 
 	result->count = stats.count;
 	result->sum = stats.sum;
@@ -841,9 +840,9 @@ void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 
 template<typename Func>
 LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(Func func,
-		size_t elements, float const data[], bool const is_valid[],
+		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
-	CHECK_ARGS(elements <= INT32_MAX);
+	CHECK_ARGS(num_data <= INT32_MAX);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -851,7 +850,7 @@ LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(Func func,
 	CHECK_ARGS(result != nullptr);
 
 	try {
-		func(/*data, is_valid, elements, result*/);
+		func(/*num_data, data, is_valid, result*/);
 	} catch (...) {
 		assert(false); // No exception should be raised for the current implementation.
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -860,25 +859,25 @@ LIBSAKURA_SYMBOL(Status) ComputeStatisticsFloatGateKeeper(Func func,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
-		size_t elements, float const data[], bool const is_valid[],
+		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) noexcept {
 	return ComputeStatisticsFloatGateKeeper(
-			[=] {ComputeStatistics(data, is_valid, elements, result);},
-			elements, data, is_valid, result);
+			[=] {ComputeStatistics(num_data, data, is_valid, result);},
+			num_data, data, is_valid, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
-		size_t elements, float const data[], bool const is_valid[],
+		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) noexcept {
 	return ComputeStatisticsFloatGateKeeper(
-			[=] {ComputeAccurateStatistics(data, is_valid, elements, result);},
-			elements, data, is_valid, result);
+			[=] {ComputeAccurateStatistics(num_data, data, is_valid, result);},
+			num_data, data, is_valid, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
-		size_t count, double mean, size_t elements, float const data[],
+		size_t degree_of_freedom, double mean, size_t num_data, float const data[],
 		bool const is_valid[], double *result) noexcept {
-	CHECK_ARGS(elements <= INT32_MAX);
+	CHECK_ARGS(num_data <= INT32_MAX);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(is_valid != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -887,20 +886,20 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
 
 #if 1
 	double sq_diff = 0.;
-	for (size_t i = 0; i < elements; ++i) {
+	for (size_t i = 0; i < num_data; ++i) {
 		if (is_valid[i]) {
 			double diff = data[i] - mean;
 			sq_diff += diff * diff;
 		}
 	}
-	*result = sqrt(sq_diff / count);
+	*result = sqrt(sq_diff / degree_of_freedom);
 #else
 	{
 		size_t n = 0;
 		double mean = 0;
 		double M2 = 0;
 
-		for (size_t i = 0; i < elements; ++i) {
+		for (size_t i = 0; i < num_data; ++i) {
 			if (is_valid[i]) {
 				++n;
 				double delta = data[i] - mean;
@@ -928,14 +927,13 @@ void QuickSort(size_t num_data, T data[]) {
 					void const*)>(COMPARATOR::Compare));}
 
 template<typename T>
-class AscendingOrder {
-public:
+struct AscendingOrder {
 	static int Compare(T const*a, T const*b) {
-		if (false) {
+		if (false) { // no branch version
 			auto tmp = *a - *b;
 			int sign = static_cast<int>(std::abs(tmp) / tmp);
 			if (static_cast<int>(0. / 0.) == INT_MIN) {
-				sign <<= 1;
+				sign <<= 1; // make INT_MIN 0
 			} else if (static_cast<int>(0. / 0.) == 0) {
 			} else {
 				assert(false);
