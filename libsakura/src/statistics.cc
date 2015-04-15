@@ -533,9 +533,9 @@ struct SIMDStats<float, double> {
 
 	void LastLevelReduce(size_t position, size_t block_size,
 			MiddleLevelAccumulator &accumulator) {
-		auto mask_ = reinterpret_cast<double const *>(&is_valid[position]);
+		auto mask_ptr = reinterpret_cast<double const *>(&is_valid[position]);
 		StatsBlock(position, reinterpret_cast<__m256 const *>(&data[position]),
-				mask_, accumulator.count, accumulator.sum.m256d,
+				mask_ptr, accumulator.count, accumulator.sum.m256d,
 				accumulator.square_sum.m256d, accumulator.min.m256,
 				accumulator.max.m256, accumulator.index_of_min.m256i,
 				accumulator.index_of_max.m256i);
@@ -580,9 +580,9 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 	STATIC_ASSERT(
 			true == 1 && false == 0 && sizeof(bool) == 1 && sizeof(bool) * 8 == sizeof(double));
 	double const *mask_ptr = reinterpret_cast<double const *>(is_valid);
-	auto const *data_ = AssumeAligned(reinterpret_cast<__m256 const *>(data));
+	auto const *data_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 	for (size_t i = 0; i < num_data / (sizeof(__m256 ) / sizeof(float)); ++i) {
-		StatsBlock(i, &data_[i], &mask_ptr[i], count, sum, square_sum, min, max,
+		StatsBlock(i, &data_ptr[i], &mask_ptr[i], count, sum, square_sum, min, max,
 				index_of_min, index_of_max);
 	}
 #if defined(__AVX2__)
