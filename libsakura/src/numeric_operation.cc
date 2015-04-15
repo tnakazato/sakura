@@ -672,40 +672,32 @@ void UpdateLeastSquareFittingCoefficientsEntry(size_t const num_data,
 }
 
 } /* anonymous namespace */
+
+#define CHECK_ARGS(x) do { \
+	if (!(x)) { \
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument); \
+	} \
+} while (false)
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_boundary, double const boundary[], double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) noexcept {
-	if (num_data < 4)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_boundary == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_boundary > num_data / 4)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (boundary == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(boundary)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (basis_data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_matrix == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_vector == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_vector)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	CHECK_ARGS(num_data >= 4);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(num_boundary != 0);
+	CHECK_ARGS(num_boundary <= num_data / 4);
+	CHECK_ARGS(boundary != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
+	CHECK_ARGS(basis_data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	CHECK_ARGS(lsq_matrix != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
+	CHECK_ARGS(lsq_vector != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
 		GetLeastSquareFittingCoefficientsCubicSpline(num_data, data, mask,
@@ -725,36 +717,21 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		size_t const num_model_bases, double const basis_data[],
 		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[])
 				noexcept {
-	if (num_data == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_model_bases == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_model_bases > num_data)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (basis_data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_lsq_bases == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_lsq_bases > num_model_bases)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_matrix == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_vector == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_vector)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	CHECK_ARGS(num_data != 0);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(num_model_bases != 0);
+	CHECK_ARGS(num_model_bases <= num_data);
+	CHECK_ARGS(basis_data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	CHECK_ARGS(num_lsq_bases != 0);
+	CHECK_ARGS(num_lsq_bases <= num_model_bases);
+	CHECK_ARGS(lsq_matrix != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
+	CHECK_ARGS(lsq_vector != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
 		GetLeastSquareFittingCoefficientsEntry(num_data, data, mask,
@@ -777,42 +754,25 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		size_t const num_model_bases, double const basis_data[],
 		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[])
 				noexcept {
-	if (num_data == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (exclude_indices == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(exclude_indices)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_exclude_indices > num_data)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	CHECK_ARGS(num_data != 0);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(exclude_indices != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(exclude_indices));
+	CHECK_ARGS(num_exclude_indices <= num_data);
 	for (size_t i = 0; i < num_exclude_indices; ++i) {
-		if (exclude_indices[i] >= num_data)
-			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		CHECK_ARGS(exclude_indices[i] < num_data);
 	}
-	if (num_model_bases == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_model_bases > num_data)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (basis_data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(basis_data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_lsq_bases == 0)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (num_lsq_bases > num_model_bases)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_matrix == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lsq_vector == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lsq_vector)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	CHECK_ARGS(num_model_bases != 0);
+	CHECK_ARGS(num_model_bases <= num_data);
+	CHECK_ARGS(basis_data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	CHECK_ARGS(num_lsq_bases != 0);
+	CHECK_ARGS(num_lsq_bases <= num_model_bases);
+	CHECK_ARGS(lsq_matrix != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
+	CHECK_ARGS(lsq_vector != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
 		UpdateLeastSquareFittingCoefficientsEntry(num_data, data,
@@ -829,18 +789,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 		size_t num_equations, double const in_matrix[],
 		double const in_vector[], double out[]) noexcept {
-	if (in_matrix == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_matrix)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (in_vector == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(in_vector)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (out == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(out)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	CHECK_ARGS(in_matrix != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(in_matrix));
+	CHECK_ARGS(in_vector != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(in_vector));
+	CHECK_ARGS(out != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
 		SolveSimultaneousEquationsByLUDouble(num_equations, in_matrix,
