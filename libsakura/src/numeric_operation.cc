@@ -63,7 +63,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d    const &a, __m256d    const &b, __m256d    const &c) {
+__m256d NegMultiplyAdd(__m256d     const &a, __m256d     const &b, __m256d     const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -210,7 +210,8 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 		size_t num_mask, bool const *mask, size_t num_boundary,
 		double const *boundary, double const *model, double *out) {
-	if (num_boundary == 0) num_boundary = 1;
+	if (num_boundary == 0)
+		num_boundary = 1;
 	size_t num_cubic_bases = 4;
 	size_t num_cubic_bases_minus1 = num_cubic_bases - 1;
 	size_t num_model_bases = num_cubic_bases_minus1 + num_boundary;
@@ -283,7 +284,8 @@ inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
 		size_t num_data, float const *data,
 		bool const *mask, size_t num_boundary, double const *boundary,
 		double const *model, double *out) {
-	if (num_boundary == 0) num_boundary = 1;
+	if (num_boundary == 0)
+		num_boundary = 1;
 	size_t num_cubic_bases = 4;
 	size_t num_cubic_bases_minus1 = num_cubic_bases - 1;
 	size_t num_model_bases = num_cubic_bases_minus1 + num_boundary;
@@ -674,7 +676,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 		size_t num_data, float const data[], bool const mask[],
 		size_t num_boundary, double const boundary[], double const basis_data[],
 		double lsq_matrix[], double lsq_vector[]) noexcept {
-	if (num_data == 0)
+	if (num_data < 4)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -685,6 +687,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(mask)))
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_boundary == 0)
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	if (num_boundary > num_data / 4)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (boundary == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -719,7 +723,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
-		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) noexcept {
+		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[])
+				noexcept {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)
@@ -766,22 +771,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoeffi
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsCubicSplineDouble)(
-		size_t const num_data, float const data[/*num_data*/],
-		size_t const num_exclude_indices,
-		size_t const exclude_indices[/*num_data*/], size_t const num_boundary,
-		double const boundary[/*num_boundary*/],
-		double const basis_data[/*4*num_data*/],
-		double lsq_matrix[/*(3+num_boundary)**2*/],
-		double lsq_vector[/*3+num_boundary*/]) noexcept {
-	return LIBSAKURA_SYMBOL(Status_kOK);
-}
-
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[],
 		size_t const num_exclude_indices, size_t const exclude_indices[],
 		size_t const num_model_bases, double const basis_data[],
-		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[]) noexcept {
+		size_t const num_lsq_bases, double lsq_matrix[], double lsq_vector[])
+				noexcept {
 	if (num_data == 0)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (data == nullptr)

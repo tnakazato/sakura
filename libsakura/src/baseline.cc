@@ -508,19 +508,19 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		coeff[i] = coeff_raw[i];
 	}
 	/*
-	for (size_t i = 1; i < num_pieces; ++i) {
-		size_t ioffset = num_bases * i;
-		size_t ioffset_prev = ioffset - num_bases;
-		size_t j = num_bases - 1 + i;
-		coeff[ioffset] = coeff[ioffset_prev]
-				- boundary[i] * boundary[i] * boundary[i] * coeff_raw[j];
-		coeff[ioffset + 1] = coeff[ioffset_prev + 1]
-				+ 3.0 * boundary[i] * boundary[i] * coeff_raw[j];
-		coeff[ioffset + 2] = coeff[ioffset_prev + 2]
-				- 3.0 * boundary[i] * coeff_raw[j];
-		coeff[ioffset + 3] = coeff[ioffset_prev + 3] + coeff_raw[j];
-	}
-	*/
+	 for (size_t i = 1; i < num_pieces; ++i) {
+	 size_t ioffset = num_bases * i;
+	 size_t ioffset_prev = ioffset - num_bases;
+	 size_t j = num_bases - 1 + i;
+	 coeff[ioffset] = coeff[ioffset_prev]
+	 - boundary[i] * boundary[i] * boundary[i] * coeff_raw[j];
+	 coeff[ioffset + 1] = coeff[ioffset_prev + 1]
+	 + 3.0 * boundary[i] * boundary[i] * coeff_raw[j];
+	 coeff[ioffset + 2] = coeff[ioffset_prev + 2]
+	 - 3.0 * boundary[i] * coeff_raw[j];
+	 coeff[ioffset + 3] = coeff[ioffset_prev + 3] + coeff_raw[j];
+	 }
+	 */
 	for (size_t i = 1; i < num_pieces; ++i) {
 		size_t ioffset = num_bases * i;
 		size_t ioffset_prev = ioffset - num_bases;
@@ -624,16 +624,16 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			/*
-			for (size_t j = 0; j < num_bases; ++j) {
-				std::cout << " | ";
-				for (size_t k = 0; k < num_bases; ++k) {
-					std::cout << std::setw(8) << std::right
-							<< lsq_matrix[j * num_bases + k] << "  ";
-				}
-				std::cout << " | " << std::setw(8) << std::right
-						<< lsq_vector[j] << std::endl;
-			}
-			*/
+			 for (size_t j = 0; j < num_bases; ++j) {
+			 std::cout << " | ";
+			 for (size_t k = 0; k < num_bases; ++k) {
+			 std::cout << std::setw(8) << std::right
+			 << lsq_matrix[j * num_bases + k] << "  ";
+			 }
+			 std::cout << " | " << std::setw(8) << std::right
+			 << lsq_vector[j] << std::endl;
+			 }
+			 */
 			/*
 			 if (num_unmasked_data <= num_clipped) {
 			 LIBSAKURA_SYMBOL(Status) coeff_status =
@@ -665,31 +665,33 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			/*
-			for (size_t j = 0; j < num_bases; ++j) {
-				std::cout << "#### coeff_raw[" << j << "] = " << coeff_raw[j]
-						<< std::endl;
-			}
-			*/
-			GetFullCubicSplineCoefficients(num_pieces, boundary, coeff_raw, coeff);
+			 for (size_t j = 0; j < num_bases; ++j) {
+			 std::cout << "#### coeff_raw[" << j << "] = " << coeff_raw[j]
+			 << std::endl;
+			 }
+			 */
+			GetFullCubicSplineCoefficients(num_pieces, boundary, coeff_raw,
+					coeff);
 			/*
-			for (size_t j = 0; j < num_pieces; ++j) {
-				std::cout << "   [ ";
-				for (size_t k = 0; k < 4; ++k) {
-					std::cout << coeff[4 * j + k] << ", ";
-				}
-				std::cout << " ]" << std::endl << std::flush;
-			}
-			*/
+			 for (size_t j = 0; j < num_pieces; ++j) {
+			 std::cout << "   [ ";
+			 for (size_t k = 0; k < 4; ++k) {
+			 std::cout << coeff[4 * j + k] << ", ";
+			 }
+			 std::cout << " ]" << std::endl << std::flush;
+			 }
+			 */
 			GetBestFitModelAndResidualCubicSpline(num_data, data,
 					baseline_context, coeff, num_pieces, boundary,
 					best_fit_model, residual_data);
 
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data, residual_data,
-					final_mask, &result);
+			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
+					residual_data, final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in ComputeAccurateStatisticsFloat.");
+				throw std::runtime_error(
+						"failed in ComputeAccurateStatisticsFloat.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
@@ -807,10 +809,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data, residual_data,
-					final_mask, &result);
+			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
+					residual_data, final_mask, &result);
 			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in ComputeAccurateStatisticsFloat.");
+				throw std::runtime_error(
+						"failed in ComputeAccurateStatisticsFloat.");
 			}
 			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 			float clip_threshold_lower = result.mean - clip_threshold_abs;
@@ -1010,7 +1013,8 @@ inline void SubtractBaselineCubicSplineUsingCoefficientsFloat(
 LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_data,
 		float const *data_arg, size_t num_pieces, double const *coeff_arg,
 		double const *boundary_arg, float *out_arg) {
-	if (num_pieces < 1) return;
+	if (num_pieces < 1)
+		return;
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -1391,8 +1395,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialF
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
-		float const data[], size_t num_coeff, double const coeff[],
-		float out[]) noexcept {
+		float const data[], size_t num_coeff, double const coeff[], float out[])
+				noexcept {
 	if (context == nullptr)
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	if (num_data != context->num_basis_data)

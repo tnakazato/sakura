@@ -67,7 +67,8 @@ typedef enum {
 	 *
 	 * @~japanese
 	 * @brief 成功または正常
-	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
+	 */LIBSAKURA_SYMBOL
+	(Status_kOK) = 0,
 	/**
 	 * @~english
 	 * @brief Failure or abnormal end
@@ -100,7 +101,7 @@ typedef enum {
 	 * @~japanese
 	 * @brief 原因不明のエラー
 	 */LIBSAKURA_SYMBOL(Status_kUnknownError) = 99
-}LIBSAKURA_SYMBOL(Status);
+}LIBSAKURA_SYMBOL (Status);
 
 /**
  * @~english
@@ -172,7 +173,8 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
 LIBSAKURA_SYMBOL(UserAllocator) allocator,
-LIBSAKURA_SYMBOL(UserDeallocator) deallocator) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+LIBSAKURA_SYMBOL(UserDeallocator) deallocator)
+		LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -409,9 +411,9 @@ typedef struct {
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT
-				LIBSAKURA_WARN_UNUSED_RESULT;
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
- /**
+/**
  * @copybrief sakura_ComputeStatisticsFloat
  * @copydetails sakura_ComputeStatisticsFloat
  * @~
@@ -420,9 +422,9 @@ typedef struct {
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
 		size_t num_data, float const data[], bool const is_valid[],
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT
-				LIBSAKURA_WARN_UNUSED_RESULT;
+		LIBSAKURA_WARN_UNUSED_RESULT;
 
- /**
+/**
  * @~japanese
  * @brief validな値のみを先頭に詰めて昇順にソートする
  *
@@ -557,7 +559,7 @@ typedef struct {
 		double weight_sum/*[num_polarizations_for_grid]*/[/*num_channels_for_grid*/],
 		float weight_of_grid/*[height][width][num_polarizations_for_grid]*/[/*num_channels_for_grid*/],
 		float grid/*[height][width][num_polarizations_for_grid]*/[/*num_channels_for_grid*/])
-		 LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~english
@@ -988,13 +990,15 @@ typedef struct {
  *@~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_data,
-		uint8_t const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		uint8_t const data[/*num_data*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_Uint8ToBool
  * @copydetails sakura_Uint8ToBool
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(size_t num_data,
-		uint32_t const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		uint32_t const data[/*num_data*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1089,13 +1093,15 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseAndUint8
  * @copydetails sakura_OperateBitwiseAndUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1165,13 +1171,15 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseConverseNonImplicationUint8
  * @copydetails sakura_OperateBitwiseConverseNonImplicationUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1241,13 +1249,15 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseImplicationUint8
  * @copydetails sakura_OperateBitwiseImplicationUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1300,13 +1310,15 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseNotUint8
  * @copydetails sakura_OperateBitwiseNotUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1374,13 +1386,15 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseOrUint8
  * @copydetails sakura_OperateBitwiseOrUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~english
@@ -1448,13 +1462,15 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint8_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 /**
  * @copybrief sakura_OperateBitwiseXorUint8
  * @copydetails sakura_OperateBitwiseXorUint8
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[/*num_data*/],
-		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const edit_mask[/*num_data*/], uint32_t result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -1676,7 +1692,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolate_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
-		bool interpolated_mask[/*num_interpolated*num_array*/]) LIBSAKURA_NOEXCEPT;
+		bool interpolated_mask[/*num_interpolated*num_array*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_IntepolateXAxisFloat
@@ -1689,7 +1706,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
 		double const interpolate_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
-		bool interpolated_mask[/*num_interpolated*num_array*/]) LIBSAKURA_NOEXCEPT;
+		bool interpolated_mask[/*num_interpolated*num_array*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -1865,7 +1883,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
- /**
+/**
  * @~japanese
  * @brief コンボリューションを行う。
  * @details sakura_CreateConvolve1DContextで設定した条件に従い、入力データに対してカーネルによるコンボリューションを行う。
@@ -1919,7 +1937,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @~
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context) LIBSAKURA_NOEXCEPT;
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context)
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -1962,42 +1981,42 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * This function computes the coefficients of the above simultaneous equations, i.e.,
  * the elements of the matrix at the left side and of the vector at the right side.
  * @par
- * @param[in] num_data the number of elements in the arrays @a data
+ * @param[in] num_data The number of elements in the arrays @a data
  * and @a mask, and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the entire model.
- * it must be a positive number.
- * @param[in] data input data with length of @a num_data .
+ * It must be a positive number.
+ * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask input mask data with length of @a num_mask .
+ * @param[in] mask Input mask data with length of @a num_mask .
  * @n must-be-aligned
- * @param[in] num_model_bases number of model basis functions. it must be a
+ * @param[in] num_model_bases Number of model basis functions. It must be a
  * positive number, also it must be equal to or less than @a num_data .
- * @param[in] basis_data a 1D array containing values of all basis functions
- * concatenated. loop for basis index must be inside of that for data index,
+ * @param[in] basis_data A 1D array containing values of all basis functions
+ * concatenated. Loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be
+ * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. Its length must be
  * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
- * @param[in] num_lsq_bases the number of model basis functions to be used
- * in actual fitting. it must be a positive number and must not exceed
+ * @param[in] num_lsq_bases The number of model basis functions to be used
+ * in actual fitting. It must be a positive number and must not exceed
  * @a num_model_bases .
- * @param[out] lsq_matrix a 1D array containing the values of a matrix
+ * @param[out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
- * loop for columns comes inside that for rows, i.e., the value at the
+ * Its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
+ * Loop for columns comes inside that for rows, i.e., the value at the
  * @a m -th row and @a n -th column is stored at @a out [ @a
  * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
  * symmetric.
  * @n must-be-aligned
- * @param[out] lsq_vector the values of a vector at the right side of
- * simultaneous equations for least-square fitting. its length should be
- * equal to @a num_model_bases.
+ * @param[out] lsq_vector The values of a vector at the right side of
+ * simultaneous equations for least-square fitting. Its length should be
+ * equal to @a num_model_bases .
  * @n must-be-aligned
- * @return status code. Status_kOK if finished successfully,
- * Status_kInvalidArgument in case parameters does not meet the above
- * criteria, Status_kNG in case the number of unmasked data (for which
- * mask is @a false ) is less than the number of simultaneous equations,
- * and Status_kUnknownError in case other exceptions
+ * @return Status code. sakura_Status_kOK if finished successfully,
+ * sakura_Status_kInvalidArgument in case parameters does not meet the
+ * above criteria, sakura_Status_kNG in case the number of unmasked data
+ * (for which mask is @a false ) is less than the number of simultaneous
+ * equations, and sakura_Status_kUnknownError in case other exceptions
  * emitted internally.
  * @~
  * MT-safe
@@ -2007,10 +2026,90 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
-		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_vector[/*num_lsq_bases*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @~japanese
+ * @brief 3次スプライン曲線による最小二乗フィットを解くための連立方程式の係数値を計算する。
+ * @details
+ * ( @a num_data ) 個の離散的な点で与えられたデータ yi ( 0 <= i <= @a num_data - 1 ) を、( @a num_boundary ) 個の区分からなり、区分の各境界において2階微分まで連続に繋がる3次曲線(3次スプライン曲線)で最小二乗フィットし、( @a num_boundary * 4 )個の係数値を求めることを考える。この時、データと係数の間には( @a num_boundary + 3 )本の連立方程式が成り立ち、まとめて「 @a A * @a x = @a b 」の形に書ける。
+ * ここで、@a N = @a num_boundary +3 として、@a A は @a N 行 @a N 列の行列、xおよびbは @a N 行の列ベクトルである。また、@a x の値は上から順に ( @a A_1, @a B_1, @a C_1, @a D_1, @a D_2, @a D_3, ..., @a D_(num_boundary) ) であり、@a A_1, @a B_1, @a C_1, @a D_1 は左端(iが小さい側)の0,1,2,3次の係数、@a D_n は左からn番目の曲線の3次の係数である。
+ * 残りの係数はこれらの係数値と連続の条件から求めることができる。この関数は、上の連立方程式の係数値、即ち、左辺の行列 @a A と右辺のベクトル @a b の成分を計算する。
+ * @par
+ * @param[in] num_data 配列 @a data 、 @a mask 、及び、モデルを構成する各基底関数の離散的データ点の要素数。4 以上の数でなければならない。
+ * @param[in] data 入力データ。要素数は @a num_data でなければならない。
+ * @n must-be-aligned
+ * @param[in] mask 入力データに対するマスク情報。要素数は @a num_mask でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
+ * @n must-be-aligned
+ * @param[in] num_boundary スプライン曲線を構成する3次曲線の本数。1 以上、且つ、( @a num_data / 4) 以下の数でなければならない。
+ * @param[in] boundary スプライン曲線を構成する各区分の3次曲線の左端(iが小さい側)の位置を、左から右への順に格納する１次元配列。配列の長さは( @a num_boundary )でなければならない。
+ * @param[in] basis_data 3次曲線を構成する4つの基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目( @a m 次)のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_data * 4 )でなければならない。
+ * @n must-be-aligned
+ * @param[out] lsq_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_lsq_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( ( @a num_boundary + 3) * ( @a num_boundary + 3) )となる。
+ * @n must-be-aligned
+ * @param[out] lsq_vector 求める連立方程式の右辺側のベクトル成分を格納する配列。配列の長さは ( @a num_boundary + 3) となる。
+ * @n must-be-aligned
+ * @return 終了ステータス。正常終了時は Status_kOK、パラメータが上記の条件を満さない場合は Status_kInvalidArgument、マスクされていないデータの数が求める連立方程式の本数に満たない場合は Status_kNG、それ以外の例外が内部で発生した場合には Status_kUnknownError となる。
+ * @~english
  * @brief Compute coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
+ * @details
+ * Suppose fitting ( @a num_data ) discrete data points yi with a cubic
+ * spline curve, consisting of ( @a num_boundary ) cubic curves smoothly
+ * connected with each other at the given boundary positions.
+ * Using least-square fitting method, we obtain ( @a num_boundary + 3 )
+ * simultaneous equations connecting the input data and the
+ * ( @a num_boundary * 4 ) coefficients of the best-fit spline curve.
+ * Defining ( @a num_boundary + 3 ) as @a N , these equations are written
+ * as @a A * @a x = @a b , where @a A is an @a N -by- @a N matrix, @a x
+ * and @a y are @a N -component column vectors.
+ * The vector @a x contains coefficient values ( @a A_1, @a B_1, @a C_1,
+ * @a D_1, @a D_2, @a D_3, ..., @a D_(num_boundary) ), where @a A_1,
+ * @a B_1, @a C_1, and @a D_1 are constant, linear, square, and cubic
+ * terms of the leftmost piecewise cubic curve, while @a D_n corresponds
+ * to the cubic term of the spline curve at the @a n -th piece.
+ * This function computes the coefficients of the above simultaneous
+ * equations, i.e., the elements of the matrix @a A at the left side and
+ * of the vector @a b at the right side.
+ * @par
+ * @param[in] num_data The number of elements in the arrays @a data and
+ * @a mask, and also the number of elements in each model data (i.e.,
+ * discrete values of basis function) consisting the entire model.
+ * It must be greater than or equal to 4.
+ * @param[in] data Input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask Input mask data with length of @a num_mask .
+ * @n must-be-aligned
+ * @param[in] num_boundary The number of piecewise cubic curves composing
+ * the cubic spline curve. It must be a positive value, and also must not
+ * exceed ( @a num_data / 4 ).
+ * @param[in] boundary A 1D array containing the left edge positions of
+ * @a num_boundary pieces of the spline curve. The values should be stored
+ * in left-to-right order.
+ * @param[in] basis_data A 1D array containing values of the basis
+ * functions concatenated. Loop for basis index must be inside of that for
+ * data index, i.e., the @a n -th data of the @a m -th model should be
+ * stored at @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. Its
+ * length must be equal to ( @a num_data * 4 ).
+ * @n must-be-aligned
+ * @param[out] lsq_matrix A 1D array containing the values of a matrix
+ * at the left side of simultaneous equations for least-square fitting.
+ * Its length should therefore be equal to ( ( @a num_boundary + 3 ) * (
+ * @a num_lsq_bases + 3 ) ). Loop for columns comes inside that for rows,
+ * i.e., the value at the @a m -th row and @a n -th column is stored at
+ * @a out [( @a num_boundary + 3 ) * @a (m-1) + @a (n-1)], though @a out
+ * is actually symmetric.
+ * @n must-be-aligned
+ * @param[out] lsq_vector The values of a vector at the right side of
+ * simultaneous equations for least-square fitting. Its length should be
+ * equal to ( @a num_boundary + 3).
+ * @n must-be-aligned
+ * @return Status code. sakura_Status_kOK if finished successfully,
+ * sakura_Status_kInvalidArgument in case parameters does not meet the
+ * above criteria, sakura_Status_kNG in case the number of unmasked data
+ * (for which mask is @a false ) is less than the number of simultaneous
+ * equations, and sakura_Status_kUnknownError in case other exceptions
+ * emitted internally.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
@@ -2018,21 +2117,9 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		bool const mask[/*num_data*/], size_t const num_boundary,
 		double const boundary[/*num_boundary*/],
 		double const basis_data[/*4*num_data*/],
-		double lsq_matrix[/*(3+num_boundary)**2*/],
-		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
-
-/**
- * @brief Update coefficients of simultaneous equations used for Least-Square fitting of cubic spline curve.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsCubicSplineDouble)(
-		size_t const num_data, float const data[/*num_data*/],
-		size_t const num_exclude_indices,
-		size_t const exclude_indices[/*num_data*/], size_t const num_boundary,
-		double const boundary[/*num_boundary*/],
-		double const basis_data[/*4*num_data*/],
-		double lsq_matrix[/*(3+num_boundary)**2*/],
-		double lsq_vector[/*3+num_boundary*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_matrix[/*(num_boundary+3)*(num_boundary+3)*/],
+		double lsq_vector[/*num_boundary+3*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2081,47 +2168,47 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * calculating coefficients if the number of points to be excluded this time
  * is less than half of those previously used.
  * @par
- * @param[in] num_data the number of elements in the arrays @a data and the
+ * @param[in] num_data The number of elements in the arrays @a data and the
  * number of elements in each model data (i.e., discrete values of basis
  * function) consisting the entire model.
- * it must be a positive number.
- * @param[in] data input data with length of @a num_data .
+ * It must be a positive number.
+ * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_exclude_indices the number of data points to be excluded
- * this time. the range of allowed value is between 0 and @a num_data .
- * @param[in] exclude_indices an array containing indices of data points
- * (the row index of @a basis_data ) to be excluded this time. the indices
- * must be stored in the first @a num_exclude_indices elements. its length
+ * @param[in] num_exclude_indices The number of data points to be excluded
+ * this time. The range of allowed value is between 0 and @a num_data .
+ * @param[in] exclude_indices An array containing indices of data points
+ * (the row index of @a basis_data ) to be excluded this time. The indices
+ * must be stored in the first @a num_exclude_indices elements. Its length
  * should be @a num_exclude_indices .
  * @n must-be-aligned
- * @param[in] num_model_bases number of model basis functions. it must be a
+ * @param[in] num_model_bases Number of model basis functions. It must be a
  * positive number, also it must be equal to or less than @a num_data .
- * @param[in] basis_data a 1D array containing values of all basis functions
- * concatenated. loop for basis index must be inside of that for data index,
+ * @param[in] basis_data A 1D array containing values of all basis functions
+ * concatenated. Loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
- * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. its length must be
+ * @a basis_data [ @a num_data * @a (n-1) + @a (m-1) ]. Its length must be
  * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
- * @param[in] num_lsq_bases the number of model basis functions to be used
- * in actual fitting. it must be a positive number and must not exceed
+ * @param[in] num_lsq_bases The number of model basis functions to be used
+ * in actual fitting. It must be a positive number and must not exceed
  * @a num_model_bases .
- * @param[in,out] lsq_matrix a 1D array containing the values of a matrix
+ * @param[in,out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
- * its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
- * loop for columns comes inside that for rows, i.e., the value at the
+ * Its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
+ * Loop for columns comes inside that for rows, i.e., the value at the
  * @a m -th row and @a n -th column is stored at @a out [ @a
  * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
  * symmetric.
- * @param[in,out] lsq_vector the values of a vector at the right side of
- * simultaneous equations for least-square fitting. its length should be
+ * @param[in,out] lsq_vector The values of a vector at the right side of
+ * simultaneous equations for least-square fitting. Its length should be
  * equal to @a num_lsq_bases .
  * @n must-be-aligned
- * @return status code. Status_kOK if finished successfully,
- * Status_kInvalidArgument in case parameters does not meet the above
- * criteria, and Status_kUnknownError in case other exceptions emitted
+ * @return Status code. sakura_Status_kOK if finished successfully,
+ * sakura_Status_kInvalidArgument in case parameters does not meet the above
+ * criteria, and sakura_Status_kUnknownError in case other exceptions emitted
  * internally.
  * @par Caution:
- * users must be careful in using this function about which and how many
+ * Users must be careful in using this function about which and how many
  * data are to be excluded not to fall into destructive cases that the
  * number of used data becomes less than @a num_model_bases or not to
  * exclude the same data duplicatedly.
@@ -2135,7 +2222,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
-		double lsq_vector[/*num_lsq_bases*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+		double lsq_vector[/*num_lsq_bases*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2159,30 +2247,31 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * are vectors with length of @a num_equations . Given A and y values,
  * this function computes x values using LU decomposition of A.
  * @par
- * @param[in] num_equations number of equations.
- * @param[in] in_matrix a 1D array containing values of the matrix A in
- * the left side of the above simultaneous equations. loop for columns
+ * @param[in] num_equations Number of equations.
+ * @param[in] in_matrix A 1D array containing values of the matrix A in
+ * the left side of the above simultaneous equations. Loop for columns
  * comes inside that for rows, i.e., the value at the @a m -th row and
  * @a n -th column is stored at
  * @a in_matrix [ @a num_equations * ( @a m -1) + ( @a n -1)].
- * its length must be (@a num_equations * @a num_equations).
+ * Its length must be (@a num_equations * @a num_equations).
  * @n must-be-aligned
- * @param[in] in_vector a 1D array containing values of the vector y in
- * the right side of the above simultaneous equations. its length must be
+ * @param[in] in_vector A 1D array containing values of the vector y in
+ * the right side of the above simultaneous equations. Its length must be
  * @a num_equations .
  * @n must-be-aligned
- * @param[out] out the solution (x in the above equations). its length
- * must be @a num_equations . the pointer of @a out can be identical with
+ * @param[out] out The solution (x in the above equations). Its length
+ * must be @a num_equations . The pointer of @a out can be identical with
  * that of @a in_vector .
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 		size_t num_equations,
 		double const in_matrix[/*num_equations*num_equations*/],
 		double const in_vector[/*num_equations*/],
-		double out[/*num_equations*/]) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+		double out[/*num_equations*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @~japanese
@@ -2205,7 +2294,7 @@ typedef enum {
 	 * @~japanese
 	 * @brief データ数が不足のため、ベースラインフィッティングを実行できない
 	 * @~english
-	 * @brief not enough data for baseline fitting
+	 * @brief Not enough data for baseline fitting
 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2, /**
 	 * @~japanese
 	 * @brief 実装されているエラーコードの個数
@@ -2270,18 +2359,21 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @~english
  * @brief Create an object containing baseline model data.
  * @details
- * @param[in] baseline_type type of basis function.
- * @param[in] order parameter for the specified function.
- * actually it is the maximum order (for polynomial and chebyshev),
- * or the maximum number of subsections (for cubic spline), or
- * the maximum wave number (for sinusoid). must be positive for cubic
- * spline, while other models accept zero value. the number
- * of model bases, which is @a order+1 for polynomials or
- * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
- * must not exceed @a num_data.
- * @param[in] num_data number of data to fit baseline.
- * @param[out] context an object containing baseline model data.
- * @return status code.
+ * @param[in] baseline_type Type of basis function.
+ * @param[in] order Parameter for the specified function.
+ * It is the maximum order (for sakura_BaselineType_kPolynomial
+ * and sakura_BaselineType_kChebyshev), or the maximum number of
+ * spline pieces (for sakura_BaselineType_kCubicSpline), or the
+ * maximum wave number (for sakura_BaselineType_kSinusoid). It
+ * must be positive for sakura_BaselineType_kCubicSpline, while
+ * other models accept zero value. The number of model bases,
+ * which is @a order+1 for sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, or @a order+3 for
+ * sakura_BaselineType_kCubicSpline or @a order*2+1 for
+ * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
+ * @param[in] num_data Number of data to fit baseline.
+ * @param[out] context An object containing baseline model data.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
@@ -2299,8 +2391,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief Destroy an object containing baseline model data.
  * @details
- * @param[in] context an object containing baseline model data.
- * @return status code.
+ * @param[in] context An object containing baseline model data.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContext)(
@@ -2324,28 +2416,32 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief Compute the best-fit model by least-square fitting.
  * @details
- * @param[in] context an object containing baseline model data.
- * @param[in] order parameter for the specified function.
- * actually it is the order (for polynomial and chebyshev),
- * or the number of subsections (for cubic spline), or
- * the maximum wave number (for sinusoid). must be positive for cubic
- * spline, while other models accept zero value. the value should not
- * exceed the @a order specified in creation of @a context .
- * the number of model bases, which is @a order+1 for polynomials or
- * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
- * must not exceed @a num_data.
- * @param[in] num_data the number of elements in the arrays @a data,
+ * @param[in] context An object containing baseline model data.
+ * @param[in] order Parameter for the specified function.
+ * It is the order for sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, or the number of spline
+ * pieces for sakura_BaselineType_kCubicSpline, or the maximum
+ * wave number for sakura_BaselineType_kSinusoid. It must be
+ * positive for sakura_BaselineType_kCubicSpline, while other
+ * models accept zero value. The value should not exceed the
+ * @a order specified in creation of @a context .
+ * The number of model bases, which is @a order+1 for
+ * sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, or @a order+3 for
+ * sakura_BaselineType_kCubicSpline or @a order*2+1 for
+ * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
+ * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a out , and also the number of elements in each model data
  * (i.e., discrete values of basis function) consisting the total model.
- * @param[in] data the input data with length of @a num_data .
+ * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask the input mask data with length of @a num_data .
+ * @param[in] mask The input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[out] out the best-fit model with length of @a num_data . the
+ * @param[out] out The best-fit model with length of @a num_data . The
  * pointer of @a out can be identical with that of @a data .
  * @n must-be-aligned
- * @param[out] baseline_status baseline-specific error code.
- * @return status code.
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
@@ -2384,40 +2480,44 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @~english
  * @brief Recursively fit a baseline and subtract it from input spectrum.
  * @details
- * @param[in] context an object containing baseline model data.
- * @param[in] order parameter for the specified function.
- * actually it is the order (for polynomial and chebyshev),
- * or the number of subsections (for cubic spline), or
- * the maximum wave number (for sinusoid). must be positive for cubic
- * spline, while other models accept zero value. the value should not
- * exceed the @a order specified in creation of @a context .
- * the number of model bases, which is @a order+1 for polynomials or
- * @a order+3 for cubic spline or @a order*2+1 for sinusoids,
- * must not exceed @a num_data.
- * @param[in] num_data the number of elements in the arrays @a data,
+ * @param[in] context An object containing baseline model data.
+ * @param[in] order Parameter for the specified function.
+ * It is the order for sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, or the number of spline pieces for
+ * sakura_BaselineType_kCubicSpline, or the maximum wave number for
+ * sakura_BaselineType_kSinusoid. It must be positive for
+ * sakura_BaselineType_kCubicSpline, while other models accept zero
+ * value. The value should not exceed the @a order specified in creation
+ * of @a context .
+ * The number of model bases, which is @a order+1 for
+ * sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, or @a order+3 for
+ * sakura_BaselineType_kCubicSpline or @a order*2+1 for
+ * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
+ * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out.
- * @param[in] data the input data with length of @a num_data .
+ * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask the input mask data with length of @a num_data .
+ * @param[in] mask The input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] clip_threshold_sigma the threshold of clipping in unit of
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. must be positive.
- * @param[in] num_fitting_max the maximum of total number of times
+ * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
  * The default is 1 (i.e., baseline fitting done just once and no
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
- * @param[in] get_residual set the output to be (input - best-fit) if true,
+ * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
- * @param[out] final_mask the final mask data after recursive clipping
+ * @param[out] final_mask The final mask data after recursive clipping
  * procedure. its length must be @a num_data .
  * @n must-be-aligned
- * @param[out] out the output data. its length must be @a num_data .
+ * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
- * @param[out] baseline_status baseline-specific error code.
- * @return status code.
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
  * @~
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
