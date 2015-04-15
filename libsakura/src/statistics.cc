@@ -718,7 +718,7 @@ struct StatVisitor {
 			++count;
 			assert(!std::isnan(value));
 			sum += value;
-			square_sum += Accumulator(value) * Accumulator(value);
+			square_sum += value * value;
 			if (value_f < min) {
 				min = value_f;
 				index_of_min = i;
