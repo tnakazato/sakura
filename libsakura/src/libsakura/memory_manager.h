@@ -147,7 +147,7 @@ public:
 
 	~Allocator() noexcept {}
 
-	pointer allocate(size_type size, const void* = nullptr) {
+	pointer allocate(size_type size, void const *hint= nullptr) {
 		if (size > this->max_size()) {
 			throw std::bad_alloc();
 		}
@@ -159,7 +159,7 @@ public:
 	}
 
 	void deallocate(pointer ptr, size_type) {
-		pointer memory = Memory::Free(ptr);
+		Memory::Free(ptr);
 	}
 };
 
