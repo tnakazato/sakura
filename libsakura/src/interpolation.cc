@@ -107,9 +107,8 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
 }
 
 template<class DataType>
-size_t Locate(size_t num_reference, size_t num_data,
-		DataType const reference[], DataType const data[],
-		size_t location_list[]) {
+size_t Locate(size_t num_reference, size_t num_data, DataType const reference[],
+		DataType const data[], size_t location_list[]) {
 	// input arrays must be sorted in ascending order
 	size_t num_location_list = 0;
 	if (data[num_data - 1] <= reference[0]) {
@@ -782,20 +781,20 @@ struct XInterpolatorHelper {
 	static inline void SubstituteSingleBaseData(size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(0, num_interpolated, num_array, 0, num_interpolated,
-				num_base, base_data, interpolated_data);
+		Substitute(num_array, 0, num_base, base_data, 0, num_interpolated,
+				interpolated_data);
 	}
 	static inline void SubstituteLeftMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(0, location, num_array, 0, num_interpolated, num_base,
-				base_data, interpolated_data);
+		Substitute(num_array, 0, num_base, base_data, 0, location,
+				num_interpolated, interpolated_data);
 	}
 	static inline void SubstituteRightMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(location, num_interpolated, num_array, num_base - 1,
-				num_interpolated, num_base, base_data, interpolated_data);
+		Substitute(num_array, num_base - 1, num_base, base_data, location,
+				num_interpolated, num_interpolated, interpolated_data);
 	}
 	static inline void SwapResult(size_t num_array, size_t num_interpolated,
 			YDataType interpolated_data[]) {
@@ -809,12 +808,12 @@ struct XInterpolatorHelper {
 		}
 	}
 private:
-	static inline void Substitute(size_t start, size_t end, size_t num,
-			size_t offset, size_t step_in, size_t step_out,
-			YDataType const in[], YDataType out[]) {
-		for (size_t j = 0; j < num; ++j) {
-			for (size_t i = start; i < end; ++i) {
-				out[j * step_in + i] = in[j * step_out + offset];
+	static inline void Substitute(size_t num_column, size_t source_row,
+			size_t in_increment, YDataType const in[], size_t start_row,
+			size_t end_row, size_t out_increment, YDataType out[]) {
+		for (size_t j = 0; j < num_column; ++j) {
+			for (size_t i = start_row; i < end_row; ++i) {
+				out[j * out_increment + i] = in[j * in_increment + source_row];
 			}
 		}
 	}
@@ -880,19 +879,19 @@ struct YInterpolatorHelper {
 	static inline void SubstituteSingleBaseData(size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(0, num_interpolated, num_array, 0, base_data,
+		Substitute(num_array, 0, base_data, 0, num_interpolated,
 				interpolated_data);
 	}
 	static inline void SubstituteLeftMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(0, location, num_array, 0, base_data, interpolated_data);
+		Substitute(num_array, 0, base_data, 0, location, interpolated_data);
 	}
 	static inline void SubstituteRightMostData(size_t location, size_t num_base,
 			size_t num_array, size_t num_interpolated,
 			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(location, num_interpolated, num_array, num_base - 1,
-				base_data, interpolated_data);
+		Substitute(num_array, num_base - 1, base_data, location,
+				num_interpolated, interpolated_data);
 	}
 	static inline void SwapResult(size_t num_array, size_t num_interpolated,
 			YDataType interpolated_data[]) {
@@ -907,11 +906,12 @@ struct YInterpolatorHelper {
 		}
 	}
 private:
-	static inline void Substitute(size_t start, size_t end, size_t num,
-			size_t offset, YDataType const in[], YDataType out[]) {
-		for (size_t i = start; i < end; ++i) {
-			for (size_t j = 0; j < num; ++j) {
-				out[i * num + j] = in[offset * num + j];
+	static inline void Substitute(size_t num_column, size_t source_row,
+			YDataType const in[], size_t start_row, size_t end_row,
+			YDataType out[]) {
+		for (size_t i = start_row; i < end_row; ++i) {
+			for (size_t j = 0; j < num_column; ++j) {
+				out[i * num_column + j] = in[source_row * num_column + j];
 			}
 		}
 	}
