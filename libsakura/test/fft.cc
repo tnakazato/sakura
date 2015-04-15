@@ -165,6 +165,9 @@ void TestGeneric(bool inner_most_untouched, size_t dims,
 					sizeof(data[0]) * prod, &data));
 	InitArray(prod, data);
 	if (!kTiming) {
+		if (verbose) {
+			cout << "src:\n";
+		}
 		Print<T, COL>(prod, data);
 	}
 
@@ -186,6 +189,10 @@ void TestGeneric(bool inner_most_untouched, size_t dims,
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 	if (!kTiming) {
+		if (verbose) {
+			cout << "flipped(inner_most_untouched=" << inner_most_untouched
+					<< "):\n";
+		}
 		Print<T, COL>(prod, flipped_data);
 	}
 	if (ref) {
@@ -210,6 +217,9 @@ void TestGeneric(bool inner_most_untouched, size_t dims,
 	}
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
 	if (!kTiming) {
+		if (verbose) {
+			cout << "unflipped:\n";
+		}
 		Print<T, COL>(prod, rev_data);
 	}
 	EXPECT_TRUE(IsEqual(prod, data, rev_data));
