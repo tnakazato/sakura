@@ -168,6 +168,7 @@ struct PolynomialWorkingData {
 	PolynomialWorkingData(uint8_t order, size_t num_base, size_t array_size,
 			size_t num_array) :
 			xholder(array_size) {
+		assert(num_base > 0);
 		polynomial_order = static_cast<uint8_t>(std::min(num_base - 1,
 				static_cast<size_t>(order)));
 		num_elements = polynomial_order + 1;
@@ -837,7 +838,7 @@ struct YInterpolatorHelper {
 			bool const mask[], bool is_ascending, XDataType x[],
 			YDataType y[]) {
 		assert(iarray < num_array);
-		assert(num_base > 1);
+		assert(num_base > 0);
 		size_t position_index_start = is_ascending ? 0 : num_base - 1;
 		ssize_t position_index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
