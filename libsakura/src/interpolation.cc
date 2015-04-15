@@ -1010,14 +1010,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 
 			// Between base_position[0] and base_position[num_base-1]
 			size_t offset = 0;
-			if (x0[0] < x1[0]) {
-				for (size_t itmp = 1; itmp < n; ++itmp) {
-					if (x0[offset + 1] < x1[0]) {
-						offset++;
-					} else {
-						break;
-					}
-				}
+			while (offset + 1 < n && x0[offset + 1] < x1[0]) {
+				offset++;
 			}
 			Interpolator::Interpolate1D(n, x0, 1, y0, num_interpolated, x1, y1,
 					num_location_base, location_base, offset, work_data);
