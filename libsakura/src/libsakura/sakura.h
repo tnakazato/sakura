@@ -1571,12 +1571,12 @@ typedef enum {
  * @param[in] interpolation_method 補間方法
  * @param[in] polynomial_order 多項式補間法の場合の最大次数。
  * 実際に適用される次数は、@a num_base との兼ね合いで決まる。
- * @param[in] num_base 補間のためのデータ点の数。
+ * @param[in] num_base 補間のためのデータ点の数。@a num_base は1以上でなければならない。
  * @param[in] base_position 補間のための各データの位置。
  * 要素数は@a num_base でなければならない。
  * @a base_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
- * @param[in] num_array 同時に渡すデータ列の数。
+ * @param[in] num_array 同時に渡すデータ列の数。@a num_array は1以上でなければならない。
  * @param[in] base_data 補間のためのデータ列。
  * 要素数は@a num_base × @a num_array でなければならない。
  * must-be-aligned
@@ -1584,7 +1584,7 @@ typedef enum {
  * 要素数は@a num_base × @a num_array でなければならない。
  * マスク値がfalseである要素に対応する @a base_data の値は補間に使われない。
  * must-be-aligned
- * @param[in] num_interpolated 補間したいデータ点の数。
+ * @param[in] num_interpolated 補間したいデータ点の数。@a num_interpolated は1以上でなければならない。
  * @param[in] interpolate_position 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
  * @a interpolate_position は昇順または降順にソートされていなければならない。
@@ -1659,18 +1659,18 @@ typedef enum {
  * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
  * Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
- * @param[in] num_base number of elements for data points.
+ * @param[in] num_base number of elements for data points. Its value must be greater than 0.
  * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
  * must-be-aligned
- * @param[in] num_array number of arrays given in @a base_data.
+ * @param[in] num_array number of arrays given in @a base_data. Its value must be greater than 0.
  * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
  * must-be-aligned
  * @param[in] base_mask boolean mask for data. Its length must be @a num_base times @a num_array.
  * False points will be excluded from the interpolation
  * must-be-aligned
  * @param[in] num_interpolated number of elements for points that wants to get
- * interpolated value.
+ * interpolated value. Its value must be greater than 0.
  * @param[in] interpolate_position x-coordinate of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * must-be-aligned
