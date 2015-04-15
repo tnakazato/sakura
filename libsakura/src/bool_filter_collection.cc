@@ -30,7 +30,7 @@
 // Vectorization by Compiler
 namespace {
 
-template<typename DataType, size_t NUM_BOUNDS>
+template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
@@ -40,7 +40,7 @@ inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 
 	for (size_t i = 0; i < num_data; ++i) {
 		uint8_t is_in_range = 0;
-		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
+		for (size_t j = 0; j < kNumBounds; ++j) {
 			is_in_range |= static_cast<uint8_t>((data[i] - lower_bounds[j])
 					* (upper_bounds[j] - data[i]) >= kZero);
 		}
@@ -48,7 +48,7 @@ inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 	}
 }
 
-template<typename DataType, size_t NUM_BOUNDS>
+template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
@@ -57,7 +57,7 @@ inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
-		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
+		for (size_t j = 0; j < kNumBounds; ++j) {
 			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
 					>= kZero)) {
 				is_in_range = true;
@@ -88,7 +88,7 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 	}
 }
 
-template<typename DataType, size_t NUM_BOUNDS>
+template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
@@ -97,7 +97,7 @@ inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
-		for (size_t j = 0; j < NUM_BOUNDS; ++j) {
+		for (size_t j = 0; j < kNumBounds; ++j) {
 			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
 					> kZero)) {
 				is_in_range = true;
