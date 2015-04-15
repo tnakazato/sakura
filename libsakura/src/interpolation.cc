@@ -60,43 +60,43 @@ inline void AllocateAndAlign(size_t num_elements,
 }
 
 // Locator
-template<class XDataType>
-size_t FindIndexOfClosestElementFromSortedArray(size_t start_position,
-		size_t end_position, size_t num_base, XDataType const base_position[],
-		XDataType located_position) {
-	assert(num_base > 0);
-	assert(start_position <= end_position);
-	assert(end_position < num_base);
-	assert(base_position != nullptr);
+template<class DataType>
+size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
+		size_t end_index, size_t num_reference, DataType const reference[],
+		DataType data) {
+	assert(num_reference > 0);
+	assert(start_index <= end_index);
+	assert(end_index < num_reference);
+	assert(reference != nullptr);
 
 	// If length of the array is just 1, return 0
-	if (num_base == 1)
+	if (num_reference == 1)
 		return 0;
 
 	// base_position must be sorted in ascending order
-	if (located_position <= base_position[0]) {
+	if (data <= reference[0]) {
 		// out of range
 		return 0;
-	} else if (located_position > base_position[num_base - 1]) {
+	} else if (data > reference[num_reference - 1]) {
 		// out of range
-		return num_base;
-	} else if (located_position < base_position[start_position]) {
+		return num_reference;
+	} else if (data < reference[start_index]) {
 		// x_located is not in the range (start_position, end_position)
 		// call this function to search other location
-		return FindIndexOfClosestElementFromSortedArray(0, start_position,
-				num_base, base_position, located_position);
-	} else if (located_position > base_position[end_position]) {
+		return FindIndexOfClosestElementFromSortedArray(0, start_index,
+				num_reference, reference, data);
+	} else if (data > reference[end_index]) {
 		// located_position is not in the range (start_position, end_position)
 		// call this function to search other location
-		return FindIndexOfClosestElementFromSortedArray(end_position,
-				num_base - 1, num_base, base_position, located_position);
+		return FindIndexOfClosestElementFromSortedArray(end_index,
+				num_reference - 1, num_reference, reference, data);
 	} else {
 		// do bisection
-		size_t left_index = start_position;
-		size_t right_index = end_position;
+		size_t left_index = start_index;
+		size_t right_index = end_index;
 		while (left_index + 1 < right_index) {
 			size_t const middle_index = (right_index + left_index) / 2;
-			if (located_position > base_position[middle_index]) {
+			if (data > reference[middle_index]) {
 				left_index = middle_index;
 			} else {
 				right_index = middle_index;
@@ -106,33 +106,33 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_position,
 	}
 }
 
-template<class XDataType>
-size_t Locate(size_t num_base, size_t num_located,
-		XDataType const base_position[], XDataType const located_position[],
+template<class DataType>
+size_t Locate(size_t num_reference, size_t num_data,
+		DataType const reference[], DataType const data[],
 		size_t location_list[]) {
 	// input arrays must be sorted in ascending order
 	size_t num_location_list = 0;
-	if (located_position[num_located - 1] <= base_position[0]) {
+	if (data[num_data - 1] <= reference[0]) {
 		// all located_position's are on the left (lower) side of base_position
 		num_location_list = 1;
 		location_list[0] = 0;
-	} else if (located_position[0] >= base_position[num_base - 1]) {
+	} else if (data[0] >= reference[num_reference - 1]) {
 		// all located_position's are on the right (upper) side of base_position
 		num_location_list = 1;
-		location_list[0] = num_base;
-	} else if (num_base == 1) {
+		location_list[0] = num_reference;
+	} else if (num_reference == 1) {
 		num_location_list = 2;
 		location_list[0] = 0;
 		location_list[1] = 1;
 	} else {
 		size_t start_position = 0;
-		size_t end_position = num_base - 1;
-		size_t previous_location = num_base + 1;
-		for (size_t i = 0; i < num_located && start_position <= end_position;
+		size_t end_position = num_reference - 1;
+		size_t previous_location = num_reference + 1;
+		for (size_t i = 0; i < num_data && start_position <= end_position;
 				++i) {
 			size_t const location = FindIndexOfClosestElementFromSortedArray(
-					start_position, end_position, num_base, base_position,
-					located_position[i]);
+					start_position, end_position, num_reference, reference,
+					data[i]);
 			if (location != previous_location) {
 				location_list[num_location_list] = location;
 				num_location_list += 1;
