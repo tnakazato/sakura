@@ -1614,7 +1614,7 @@ typedef enum {
  * out of range points are filled by the value of nearest points.
  * Output boolean mask is @a interpolated_mask. Data will be invalid if corresponding mask is false, i.e.,
  * the value is just a nominal one but a result of actual interpolation. The mask will be false when
- * interpolation is skipped due to missing enough valid data.
+ * interpolation is skipped due to insufficient number of valid data elements.
  *
  * The function returns result status. In the successful run, returned value is
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink while appropriate
