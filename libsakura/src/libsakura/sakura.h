@@ -2701,6 +2701,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  *   3,   1,   2,
  *   6,   4,   5,
  * @endcode
+ * If @a inner_most_untouched = true, then you will get @a dst as below.
+ * @code
+ *  7,   8,   9,
+ * 10,  11,  12,
+ *  1,   2,   3,
+ *  4,   5,   6,
+ * @endcode
  *
  * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
  * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
