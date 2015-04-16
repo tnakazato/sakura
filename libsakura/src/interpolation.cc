@@ -162,7 +162,11 @@ struct NullWorkingData {
 struct CustomizedMemoryManagement {
 	static void *operator new(size_t size) {
 		//std::cout << "This is overloaded new" << std::endl;
-		return LIBSAKURA_PREFIX::Memory::Allocate(size);
+		void *p = LIBSAKURA_PREFIX::Memory::Allocate(size);
+		if (p == nullptr) {
+			throw std::bad_alloc();
+		}
+		return p;
 	}
 	static void operator delete(void *p) {
 		//std::cout << "This is overloaded delete" << std::endl;

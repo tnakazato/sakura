@@ -32,8 +32,9 @@
 #include "gtest/gtest.h"
 #include "asap/CubicSplineInterpolator1D.h"
 
-#include "loginit.h"
+#include "aligned_memory.h"
 #include "interpolation.h"
+#include "loginit.h"
 
 #define TEST_INTERP_X(name) TEST_F(InterpolateArray1DFloatTest,name)
 
@@ -104,6 +105,36 @@ TEST_INTERP_X(InputArrayNotAligned) {
 	RunInterpolateArray1D(sakura_InterpolationMethod_kPolynomial, 1,
 			num_interpolated, num_array, sakura_Status_kInvalidArgument,
 			false);
+}
+
+namespace {
+void *AlwaysFailNew(size_t size) {
+	return nullptr;
+}
+#define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
+}
+
+TEST(InterpolateArray1DFloatStandaloneTest, BadAlloc) {
+	sakura_Status status = sakura_Initialize(AlwaysFailNew, nullptr);
+	EXPECT_EQ(status, sakura_Status_kOK);
+	uint8_t polynomial_order = 2;
+	constexpr size_t num_array = 1;
+	SIMD_ALIGN double base_position[] = {0.0, 1.0, 2.0};
+	constexpr size_t num_base = ELEMENTSOF(base_position);
+	SIMD_ALIGN double interpolated_position[] = {-1.0, 0.5, 1.5, 2.5};
+	constexpr size_t num_interpolated = ELEMENTSOF(interpolated_position);
+	SIMD_ALIGN float base_data[] = {5.0, 4.0, 3.0};
+	SIMD_ALIGN float interpolated_data[num_interpolated * num_array];
+	SIMD_ALIGN bool base_mask[] = {true, true, true};
+	SIMD_ALIGN bool interpolated_mask[num_interpolated * num_array];
+	static_assert(ELEMENTSOF(base_data) == num_base * num_array, "");
+	static_assert(ELEMENTSOF(base_mask) == num_base * num_array, "");
+	static_assert(ELEMENTSOF(interpolated_data) == num_interpolated * num_array, "");
+	static_assert(ELEMENTSOF(interpolated_mask) == num_interpolated * num_array, "");
+	status = sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kPolynomial, polynomial_order,
+			num_base, base_position, num_array, base_data, base_mask, num_interpolated,
+			interpolated_position, interpolated_data, interpolated_mask);
+	EXPECT_EQ(status, sakura_Status_kNoMemory);
 }
 
 #if 0
