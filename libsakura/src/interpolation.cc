@@ -24,11 +24,11 @@
 
 #include <sys/types.h>
 
+#include <algorithm>
 #include <cassert>
 #include <climits>
 #include <memory>
 #include <utility>
-#include <vector>
 
 #include <libsakura/localdef.h>
 #include <libsakura/logger.h>
