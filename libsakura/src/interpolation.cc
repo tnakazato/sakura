@@ -147,64 +147,49 @@ size_t Locate(size_t num_reference, size_t num_data, DataType const reference[],
 template<class XDataType, class YDataType>
 struct NullWorkingData {
 	static NullWorkingData<XDataType, YDataType> * Allocate(
-			uint8_t polynomial_order, size_t num_base, size_t num_array) {
+			uint8_t polynomial_order, size_t num_base) {
 		return nullptr;
 	}
-	static void Initialize(size_t num_base, size_t num_array,
-			XDataType const base_position[], YDataType const base_data[],
+	static void Initialize(size_t num_base, XDataType const base_position[],
+			YDataType const base_data[],
 			NullWorkingData<XDataType, YDataType> *work_data) {
 	}
 };
 
-template<class DataType>
-struct PolynomialWorkingData {
-	PolynomialWorkingData(uint8_t order, size_t num_base, size_t array_size,
-			size_t num_array) :
+template<class XDataType, class YDataType>
+struct PolynomialXWorkingData {
+	static PolynomialXWorkingData<XDataType, YDataType> * Allocate(
+			uint8_t polynomial_order, size_t num_base) {
+		return new PolynomialXWorkingData<XDataType, YDataType>(
+				polynomial_order, num_base, 2);
+	}
+	static void Initialize(size_t num_base, XDataType const base_position[],
+			YDataType const base_data[],
+			PolynomialXWorkingData<XDataType, YDataType> *work_datas) {
+	}
+	PolynomialXWorkingData(uint8_t order, size_t num_base, size_t array_size) :
 			xholder(array_size) {
 		assert(num_base > 0);
 		polynomial_order = static_cast<uint8_t>(std::min(num_base - 1,
 				static_cast<size_t>(order)));
 		num_elements = polynomial_order + 1;
 		for (size_t i = 0; i < array_size; ++i) {
-			AllocateAndAlign<DataType>(num_elements * num_array, &(xholder[i]));
+			AllocateAndAlign<XDataType>(num_elements, &(xholder[i]));
 		}
 	}
-	std::vector<StorageAndAlignedPointer<DataType> > xholder;
+	std::vector<StorageAndAlignedPointer<XDataType> > xholder;
 	size_t num_elements;
 	uint8_t polynomial_order;
 };
 
 template<class XDataType, class YDataType>
-struct PolynomialXWorkingData: public PolynomialWorkingData<XDataType> {
-	static PolynomialXWorkingData<XDataType, YDataType> * Allocate(
-			uint8_t polynomial_order, size_t num_base, size_t num_array) {
-		return new PolynomialXWorkingData<XDataType, YDataType>(
-				polynomial_order, num_base, 2, 1);
-	}
-	static void Initialize(
-
-	size_t num_base, size_t num_array, XDataType const base_position[],
-			YDataType const base_data[],
-			PolynomialXWorkingData<XDataType, YDataType> *work_datas) {
-	}
-	PolynomialXWorkingData(uint8_t order, size_t num_base, size_t array_size,
-			size_t num_array) :
-			PolynomialWorkingData<XDataType>(order, num_base, array_size,
-					num_array) {
-	}
-};
-
-template<class XDataType, class YDataType>
 inline void DeriveSplineCorrectionTermImpl(size_t num_base,
-		XDataType const base_position[], size_t num_array,
-		YDataType const base_data[], YDataType d2ydx2[],
-		YDataType upper_triangular[]) {
+		XDataType const base_position[], YDataType const base_data[],
+		YDataType d2ydx2[], YDataType upper_triangular[]) {
 	// This is a condition of natural cubic spline
-	for (size_t i = 0; i < num_array; ++i) {
-		d2ydx2[i] = 0.0;
-		d2ydx2[(num_base - 1) * num_array + i] = 0.0;
-		upper_triangular[i] = 0.0;
-	}
+	d2ydx2[0] = 0.0;
+	d2ydx2[num_base - 1] = 0.0;
+	upper_triangular[0] = 0.0;
 
 	// Solve tridiagonal system.
 	// Here tridiagonal matrix is decomposed to upper triangular matrix.
@@ -217,45 +202,40 @@ inline void DeriveSplineCorrectionTermImpl(size_t num_base,
 	for (size_t i = 2; i < num_base; ++i) {
 		XDataType const a2 = base_position[i] - base_position[i - 1];
 		XDataType const b1 = 1.0 / (base_position[i] - base_position[i - 2]);
-		for (size_t j = 0; j < num_array; ++j) {
-			size_t i0 = num_array * i + j;
-			size_t i1 = i0 - num_array;
-			size_t i2 = i1 - num_array;
-			d2ydx2[i1] = 3.0 * b1
-					* ((base_data[i0] - base_data[i1]) / a2
-							- (base_data[i1] - base_data[i2]) / a1
-							- d2ydx2[i2] * 0.5 * a1);
-			XDataType a3 = 1.0 / (1.0 - upper_triangular[i2] * 0.5 * a1 * b1);
-			d2ydx2[i1] *= a3;
-			upper_triangular[i1] = 0.5 * a2 * b1 * a3;
-		}
+		size_t i0 = i;
+		size_t i1 = i0 - 1;
+		size_t i2 = i1 - 1;
+		d2ydx2[i1] = 3.0 * b1
+				* ((base_data[i0] - base_data[i1]) / a2
+						- (base_data[i1] - base_data[i2]) / a1
+						- d2ydx2[i2] * 0.5 * a1);
+		XDataType a3 = 1.0 / (1.0 - upper_triangular[i2] * 0.5 * a1 * b1);
+		d2ydx2[i1] *= a3;
+		upper_triangular[i1] = 0.5 * a2 * b1 * a3;
 		a1 = a2;
 	}
 
 	// Solve the system by backsubstitution and store solution to d2ydx2
 	for (size_t k = num_base; k >= 3; --k) {
-		for (size_t j = 0; j < num_array; ++j) {
-			size_t const index = (k - 2) * num_array + j;
-			d2ydx2[index] -= upper_triangular[index]
-					* d2ydx2[index + num_array];
-		}
+		size_t const index = k - 2;
+		d2ydx2[index] -= upper_triangular[index] * d2ydx2[index + 1];
 	}
 }
 
 template<class XDataType, class YDataType>
 struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType> {
 	static SplineXWorkingData<XDataType, YDataType> * Allocate(
-			uint8_t polynomial_order, size_t num_base, size_t num_array) {
+			uint8_t polynomial_order, size_t num_base) {
 		SplineXWorkingData<XDataType, YDataType> *work_data =
 				new SplineXWorkingData<XDataType, YDataType>();
-		AllocateAndAlign<YDataType>(num_base * num_array, work_data);
+		AllocateAndAlign<YDataType>(num_base, work_data);
 		return work_data;
 	}
-	static void Initialize(size_t num_base, size_t num_array,
-			XDataType const base_position[], YDataType const base_data[],
+	static void Initialize(size_t num_base, XDataType const base_position[],
+			YDataType const base_data[],
 			SplineXWorkingData<XDataType, YDataType> *work_data) {
-		work_data->DeriveSplineCorrectionTerm(num_base, base_position,
-				num_array, base_data);
+		work_data->DeriveSplineCorrectionTerm(num_base, base_position, 1,
+				base_data);
 	}
 	void DeriveSplineCorrectionTerm(size_t num_base,
 			XDataType const base_position[], size_t num_array,
@@ -267,7 +247,7 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType> {
 			size_t const index = i * num_base;
 			YDataType const *base_data_work = &(base_data[index]);
 			YDataType *d2ydx2 = &(this->pointer[index]);
-			DeriveSplineCorrectionTermImpl(num_base, base_position, 1,
+			DeriveSplineCorrectionTermImpl(num_base, base_position,
 					base_data_work, d2ydx2, upper_triangular);
 		}
 	}
@@ -507,7 +487,8 @@ struct XInterpolatorHelper {
 		size_t position_index_start = is_ascending ? 0 : num_base - 1;
 		long long index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
-				is_ascending ? iarray * num_base : iarray * num_base + num_base - 1;
+				is_ascending ?
+						iarray * num_base : iarray * num_base + num_base - 1;
 		assert(data_index_start < num_base * num_array);
 		return FillDataAsAscendingImpl(position_index_start, index_increment,
 				data_index_start, index_increment, num_base, position, data,
@@ -745,7 +726,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	YDataType *y1 = y1_storage.pointer;
 
 	std::unique_ptr<WorkingData> wdata_storage(
-			WorkingData::Allocate(polynomial_order, num_base, 1));
+			WorkingData::Allocate(polynomial_order, num_base));
 	WorkingData *work_data = wdata_storage.get();
 
 	for (size_t iarray = 0; iarray < num_array; ++iarray) {
@@ -766,7 +747,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 
 			// Perform 1-dimensional interpolation
 			// Any preparation for interpolation should be done here
-			WorkingData::Initialize(n, 1, x0, y0, work_data);
+			WorkingData::Initialize(n, x0, y0, work_data);
 
 			// Locate each element in base_position against interpolated_position
 			StorageAndAlignedPointer<size_t> size_t_holder;
