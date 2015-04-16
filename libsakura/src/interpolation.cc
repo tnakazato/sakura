@@ -502,11 +502,13 @@ struct XInterpolatorHelper {
 			size_t iarray, XDataType const position[], YDataType const data[],
 			bool const mask[], bool is_ascending, XDataType x[],
 			YDataType y[]) {
+		assert(num_base > 0);
 		assert(iarray < num_array);
 		size_t position_index_start = is_ascending ? 0 : num_base - 1;
 		long long index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
-				is_ascending ? iarray * num_base : num_base * (iarray + 1) - 1;
+				is_ascending ? iarray * num_base : iarray * num_base + num_base - 1;
+		assert(data_index_start < num_base * num_array);
 		return FillDataAsAscendingImpl(position_index_start, index_increment,
 				data_index_start, index_increment, num_base, position, data,
 				mask, x, y);
@@ -524,11 +526,13 @@ struct XInterpolatorHelper {
 	static void FillResult(size_t num_interpolated, size_t num_array,
 			size_t iarray, bool is_ascending, YDataType y1[],
 			YDataType data[]) {
+		assert(num_interpolated > 0);
 		assert(iarray < num_array);
 		size_t start =
 				is_ascending ?
 						iarray * num_interpolated :
-						num_interpolated * (iarray + 1) - 1;
+						iarray * num_interpolated + num_interpolated - 1;
+		assert(start < num_interpolated * num_array);
 		long long increment = is_ascending ? 1LL : -1LL;
 		FillResultImpl(start, increment, num_interpolated, y1, data);
 	}
