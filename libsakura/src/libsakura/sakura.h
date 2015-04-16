@@ -1571,6 +1571,9 @@ typedef enum {
  * @param[in] interpolation_method 補間方法
  * @param[in] polynomial_order 多項式補間法の場合の最大次数。
  * 実際に適用される次数は、@a num_base との兼ね合いで決まる。
+ * @a polynomial_order は @a interpolation_method が
+ * @link sakura_InterpolationMethod::sakura_InterpolationMethod_kPolynomial sakura_InterpolationMethod_kPolynomial @endlink
+ * である場合のみ有効であり、その他の場合は無視される。
  * @param[in] num_base 補間のためのデータ点の数。@a num_base は1以上でなければならない。
  * @param[in] base_position 補間のための各データの位置。
  * 要素数は@a num_base でなければならない。
@@ -1659,6 +1662,9 @@ typedef enum {
  * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
  * Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
+ * This parameter is effective only when @a interpolation_method is
+ * @link sakura_InterpolationMethod::sakura_InterpolationMethod_kPolynomial sakura_InterpolationMethod_kPolynomial @endlink.
+ * In other interpolation methods, it is ignored.
  * @param[in] num_base number of elements for data points. Its value must be greater than 0.
  * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
