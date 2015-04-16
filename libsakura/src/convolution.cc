@@ -76,7 +76,7 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 	}
 }
 
-inline void Create1DGaussianKernel(size_t num_kernel, size_t use_fft,
+inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 		size_t kernel_width, float* kernel) {
 	assert((2*num_kernel-1)>=0);
 	size_t num_data_for_gauss = (use_fft) ? num_kernel : 2 * num_kernel - 1;
@@ -113,7 +113,7 @@ inline void Create1DGaussianKernel(size_t num_kernel, size_t use_fft,
 
 }
 
-inline void Create1DKernel(size_t num_kernel, size_t use_fft,
+inline void Create1DKernel(size_t num_kernel, bool use_fft,
 LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		float* kernel) {
 	switch (kernel_type) {
