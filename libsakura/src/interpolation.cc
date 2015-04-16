@@ -164,23 +164,21 @@ struct PolynomialXWorkingData {
 	static PolynomialXWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		return new PolynomialXWorkingData<XDataType, YDataType>(
-				polynomial_order, num_base, 2);
+				polynomial_order, num_base);
 	}
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
 			PolynomialXWorkingData<XDataType, YDataType> *work_datas) {
 	}
-	PolynomialXWorkingData(uint8_t order, size_t num_base, size_t array_size) :
-			xholder(array_size) {
+	PolynomialXWorkingData(uint8_t order, size_t num_base) {
 		assert(num_base > 0);
 		polynomial_order = static_cast<uint8_t>(std::min(num_base - 1,
 				static_cast<size_t>(order)));
 		num_elements = polynomial_order + 1;
-		for (size_t i = 0; i < array_size; ++i) {
-			AllocateAndAlign<XDataType>(num_elements, &(xholder[i]));
-		}
+		AllocateAndAlign<XDataType>(num_elements, &(xholder[0]));
+		AllocateAndAlign<XDataType>(num_elements, &(xholder[1]));
 	}
-	std::vector<StorageAndAlignedPointer<XDataType> > xholder;
+	StorageAndAlignedPointer<XDataType> xholder[2];
 	size_t num_elements;
 	uint8_t polynomial_order;
 };
