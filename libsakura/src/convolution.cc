@@ -381,9 +381,6 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const std::invalid_argument &e) {
-		LOG4CXX_ERROR(logger, e.what());
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
