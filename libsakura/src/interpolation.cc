@@ -133,6 +133,7 @@ size_t Locate(size_t num_reference, size_t num_data, DataType const reference[],
 					start_position, end_position, num_reference, reference,
 					data[i]);
 			if (location != previous_location) {
+				assert(num_location_list < num_data);
 				location_list[num_location_list] = location;
 				num_location_list += 1;
 				start_position = location;
