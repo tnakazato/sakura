@@ -56,6 +56,8 @@ public:
 	 * MT-safe
 	 *
 	 * @param[in] size 0 is acceptable and a valid address for the area with size 0 would be returned.
+	 *
+	 * @return allocated address. If it fails to allocate memory, nullptr is returned.
 	 */
 	static void * Allocate(size_t size) noexcept;
 
