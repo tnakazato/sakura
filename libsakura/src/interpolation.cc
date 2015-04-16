@@ -205,13 +205,15 @@ inline void DeriveSplineCorrectionTermImpl(size_t num_base,
 		size_t i0 = i;
 		size_t i1 = i0 - 1;
 		size_t i2 = i1 - 1;
-		d2ydx2[i1] = 3.0 * b1
+		d2ydx2[i1] = YDataType(3.0) * b1
 				* ((base_data[i0] - base_data[i1]) / a2
 						- (base_data[i1] - base_data[i2]) / a1
-						- d2ydx2[i2] * a1 / 2.0);
-		XDataType a3 = 1.0 / (1.0 - upper_triangular[i2] * a1 * b1 / 2.0);
+						- d2ydx2[i2] * a1 / YDataType(2.0));
+		XDataType a3 = XDataType(1.0)
+				/ (XDataType(1.0)
+						- upper_triangular[i2] * a1 * b1 / XDataType(2.0));
 		d2ydx2[i1] *= a3;
-		upper_triangular[i1] = a2 * b1 * a3 / 2.0;
+		upper_triangular[i1] = a2 * b1 * a3 / YDataType(2.0);
 		a1 = a2;
 	}
 
@@ -302,10 +304,9 @@ struct NearestXInterpolatorImpl: public InterpolatorInterface<
 			size_t k, size_t left_index, WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
 		XDataType const midpoint = (base_position[left_index + 1]
-				+ base_position[left_index]) / 2.0;
+				+ base_position[left_index]) / XDataType(2.0);
 		YDataType const left_value = base_data[left_index];
 		YDataType const right_value = base_data[left_index + 1];
-		//YDataType *work = &interpolated_data[0];
 		for (size_t i = location[k - 1]; i < location[k]; ++i) {
 			interpolated_data[i] =
 					(interpolated_position[i] > midpoint) ?
@@ -427,12 +428,12 @@ struct SplineXInterpolatorImpl: public InterpolatorInterface<
 		YDataType const * const d2ydx2 = work_data->pointer;
 		XDataType const dx = base_position[left_index + 1]
 				- base_position[left_index];
-		XDataType const dx_factor = dx * dx / 6.0;
+		XDataType const dx_factor = dx * dx / XDataType(6.0);
 		size_t const offset_index_left = left_index;
 		for (size_t i = location[k - 1]; i < location[k]; ++i) {
 			XDataType const a = (base_position[left_index + 1]
 					- interpolated_position[i]) / dx;
-			XDataType const b = 1.0 - a;
+			XDataType const b = XDataType(1.0) - a;
 			interpolated_data[i] = static_cast<YDataType>(a
 					* base_data[offset_index_left]
 					+ b * base_data[offset_index_left + 1]
