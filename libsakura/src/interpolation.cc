@@ -464,11 +464,19 @@ inline size_t FillDataAsAscendingImpl(size_t position_index_start,
 	return n;
 }
 
-template<class YDataType>
+template<class DataType>
 inline void FillResultImpl(size_t index_start, long long index_increment,
-		size_t num_interpolated, YDataType y1[], YDataType data[]) {
+		size_t num_interpolated, DataType y1[], DataType data[]) {
 	for (size_t i = 0; i < num_interpolated; ++i) {
 		data[index_start + i * index_increment] = y1[i];
+	}
+}
+
+template<class DataType>
+inline void FillOutOfRangeAreaWithEdgeValue(size_t edge_index,
+		DataType const in[], size_t start, size_t end, DataType out[]) {
+	for (size_t i = start; i < end; ++i) {
+		out[i] = in[edge_index];
 	}
 }
 
@@ -531,24 +539,6 @@ struct XInterpolatorHelper {
 			}
 		}
 	}
-	static inline void SubstituteSingleBaseData(size_t num_base,
-			size_t num_array, size_t num_interpolated,
-			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(num_array, 0, num_base, base_data, 0, num_interpolated,
-				interpolated_data);
-	}
-	static inline void SubstituteLeftMostData(size_t location, size_t num_base,
-			size_t num_array, size_t num_interpolated,
-			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(num_array, 0, num_base, base_data, 0, location,
-				num_interpolated, interpolated_data);
-	}
-	static inline void SubstituteRightMostData(size_t location, size_t num_base,
-			size_t num_array, size_t num_interpolated,
-			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(num_array, num_base - 1, num_base, base_data, location,
-				num_interpolated, num_interpolated, interpolated_data);
-	}
 	static inline void SwapResult(size_t num_array, size_t num_interpolated,
 			YDataType interpolated_data[]) {
 		size_t const midpoint = num_interpolated / 2;
@@ -557,16 +547,6 @@ struct XInterpolatorHelper {
 			YDataType *work = &interpolated_data[j * num_interpolated];
 			for (size_t i = 0; i < midpoint; ++i) {
 				std::swap<YDataType>(work[i], work[right_edge - i]);
-			}
-		}
-	}
-private:
-	static inline void Substitute(size_t num_column, size_t source_row,
-			size_t in_increment, YDataType const in[], size_t start_row,
-			size_t end_row, size_t out_increment, YDataType out[]) {
-		for (size_t j = 0; j < num_column; ++j) {
-			for (size_t i = start_row; i < end_row; ++i) {
-				out[j * out_increment + i] = in[j * in_increment + source_row];
 			}
 		}
 	}
@@ -629,23 +609,6 @@ struct YInterpolatorHelper {
 			}
 		}
 	}
-	static inline void SubstituteSingleBaseData(size_t num_base,
-			size_t num_array, size_t num_interpolated,
-			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(num_array, 0, base_data, 0, num_interpolated,
-				interpolated_data);
-	}
-	static inline void SubstituteLeftMostData(size_t location, size_t num_base,
-			size_t num_array, size_t num_interpolated,
-			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(num_array, 0, base_data, 0, location, interpolated_data);
-	}
-	static inline void SubstituteRightMostData(size_t location, size_t num_base,
-			size_t num_array, size_t num_interpolated,
-			YDataType const base_data[], YDataType interpolated_data[]) {
-		Substitute(num_array, num_base - 1, base_data, location,
-				num_interpolated, interpolated_data);
-	}
 	static inline void SwapResult(size_t num_array, size_t num_interpolated,
 			YDataType interpolated_data[]) {
 		size_t midpoint = num_interpolated / 2;
@@ -655,16 +618,6 @@ struct YInterpolatorHelper {
 					* num_array];
 			for (size_t j = 0; j < num_array; ++j) {
 				std::swap<YDataType>(a[j], b[j]);
-			}
-		}
-	}
-private:
-	static inline void Substitute(size_t num_column, size_t source_row,
-			YDataType const in[], size_t start_row, size_t end_row,
-			YDataType out[]) {
-		for (size_t i = start_row; i < end_row; ++i) {
-			for (size_t j = 0; j < num_column; ++j) {
-				out[i * num_column + j] = in[source_row * num_column + j];
 			}
 		}
 	}
@@ -758,8 +711,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					n, x1, x0, location_base);
 
 			// Outside of base_position[0]
-			Helper::SubstituteLeftMostData(location_base[0], n, 1,
-					num_interpolated, y0, y1);
+			FillOutOfRangeAreaWithEdgeValue(0, y0, 0, location_base[0], y1);
 
 			// Between base_position[0] and base_position[num_base-1]
 			size_t offset = 0;
@@ -770,9 +722,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					num_location_base, location_base, offset, work_data, y1);
 
 			// Outside of base_position[num_base-1]
-			Helper::SubstituteRightMostData(
-					location_base[num_location_base - 1], n, 1,
-					num_interpolated, y0, y1);
+			FillOutOfRangeAreaWithEdgeValue(n - 1, y0,
+					location_base[num_location_base - 1], num_interpolated, y1);
 
 			Helper::FillResult(num_interpolated, num_array, iarray,
 					is_interp_ascending, y1, interpolated_data);
