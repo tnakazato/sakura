@@ -255,22 +255,17 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
 			SplineXWorkingData<XDataType, YDataType> *work_data) {
-		work_data->DeriveSplineCorrectionTerm(num_base, base_position, 1,
+		work_data->DeriveSplineCorrectionTerm(num_base, base_position,
 				base_data);
 	}
 	void DeriveSplineCorrectionTerm(size_t num_base,
-			XDataType const base_position[], size_t num_array,
-			YDataType const base_data[]) {
+			XDataType const base_position[], YDataType const base_data[]) {
 		StorageAndAlignedPointer<YDataType> holder_for_u;
-		AllocateAndAlign<YDataType>(num_base * num_array, &holder_for_u);
+		AllocateAndAlign<YDataType>(num_base, &holder_for_u);
 		YDataType *upper_triangular = holder_for_u.pointer;
-		for (size_t i = 0; i < num_array; ++i) {
-			size_t const index = i * num_base;
-			YDataType const *base_data_work = &(base_data[index]);
-			YDataType *d2ydx2 = &(this->pointer[index]);
-			DeriveSplineCorrectionTermImpl(num_base, base_position,
-					base_data_work, d2ydx2, upper_triangular);
-		}
+		YDataType *d2ydx2 = this->pointer;
+		DeriveSplineCorrectionTermImpl(num_base, base_position, base_data,
+				d2ydx2, upper_triangular);
 	}
 };
 
