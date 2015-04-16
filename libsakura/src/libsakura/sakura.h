@@ -1743,7 +1743,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * 平均されたシステム雑音温度のみが与えられた場合、@a num_data はシステム雑音温度が周波数に依存する場合に相当する。
  *
  * @param[in] num_scaling_factor @a scaling_factor の要素数。
- * 1または@a num_data のいずれかでなければならない。
+ * 1または@a num_data のいずれかでなければならない。@a num_scaling_factor が1の場合、
+ * @a scaling_factor[0] が全ての要素に適用される。
  * @param[in] scaling_factor スケーリング因子。システム雑音温度に相当する。
  * 要素数は @a num_scaling_factor でなければならない。
  * must-be-aligned
@@ -1787,7 +1788,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * respectively.
  *
  * @param[in] num_scaling_factor number of elements of @a scaling_factor. Its value should be
- * 1 or equal to @a num_data.
+ * 1 or equal to @a num_data. If @a num_scaling_factor is 1, @a scaling_factor[0] will be
+ * applied to all array elements.
  * @param[in] scaling_factor scaling factor corresponding to system temperature. number of
  * elements must be @a num_scaling_factor.
  * must-be-aligned
