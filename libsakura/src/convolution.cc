@@ -333,9 +333,7 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 	if (context != nullptr) {
 		DestroyFFTPlan(context->plan_real_to_complex_float);
 		DestroyFFTPlan(context->plan_complex_to_real_float);
-		if (context->fft_applied_complex_kernel != nullptr) {
-			FreeFFTArray(context->fft_applied_complex_kernel);
-		}
+		FreeFFTArray(context->fft_applied_complex_kernel);
 		if (context->real_kernel_array_work != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->real_kernel_array_work);
 		}
