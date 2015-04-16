@@ -857,7 +857,7 @@ struct YInterpolatorHelper {
 			size_t iarray, bool is_ascending, YDataType y1[],
 			YDataType data[]) {
 		assert(iarray < num_array);
-		assert(num_interpolated > 1);
+		assert(num_interpolated > 0);
 		size_t start =
 				is_ascending ?
 						iarray : num_array * (num_interpolated - 1) + iarray;
