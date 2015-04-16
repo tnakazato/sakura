@@ -78,7 +78,7 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 
 inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 		size_t kernel_width, float* kernel) {
-	assert((2*num_kernel-1)>=0);
+	assert((2 * num_kernel - 1) >= 0);
 	size_t num_data_for_gauss = (use_fft) ? num_kernel : 2 * num_kernel - 1;
 	assert(kernel_width != 0);
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
@@ -246,7 +246,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 	} else {
 		size_t threshold = kernel_width / 2;
 		if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) {
-			constexpr double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+			const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
 			threshold = kernel_width * six_sigma;
 		}
 		size_t num_kernel = threshold + 1;
