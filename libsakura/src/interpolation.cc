@@ -199,8 +199,10 @@ inline void DeriveSplineCorrectionTermImpl(size_t num_base,
 
 	// x_base is ascending order
 	XDataType a1 = base_position[1] - base_position[0];
+	assert(a1 != XDataType(0));
 	for (size_t i = 2; i < num_base; ++i) {
 		XDataType const a2 = base_position[i] - base_position[i - 1];
+		assert(a2 != XDataType(0));
 		XDataType const b1 = 1.0 / (base_position[i] - base_position[i - 2]);
 		size_t i0 = i;
 		size_t i1 = i0 - 1;
@@ -782,6 +784,35 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			interpolated_data, interpolated_mask);
 }
 
+template<class DataType, class Checker>
+bool IsDuplicateOrNotSorted(Checker checker, size_t num_elements,
+		DataType const data[]) {
+	for (size_t i = 0; i < num_elements - 1; ++i) {
+		if (checker(data[i], data[i + 1])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+template<class DataType>
+bool IsDuplicateOrNotSorted(size_t num_elements, DataType const data[]) {
+	if (num_elements == 1) {
+		return false;
+	} else if (data[0] < data[num_elements - 1]) {
+		// ascending check
+		return IsDuplicateOrNotSorted(
+				[](DataType x, DataType y) {return x >= y;}, num_elements,
+				data);
+	} else if (data[0] > data[num_elements - 1]) {
+		// descending check
+		return IsDuplicateOrNotSorted(
+				[](DataType x, DataType y) {return x <= y;}, num_elements,
+				data);
+	}
+	return true;
+}
+
 // basic check of arguments
 bool IsValidArguments(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
@@ -836,6 +867,23 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
+
+	// base_position is not sorted or base_position has duplicated element
+	if (IsDuplicateOrNotSorted(num_base, base_position)) {
+		LOG4CXX_ERROR(logger,
+				"base_position is not sorted or has duplicated elements");
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return false;
+	}
+
+	// interpolated_position is not sorted or base_position has duplicated element
+	if (IsDuplicateOrNotSorted(num_interpolated, interpolated_position)) {
+		LOG4CXX_ERROR(logger,
+				"interpolated_position is not sorted or has duplicated elements");
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return false;
+	}
+
 	return true;
 }
 
@@ -879,8 +927,7 @@ LIBSAKURA_SYMBOL(
 	return status;
 }
 
-}
-/* anonymous namespace */
+} /* anonymous namespace */
 
 /**
  * InterpolateXAxisFloat performs 1D interpolation along column based on

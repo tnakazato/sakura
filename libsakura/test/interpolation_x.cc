@@ -106,6 +106,70 @@ TEST_INTERP_X(InputArrayNotAligned) {
 			false);
 }
 
+TEST_INTERP_X(DuplicateBasePosition) {
+	// initial setup
+	size_t const num_base = 2;
+	size_t const num_interpolated = 1;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 1.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kInvalidArgument,
+			false);
+}
+
+TEST_INTERP_X(BasePositionNotSorted) {
+	// initial setup
+	size_t const num_base = 3;
+	size_t const num_interpolated = 1;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 0.2, 0.1);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, 1.0, 1.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kInvalidArgument,
+			false);
+}
+
+TEST_INTERP_X(DuplicateInterpolatedPosition) {
+	// initial setup
+	size_t const num_base = 1;
+	size_t const num_interpolated = 2;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.0, 1.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kInvalidArgument,
+			false);
+}
+
+TEST_INTERP_X(InterpolatedPositionNotSorted) {
+	// initial setup
+	size_t const num_base = 1;
+	size_t const num_interpolated = 3;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0);
+	InitializeDoubleArray(num_interpolated, x_interpolated_, 1.0, 0.0, 0.5);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kInvalidArgument,
+			false);
+}
+
 TEST_INTERP_X(SingleBase) {
 	// initial setup
 	size_t const num_base = 1;
@@ -539,9 +603,9 @@ TEST_INTERP_X(LinearMaskEdge) {
 	y_expected_[num_interpolated * num_array - 1] = 0.5;
 	EquallySpacedGrid(num_interpolated - 2, x_base_[0], x_base_[num_base - 1],
 			&x_interpolated_[1]);
-	InitializeFloatArray(num_interpolated * num_array, y_expected_, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.0, 0.0, 0.0, 0.1,
-			0.2, 0.3, 0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5);
+	InitializeFloatArray(num_interpolated * num_array, y_expected_, 0.0, 0.0,
+			0.0, 0.0, 0.0, 0.0, 0.0, -0.2, -0.4, -0.6, -0.8, -1.0, -1.0, 0.0,
+			0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5);
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
@@ -998,8 +1062,9 @@ TEST_INTERP_X(SingleBasePerformance) {
 	EquallySpacedGrid(num_interpolated, -1.0, 1.0, x_interpolated_);
 
 	// execute interpolation
-	double elapsed = RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
-			num_interpolated, num_array, sakura_Status_kOK, false, false, iter);
+	double elapsed = RunInterpolateArray1D(sakura_InterpolationMethod_kNearest,
+			num_base, num_interpolated, num_array, sakura_Status_kOK, false,
+			false, iter);
 	LogElapsed("SingleBasePerformance", elapsed);
 }
 
@@ -1015,8 +1080,9 @@ TEST_INTERP_X(SingleBase1DPerformance) {
 	EquallySpacedGrid(num_interpolated, -0.5, 0.5, x_interpolated_);
 
 	// execute interpolation
-	double elapsed = RunInterpolateArray1D(sakura_InterpolationMethod_kNearest, num_base,
-			num_interpolated, num_array, sakura_Status_kOK, false, false, iter);
+	double elapsed = RunInterpolateArray1D(sakura_InterpolationMethod_kNearest,
+			num_base, num_interpolated, num_array, sakura_Status_kOK, false,
+			false, iter);
 	LogElapsed("SingleBase1DPerformance", elapsed);
 }
 
