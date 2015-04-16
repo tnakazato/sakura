@@ -246,7 +246,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 	} else {
 		size_t threshold = kernel_width / 2;
 		if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) {
-			const double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+			constexpr double six_sigma = 6.0 / sqrt(8.0 * log(2.0));
 			threshold = kernel_width * six_sigma;
 		}
 		size_t num_kernel = threshold + 1;
