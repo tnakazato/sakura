@@ -286,9 +286,7 @@ inline void Convolve1DFloat(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
 		float output_data_arg[/*num_data*/]) {
-	if (!(context->num_data == num_data)) {
-		throw std::invalid_argument("num_data must equal to context->num_data");
-	}
+	assert(context->num_data == num_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
 	auto input_data = AssumeAligned(input_data_arg);
@@ -415,9 +413,6 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
-	} catch (const std::invalid_argument &e) {
-		LOG4CXX_ERROR(logger, e.what());
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
