@@ -33,6 +33,10 @@
 
 namespace {
 
+/*
+ * See ../doc/misc/SakuraStatistics-algorithm.xlsx for detail of Traverse algorithm.
+ */
+
 template<size_t kUnitSize, size_t kBlockSize, typename Reducer>
 typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 		int levels, size_t stride, size_t num_blocks, size_t full_blocks,
