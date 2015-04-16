@@ -195,26 +195,6 @@ struct PolynomialXWorkingData: public PolynomialWorkingData<XDataType> {
 };
 
 template<class XDataType, class YDataType>
-struct PolynomialYWorkingData: public PolynomialWorkingData<XDataType> {
-	static PolynomialYWorkingData<XDataType, YDataType> * Allocate(
-			uint8_t polynomial_order, size_t num_base, size_t num_array) {
-		return new PolynomialYWorkingData<XDataType, YDataType>(
-				polynomial_order, num_base, 3, num_array);
-	}
-	static void Initialize(
-
-	size_t num_base, size_t num_array, XDataType const base_position[],
-			YDataType const base_data[],
-			PolynomialYWorkingData<XDataType, YDataType> *work_data) {
-	}
-	PolynomialYWorkingData(uint8_t order, size_t num_base, size_t array_size,
-			size_t num_array) :
-			PolynomialWorkingData<XDataType>(order, num_base, array_size,
-					num_array) {
-	}
-};
-
-template<class XDataType, class YDataType>
 inline void DeriveSplineCorrectionTermImpl(size_t num_base,
 		XDataType const base_position[], size_t num_array,
 		YDataType const base_data[], YDataType d2ydx2[],
@@ -293,33 +273,6 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType> {
 	}
 };
 
-template<class XDataType, class YDataType>
-struct SplineYWorkingData: public StorageAndAlignedPointer<YDataType> {
-	static SplineYWorkingData<XDataType, YDataType> * Allocate(
-			uint8_t polynomial_order, size_t num_base, size_t num_array) {
-		SplineYWorkingData<XDataType, YDataType> *work_data =
-				new SplineYWorkingData<XDataType, YDataType>();
-		AllocateAndAlign<YDataType>(num_base * num_array, work_data);
-		return work_data;
-	}
-	static void Initialize(size_t num_base, size_t num_array,
-			XDataType const base_position[], YDataType const base_data[],
-			SplineYWorkingData<XDataType, YDataType> *work_data) {
-		work_data->DeriveSplineCorrectionTerm(num_base, base_position,
-				num_array, base_data);
-	}
-	void DeriveSplineCorrectionTerm(size_t num_base,
-			XDataType const base_position[], size_t num_array,
-			YDataType const base_data[]) {
-		StorageAndAlignedPointer<YDataType> holder_for_u;
-		AllocateAndAlign<YDataType>(num_base * num_array, &holder_for_u);
-		YDataType *upper_triangular = holder_for_u.pointer;
-		DeriveSplineCorrectionTermImpl<XDataType, YDataType>(num_base,
-				base_position, num_array, base_data, this->pointer,
-				upper_triangular);
-	}
-};
-
 // Interface class for Interpolator
 template<class InterpolatorImpl, class WorkData, class XDataType,
 		class YDataType>
@@ -381,30 +334,6 @@ struct NearestXInterpolatorImpl: public InterpolatorInterface<
 	}
 };
 
-template<class XDataType, class YDataType>
-struct NearestYInterpolatorImpl: public InterpolatorInterface<
-		NearestYInterpolatorImpl<XDataType, YDataType>,
-		NullWorkingData<XDataType, YDataType>, XDataType, YDataType> {
-	typedef typename InterpolatorInterface<
-			NearestYInterpolatorImpl<XDataType, YDataType>,
-			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	static void DoInterpolate(size_t num_base, XDataType const base_position[],
-			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
-		XDataType const midpoint = 0.5
-				* (base_position[left_index + 1] + base_position[left_index]);
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
-			size_t offset_index = (interpolated_position[i] > midpoint) ? 0 : 1;
-			YDataType *work = &interpolated_data[i];
-			YDataType const * const nearest = &base_data[left_index
-					+ offset_index];
-			interpolated_data[i] = base_data[left_index + offset_index];
-		}
-	}
-};
-
 // TODO: documentation must be added
 template<class XDataType, class YDataType>
 struct LinearXInterpolatorImpl: public InterpolatorInterface<
@@ -430,36 +359,6 @@ struct LinearXInterpolatorImpl: public InterpolatorInterface<
 					+ static_cast<YDataType>(dydx
 							* (interpolated_position[i]
 									- base_position[left_index]));
-		}
-	}
-};
-
-template<class XDataType, class YDataType>
-struct LinearYInterpolatorImpl: public InterpolatorInterface<
-		LinearYInterpolatorImpl<XDataType, YDataType>,
-		NullWorkingData<XDataType, YDataType>, XDataType, YDataType> {
-	typedef typename InterpolatorInterface<
-			LinearYInterpolatorImpl<XDataType, YDataType>,
-			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	static void DoInterpolate(size_t num_base, XDataType const base_position[],
-			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
-			YDataType const fraction =
-					static_cast<YDataType>((interpolated_position[i]
-							- base_position[left_index])
-							/ (base_position[left_index + 1]
-									- base_position[left_index]));
-			YDataType *work = &interpolated_data[i];
-			YDataType const *left_value = &base_data[left_index];
-			YDataType const *right_value = &base_data[left_index + 1];
-			interpolated_data[i] =
-					base_data[left_index]
-							+ fraction
-									* (base_data[left_index + 1]
-											- base_data[left_index]);
 		}
 	}
 };
@@ -531,70 +430,6 @@ private:
 	}
 };
 
-template<class XDataType, class YDataType>
-struct PolynomialYInterpolatorImpl: public InterpolatorInterface<
-		PolynomialYInterpolatorImpl<XDataType, YDataType>,
-		PolynomialYWorkingData<XDataType, YDataType>, XDataType, YDataType> {
-	typedef typename InterpolatorInterface<
-			PolynomialYInterpolatorImpl<XDataType, YDataType>,
-			PolynomialYWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	static void DoInterpolate(size_t num_base, XDataType const base_position[],
-			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
-		int left_edge1 = left_index - work_data->polynomial_order / 2;
-		size_t left_edge2 = num_base - work_data->num_elements;
-		size_t left_edge =
-				static_cast<size_t>((left_edge1 > 0) ? left_edge1 : 0);
-		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
-			PerformNevilleAlgorithm(base_position, base_data, left_edge,
-					interpolated_position[i], work_data, &interpolated_data[i]);
-		}
-	}
-private:
-	static void PerformNevilleAlgorithm(XDataType const base_position[],
-			YDataType const base_data[], size_t left_index,
-			XDataType interpolated_position,
-			WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
-		// working pointers
-		XDataType const *x_ptr = &(base_position[left_index]);
-		XDataType *c = work_data->xholder[0].pointer;
-		XDataType *d = work_data->xholder[1].pointer;
-		XDataType *work = work_data->xholder[2].pointer;
-
-		for (size_t i = 0; i < work_data->num_elements; ++i) {
-			c[i] = static_cast<XDataType>(base_data[left_index + i]);
-			d[i] = c[i];
-		}
-
-		// Neville's algorithm
-		work[0] = c[0];
-		for (size_t m = 1; m < work_data->num_elements; ++m) {
-			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
-			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
-			// d[n-m-1].
-			for (size_t i = m; i < work_data->num_elements; ++i) {
-				XDataType const dx = x_ptr[i - m] - x_ptr[i];
-				assert(dx != 0);
-				size_t const offset = (i - m);
-				size_t j = 0;
-				XDataType cd = (c[offset + 1] - d[offset]) / dx;
-				c[offset] = (x_ptr[i - m] - interpolated_position) * cd;
-				d[offset] = (x_ptr[i] - interpolated_position) * cd;
-			}
-
-			// In each step, c[0] holds Cm1 which is a correction between
-			// P12...m and P12...[m+1]. Thus, the following repeated update
-			// corresponds to the route P1 -> P12 -> P123 ->...-> P123...n.
-			work[0] += c[0];
-		}
-		interpolated_data[0] = static_cast<YDataType>(work[0]);
-	}
-};
-
 // TODO: documentation must be added
 template<class XDataType, class YDataType>
 struct SplineXInterpolatorImpl: public InterpolatorInterface<
@@ -623,37 +458,6 @@ struct SplineXInterpolatorImpl: public InterpolatorInterface<
 					+ ((a * a * a - a) * d2ydx2[offset_index_left]
 							+ (b * b * b - b) * d2ydx2[offset_index_left + 1])
 							* dx_factor);
-		}
-	}
-};
-
-template<class XDataType, class YDataType>
-struct SplineYInterpolatorImpl: public InterpolatorInterface<
-		SplineYInterpolatorImpl<XDataType, YDataType>,
-		SplineYWorkingData<XDataType, YDataType>, XDataType, YDataType> {
-	typedef typename InterpolatorInterface<
-			SplineYInterpolatorImpl<XDataType, YDataType>,
-			SplineYWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	static void DoInterpolate(size_t num_base, XDataType const base_position[],
-			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
-		YDataType const * const d2ydx2 = work_data->pointer;
-		XDataType const dx = base_position[left_index + 1]
-				- base_position[left_index];
-		YDataType const left_value = base_data[left_index];
-		YDataType const right_value = base_data[(left_index + 1)];
-		YDataType const d2ydx2_left = d2ydx2[left_index];
-		YDataType const d2ydx2_right = d2ydx2[(left_index + 1)];
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
-			XDataType const a = (base_position[left_index + 1]
-					- interpolated_position[i]) / dx;
-			XDataType const b = 1.0 - a;
-			XDataType const aaa = (a * a * a - a) * dx * dx / 6.0;
-			XDataType const bbb = (b * b * b - b) * dx * dx / 6.0;
-			interpolated_data[i] = static_cast<YDataType>(a * left_value
-					+ b * right_value + aaa * d2ydx2_left + bbb * d2ydx2_right);
 		}
 	}
 };
