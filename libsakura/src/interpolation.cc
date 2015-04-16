@@ -800,7 +800,7 @@ bool IsDuplicateOrNotSorted(Checker checker, size_t num_elements,
 
 template<class DataType>
 bool IsDuplicateOrNotSorted(size_t num_elements, DataType const data[]) {
-	if (num_elements == 1) {
+	if (num_elements <= 1) {
 		return false;
 	} else if (data[0] < data[num_elements - 1]) {
 		// ascending check
@@ -871,6 +871,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		return false;
 	}
 
+#ifndef NDEBUG
 	// base_position is not sorted or base_position has duplicated element
 	if (IsDuplicateOrNotSorted(num_base, base_position)) {
 		LOG4CXX_ERROR(logger,
@@ -886,6 +887,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
+#endif
 
 	return true;
 }
@@ -914,15 +916,15 @@ LIBSAKURA_SYMBOL(
 				num_array, base_data, base_mask, num_interpolated,
 				interpolated_position, interpolated_data, interpolated_mask);
 	} catch (const std::bad_alloc &e) {
-// failed to allocate memory
+		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
 	} catch (const LIBSAKURA_SYMBOL(Status)&LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
-// failed to allocate memory
+		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Invalid interpolation type.");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	} catch (...) {
-// any exception is thrown during interpolation
+		// any exception is thrown during interpolation
 		assert(false);
 		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
