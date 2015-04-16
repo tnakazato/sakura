@@ -208,10 +208,10 @@ inline void DeriveSplineCorrectionTermImpl(size_t num_base,
 		d2ydx2[i1] = 3.0 * b1
 				* ((base_data[i0] - base_data[i1]) / a2
 						- (base_data[i1] - base_data[i2]) / a1
-						- d2ydx2[i2] * 0.5 * a1);
-		XDataType a3 = 1.0 / (1.0 - upper_triangular[i2] * 0.5 * a1 * b1);
+						- d2ydx2[i2] * a1 / 2.0);
+		XDataType a3 = 1.0 / (1.0 - upper_triangular[i2] * a1 * b1 / 2.0);
 		d2ydx2[i1] *= a3;
-		upper_triangular[i1] = 0.5 * a2 * b1 * a3;
+		upper_triangular[i1] = a2 * b1 * a3 / 2.0;
 		a1 = a2;
 	}
 
@@ -301,8 +301,8 @@ struct NearestXInterpolatorImpl: public InterpolatorInterface<
 			XDataType const interpolated_position[], size_t const location[],
 			size_t k, size_t left_index, WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
-		XDataType const midpoint = 0.5
-				* (base_position[left_index + 1] + base_position[left_index]);
+		XDataType const midpoint = (base_position[left_index + 1]
+				+ base_position[left_index]) / 2.0;
 		YDataType const left_value = base_data[left_index];
 		YDataType const right_value = base_data[left_index + 1];
 		//YDataType *work = &interpolated_data[0];
