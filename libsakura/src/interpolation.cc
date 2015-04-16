@@ -376,10 +376,11 @@ struct PolynomialXInterpolatorImpl: public InterpolatorInterface<
 			XDataType const interpolated_position[], size_t const location[],
 			size_t k, size_t left_index, WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
-		int const left_edge1 = left_index - work_data->polynomial_order / 2;
+		assert(num_base >= work_data->num_elements);
 		size_t const left_edge2 = num_base - work_data->num_elements;
 		size_t left_edge =
-				static_cast<size_t>((left_edge1 > 0) ? left_edge1 : 0);
+				(left_index >= work_data->polynomial_order / 2u) ?
+						left_index - work_data->polynomial_order / 2u : 0;
 		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
 		for (size_t i = location[k - 1]; i < location[k]; ++i) {
 			PerformNevilleAlgorithm(num_base, base_position, base_data,
