@@ -63,7 +63,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d     const &a, __m256d     const &b, __m256d     const &c) {
+__m256d NegMultiplyAdd(__m256d       const &a, __m256d       const &b, __m256d       const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -153,6 +153,9 @@ template<size_t NUM_BASES>
 inline void GetMatrixCoefficientsForLeastSquareFittingTemplate(size_t num_mask,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
@@ -182,6 +185,9 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 inline void GetMatrixCoefficientsForLeastSquareFitting(size_t num_mask,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		size_t num_lsq_bases, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
@@ -208,10 +214,17 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 }
 
 inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
-		size_t num_mask, bool const *mask, size_t num_boundary,
-		double const *boundary, double const *model, double *out) {
-	if (num_boundary == 0)
-		num_boundary = 1;
+		size_t num_mask, bool const *mask_arg, size_t num_boundary,
+		double const *boundary_arg, double const *model_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto mask = AssumeAligned(mask_arg);
+	auto boundary = AssumeAligned(boundary_arg);
+	auto model = AssumeAligned(model_arg);
+	auto out = AssumeAligned(out_arg);
+
 	size_t num_cubic_bases = 4;
 	size_t num_cubic_bases_minus1 = num_cubic_bases - 1;
 	size_t num_model_bases = num_cubic_bases_minus1 + num_boundary;
@@ -281,14 +294,24 @@ inline void GetMatrixCoefficientsForLeastSquareFittingCubicSpline(
 }
 
 inline void GetVectorCoefficientsForLeastSquareFittingCubicSpline(
-		size_t num_data, float const *data,
-		bool const *mask, size_t num_boundary, double const *boundary,
-		double const *model, double *out) {
-	if (num_boundary == 0)
-		num_boundary = 1;
+		size_t num_data, float const *data_arg, bool const *mask_arg,
+		size_t num_boundary, double const *boundary_arg,
+		double const *model_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto boundary = AssumeAligned(boundary_arg);
+	auto model = AssumeAligned(model_arg);
+	auto out = AssumeAligned(out_arg);
+
 	size_t num_cubic_bases = 4;
 	size_t num_cubic_bases_minus1 = num_cubic_bases - 1;
 	size_t num_model_bases = num_cubic_bases_minus1 + num_boundary;
+
 	double *aux_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -336,6 +359,10 @@ inline void UpdateMatrixCoefficientsForLeastSquareFittingTemplate(
 		size_t num_clipped, size_t const *clipped_indices_arg,
 		size_t num_model_bases, double const *in_arg, double const *model_arg,
 		double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
 	auto model = AssumeAligned(model_arg);
@@ -357,6 +384,10 @@ inline void UpdateMatrixCoefficientsForLeastSquareFitting(size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_lsq_bases,
 		double const *in_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
 	auto model = AssumeAligned(model_arg);
@@ -378,6 +409,10 @@ template<size_t NUM_BASES>
 inline void GetVectorCoefficientsForLeastSquareFittingTemplate(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
 		double const *model_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
@@ -398,6 +433,10 @@ inline void GetVectorCoefficientsForLeastSquareFittingTemplate(size_t num_data,
 inline void GetVectorCoefficientsForLeastSquareFitting(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
 		double const *model_arg, size_t num_lsq_bases, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto model = AssumeAligned(model_arg);
@@ -420,6 +459,11 @@ inline void UpdateVectorCoefficientsForLeastSquareFittingTemplate(
 		float const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
@@ -440,6 +484,11 @@ inline void UpdateVectorCoefficientsForLeastSquareFitting(float const *data_arg,
 		size_t num_clipped, size_t const *clipped_indices_arg,
 		size_t num_lsq_bases, double const *in_arg, size_t num_model_bases,
 		double const *model_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto data = AssumeAligned(data_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto in = AssumeAligned(in_arg);
@@ -501,17 +550,6 @@ inline void GetLeastSquareFittingCoefficients(size_t num_data,
 			num_model_bases, basis, num_lsq_bases, lsq_vector);
 }
 
-inline void GetLeastSquareFittingCoefficientsCubicSpline(size_t num_data,
-		float const *data, bool const *mask, size_t num_boundary,
-		double const *boundary, double const *basis_data, double *lsq_matrix,
-		double *lsq_vector) {
-
-	GetMatrixCoefficientsForLeastSquareFittingCubicSpline(num_data, mask,
-			num_boundary, boundary, basis_data, lsq_matrix);
-	GetVectorCoefficientsForLeastSquareFittingCubicSpline(num_data, data, mask,
-			num_boundary, boundary, basis_data, lsq_vector);
-}
-
 template<size_t NUM_BASES>
 inline void UpdateLeastSquareFittingCoefficientsTemplate(size_t const num_data,
 		float const *data_arg, size_t const num_clipped,
@@ -558,6 +596,29 @@ inline void UpdateLeastSquareFittingCoefficients(size_t const num_data,
 	UpdateVectorCoefficientsForLeastSquareFitting(data, num_clipped,
 			clipped_indices, num_lsq_bases, lsq_vector, num_model_bases, basis,
 			lsq_vector);
+}
+
+inline void GetLeastSquareFittingCoefficientsCubicSpline(size_t num_data,
+		float const *data_arg, bool const *mask_arg, size_t num_boundary,
+		double const *boundary_arg, double const *basis_data,
+		double *lsq_matrix_arg, double *lsq_vector_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
+	auto data = AssumeAligned(data_arg);
+	auto mask = AssumeAligned(mask_arg);
+	auto boundary = AssumeAligned(boundary_arg);
+	auto basis = AssumeAligned(basis_data);
+	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
+	auto lsq_vector = AssumeAligned(lsq_vector_arg);
+
+	GetMatrixCoefficientsForLeastSquareFittingCubicSpline(num_data, mask,
+			num_boundary, boundary, basis, lsq_matrix);
+	GetVectorCoefficientsForLeastSquareFittingCubicSpline(num_data, data, mask,
+			num_boundary, boundary, basis, lsq_vector);
 }
 
 inline void SolveSimultaneousEquationsByLUDouble(size_t num_equations,
@@ -679,39 +740,6 @@ void UpdateLeastSquareFittingCoefficientsEntry(size_t const num_data,
 	} \
 } while (false)
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
-		size_t num_data, float const data[], bool const mask[],
-		size_t num_boundary, double const boundary[], double const basis_data[],
-		double lsq_matrix[], double lsq_vector[]) noexcept {
-	CHECK_ARGS(num_data >= 4);
-	CHECK_ARGS(data != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
-	CHECK_ARGS(mask != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(num_boundary != 0);
-	CHECK_ARGS(num_boundary <= num_data / 4);
-	CHECK_ARGS(boundary != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
-	CHECK_ARGS(basis_data != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	CHECK_ARGS(lsq_matrix != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
-	CHECK_ARGS(lsq_vector != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
-
-	try {
-		GetLeastSquareFittingCoefficientsCubicSpline(num_data, data, mask,
-				num_boundary, boundary, basis_data, lsq_matrix, lsq_vector);
-	} catch (const std::runtime_error &e) {
-		LOG4CXX_ERROR(logger, e.what());
-		return LIBSAKURA_SYMBOL(Status_kNG);
-	} catch (...) {
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-
-	return LIBSAKURA_SYMBOL(Status_kOK);
-}
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
@@ -778,6 +806,40 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoe
 		UpdateLeastSquareFittingCoefficientsEntry(num_data, data,
 				num_exclude_indices, exclude_indices, num_model_bases,
 				basis_data, num_lsq_bases, lsq_matrix, lsq_vector);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+		size_t num_data, float const data[], bool const mask[],
+		size_t num_boundary, double const boundary[], double const basis_data[],
+		double lsq_matrix[], double lsq_vector[]) noexcept {
+	CHECK_ARGS(num_data >= 4);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(num_boundary != 0);
+	CHECK_ARGS(num_boundary <= num_data / 4);
+	CHECK_ARGS(boundary != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
+	CHECK_ARGS(basis_data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
+	CHECK_ARGS(lsq_matrix != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
+	CHECK_ARGS(lsq_vector != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
+
+	try {
+		GetLeastSquareFittingCoefficientsCubicSpline(num_data, data, mask,
+				num_boundary, boundary, basis_data, lsq_matrix, lsq_vector);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);

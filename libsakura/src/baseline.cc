@@ -71,8 +71,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	size_t num_bases = 0;
 	switch (baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		num_bases = order + 1;
-		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
 		num_bases = order + 1;
 		break;
@@ -147,6 +145,9 @@ inline void SetBasisData(uint16_t const order,
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
 			order);
+	if (context->num_basis_data < context->num_bases) {
+		throw std::invalid_argument("num_bases exceeds num_basis_data!");
+	}
 	AllocateMemoryForBasisData(context);
 	switch (context->baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
@@ -168,9 +169,6 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	default:
 		assert(false);
 		break;
-	}
-	if (context->num_bases > context->num_basis_data) {
-		throw std::invalid_argument("num_bases exceeds num_basis_data!");
 	}
 }
 
@@ -488,13 +486,10 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	}
 }
 
-inline void GetUnmaskedDataNumbers(size_t num_data, float const *data_arg,
-bool const *mask_arg, size_t num_pieces, double const *boundary_arg,
-		size_t *num_clipped) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+inline void GetUnmaskedDataNumbers(size_t num_mask, bool const *mask_arg,
+		size_t num_pieces, double const *boundary_arg, size_t *num_clipped) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
-	auto data = AssumeAligned(data_arg);
 	auto mask = AssumeAligned(mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
@@ -503,7 +498,7 @@ bool const *mask_arg, size_t num_pieces, double const *boundary_arg,
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
 		size_t end_idx =
 				(i < num_pieces - 1) ?
-						static_cast<size_t>(ceil(boundary[i + 1])) : num_data;
+						static_cast<size_t>(ceil(boundary[i + 1])) : num_mask;
 		for (size_t j = start_idx; j < end_idx; ++j) {
 			if (mask[j]) {
 				++num_clipped[i];
@@ -612,14 +607,13 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*num_unmasked_data) * num_pieces,
 					&num_unmasked_data));
-	GetUnmaskedDataNumbers(num_data, data, mask, num_pieces, boundary,
+	GetUnmaskedDataNumbers(num_data, mask, num_pieces, boundary,
 			num_unmasked_data);
 	size_t *num_clipped = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_num_clipped(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*num_clipped) * num_pieces, &num_clipped));
-	GetUnmaskedDataNumbers(num_data, data, mask, num_pieces, boundary,
-			num_clipped);
+	GetUnmaskedDataNumbers(num_data, mask, num_pieces, boundary, num_clipped);
 
 	for (size_t i = 0; i < num_data; ++i) {
 		final_mask[i] = mask[i];
