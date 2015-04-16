@@ -699,10 +699,6 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		} else {
 			// perform interpolation, keep input mask
 
-			// Perform 1-dimensional interpolation
-			// Any preparation for interpolation should be done here
-			WorkingData::Initialize(n, x0, y0, work_data);
-
 			// Locate each element in base_position against interpolated_position
 			StorageAndAlignedPointer<size_t> size_t_holder;
 			AllocateAndAlign<size_t>(n, &size_t_holder);
@@ -713,11 +709,13 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			// Outside of base_position[0]
 			FillOutOfRangeAreaWithEdgeValue(0, y0, 0, location_base[0], y1);
 
-			// Between base_position[0] and base_position[num_base-1]
+			// Perform 1-dimensional interpolation
+			// between base_position[0] and base_position[num_base-1]
 			size_t offset = 0;
 			while (offset + 1 < n && x0[offset + 1] < x1[0]) {
 				offset++;
 			}
+			WorkingData::Initialize(n, x0, y0, work_data);
 			Interpolator::Interpolate1D(n, x0, y0, num_interpolated, x1,
 					num_location_base, location_base, offset, work_data, y1);
 
