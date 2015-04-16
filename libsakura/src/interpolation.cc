@@ -159,8 +159,19 @@ struct NullWorkingData {
 	}
 };
 
+struct CustomizedMemoryManagement {
+	static void *operator new(size_t size) {
+		//std::cout << "This is overloaded new" << std::endl;
+		return LIBSAKURA_PREFIX::Memory::Allocate(size);
+	}
+	static void operator delete(void *p) {
+		//std::cout << "This is overloaded delete" << std::endl;
+		LIBSAKURA_PREFIX::Memory::Free(p);
+	}
+};
+
 template<class XDataType, class YDataType>
-struct PolynomialXWorkingData {
+struct PolynomialXWorkingData: CustomizedMemoryManagement {
 	static PolynomialXWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		return new PolynomialXWorkingData<XDataType, YDataType>(
@@ -228,7 +239,8 @@ inline void DeriveSplineCorrectionTermImpl(size_t num_base,
 }
 
 template<class XDataType, class YDataType>
-struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType> {
+struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
+		public CustomizedMemoryManagement {
 	static SplineXWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		SplineXWorkingData<XDataType, YDataType> *work_data =
