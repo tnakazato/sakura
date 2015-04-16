@@ -398,14 +398,16 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if(0 >= num_data || num_data > INT_MAX){
+	if (0 >= num_data || num_data > INT_MAX) {
 		LOG4CXX_ERROR(logger, "num_data must be '0 < num_data <= INT_MAX'");
-				return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	if (LIBSAKURA_SYMBOL(IsAligned)(input_data) == false)
+	if (LIBSAKURA_SYMBOL(IsAligned)(input_data) == false) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if(LIBSAKURA_SYMBOL(IsAligned)(output_data) == false)
+	}
+	if (LIBSAKURA_SYMBOL(IsAligned)(output_data) == false) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 	//assert(fftw_alignment_of((double *)input_data) == 0);
 	//assert(fftw_alignment_of((double *)output_data) == 0);
 	try {
