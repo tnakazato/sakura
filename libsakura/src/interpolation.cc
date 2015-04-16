@@ -487,11 +487,6 @@ inline void FillOutOfRangeAreaWithEdgeValue(size_t edge_index,
 
 template<class XDataType, class YDataType>
 struct XInterpolatorHelper {
-//	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-//	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-//	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-//	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
-
 	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
 			size_t iarray, XDataType const position[], YDataType const data[],
 			bool const mask[], bool is_ascending, XDataType x[],
@@ -559,11 +554,6 @@ struct XInterpolatorHelper {
 
 template<class XDataType, class YDataType>
 struct YInterpolatorHelper {
-//	typedef NearestYInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-//	typedef LinearYInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-//	typedef PolynomialYInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-//	typedef SplineYInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
-
 	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
 			size_t iarray, XDataType const position[], YDataType const data[],
 			bool const mask[], bool is_ascending, XDataType x[],
