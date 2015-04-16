@@ -249,7 +249,12 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 			uint8_t polynomial_order, size_t num_base) {
 		SplineXWorkingData<XDataType, YDataType> *work_data =
 				new SplineXWorkingData<XDataType, YDataType>();
-		AllocateAndAlign<YDataType>(num_base, work_data);
+		try {
+			AllocateAndAlign<YDataType>(num_base, work_data);
+		} catch (...) {
+			delete work_data;
+			throw std::bad_alloc();
+		}
 		return work_data;
 	}
 	static void Initialize(size_t num_base, XDataType const base_position[],
