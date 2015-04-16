@@ -331,12 +331,8 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 inline void DestroyConvolve1DContextFloat(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 	if (context != nullptr) {
-		if (context->plan_real_to_complex_float != nullptr) {
-			DestroyFFTPlan(context->plan_real_to_complex_float);
-		}
-		if (context->plan_complex_to_real_float != nullptr) {
-			DestroyFFTPlan(context->plan_complex_to_real_float);
-		}
+		DestroyFFTPlan(context->plan_real_to_complex_float);
+		DestroyFFTPlan(context->plan_complex_to_real_float);
 		if (context->fft_applied_complex_kernel != nullptr) {
 			FreeFFTArray(context->fft_applied_complex_kernel);
 		}
