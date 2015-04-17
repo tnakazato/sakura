@@ -482,6 +482,18 @@ inline void FillOutOfRangeAreaWithEdgeValue(size_t edge_index,
 	}
 }
 
+template<class DataType, class Indexer>
+static void FillOneRowWithValue(Indexer indexer, size_t num_column,
+		size_t num_row, DataType value, size_t the_row,
+		DataType data[/*num_row][num_column*/]) {
+	assert(the_row < num_row);
+	for (size_t i = 0; i < num_column; ++i) {
+		size_t index = indexer(num_column, num_row, the_row, i);
+		assert(index < num_row * num_column);
+		data[index] = value;
+	}
+}
+
 template<class XDataType, class YDataType>
 struct XInterpolatorHelper {
 	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
@@ -501,13 +513,9 @@ struct XInterpolatorHelper {
 				mask, x, y);
 	}
 
-	template<class T>
-	static void FillOneRowWithValue(size_t num_column, size_t num_row, T value,
-			size_t the_row, T data[/*num_row][num_column*/]) {
-		assert(the_row < num_row);
-		for (size_t i = 0; i < num_column; ++i) {
-			data[num_column * the_row + i] = value;
-		}
+	static size_t FillOneRowWithValueIndexer(size_t num_column, size_t num_row,
+			size_t the_row, size_t index) {
+		return num_column * the_row + index;
 	}
 
 	static void FillResult(size_t num_interpolated, size_t num_array,
@@ -544,13 +552,9 @@ struct YInterpolatorHelper {
 				data_index_increment, num_base, position, data, mask, x, y);
 	}
 
-	template<class T>
-	static void FillOneRowWithValue(size_t num_column, size_t num_row, T value,
-			size_t the_row, T data[/*num_column][num_row*/]) {
-		assert(the_row < num_row);
-		for (size_t i = 0; i < num_column; ++i) {
-			data[the_row + num_row * i] = value;
-		}
+	static size_t FillOneRowWithValueIndexer(size_t num_column, size_t num_row,
+			size_t the_row, size_t index) {
+		return the_row + num_row * index;
 	}
 
 	static void FillResult(size_t num_interpolated, size_t num_array,
@@ -633,13 +637,15 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 				x0, y0);
 		if (n == 0) {
 			// cannot perform interpolation, mask all data
-			Helper::FillOneRowWithValue(num_interpolated, num_array, false,
-					iarray, interpolated_mask);
+			FillOneRowWithValue(Helper::FillOneRowWithValueIndexer,
+					num_interpolated, num_array, false, iarray,
+					interpolated_mask);
 		} else if (n == 1) {
 			// no need to interpolate, just substitute single base data
 			// to all elements in interpolated data, keep input mask
-			Helper::FillOneRowWithValue(num_interpolated, num_array, y0[0],
-					iarray, interpolated_data);
+			FillOneRowWithValue(Helper::FillOneRowWithValueIndexer,
+					num_interpolated, num_array, y0[0], iarray,
+					interpolated_data);
 		} else {
 			// perform interpolation, keep input mask
 
@@ -671,59 +677,6 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					is_interp_ascending, y1, interpolated_data);
 		}
 	}
-}
-
-template<class InterpolatorHelper, class XDataType, class YDataType>
-void ExecuteInterpolate1D(
-LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
-		uint8_t polynomial_order, size_t num_base,
-		XDataType const base_position[], size_t num_array,
-		YDataType const base_data[], bool const base_mask[],
-		size_t num_interpolated, XDataType const interpolated_position[],
-		YDataType interpolated_data[], bool interpolated_mask[]) {
-	typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-	typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-	typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-	typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
-	typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
-			size_t, YDataType const *, bool const *, size_t, XDataType const *,
-			YDataType *, bool *);
-	Interpolate1DFunc func = [](uint8_t, size_t, XDataType const *,
-			size_t, YDataType const *, bool const *, size_t,
-			XDataType const *, YDataType *, bool *) {
-		throw LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	};
-	switch (interpolation_method) {
-	case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
-		func = Interpolate1D<NearestInterpolator, InterpolatorHelper, XDataType,
-				YDataType>;
-		break;
-	case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
-		func = Interpolate1D<LinearInterpolator, InterpolatorHelper, XDataType,
-				YDataType>;
-		break;
-	case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
-		if (polynomial_order == 0) {
-			// This is special case: 0-th polynomial interpolation
-			// acts like nearest interpolation
-			func = Interpolate1D<NearestInterpolator, InterpolatorHelper,
-					XDataType, YDataType>;
-		} else {
-			func = Interpolate1D<PolynomialInterpolator, InterpolatorHelper,
-					XDataType, YDataType>;
-		}
-		break;
-	case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
-		func = Interpolate1D<SplineInterpolator, InterpolatorHelper, XDataType,
-				YDataType>;
-		break;
-	default:
-		// invalid interpolation method type
-		break;
-	}
-	(*func)(polynomial_order, num_base, base_position, num_array, base_data,
-			base_mask, num_interpolated, interpolated_position,
-			interpolated_data, interpolated_mask);
 }
 
 #ifndef NDEBUG
@@ -833,15 +786,15 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	return true;
 }
 
-template<typename Func>
-LIBSAKURA_SYMBOL(Status) DoInterpolate(Func func,
+template<typename XDataType, typename YDataType, typename InterpolatorHelper>
+LIBSAKURA_SYMBOL(Status) DoInterpolate(
 LIBSAKURA_SYMBOL(
 		InterpolationMethod) interpolation_method, uint8_t polynomial_order,
-		size_t num_base, double const base_position[/*num_base*/],
-		size_t num_array, float const base_data[/*num_base*num_array*/],
+		size_t num_base, XDataType const base_position[/*num_base*/],
+		size_t num_array, YDataType const base_data[/*num_base*num_array*/],
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
-		double const interpolated_position[/*num_interpolated*/],
-		float interpolated_data[/*num_interpolated*num_array*/],
+		XDataType const interpolated_position[/*num_interpolated*/],
+		YDataType interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) {
 	// check arguments
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
@@ -853,9 +806,49 @@ LIBSAKURA_SYMBOL(
 	}
 
 	try {
-		func(interpolation_method, polynomial_order, num_base, base_position,
-				num_array, base_data, base_mask, num_interpolated,
-				interpolated_position, interpolated_data, interpolated_mask);
+		typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
+		typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
+		typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
+		typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
+		typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
+				size_t, YDataType const *, bool const *, size_t,
+				XDataType const *, YDataType *, bool *);
+		Interpolate1DFunc func = [](uint8_t, size_t, XDataType const *,
+				size_t, YDataType const *, bool const *, size_t,
+				XDataType const *, YDataType *, bool *) {
+			throw LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		};
+		switch (interpolation_method) {
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kNearest):
+			func = Interpolate1D<NearestInterpolator, InterpolatorHelper,
+					XDataType, YDataType>;
+			break;
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kLinear):
+			func = Interpolate1D<LinearInterpolator, InterpolatorHelper,
+					XDataType, YDataType>;
+			break;
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kPolynomial):
+			if (polynomial_order == 0) {
+				// This is special case: 0-th polynomial interpolation
+				// acts like nearest interpolation
+				func = Interpolate1D<NearestInterpolator, InterpolatorHelper,
+						XDataType, YDataType>;
+			} else {
+				func = Interpolate1D<PolynomialInterpolator, InterpolatorHelper,
+						XDataType, YDataType>;
+			}
+			break;
+		case LIBSAKURA_SYMBOL(InterpolationMethod_kSpline):
+			func = Interpolate1D<SplineInterpolator, InterpolatorHelper,
+					XDataType, YDataType>;
+			break;
+		default:
+			// invalid interpolation method type
+			break;
+		}
+		(*func)(polynomial_order, num_base, base_position, num_array, base_data,
+				base_mask, num_interpolated, interpolated_position,
+				interpolated_data, interpolated_mask);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -899,10 +892,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) noexcept {
 
-	return DoInterpolate(
-			ExecuteInterpolate1D<XInterpolatorHelper<double, float>, double,
-					float>, interpolation_method, polynomial_order, num_base,
-			base_position, num_array, base_data, base_mask, num_interpolated,
+	return DoInterpolate<double, float, XInterpolatorHelper<double, float> >(
+			interpolation_method, polynomial_order, num_base, base_position,
+			num_array, base_data, base_mask, num_interpolated,
 			interpolated_position, interpolated_data, interpolated_mask);
 
 }
@@ -931,10 +923,9 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) noexcept {
 
-	return DoInterpolate(
-			ExecuteInterpolate1D<YInterpolatorHelper<double, float>, double,
-					float>, interpolation_method, polynomial_order, num_base,
-			base_position, num_array, base_data, base_mask, num_interpolated,
+	return DoInterpolate<double, float, YInterpolatorHelper<double, float> >(
+			interpolation_method, polynomial_order, num_base, base_position,
+			num_array, base_data, base_mask, num_interpolated,
 			interpolated_position, interpolated_data, interpolated_mask);
 
 }
