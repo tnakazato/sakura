@@ -222,9 +222,9 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 		YDataType *d2ydx2 = work_data->pointer;
 
 		// This is a condition of natural cubic spline
-		d2ydx2[0] = 0.0;
-		d2ydx2[num_base - 1] = 0.0;
-		upper_triangular[0] = 0.0;
+		d2ydx2[0] = YDataType(0.0);
+		d2ydx2[num_base - 1] = YDataType(0.0);
+		upper_triangular[0] = YDataType(0.0);
 
 		// Solve tridiagonal system.
 		// Here tridiagonal matrix is decomposed to upper triangular matrix.
