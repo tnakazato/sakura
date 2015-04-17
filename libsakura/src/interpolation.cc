@@ -446,17 +446,14 @@ struct SplineXInterpolatorImpl: public InterpolatorInterface<
 	}
 };
 
-template<class XDataType, class YDataType>
-inline size_t FillDataAsAscendingImpl(size_t position_index_start,
-		ssize_t position_index_increment, size_t data_index_start,
-		ssize_t data_index_increment, size_t num_column,
-		XDataType const position[], YDataType const data[],
+template<class Indexer, class XDataType, class YDataType>
+inline size_t FillDataAsAscending(size_t num_column, XDataType const position[],
+		size_t num_row, size_t the_row, YDataType const data[],
 		bool const mask[], XDataType out_position[], YDataType out_data[]) {
 	size_t n = 0;
 	for (size_t i = 0; i < num_column; ++i) {
-		size_t data_index = data_index_start + data_index_increment * i;
-		size_t position_index = position_index_start
-				+ position_index_increment * i;
+		size_t data_index = Indexer::GetIndex(num_column, num_row, the_row, i);
+		size_t position_index = Indexer::GetIndex(num_column, 1, 0, i);
 		if (mask[data_index]) {
 			out_position[n] = position[position_index];
 			out_data[n] = data[data_index];
@@ -466,11 +463,13 @@ inline size_t FillDataAsAscendingImpl(size_t position_index_start,
 	return n;
 }
 
-template<class DataType>
-inline void FillResultImpl(size_t index_start, ssize_t index_increment,
-		size_t num_interpolated, DataType y1[], DataType data[]) {
-	for (size_t i = 0; i < num_interpolated; ++i) {
-		data[index_start + i * index_increment] = y1[i];
+template<class Indexer, class DataType>
+inline void CopyResult(size_t num_column, size_t num_row, size_t the_row,
+		DataType in_data[], DataType out_data[]) {
+	for (size_t i = 0; i < num_column; ++i) {
+		size_t index = Indexer::GetIndex(num_column, num_row, the_row, i);
+		assert(index < num_row * num_column);
+		out_data[index] = in_data[i];
 	}
 }
 
@@ -482,92 +481,54 @@ inline void FillOutOfRangeAreaWithEdgeValue(size_t edge_index,
 	}
 }
 
-template<class DataType, class Indexer>
-static void FillOneRowWithValue(Indexer indexer, size_t num_column,
-		size_t num_row, DataType value, size_t the_row,
+template<class Indexer, class DataType>
+static void FillOneRowWithValue(size_t num_column, size_t num_row,
+		DataType value, size_t the_row,
 		DataType data[/*num_row][num_column*/]) {
 	assert(the_row < num_row);
 	for (size_t i = 0; i < num_column; ++i) {
-		size_t index = indexer(num_column, num_row, the_row, i);
+		size_t index = Indexer::GetIndex(num_column, num_row, the_row, i);
 		assert(index < num_row * num_column);
 		data[index] = value;
 	}
 }
 
-template<class XDataType, class YDataType>
-struct XInterpolatorHelper {
-	static size_t FillDataAsAscending(size_t num_column, size_t num_row,
-			size_t the_row, XDataType const position[], YDataType const data[],
-			bool const mask[], bool is_ascending, XDataType out_position[],
-			YDataType out_data[]) {
-		assert(num_column > 0);
-		assert(the_row < num_row);
-		size_t position_index_start = is_ascending ? 0 : num_column - 1;
-		ssize_t index_increment = is_ascending ? 1LL : -1LL;
-		size_t data_index_start =
-				is_ascending ?
-						the_row * num_column :
-						the_row * num_column + num_column - 1;
-		assert(data_index_start < num_column * num_row);
-		return FillDataAsAscendingImpl(position_index_start, index_increment,
-				data_index_start, index_increment, num_column, position, data,
-				mask, out_position, out_data);
-	}
-
-	static size_t GetIndexForRowFiller(size_t num_column, size_t num_row,
-			size_t the_row, size_t index) {
+struct XAscendingIndexer {
+	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
+			size_t index) {
 		return num_column * the_row + index;
-	}
-
-	static void FillResult(size_t num_column, size_t num_row, size_t the_row,
-	bool is_ascending, YDataType y1[], YDataType data[]) {
-		assert(num_column > 0);
-		assert(the_row < num_row);
-		size_t start =
-				is_ascending ?
-						the_row * num_column :
-						the_row * num_column + num_column - 1;
-		assert(start < num_column * num_row);
-		ssize_t increment = is_ascending ? 1LL : -1LL;
-		FillResultImpl(start, increment, num_column, y1, data);
 	}
 };
 
-template<class XDataType, class YDataType>
-struct YInterpolatorHelper {
-	static size_t FillDataAsAscending(size_t num_column, size_t num_row,
-			size_t the_row, XDataType const position[], YDataType const data[],
-			bool const mask[], bool is_ascending, XDataType out_position[],
-			YDataType out_data[]) {
-		assert(the_row < num_row);
-		assert(num_column > 0);
-		size_t position_index_start = is_ascending ? 0 : num_column - 1;
-		ssize_t position_index_increment = is_ascending ? 1LL : -1LL;
-		size_t data_index_start =
-				is_ascending ? the_row : num_row * (num_column - 1) + the_row;
-		assert(num_row <= SSIZE_MAX);
-		ssize_t data_index_increment = is_ascending ? num_row : -num_row;
-		return FillDataAsAscendingImpl(position_index_start,
-				position_index_increment, data_index_start,
-				data_index_increment, num_column, position, data, mask,
-				out_position, out_data);
+struct XDescendingIndexer {
+	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
+			size_t index) {
+		return num_column * the_row + num_column - 1 - index;
 	}
+};
 
-	static size_t GetIndexForRowFiller(size_t num_column, size_t num_row,
-			size_t the_row, size_t index) {
+struct YAscendingIndexer {
+	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
+			size_t index) {
 		return the_row + num_row * index;
 	}
+};
 
-	static void FillResult(size_t num_column, size_t num_row, size_t the_row,
-	bool is_ascending, YDataType y1[], YDataType data[]) {
-		assert(the_row < num_row);
-		assert(num_column > 0);
-		size_t start =
-				is_ascending ? the_row : num_row * (num_column - 1) + the_row;
-		assert(num_row < SSIZE_MAX);
-		ssize_t increment = is_ascending ? num_row : -num_row;
-		FillResultImpl(start, increment, num_column, y1, data);
+struct YDescendingIndexer {
+	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
+			size_t index) {
+		return the_row + num_row * (num_column - 1 - index);
 	}
+};
+
+struct XInterpolatorHelper {
+	typedef XAscendingIndexer AscendingIndexer;
+	typedef XDescendingIndexer DescendingIndexer;
+};
+
+struct YInterpolatorHelper {
+	typedef YAscendingIndexer AscendingIndexer;
+	typedef YDescendingIndexer DescendingIndexer;
 };
 
 template<class Interpolator, class Helper, class XDataType, class YDataType>
@@ -579,6 +540,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		YDataType interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) {
 	typedef typename Interpolator::WorkingData WorkingData;
+	typedef typename Helper::AscendingIndexer AscendingIndexer;
+	typedef typename Helper::DescendingIndexer DescendingIndexer;
 	assert(num_base > 0);
 	assert(num_array > 0);
 	assert(num_interpolated > 0);
@@ -601,6 +564,16 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	bool const is_interp_ascending =
 			(interpolated_position[num_interpolated - 1]
 					> interpolated_position[0]);
+
+	// Define helper function here
+	auto data_filler =
+			(is_base_ascending) ?
+					FillDataAsAscending<AscendingIndexer, XDataType, YDataType> :
+					FillDataAsAscending<DescendingIndexer, XDataType, YDataType>;
+	auto data_copier =
+			(is_interp_ascending) ?
+					CopyResult<AscendingIndexer, YDataType> :
+					CopyResult<DescendingIndexer, YDataType>;
 
 	// Initialize interpolated_mask to true
 	for (size_t i = 0; i < num_interpolated * num_array; ++i) {
@@ -630,18 +603,22 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			WorkingData::Allocate(polynomial_order, num_base));
 	WorkingData *work_data = wdata_storage.get();
 
+	StorageAndAlignedPointer<size_t> size_t_holder;
+
 	for (size_t iarray = 0; iarray < num_array; ++iarray) {
-		size_t const n = Helper::FillDataAsAscending(num_base, num_array,
-				iarray, base_position, base_data, base_mask, is_base_ascending,
-				x0, y0);
+		// Pick up valid data and associating position from base_position and base_data
+		// by referring base_mask. The data and position are reversed if sort order is
+		// descending.
+		size_t const n = data_filler(num_base, base_position, num_array, iarray,
+				base_data, base_mask, x0, y0);
 		if (n == 0) {
 			// cannot perform interpolation, mask all data
-			FillOneRowWithValue(Helper::GetIndexForRowFiller, num_interpolated,
+			FillOneRowWithValue<AscendingIndexer, bool>(num_interpolated,
 					num_array, false, iarray, interpolated_mask);
 		} else if (n == 1) {
 			// no need to interpolate, just substitute single base data
 			// to all elements in interpolated data, keep input mask
-			FillOneRowWithValue(Helper::GetIndexForRowFiller, num_interpolated,
+			FillOneRowWithValue<AscendingIndexer, YDataType>(num_interpolated,
 					num_array, y0[0], iarray, interpolated_data);
 		} else {
 			// perform interpolation, keep input mask
@@ -670,8 +647,9 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			FillOutOfRangeAreaWithEdgeValue(n - 1, y0,
 					location_base[num_location_base - 1], num_interpolated, y1);
 
-			Helper::FillResult(num_interpolated, num_array, iarray,
-					is_interp_ascending, y1, interpolated_data);
+			// Copy results in working array, y1, into result array
+			data_copier(num_interpolated, num_array, iarray, y1,
+					interpolated_data);
 		}
 	}
 }
@@ -889,7 +867,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) noexcept {
 
-	return DoInterpolate<double, float, XInterpolatorHelper<double, float> >(
+	return DoInterpolate<double, float, XInterpolatorHelper>(
 			interpolation_method, polynomial_order, num_base, base_position,
 			num_array, base_data, base_mask, num_interpolated,
 			interpolated_position, interpolated_data, interpolated_mask);
@@ -920,7 +898,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		float interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/]) noexcept {
 
-	return DoInterpolate<double, float, YInterpolatorHelper<double, float> >(
+	return DoInterpolate<double, float, YInterpolatorHelper>(
 			interpolation_method, polynomial_order, num_base, base_position,
 			num_array, base_data, base_mask, num_interpolated,
 			interpolated_position, interpolated_data, interpolated_mask);
