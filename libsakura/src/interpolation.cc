@@ -449,17 +449,17 @@ struct SplineXInterpolatorImpl: public InterpolatorInterface<
 template<class XDataType, class YDataType>
 inline size_t FillDataAsAscendingImpl(size_t position_index_start,
 		ssize_t position_index_increment, size_t data_index_start,
-		ssize_t data_index_increment, size_t num_base,
+		ssize_t data_index_increment, size_t num_column,
 		XDataType const position[], YDataType const data[],
-		bool const mask[], XDataType x[], YDataType y[]) {
+		bool const mask[], XDataType out_position[], YDataType out_data[]) {
 	size_t n = 0;
-	for (size_t i = 0; i < num_base; ++i) {
+	for (size_t i = 0; i < num_column; ++i) {
 		size_t data_index = data_index_start + data_index_increment * i;
 		size_t position_index = position_index_start
 				+ position_index_increment * i;
 		if (mask[data_index]) {
-			x[n] = position[position_index];
-			y[n] = data[data_index];
+			out_position[n] = position[position_index];
+			out_data[n] = data[data_index];
 			++n;
 		}
 	}
@@ -496,78 +496,77 @@ static void FillOneRowWithValue(Indexer indexer, size_t num_column,
 
 template<class XDataType, class YDataType>
 struct XInterpolatorHelper {
-	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
-			size_t iarray, XDataType const position[], YDataType const data[],
-			bool const mask[], bool is_ascending, XDataType x[],
-			YDataType y[]) {
-		assert(num_base > 0);
-		assert(iarray < num_array);
-		size_t position_index_start = is_ascending ? 0 : num_base - 1;
+	static size_t FillDataAsAscending(size_t num_column, size_t num_row,
+			size_t the_row, XDataType const position[], YDataType const data[],
+			bool const mask[], bool is_ascending, XDataType out_position[],
+			YDataType out_data[]) {
+		assert(num_column > 0);
+		assert(the_row < num_row);
+		size_t position_index_start = is_ascending ? 0 : num_column - 1;
 		ssize_t index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
 				is_ascending ?
-						iarray * num_base : iarray * num_base + num_base - 1;
-		assert(data_index_start < num_base * num_array);
+						the_row * num_column :
+						the_row * num_column + num_column - 1;
+		assert(data_index_start < num_column * num_row);
 		return FillDataAsAscendingImpl(position_index_start, index_increment,
-				data_index_start, index_increment, num_base, position, data,
-				mask, x, y);
+				data_index_start, index_increment, num_column, position, data,
+				mask, out_position, out_data);
 	}
 
-	static size_t FillOneRowWithValueIndexer(size_t num_column, size_t num_row,
+	static size_t GetIndexForRowFiller(size_t num_column, size_t num_row,
 			size_t the_row, size_t index) {
 		return num_column * the_row + index;
 	}
 
-	static void FillResult(size_t num_interpolated, size_t num_array,
-			size_t iarray, bool is_ascending, YDataType y1[],
-			YDataType data[]) {
-		assert(num_interpolated > 0);
-		assert(iarray < num_array);
+	static void FillResult(size_t num_column, size_t num_row, size_t the_row,
+	bool is_ascending, YDataType y1[], YDataType data[]) {
+		assert(num_column > 0);
+		assert(the_row < num_row);
 		size_t start =
 				is_ascending ?
-						iarray * num_interpolated :
-						iarray * num_interpolated + num_interpolated - 1;
-		assert(start < num_interpolated * num_array);
+						the_row * num_column :
+						the_row * num_column + num_column - 1;
+		assert(start < num_column * num_row);
 		ssize_t increment = is_ascending ? 1LL : -1LL;
-		FillResultImpl(start, increment, num_interpolated, y1, data);
+		FillResultImpl(start, increment, num_column, y1, data);
 	}
 };
 
 template<class XDataType, class YDataType>
 struct YInterpolatorHelper {
-	static size_t FillDataAsAscending(size_t num_base, size_t num_array,
-			size_t iarray, XDataType const position[], YDataType const data[],
-			bool const mask[], bool is_ascending, XDataType x[],
-			YDataType y[]) {
-		assert(iarray < num_array);
-		assert(num_base > 0);
-		size_t position_index_start = is_ascending ? 0 : num_base - 1;
+	static size_t FillDataAsAscending(size_t num_column, size_t num_row,
+			size_t the_row, XDataType const position[], YDataType const data[],
+			bool const mask[], bool is_ascending, XDataType out_position[],
+			YDataType out_data[]) {
+		assert(the_row < num_row);
+		assert(num_column > 0);
+		size_t position_index_start = is_ascending ? 0 : num_column - 1;
 		ssize_t position_index_increment = is_ascending ? 1LL : -1LL;
 		size_t data_index_start =
-				is_ascending ? iarray : num_array * (num_base - 1) + iarray;
-		assert(num_array <= SSIZE_MAX);
-		ssize_t data_index_increment = is_ascending ? num_array : -num_array;
+				is_ascending ? the_row : num_row * (num_column - 1) + the_row;
+		assert(num_row <= SSIZE_MAX);
+		ssize_t data_index_increment = is_ascending ? num_row : -num_row;
 		return FillDataAsAscendingImpl(position_index_start,
 				position_index_increment, data_index_start,
-				data_index_increment, num_base, position, data, mask, x, y);
+				data_index_increment, num_column, position, data, mask,
+				out_position, out_data);
 	}
 
-	static size_t FillOneRowWithValueIndexer(size_t num_column, size_t num_row,
+	static size_t GetIndexForRowFiller(size_t num_column, size_t num_row,
 			size_t the_row, size_t index) {
 		return the_row + num_row * index;
 	}
 
-	static void FillResult(size_t num_interpolated, size_t num_array,
-			size_t iarray, bool is_ascending, YDataType y1[],
-			YDataType data[]) {
-		assert(iarray < num_array);
-		assert(num_interpolated > 0);
+	static void FillResult(size_t num_column, size_t num_row, size_t the_row,
+	bool is_ascending, YDataType y1[], YDataType data[]) {
+		assert(the_row < num_row);
+		assert(num_column > 0);
 		size_t start =
-				is_ascending ?
-						iarray : num_array * (num_interpolated - 1) + iarray;
-		assert(num_array < SSIZE_MAX);
-		ssize_t increment = is_ascending ? num_array : -num_array;
-		FillResultImpl(start, increment, num_interpolated, y1, data);
+				is_ascending ? the_row : num_row * (num_column - 1) + the_row;
+		assert(num_row < SSIZE_MAX);
+		ssize_t increment = is_ascending ? num_row : -num_row;
+		FillResultImpl(start, increment, num_column, y1, data);
 	}
 };
 
@@ -637,15 +636,13 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 				x0, y0);
 		if (n == 0) {
 			// cannot perform interpolation, mask all data
-			FillOneRowWithValue(Helper::FillOneRowWithValueIndexer,
-					num_interpolated, num_array, false, iarray,
-					interpolated_mask);
+			FillOneRowWithValue(Helper::GetIndexForRowFiller, num_interpolated,
+					num_array, false, iarray, interpolated_mask);
 		} else if (n == 1) {
 			// no need to interpolate, just substitute single base data
 			// to all elements in interpolated data, keep input mask
-			FillOneRowWithValue(Helper::FillOneRowWithValueIndexer,
-					num_interpolated, num_array, y0[0], iarray,
-					interpolated_data);
+			FillOneRowWithValue(Helper::GetIndexForRowFiller, num_interpolated,
+					num_array, y0[0], iarray, interpolated_data);
 		} else {
 			// perform interpolation, keep input mask
 
