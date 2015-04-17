@@ -199,49 +199,6 @@ struct PolynomialXWorkingData: CustomizedMemoryManagement {
 };
 
 template<class XDataType, class YDataType>
-inline void DeriveSplineCorrectionTermImpl(size_t num_base,
-		XDataType const base_position[], YDataType const base_data[],
-		YDataType d2ydx2[], YDataType upper_triangular[]) {
-	// This is a condition of natural cubic spline
-	d2ydx2[0] = 0.0;
-	d2ydx2[num_base - 1] = 0.0;
-	upper_triangular[0] = 0.0;
-
-	// Solve tridiagonal system.
-	// Here tridiagonal matrix is decomposed to upper triangular matrix.
-	// upper_tridiangular stores upper triangular elements, while
-	// d2ydx2 stores right-hand-side vector. The diagonal
-	// elements are normalized to 1.
-
-	// x_base is ascending order
-	auto a1 = base_position[1] - base_position[0];
-	assert(a1 != decltype(a1)(0));
-	for (size_t i = 2; i < num_base; ++i) {
-		auto const a2 = base_position[i] - base_position[i - 1];
-		assert(a2 != decltype(a2)(0));
-		XDataType const b1 = 1.0 / (base_position[i] - base_position[i - 2]);
-		size_t i0 = i;
-		size_t i1 = i0 - 1;
-		size_t i2 = i1 - 1;
-		d2ydx2[i1] = YDataType(3.0) * b1
-				* ((base_data[i0] - base_data[i1]) / a2
-						- (base_data[i1] - base_data[i2]) / a1
-						- d2ydx2[i2] * a1 / YDataType(2.0));
-		XDataType a3 = XDataType(1.0)
-				/ (XDataType(1.0)
-						- upper_triangular[i2] * a1 * b1 / XDataType(2.0));
-		d2ydx2[i1] *= a3;
-		upper_triangular[i1] = a2 * b1 * a3 / YDataType(2.0);
-		a1 = a2;
-	}
-
-	// Solve the system by backsubstitution and store solution to d2ydx2
-	for (size_t k = num_base; k >= 3; --k) {
-		d2ydx2[k - 2] -= upper_triangular[k - 2] * d2ydx2[k - 1];
-	}
-}
-
-template<class XDataType, class YDataType>
 struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 		public CustomizedMemoryManagement {
 	static SplineXWorkingData<XDataType, YDataType> * Allocate(
@@ -263,8 +220,45 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 		AllocateAndAlign<YDataType>(num_base, &holder_for_u);
 		YDataType *upper_triangular = holder_for_u.pointer;
 		YDataType *d2ydx2 = work_data->pointer;
-		DeriveSplineCorrectionTermImpl(num_base, base_position, base_data,
-				d2ydx2, upper_triangular);
+
+		// This is a condition of natural cubic spline
+		d2ydx2[0] = 0.0;
+		d2ydx2[num_base - 1] = 0.0;
+		upper_triangular[0] = 0.0;
+
+		// Solve tridiagonal system.
+		// Here tridiagonal matrix is decomposed to upper triangular matrix.
+		// upper_tridiangular stores upper triangular elements, while
+		// d2ydx2 stores right-hand-side vector. The diagonal
+		// elements are normalized to 1.
+
+		// x_base is ascending order
+		auto a1 = base_position[1] - base_position[0];
+		assert(a1 != decltype(a1)(0));
+		for (size_t i = 2; i < num_base; ++i) {
+			auto const a2 = base_position[i] - base_position[i - 1];
+			assert(a2 != decltype(a2)(0));
+			XDataType const b1 = 1.0
+					/ (base_position[i] - base_position[i - 2]);
+			size_t i0 = i;
+			size_t i1 = i0 - 1;
+			size_t i2 = i1 - 1;
+			d2ydx2[i1] = YDataType(3.0) * b1
+					* ((base_data[i0] - base_data[i1]) / a2
+							- (base_data[i1] - base_data[i2]) / a1
+							- d2ydx2[i2] * a1 / YDataType(2.0));
+			XDataType a3 = XDataType(1.0)
+					/ (XDataType(1.0)
+							- upper_triangular[i2] * a1 * b1 / XDataType(2.0));
+			d2ydx2[i1] *= a3;
+			upper_triangular[i1] = a2 * b1 * a3 / YDataType(2.0);
+			a1 = a2;
+		}
+
+		// Solve the system by backsubstitution and store solution to d2ydx2
+		for (size_t k = num_base; k >= 3; --k) {
+			d2ydx2[k - 2] -= upper_triangular[k - 2] * d2ydx2[k - 1];
+		}
 	}
 };
 
