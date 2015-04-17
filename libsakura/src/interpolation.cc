@@ -22,8 +22,6 @@
  */
 #include <libsakura/sakura.h>
 
-#include <sys/types.h>
-
 #include <algorithm>
 #include <cassert>
 #include <climits>
