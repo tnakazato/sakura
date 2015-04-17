@@ -61,7 +61,6 @@ inline void AllocateAndAlign(size_t num_elements,
 			num_elements * sizeof(DataType), &(holder->pointer));
 }
 
-// Locator
 template<class DataType>
 size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
 		size_t end_index, size_t num_reference, DataType const reference[],
