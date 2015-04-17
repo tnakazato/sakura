@@ -143,7 +143,9 @@ size_t Locate(size_t num_reference, size_t num_data, DataType const reference[],
 	return num_location_list;
 }
 
-// Initializer
+// Working data
+// NullWorkingData is a null implementation of working data,
+// It has nothing and it does nothing
 template<class XDataType, class YDataType>
 struct NullWorkingData {
 	static NullWorkingData<XDataType, YDataType> * Allocate(
@@ -171,6 +173,8 @@ struct CustomizedMemoryManagement {
 	}
 };
 
+// Working data for polynomial interpolation
+// It stores working array for Neville's algorithm
 template<class XDataType, class YDataType>
 struct PolynomialXWorkingData: CustomizedMemoryManagement {
 	static PolynomialXWorkingData<XDataType, YDataType> * Allocate(
@@ -195,6 +199,8 @@ struct PolynomialXWorkingData: CustomizedMemoryManagement {
 	uint8_t polynomial_order;
 };
 
+// Working data for spline interpolation
+// It stores working array for spline correction term
 template<class XDataType, class YDataType>
 struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 		public CustomizedMemoryManagement {
@@ -296,11 +302,11 @@ struct InterpolatorInterface {
  *     ---> nearest is left_value (left side)
  */
 template<class XDataType, class YDataType>
-struct NearestXInterpolatorImpl: public InterpolatorInterface<
-		NearestXInterpolatorImpl<XDataType, YDataType>,
+struct NearestInterpolatorImpl: public InterpolatorInterface<
+		NearestInterpolatorImpl<XDataType, YDataType>,
 		NullWorkingData<XDataType, YDataType>, XDataType, YDataType> {
 	typedef typename InterpolatorInterface<
-			NearestXInterpolatorImpl<XDataType, YDataType>,
+			NearestInterpolatorImpl<XDataType, YDataType>,
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
@@ -322,11 +328,11 @@ struct NearestXInterpolatorImpl: public InterpolatorInterface<
 
 // TODO: documentation must be added
 template<class XDataType, class YDataType>
-struct LinearXInterpolatorImpl: public InterpolatorInterface<
-		LinearXInterpolatorImpl<XDataType, YDataType>,
+struct LinearInterpolatorImpl: public InterpolatorInterface<
+		LinearInterpolatorImpl<XDataType, YDataType>,
 		NullWorkingData<XDataType, YDataType>, XDataType, YDataType> {
 	typedef typename InterpolatorInterface<
-			LinearXInterpolatorImpl<XDataType, YDataType>,
+			LinearInterpolatorImpl<XDataType, YDataType>,
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
@@ -347,11 +353,11 @@ struct LinearXInterpolatorImpl: public InterpolatorInterface<
 
 // TODO: documentation must be added
 template<class XDataType, class YDataType>
-struct PolynomialXInterpolatorImpl: public InterpolatorInterface<
-		PolynomialXInterpolatorImpl<XDataType, YDataType>,
+struct PolynomialInterpolatorImpl: public InterpolatorInterface<
+		PolynomialInterpolatorImpl<XDataType, YDataType>,
 		PolynomialXWorkingData<XDataType, YDataType>, XDataType, YDataType> {
 	typedef typename InterpolatorInterface<
-			PolynomialXInterpolatorImpl<XDataType, YDataType>,
+			PolynomialInterpolatorImpl<XDataType, YDataType>,
 			PolynomialXWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
@@ -415,11 +421,11 @@ private:
 
 // TODO: documentation must be added
 template<class XDataType, class YDataType>
-struct SplineXInterpolatorImpl: public InterpolatorInterface<
-		SplineXInterpolatorImpl<XDataType, YDataType>,
+struct SplineInterpolatorImpl: public InterpolatorInterface<
+		SplineInterpolatorImpl<XDataType, YDataType>,
 		SplineXWorkingData<XDataType, YDataType>, XDataType, YDataType> {
 	typedef typename InterpolatorInterface<
-			SplineXInterpolatorImpl<XDataType, YDataType>,
+			SplineInterpolatorImpl<XDataType, YDataType>,
 			SplineXWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
@@ -778,10 +784,10 @@ LIBSAKURA_SYMBOL(
 	}
 
 	try {
-		typedef NearestXInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
-		typedef LinearXInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
-		typedef PolynomialXInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
-		typedef SplineXInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
+		typedef NearestInterpolatorImpl<XDataType, YDataType> NearestInterpolator;
+		typedef LinearInterpolatorImpl<XDataType, YDataType> LinearInterpolator;
+		typedef PolynomialInterpolatorImpl<XDataType, YDataType> PolynomialInterpolator;
+		typedef SplineInterpolatorImpl<XDataType, YDataType> SplineInterpolator;
 		typedef void (*Interpolate1DFunc)(uint8_t, size_t, XDataType const *,
 				size_t, YDataType const *, bool const *, size_t,
 				XDataType const *, YDataType *, bool *);
