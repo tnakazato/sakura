@@ -523,30 +523,6 @@ struct XInterpolatorHelper {
 		ssize_t increment = is_ascending ? 1LL : -1LL;
 		FillResultImpl(start, increment, num_interpolated, y1, data);
 	}
-
-	template<class DataType>
-	static inline void Reorder(size_t num_x, size_t num_y,
-			DataType const input_data[], DataType output_data[]) {
-		for (size_t i = 0; i < num_y; ++i) {
-			size_t const start_position = num_x * i;
-			size_t const end_position = start_position + num_x;
-			for (size_t j = start_position; j < end_position; ++j) {
-				output_data[j] = input_data[end_position - (j - start_position)
-						- 1];
-			}
-		}
-	}
-	static inline void SwapResult(size_t num_array, size_t num_interpolated,
-			YDataType interpolated_data[]) {
-		size_t const midpoint = num_interpolated / 2;
-		size_t const right_edge = num_interpolated - 1;
-		for (size_t j = 0; j < num_array; ++j) {
-			YDataType *work = &interpolated_data[j * num_interpolated];
-			for (size_t i = 0; i < midpoint; ++i) {
-				std::swap<YDataType>(work[i], work[right_edge - i]);
-			}
-		}
-	}
 };
 
 template<class XDataType, class YDataType>
@@ -588,30 +564,6 @@ struct YInterpolatorHelper {
 		assert(num_array < SSIZE_MAX);
 		ssize_t increment = is_ascending ? num_array : -num_array;
 		FillResultImpl(start, increment, num_interpolated, y1, data);
-	}
-
-	template<class DataType>
-	static inline void Reorder(size_t num_x, size_t num_y,
-			DataType const input_data[], DataType output_data[]) {
-		for (size_t i = 0; i < num_x; ++i) {
-			DataType *out_storage = &output_data[i * num_y];
-			DataType const *in_storage = &input_data[(num_x - 1 - i) * num_y];
-			for (size_t j = 0; j < num_y; ++j) {
-				out_storage[j] = in_storage[j];
-			}
-		}
-	}
-	static inline void SwapResult(size_t num_array, size_t num_interpolated,
-			YDataType interpolated_data[]) {
-		size_t midpoint = num_interpolated / 2;
-		for (size_t i = 0; i < midpoint; ++i) {
-			YDataType *a = &interpolated_data[i * num_array];
-			YDataType *b = &interpolated_data[(num_interpolated - 1 - i)
-					* num_array];
-			for (size_t j = 0; j < num_array; ++j) {
-				std::swap<YDataType>(a[j], b[j]);
-			}
-		}
 	}
 };
 
@@ -774,6 +726,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 			interpolated_data, interpolated_mask);
 }
 
+#ifndef NDEBUG
 template<class DataType, class Checker>
 bool IsDuplicateOrNotSorted(Checker checker, size_t num_elements,
 		DataType const data[]) {
@@ -802,6 +755,7 @@ bool IsDuplicateOrNotSorted(size_t num_elements, DataType const data[]) {
 	}
 	return true;
 }
+#endif
 
 // basic check of arguments
 bool IsValidArguments(
