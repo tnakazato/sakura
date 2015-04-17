@@ -238,7 +238,7 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 		for (size_t i = 2; i < num_base; ++i) {
 			auto const a2 = base_position[i] - base_position[i - 1];
 			assert(a2 != decltype(a2)(0));
-			XDataType const b1 = 1.0
+			XDataType const b1 = XDataType(1.0)
 					/ (base_position[i] - base_position[i - 2]);
 			size_t i0 = i;
 			size_t i1 = i0 - 1;
