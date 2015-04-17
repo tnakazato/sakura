@@ -247,9 +247,10 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 	}
 }
 
-inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
-		size_t num_bases, double const *coeff_arg, size_t num_out,
-		double const *basis_arg, float *out_arg) {
+inline void AddMulMatrixCubicSpline(size_t num_pieces,
+		double const *boundary_arg, size_t num_bases, double const *coeff_arg,
+		size_t num_out, double const *basis_arg, float *out_arg) {
+	auto boundary = AssumeAligned(boundary_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto basis = AssumeAligned(basis_arg);
 	auto out = AssumeAligned(out_arg);
@@ -328,16 +329,15 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*lsq_vector) * num_lsq_vector, &lsq_vector));
-	//size_t num_coeff = context->num_bases;
 	double *coeff = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff) * num_coeff, &coeff));
 
 	LIBSAKURA_SYMBOL(Status) coeff_status =
-	LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(num_data, data,
-			mask, context->num_bases, context->basis_data, num_coeff,
-			lsq_matrix, lsq_vector);
+	LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDouble)(num_data, data, mask,
+			context->num_bases, context->basis_data, num_coeff, lsq_matrix,
+			lsq_vector);
 	if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		throw std::runtime_error(
 				"failed in GetLeastSquareFittingCoefficients.");
@@ -631,10 +631,9 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 				}
 			}
 			LIBSAKURA_SYMBOL(Status) coeff_status =
-					LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
-							num_data, data, final_mask, num_pieces, boundary,
-							baseline_context->basis_data, lsq_matrix,
-							lsq_vector);
+			LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsCubicSplineDouble)(
+					num_data, data, final_mask, num_pieces, boundary,
+					baseline_context->basis_data, lsq_matrix, lsq_vector);
 			if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in GetLeastSquareFittingCoefficients.");
@@ -720,7 +719,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*clipped_indices) * num_data, &clipped_indices));
-	//size_t num_bases = baseline_context->num_bases;
 	size_t num_lsq_matrix = num_coeff * num_coeff;
 	double *lsq_matrix = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
@@ -752,8 +750,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 			if (num_unmasked_data <= num_clipped) {
 				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
-						num_data, data, final_mask, baseline_context->num_bases,
+				LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDouble)(num_data,
+						data, final_mask, baseline_context->num_bases,
 						baseline_context->basis_data, num_coeff, lsq_matrix,
 						lsq_vector);
 				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
@@ -762,8 +760,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				}
 			} else {
 				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
-						num_data, data, num_clipped, clipped_indices,
+				LIBSAKURA_SYMBOL(UpdateLSQFittingCoefficientsDouble)(num_data,
+						data, num_clipped, clipped_indices,
 						baseline_context->num_bases,
 						baseline_context->basis_data, num_coeff, lsq_matrix,
 						lsq_vector);

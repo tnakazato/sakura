@@ -2028,7 +2028,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * emitted internally.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
@@ -2052,6 +2052,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @n must-be-aligned
  * @param[in] num_boundary スプライン曲線を構成する3次曲線の本数。1 以上、且つ、( @a num_data / 4) 以下の数でなければならない。
  * @param[in] boundary スプライン曲線を構成する各区分の3次曲線の左端(iが小さい側)の位置を、左から右への順に格納する１次元配列。配列の長さは( @a num_boundary )でなければならない。
+ * @n must-be-aligned
  * @param[in] basis_data 3次曲線を構成する4つの基底関数の離散的な値を格納する１次元配列。関数に対するループはデータに対するループより内側になる。即ち、 @a m 番目( @a m 次)のモデル関数の @a n 番目のデータ点の値は、 @a basis_data [ @a num_data * ( @a n -1) + ( @a m -1)]に格納されなければならない。配列の長さは( @a num_data * 4 )でなければならない。
  * @n must-be-aligned
  * @param[out] lsq_matrix 求める連立方程式の左辺側の行列成分を格納する１次元配列。この行列は対称行列である。列に対するループは行のループより内側になる。即ち、 @a m 行 @a n 列目の成分値は、 @a lsq_matrix [ @a num_lsq_bases * ( @a m -1) + ( @a n -1)]に格納される。配列の長さは( ( @a num_boundary + 3) * ( @a num_boundary + 3) )となる。
@@ -2094,6 +2095,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] boundary A 1D array containing the left edge positions of
  * @a num_boundary pieces of the spline curve. The values should be stored
  * in left-to-right order.
+ * @n must-be-aligned
  * @param[in] basis_data A 1D array containing values of the basis
  * functions concatenated. Loop for basis index must be inside of that for
  * data index, i.e., the @a n -th data of the @a m -th model should be
@@ -2120,7 +2122,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * emitted internally.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLeastSquareFittingCoefficientsCubicSplineDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsCubicSplineDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_boundary,
 		double const boundary[/*num_boundary*/],
@@ -2137,7 +2139,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、先にGetLeastSquareFittingCoefficients()によって求められた、上の連立方程式の係数値を更新するために用いる。即ち、データ点のうち幾つかを除外して連立方程式を計算し直す際に、先に計算した各成分から除外するデータ点に対応する値を差し引く。除外するデータ数が少ない（前回の計算に用いられたデータ数の半分未満）場合は、一から計算し直すよりも高速である。
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、先にGetLSQFittingCoefficients()によって求められた、上の連立方程式の係数値を更新するために用いる。即ち、データ点のうち幾つかを除外して連立方程式を計算し直す際に、先に計算した各成分から除外するデータ点に対応する値を差し引く。除外するデータ数が少ない（前回の計算に用いられたデータ数の半分未満）場合は、一から計算し直すよりも高速である。
  * @par
  * @param[in] num_data 配列 @a data 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正の数でなければならない。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
@@ -2222,7 +2224,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * exclude the same data duplicatedly.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLeastSquareFittingCoefficientsDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQFittingCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/],
@@ -2861,7 +2863,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*4*num_pieces*/],
-		double const boundary[/*num_pieces*/], float out[])
+		double const boundary[/*num_pieces*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
