@@ -252,7 +252,7 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 			AllocateAndAlign<YDataType>(num_base, work_data);
 		} catch (...) {
 			delete work_data;
-			throw std::bad_alloc();
+			throw;
 		}
 		return work_data;
 	}
