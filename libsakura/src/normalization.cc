@@ -39,7 +39,7 @@ using ::Eigen::Aligned;
 namespace {
 
 // a logger for this module
-auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("apply_calibration");
+auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("normalization");
 
 template<class DataType>
 struct InPlaceImpl {
