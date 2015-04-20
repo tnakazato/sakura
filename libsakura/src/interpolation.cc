@@ -507,8 +507,11 @@ struct InterpolatorInterface {
 			YDataType interpolated_data[]) {
 		for (size_t k = 1; k < num_location; ++k) {
 			size_t const left_index = offset + k - 1;
+			auto const index_from = location[k - 1];
+			auto const index_to = location[k];
 			InterpolatorImpl::DoInterpolate(num_base, base_position, base_data,
-					num_interpolated, interpolated_position, location, k,
+					num_interpolated, interpolated_position, index_from,
+					index_to,		//location, k,
 					left_index, work_data, interpolated_data);
 		}
 	}
@@ -516,19 +519,7 @@ struct InterpolatorInterface {
 
 // TODO: documentation needs to be improved.
 /**
- * Nearest interpolation engine classes
- *
- * nearest condition
- * - interpolated_position[i] == midpoint
- *     ---> nearest is left_value (left side)
- * - interpolated_position[i] < midpoint and ascending order
- *     ---> nearest is left_value (left side)
- * - interpolated_position[i] > midpoint and ascending order
- *     ---> nearest is right_value (right side)
- * - interpolated_position[i] < midpoint and descending order
- *     ---> nearest is right_value (right side)
- * - interpolated_position[i] > midpoint and descending order
- *     ---> nearest is left_value (left side)
+ * Nearest interpolation implementation.
  */
 template<class XDataType, class YDataType>
 struct NearestInterpolatorImpl: public InterpolatorInterface<
@@ -537,17 +528,45 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			NearestInterpolatorImpl<XDataType, YDataType>,
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	/**
+	 * Perform nearest interpolation.
+	 * For each @a interpolated_position that locates in between @a base_position[left_index]
+	 * and @a base_position[left_index+1], perform nearest interpolation and set the result
+	 * to @a interpolated_data. Interpolated result will be @a base_data[left_index] if
+	 * @a interpolated_position is closer to @a base_position[left_index] or @a interpolated_position
+	 * is located at the midpoint. Otherwise, the result will be @a base_data[left_index+1].
+	 *
+	 * @param[in] num_base number of elements for data points.
+	 * @param[in] base_position position of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] base_data value of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] num_interpolated number of elements for points that wants to get
+	 * interpolated value.
+	 * @param[in] interpolated_position location of points that wants to get interpolated
+	 * value. Its length must be @a num_interpolated.
+	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * @param[in] work_data working data for interpolation
+	 * @param[out] interpolated_data storage for interpolation result. Its length must be
+	 * @a num_interpolated. must-be-aligned
+	 */
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
+			XDataType const interpolated_position[], size_t index_from,
+			size_t index_to, size_t left_index,
+			WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
 		auto const midpoint = (base_position[left_index + 1]
 				+ base_position[left_index])
 				/ decltype(base_position[left_index])(2.0);
 		auto const left_value = base_data[left_index];
 		auto const right_value = base_data[left_index + 1];
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
+		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[i] =
 					(interpolated_position[i] > midpoint) ?
 							right_value : left_value;
@@ -555,7 +574,9 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 	}
 };
 
-// TODO: documentation must be added
+/**
+ * Linear interpolation implementation.
+ */
 template<class XDataType, class YDataType>
 struct LinearInterpolatorImpl: public InterpolatorInterface<
 		LinearInterpolatorImpl<XDataType, YDataType>,
@@ -563,15 +584,43 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			LinearInterpolatorImpl<XDataType, YDataType>,
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	/**
+	 * Perform linear interpolation.
+	 * For each @a interpolated_position that locates in between @a base_position[left_index]
+	 * and @a base_position[left_index+1], perform linear interpolation and set the result
+	 * to @a interpolated_data. Interpolated curve is a straight line that goes through
+	 * two data points (@a base_position[left_index], @a base_data[left_index]) and
+	 * (@a base_position[left_index+1], @a base_data[left_index+1]).
+	 *
+	 * @param[in] num_base number of elements for data points.
+	 * @param[in] base_position position of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] base_data value of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] num_interpolated number of elements for points that wants to get
+	 * interpolated value.
+	 * @param[in] interpolated_position location of points that wants to get interpolated
+	 * value. Its length must be @a num_interpolated.
+	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * @param[in] work_data working data for interpolation
+	 * @param[out] interpolated_data storage for interpolation result. Its length must be
+	 * @a num_interpolated. must-be-aligned
+	 */
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
+			XDataType const interpolated_position[], size_t index_from,
+			size_t index_to, size_t left_index,
+			WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
 		XDataType const dydx = static_cast<XDataType>(base_data[left_index + 1]
 				- base_data[left_index])
 				/ (base_position[left_index + 1] - base_position[left_index]);
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
+		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[i] = base_data[left_index]
 					+ static_cast<YDataType>(dydx
 							* (interpolated_position[i]
@@ -580,7 +629,9 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	}
 };
 
-// TODO: documentation must be added
+/**
+ * Polynomial interpolation implementation.
+ */
 template<class XDataType, class YDataType>
 struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 		PolynomialInterpolatorImpl<XDataType, YDataType>,
@@ -588,10 +639,39 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			PolynomialInterpolatorImpl<XDataType, YDataType>,
 			PolynomialWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	/**
+	 * Perform linear interpolation.
+	 * For each @a interpolated_position that locates in between @a base_position[left_index]
+	 * and @a base_position[left_index+1], perform linear interpolation and set the result
+	 * to @a interpolated_data. Interpolated curve is a polynomial that goes through given
+	 * data points. The polynomial is evaluated by the Nevilles algorithm.
+	 *
+	 * See http://en.wikipedia.org/wiki/Neville's_algorithm for details about the algorithm.
+	 *
+	 * @param[in] num_base number of elements for data points.
+	 * @param[in] base_position position of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] base_data value of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] num_interpolated number of elements for points that wants to get
+	 * interpolated value.
+	 * @param[in] interpolated_position location of points that wants to get interpolated
+	 * value. Its length must be @a num_interpolated.
+	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * @param[in] work_data working data for interpolation
+	 * @param[out] interpolated_data storage for interpolation result. Its length must be
+	 * @a num_interpolated. must-be-aligned
+	 */
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
+			XDataType const interpolated_position[], size_t index_from,
+			size_t index_to, size_t left_index,
+			WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
 		assert(num_base >= work_data->num_elements);
 		size_t const left_edge2 = num_base - work_data->num_elements;
@@ -599,7 +679,7 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 				(left_index >= work_data->polynomial_order / 2u) ?
 						left_index - work_data->polynomial_order / 2u : 0;
 		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
+		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[i] = PerformNevilleAlgorithm(num_base,
 					base_position, base_data, left_edge,
 					interpolated_position[i], work_data);
@@ -656,16 +736,46 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			SplineInterpolatorImpl<XDataType, YDataType>,
 			SplineWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	/**
+	 * Perform spline interpolation.
+	 * For each @a interpolated_position that locates in between @a base_position[left_index]
+	 * and @a base_position[left_index+1], perform linear interpolation and set the result
+	 * to @a interpolated_data. Interpolated curve is a spline that goes through all data
+	 * points that are defined by @a base_position and @a base_data. Spline curve is evaluated
+	 * by using straight line that goes through (@a base_position[left_index], @a base_data[left_index])
+	 * and (@a base_position[left_index+1], @a base_data[left_index+1]) and spline correction term
+	 * that is stored in @a work_data.
+	 *
+	 * @param[in] num_base number of elements for data points.
+	 * @param[in] base_position position of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] base_data value of data points. Its length must be @a num_base.
+	 * must-be-aligned
+	 * @param[in] num_interpolated number of elements for points that wants to get
+	 * interpolated value.
+	 * @param[in] interpolated_position location of points that wants to get interpolated
+	 * value. Its length must be @a num_interpolated.
+	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
+	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * @param[in] work_data working data for interpolation
+	 * @param[out] interpolated_data storage for interpolation result. Its length must be
+	 * @a num_interpolated. must-be-aligned
+	 */
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
-			XDataType const interpolated_position[], size_t const location[],
-			size_t k, size_t left_index, WorkingData const * const work_data,
+			XDataType const interpolated_position[], size_t index_from,
+			size_t index_to, size_t left_index,
+			WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
 		YDataType const * const d2ydx2 = work_data->second_derivative.pointer;
 		auto const dx = base_position[left_index + 1]
 				- base_position[left_index];
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
-		for (size_t i = location[k - 1]; i < location[k]; ++i) {
+		for (size_t i = index_from; i < index_to; ++i) {
 			auto const a = (base_position[left_index + 1]
 					- interpolated_position[i]) / dx;
 			auto const b = decltype(a)(1.0) - a;
