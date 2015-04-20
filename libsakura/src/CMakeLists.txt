@@ -142,4 +142,6 @@ install(TARGETS sakura
 	LIBRARY DESTINATION lib
 	PUBLIC_HEADER DESTINATION include/libsakura)
 
-install(DIRECTORY "${PROJECT_BINARY_DIR}/docs/api" DESTINATION share/doc/libsakura)
+if (BUILD_DOC)
+    install(DIRECTORY "${PROJECT_BINARY_DIR}/docs/api" DESTINATION share/doc/libsakura)
+endif(BUILD_DOC)
