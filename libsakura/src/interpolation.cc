@@ -79,8 +79,8 @@ struct StorageAndAlignedPointer {
  * alignment will autocatically be calculated. Throws the std::bad_alloc if allocation
  * failed or size of allocated memory area is not enough.
  * Initial address and aligned address will be held by @a holder.
- * @param num_elements[in] number of elements of aligned array
- * @param holder[out] struct holding both initial address and aligned address of
+ * @param[in] num_elements number of elements of aligned array
+ * @param[in] holder[out] struct holding both initial address and aligned address of
  * allocated memory area
  * @exception std::bad_alloc failed to allocate memory
  */
@@ -98,11 +98,11 @@ inline void AllocateAndAlign(size_t num_elements,
  * than @a reference[0], 0 will be returned. Also, if @a data is greater than
  * @a reference[num_reference-1], @a num_reference will be returned.
  *
- * @param start_index[in] start index of @a reference for the search
- * @param end_index[in] end index of @a reference for the search
- * @param num_reference[in] number of elements for @a reference
- * @param reference[in] reference array. Its length must be @a num_reference
- * @param data[in] data to be located.
+ * @param[in] start_index start index of @a reference for the search
+ * @param[in] end_index end index of @a reference for the search
+ * @param[in] num_reference number of elements for @a reference
+ * @param[in] reference reference array. Its length must be @a num_reference
+ * @param[in] data data to be located.
  * @return array index for @a reference that brackets @a data
  */
 template<class DataType>
@@ -171,13 +171,13 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
  *
  * @pre @a data and @a reference must be sorted in an ascending order
  *
- * @param num_reference[in] number of reference
- * @param reference[in] reference. Number of elements must be @a num_reference.
+ * @param[in] num_reference number of reference
+ * @param[in] reference reference. Number of elements must be @a num_reference.
  * must-be-aligned
- * @param num_data[in] number of data
- * @param data[in] data. Number of elements must be @a num_data.
+ * @param[in] num_data number of data
+ * @param[in] data data. Number of elements must be @a num_data.
  * must-be-aligned
- * @param location_list[out] location list. Number of elements must be @a num_data.
+ * @param[out] location_list location list. Number of elements must be @a num_data.
  * must-be-aligned
  * @return number of locations
  */
@@ -238,8 +238,8 @@ template<class XDataType, class YDataType>
 struct NullWorkingData {
 	/**
 	 * The @a Allocate method does nothing.
-	 * @param polynomial_order[in] no effect
-	 * @param num_base[in] no effect
+	 * @param[in] polynomial_order no effect
+	 * @param[in] num_base no effect
 	 * @return nullptr
 	 */
 	static NullWorkingData<XDataType, YDataType> * Allocate(
@@ -248,10 +248,10 @@ struct NullWorkingData {
 	}
 	/**
 	 * The @a Initialize method does nothing.
-	 * @param num_base[in] no effect
-	 * @param base_position[in] no effect
-	 * @param base_data[in] no effect
-	 * @param work_data[out] no effect
+	 * @param[in] num_base no effect
+	 * @param[in] base_position no effect
+	 * @param[in] base_data no effect
+	 * @param[out] work_data no effect
 	 */
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
@@ -269,7 +269,7 @@ struct CustomizedMemoryManagement {
 	 * Overloaded operator new. It uses
 	 * @link sakura::Memory::Allocate Memory::Allocate @endlink
 	 * to allocate memory.
-	 * @param size[in] size of allocated memory
+	 * @param[in] size size of allocated memory
 	 */
 	static void *operator new(size_t size) {
 		//std::cout << "This is overloaded new" << std::endl;
@@ -283,7 +283,7 @@ struct CustomizedMemoryManagement {
 	 * Overloaded operator delete. It uses
 	 * @link sakura::Memory::Free Memory::Free @endlink
 	 * to release memory.
-	 * @param p[in] initial address of the allocated memory
+	 * @param[in] p initial address of the allocated memory
 	 */
 	static void operator delete(void *p) {
 		//std::cout << "This is overloaded delete" << std::endl;
@@ -299,8 +299,8 @@ template<class XDataType, class YDataType>
 struct PolynomialWorkingData: CustomizedMemoryManagement {
 	/**
 	 * The @a Allocate method creates @a PolynomialWorkingData instance and return it.
-	 * @param polynomial_order[in] polynomial order for polynomial interpolation
-	 * @param num_base[in] number of base data
+	 * @param[in] polynomial_order polynomial order for polynomial interpolation
+	 * @param[in] num_base number of base data
 	 * @return working data
 	 */
 	static PolynomialWorkingData<XDataType, YDataType> * Allocate(
@@ -310,10 +310,10 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
 	}
 	/**
 	 * The @a Initialize method does nothing.
-	 * @param num_base[in] no effect
-	 * @param base_position[in] no effect
-	 * @param base_data[in] no effect
-	 * @param work_datas[out] no effect
+	 * @param[in] num_base no effect
+	 * @param[in] base_position no effect
+	 * @param[in] base_data no effect
+	 * @param[out] work_datas no effect
 	 */
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
@@ -321,8 +321,8 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
 	}
 	/**
 	 * Constructor allocates working array for polynomial interpolation.
-	 * @param order[in] polynomial order for polynomial interpolation
-	 * @param num_base[in] number of base data
+	 * @param[in] order polynomial order for polynomial interpolation
+	 * @param[in] num_base number of base data
 	 */
 	PolynomialWorkingData(uint8_t order, size_t num_base) {
 		assert(num_base > 0);
@@ -356,8 +356,8 @@ template<class XDataType, class YDataType>
 struct SplineWorkingData: public CustomizedMemoryManagement {
 	/**
 	 * The @a Allocate method creates @a SplineWorkingData instance and return it.
-	 * @param polynomial_order[in] no effect
-	 * @param num_base[in] number of base data
+	 * @param[in] polynomial_order no effect
+	 * @param[in] num_base number of base data
 	 * @return working data
 	 */
 	static SplineWorkingData<XDataType, YDataType> * Allocate(
@@ -387,12 +387,12 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	 * The method solves tri-diagonal system with the natural cubic spline condition,
 	 * which defines the second derivatives of edge points as zero.
 	 *
-	 * @param num_base[in] number of base data
-	 * @param base_position[in] positions of base data. Number of elements must be
+	 * @param[in] num_base number of base data
+	 * @param[in] base_position positions of base data. Number of elements must be
 	 * @a num_base. must-be-aligned
-	 * @param base_data[in] base data. Number of elements must be @a num_base.
+	 * @param[in] base_data base data. Number of elements must be @a num_base.
 	 * must-be-aligned
-	 * @param work_datas[out] working data
+	 * @param[out] work_datas working data
 	 */
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
@@ -443,7 +443,7 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	}
 	/**
 	 * Constructor allocates memory for spline correction term.
-	 * @param num_base[in] number of elements of spline correction term
+	 * @param[in] num_base number of elements of spline correction term
 	 */
 	SplineWorkingData(size_t num_base) {
 		AllocateAndAlign<YDataType>(num_base, &second_derivative);
@@ -482,21 +482,21 @@ struct InterpolatorInterface {
 	 * Template method for interpolation. It calls @a DoInterpolate method of its
 	 * implementation class for each interpolation position.
 	 *
-	 * @param num_base[in] number of base data
-	 * @param base_position[in] positions of base data. Number of elemments must be
+	 * @param[in] num_base number of base data
+	 * @param[in] base_position positions of base data. Number of elemments must be
 	 * @a num_data. must-be-aligned
-	 * @param base_data[in] base data. Number of elements must be @a num_data.
+	 * @param[in] base_data base data. Number of elements must be @a num_data.
 	 * must-be-aligned
-	 * @param num_interpolated[in] number of interpolation data
-	 * @param interpolated_position[in] positions of interpolation data. Number of elements
+	 * @param[in] num_interpolated number of interpolation data
+	 * @param[in] interpolated_position positions of interpolation data. Number of elements
 	 * must be @a num_interpolated. must-be-aligned
-	 * @param num_location[in] Length of @a location.
-	 * @param location[in] list of indices that indicates the location of each position
+	 * @param[in] num_location Length of @a location.
+	 * @param[in] location list of indices that indicates the location of each position
 	 * in @a base_position with respect to @a interpolated_position. Its length must be
 	 * @a num_location. must-be-aligned
-	 * @param offset[in] index offset for @a location
-	 * @param work_data[in] working data for interpolation
-	 * @param interpolated_data[out] interpolated value for each element whose location
+	 * @param[in] offset index offset for @a location
+	 * @param[in] work_data working data for interpolation
+	 * @param[out] interpolated_data interpolated value for each element whose location
 	 * is stored in @a interpolated_position
 	 */
 	static void Interpolate1D(size_t num_base, XDataType const base_position[],
@@ -763,6 +763,43 @@ struct YInterpolatorHelper {
 	typedef YDescendingIndexer DescendingIndexer;
 };
 
+/**
+ * Core function for interpolation. The procedure is as follows:
+ *
+ *     -# Check sort order (ascending or descending)
+ *     -# Initialization
+ *         - Initialize helper function
+ *         - Initialize output mask to true
+ *         - Prepare working arrays
+ *     -# Instantiate working data
+ *     -# Main loop on @a num_array:
+ *          -# Pick up valid data from @a base_position and @a base_data
+ *          -# If there is no valid data, set all @a interpolated_mask elements to false
+ *          -# If there is only one valid data, fill @a interpolated_data with the value
+ *          -# Otherwise, perform interpolation
+ *
+ *  Interpolation is done by splitting @a interpolated_data into three regions based on
+ *  @a interpolated_position: 1) @a interpolated_position is less than @a base_position[0],
+ *  2) @a interpolated_position is in between @a base_position[0] and @a base_position[num_base-1],
+ *  and 3) @a interpolated_position is greater than @a base_position[num_base-1].
+ *  In regions 1) and 3), no interpolation is done and @a interpolated_data is filled using
+ *  nearest value (either @a base_data[0] or @a base_data[num_base-1]). In region 2),
+ *  interpolation is performed using @a Interpolator.
+ *
+ *  See @link sakura_InterpolateXAxisFloat sakura_InterpolateXAxisFloat @endlink for
+ *  parameter description.
+ *
+ * @param[in] polynomial_order
+ * @param[in] num_base
+ * @param[in] base_position
+ * @param[in] num_array
+ * @param[in] base_data
+ * @param[in] base_mask
+ * @param[in] num_interpolated
+ * @param[in] interpolated_position
+ * @param[out] interpolated_data
+ * @param[out] interpolated_mask
+ */
 template<class Interpolator, class Helper, class XDataType, class YDataType>
 void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		XDataType const base_position[/*num_base*/], size_t num_array,
@@ -862,11 +899,12 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			size_t const num_location_base = Locate<XDataType>(num_interpolated,
 					x1, n, x0, location_base);
 
-			// Outside of base_position[0]
+			// interpolated_position is less than base_position[0]
 			FillOutOfRangeAreaWithEdgeValue(0, y0, 0, location_base[0], y1);
 
 			// Perform 1-dimensional interpolation
-			// between base_position[0] and base_position[num_base-1]
+			// interpolated_position is located in between base_position[0]
+			// and base_position[num_base-1]
 			size_t offset = 0;
 			while (offset + 1 < n && x0[offset + 1] < x1[0]) {
 				offset++;
@@ -875,7 +913,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			Interpolator::Interpolate1D(n, x0, y0, num_interpolated, x1,
 					num_location_base, location_base, offset, work_data, y1);
 
-			// Outside of base_position[num_base-1]
+			// interpolated_position is greater than base_position[num_base-1]
 			FillOutOfRangeAreaWithEdgeValue(n - 1, y0,
 					location_base[num_location_base - 1], num_interpolated, y1);
 
@@ -887,6 +925,14 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 }
 
 #ifndef NDEBUG
+/**
+ * Template utility function for sort check
+ * @param[in] checker function to check array elements
+ * @param[in] num_elements Length of the @a data
+ * @param[in] data data to be inspected. Length must be @a num_elements.
+ * must-be-aligned
+ * @return true if input array is sorted and no duplicates, otherwise false
+ */
 template<class DataType, class Checker>
 bool IsDuplicateOrNotSorted(Checker checker, size_t num_elements,
 		DataType const data[]) {
@@ -898,6 +944,14 @@ bool IsDuplicateOrNotSorted(Checker checker, size_t num_elements,
 	return false;
 }
 
+/**
+ * Check if input array is sorted and no duplicates.
+ *
+ * @param[in] num_elements Length of the @a data
+ * @param[out] data data to be inspected. Length must be @a num_elements.
+ * must-be-aligned
+ * @return true if input array is sorted and no duplicates, otherwise false
+ */
 template<class DataType>
 bool IsDuplicateOrNotSorted(size_t num_elements, DataType const data[]) {
 	if (num_elements <= 1) {
@@ -917,7 +971,9 @@ bool IsDuplicateOrNotSorted(size_t num_elements, DataType const data[]) {
 }
 #endif
 
-// basic check of arguments
+/**
+ * Perform basic check of input arguments.
+ */
 bool IsValidArguments(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		uint8_t polynomial_order, size_t num_base, double const base_position[],
@@ -993,6 +1049,21 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 	return true;
 }
 
+/**
+ * @a DoInterpolate calls core function @a Interpolate1D with appropriate
+ * template arguments according to user-specified @a interpolation method and
+ * @a polynomial_order. If any input argument is invalid, it doesn't execute
+ * @a Interpolate1D and appropriate error status is returned. Interpolator
+ * class are set as the following manner:
+ *
+ *     - @a NearestInterpolator if interpolation_method is @a sakura_InterpolationMethod_kNearest
+ *     - @a LinearInterpolator if interpolation_method is @a sakura_InterpolationMethod_kLinear
+ *     - @a SplineInterpolator if interpolation_method is @a sakura_InterpolationMethod_kSpline
+ *     - @a PolynomialInterpolator if interpolation_method is @a sakura_InterpolationMethod_kPolynomial
+ *       and @a polynomial_order is not 0
+ *     - @a NearestInterpolator if interpolation_method is @a sakura_InterpolationMethod_kPolynomial
+ *       and @a polynomial_order is 0
+ */
 template<typename XDataType, typename YDataType, typename InterpolatorHelper>
 LIBSAKURA_SYMBOL(Status) DoInterpolate(
 LIBSAKURA_SYMBOL(
