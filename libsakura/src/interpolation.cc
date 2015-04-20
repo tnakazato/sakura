@@ -42,7 +42,7 @@ struct StorageAndAlignedPointer {
 	StorageAndAlignedPointer() :
 			storage(nullptr), pointer(nullptr) {
 	}
-	virtual ~StorageAndAlignedPointer() {
+	~StorageAndAlignedPointer() {
 		if (storage != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(storage);
 			storage = nullptr;
@@ -202,18 +202,11 @@ struct PolynomialXWorkingData: CustomizedMemoryManagement {
 // Working data for spline interpolation
 // It stores working array for spline correction term
 template<class XDataType, class YDataType>
-struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
-		public CustomizedMemoryManagement {
+struct SplineXWorkingData: public CustomizedMemoryManagement {
 	static SplineXWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		SplineXWorkingData<XDataType, YDataType> *work_data =
-				new SplineXWorkingData<XDataType, YDataType>();
-		try {
-			AllocateAndAlign<YDataType>(num_base, work_data);
-		} catch (...) {
-			delete work_data;
-			throw;
-		}
+				new SplineXWorkingData<XDataType, YDataType>(num_base);
 		return work_data;
 	}
 	static void Initialize(size_t num_base, XDataType const base_position[],
@@ -222,7 +215,7 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 		StorageAndAlignedPointer<YDataType> holder_for_u;
 		AllocateAndAlign<YDataType>(num_base, &holder_for_u);
 		YDataType *upper_triangular = holder_for_u.pointer;
-		YDataType *d2ydx2 = work_data->pointer;
+		YDataType *d2ydx2 = work_data->storage.pointer;
 
 		// This is a condition of natural cubic spline
 		d2ydx2[0] = YDataType(0.0);
@@ -263,6 +256,10 @@ struct SplineXWorkingData: public StorageAndAlignedPointer<YDataType>,
 			d2ydx2[k - 2] -= upper_triangular[k - 2] * d2ydx2[k - 1];
 		}
 	}
+	SplineXWorkingData(size_t num_base) {
+		AllocateAndAlign<YDataType>(num_base, &storage);
+	}
+	StorageAndAlignedPointer<YDataType> storage;
 };
 
 // Interface class for Interpolator
@@ -432,7 +429,7 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			XDataType const interpolated_position[], size_t const location[],
 			size_t k, size_t left_index, WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
-		YDataType const * const d2ydx2 = work_data->pointer;
+		YDataType const * const d2ydx2 = work_data->storage.pointer;
 		auto const dx = base_position[left_index + 1]
 				- base_position[left_index];
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
