@@ -181,7 +181,7 @@ class PerformanceTestLogger {
 public:
 	static void LogElapsed(const char *name, size_t /*num_segments*/,
 			size_t /*iteration*/, double elapsed_time) {
-		std::cout << "#x# benchmark " << name << " " << elapsed_time
+		std::cout << "#x# benchmark Normalization_" << name << " " << elapsed_time
 				<< std::endl;
 	}
 };
