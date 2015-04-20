@@ -317,6 +317,25 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	}
 	/**
 	 * The @a Initialize method computes spline correction term.
+	 *
+	 * Condition of the spline correction term is that the first derivative is smooth
+	 * and the second derivative is contiguous within the interpolation range.
+	 * Spline curve of each segment can be constructed from linearly interpolated
+	 * curve, which is a straight line that connects two points, by adding spline
+	 * correction term.
+	 *
+	 * Spline correction term is a cubic polynomial that satisfies the following
+	 * conditions:
+	 *
+	 *    -# its value must be zero at each data point
+	 *    -# its second derivative linearly changes between two base points
+	 *
+	 * These conditions can be formalized as a tri-diagonal system with a certain
+	 * boundary condition, which defines the second derivatives of edge points.
+	 * The solution of the system is the second derivatives of each base points.
+	 * The method solves tri-diagonal system with the natural cubic spline condition,
+	 * which defines the second derivatives of edge points as zero.
+	 *
 	 * @param num_base[in] number of base data
 	 * @param base_position[in] positions of base data. Number of elements must be
 	 * @a num_base. must-be-aligned
@@ -331,7 +350,8 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 		YDataType *upper_triangular = work_data->upper_triangular.pointer;
 		YDataType *d2ydx2 = work_data->second_derivative.pointer;
 
-		// This is a condition of natural cubic spline
+		// This is a condition of natural cubic spline: second derivative of
+		// interpolated spline curve should be zero.
 		d2ydx2[0] = YDataType(0.0);
 		d2ydx2[num_base - 1] = YDataType(0.0);
 		upper_triangular[0] = YDataType(0.0);
@@ -381,8 +401,8 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	/**
 	 * Working array for spline interpolation. The array is kept as
 	 * @a StorageAndAlignedPointer instance since working arrays should be
-	 * aligned. It will store spline correction term, which is a second
-	 * derivative for each base position.
+	 * aligned. It will store a second derivative of spline curve for each
+	 * base position.
 	 */
 	StorageAndAlignedPointer<YDataType> second_derivative;
 	/**
