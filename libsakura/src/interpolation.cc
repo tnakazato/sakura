@@ -1091,16 +1091,16 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 	StorageAndAlignedPointer<YDataType> y0_storage, y1_storage;
 	AllocateAndAlign(num_base, &x0_storage);
 	AllocateAndAlign(num_base, &y0_storage);
-	XDataType *x0 = x0_storage.pointer;
-	YDataType *y0 = y0_storage.pointer;
-	XDataType const *x1 = interpolated_position;
+	XDataType *valid_base_position = x0_storage.pointer;
+	YDataType *valid_base_data = y0_storage.pointer;
+	XDataType const *interpolated_position_ascending = interpolated_position;
 	if (!is_interp_ascending) {
 		AllocateAndAlign(num_interpolated, &x1_storage);
 		XDataType *x_writable = x1_storage.pointer;
 		for (size_t i = 0; i < num_interpolated; ++i) {
 			x_writable[i] = interpolated_position[num_interpolated - 1 - i];
 		}
-		x1 = x_writable;
+		interpolated_position_ascending = x_writable;
 	}
 	AllocateAndAlign(num_interpolated, &y1_storage);
 	YDataType *y1 = y1_storage.pointer;
@@ -1109,49 +1109,55 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			WorkingData::Allocate(polynomial_order, num_base));
 	WorkingData *work_data = wdata_storage.get();
 
-	StorageAndAlignedPointer<size_t> size_t_holder;
-
 	for (size_t iarray = 0; iarray < num_array; ++iarray) {
 		// Pick up valid data and associating position from base_position and base_data
 		// by referring base_mask. The data and position are reversed if sort order is
 		// descending.
-		size_t const n = data_filler(num_base, base_position, num_array, iarray,
-				base_data, base_mask, x0, y0);
-		if (n == 0) {
+		size_t const num_valid_data = data_filler(num_base, base_position,
+				num_array, iarray, base_data, base_mask, valid_base_position,
+				valid_base_data);
+		if (num_valid_data == 0) {
 			// cannot perform interpolation, mask all data
 			FillOneRowWithValue<AscendingIndexer, bool>(num_interpolated,
 					num_array, false, iarray, interpolated_mask);
-		} else if (n == 1) {
+		} else if (num_valid_data == 1) {
 			// no need to interpolate, just substitute single base data
 			// to all elements in interpolated data, keep input mask
 			FillOneRowWithValue<AscendingIndexer, YDataType>(num_interpolated,
-					num_array, y0[0], iarray, interpolated_data);
+					num_array, valid_base_data[0], iarray, interpolated_data);
 		} else {
 			// perform interpolation, keep input mask
 
 			// Locate each element in base_position against interpolated_position
 			StorageAndAlignedPointer<size_t> size_t_holder;
-			AllocateAndAlign<size_t>(n, &size_t_holder);
+			AllocateAndAlign<size_t>(num_valid_data, &size_t_holder);
 			size_t *location_base = size_t_holder.pointer;
 			size_t const num_location_base = Locate<XDataType>(num_interpolated,
-					x1, n, x0, location_base);
+					interpolated_position_ascending, num_valid_data,
+					valid_base_position, location_base);
 
 			// interpolated_position is less than base_position[0]
-			FillOutOfRangeAreaWithEdgeValue(y0[0], 0, location_base[0], y1);
+			FillOutOfRangeAreaWithEdgeValue(valid_base_data[0], 0,
+					location_base[0], y1);
 
 			// Perform 1-dimensional interpolation
 			// interpolated_position is located in between base_position[0]
 			// and base_position[num_base-1]
 			size_t offset = 0;
-			while (offset + 1 < n && x0[offset + 1] < x1[0]) {
+			while (offset + 1 < num_valid_data
+					&& valid_base_position[offset + 1]
+							< interpolated_position_ascending[0]) {
 				offset++;
 			}
-			WorkingData::Initialize(n, x0, y0, work_data);
-			Interpolator::Interpolate1D(n, x0, y0, num_interpolated, x1,
-					num_location_base, location_base, offset, work_data, y1);
+			WorkingData::Initialize(num_valid_data, valid_base_position,
+					valid_base_data, work_data);
+			Interpolator::Interpolate1D(num_valid_data, valid_base_position,
+					valid_base_data, num_interpolated,
+					interpolated_position_ascending, num_location_base,
+					location_base, offset, work_data, y1);
 
 			// interpolated_position is greater than base_position[num_base-1]
-			FillOutOfRangeAreaWithEdgeValue(y0[n - 1],
+			FillOutOfRangeAreaWithEdgeValue(valid_base_data[num_valid_data - 1],
 					location_base[num_location_base - 1], num_interpolated, y1);
 
 			// Copy results in working array, y1, into result array
