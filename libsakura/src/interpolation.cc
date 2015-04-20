@@ -80,7 +80,7 @@ struct StorageAndAlignedPointer {
  * failed or size of allocated memory area is not enough.
  * Initial address and aligned address will be held by @a holder.
  * @param num_elements[in] number of elements of aligned array
- * @param holder[in,out] struct holding both initial address and aligned address of
+ * @param holder[out] struct holding both initial address and aligned address of
  * allocated memory area
  * @exception std::bad_alloc failed to allocate memory
  */
@@ -176,21 +176,50 @@ size_t Locate(size_t num_reference, size_t num_data, DataType const reference[],
 }
 
 // Working data
-// NullWorkingData is a null implementation of working data,
-// It has nothing and it does nothing
+// Working data should have static methods, Allocate and Initialize.
+// It keeps necessary working data inside.
+
+/**
+ * @a NullWorkingData is a null implementation of working data.
+ * It has nothing and it does nothing.
+ */
 template<class XDataType, class YDataType>
 struct NullWorkingData {
+	/**
+	 * The @a Allocate method does nothing.
+	 * @param polynomial_order[in] no effect
+	 * @param num_base[in] no effect
+	 * @return nullptr
+	 */
 	static NullWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		return nullptr;
 	}
+	/**
+	 * The @a Initialize method does nothing.
+	 * @param num_base[in] no effect
+	 * @param base_position[in] no effect
+	 * @param base_data[in] no effect
+	 * @param work_data[out] no effect
+	 */
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
 			NullWorkingData<XDataType, YDataType> *work_data) {
 	}
 };
 
+/**
+ * @a CustomizedMemoryManagement defines overloaded operator new and delete
+ * that depends on user-specified allocation and deallocation functions.
+ * Working data can use overloaded new/delete by inheriting this class.
+ */
 struct CustomizedMemoryManagement {
+	/**
+	 * Overloaded operator new. It uses
+	 * @link sakura::Memory::Allocate Memory::Allocate @endlink
+	 * to allocate memory.
+	 * @param size[in] size of allocated memory
+	 */
 	static void *operator new(size_t size) {
 		//std::cout << "This is overloaded new" << std::endl;
 		void *p = LIBSAKURA_PREFIX::Memory::Allocate(size);
@@ -199,25 +228,51 @@ struct CustomizedMemoryManagement {
 		}
 		return p;
 	}
+	/**
+	 * Overloaded operator delete. It uses
+	 * @link sakura::Memory::Free Memory::Free @endlink
+	 * to release memory.
+	 * @param p[in] initial address of the allocated memory
+	 */
 	static void operator delete(void *p) {
 		//std::cout << "This is overloaded delete" << std::endl;
 		LIBSAKURA_PREFIX::Memory::Free(p);
 	}
 };
 
-// Working data for polynomial interpolation
-// It stores working array for Neville's algorithm
+/**
+ * @a PolynomialWorkingData is a working data for polynomial interpolation.
+ * It stores working array for Neville's algorithm.
+ */
 template<class XDataType, class YDataType>
 struct PolynomialWorkingData: CustomizedMemoryManagement {
+	/**
+	 * The @a Allocate method creates @a PolynomialWorkingData instance and return it.
+	 * @param polynomial_order[in] polynomial order for polynomial interpolation
+	 * @param num_base[in] number of base data
+	 * @return working data
+	 */
 	static PolynomialWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		return new PolynomialWorkingData<XDataType, YDataType>(
 				polynomial_order, num_base);
 	}
+	/**
+	 * The @a Initialize method does nothing.
+	 * @param num_base[in] no effect
+	 * @param base_position[in] no effect
+	 * @param base_data[in] no effect
+	 * @param work_datas[out] no effect
+	 */
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
 			PolynomialWorkingData<XDataType, YDataType> *work_datas) {
 	}
+	/**
+	 * Constructor allocates working array for polynomial interpolation.
+	 * @param order[in] polynomial order for polynomial interpolation
+	 * @param num_base[in] number of base data
+	 */
 	PolynomialWorkingData(uint8_t order, size_t num_base) {
 		assert(num_base > 0);
 		polynomial_order = static_cast<uint8_t>(std::min(num_base - 1,
@@ -226,21 +281,49 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
 		AllocateAndAlign<XDataType>(num_elements, &(xholder[0]));
 		AllocateAndAlign<XDataType>(num_elements, &(xholder[1]));
 	}
+	/**
+	 * Working arrays for polynomial interpolation. The arrays are kept as
+	 * @a StorageAndAlignedPointer instance since working arrays should be
+	 * aligned.
+	 */
 	StorageAndAlignedPointer<XDataType> xholder[2];
+	/**
+	 * Number of elements of each working array.
+	 */
 	size_t num_elements;
+	/**
+	 * Specified polynomial order for the polynomial interpolation.
+	 */
 	uint8_t polynomial_order;
 };
 
-// Working data for spline interpolation
-// It stores working array for spline correction term
+/**
+ * @a SplineWorkingData is a working data for spline interpolation.
+ * It stores working array for spline correction term.
+ */
 template<class XDataType, class YDataType>
 struct SplineWorkingData: public CustomizedMemoryManagement {
+	/**
+	 * The @a Allocate method creates @a SplineWorkingData instance and return it.
+	 * @param polynomial_order[in] no effect
+	 * @param num_base[in] number of base data
+	 * @return working data
+	 */
 	static SplineWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
 		SplineWorkingData<XDataType, YDataType> *work_data =
 				new SplineWorkingData<XDataType, YDataType>(num_base);
 		return work_data;
 	}
+	/**
+	 * The @a Initialize method computes spline correction term.
+	 * @param num_base[in] number of base data
+	 * @param base_position[in] positions of base data. Number of elements must be
+	 * @a num_base. must-be-aligned
+	 * @param base_data[in] base data. Number of elements must be @a num_base.
+	 * must-be-aligned
+	 * @param work_datas[out] working data
+	 */
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
 			SplineWorkingData<XDataType, YDataType> *work_data) {
@@ -288,9 +371,18 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 			d2ydx2[k - 2] -= upper_triangular[k - 2] * d2ydx2[k - 1];
 		}
 	}
+	/**
+	 * Constructor allocates memory for spline correction term.
+	 * @param num_base[in] number of elements of spline correction term
+	 */
 	SplineWorkingData(size_t num_base) {
 		AllocateAndAlign<YDataType>(num_base, &storage);
 	}
+	/**
+	 * Working arrays for spline interpolation. The arrays are kept as
+	 * @a StorageAndAlignedPointer instance since working arrays should be
+	 * aligned. It will store spline correction term for each position.
+	 */
 	StorageAndAlignedPointer<YDataType> storage;
 };
 
