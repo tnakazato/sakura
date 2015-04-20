@@ -194,8 +194,8 @@ template<class DataType>
 size_t Locate(size_t num_reference, DataType const reference[], size_t num_data,
 		DataType const data[], size_t location_list[]) {
 	// input arrays must be sorted in ascending order and no duplicates
-	assert(reference[0] < reference[num_reference - 1]);
-	assert(data[0] < data[num_data - 1]);
+	assert(num_reference == 1 || reference[0] < reference[num_reference - 1]);
+	assert(num_data == 1 || data[0] < data[num_data - 1]);
 
 	size_t num_location_list = 0;
 	if (data[num_data - 1] <= reference[0]) {
@@ -522,20 +522,21 @@ struct InterpolatorInterface {
 	 * @param[out] interpolated_data interpolated value for each element whose location
 	 * is stored in @a interpolated_position
 	 */
+	template<class Indexer>
 	static void Interpolate1D(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t num_location,
 			size_t const location[], size_t offset,
-			WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
+			WorkingData const * const work_data, size_t num_array,
+			size_t iarray, YDataType interpolated_data[]) {
 		for (size_t k = 1; k < num_location; ++k) {
 			size_t const left_index = offset + k - 1;
 			auto const index_from = location[k - 1];
 			auto const index_to = location[k];
-			InterpolatorImpl::DoInterpolate(num_base, base_position, base_data,
-					num_interpolated, interpolated_position, index_from,
-					index_to,		//location, k,
-					left_index, work_data, interpolated_data);
+			InterpolatorImpl::template DoInterpolate<Indexer>(num_base,
+					base_position, base_data, num_interpolated,
+					interpolated_position, index_from, index_to, left_index,
+					work_data, num_array, iarray, interpolated_data);
 		}
 	}
 };
@@ -581,19 +582,21 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
 	 */
+	template<class Indexer>
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
 			size_t index_to, size_t left_index,
-			WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
+			WorkingData const * const work_data, size_t num_array,
+			size_t iarray, YDataType interpolated_data[]) {
 		auto const midpoint = (base_position[left_index + 1]
 				+ base_position[left_index])
 				/ decltype(base_position[left_index])(2.0);
 		auto const left_value = base_data[left_index];
 		auto const right_value = base_data[left_index + 1];
 		for (size_t i = index_from; i < index_to; ++i) {
-			interpolated_data[i] =
+			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
+					iarray, i)] =
 					(interpolated_position[i] > midpoint) ?
 							right_value : left_value;
 		}
@@ -640,17 +643,19 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
 	 */
+	template<class Indexer>
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
 			size_t index_to, size_t left_index,
-			WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
+			WorkingData const * const work_data, size_t num_array,
+			size_t iarray, YDataType interpolated_data[]) {
 		XDataType const dydx = static_cast<XDataType>(base_data[left_index + 1]
 				- base_data[left_index])
 				/ (base_position[left_index + 1] - base_position[left_index]);
 		for (size_t i = index_from; i < index_to; ++i) {
-			interpolated_data[i] = base_data[left_index]
+			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
+					iarray, i)] = base_data[left_index]
 					+ static_cast<YDataType>(dydx
 							* (interpolated_position[i]
 									- base_position[left_index]));
@@ -699,12 +704,13 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
 	 */
+	template<class Indexer>
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
 			size_t index_to, size_t left_index,
-			WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
+			WorkingData const * const work_data, size_t num_array,
+			size_t iarray, YDataType interpolated_data[]) {
 		assert(num_base >= work_data->num_elements);
 		size_t const left_edge2 = num_base - work_data->num_elements;
 		size_t left_edge =
@@ -712,7 +718,8 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 						left_index - work_data->polynomial_order / 2u : 0;
 		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
 		for (size_t i = index_from; i < index_to; ++i) {
-			interpolated_data[i] = PerformNevilleAlgorithm(num_base,
+			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
+					iarray, i)] = PerformNevilleAlgorithm(num_base,
 					base_position, base_data, left_edge,
 					interpolated_position[i], work_data);
 		}
@@ -802,12 +809,13 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
 	 */
+	template<class Indexer>
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
 			size_t index_to, size_t left_index,
-			WorkingData const * const work_data,
-			YDataType interpolated_data[]) {
+			WorkingData const * const work_data, size_t num_array,
+			size_t iarray, YDataType interpolated_data[]) {
 		YDataType const * const d2ydx2 = work_data->second_derivative.pointer;
 		auto const dx = base_position[left_index + 1]
 				- base_position[left_index];
@@ -816,7 +824,8 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			auto const a = (base_position[left_index + 1]
 					- interpolated_position[i]) / dx;
 			auto const b = decltype(a)(1.0) - a;
-			interpolated_data[i] = static_cast<YDataType>(a
+			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
+					iarray, i)] = static_cast<YDataType>(a
 					* base_data[left_index] + b * base_data[left_index + 1]
 					+ ((a * a * a - a) * d2ydx2[left_index]
 							+ (b * b * b - b) * d2ydx2[left_index + 1])
@@ -852,8 +861,9 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
  * @return number of valid data
  */
 template<class Indexer, class XDataType, class YDataType>
-inline size_t FillDataAsAscending(size_t num_column, XDataType const position[],
-		size_t num_row, size_t the_row, YDataType const data[],
+inline size_t PickValidDataAsAscending(size_t num_column,
+		XDataType const position[], size_t num_row, size_t the_row,
+		YDataType const data[],
 		bool const mask[], XDataType out_position[], YDataType out_data[]) {
 	size_t n = 0;
 	for (size_t i = 0; i < num_column; ++i) {
@@ -905,11 +915,12 @@ inline void CopyResult(size_t num_column, DataType in_data[], size_t num_row,
  * @param[in] end end index for @a out.
  * @param[out] out output data array.
  */
-template<class DataType>
-inline void FillOutOfRangeAreaWithEdgeValue(DataType the_value, size_t start,
-		size_t end, DataType out[]) {
+template<class Indexer, class DataType>
+inline void FillOutOfRangeAreaWithValue(DataType the_value, size_t start,
+		size_t end, size_t num_column, size_t num_row, size_t the_row,
+		DataType out[]) {
 	for (size_t i = start; i < end; ++i) {
-		out[i] = the_value;
+		out[Indexer::GetIndex(num_column, num_row, the_row, i)] = the_value;
 	}
 }
 
@@ -1072,14 +1083,20 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					> interpolated_position[0]);
 
 	// Define helper function here
-	auto data_filler =
+	auto data_picker =
 			(is_base_ascending) ?
-					FillDataAsAscending<AscendingIndexer, XDataType, YDataType> :
-					FillDataAsAscending<DescendingIndexer, XDataType, YDataType>;
-	auto data_copier =
+					PickValidDataAsAscending<AscendingIndexer, XDataType,
+							YDataType> :
+					PickValidDataAsAscending<DescendingIndexer, XDataType,
+							YDataType>;
+	auto interpolator =
 			(is_interp_ascending) ?
-					CopyResult<AscendingIndexer, YDataType> :
-					CopyResult<DescendingIndexer, YDataType>;
+					Interpolator::template Interpolate1D<AscendingIndexer> :
+					Interpolator::template Interpolate1D<DescendingIndexer>;
+	auto data_filler =
+			(is_interp_ascending) ?
+					FillOutOfRangeAreaWithValue<AscendingIndexer, YDataType> :
+					FillOutOfRangeAreaWithValue<DescendingIndexer, YDataType>;
 
 	// Initialize interpolated_mask to true
 	for (size_t i = 0; i < num_interpolated * num_array; ++i) {
@@ -1102,8 +1119,6 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		}
 		interpolated_position_ascending = x_writable;
 	}
-	AllocateAndAlign(num_interpolated, &y1_storage);
-	YDataType *y1 = y1_storage.pointer;
 
 	std::unique_ptr<WorkingData> wdata_storage(
 			WorkingData::Allocate(polynomial_order, num_base));
@@ -1113,7 +1128,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 		// Pick up valid data and associating position from base_position and base_data
 		// by referring base_mask. The data and position are reversed if sort order is
 		// descending.
-		size_t const num_valid_data = data_filler(num_base, base_position,
+		size_t const num_valid_data = data_picker(num_base, base_position,
 				num_array, iarray, base_data, base_mask, valid_base_position,
 				valid_base_data);
 		if (num_valid_data == 0) {
@@ -1137,8 +1152,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					valid_base_position, location_base);
 
 			// interpolated_position is less than base_position[0]
-			FillOutOfRangeAreaWithEdgeValue(valid_base_data[0], 0,
-					location_base[0], y1);
+			data_filler(valid_base_data[0], 0, location_base[0],
+					num_interpolated, num_array, iarray, interpolated_data);
 
 			// Perform 1-dimensional interpolation
 			// interpolated_position is located in between base_position[0]
@@ -1151,18 +1166,15 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			}
 			WorkingData::Initialize(num_valid_data, valid_base_position,
 					valid_base_data, work_data);
-			Interpolator::Interpolate1D(num_valid_data, valid_base_position,
-					valid_base_data, num_interpolated,
-					interpolated_position_ascending, num_location_base,
-					location_base, offset, work_data, y1);
+			interpolator(num_valid_data, valid_base_position, valid_base_data,
+					num_interpolated, interpolated_position_ascending,
+					num_location_base, location_base, offset, work_data,
+					num_array, iarray, interpolated_data);
 
 			// interpolated_position is greater than base_position[num_base-1]
-			FillOutOfRangeAreaWithEdgeValue(valid_base_data[num_valid_data - 1],
-					location_base[num_location_base - 1], num_interpolated, y1);
-
-			// Copy results in working array, y1, into result array
-			data_copier(num_interpolated, y1, num_array, iarray,
-					interpolated_data);
+			data_filler(valid_base_data[num_valid_data - 1],
+					location_base[num_location_base - 1], num_interpolated,
+					num_interpolated, num_array, iarray, interpolated_data);
 		}
 	}
 }
