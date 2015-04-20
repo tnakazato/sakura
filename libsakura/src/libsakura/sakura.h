@@ -1716,62 +1716,14 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				LIBSAKURA_NOEXCEPT;
 
 /**
- * @~japanese
- * @brief position switch calibrationを実行する。
+ * @~
+ * @brief Normalize data against reference value with scaling factor.
  * @details
- * position switch calibrationを実行する。
- * 具体的には、
- * @verbatim result = scaling_factor * (target - reference) / reference @endverbatim
- * を実行する。これは、position switch観測の温度較正
- * @verbatim calibrated = Tsys * (ON - OFF) / OFF @endverbatim
- * に相当する処理である。ただし、Tsys はシステム雑音温度、ONおよびOFFはそれぞれ
- * on sourceおよびoff sourceの生データである。
- * @n
- * @n
- * 戻り値は終了ステータスである。正常終了の場合、
- * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
- * を返す。
- * 引数に不正がある場合には
- * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * を返す。
- * @n
- * @n
- * インプレースな処理がを許す。すなわち、@a result は@a target もしくは@a reference と同じ配列を渡してよい。
- * その場合、@a target もしくは@a reference は上書きされる。
- * @pre
- * @a num_scaling_factor は1もしくは@a num_data と等しくなければならない。1は周波数に依存しない、または周波数方向に
- * 平均されたシステム雑音温度のみが与えられた場合、@a num_data はシステム雑音温度が周波数に依存する場合に相当する。
+ * Normalize the data against reference value with scaling factor. The function normalizes the @a data
+ * by the assumption that
+ * the value in @a reference is normalized to @a scaling_factor. Specifically, it will calculate,
+ * @verbatim result = scaling_factor * (data - reference) / reference @endverbatim
  *
- * @param[in] num_scaling_factor @a scaling_factor の要素数。
- * 1または@a num_data のいずれかでなければならない。@a num_scaling_factor が1の場合、
- * @a scaling_factor[0] が全ての要素に適用される。
- * @param[in] scaling_factor スケーリング因子。システム雑音温度に相当する。
- * 要素数は @a num_scaling_factor でなければならない。
- * must-be-aligned
- * @param[in] num_data データの要素数。
- * @param[in] target ターゲットデータ。on sourceデータに相当する。
- * 要素数は@a num_data でなければならない。
- * must-be-aligned
- * @param[in] reference 参照データ。off sourceデータに相当する。
- * 要素数は@a num_data でなければならない。
- * must-be-aligned
- * @param[out] result 計算結果。較正済みデータに相当する。
- * @a target または@a reference と同じ配列を渡してもよい。
- * 要素数は@a num_data でなければならない。
- * must-be-aligned
- *
- * @return 終了ステータス。
- *
- * @~english
- * @brief Perform position switch calibration.
- * @details
- * Perform position switch calibration. Specifically, it will calculate,
- * @verbatim result = scaling_factor * (target - reference) / reference @endverbatim
- * which physically corresponds to
- * @verbatim calibrated = Tsys * (ON - OFF) / OFF @endverbatim
- * where Tsys is system temperature, ON and OFF are on source and off source spectra,
- * respectively.
- * @n
  * @n
  * The function returns result status. For successful run, return value will be
  * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink.
@@ -1780,8 +1732,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * if any invalid values are passed to arguments.
  * @n
  * @n
- * The function allows in-place calculation, i.e., @a result array can be either @a target or
- * @a reference. In this case, @a target or @a reference will be overwritten.
+ * The function allows in-place calculation, i.e., @a result array can be either @a data or
+ * @a reference. In this case, @a data or @a reference will be overwritten.
  * @pre
  * @a num_scaling_factor should be 1 or equal to @a num_data. These values corresponds to the case of
  * frequency-independent (channel averaged) or frequency-dependent system temperature,
@@ -1794,23 +1746,22 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * elements must be @a num_scaling_factor.
  * must-be-aligned
  * @param[in] num_data number of data
- * @param[in] target target (on source) data. number of elements must be @a num_data.
+ * @param[in] data data to be normalized. number of elements must be @a num_data.
  * must-be-aligned
- * @param[in] reference reference (off source) data. number of elements must be @a num_data.
+ * @param[in] reference reference data. number of elements must be @a num_data.
  * must-be-aligned
- * @param[out] result resulting (calibrated) data. one can give same array with either
- * @a target or @a reference for in-place calculation. number of elements must be @a num_data.
+ * @param[out] result resulting normalized data. one can give same array with either
+ * @a data or @a reference for in-place calculation. number of elements must be @a num_data.
  * must-be-aligned
  *
  * @return status code.
  *
- * @~
  * MT-safe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrationFloat)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
 		size_t num_scaling_factor,
 		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
-		float const target[/*num_data*/], float const reference[/*num_data*/],
+		float const data[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**

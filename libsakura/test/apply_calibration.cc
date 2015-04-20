@@ -37,7 +37,7 @@
 #include "loginit.h"
 #include "aligned_memory.h"
 
-#define APPLYCAL_FLOAT_TEST(NAME) TEST_F(ApplyCalibrationFloatTest, NAME)
+#define APPLYCAL_FLOAT_TEST(NAME) TEST_F(NormalizeDataFloatTest, NAME)
 
 namespace {
 void InitializeFloatArray(size_t num_array, float array[], ...) {
@@ -187,7 +187,7 @@ public:
 };
 } // anonymous namespace
 
-class ApplyCalibrationFloatTest: public ::testing::Test {
+class NormalizeDataFloatTest: public ::testing::Test {
 public:
 	virtual void SetUp() {
 		// Initialize sakura
@@ -211,8 +211,8 @@ public:
 				<< std::endl;
 		std::string message =
 				(expected_status == sakura_Status_kOK) ?
-						"ApplyCalibration had any problems during execution." :
-						"ApplyCalibration should fail!";
+						"NormalizeData had any problems during execution." :
+						"NormalizeData should fail!";
 		float *target_saved = nullptr;
 		std::unique_ptr<float[]> storage_for_saved;
 		if (target == result) {
@@ -242,7 +242,7 @@ public:
 				float *wr = &result[i * num_data];
 				double start = sakura_GetCurrentTime();
 				LIBSAKURA_SYMBOL(Status) result_status =
-				LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibrationFloat)(
+				LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
 						num_scaling_factor, ws, num_data, wt, wf, wr);
 				double end = sakura_GetCurrentTime();
 				elapsed_time += end - start;
@@ -255,7 +255,7 @@ public:
 						//std::cout << "Expected value at index " << index << ": "
 						//		<< expected[index] << std::endl;
 						EXPECT_FLOAT_EQ(expected[index], result[index])
-								<< "calibrated value differs from expected value at "
+								<< "normalized value differs from expected value at "
 								<< index << ": " << expected[index] << ", "
 								<< result[index];
 					}
