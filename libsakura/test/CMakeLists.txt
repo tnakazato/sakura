@@ -73,7 +73,6 @@ add_custom_target(logConfig
 	DEPENDS "${PROJECT_SOURCE_DIR}/libsakura.log4j"
 )
 
-add_executable(testApplyCalibration      apply_calibration.cc)
 add_executable(testBaseline              baseline.cc)
 add_executable(testBaselineKS            baseline_ks.cc)
 add_executable(testBaselineSK            baseline_sk.cc)
@@ -85,12 +84,12 @@ add_executable(testGridding              gridding.cc)
 add_executable(testInit                  init.cc)
 add_executable(testInterpolationX        interpolation_x.cc)
 add_executable(testInterpolationY        interpolation_y.cc)
+add_executable(testNormalization         normalization.cc)
 add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
 add_executable(testFFT fft.cc)
 add_executable(testCInterface c_interface.c)
 
-target_link_libraries (testApplyCalibration      gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaseline              gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaselineKS            gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaselineSK            gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
@@ -102,6 +101,7 @@ target_link_libraries (testGridding              gtest_main gtest sakura -L${PRO
 target_link_libraries (testInit                  gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testInterpolationX        gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testInterpolationY        gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testNormalization         gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testNumericOperation      gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testStatistics            gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testFFT 						gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
@@ -109,7 +109,6 @@ target_link_libraries (testCInterface sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,
 
 add_dependencies(testInit logConfig)
 
-add_custom_target(testApplyCalibrationRun      COMMAND ./testApplyCalibration      DEPENDS testApplyCalibration)
 add_custom_target(testBaselineRun              COMMAND ./testBaseline              DEPENDS testBaseline)
 add_custom_target(testBaselineKSRun            COMMAND ./testBaselineKS            DEPENDS testBaselineKS)
 add_custom_target(testBaselineSKRun            COMMAND ./testBaselineSK            DEPENDS testBaselineSK)
@@ -121,6 +120,7 @@ add_custom_target(testGriddingRun              COMMAND ./testGridding           
 add_custom_target(testInitRun                  COMMAND ./testInit                  DEPENDS testInit)
 add_custom_target(testInterpolationXRun        COMMAND ./testInterpolationX        DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRun        COMMAND ./testInterpolationY        DEPENDS testInterpolationY)
+add_custom_target(testNormalizationRun         COMMAND ./testNormalization         DEPENDS testNormalization)
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 add_custom_target(testFFTRun            COMMAND ./testFFT            DEPENDS testFFT)
@@ -147,7 +147,7 @@ add_custom_target(test
 	COMMAND ./testGridding
 	COMMAND ./testInterpolationX
 	COMMAND ./testInterpolationY
-	COMMAND ./testApplyCalibration
+	COMMAND ./testNormalization
 	COMMAND ./testConvolution
 	COMMAND ./testFFT
 	COMMAND ./testCInterface

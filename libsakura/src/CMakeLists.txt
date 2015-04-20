@@ -74,9 +74,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -funroll-all-loops -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
-set(SOURCES apply_calibration.cc baseline.cc bit_operation.cc 
-	bool_filter_collection.cc convolution.cc gridding.cc interpolation.cc 
-	numeric_operation.cc statistics.cc fft.cc
+set(SOURCES baseline.cc bit_operation.cc bool_filter_collection.cc 
+	convolution.cc gridding.cc interpolation.cc 
+	normalization.cc numeric_operation.cc statistics.cc fft.cc
 	gen_util.cc concurrent.cc 
 	)
 configure_file (
