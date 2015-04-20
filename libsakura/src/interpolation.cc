@@ -91,6 +91,20 @@ inline void AllocateAndAlign(size_t num_elements,
 			num_elements * sizeof(DataType), &(holder->pointer));
 }
 
+/**
+ * For given @a data, it returns the array index, @a i,  for @a reference whose
+ * element @a reference[i-1] and @a reference[i] brackets @a data. Reference
+ * array @a reference must be sorted in an ascending order. If @a data is less
+ * than @a reference[0], 0 will be returned. Also, if @a data is greater than
+ * @a reference[num_reference-1], @a num_reference will be returned.
+ *
+ * @param start_index[in] start index of @a reference for the search
+ * @param end_index[in] end index of @a reference for the search
+ * @param num_reference[in] number of elements for @a reference
+ * @param reference[in] reference array. Its length must be @a num_reference
+ * @param data[in] data to be located.
+ * @return array index for @a reference that brackets @a data
+ */
 template<class DataType>
 size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
 		size_t end_index, size_t num_reference, DataType const reference[],
@@ -105,6 +119,8 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
 		return 0;
 
 	// base_position must be sorted in ascending order
+	assert(reference[0] < reference[num_reference - 1]);
+
 	if (data <= reference[0]) {
 		// out of range
 		return 0;
@@ -112,17 +128,18 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
 		// out of range
 		return num_reference;
 	} else if (data < reference[start_index]) {
-		// x_located is not in the range (start_position, end_position)
-		// call this function to search other location
+		// data is not in the range between start_index and end_index
+		// call this function to search other location (< start_index)
 		return FindIndexOfClosestElementFromSortedArray(0, start_index,
 				num_reference, reference, data);
 	} else if (data > reference[end_index]) {
-		// located_position is not in the range (start_position, end_position)
-		// call this function to search other location
+		// data is not in the range between start_index and end_index
+		// call this function to search other location (> end_index)
 		return FindIndexOfClosestElementFromSortedArray(end_index,
 				num_reference - 1, num_reference, reference, data);
 	} else {
-		// do bisection
+		// data will be located between start_index and end_index
+		// perform bisection search
 		size_t left_index = start_index;
 		size_t right_index = end_index;
 		while (left_index + 1 < right_index) {
@@ -137,24 +154,58 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
 	}
 }
 
+/**
+ * Compare elements in @a data with the ones in @a reference and determine
+ * where each element in @a data is located in between the elements in
+ * @a reference.
+ * The result is stored in @a location_list as a upper index of @a reference
+ * that brackets the element in @a data. The index 0 or @a num_reference in
+ * @a location_list indicate that the data is out of range.
+ *
+ * For example, supporse that @a data and @a reference are as follows:
+ * @verbatim
+ * float data[] = {-0.5, 1.8, 1.9, 2.2};
+ * float reference[] = {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0};
+ * @endverbatim
+ * The @a location_list will store the indices 0, 4, and 5.
+ *
+ * @pre @a data and @a reference must be sorted in an ascending order
+ *
+ * @param num_reference[in] number of reference
+ * @param reference[in] reference. Number of elements must be @a num_reference.
+ * must-be-aligned
+ * @param num_data[in] number of data
+ * @param data[in] data. Number of elements must be @a num_data.
+ * must-be-aligned
+ * @param location_list[out] location list. Number of elements must be @a num_data.
+ * must-be-aligned
+ * @return number of locations
+ */
 template<class DataType>
-size_t Locate(size_t num_reference, size_t num_data, DataType const reference[],
+size_t Locate(size_t num_reference, DataType const reference[], size_t num_data,
 		DataType const data[], size_t location_list[]) {
-	// input arrays must be sorted in ascending order
+	// input arrays must be sorted in ascending order and no duplicates
+	assert(reference[0] < reference[num_reference - 1]);
+	assert(data[0] < data[num_data - 1]);
+
 	size_t num_location_list = 0;
 	if (data[num_data - 1] <= reference[0]) {
-		// all located_position's are on the left (lower) side of base_position
+		// all data are on the left (lower) side of reference
 		num_location_list = 1;
 		location_list[0] = 0;
 	} else if (data[0] >= reference[num_reference - 1]) {
-		// all located_position's are on the right (upper) side of base_position
+		// all data are on the right (upper) side of reference
 		num_location_list = 1;
 		location_list[0] = num_reference;
 	} else if (num_reference == 1) {
+		// data are divided at a certain point by reference
 		num_location_list = 2;
 		location_list[0] = 0;
 		location_list[1] = 1;
 	} else {
+		// Evaluate location by FindIndexOfClosestElementFromSortedArray, which
+		// basically performs bisection search to locate data
+		// start_position and end_position are the cache for searched range
 		size_t start_position = 0;
 		size_t end_position = num_reference - 1;
 		size_t previous_location = num_reference + 1;
@@ -254,8 +305,8 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
 	 */
 	static PolynomialWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
-		return new PolynomialWorkingData<XDataType, YDataType>(
-				polynomial_order, num_base);
+		return new PolynomialWorkingData<XDataType, YDataType>(polynomial_order,
+				num_base);
 	}
 	/**
 	 * The @a Initialize method does nothing.
@@ -414,11 +465,40 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	StorageAndAlignedPointer<YDataType> upper_triangular;
 };
 
-// Interface class for Interpolator
+/**
+ * Interface class for Interpolator. It defines an template method, @a Interpolate1D,
+ * that will be called from @link ::Interpolate1D Interpolate1D @endlink.
+ * Implementation classes should inherit it according to CRTP and implement
+ * @a DoInterpolate method.
+ */
 template<class InterpolatorImpl, class WorkData, class XDataType,
 		class YDataType>
 struct InterpolatorInterface {
+	/**
+	 * Type of working data
+	 */
 	typedef WorkData WorkingData;
+	/**
+	 * Template method for interpolation. It calls @a DoInterpolate method of its
+	 * implementation class for each interpolation position.
+	 *
+	 * @param num_base[in] number of base data
+	 * @param base_position[in] positions of base data. Number of elemments must be
+	 * @a num_data. must-be-aligned
+	 * @param base_data[in] base data. Number of elements must be @a num_data.
+	 * must-be-aligned
+	 * @param num_interpolated[in] number of interpolation data
+	 * @param interpolated_position[in] positions of interpolation data. Number of elements
+	 * must be @a num_interpolated. must-be-aligned
+	 * @param num_location[in] Length of @a location.
+	 * @param location[in] list of indices that indicates the location of each position
+	 * in @a base_position with respect to @a interpolated_position. Its length must be
+	 * @a num_location. must-be-aligned
+	 * @param offset[in] index offset for @a location
+	 * @param work_data[in] working data for interpolation
+	 * @param interpolated_data[out] interpolated value for each element whose location
+	 * is stored in @a interpolated_position
+	 */
 	static void Interpolate1D(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t num_location,
@@ -780,7 +860,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			AllocateAndAlign<size_t>(n, &size_t_holder);
 			size_t *location_base = size_t_holder.pointer;
 			size_t const num_location_base = Locate<XDataType>(num_interpolated,
-					n, x1, x0, location_base);
+					x1, n, x0, location_base);
 
 			// Outside of base_position[0]
 			FillOutOfRangeAreaWithEdgeValue(0, y0, 0, location_base[0], y1);
