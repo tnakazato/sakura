@@ -328,9 +328,8 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 			YDataType const base_data[],
 			SplineWorkingData<XDataType, YDataType> *work_data) {
 		StorageAndAlignedPointer<YDataType> holder_for_u;
-		AllocateAndAlign<YDataType>(num_base, &holder_for_u);
-		YDataType *upper_triangular = holder_for_u.pointer;
-		YDataType *d2ydx2 = work_data->storage.pointer;
+		YDataType *upper_triangular = work_data->upper_triangular.pointer;
+		YDataType *d2ydx2 = work_data->second_derivative.pointer;
 
 		// This is a condition of natural cubic spline
 		d2ydx2[0] = YDataType(0.0);
@@ -376,14 +375,23 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	 * @param num_base[in] number of elements of spline correction term
 	 */
 	SplineWorkingData(size_t num_base) {
-		AllocateAndAlign<YDataType>(num_base, &storage);
+		AllocateAndAlign<YDataType>(num_base, &second_derivative);
+		AllocateAndAlign<YDataType>(num_base, &upper_triangular);
 	}
 	/**
-	 * Working arrays for spline interpolation. The arrays are kept as
+	 * Working array for spline interpolation. The array is kept as
 	 * @a StorageAndAlignedPointer instance since working arrays should be
-	 * aligned. It will store spline correction term for each position.
+	 * aligned. It will store spline correction term, which is a second
+	 * derivative for each base position.
 	 */
-	StorageAndAlignedPointer<YDataType> storage;
+	StorageAndAlignedPointer<YDataType> second_derivative;
+	/**
+	 * Working array for spline interpolation. The array is kept as
+	 * @a StorageAndAlignedPointer instance since working arrays should be
+	 * aligned. It will store elements of upper triangular matrix that
+	 * is necessary to calculate spline correction term.
+	 */
+	StorageAndAlignedPointer<YDataType> upper_triangular;
 };
 
 // Interface class for Interpolator
@@ -553,7 +561,7 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			XDataType const interpolated_position[], size_t const location[],
 			size_t k, size_t left_index, WorkingData const * const work_data,
 			YDataType interpolated_data[]) {
-		YDataType const * const d2ydx2 = work_data->storage.pointer;
+		YDataType const * const d2ydx2 = work_data->second_derivative.pointer;
 		auto const dx = base_position[left_index + 1]
 				- base_position[left_index];
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
