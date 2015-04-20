@@ -176,17 +176,17 @@ struct CustomizedMemoryManagement {
 // Working data for polynomial interpolation
 // It stores working array for Neville's algorithm
 template<class XDataType, class YDataType>
-struct PolynomialXWorkingData: CustomizedMemoryManagement {
-	static PolynomialXWorkingData<XDataType, YDataType> * Allocate(
+struct PolynomialWorkingData: CustomizedMemoryManagement {
+	static PolynomialWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
-		return new PolynomialXWorkingData<XDataType, YDataType>(
+		return new PolynomialWorkingData<XDataType, YDataType>(
 				polynomial_order, num_base);
 	}
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
-			PolynomialXWorkingData<XDataType, YDataType> *work_datas) {
+			PolynomialWorkingData<XDataType, YDataType> *work_datas) {
 	}
-	PolynomialXWorkingData(uint8_t order, size_t num_base) {
+	PolynomialWorkingData(uint8_t order, size_t num_base) {
 		assert(num_base > 0);
 		polynomial_order = static_cast<uint8_t>(std::min(num_base - 1,
 				static_cast<size_t>(order)));
@@ -202,16 +202,16 @@ struct PolynomialXWorkingData: CustomizedMemoryManagement {
 // Working data for spline interpolation
 // It stores working array for spline correction term
 template<class XDataType, class YDataType>
-struct SplineXWorkingData: public CustomizedMemoryManagement {
-	static SplineXWorkingData<XDataType, YDataType> * Allocate(
+struct SplineWorkingData: public CustomizedMemoryManagement {
+	static SplineWorkingData<XDataType, YDataType> * Allocate(
 			uint8_t polynomial_order, size_t num_base) {
-		SplineXWorkingData<XDataType, YDataType> *work_data =
-				new SplineXWorkingData<XDataType, YDataType>(num_base);
+		SplineWorkingData<XDataType, YDataType> *work_data =
+				new SplineWorkingData<XDataType, YDataType>(num_base);
 		return work_data;
 	}
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
-			SplineXWorkingData<XDataType, YDataType> *work_data) {
+			SplineWorkingData<XDataType, YDataType> *work_data) {
 		StorageAndAlignedPointer<YDataType> holder_for_u;
 		AllocateAndAlign<YDataType>(num_base, &holder_for_u);
 		YDataType *upper_triangular = holder_for_u.pointer;
@@ -256,7 +256,7 @@ struct SplineXWorkingData: public CustomizedMemoryManagement {
 			d2ydx2[k - 2] -= upper_triangular[k - 2] * d2ydx2[k - 1];
 		}
 	}
-	SplineXWorkingData(size_t num_base) {
+	SplineWorkingData(size_t num_base) {
 		AllocateAndAlign<YDataType>(num_base, &storage);
 	}
 	StorageAndAlignedPointer<YDataType> storage;
@@ -352,10 +352,10 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 template<class XDataType, class YDataType>
 struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 		PolynomialInterpolatorImpl<XDataType, YDataType>,
-		PolynomialXWorkingData<XDataType, YDataType>, XDataType, YDataType> {
+		PolynomialWorkingData<XDataType, YDataType>, XDataType, YDataType> {
 	typedef typename InterpolatorInterface<
 			PolynomialInterpolatorImpl<XDataType, YDataType>,
-			PolynomialXWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+			PolynomialWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t const location[],
@@ -420,10 +420,10 @@ private:
 template<class XDataType, class YDataType>
 struct SplineInterpolatorImpl: public InterpolatorInterface<
 		SplineInterpolatorImpl<XDataType, YDataType>,
-		SplineXWorkingData<XDataType, YDataType>, XDataType, YDataType> {
+		SplineWorkingData<XDataType, YDataType>, XDataType, YDataType> {
 	typedef typename InterpolatorInterface<
 			SplineInterpolatorImpl<XDataType, YDataType>,
-			SplineXWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+			SplineWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t const location[],
