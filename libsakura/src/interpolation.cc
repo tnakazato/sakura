@@ -45,6 +45,8 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
  * @a storage points an initial address of allocated memory area while
  * @a pointer keeps a minimum aligned address of allocated memory area.
  * Its destructor will automatically release allocated area that @a storage points to.
+ *
+ * @tparam DataType data type
  */
 template<class DataType>
 struct StorageAndAlignedPointer {
@@ -79,6 +81,9 @@ struct StorageAndAlignedPointer {
  * alignment will autocatically be calculated. Throws the std::bad_alloc if allocation
  * failed or size of allocated memory area is not enough.
  * Initial address and aligned address will be held by @a holder.
+ *
+ * @tparam DataType data type
+ *
  * @param[in] num_elements number of elements of aligned array
  * @param[in] holder[out] struct holding both initial address and aligned address of
  * allocated memory area
@@ -97,6 +102,8 @@ inline void AllocateAndAlign(size_t num_elements,
  * array @a reference must be sorted in an ascending order. If @a data is less
  * than @a reference[0], 0 will be returned. Also, if @a data is greater than
  * @a reference[num_reference-1], @a num_reference will be returned.
+ *
+ * @tparam DataType data type for @a reference and @a data
  *
  * @param[in] start_index start index of @a reference for the search
  * @param[in] end_index end index of @a reference for the search
@@ -171,6 +178,8 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
  *
  * @pre @a data and @a reference must be sorted in an ascending order
  *
+ * @tparam DataType data type for @a reference and @a data
+ *
  * @param[in] num_reference number of reference
  * @param[in] reference reference. Number of elements must be @a num_reference.
  * must-be-aligned
@@ -233,6 +242,9 @@ size_t Locate(size_t num_reference, DataType const reference[], size_t num_data,
 /**
  * @a NullWorkingData is a null implementation of working data.
  * It has nothing and it does nothing.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class XDataType, class YDataType>
 struct NullWorkingData {
@@ -294,6 +306,9 @@ struct CustomizedMemoryManagement {
 /**
  * @a PolynomialWorkingData is a working data for polynomial interpolation.
  * It stores working array for Neville's algorithm.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class XDataType, class YDataType>
 struct PolynomialWorkingData: CustomizedMemoryManagement {
@@ -351,6 +366,9 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
 /**
  * @a SplineWorkingData is a working data for spline interpolation.
  * It stores working array for spline correction term.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class XDataType, class YDataType>
 struct SplineWorkingData: public CustomizedMemoryManagement {
@@ -470,6 +488,11 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
  * that will be called from @link ::Interpolate1D Interpolate1D @endlink.
  * Implementation classes should inherit it according to CRTP and implement
  * @a DoInterpolate method.
+ *
+ * @tparam InterolatorImpl implementation class of interpolator
+ * @tparam WorkData working data type that corresponds to @a InterpolatorImpl
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class InterpolatorImpl, class WorkData, class XDataType,
 		class YDataType>
@@ -520,6 +543,9 @@ struct InterpolatorInterface {
 // TODO: documentation needs to be improved.
 /**
  * Nearest interpolation implementation.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class XDataType, class YDataType>
 struct NearestInterpolatorImpl: public InterpolatorInterface<
@@ -576,6 +602,9 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 
 /**
  * Linear interpolation implementation.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class XDataType, class YDataType>
 struct LinearInterpolatorImpl: public InterpolatorInterface<
@@ -631,6 +660,9 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 
 /**
  * Polynomial interpolation implementation.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  */
 template<class XDataType, class YDataType>
 struct PolynomialInterpolatorImpl: public InterpolatorInterface<
@@ -728,7 +760,12 @@ private:
 	}
 };
 
-// TODO: documentation must be added
+/**
+ * Spline interpolation implementation.
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
+ */
 template<class XDataType, class YDataType>
 struct SplineInterpolatorImpl: public InterpolatorInterface<
 		SplineInterpolatorImpl<XDataType, YDataType>,
@@ -793,6 +830,10 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
  * If the data is sorted in descending order, the array order will be
  * reversed.
  *
+ * @tparam Indexer data accessor
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
+ *
  * @param[in] num_column number of elements for @a position. It also defines a
  * number of columns for the @a data.
  * @param[in] position list of data positions. Length must be @a num_column.
@@ -831,6 +872,9 @@ inline size_t FillDataAsAscending(size_t num_column, XDataType const position[],
  * Copy contents of working data specified as @a in_data into @a out_data.
  * Copied location is defined by @a Indexer.
  *
+ * @tparam Indexer data accessor
+ * @tparam DataType data type for data
+ *
  * @param[in] num_column number of elements for @a in_data. It also defines a
  * number of columns for the @a out_data.
  * @param[in] num_row number of rows for the @a out_data.
@@ -854,6 +898,8 @@ inline void CopyResult(size_t num_column, DataType in_data[], size_t num_row,
 /**
  * It fills specified ranges of output data with specified value.
  *
+ * @tparam DataType data type for data
+ *
  * @param[in] the_value the value to be filled.
  * @param[in] start start index for @a out.
  * @param[in] end end index for @a out.
@@ -870,6 +916,9 @@ inline void FillOutOfRangeAreaWithEdgeValue(DataType the_value, size_t start,
 /**
  * It fills one row with specified value. Data accessing rule is defined
  * by @a Indexer.
+ *
+ * @tparam Indexer data accessor
+ * @tparam DataType data type for data
  *
  * @param[in] num_column number of columns.
  * @param[in] num_row number of rows.
@@ -971,6 +1020,11 @@ struct YInterpolatorHelper {
  *
  *  See @link sakura_InterpolateXAxisFloat sakura_InterpolateXAxisFloat @endlink for
  *  parameter description.
+ *
+ * @tparam Interpolator interpolation engine class
+ * @tparam Helper class for interpolation
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
  *
  * @param[in] polynomial_order
  * @param[in] num_base
@@ -1110,6 +1164,11 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 #ifndef NDEBUG
 /**
  * Template utility function for sort check
+ *
+ * @tparam DataType data type for data
+ * @tparam Checker data checker. It must take two DataType arguments and
+ * return boolean value.
+ *
  * @param[in] checker function to check array elements
  * @param[in] num_elements Length of the @a data
  * @param[in] data data to be inspected. Length must be @a num_elements.
@@ -1129,6 +1188,8 @@ bool IsDuplicateOrNotSorted(Checker checker, size_t num_elements,
 
 /**
  * Check if input array is sorted and no duplicates.
+ *
+ * @tparam DataType data type for data
  *
  * @param[in] num_elements Length of the @a data
  * @param[out] data data to be inspected. Length must be @a num_elements.
@@ -1246,6 +1307,10 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  *       and @a polynomial_order is not 0
  *     - @a NearestInterpolator if interpolation_method is @a sakura_InterpolationMethod_kPolynomial
  *       and @a polynomial_order is 0
+ *
+ * @tparam XDataType data type for position
+ * @tparam YDataType data type for data
+ * @tparam InterpolatorHelper Helper class for interpolation
  */
 template<typename XDataType, typename YDataType, typename InterpolatorHelper>
 LIBSAKURA_SYMBOL(Status) DoInterpolate(
