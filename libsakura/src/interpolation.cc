@@ -37,21 +37,53 @@ namespace {
 // a logger for this module
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
+/**
+ * @struct StorageAndAlignedPointer
+ * @brief Storage for aligned array
+ * @details
+ * @a StorageAndAlignedPointer holds two pointers, @a storage and @a pointer.
+ * @a storage points an initial address of allocated memory area while
+ * @a pointer keeps a minimum aligned address of allocated memory area.
+ * Its destructor will automatically release allocated area that @a storage points to.
+ */
 template<class DataType>
 struct StorageAndAlignedPointer {
+	/**
+	 * Constructor. It initializes @a storage and @a pointer by nullptr.
+	 */
 	StorageAndAlignedPointer() :
 			storage(nullptr), pointer(nullptr) {
 	}
+	/**
+	 * Destructur. It releases allocated area that @a storage points to.
+	 */
 	~StorageAndAlignedPointer() {
 		if (storage != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(storage);
 			storage = nullptr;
 		}
 	}
+	/**
+	 * An initial address of allocated memory area.
+	 */
 	void *storage;
+	/**
+	 * A minimum aligned address of allocated memory area.
+	 */
 	DataType *pointer;
 };
 
+/**
+ * AllocateAndAlign allocates required memory area that is necessary to get aligned array
+ * with number of elements specified by @a num_elements. Required size with mergin for
+ * alignment will autocatically be calculated. Throws the std::bad_alloc if allocation
+ * failed or size of allocated memory area is not enough.
+ * Initial address and aligned address will be held by @a holder.
+ * @param num_elements[in] number of elements of aligned array
+ * @param holder[in,out] struct holding both initial address and aligned address of
+ * allocated memory area
+ * @exception std::bad_alloc failed to allocate memory
+ */
 template<class DataType>
 inline void AllocateAndAlign(size_t num_elements,
 		StorageAndAlignedPointer<DataType> *holder) {
