@@ -788,6 +788,28 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	}
 };
 
+/**
+ * Pick up valid (mask is true) data and fill out output array with them.
+ * If the data is sorted in descending order, the array order will be
+ * reversed.
+ *
+ * @param[in] num_column number of elements for @a position. It also defines a
+ * number of columns for the @a data.
+ * @param[in] position list of data positions. Length must be @a num_column.
+ * must-be-aligned
+ * @param[in] num_row number of rows for the @a data.
+ * @param[in] the_row target row index for the @a data. It must be less than
+ * @a num_row.
+ * @param[in] data data array. Its length must be @a num_column times @a num_row.
+ * must-be-aligned
+ * @param[in] mask data mask. true is valid. Its length must be @a num_column
+ * times @a num_row. must-be-aligned
+ * @param[out] out_position output valid position list. Its length must be
+ * @a num_column. Number of valid data is returned value of this function.
+ * @param[out] out_data output valid data list. Its length must be
+ * @a num_column. Number of valid data is returned value of this function.
+ * @return number of valid data
+ */
 template<class Indexer, class XDataType, class YDataType>
 inline size_t FillDataAsAscending(size_t num_column, XDataType const position[],
 		size_t num_row, size_t the_row, YDataType const data[],
@@ -805,9 +827,23 @@ inline size_t FillDataAsAscending(size_t num_column, XDataType const position[],
 	return n;
 }
 
+/**
+ * Copy contents of working data specified as @a in_data into @a out_data.
+ * Copied location is defined by @a Indexer.
+ *
+ * @param[in] num_column number of elements for @a in_data. It also defines a
+ * number of columns for the @a out_data.
+ * @param[in] num_row number of rows for the @a out_data.
+ * @param[in] the_row target row index for the @a out_data. It must be less than
+ * @a num_row.
+ * @param[in] in_data input working data. Its length must be @a num_column.
+ * must-be-aligned
+ * @param[out] out_data output data. Its length must be @a num_column times
+ * @a num_row. must-be-aligned
+ */
 template<class Indexer, class DataType>
-inline void CopyResult(size_t num_column, size_t num_row, size_t the_row,
-		DataType in_data[], DataType out_data[]) {
+inline void CopyResult(size_t num_column, DataType in_data[], size_t num_row,
+		size_t the_row, DataType out_data[]) {
 	for (size_t i = 0; i < num_column; ++i) {
 		size_t index = Indexer::GetIndex(num_column, num_row, the_row, i);
 		assert(index < num_row * num_column);
@@ -815,14 +851,33 @@ inline void CopyResult(size_t num_column, size_t num_row, size_t the_row,
 	}
 }
 
+/**
+ * It fills specified ranges of output data with specified value.
+ *
+ * @param[in] the_value the value to be filled.
+ * @param[in] start start index for @a out.
+ * @param[in] end end index for @a out.
+ * @param[out] out output data array.
+ */
 template<class DataType>
-inline void FillOutOfRangeAreaWithEdgeValue(size_t edge_index,
-		DataType const in[], size_t start, size_t end, DataType out[]) {
+inline void FillOutOfRangeAreaWithEdgeValue(DataType the_value, size_t start,
+		size_t end, DataType out[]) {
 	for (size_t i = start; i < end; ++i) {
-		out[i] = in[edge_index];
+		out[i] = the_value;
 	}
 }
 
+/**
+ * It fills one row with specified value. Data accessing rule is defined
+ * by @a Indexer.
+ *
+ * @param[in] num_column number of columns.
+ * @param[in] num_row number of rows.
+ * @param[in] value the value to be filled.
+ * @param[in] the_row target row index. It must be less than @a num_row
+ * @param[out] data data array. Its length must be @a num_column times
+ * @a num_row. must-be-aligned
+ */
 template<class Indexer, class DataType>
 static void FillOneRowWithValue(size_t num_column, size_t num_row,
 		DataType value, size_t the_row,
@@ -835,6 +890,9 @@ static void FillOneRowWithValue(size_t num_column, size_t num_row,
 	}
 }
 
+/**
+ * Array accessor for X-axis interpolation with ascending array.
+ */
 struct XAscendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
@@ -842,6 +900,9 @@ struct XAscendingIndexer {
 	}
 };
 
+/**
+ * Array accessor for X-axis interpolation with descending array.
+ */
 struct XDescendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
@@ -849,6 +910,9 @@ struct XDescendingIndexer {
 	}
 };
 
+/**
+ * Array accessor for Y-axis interpolation with ascending array.
+ */
 struct YAscendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
@@ -856,6 +920,9 @@ struct YAscendingIndexer {
 	}
 };
 
+/**
+ * Array accessor for Y-axis interpolation with descending array.
+ */
 struct YDescendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
@@ -863,11 +930,17 @@ struct YDescendingIndexer {
 	}
 };
 
+/**
+ * Helper class for X-axis interpolation.
+ */
 struct XInterpolatorHelper {
 	typedef XAscendingIndexer AscendingIndexer;
 	typedef XDescendingIndexer DescendingIndexer;
 };
 
+/**
+ * Helper class for Y-axis interpolation.
+ */
 struct YInterpolatorHelper {
 	typedef YAscendingIndexer AscendingIndexer;
 	typedef YDescendingIndexer DescendingIndexer;
@@ -1010,7 +1083,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					x1, n, x0, location_base);
 
 			// interpolated_position is less than base_position[0]
-			FillOutOfRangeAreaWithEdgeValue(0, y0, 0, location_base[0], y1);
+			FillOutOfRangeAreaWithEdgeValue(y0[0], 0, location_base[0], y1);
 
 			// Perform 1-dimensional interpolation
 			// interpolated_position is located in between base_position[0]
@@ -1024,11 +1097,11 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 					num_location_base, location_base, offset, work_data, y1);
 
 			// interpolated_position is greater than base_position[num_base-1]
-			FillOutOfRangeAreaWithEdgeValue(n - 1, y0,
+			FillOutOfRangeAreaWithEdgeValue(y0[n - 1],
 					location_base[num_location_base - 1], num_interpolated, y1);
 
 			// Copy results in working array, y1, into result array
-			data_copier(num_interpolated, num_array, iarray, y1,
+			data_copier(num_interpolated, y1, num_array, iarray,
 					interpolated_data);
 		}
 	}
