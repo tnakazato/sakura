@@ -1677,7 +1677,7 @@ typedef enum {
  * must-be-aligned
  * @param[in] num_interpolated number of elements for points that wants to get
  * interpolated value. Its value must be greater than 0.
- * @param[in] interpolated_position x-coordinate of points that wants to get interpolated
+ * @param[in] interpolated_position location of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * must-be-aligned
  * @param[out] interpolated_data storage for interpolation result. Its length must be
