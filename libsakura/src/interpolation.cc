@@ -20,8 +20,6 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
-#include <libsakura/sakura.h>
-
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -31,6 +29,7 @@
 #include <libsakura/localdef.h>
 #include <libsakura/logger.h>
 #include <libsakura/memory_manager.h>
+#include <libsakura/sakura.h>
 
 namespace {
 

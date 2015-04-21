@@ -21,8 +21,6 @@
  * @SAKURA_LICENSE_HEADER_END@
  */
 
-#include "libsakura/sakura.h"
-
 #include <cassert>
 
 #include <Eigen/Core>
@@ -30,6 +28,7 @@
 #include "libsakura/localdef.h"
 #include "libsakura/logger.h"
 #include "libsakura/packed_type.h"
+#include "libsakura/sakura.h"
 
 using ::Eigen::Map;
 using ::Eigen::Array;
