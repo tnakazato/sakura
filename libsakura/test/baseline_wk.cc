@@ -1677,17 +1677,19 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			}
 
 			LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+			/*
 			LIBSAKURA_SYMBOL (Status) coeff_status = LIBSAKURA_SYMBOL(
 					GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
 					num_data, in_data, mask, 5.0f, 1, num_pieces, out, mask,
 					&baseline_status);
-
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+			 */
 			LIBSAKURA_SYMBOL (Status) sub_status =
 			LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context,
 					num_pieces, num_data, in_data, mask, 5.0f, 1, true, mask,
 					out2, &baseline_status);
-
-			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
 			for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
@@ -1733,8 +1735,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			out_sqmean /= (double)num_gooddata;
 			out_stddev = sqrt(out_sqmean - out_mean * out_mean);
 			cout << "rms = " << out_stddev << endl;
-			//cout << "out2_min = " << out_min << "[at i = " << idx_min << "],     ";
-			//cout << "out2_max = " << out_max << "[at i = " << idx_max << "]" << endl;
+			cout << "out2_min = " << out_min << "[at i = " << idx_min << "],     ";
+			cout << "out2_max = " << out_max << "[at i = " << idx_max << "]" << endl;
 			//cout << "out2[0] = " << out2[0] << ",     ";
 			//cout << "out2[4079] = " << out2[4079] << endl;
 			LIBSAKURA_SYMBOL (Status) destroy_status =
