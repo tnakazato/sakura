@@ -1099,7 +1099,7 @@ TEST_INTERP_X(SingleBasePerformance) {
 	double elapsed = RunInterpolateArray1D(sakura_InterpolationMethod_kNearest,
 			num_base, num_interpolated, num_array, sakura_Status_kOK, false,
 			false, iter);
-	LogElapsed("SingleBasePerformance", elapsed);
+	LogElapsed("InterpolationX_SingleBasePerformance", elapsed);
 }
 
 TEST_INTERP_X(SingleBase1DPerformance) {
@@ -1117,7 +1117,7 @@ TEST_INTERP_X(SingleBase1DPerformance) {
 	double elapsed = RunInterpolateArray1D(sakura_InterpolationMethod_kNearest,
 			num_base, num_interpolated, num_array, sakura_Status_kOK, false,
 			false, iter);
-	LogElapsed("SingleBase1DPerformance", elapsed);
+	LogElapsed("InterpolationX_SingleBase1DPerformance", elapsed);
 }
 
 #define PERFORMANCE_TEST(NAME,METHOD,NUM_BASE,NUM_INTERP,NUM_ARRAY,LEFT,RIGHT,START_POS,INCREMENT,ITER) \
@@ -1131,7 +1131,7 @@ TEST_INTERP_X(SingleBase1DPerformance) {
 	EquallySpacedGrid((NUM_INTERP), (START_POS), (INCREMENT) + (START_POS), x_interpolated_);\
 	double elapsed = RunInterpolateArray1D((METHOD), (NUM_BASE), \
 			(NUM_INTERP), (NUM_ARRAY), sakura_Status_kOK, false, false, (ITER)); \
-    LogElapsed(#NAME, elapsed); \
+    LogElapsed("InterpolationX_" #NAME, elapsed); \
 }
 
 // Nearest
