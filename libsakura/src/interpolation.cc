@@ -1124,6 +1124,8 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			WorkingData::Allocate(polynomial_order, num_base));
 	WorkingData *work_data = wdata_storage.get();
 
+	StorageAndAlignedPointer<size_t> size_t_holder;
+
 	for (size_t iarray = 0; iarray < num_array; ++iarray) {
 		// Pick up valid data and associating position from base_position and base_data
 		// by referring base_mask. The data and position are reversed if sort order is
@@ -1144,8 +1146,9 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			// perform interpolation, keep input mask
 
 			// Locate each element in base_position against interpolated_position
-			StorageAndAlignedPointer<size_t> size_t_holder;
-			AllocateAndAlign<size_t>(num_valid_data, &size_t_holder);
+			if (size_t_holder.pointer == nullptr) {
+				AllocateAndAlign<size_t>(num_base, &size_t_holder);
+			}
 			size_t *location_base = size_t_holder.pointer;
 			size_t const num_location_base = Locate<XDataType>(num_interpolated,
 					interpolated_position_ascending, num_valid_data,
