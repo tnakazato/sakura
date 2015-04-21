@@ -119,20 +119,27 @@ TEST(InterpolateArray1DFloatStandaloneTest, BadAlloc) {
 	EXPECT_EQ(status, sakura_Status_kOK);
 	uint8_t polynomial_order = 2;
 	constexpr size_t num_array = 1;
-	SIMD_ALIGN double base_position[] = {0.0, 1.0, 2.0};
+	SIMD_ALIGN
+	double base_position[] = { 0.0, 1.0, 2.0 };
 	constexpr size_t num_base = ELEMENTSOF(base_position);
-	SIMD_ALIGN double interpolated_position[] = {-1.0, 0.5, 1.5, 2.5};
+	SIMD_ALIGN
+	double interpolated_position[] = { -1.0, 0.5, 1.5, 2.5 };
 	constexpr size_t num_interpolated = ELEMENTSOF(interpolated_position);
-	SIMD_ALIGN float base_data[] = {5.0, 4.0, 3.0};
-	SIMD_ALIGN float interpolated_data[num_interpolated * num_array];
-	SIMD_ALIGN bool base_mask[] = {true, true, true};
-	SIMD_ALIGN bool interpolated_mask[num_interpolated * num_array];
+	SIMD_ALIGN
+	float base_data[] = { 5.0, 4.0, 3.0 };
+	SIMD_ALIGN
+	float interpolated_data[num_interpolated * num_array];
+	SIMD_ALIGN
+	bool base_mask[] = { true, true, true };
+	SIMD_ALIGN
+	bool interpolated_mask[num_interpolated * num_array];
 	static_assert(ELEMENTSOF(base_data) == num_base * num_array, "");
 	static_assert(ELEMENTSOF(base_mask) == num_base * num_array, "");
 	static_assert(ELEMENTSOF(interpolated_data) == num_interpolated * num_array, "");
 	static_assert(ELEMENTSOF(interpolated_mask) == num_interpolated * num_array, "");
-	status = sakura_InterpolateXAxisFloat(sakura_InterpolationMethod_kPolynomial, polynomial_order,
-			num_base, base_position, num_array, base_data, base_mask, num_interpolated,
+	status = sakura_InterpolateXAxisFloat(
+			sakura_InterpolationMethod_kPolynomial, polynomial_order, num_base,
+			base_position, num_array, base_data, base_mask, num_interpolated,
 			interpolated_position, interpolated_data, interpolated_mask);
 	EXPECT_EQ(status, sakura_Status_kNoMemory);
 }
@@ -960,7 +967,7 @@ TEST_INTERP_X(PolynomialOrder1Sub) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
-TEST_INTERP_X(Spline) {
+TEST_INTERP_X(ThreePointSpline) {
 	// initial setup
 	size_t const num_base = 3;
 	size_t const num_interpolated = 13;
@@ -977,6 +984,44 @@ TEST_INTERP_X(Spline) {
 			0.456, -0.052, -0.488, -0.816, -1.0, -1.016, -0.888, -0.652, -0.344,
 			0.0, 0.0, 5.0, 5.0, 5.08, 5.19, 5.36, 5.62, 6.0, 6.52, 7.16, 7.89,
 			8.68, 9.5, 9.5);
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_INTERP_X(FourPointSpline) {
+	// initial setup
+	constexpr size_t num_base = 4;
+	size_t const num_interpolated = 27;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 5.0, 10.0, 15.0, 20.0);
+	InitializeFloatArray(num_base, y_base_, 7.0, 10.0, -5.0, 8.0);
+	for (size_t i = 0; i < num_interpolated; ++i) {
+		x_interpolated_[i] = i + 0.5;
+	}
+	// second derivatives calculated by hand
+	SIMD_ALIGN
+	float d2ydx2[] = { 0.0, -1.6, 2.08, 0.0 };
+	size_t const left_edge = static_cast<size_t>(x_base_[0]);
+	size_t const right_edge = static_cast<size_t>(x_base_[num_base - 1]);
+	for (size_t i = 0; i < left_edge; ++i) {
+		y_expected_[i] = y_base_[0];
+	}
+	for (size_t i = left_edge; i < right_edge; ++i) {
+		size_t base_index = i / 5 - 1;
+		auto const dx = x_base_[base_index + 1] - x_base_[base_index];
+		auto const a = (x_base_[base_index + 1] - x_interpolated_[i]) / dx;
+		auto const b = 1.0 - a;
+		y_expected_[i] = a * y_base_[base_index] + b * y_base_[base_index + 1]
+				+ ((a * a * a - a) * d2ydx2[base_index]
+						+ (b * b * b - b) * d2ydx2[base_index + 1]) * dx * dx
+						/ 6.0;
+	}
+	for (size_t i = right_edge; i < num_interpolated; ++i) {
+		y_expected_[i] = y_base_[num_base - 1];
+	}
 
 	// execute interpolation
 	RunInterpolateArray1D(sakura_InterpolationMethod_kSpline, num_base,
