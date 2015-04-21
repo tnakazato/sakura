@@ -45,12 +45,18 @@
 #	define LIBSAKURA_WARN_UNUSED_RESULT /* Don't ignore result value */
 #endif
 
+#define LIBSAKURA_NOEXCEPT /* noexcept */
+
 #ifdef __cplusplus
 extern "C" {
+
+#if __cplusplus >= 201103L
+# undef LIBSAKURA_NOEXCEPT
 # define LIBSAKURA_NOEXCEPT noexcept
-#else
-# define LIBSAKURA_NOEXCEPT /* noexcept */
 #endif
+
+#endif
+
 
 /**
  * @~english
