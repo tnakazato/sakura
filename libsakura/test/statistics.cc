@@ -467,7 +467,7 @@ TEST(Statistics, ComputeStatistics) {
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
 		size_t count = 0;
-		float sum = 0;
+		double sum = 0;
 		float max = -1;
 		float min = data.size() + 1;
 		size_t max_idx = -1;
@@ -491,8 +491,8 @@ TEST(Statistics, ComputeStatistics) {
 				}
 			}
 		}
-		auto const rms2 = sqsum / count;
-		auto const mean = sum / count;
+		auto rms2 = sqsum / count;
+		auto mean = sum / count;
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = count;
@@ -500,6 +500,37 @@ TEST(Statistics, ComputeStatistics) {
 		ref.min = min;
 		ref.index_of_max = max_idx;
 		ref.max = max;
+		ref.sum = sum;
+		ref.mean = mean;
+		ref.rms = std::sqrt(rms2);
+		ref.stddev = std::sqrt(rms2 - mean * mean);
+
+		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+				TestResult, TestResult);
+
+		is_valid.fill(false);
+		sum = 0.;
+		sqsum = 0.;
+		count = 0;
+		size_t base = 1024 - 16;
+		auto put = [&](size_t offset) {
+			is_valid[base + offset] = true;
+			++count;
+			sum += data[base + offset];
+			double v = data[base + offset];
+			sqsum += v * v;
+		};
+		put(2);
+		put(3);
+
+		rms2 = sqsum / count;
+		mean = sum / count;
+
+		ref.count = count;
+		ref.index_of_min = base + 2;
+		ref.min = data[base + 2];
+		ref.index_of_max = base + 3;
+		ref.max = data[base + 3];
 		ref.sum = sum;
 		ref.mean = mean;
 		ref.rms = std::sqrt(rms2);
