@@ -222,15 +222,13 @@ inline void OperateBitwiseXor(DataType bit_mask, size_t num_data,
 
 template<typename DataType>
 bool IsValidArguments(DataType const *data, bool const *edit_mask,
-		DataType const *result, LIBSAKURA_SYMBOL(Status) *status) {
+		DataType const *result) {
 	if (data == nullptr || result == nullptr || edit_mask == nullptr) {
-		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
 	if (!( LIBSAKURA_SYMBOL(IsAligned)(data))
 			|| !( LIBSAKURA_SYMBOL(IsAligned)(result))
 			|| !( LIBSAKURA_SYMBOL(IsAligned)(edit_mask))) {
-		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
 	return true;
@@ -241,9 +239,8 @@ LIBSAKURA_SYMBOL(Status) DoBitOperation(Func func, DataType bit_mask,
 		size_t num_data, DataType const *data,
 		bool const *edit_mask, DataType *result) {
 	// Check parameter arguments.
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!IsValidArguments(data, edit_mask, result, &status)) {
-		return status;
+	if (!IsValidArguments(data, edit_mask, result)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	// Now actual operation
 	try {
@@ -316,9 +313,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[], bool const edit_mask[],
 		uint8_t result[]) noexcept {
 	// Check parameter arguments.
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!IsValidArguments(data, edit_mask, result, &status)) {
-		return status;
+	if (!IsValidArguments(data, edit_mask, result)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// Now actual operation
@@ -337,9 +333,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[], bool const edit_mask[],
 		uint32_t result[]) noexcept {
 	// Check parameter arguments.
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!IsValidArguments(data, edit_mask, result, &status)) {
-		return status;
+	if (!IsValidArguments(data, edit_mask, result)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// Now actual operation
