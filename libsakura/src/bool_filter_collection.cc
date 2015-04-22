@@ -317,6 +317,123 @@ void SetTrueIfInRangesExclusive(size_t num_data,
 	}
 }
 
+/* Helper functions to test array parameters*/
+/* Returns false if the array is either nullptr or not aligned */
+template<typename DataType>
+bool IsValidArray(DataType const data_array[]) {
+	if (data_array == nullptr) {
+		return false;
+	} else if (!( LIBSAKURA_SYMBOL(IsAligned)(data_array))) {
+		return false;
+	}
+	return true;
+}
+
+/* Test data and result arrays*/
+template<typename DataType>
+bool CheckArrays(DataType const data[], bool const result[],
+LIBSAKURA_SYMBOL(Status) *status) {
+	if (!IsValidArray(data) || !IsValidArray(result)) {
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return false;
+	}
+	return true;
+}
+
+/* Test range parameters */
+template<typename DataType>
+bool CheckRanges(size_t num_condition,
+		DataType const lower_bounds[/*num_condition*/],
+		DataType const upper_bounds[/*num_condition*/],
+		LIBSAKURA_SYMBOL(Status) *status) {
+	if (!IsValidArray(lower_bounds) || !IsValidArray(upper_bounds)) {
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return false;
+	}
+//#ifndef NDEBUG
+	// lower_bounds should be smaller or equals to corresponding upper_bounds.
+	for (size_t i = 0; i < num_condition; ++i) {
+		if (lower_bounds[i] > upper_bounds[i]) {
+			*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+			return false;
+		}
+	}
+//#endif
+	return true;
+}
+
+/* Invoke Bool Filter of each interface type */
+template<typename Func, typename DataType>
+LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
+		DataType const data[/*num_data*/], size_t num_condition,
+		DataType const lower_bounds[/*num_condition*/],
+		DataType const upper_bounds[/*num_condition*/],
+		bool result[/*num_data*/]) {
+	// Check parameter arguments.
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!CheckArrays(data, result, &status)
+			|| !CheckRanges(num_condition, lower_bounds, upper_bounds,
+					&status)) {
+		return status;
+	}
+
+	// Now actual operation
+	try {
+		func(/*num_data, data, num_condition, lower_bounds, upper_bounds, result*/);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+template<typename Func, typename DataType>
+LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
+		DataType const data[/*num_data*/], DataType threshold,
+		bool result[/*num_data*/]) {
+	// Check parameter arguments.
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!CheckArrays(data, result, &status)) {
+		return status;
+	}
+
+	// Now actual operation
+	try {
+		func(/*num_data, data, threshold, result*/);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+
+}
+
+template<typename Func, typename DataType>
+LIBSAKURA_SYMBOL(Status) DoSimpleBoolFilter(Func func, size_t num_data,
+		DataType const data[/*num_data*/], bool const result[/*num_data*/]) {
+
+	// Check parameter arguments.
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!CheckArrays(data, result, &status)) {
+		return status;
+	}
+
+	// Now actual operation
+	try {
+		func(/*num_data, data, result*/);
+	} catch (...) {
+		// an exception is thrown during operation
+		// abort if assertion is enabled. if not, return kUnknownError status.
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
 } /* anonymous namespace */
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
@@ -324,40 +441,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveF
 		float const lower_bounds[/*num_condition*/],
 		float const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
 				noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lower_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (upper_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lower_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(upper_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	// lower_bounds should be smaller or equals to corresponding upper_bounds.
-	for (size_t i = 0; i < num_condition; ++i) {
-		if (lower_bounds[i] > upper_bounds[i])
-			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	// Now actual operation
-	try {
-		SetTrueIfInRangesInclusive(num_data, data, num_condition, lower_bounds,
-				upper_bounds, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoRangesBoolFilter(
+			[=] {SetTrueIfInRangesInclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);},
+			num_data, data, num_condition, lower_bounds, upper_bounds, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt)(
@@ -365,40 +451,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveI
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
 				noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lower_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (upper_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lower_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(upper_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	// lower_bounds should be smaller or equals to corresponding upper_bounds.
-	for (size_t i = 0; i < num_condition; ++i) {
-		if (lower_bounds[i] > upper_bounds[i])
-			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	// Now actual operation
-	try {
-		SetTrueIfInRangesInclusive(num_data, data, num_condition, lower_bounds,
-				upper_bounds, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoRangesBoolFilter(
+			[=] {SetTrueIfInRangesInclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);},
+			num_data, data, num_condition, lower_bounds, upper_bounds, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)(
@@ -406,40 +461,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveF
 		float const lower_bounds[/*num_condition*/],
 		float const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
 				noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lower_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (upper_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lower_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(upper_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	// lower_bounds should be smaller or equals to corresponding upper_bounds.
-	for (size_t i = 0; i < num_condition; ++i) {
-		if (lower_bounds[i] > upper_bounds[i])
-			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	// Now actual operation
-	try {
-		SetTrueIfInRangesExclusive(num_data, data, num_condition, lower_bounds,
-				upper_bounds, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoRangesBoolFilter(
+			[=] {SetTrueIfInRangesExclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);},
+			num_data, data, num_condition, lower_bounds, upper_bounds, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt)(
@@ -447,338 +471,99 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveI
 		int const lower_bounds[/*num_condition*/],
 		int const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
 				noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (lower_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (upper_bounds == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(lower_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(upper_bounds)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	// lower_bounds should be smaller or equals to corresponding upper_bounds.
-	for (size_t i = 0; i < num_condition; ++i) {
-		if (lower_bounds[i] > upper_bounds[i])
-			return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	// Now actual operation
-	try {
-		SetTrueIfInRangesExclusive(num_data, data, num_condition, lower_bounds,
-				upper_bounds, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoRangesBoolFilter(
+			[=] {SetTrueIfInRangesExclusive(num_data, data, num_condition, lower_bounds, upper_bounds, result);},
+			num_data, data, num_condition, lower_bounds, upper_bounds, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfGreaterThan(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfGreaterThan(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfGreaterThan(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfGreaterThan(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfLessThan(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfLessThan(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfLessThan(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfLessThan(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfLessThanOrEquals(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfLessThanOrEquals(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetTrueIfLessThanOrEquals(num_data, data, threshold, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBoundaryBoolFilter(
+			[=] {SetTrueIfLessThanOrEquals(num_data, data, threshold, result);},
+			num_data, data, threshold, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		SetFalseIfNanOrInf(num_data, data, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoSimpleBoolFilter([=] {SetFalseIfNanOrInf(num_data, data, result);},
+			num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		ToBool(num_data, data, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoSimpleBoolFilter([=] {ToBool(num_data, data, result);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		size_t num_data, uint32_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		ToBool(num_data, data, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoSimpleBoolFilter([=] {ToBool(num_data, data, result);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
 		size_t num_data,
 		bool const data[/*num_data*/], bool result[/*num_data*/]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		InvertBool(num_data, data, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoSimpleBoolFilter([=] {InvertBool(num_data, data, result);},
+			num_data, data, result);
 }
