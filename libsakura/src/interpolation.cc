@@ -983,6 +983,8 @@ static void FillOneRowWithValue(size_t num_column, size_t num_row,
 struct XAscendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
+		assert(the_row < num_row);
+		assert(index < num_column);
 		return num_column * the_row + index;
 	}
 };
@@ -993,6 +995,8 @@ struct XAscendingIndexer {
 struct XDescendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
+		assert(the_row < num_row);
+		assert(index < num_column);
 		return num_column * the_row + num_column - 1 - index;
 	}
 };
@@ -1003,6 +1007,8 @@ struct XDescendingIndexer {
 struct YAscendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
+		assert(the_row < num_row);
+		assert(index < num_column);
 		return the_row + num_row * index;
 	}
 };
@@ -1013,6 +1019,8 @@ struct YAscendingIndexer {
 struct YDescendingIndexer {
 	static size_t GetIndex(size_t num_column, size_t num_row, size_t the_row,
 			size_t index) {
+		assert(the_row < num_row);
+		assert(index < num_column);
 		return the_row + num_row * (num_column - 1 - index);
 	}
 };
