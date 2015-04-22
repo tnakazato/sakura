@@ -913,7 +913,7 @@ PERFORMANCE_TEST(Nearest1DPerformance, sakura_InterpolationMethod_kNearest, 2,
 PERFORMANCE_TEST(NearestDescendingPerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 0.0,
 		100.0, 5)
-PERFORMANCE_TEST(NearestOpppsitePerformance,
+PERFORMANCE_TEST(NearestOppositePerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 100.0,
 		-100.0, 5)
 
@@ -925,7 +925,7 @@ PERFORMANCE_TEST(Linear1DPerformance, sakura_InterpolationMethod_kLinear, 2,
 PERFORMANCE_TEST(LinearDescendingPerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 0.0,
 		100.0, 5)
-PERFORMANCE_TEST(LinearOpppsitePerformance, sakura_InterpolationMethod_kNearest,
+PERFORMANCE_TEST(LinearOppositePerformance, sakura_InterpolationMethod_kNearest,
 		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 5)
 
 // Polynomial
@@ -950,7 +950,7 @@ PERFORMANCE_TEST(Spline1DPerformance, sakura_InterpolationMethod_kSpline, 2,
 PERFORMANCE_TEST(SplineDescendingPerformance,
 		sakura_InterpolationMethod_kSpline, 2, 4096, 30000, 100.0, 0.0, 0.0,
 		100.0, 5)
-PERFORMANCE_TEST(SplineOpppsitePerformance, sakura_InterpolationMethod_kSpline,
+PERFORMANCE_TEST(SplineOppositePerformance, sakura_InterpolationMethod_kSpline,
 		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 5)
 
 // AasapSplinePerformance

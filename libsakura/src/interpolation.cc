@@ -173,7 +173,19 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
  * float data[] = {-0.5, 1.8, 1.9, 2.2};
  * float reference[] = {0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0};
  * @endverbatim
- * The @a location_list will store the indices 0, 4, and 5.
+ * The @a location_list will store the indices 0, 4, and 5. And the
+ * @a lower_index_list will be 0, 2, and 3. These results are visually
+ * shown below.
+ *
+ * @verbartim
+ *
+ * data:         0                       1    2         3
+ * reference:        0    1    2    3              4         5    6
+ *               |   x    x    x    x    |    |    x    |    x    x
+ * location:         ^                             ^         ^
+ * lower_index:  ^                            ^         ^
+ *
+ * @endverbatim
  *
  * @pre @a data and @a reference must be sorted in an ascending order
  *
@@ -187,11 +199,14 @@ size_t FindIndexOfClosestElementFromSortedArray(size_t start_index,
  * must-be-aligned
  * @param[out] location_list location list. Number of elements must be @a num_data.
  * must-be-aligned
+ * @param[out] lower_index_list index list for lower side data with respect to
+ * reference locations that are specified by @a location_list. must-be-aligned
  * @return number of locations
  */
 template<class DataType>
 size_t Locate(size_t num_reference, DataType const reference[], size_t num_data,
-		DataType const data[], size_t location_list[]) {
+		DataType const data[], size_t location_list[],
+		size_t lower_index_list[]) {
 	// input arrays must be sorted in ascending order and no duplicates
 	assert(num_reference == 1 || reference[0] < reference[num_reference - 1]);
 	assert(num_data == 1 || data[0] < data[num_data - 1]);
@@ -201,15 +216,21 @@ size_t Locate(size_t num_reference, DataType const reference[], size_t num_data,
 		// all data are on the left (lower) side of reference
 		num_location_list = 1;
 		location_list[0] = 0;
+		lower_index_list[0] = 0;
 	} else if (data[0] >= reference[num_reference - 1]) {
 		// all data are on the right (upper) side of reference
 		num_location_list = 1;
 		location_list[0] = num_reference;
+		lower_index_list[0] = 0;
 	} else if (num_reference == 1) {
 		// data are divided at a certain point by reference
 		num_location_list = 2;
 		location_list[0] = 0;
 		location_list[1] = 1;
+		size_t const rloc = FindIndexOfClosestElementFromSortedArray(0,
+				num_data - 1, num_data, data, reference[0]);
+		lower_index_list[0] = rloc - ((data[rloc] == reference[0]) ? 0 : 1);
+		lower_index_list[1] = num_data - 1;
 	} else {
 		// Evaluate location by FindIndexOfClosestElementFromSortedArray, which
 		// basically performs bisection search to locate data
@@ -225,6 +246,16 @@ size_t Locate(size_t num_reference, DataType const reference[], size_t num_data,
 			if (location != previous_location) {
 				assert(num_location_list < num_data);
 				location_list[num_location_list] = location;
+				if (location < num_reference) {
+					size_t const rloc =
+							FindIndexOfClosestElementFromSortedArray(0,
+									num_data - 1, num_data, data,
+									reference[location]);
+					lower_index_list[num_location_list] = rloc
+							- ((data[rloc] == reference[location]) ? 0 : 1);
+				} else {
+					lower_index_list[num_location_list] = num_data - 1;
+				}
 				num_location_list += 1;
 				start_position = location;
 				previous_location = location;
@@ -513,7 +544,9 @@ struct InterpolatorInterface {
 	 * @param[in] location list of indices that indicates the location of each position
 	 * in @a base_position with respect to @a interpolated_position. Its length must be
 	 * @a num_location. must-be-aligned
-	 * @param[in] offset index offset for @a location
+	 * @param[in] lower_index index array of lower side of base data for interpolated data
+	 * segment. lower_index[k] is an index for segment between location[k] and location[k+1].
+	 * must-be-aligned
 	 * @param[in] work_data working data for interpolation
 	 * @param[out] interpolated_data interpolated value for each element whose location
 	 * is stored in @a interpolated_position
@@ -522,17 +555,15 @@ struct InterpolatorInterface {
 	static void Interpolate1D(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t num_location,
-			size_t const location[], size_t offset,
+			size_t const location[], size_t const lower_index[],
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
 		for (size_t k = 1; k < num_location; ++k) {
-			size_t const left_index = offset + k - 1;
-			auto const index_from = location[k - 1];
-			auto const index_to = location[k];
 			InterpolatorImpl::template DoInterpolate<Indexer>(num_base,
 					base_position, base_data, num_interpolated,
-					interpolated_position, index_from, index_to, left_index,
-					work_data, num_array, iarray, interpolated_data);
+					interpolated_position, location[k - 1], location[k],
+					lower_index[k - 1], work_data, num_array, iarray,
+					interpolated_data);
 		}
 	}
 };
@@ -553,11 +584,11 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	/**
 	 * Perform nearest interpolation.
-	 * For each @a interpolated_position that locates in between @a base_position[left_index]
-	 * and @a base_position[left_index+1], perform nearest interpolation and set the result
-	 * to @a interpolated_data. Interpolated result will be @a base_data[left_index] if
-	 * @a interpolated_position is closer to @a base_position[left_index] or @a interpolated_position
-	 * is located at the midpoint. Otherwise, the result will be @a base_data[left_index+1].
+	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
+	 * and @a base_position[lower_index+1], perform nearest interpolation and set the result
+	 * to @a interpolated_data. Interpolated result will be @a base_data[lower_index] if
+	 * @a interpolated_position is closer to @a base_position[lower_index] or @a interpolated_position
+	 * is located at the midpoint. Otherwise, the result will be @a base_data[lower_index+1].
 	 *
 	 * @param[in] num_base number of elements for data points.
 	 * @param[in] base_position position of data points. Its length must be @a num_base.
@@ -569,11 +600,11 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 	 * @param[in] interpolated_position location of points that wants to get interpolated
 	 * value. Its length must be @a num_interpolated.
 	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
 	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
-	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
-	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
+	 * @param[in] lower_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[lower_index] and @a base_position[lower_index+1],
 	 * @param[in] work_data working data for interpolation
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
@@ -582,14 +613,14 @@ struct NearestInterpolatorImpl: public InterpolatorInterface<
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
-			size_t index_to, size_t left_index,
+			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
-		auto const midpoint = (base_position[left_index + 1]
-				+ base_position[left_index])
-				/ decltype(base_position[left_index])(2.0);
-		auto const left_value = base_data[left_index];
-		auto const right_value = base_data[left_index + 1];
+		auto const midpoint = (base_position[lower_index + 1]
+				+ base_position[lower_index])
+				/ decltype(base_position[lower_index])(2.0);
+		auto const left_value = base_data[lower_index];
+		auto const right_value = base_data[lower_index + 1];
 		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
 					iarray, i)] =
@@ -614,11 +645,11 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	/**
 	 * Perform linear interpolation.
-	 * For each @a interpolated_position that locates in between @a base_position[left_index]
-	 * and @a base_position[left_index+1], perform linear interpolation and set the result
+	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
+	 * and @a base_position[lower_index+1], perform linear interpolation and set the result
 	 * to @a interpolated_data. Interpolated curve is a straight line that goes through
-	 * two data points (@a base_position[left_index], @a base_data[left_index]) and
-	 * (@a base_position[left_index+1], @a base_data[left_index+1]).
+	 * two data points (@a base_position[lower_index], @a base_data[lower_index]) and
+	 * (@a base_position[lower_index+1], @a base_data[lower_index+1]).
 	 *
 	 * @param[in] num_base number of elements for data points.
 	 * @param[in] base_position position of data points. Its length must be @a num_base.
@@ -630,11 +661,11 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	 * @param[in] interpolated_position location of points that wants to get interpolated
 	 * value. Its length must be @a num_interpolated.
 	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
 	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
-	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
-	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
+	 * @param[in] lower_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[lower_index] and @a base_position[lower_index+1],
 	 * @param[in] work_data working data for interpolation
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
@@ -643,18 +674,18 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
-			size_t index_to, size_t left_index,
+			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
-		XDataType const dydx = static_cast<XDataType>(base_data[left_index + 1]
-				- base_data[left_index])
-				/ (base_position[left_index + 1] - base_position[left_index]);
+		XDataType const dydx = static_cast<XDataType>(base_data[lower_index + 1]
+				- base_data[lower_index])
+				/ (base_position[lower_index + 1] - base_position[lower_index]);
 		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
-					iarray, i)] = base_data[left_index]
+					iarray, i)] = base_data[lower_index]
 					+ static_cast<YDataType>(dydx
 							* (interpolated_position[i]
-									- base_position[left_index]));
+									- base_position[lower_index]));
 		}
 	}
 };
@@ -674,8 +705,8 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 			PolynomialWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	/**
 	 * Perform linear interpolation.
-	 * For each @a interpolated_position that locates in between @a base_position[left_index]
-	 * and @a base_position[left_index+1], perform linear interpolation and set the result
+	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
+	 * and @a base_position[lower_index+1], perform linear interpolation and set the result
 	 * to @a interpolated_data. Interpolated curve is a polynomial that goes through given
 	 * data points. The polynomial is evaluated by the Nevilles algorithm.
 	 *
@@ -691,11 +722,11 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 	 * @param[in] interpolated_position location of points that wants to get interpolated
 	 * value. Its length must be @a num_interpolated.
 	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
 	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
-	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
-	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
+	 * @param[in] lower_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[lower_index] and @a base_position[lower_index+1],
 	 * @param[in] work_data working data for interpolation
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
@@ -704,14 +735,14 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
-			size_t index_to, size_t left_index,
+			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
 		assert(num_base >= work_data->num_elements);
 		size_t const left_edge2 = num_base - work_data->num_elements;
 		size_t left_edge =
-				(left_index >= work_data->polynomial_order / 2u) ?
-						left_index - work_data->polynomial_order / 2u : 0;
+				(lower_index >= work_data->polynomial_order / 2u) ?
+						lower_index - work_data->polynomial_order / 2u : 0;
 		left_edge = (left_edge > left_edge2) ? left_edge2 : left_edge;
 		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
@@ -723,12 +754,12 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 private:
 	static YDataType PerformNevilleAlgorithm(size_t num_base,
 			XDataType const base_position[], YDataType const base_data[],
-			size_t left_index, XDataType interpolated_position,
+			size_t lower_index, XDataType interpolated_position,
 			WorkingData const * const work_data) {
 
 		// working pointers
-		XDataType const *x_ptr = &(base_position[left_index]);
-		YDataType const *y_ptr = &(base_data[left_index]);
+		XDataType const *x_ptr = &(base_position[lower_index]);
+		YDataType const *y_ptr = &(base_data[lower_index]);
 
 		XDataType *c = work_data->xholder[0].pointer;
 		XDataType *d = work_data->xholder[1].pointer;
@@ -778,12 +809,12 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			SplineWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
 	/**
 	 * Perform spline interpolation.
-	 * For each @a interpolated_position that locates in between @a base_position[left_index]
-	 * and @a base_position[left_index+1], perform linear interpolation and set the result
+	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
+	 * and @a base_position[lower_index+1], perform linear interpolation and set the result
 	 * to @a interpolated_data. Interpolated curve is a spline that goes through all data
 	 * points that are defined by @a base_position and @a base_data. Spline curve is evaluated
-	 * by using straight line that goes through (@a base_position[left_index], @a base_data[left_index])
-	 * and (@a base_position[left_index+1], @a base_data[left_index+1]) and spline correction term
+	 * by using straight line that goes through (@a base_position[lower_index], @a base_data[lower_index])
+	 * and (@a base_position[lower_index+1], @a base_data[lower_index+1]) and spline correction term
 	 * that is stored in @a work_data.
 	 *
 	 * @param[in] num_base number of elements for data points.
@@ -796,11 +827,11 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	 * @param[in] interpolated_position location of points that wants to get interpolated
 	 * value. Its length must be @a num_interpolated.
 	 * @param[in] index_from start index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
 	 * @param[in] index_to end index for @a interpolated_position and @a interpolated_data
-	 * that are located in between @a base_position[left_index] and @a base_position[left_index+1]
-	 * @param[in] left_index index for @a base_position. Interpolated area is defined as
-	 * @a base_position[left_index] and @a base_position[left_index+1],
+	 * that are located in between @a base_position[lower_index] and @a base_position[lower_index+1]
+	 * @param[in] lower_index index for @a base_position. Interpolated area is defined as
+	 * @a base_position[lower_index] and @a base_position[lower_index+1],
 	 * @param[in] work_data working data for interpolation
 	 * @param[out] interpolated_data storage for interpolation result. Its length must be
 	 * @a num_interpolated. must-be-aligned
@@ -809,22 +840,22 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	static void DoInterpolate(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[], size_t num_interpolated,
 			XDataType const interpolated_position[], size_t index_from,
-			size_t index_to, size_t left_index,
+			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
 		YDataType const * const d2ydx2 = work_data->second_derivative.pointer;
-		auto const dx = base_position[left_index + 1]
-				- base_position[left_index];
+		auto const dx = base_position[lower_index + 1]
+				- base_position[lower_index];
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
 		for (size_t i = index_from; i < index_to; ++i) {
-			auto const a = (base_position[left_index + 1]
+			auto const a = (base_position[lower_index + 1]
 					- interpolated_position[i]) / dx;
 			auto const b = decltype(a)(1.0) - a;
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
 					iarray, i)] = static_cast<YDataType>(a
-					* base_data[left_index] + b * base_data[left_index + 1]
-					+ ((a * a * a - a) * d2ydx2[left_index]
-							+ (b * b * b - b) * d2ydx2[left_index + 1])
+					* base_data[lower_index] + b * base_data[lower_index + 1]
+					+ ((a * a * a - a) * d2ydx2[lower_index]
+							+ (b * b * b - b) * d2ydx2[lower_index + 1])
 							* dx_factor);
 		}
 	}
@@ -1120,7 +1151,7 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			WorkingData::Allocate(polynomial_order, num_base));
 	WorkingData *work_data = wdata_storage.get();
 
-	StorageAndAlignedPointer<size_t> size_t_holder;
+	StorageAndAlignedPointer<size_t> size_t_holder[2];
 
 	for (size_t iarray = 0; iarray < num_array; ++iarray) {
 		// Pick up valid data and associating position from base_position and base_data
@@ -1142,13 +1173,15 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			// perform interpolation, keep input mask
 
 			// Locate each element in base_position against interpolated_position
-			if (size_t_holder.pointer == nullptr) {
-				AllocateAndAlign<size_t>(num_base, &size_t_holder);
+			if (size_t_holder[0].pointer == nullptr) {
+				AllocateAndAlign<size_t>(num_base, &size_t_holder[0]);
+				AllocateAndAlign<size_t>(num_base, &size_t_holder[1]);
 			}
-			size_t *location_base = size_t_holder.pointer;
+			size_t *location_base = size_t_holder[0].pointer;
+			size_t *lower_index_base = size_t_holder[1].pointer;
 			size_t const num_location_base = Locate<XDataType>(num_interpolated,
 					interpolated_position_ascending, num_valid_data,
-					valid_base_position, location_base);
+					valid_base_position, location_base, lower_index_base);
 
 			// interpolated_position is less than base_position[0]
 			data_filler(valid_base_data[0], 0, location_base[0],
@@ -1157,18 +1190,12 @@ void Interpolate1D(uint8_t polynomial_order, size_t num_base,
 			// Perform 1-dimensional interpolation
 			// interpolated_position is located in between base_position[0]
 			// and base_position[num_base-1]
-			size_t offset = 0;
-			while (offset + 1 < num_valid_data
-					&& valid_base_position[offset + 1]
-							< interpolated_position_ascending[0]) {
-				offset++;
-			}
 			WorkingData::Initialize(num_valid_data, valid_base_position,
 					valid_base_data, work_data);
 			interpolator(num_valid_data, valid_base_position, valid_base_data,
 					num_interpolated, interpolated_position_ascending,
-					num_location_base, location_base, offset, work_data,
-					num_array, iarray, interpolated_data);
+					num_location_base, location_base, lower_index_base,
+					work_data, num_array, iarray, interpolated_data);
 
 			// interpolated_position is greater than base_position[num_base-1]
 			data_filler(valid_base_data[num_valid_data - 1],

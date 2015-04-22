@@ -1028,6 +1028,42 @@ TEST_INTERP_X(FourPointSpline) {
 			num_interpolated, num_array, sakura_Status_kOK, true);
 }
 
+TEST_INTERP_X(SparseInterpolation) {
+	// initial setup
+	size_t const num_base = 4;
+	size_t const num_interpolated = 3;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0, 3.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, 0.0, 3.0);
+	x_interpolated_[0] = -1.0;
+	x_interpolated_[1] = 0.5;
+	x_interpolated_[2] = 2.5;
+	y_expected_[0] = 1.0;
+	y_expected_[1] = 0.0;
+	y_expected_[2] = 1.5;
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
+TEST_INTERP_X(OnePointInterpolation) {
+	// initial setup
+	size_t const num_base = 4;
+	size_t const num_interpolated = 1;
+	size_t const num_array = 1;
+	AllocateMemory(num_base, num_interpolated, num_array);
+	InitializeDoubleArray(num_base, x_base_, 0.0, 1.0, 2.0, 3.0);
+	InitializeFloatArray(num_base * num_array, y_base_, 1.0, -1.0, 0.0, 3.0);
+	x_interpolated_[0] = 2.2;
+	y_expected_[0] = 0.6;
+
+	// execute interpolation
+	RunInterpolateArray1D(sakura_InterpolationMethod_kLinear, num_base,
+			num_interpolated, num_array, sakura_Status_kOK, true);
+}
+
 TEST_INTERP_X(Spline1D) {
 	// initial setup
 	size_t const num_base = 3;
@@ -1187,7 +1223,7 @@ PERFORMANCE_TEST(Nearest1DPerformance, sakura_InterpolationMethod_kNearest, 2,
 PERFORMANCE_TEST(NearestDescendingPerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 0.0,
 		100.0, 10)
-PERFORMANCE_TEST(NearestOpppsitePerformance,
+PERFORMANCE_TEST(NearestOppositePerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 100.0,
 		-100.0, 10)
 
@@ -1199,7 +1235,7 @@ PERFORMANCE_TEST(Linear1DPerformance, sakura_InterpolationMethod_kLinear, 2,
 PERFORMANCE_TEST(LinearDescendingPerformance,
 		sakura_InterpolationMethod_kNearest, 2, 4096, 30000, 100.0, 0.0, 0.0,
 		100.0, 10)
-PERFORMANCE_TEST(LinearOpppsitePerformance, sakura_InterpolationMethod_kNearest,
+PERFORMANCE_TEST(LinearOppositePerformance, sakura_InterpolationMethod_kNearest,
 		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 10)
 
 // Polynomial
@@ -1224,7 +1260,7 @@ PERFORMANCE_TEST(Spline1DPerformance, sakura_InterpolationMethod_kSpline, 2,
 PERFORMANCE_TEST(SplineDescendingPerformance,
 		sakura_InterpolationMethod_kSpline, 2, 4096, 30000, 100.0, 0.0, 0.0,
 		100.0, 5)
-PERFORMANCE_TEST(SplineOpppsitePerformance, sakura_InterpolationMethod_kSpline,
+PERFORMANCE_TEST(SplineOppositePerformance, sakura_InterpolationMethod_kSpline,
 		2, 4096, 30000, 100.0, 0.0, 100.0, -100.0, 5)
 
 TEST_INTERP_X(SplineComparisonWithAsap) {
