@@ -331,10 +331,8 @@ bool IsValidArray(DataType const data_array[]) {
 
 /* Test data and result arrays*/
 template<typename DataType>
-bool CheckArrays(DataType const data[], bool const result[],
-LIBSAKURA_SYMBOL(Status) *status) {
+bool CheckArrays(DataType const data[], bool const result[]) {
 	if (!IsValidArray(data) || !IsValidArray(result)) {
-		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
 	return true;
@@ -344,17 +342,14 @@ LIBSAKURA_SYMBOL(Status) *status) {
 template<typename DataType>
 bool CheckRanges(size_t num_condition,
 		DataType const lower_bounds[/*num_condition*/],
-		DataType const upper_bounds[/*num_condition*/],
-		LIBSAKURA_SYMBOL(Status) *status) {
+		DataType const upper_bounds[/*num_condition*/]) {
 	if (!IsValidArray(lower_bounds) || !IsValidArray(upper_bounds)) {
-		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
 #ifndef NDEBUG
 	// lower_bounds should be smaller or equals to corresponding upper_bounds.
 	for (size_t i = 0; i < num_condition; ++i) {
 		if (lower_bounds[i] > upper_bounds[i]) {
-			*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 			return false;
 		}
 	}
@@ -370,11 +365,9 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
 	// Check parameter arguments.
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!CheckArrays(data, result, &status)
-			|| !CheckRanges(num_condition, lower_bounds, upper_bounds,
-					&status)) {
-		return status;
+	if (!CheckArrays(data, result)
+			|| !CheckRanges(num_condition, lower_bounds, upper_bounds)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// Now actual operation
@@ -394,9 +387,8 @@ LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], DataType threshold,
 		bool result[/*num_data*/]) {
 	// Check parameter arguments.
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!CheckArrays(data, result, &status)) {
-		return status;
+	if (!CheckArrays(data, result)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// Now actual operation
@@ -417,9 +409,8 @@ LIBSAKURA_SYMBOL(Status) DoSimpleBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool const result[/*num_data*/]) {
 
 	// Check parameter arguments.
-	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
-	if (!CheckArrays(data, result, &status)) {
-		return status;
+	if (!CheckArrays(data, result)) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
 	// Now actual operation
