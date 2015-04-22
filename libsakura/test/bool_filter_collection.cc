@@ -257,7 +257,7 @@ protected:
 		}
 	}
 
-	void RunRangesLongTest(size_t const num_long, size_t const num_repeat) {
+	void RunRangesPerformanceTest(size_t const num_long, size_t const num_repeat) {
 		size_t const num_large(num_long);
 		SIMD_ALIGN
 		DataType data[num_large];
@@ -270,7 +270,7 @@ protected:
 		size_t const num_range(ELEMENTSOF(lower));
 
 		// Loop over sakura functions and number of conditions
-		cout << "[Long tests]" << endl;
+		cout << "[Performance tests]" << endl;
 		RunRangesTest(num_long, data, num_range, lower, upper, result,
 				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kOK), true, 1, num_repeat);
@@ -369,8 +369,8 @@ protected:
 		}
 	}
 
-	// Long test of various bool filter functions using a threshold value with a large array
-	void RunBoundaryLongTest(size_t const num_long, size_t const num_repeat) {
+	// Performance test of various bool filter functions using a threshold value with a large array
+	void RunBoundaryPerformanceTest(size_t const num_long, size_t const num_repeat) {
 		assert(num_long > 0);
 		assert(num_repeat > 0);
 		size_t const num_large(num_long);
@@ -380,7 +380,7 @@ protected:
 		bool result[ELEMENTSOF(data)];
 
 		// Loop over sakura functions with a threshold
-		cout << "[Long tests]" << endl;
+		cout << "[Performance tests]" << endl;
 		RunBoundaryTest(num_large, data, result, ELEMENTSOF(BoundaryTestCase),
 				BoundaryTestCase, LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
 	}
@@ -678,12 +678,12 @@ TEST_F(BoolFilterInt, RangesVariousLength) {
 /*
  * Test bool filter generation using ranges for an array for a large array
  */
-TEST_F(BoolFilterFloat, RangesLong) {
-	RunRangesLongTest(NUM_IN_LONG, 2000);
+TEST_F(BoolFilterFloat, RangesPerformance) {
+	RunRangesPerformanceTest(NUM_IN_LONG, 2000);
 }
 
-TEST_F(BoolFilterInt, RangesLong) {
-	RunRangesLongTest(NUM_IN_LONG, 2000);
+TEST_F(BoolFilterInt, RangesPerformance) {
+	RunRangesPerformanceTest(NUM_IN_LONG, 2000);
 }
 
 /*
@@ -712,12 +712,12 @@ TEST_F(BoolFilterInt, BoundaryVariousLength) {
 /*
  * Test bool filter generation using a boundary value for a large array
  */
-TEST_F(BoolFilterFloat, BoundaryLong) {
-	RunBoundaryLongTest(NUM_IN_LONG, 20000); // array_length, repeat
+TEST_F(BoolFilterFloat, BoundaryPerformance) {
+	RunBoundaryPerformanceTest(NUM_IN_LONG, 20000); // array_length, repeat
 }
 
-TEST_F(BoolFilterInt, BoundaryLong) {
-	RunBoundaryLongTest(NUM_IN_LONG, 20000); // array_length, repeat
+TEST_F(BoolFilterInt, BoundaryPerformance) {
+	RunBoundaryPerformanceTest(NUM_IN_LONG, 20000); // array_length, repeat
 }
 
 /*
@@ -831,7 +831,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
  * RESULT:
  * result = [T, T, F, F, F, T, T, T, ...]
  */
-TEST_F(BoolFilterFloat, NanOrInfLong) {
+TEST_F(BoolFilterFloat, NanOrInfPerformance) {
 	size_t const num_data(NUM_IN_LONG);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -936,7 +936,7 @@ TEST_F(BoolFilterSimple, InvertBool) {
  * RESULT:
  * result = [F, T, T, F]
  */
-TEST_F(BoolFilterSimple, InvertBoolLong) {
+TEST_F(BoolFilterSimple, InvertBoolPerformance) {
 	size_t const num_base(4);
 	size_t const num_long(NUM_IN_LONG);
 	SIMD_ALIGN
@@ -1028,13 +1028,13 @@ TEST_F(BoolFilterSimple, Uint8ToBool) {
 }
 
 /*
- * Test bool filter generation sakura_Uint8ToBool  (Long Test)
+ * Test bool filter generation sakura_Uint8ToBool  (Performance Test)
  * INPUT:
  * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ...repeated...]
  * RESULT:
  * result = [F, T, T, T, T, T, T, T, ... repeated...]
  */
-TEST_F(BoolFilterSimple, Uint8ToBoolLong) {
+TEST_F(BoolFilterSimple, Uint8ToBoolPerformance) {
 	size_t const num_base(NUM_IN);
 	size_t const num_long(NUM_IN_LONG);
 	uint8_t const data_base[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
@@ -1125,13 +1125,13 @@ TEST_F(BoolFilterSimple, Uint32ToBool) {
 }
 
 /*
- * Test bool filter generation sakura_Uint8ToBool  (Long Test)
+ * Test bool filter generation sakura_Uint8ToBool  (Performance Test)
  * INPUT:
  * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ...repeated...]
  * RESULT:
  * result = [F, T, T, T, T, T, T, T, ... repeated...]
  */
-TEST_F(BoolFilterSimple, Uint32ToBoolLong) {
+TEST_F(BoolFilterSimple, Uint32ToBoolPerformance) {
 	size_t const num_base(5);
 	size_t const num_long(NUM_IN_LONG);
 	uint32_t const data_base[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };

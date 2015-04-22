@@ -350,8 +350,8 @@ protected:
 				LIBSAKURA_SYMBOL(Status_kOK));
 	}
 
-	// Long test of various bit operations with with a large array
-	void RunMiscOpLongTests(size_t const num_long, size_t const num_repeat) {
+	// Performance test of various bit operations with with a large array
+	void RunMiscOpPerformanceTests(size_t const num_long, size_t const num_repeat) {
 		assert(num_long > 0);
 		assert(num_repeat > 0);
 		size_t const num_large(num_long);
@@ -364,7 +364,7 @@ protected:
 		//size_t const num_repeat = 20000;
 
 		// Loop over num_repeat times for each operation type (Standard set)
-		cout << "[Long tests]" << endl;
+		cout << "[Performance tests]" << endl;
 		RunBitOperationTest<OutOfPlaceAction>(num_large, data, edit_mask,
 				result, ELEMENTSOF(StandardTestCase), StandardTestCase,
 				LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
@@ -696,13 +696,13 @@ TEST_F(BitOperation32, MiscOpFailNotAlignedArray) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 /*
- * Long test of various bit operations with with a large Uint8 array
+ * Performance test of various bit operations with with a large Uint8 array
  */
-TEST_F(BitOperation8, MiscOpLong) {
-	RunMiscOpLongTests(NUM_IN_LONG, 20000); // array_length, repeat
+TEST_F(BitOperation8, MiscOpPerformance) {
+	RunMiscOpPerformanceTests(NUM_IN_LONG, 20000); // array_length, repeat
 }
 
-TEST_F(BitOperation32, MiscOpLong) {
-	RunMiscOpLongTests(NUM_IN_LONG, 20000); // array_length, repeat
+TEST_F(BitOperation32, MiscOpPerformance) {
+	RunMiscOpPerformanceTests(NUM_IN_LONG, 20000); // array_length, repeat
 }
 /////////////////////////////////////////////////////////////////////////////////////////
