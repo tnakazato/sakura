@@ -323,7 +323,7 @@ inline void StatsBlock(size_t i, __m256 const *data_arg, double const *mask_arg,
 #if defined(__AVX2__)
 	auto const mask = AssumeAligned(mask_arg);
 	auto const zero256i = _mm256_setzero_si256();
-	auto mask8 = _mm256_cvtepi8_epi32(_mm_castpd_si128(_mm_load1_pd(&mask[0])));
+	auto mask8 = _mm256_cvtepi8_epi32(_mm_castpd_si128(_mm_load1_pd(mask)));
 	count.Add(mask8);
 	mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
 #else
