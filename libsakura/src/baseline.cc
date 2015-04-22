@@ -659,19 +659,21 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 				throw std::runtime_error(
 						"failed in ComputeAccurateStatisticsFloat.");
 			}
-			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
-			float clip_threshold_lower = result.mean - clip_threshold_abs;
-			float clip_threshold_upper = result.mean + clip_threshold_abs;
-			size_t num_clipped_sum;
-			ClipDataPiecewise(num_data, residual_data, final_mask,
-					clip_threshold_lower, clip_threshold_upper, final_mask,
-					clipped_indices, num_pieces, boundary, num_clipped,
-					&num_clipped_sum);
-			if (num_clipped_sum == 0) {
-				break;
-			}
-			for (size_t j = 0; j < num_pieces; ++j) {
-				num_unmasked_data[j] = result.count - num_clipped[j];
+			if (i < num_fitting_max - 1) {
+				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
+				float clip_threshold_lower = result.mean - clip_threshold_abs;
+				float clip_threshold_upper = result.mean + clip_threshold_abs;
+				size_t num_clipped_sum;
+				ClipDataPiecewise(num_data, residual_data, final_mask,
+						clip_threshold_lower, clip_threshold_upper, final_mask,
+						clipped_indices, num_pieces, boundary, num_clipped,
+						&num_clipped_sum);
+				if (num_clipped_sum == 0) {
+					break;
+				}
+				for (size_t j = 0; j < num_pieces; ++j) {
+					num_unmasked_data[j] = result.count - num_clipped[j];
+				}
 			}
 		}
 		if (out != nullptr) {
@@ -791,16 +793,18 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				throw std::runtime_error(
 						"failed in ComputeAccurateStatisticsFloat.");
 			}
-			float clip_threshold_abs = clip_threshold_sigma * result.stddev;
-			float clip_threshold_lower = result.mean - clip_threshold_abs;
-			float clip_threshold_upper = result.mean + clip_threshold_abs;
-			ClipData(num_data, residual_data, final_mask, clip_threshold_lower,
-					clip_threshold_upper, final_mask, clipped_indices,
-					&num_clipped);
-			if (num_clipped == 0) {
-				break;
+			if (i < num_fitting_max - 1) {
+				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
+				float clip_threshold_lower = result.mean - clip_threshold_abs;
+				float clip_threshold_upper = result.mean + clip_threshold_abs;
+				ClipData(num_data, residual_data, final_mask,
+						clip_threshold_lower, clip_threshold_upper, final_mask,
+						clipped_indices, &num_clipped);
+				if (num_clipped == 0) {
+					break;
+				}
+				num_unmasked_data = result.count - num_clipped;
 			}
-			num_unmasked_data = result.count - num_clipped;
 		}
 		if (out != nullptr) {
 			for (size_t i = 0; i < num_data; ++i) {

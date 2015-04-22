@@ -63,7 +63,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d        const &a, __m256d        const &b, __m256d        const &c) {
+__m256d NegMultiplyAdd(__m256d  const &a, __m256d  const &b, __m256d  const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -150,9 +150,8 @@ inline void SubMulVector(size_t const num_model_bases, double k,
 }
 
 template<size_t NUM_BASES>
-inline void GetLSQFittingMatrixTemplate(size_t num_mask,
-		bool const *mask_arg, size_t num_model_bases, double const *model_arg,
-		double *out_arg) {
+inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
+		size_t num_model_bases, double const *model_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -213,9 +212,9 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 	}
 }
 
-inline void GetLSQFittingMatrixCubicSpline(
-		size_t num_mask, bool const *mask_arg, size_t num_boundary,
-		double const *boundary_arg, double const *model_arg, double *out_arg) {
+inline void GetLSQFittingMatrixCubicSpline(size_t num_mask,
+bool const *mask_arg, size_t num_boundary, double const *boundary_arg,
+		double const *model_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
@@ -293,10 +292,9 @@ inline void GetLSQFittingMatrixCubicSpline(
 	}
 }
 
-inline void GetLSQFittingVectorCubicSpline(
-		size_t num_data, float const *data_arg, bool const *mask_arg,
-		size_t num_boundary, double const *boundary_arg,
-		double const *model_arg, double *out_arg) {
+inline void GetLSQFittingVectorCubicSpline(size_t num_data,
+		float const *data_arg, bool const *mask_arg, size_t num_boundary,
+		double const *boundary_arg, double const *model_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -355,10 +353,9 @@ inline void GetLSQFittingVectorCubicSpline(
 }
 
 template<size_t NUM_BASES>
-inline void UpdateLSQFittingMatrixTemplate(
-		size_t num_clipped, size_t const *clipped_indices_arg,
-		size_t num_model_bases, double const *in_arg, double const *model_arg,
-		double *out_arg) {
+inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
+		size_t const *clipped_indices_arg, size_t num_model_bases,
+		double const *in_arg, double const *model_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
@@ -406,9 +403,9 @@ inline void UpdateLSQFittingMatrix(size_t num_clipped,
 }
 
 template<size_t NUM_BASES>
-inline void GetLSQFittingVectorTemplate(size_t num_data,
-		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
-		double const *model_arg, double *out_arg) {
+inline void GetLSQFittingVectorTemplate(size_t num_data, float const *data_arg,
+bool const *mask_arg, size_t num_model_bases, double const *model_arg,
+		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
@@ -430,9 +427,9 @@ inline void GetLSQFittingVectorTemplate(size_t num_data,
 	}
 }
 
-inline void GetLSQFittingVector(size_t num_data,
-		float const *data_arg, bool const *mask_arg, size_t num_model_bases,
-		double const *model_arg, size_t num_lsq_bases, double *out_arg) {
+inline void GetLSQFittingVector(size_t num_data, float const *data_arg,
+bool const *mask_arg, size_t num_model_bases, double const *model_arg,
+		size_t num_lsq_bases, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
@@ -454,7 +451,7 @@ inline void GetLSQFittingVector(size_t num_data,
 	}
 }
 
-template<size_t NUM_BASES>inline void UpdateLSQFittingVectorTemplate(
+template<size_t NUM_BASES> inline void UpdateLSQFittingVectorTemplate(
 		float const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
@@ -479,10 +476,10 @@ template<size_t NUM_BASES>inline void UpdateLSQFittingVectorTemplate(
 	}
 }
 
-inline void UpdateLSQFittingVector(float const *data_arg,
-		size_t num_clipped, size_t const *clipped_indices_arg,
-		size_t num_lsq_bases, double const *in_arg, size_t num_model_bases,
-		double const *model_arg, double *out_arg) {
+inline void UpdateLSQFittingVector(float const *data_arg, size_t num_clipped,
+		size_t const *clipped_indices_arg, size_t num_lsq_bases,
+		double const *in_arg, size_t num_model_bases, double const *model_arg,
+		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
@@ -521,15 +518,14 @@ inline void GetLSQFittingCoefficientsTemplate(size_t num_data,
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
 
-	GetLSQFittingMatrixTemplate<NUM_BASES>(num_data, mask,
-			num_model_bases, basis, lsq_matrix);
-	GetLSQFittingVectorTemplate<NUM_BASES>(num_data,
-			data, mask, num_model_bases, basis, lsq_vector);
+	GetLSQFittingMatrixTemplate<NUM_BASES>(num_data, mask, num_model_bases,
+			basis, lsq_matrix);
+	GetLSQFittingVectorTemplate<NUM_BASES>(num_data, data, mask,
+			num_model_bases, basis, lsq_vector);
 }
 
-inline void GetLSQFittingCoefficients(size_t num_data,
-		float const *data_arg, bool const *mask_arg,
-		size_t const num_model_bases, double const *basis_data,
+inline void GetLSQFittingCoefficients(size_t num_data, float const *data_arg,
+bool const *mask_arg, size_t const num_model_bases, double const *basis_data,
 		size_t const num_lsq_bases, double *lsq_matrix_arg,
 		double *lsq_vector_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -543,10 +539,10 @@ inline void GetLSQFittingCoefficients(size_t num_data,
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
 
-	GetLSQFittingMatrix(num_data, mask, num_model_bases, basis,
-			num_lsq_bases, lsq_matrix);
-	GetLSQFittingVector(num_data, data, mask,
-			num_model_bases, basis, num_lsq_bases, lsq_vector);
+	GetLSQFittingMatrix(num_data, mask, num_model_bases, basis, num_lsq_bases,
+			lsq_matrix);
+	GetLSQFittingVector(num_data, data, mask, num_model_bases, basis,
+			num_lsq_bases, lsq_vector);
 }
 
 template<size_t NUM_BASES>
@@ -566,12 +562,10 @@ inline void UpdateLSQFittingCoefficientsTemplate(size_t const num_data,
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
 
-	UpdateLSQFittingMatrixTemplate<NUM_BASES>(
-			num_clipped, clipped_indices, num_model_bases, lsq_matrix, basis,
-			lsq_matrix);
-	UpdateLSQFittingVectorTemplate<NUM_BASES>(data,
-			num_clipped, clipped_indices, num_model_bases, lsq_vector, basis,
-			lsq_vector);
+	UpdateLSQFittingMatrixTemplate<NUM_BASES>(num_clipped, clipped_indices,
+			num_model_bases, lsq_matrix, basis, lsq_matrix);
+	UpdateLSQFittingVectorTemplate<NUM_BASES>(data, num_clipped,
+			clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
 }
 
 inline void UpdateLSQFittingCoefficients(size_t const num_data,
@@ -590,11 +584,10 @@ inline void UpdateLSQFittingCoefficients(size_t const num_data,
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
 
-	UpdateLSQFittingMatrix(num_clipped, clipped_indices,
-			num_lsq_bases, lsq_matrix, num_model_bases, basis, lsq_matrix);
-	UpdateLSQFittingVector(data, num_clipped,
-			clipped_indices, num_lsq_bases, lsq_vector, num_model_bases, basis,
-			lsq_vector);
+	UpdateLSQFittingMatrix(num_clipped, clipped_indices, num_lsq_bases,
+			lsq_matrix, num_model_bases, basis, lsq_matrix);
+	UpdateLSQFittingVector(data, num_clipped, clipped_indices, num_lsq_bases,
+			lsq_vector, num_model_bases, basis, lsq_vector);
 }
 
 inline void GetLSQFittingCoefficientsCubicSpline(size_t num_data,
@@ -614,10 +607,10 @@ inline void GetLSQFittingCoefficientsCubicSpline(size_t num_data,
 	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
 	auto lsq_vector = AssumeAligned(lsq_vector_arg);
 
-	GetLSQFittingMatrixCubicSpline(num_data, mask,
-			num_boundary, boundary, basis, lsq_matrix);
-	GetLSQFittingVectorCubicSpline(num_data, data, mask,
-			num_boundary, boundary, basis, lsq_vector);
+	GetLSQFittingMatrixCubicSpline(num_data, mask, num_boundary, boundary,
+			basis, lsq_matrix);
+	GetLSQFittingVectorCubicSpline(num_data, data, mask, num_boundary, boundary,
+			basis, lsq_vector);
 }
 
 inline void SolveSimultaneousEquationsByLUDouble(size_t num_equations,
@@ -701,8 +694,8 @@ void UpdateLSQFittingCoefficientsEntry(size_t const num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
-	typedef void (*UpdateLSQFittingCoefficientsFunc)(
-			size_t const num_data, float const *data, size_t const num_clipped,
+	typedef void (*UpdateLSQFittingCoefficientsFunc)(size_t const num_data,
+			float const *data, size_t const num_clipped,
 			size_t const *clipped_indices, size_t const num_model_bases,
 			double const *basis_data, size_t const num_lsq_bases,
 			double *lsq_matrix, double *lsq_vector);
@@ -761,9 +754,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDo
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
-		GetLSQFittingCoefficientsEntry(num_data, data, mask,
-				num_model_bases, basis_data, num_lsq_bases, lsq_matrix,
-				lsq_vector);
+		GetLSQFittingCoefficientsEntry(num_data, data, mask, num_model_bases,
+				basis_data, num_lsq_bases, lsq_matrix, lsq_vector);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -802,9 +794,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQFittingCoefficient
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
-		UpdateLSQFittingCoefficientsEntry(num_data, data,
-				num_exclude_indices, exclude_indices, num_model_bases,
-				basis_data, num_lsq_bases, lsq_matrix, lsq_vector);
+		UpdateLSQFittingCoefficientsEntry(num_data, data, num_exclude_indices,
+				exclude_indices, num_model_bases, basis_data, num_lsq_bases,
+				lsq_matrix, lsq_vector);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -834,8 +826,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsCu
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
-		GetLSQFittingCoefficientsCubicSpline(num_data, data, mask,
-				num_boundary, boundary, basis_data, lsq_matrix, lsq_vector);
+		GetLSQFittingCoefficientsCubicSpline(num_data, data, mask, num_boundary,
+				boundary, basis_data, lsq_matrix, lsq_vector);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
