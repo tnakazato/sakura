@@ -20,13 +20,14 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+#include <libsakura/sakura.h>
+
 #include <iostream>
 #include <math.h>
 #include <string>
 #include <sys/time.h>
 
 #include <libsakura/localdef.h>
-#include <libsakura/sakura.h>
 #include "aligned_memory.h"
 #include "loginit.h"
 #include "gtest/gtest.h"
@@ -210,6 +211,9 @@ class BoolFilter: public ::testing::Test {
 protected:
 	BoolFilter() :
 			verbose_(false) {
+		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN);
+		STATIC_ASSERT(ELEMENTSOF(lower_)==NUM_RANGE);
+		STATIC_ASSERT(ELEMENTSOF(upper_)==NUM_RANGE);
 	}
 
 	virtual void SetUp() {
@@ -606,9 +610,9 @@ protected:
 
 	// Member variables
 	bool verbose_;
-	static DataType data_[NUM_IN];
-	static DataType upper_[NUM_RANGE];
-	static DataType lower_[NUM_RANGE];
+	static DataType data_[];
+	static DataType upper_[];
+	static DataType lower_[];
 	static DataType threshold_;
 
 };
@@ -652,13 +656,9 @@ template<>
 int BoolFilter<int>::upper_[] = { -3, 7 };
 
 /*
- * Tests various bool filter generation using int array
- * INPUTS:
- * - data = [0, -5, -10, -5, 0, 5, 10, 5]
- * - lower_bound = [-7, 5]
- * - upper_bound = [-3, 7]
+ * Tests various simple bool filter generation based on input data array
  */
-class BoolFilterOther: public BoolFilter<float> {
+class BoolFilterSimple: public BoolFilter<float> {
 
 };
 
@@ -903,7 +903,7 @@ TEST_F(BoolFilterFloat, NanOrInfZero) {
  * RESULT:
  * result = [F, T, T, F]
  */
-TEST_F(BoolFilterOther, InvertBool) {
+TEST_F(BoolFilterSimple, InvertBool) {
 	size_t const num_data(4);
 	SIMD_ALIGN
 	bool const data[] = { true, false, false, true };
@@ -936,7 +936,7 @@ TEST_F(BoolFilterOther, InvertBool) {
  * RESULT:
  * result = [F, T, T, F]
  */
-TEST_F(BoolFilterOther, InvertBoolLong) {
+TEST_F(BoolFilterSimple, InvertBoolLong) {
 	size_t const num_base(4);
 	size_t const num_long(NUM_IN_LONG);
 	SIMD_ALIGN
@@ -980,7 +980,7 @@ TEST_F(BoolFilterOther, InvertBoolLong) {
  * RESULT:
  * result = []
  */
-TEST_F(BoolFilterOther, InvertBoolLenghZero) {
+TEST_F(BoolFilterSimple, InvertBoolLenghZero) {
 	size_t const num_data(0);
 	SIMD_ALIGN
 	bool data[num_data];
@@ -1002,7 +1002,7 @@ TEST_F(BoolFilterOther, InvertBoolLenghZero) {
  * RESULT:
  * result = [F, T, T, T, T, T, T, T]
  */
-TEST_F(BoolFilterOther, Uint8ToBool) {
+TEST_F(BoolFilterSimple, Uint8ToBool) {
 	size_t const num_data(8);
 	SIMD_ALIGN
 	uint8_t const data[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
@@ -1034,7 +1034,7 @@ TEST_F(BoolFilterOther, Uint8ToBool) {
  * RESULT:
  * result = [F, T, T, T, T, T, T, T, ... repeated...]
  */
-TEST_F(BoolFilterOther, Uint8ToBoolLong) {
+TEST_F(BoolFilterSimple, Uint8ToBoolLong) {
 	size_t const num_base(NUM_IN);
 	size_t const num_long(NUM_IN_LONG);
 	uint8_t const data_base[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
@@ -1078,7 +1078,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolLong) {
  * INPUT: in = []
  * RESULT: result = []
  */
-TEST_F(BoolFilterOther, Uint8ToBoolLenghZero) {
+TEST_F(BoolFilterSimple, Uint8ToBoolLenghZero) {
 	size_t const num_data(0);
 	SIMD_ALIGN
 	uint8_t data[num_data];
@@ -1099,7 +1099,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolLenghZero) {
  * RESULT:
  * result = [F, T, T, T, T]
  */
-TEST_F(BoolFilterOther, Uint32ToBool) {
+TEST_F(BoolFilterSimple, Uint32ToBool) {
 	size_t const num_data(5);
 	SIMD_ALIGN
 	uint32_t const data[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
@@ -1131,7 +1131,7 @@ TEST_F(BoolFilterOther, Uint32ToBool) {
  * RESULT:
  * result = [F, T, T, T, T, T, T, T, ... repeated...]
  */
-TEST_F(BoolFilterOther, Uint32ToBoolLong) {
+TEST_F(BoolFilterSimple, Uint32ToBoolLong) {
 	size_t const num_base(5);
 	size_t const num_long(NUM_IN_LONG);
 	uint32_t const data_base[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
@@ -1176,7 +1176,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolLong) {
  * RESULT: result = []
  */
 /* Input array is zero length */
-TEST_F(BoolFilterOther, Uint32ToBoolLenghZero) {
+TEST_F(BoolFilterSimple, Uint32ToBoolLenghZero) {
 	size_t const num_data(0);
 	SIMD_ALIGN
 	uint32_t data[num_data];
@@ -1283,7 +1283,7 @@ TEST_F(BoolFilterFloat, NanOrInfNotAlignedResult) {
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
 /* Null pointer arrays */
-TEST_F(BoolFilterOther, InvertBoolFailNullData) {
+TEST_F(BoolFilterSimple, InvertBoolFailNullData) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	bool result[num_data];
@@ -1297,7 +1297,7 @@ TEST_F(BoolFilterOther, InvertBoolFailNullData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-TEST_F(BoolFilterOther, InvertBoolFailNullResult) {
+TEST_F(BoolFilterSimple, InvertBoolFailNullResult) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	bool data[num_data];
@@ -1316,7 +1316,7 @@ TEST_F(BoolFilterOther, InvertBoolFailNullResult) {
 }
 
 /* Unaligned arrays */
-TEST_F(BoolFilterOther, InvertBoolNotAlignedData) {
+TEST_F(BoolFilterSimple, InvertBoolNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data + offset);
@@ -1340,7 +1340,7 @@ TEST_F(BoolFilterOther, InvertBoolNotAlignedData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-TEST_F(BoolFilterOther, InvertBoolNotAlignedResult) {
+TEST_F(BoolFilterSimple, InvertBoolNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data + offset);
@@ -1372,7 +1372,7 @@ TEST_F(BoolFilterOther, InvertBoolNotAlignedResult) {
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
 /* Null pointer arrays */
-TEST_F(BoolFilterOther, Uint8ToBoolFailNullData) {
+TEST_F(BoolFilterSimple, Uint8ToBoolFailNullData) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	bool result[num_data];
@@ -1386,7 +1386,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolFailNullData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-TEST_F(BoolFilterOther, Uint8ToBoolFailNullResult) {
+TEST_F(BoolFilterSimple, Uint8ToBoolFailNullResult) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	// Initialize data with whatever valid value
@@ -1405,7 +1405,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolFailNullResult) {
 }
 
 /* Unaligned arrays */
-TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedData) {
+TEST_F(BoolFilterSimple, Uint8ToBoolNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(8);
 	size_t const num_elements(num_data + offset);
@@ -1429,7 +1429,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedResult) {
+TEST_F(BoolFilterSimple, Uint8ToBoolNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data + offset);
@@ -1459,7 +1459,7 @@ TEST_F(BoolFilterOther, Uint8ToBoolNotAlignedResult) {
  *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
  */
 /* Null pointer arrays */
-TEST_F(BoolFilterOther, Uint32ToBoolFailNullData) {
+TEST_F(BoolFilterSimple, Uint32ToBoolFailNullData) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	bool result[num_data];
@@ -1473,7 +1473,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolFailNullData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-TEST_F(BoolFilterOther, Uint32ToBoolFailNullResult) {
+TEST_F(BoolFilterSimple, Uint32ToBoolFailNullResult) {
 	size_t const num_data(NUM_IN);
 	SIMD_ALIGN
 	uint32_t data[num_data];
@@ -1492,7 +1492,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolFailNullResult) {
 }
 
 /* Unaligned arrays */
-TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedData) {
+TEST_F(BoolFilterSimple, Uint32ToBoolNotAlignedData) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data + offset);
@@ -1516,7 +1516,7 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedData) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
-TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
+TEST_F(BoolFilterSimple, Uint32ToBoolNotAlignedResult) {
 	size_t offset(UNALIGN_OFFSET);
 	size_t const num_data(NUM_IN);
 	size_t const num_elements(num_data + offset);
@@ -1539,3 +1539,12 @@ TEST_F(BoolFilterOther, Uint32ToBoolNotAlignedResult) {
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
+
+// TODO: performance measurements that defines which of scalar or vector version is fast in range functions.
+// It is because scalar version can be fast if the data is in the first range (stops loop)
+// It should not necessary be unit test. Running manuall tests will be fine to determine in which case which is faster.
+// 1. Use variety of num_bounds from 1~16 (templated range)
+// 2. Set a data range that will be true to either, idx=0, num_range/2, or num_range-1.
+//    The other ranges should be out of range of data distribution.
+// 3. run scalar and vector version to compare the speed
+//
