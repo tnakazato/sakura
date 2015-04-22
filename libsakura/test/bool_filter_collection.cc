@@ -304,8 +304,6 @@ protected:
 		assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
 		bool *result_shift = &result[offset];
 		assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-		DataType *range_shift = &lower[offset];
-		assert(! LIBSAKURA_SYMBOL(IsAligned)(range_shift));
 
 		// Null pointer array
 		cout << "[Test NULL data array]" << endl;
@@ -341,12 +339,14 @@ protected:
 		RunRangesTest(num_data, data, num_range, lower, upper, result_shift,
 				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+#ifndef NDEBUG
 		// lower > upper
 		cout << "[Test lower_bounds > upper_bounds]" << endl;
 		GetDataInLength(num_data, data);
 		RunRangesTest(num_data, data, num_range, upper, lower, result,
 				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument), false);
+#endif
 	}
 
 	void RunBoundaryVariousLengthTest() {

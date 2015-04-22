@@ -350,7 +350,7 @@ bool CheckRanges(size_t num_condition,
 		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		return false;
 	}
-//#ifndef NDEBUG
+#ifndef NDEBUG
 	// lower_bounds should be smaller or equals to corresponding upper_bounds.
 	for (size_t i = 0; i < num_condition; ++i) {
 		if (lower_bounds[i] > upper_bounds[i]) {
@@ -358,7 +358,7 @@ bool CheckRanges(size_t num_condition,
 			return false;
 		}
 	}
-//#endif
+#endif
 	return true;
 }
 
