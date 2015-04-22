@@ -43,6 +43,6 @@ $ ./a.out
  * You are responsible to serialize calling functions which are not marked as 'MT-safe' as well.
  *
  * @section contact Contact us
- * Please send bug report to #######@alma.nao.ac.jp if you find a bug.
+ * Please send bug report to #######@@alma.nao.ac.jp if you find a bug.
  */
 ;
