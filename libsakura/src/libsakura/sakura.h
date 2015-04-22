@@ -1580,12 +1580,12 @@ typedef enum {
  * @a polynomial_order は @a interpolation_method が
  * @link sakura_InterpolationMethod::sakura_InterpolationMethod_kPolynomial sakura_InterpolationMethod_kPolynomial @endlink
  * である場合のみ有効であり、その他の場合は無視される。
- * @param[in] num_base 補間のためのデータ点の数。@a num_base は1以上でなければならない。
+ * @param[in] num_base 補間のためのデータ点の数。@a num_base は正値でなければならない。
  * @param[in] base_position 補間のための各データの位置。
  * 要素数は@a num_base でなければならない。
  * @a base_position は昇順または降順にソートされていなければならない。
  * must-be-aligned
- * @param[in] num_array 同時に渡すデータ列の数。@a num_array は1以上でなければならない。
+ * @param[in] num_array 同時に渡すデータ列の数。
  * @param[in] base_data 補間のためのデータ列。
  * 要素数は@a num_base × @a num_array でなければならない。
  * must-be-aligned
@@ -1593,7 +1593,7 @@ typedef enum {
  * 要素数は@a num_base × @a num_array でなければならない。
  * マスク値がfalseである要素に対応する @a base_data の値は補間に使われない。
  * must-be-aligned
- * @param[in] num_interpolated 補間したいデータ点の数。@a num_interpolated は1以上でなければならない。
+ * @param[in] num_interpolated 補間したいデータ点の数。
  * @param[in] interpolate_position 補間したいデータ点のx座標。
  * 要素数は@a num_interpolated でなければならない。
  * @a interpolate_position は昇順または降順にソートされていなければならない。
@@ -1671,7 +1671,7 @@ typedef enum {
  * This parameter is effective only when @a interpolation_method is
  * @link sakura_InterpolationMethod::sakura_InterpolationMethod_kPolynomial sakura_InterpolationMethod_kPolynomial @endlink.
  * In other interpolation methods, it is ignored.
- * @param[in] num_base number of elements for data points. Its value must be greater than 0.
+ * @param[in] num_base number of elements for data points. Its value must be greater than 1.
  * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
  * must-be-aligned
