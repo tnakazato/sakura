@@ -45,7 +45,7 @@ endif(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 project(libsakura_test)
 enable_testing()
 
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
@@ -58,11 +58,9 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	set(LIBS "${LIBS} -lc++abi")
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
-message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG   "-g")
-message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
 message("PROJECT_SOURCE_DIR is ${PROJECT_SOURCE_DIR}")
 message("PROJECT_BINARY_DIR is ${PROJECT_BINARY_DIR}")
