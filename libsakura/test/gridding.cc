@@ -1947,7 +1947,62 @@ TEST(Gridding, Odd) {
 			});
 }
 
-TEST(Gridding, SpeedVectorized) {
+TEST(Gridding, VectorizedWeightOnly) {
+	typedef GridBase<64, 1, 64, 1, 2, 2, 10, 10, InitFuncs<4> > TestCase;
+	typedef RowBase<1, 1, TestCase::kNVisChan, TestCase::kNPol> RowType;
+
+	TestCase *test_case;
+	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(sizeof(*test_case),
+					&test_case));
+	test_case->SetUp();
+	auto fin_func = [=]() {test_case->TearDown();};
+	auto fin = Finalizer<decltype(fin_func)>(fin_func);
+
+	test_case->TestGrid<RowType>(
+			[](TestCase *tc, RowType *rows, TestCase::SumType *sumwt2, TestCase::GridType *wgrid2, TestCase::GridType *grid2) {
+				{
+					TestCase::ClearResults(sumwt2, wgrid2, grid2);
+					tc->ClearResults();
+					rows->SetValues(1000);
+					rows->SetXY(4.5, 4.4);
+					rows->SetWeight(2);
+					fill_n(rows->mask[0][0], TestCase::kNChan, false);
+					fill_n(rows->mask[0][0], TestCase::kNChan / 2, true);
+					static float ct[] = {2, 1, 0.5f, 0.1f, -.9f, -10, -15, -30 };
+					tc->SetConvTab(ELEMENTSOF(ct), ct);
+
+					double ref[TestCase::kNY][TestCase::kNX] = {
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, -20.0, -20.0, -20.0, -20.0, -60.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, -1.8, 0.2, 0.2, -1.8, -20.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.2, 2.0, 2.0, 0.2, -20.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.2, 2.0, 2.0, 0.2, -20.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, -1.8, 0.2, 0.2, -1.8, -20.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+						{	0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+					double sumwt = 0;
+					for (size_t y = 0; y < TestCase::kNY; ++y) {
+						for (size_t x = 0; x < TestCase::kNX; ++x) {
+							sumwt += ref[y][x];
+							for (size_t ch = 0; ch < TestCase::kNChan/2; ++ch) {
+								(*grid2)[y][x][0][ch] = ref[y][x];
+								(*wgrid2)[y][x][0][ch] = ref[y][x];
+								//sumwt2[y][x][0][ch] = ref[y][x];
+							}
+						}
+					}
+					fill_n((*sumwt2)[0], TestCase::kNChan/2, sumwt);
+
+					bool weight_only = true;
+					tc->TrySpeed(true, weight_only, rows, sumwt2, wgrid2, grid2);
+				}
+			});
+}
+
+TEST(Gridding, PerformanceVectorized) {
 	typedef TestTypical TestCase;
 	typedef RowBase<512, 2, TestCase::kNVisChan, TestCase::kNVisPol> RowType;
 
@@ -1970,12 +2025,12 @@ TEST(Gridding, SpeedVectorized) {
 							-2. * TestCase::kSupport,
 							TestCase::kNY + 2 * TestCase::kSupport);
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Vectorized");
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_VectorizedWeighted");
 				}
 			});
 }
 
-TEST(Gridding, SpeedScalar) {
+TEST(Gridding, PerformanceScalar) {
 	typedef TestTypical TestCase;
 	typedef RowBase<512, 2, TestCase::kNVisChan, TestCase::kNVisPol> RowType;
 
@@ -1997,7 +2052,7 @@ TEST(Gridding, SpeedScalar) {
 							-2. * TestCase::kSupport, TestCase::kNY + 2 * TestCase::kSupport);
 					tc->chanmap[0] = 1;
 					bool weight_only = false;
-					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Scalar");
+					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_ScalarWeighted");
 				}
 			});
 }
