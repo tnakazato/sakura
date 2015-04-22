@@ -27,6 +27,7 @@
 #include <cstddef>
 #include <iostream>
 
+#include <libsakura/config.h>
 #include "libsakura/localdef.h"
 #include "libsakura/sakura.h"
 
@@ -219,29 +220,34 @@ inline void OperateBitwiseXor(DataType bit_mask, size_t num_data,
 
 }
 
-} /* anonymous namespace */
+template<typename DataType>
+bool IsValidArguments(DataType const *data, bool const *edit_mask,
+		DataType const *result, LIBSAKURA_SYMBOL(Status) *status) {
+	if (data == nullptr || result == nullptr || edit_mask == nullptr) {
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return false;
+	}
+	if (!( LIBSAKURA_SYMBOL(IsAligned)(data))
+			|| !( LIBSAKURA_SYMBOL(IsAligned)(result))
+			|| !( LIBSAKURA_SYMBOL(IsAligned)(edit_mask))) {
+		*status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		return false;
+	}
+	return true;
+}
 
-// Bit operation AND
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
-		uint8_t bit_mask, size_t num_data, uint8_t const data[],
-		bool const edit_mask[], uint8_t result[]) noexcept {
+template<typename Func, typename DataType>
+LIBSAKURA_SYMBOL(Status) DoBitOperation(Func func, DataType bit_mask,
+		size_t num_data, DataType const *data,
+		bool const *edit_mask, DataType *result) {
 	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!IsValidArguments(data, edit_mask, result, &status)) {
+		return status;
+	}
 	// Now actual operation
 	try {
-		OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);
+		func(/*bit_mask, num_data, data, edit_mask, result*/);
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -251,153 +257,58 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+}
+/* anonymous namespace */
+
+// Bit operation AND
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
+		uint8_t bit_mask, size_t num_data, uint8_t const data[],
+		bool const edit_mask[], uint8_t result[]) noexcept {
+	return DoBitOperation(
+			[=] {OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
+}
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 // Bit operation, Converse Nonimplication
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseConverseNonImplication(bit_mask, num_data, data,
-				edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseConverseNonImplication(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseConverseNonImplication(bit_mask, num_data, data,
-				edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseConverseNonImplication(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 // Bit operation, Material Implication
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 // Bit operation NOT
@@ -405,18 +316,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[], bool const edit_mask[],
 		uint8_t result[]) noexcept {
 	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!IsValidArguments(data, edit_mask, result, &status)) {
+		return status;
+	}
 
 	// Now actual operation
 	try {
@@ -434,18 +337,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[], bool const edit_mask[],
 		uint32_t result[]) noexcept {
 	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Status_kOK);
+	if (!IsValidArguments(data, edit_mask, result, &status)) {
+		return status;
+	}
 
 	// Now actual operation
 	try {
@@ -463,116 +358,32 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 // Bit operation XOR
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	// Check parameter arguments.
-	if (data == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (result == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (edit_mask == nullptr)
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(data)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(result)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	if (!( LIBSAKURA_SYMBOL(IsAligned)(edit_mask)))
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-
-	// Now actual operation
-	try {
-		OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperation(
+			[=] {OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);},
+			bit_mask, num_data, data, edit_mask, result);
 }
