@@ -1675,14 +1675,14 @@ typedef enum {
  * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
  * must-be-aligned
- * @param[in] num_array number of arrays given in @a base_data. Its value must be greater than 0.
+ * @param[in] num_array number of arrays given in @a base_data.
  * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
  * must-be-aligned
  * @param[in] base_mask boolean mask for data. Its length must be @a num_base times @a num_array.
  * False points will be excluded from the interpolation
  * must-be-aligned
  * @param[in] num_interpolated number of elements for points that wants to get
- * interpolated value. Its value must be greater than 0.
+ * interpolated value.
  * @param[in] interpolated_position location of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * must-be-aligned
