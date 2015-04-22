@@ -122,7 +122,6 @@ struct VWeightedValue {
 template<typename WeightFunc>
 struct ScalarImpl {
 	static inline void ChannelLoop(float convolution_factor,
-			integer const chan_start,
 			integer const num_channels,
 			uint32_t const channel_map_arg[/*num_channels*/],
 			float const weight_arg[/*num_channels*/],
@@ -133,7 +132,7 @@ struct ScalarImpl {
 			float weight_of_grid[/*num_channels_for_grid*/]) {
 		auto weight = AssumeAligned(weight_arg);
 		auto channel_map = AssumeAligned(channel_map_arg);
-		for (integer ichan = chan_start; ichan < num_channels; ++ichan) {
+		for (integer ichan = 0; ichan < num_channels; ++ichan) {
 			if (mask[ichan]) {
 				integer out_chan = channel_map[ichan];
 				float the_weight = weight[ichan] * convolution_factor;
@@ -149,7 +148,6 @@ struct ScalarImpl {
 template<typename WeightFunc, typename WeightFunc4Scalar>
 struct VectorizedImpl {
 	static inline void ChannelLoop(float convolution_factor,
-			integer const chan_start,
 			integer const num_channels,
 			uint32_t const channel_map[/*num_channels*/],
 			float const weight[/*num_channels*/],
@@ -184,12 +182,11 @@ struct VectorizedImpl {
 #if defined(__AVX2__)
 		__m128 const zero128i = _mm_setzero_ps();
 #endif
-		integer ichan;
-		for (ichan = chan_start;
-				ichan
-						< num_channels
-								/ LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
-				++ichan) {
+		assert(
+				num_channels % LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat == 0);
+		integer chan_limit = num_channels
+				/ LIBSAKURA_SYMBOL(SimdPacketNative)::kNumFloat;
+		for (integer ichan = 0; ichan < chan_limit; ++ichan) {
 			LIBSAKURA_SYMBOL(SimdPacketNative) pweight;
 #if defined(__AVX2__)
 			pweight.raw_float = _mm256_cvtepi32_ps(
@@ -240,7 +237,6 @@ template<typename WeightFunc, typename WeightFunc4Scalar>
 struct VectorizedImpl {
 	static inline void ChannelLoop(
 			float convolution_factor,
-			integer const chan_start,
 			integer const num_channels,
 			uint32_t const channel_map[/*num_channels*/],
 			float const weight[/*num_channels*/],
@@ -308,7 +304,7 @@ inline void Grid(integer locx, integer locy, integer const doubled_support,
 				float *weight_of_grid_local = &weight_of_grid_pos_local[At2(
 						num_channels_for_grid, out_pol, 0)];
 
-				Impl::ChannelLoop(convolution_factor, 0, num_channels, channel_map,
+				Impl::ChannelLoop(convolution_factor, num_channels, channel_map,
 						weight, mask_local, value_local, num_channels_for_grid,
 						weight_sum_local, grid_local, weight_of_grid_local);
 			} // ipol
