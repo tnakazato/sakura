@@ -1671,7 +1671,7 @@ typedef enum {
  * This parameter is effective only when @a interpolation_method is
  * @link sakura_InterpolationMethod::sakura_InterpolationMethod_kPolynomial sakura_InterpolationMethod_kPolynomial @endlink.
  * In other interpolation methods, it is ignored.
- * @param[in] num_base number of elements for data points. Its value must be greater than 1.
+ * @param[in] num_base number of elements for data points. Its value must be greater than 0.
  * @param[in] base_position position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
  * must-be-aligned
