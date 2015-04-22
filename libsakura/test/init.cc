@@ -27,9 +27,10 @@
  *      Author: kohji
  */
 
+#include <libsakura/sakura.h>
+#include <unistd.h>
 #include <iostream>
 #include <cstdlib>
-#include <libsakura/sakura.h>
 #include "loginit.h"
 #include "gtest/gtest.h"
 
@@ -90,25 +91,44 @@ TEST(Global, Align) {
 	static_assert(sizeof(uintptr_t) >= sizeof(void *), "");
 	{
 		uintptr_t offset = 0;
-		uintptr_t base = 0x10000000ull;
+		uintptr_t base = 0x10000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
 		auto aaddr = (uintptr_t) aptr;
+		EXPECT_EQ(base, aaddr);
+		EXPECT_TRUE(sakura_IsAligned(ptr));
+
+		auto fptr = sakura_AlignFloat(100, static_cast<float *>(ptr), 50);
+		aaddr = (uintptr_t) fptr;
+		EXPECT_EQ(base, aaddr);
+
+		auto dptr = sakura_AlignDouble(100, static_cast<double *>(ptr), 50);
+		aaddr = (uintptr_t) dptr;
 		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uintptr_t offset = 1;
-		uintptr_t base = 0x10000000ull;
+		uintptr_t base = 0x10000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
 		auto aaddr = (uintptr_t) aptr;
 		EXPECT_EQ(base, aaddr);
+		EXPECT_FALSE(sakura_IsAligned(ptr));
+		EXPECT_TRUE(sakura_IsAligned(aptr));
+
+		auto fptr = sakura_AlignFloat(100, static_cast<float *>(ptr), 50);
+		aaddr = (uintptr_t) fptr;
+		EXPECT_EQ(base, aaddr);
+
+		auto dptr = sakura_AlignDouble(100, static_cast<double *>(ptr), 50);
+		aaddr = (uintptr_t) dptr;
+		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uintptr_t offset = sakura_GetAlignment() - 1;
-		uintptr_t base = 0x10000000ull;
+		uintptr_t base = 0x10000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
@@ -118,7 +138,7 @@ TEST(Global, Align) {
 
 	{
 		uintptr_t offset = 0;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
@@ -127,7 +147,7 @@ TEST(Global, Align) {
 	}
 	{
 		uintptr_t offset = 1;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
@@ -136,7 +156,7 @@ TEST(Global, Align) {
 	}
 	{
 		uintptr_t offset = sakura_GetAlignment() - 1;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 50);
@@ -159,16 +179,52 @@ TEST(Global, AlignShort) {
 	static_assert(sizeof(uintptr_t) >= sizeof(void *), "");
 	{
 		uintptr_t offset = 0;
-		uintptr_t base = 0x10000000ull;
+		uintptr_t base = 0x10000000ULL;
+		uintptr_t addr = base - offset;
+		auto ptr = (void *) addr;
+		auto aptr = sakura_AlignAny(10, ptr, 100);
+		EXPECT_EQ(nullptr, aptr);
+
+		auto fptr = sakura_AlignFloat(10, static_cast<float *>(ptr), 100);
+		EXPECT_EQ(nullptr, fptr);
+
+		auto dptr = sakura_AlignDouble(10, static_cast<double *>(ptr), 100);
+		EXPECT_EQ(nullptr, dptr);
+	}
+	{
+		uintptr_t offset = 0;
+		uintptr_t base = 0x10000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
 		auto aaddr = (uintptr_t) aptr;
 		EXPECT_EQ(base, aaddr);
+
+		auto fptr = sakura_AlignFloat(100, static_cast<float *>(ptr), 100);
+		aaddr = (uintptr_t) fptr;
+		EXPECT_EQ(base, aaddr);
+
+		auto dptr = sakura_AlignDouble(100, static_cast<double *>(ptr), 100);
+		aaddr = (uintptr_t) dptr;
+		EXPECT_EQ(base, aaddr);
 	}
 	{
 		uintptr_t offset = 1;
-		uintptr_t base = 0x10000000ull;
+		uintptr_t base = 0x10000000ULL;
+		uintptr_t addr = base - offset;
+		auto ptr = (void *) addr;
+		auto aptr = sakura_AlignAny(100, ptr, 100);
+		EXPECT_EQ(nullptr, aptr);
+
+		auto fptr = sakura_AlignFloat(100, static_cast<float *>(ptr), 100);
+		EXPECT_EQ(nullptr, fptr);
+
+		auto dptr = sakura_AlignDouble(100, static_cast<double *>(ptr), 100);
+		EXPECT_EQ(nullptr, dptr);
+	}
+	{
+		uintptr_t offset = sakura_GetAlignment() - 1;
+		uintptr_t base = 0x10000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
@@ -176,15 +232,7 @@ TEST(Global, AlignShort) {
 	}
 	{
 		uintptr_t offset = sakura_GetAlignment() - 1;
-		uintptr_t base = 0x10000000ull;
-		uintptr_t addr = base - offset;
-		auto ptr = (void *) addr;
-		auto aptr = sakura_AlignAny(100, ptr, 100);
-		EXPECT_EQ(nullptr, aptr);
-	}
-	{
-		uintptr_t offset = sakura_GetAlignment() - 1;
-		uintptr_t base = 0x10000000ull;
+		uintptr_t base = 0x10000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(1, ptr, 100);
@@ -193,7 +241,7 @@ TEST(Global, AlignShort) {
 
 	{
 		uintptr_t offset = 0;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
@@ -202,7 +250,7 @@ TEST(Global, AlignShort) {
 	}
 	{
 		uintptr_t offset = 1;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
@@ -210,7 +258,7 @@ TEST(Global, AlignShort) {
 	}
 	{
 		uintptr_t offset = sakura_GetAlignment() - 1;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(100, ptr, 100);
@@ -218,7 +266,7 @@ TEST(Global, AlignShort) {
 	}
 	{
 		uintptr_t offset = sakura_GetAlignment() - 1;
-		uintptr_t base = 0xf000000010000000ull;
+		uintptr_t base = 0xf000000010000000ULL;
 		uintptr_t addr = base - offset;
 		auto ptr = (void *) addr;
 		auto aptr = sakura_AlignAny(1, ptr, 100);
@@ -228,6 +276,21 @@ TEST(Global, AlignShort) {
 	{
 		void *aptr = sakura_AlignAny(100, nullptr, 100);
 		EXPECT_TRUE(nullptr == aptr);
+	}
+
+	sakura_CleanUp();
+}
+
+TEST(Global, GetCurrentTime) {
+	sakura_Status result = sakura_Initialize(nullptr, nullptr);
+	EXPECT_EQ(result, sakura_Status_kOK);
+
+	{
+		auto before = sakura_GetCurrentTime();
+		sleep(1);
+		auto after = sakura_GetCurrentTime();
+		auto diff = after - before;
+		EXPECT_TRUE(1 <= diff && diff < 1.2);
 	}
 
 	sakura_CleanUp();
