@@ -200,14 +200,14 @@ void LIBSAKURA_SYMBOL(CleanUp)() LIBSAKURA_NOEXCEPT;
 /**
  * @~english
  * @brief Returns a current time.
- * Precision of the time depends on gettimeofday(2).
+ * Precision of the time depends on std::chrono::system_clock.
  * @return Current time in seconds since the Epoch.
  *
  * @~japanese
  * @brief 現在時刻(単位は秒)を返す
  *
- * 精度はgettimeofday(2)依存。
- * @return 現在時刻(単位は秒)
+ * 精度は std::chrono::system_clock 依存。
+ * @return エポックからの経過時間(単位は秒)
  * @~
  * MT-safe
  */
