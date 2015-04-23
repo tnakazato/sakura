@@ -37,6 +37,26 @@ namespace {
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
 
 /**
+ * @a TypePromotion provides a mapping between base type and working data type
+ * that will be a type for working array. In general, type with higher accuracy
+ * (@a WiderType) will be set for working data type.
+ *
+ * @tparam Base base data type
+ */
+template<typename Base> struct TypePromotion {
+};
+
+#define TYPE_PROMOTION(Base, Narrow, Wide)  \
+template<> \
+struct TypePromotion<Base> { \
+        using NarrowerType = Narrow; \
+        using WiderType = Wide; \
+}
+
+// Set WiderType to double for Base type of both float and double
+TYPE_PROMOTION(float, float, double);TYPE_PROMOTION(double, float, double);
+
+/**
  * @struct StorageAndAlignedPointer
  * @brief Storage for aligned array
  * @details
@@ -342,6 +362,8 @@ struct CustomizedMemoryManagement {
  */
 template<class XDataType, class YDataType>
 struct PolynomialWorkingData: CustomizedMemoryManagement {
+	typedef typename TypePromotion<XDataType>::WiderType WDataType;
+
 	/**
 	 * The @a Allocate method creates @a PolynomialWorkingData instance and return it.
 	 * @param[in] polynomial_order polynomial order for polynomial interpolation
@@ -374,15 +396,15 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
 		polynomial_order = static_cast<uint8_t>(std::min(num_base - 1,
 				static_cast<size_t>(order)));
 		num_elements = polynomial_order + 1;
-		AllocateAndAlign<XDataType>(num_elements, &(xholder[0]));
-		AllocateAndAlign<XDataType>(num_elements, &(xholder[1]));
+		AllocateAndAlign<WDataType>(num_elements, &(xholder[0]));
+		AllocateAndAlign<WDataType>(num_elements, &(xholder[1]));
 	}
 	/**
 	 * Working arrays for polynomial interpolation. The arrays are kept as
 	 * @a StorageAndAlignedPointer instance since working arrays should be
 	 * aligned.
 	 */
-	StorageAndAlignedPointer<XDataType> xholder[2];
+	StorageAndAlignedPointer<WDataType> xholder[2];
 	/**
 	 * Number of elements of each working array.
 	 */
@@ -402,6 +424,8 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
  */
 template<class XDataType, class YDataType>
 struct SplineWorkingData: public CustomizedMemoryManagement {
+	typedef typename TypePromotion<YDataType>::WiderType WDataType;
+
 	/**
 	 * The @a Allocate method creates @a SplineWorkingData instance and return it.
 	 * @param[in] polynomial_order no effect
@@ -445,15 +469,14 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	static void Initialize(size_t num_base, XDataType const base_position[],
 			YDataType const base_data[],
 			SplineWorkingData<XDataType, YDataType> *work_data) {
-		StorageAndAlignedPointer<YDataType> holder_for_u;
-		YDataType *upper_triangular = work_data->upper_triangular.pointer;
-		YDataType *d2ydx2 = work_data->second_derivative.pointer;
+		WDataType *upper_triangular = work_data->upper_triangular.pointer;
+		WDataType *d2ydx2 = work_data->second_derivative.pointer;
 
 		// This is a condition of natural cubic spline: second derivative of
 		// interpolated spline curve should be zero.
-		d2ydx2[0] = YDataType(0.0);
-		d2ydx2[num_base - 1] = YDataType(0.0);
-		upper_triangular[0] = YDataType(0.0);
+		d2ydx2[0] = WDataType(0.0);
+		d2ydx2[num_base - 1] = WDataType(0.0);
+		upper_triangular[0] = WDataType(0.0);
 
 		// Solve tridiagonal system.
 		// Here tridiagonal matrix is decomposed to upper triangular matrix.
@@ -471,11 +494,13 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 			assert(b1 != decltype(b1)(0));
 			auto const u = a2 / (decltype(a2)(2.0) * b1);
 			auto const l = a1 / (decltype(a1)(2.0) * b1);
-			YDataType const r = YDataType(3.0)
-					* ((base_data[i] - base_data[i - 1]) / YDataType(a2)
-							- (base_data[i - 1] - base_data[i - 2])
-									/ YDataType(a1)) / YDataType(b1);
-			YDataType const denominator = YDataType(1.0)
+			WDataType const r = WDataType(3.0)
+					* (static_cast<WDataType>(base_data[i] - base_data[i - 1])
+							/ WDataType(a2)
+							- static_cast<WDataType>(base_data[i - 1]
+									- base_data[i - 2]) / WDataType(a1))
+					/ WDataType(b1);
+			WDataType const denominator = WDataType(1.0)
 					- upper_triangular[i - 2] * l;
 			upper_triangular[i - 1] = u / denominator;
 			d2ydx2[i - 1] = (r - l * d2ydx2[i - 2]) / denominator;
@@ -492,8 +517,8 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	 * @param[in] num_base number of elements of spline correction term
 	 */
 	SplineWorkingData(size_t num_base) {
-		AllocateAndAlign<YDataType>(num_base, &second_derivative);
-		AllocateAndAlign<YDataType>(num_base, &upper_triangular);
+		AllocateAndAlign<WDataType>(num_base, &second_derivative);
+		AllocateAndAlign<WDataType>(num_base, &upper_triangular);
 	}
 	/**
 	 * Working array for spline interpolation. The array is kept as
@@ -501,14 +526,14 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 	 * aligned. It will store a second derivative of spline curve for each
 	 * base position.
 	 */
-	StorageAndAlignedPointer<YDataType> second_derivative;
+	StorageAndAlignedPointer<WDataType> second_derivative;
 	/**
 	 * Working array for spline interpolation. The array is kept as
 	 * @a StorageAndAlignedPointer instance since working arrays should be
 	 * aligned. It will store elements of upper triangular matrix that
 	 * is necessary to calculate spline correction term.
 	 */
-	StorageAndAlignedPointer<YDataType> upper_triangular;
+	StorageAndAlignedPointer<WDataType> upper_triangular;
 };
 
 /**
@@ -759,26 +784,26 @@ private:
 			WorkingData const * const work_data) {
 
 		// working pointers
-		XDataType const *x_ptr = &(base_position[lower_index]);
-		YDataType const *y_ptr = &(base_data[lower_index]);
+		auto const x_ptr = &(base_position[lower_index]);
+		auto const y_ptr = &(base_data[lower_index]);
 
-		XDataType *c = work_data->xholder[0].pointer;
-		XDataType *d = work_data->xholder[1].pointer;
+		auto c = work_data->xholder[0].pointer;
+		auto d = work_data->xholder[1].pointer;
 
 		for (size_t i = 0; i < work_data->num_elements; ++i) {
-			c[i] = static_cast<XDataType>(y_ptr[i]);
+			c[i] = static_cast<typename WorkingData::WDataType>(y_ptr[i]);
 			d[i] = c[i];
 		}
 
 		// Neville's algorithm
-		XDataType work = c[0];
+		auto work = c[0];
 		for (size_t m = 1; m < work_data->num_elements; ++m) {
 			// Evaluate Cm1, Cm2, Cm3, ... Cm[n-m] and Dm1, Dm2, Dm3, ... Dm[n-m].
 			// Those are stored to c[0], c[1], ..., c[n-m-1] and d[0], d[1], ...,
 			// d[n-m-1].
 			for (size_t i = 0; i < work_data->num_elements - m; ++i) {
-				XDataType cd = c[i + 1] - d[i];
-				XDataType const dx = x_ptr[i] - x_ptr[i + m];
+				auto cd = c[i + 1] - d[i];
+				auto const dx = x_ptr[i] - x_ptr[i + m];
 				assert(dx != 0);
 				cd /= dx;
 				c[i] = (x_ptr[i] - interpolated_position) * cd;
@@ -844,7 +869,7 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
-		YDataType const * const d2ydx2 = work_data->second_derivative.pointer;
+		auto const * const d2ydx2 = work_data->second_derivative.pointer;
 		auto const dx = base_position[lower_index + 1]
 				- base_position[lower_index];
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
