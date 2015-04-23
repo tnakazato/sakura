@@ -27,18 +27,15 @@
 #include <cstddef>
 #include <iostream>
 
-#include <libsakura/config.h>
 #include "libsakura/localdef.h"
 #include "libsakura/sakura.h"
 
 // Vectorization by Compiler
 namespace {
 
-template<typename DataType>
-inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
-		DataType const *data,
-		bool const *edit_mask, DataType *result) {
-
+template<typename Operation, typename DataType>
+inline void OperateBitwise(Operation operation, size_t num_data,
+		DataType const *data, bool const *edit_mask, DataType *result) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
@@ -51,69 +48,42 @@ inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
 	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(amask[0]));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
+	for (size_t i = 0; i < num_data; ++i) {
+		aresult[i] = operation(adata[i], amask[i]);
+	}
+}
+
+template<typename DataType>
+inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
+		DataType const *data,
+		bool const *edit_mask, DataType *result) {
 
 	/* edit_mask = true: (mask8 - 1) = 00...0
 	 *                   -> (bit_mask | 00...0) = bit_mask,
 	 *           = false: (mask8 - 1) = 11...1
-	 *                   -> (bit_mask | 11...1) = 11...1 */
-	for (size_t i = 0; i < num_data; ++i) {
-		aresult[i] = adata[i]
-				& (bit_mask | (static_cast<DataType>(amask[i]) - 1));
-	}
-
+	 *                   -> (bit_mask | 11...1) = 11...1
+	 *        where mask8 = (uint8_t) edit_mask */
+	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
+		return (in_data & (bit_mask | (static_cast<DataType>(mask) - 1)));
+	}, num_data, data, edit_mask, result);
 }
-//template<typename DataType>
-//inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
-//		DataType const *data,
-//		bool const *edit_mask, DataType *result) {
-//
-//	//std::cout << "Invoking OperateBitwiseAnd()" << std::endl;
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-//	// cast bool array to uint8_t array
-//	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-//	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-//	STATIC_ASSERT(true == 1);
-//	STATIC_ASSERT(false == 0);
-//
-//	/* edit_mask = true: (mask8 - 1) = 00...0
-//	 *                   -> (bit_mask | 00...0) = bit_mask,
-//	 *           = false: (mask8 - 1) = 11...1
-//	 *                   -> (bit_mask | 11...1) = 11...1 */
-//	for (size_t i = 0; i < num_data; ++i) {
-//		result[i] = data[i]
-//				& (bit_mask | (static_cast<DataType>(mask8[i]) - 1));
-//	}
-//
-//}
 
 template<typename DataType>
 inline void OperateBitwiseConverseNonImplication(DataType bit_mask,
 		size_t num_data, DataType const *data, bool const *edit_mask,
 		DataType *result) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	// cast bool array to uint8_t array
-	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
 	/* edit_mask = true: x = (mask8 - 1) = 00...0
 	 *                   -> (bit_mask | 00...0) = bit_mask,
 	 *                   ~x = 11...1 -> (data[i] ^ ~x) = ~data[i]
 	 *           = false: x = (mask8 - 1) = 11...1
 	 *                   -> (bit_mask | 11...1) = 11...1
-	 *                   ~x = 00...0 -> (data[i] ^ ~x) = data[i] */
-	for (size_t i = 0; i < num_data; ++i) {
-		DataType x = (static_cast<DataType>(mask8[i]) - 1);
-		result[i] = (data[i] ^ ~x) & (bit_mask | x);
-	}
+	 *                   ~x = 00...0 -> (data[i] ^ ~x) = data[i]
+	 *        where mask8 = (uint8_t) edit_mask  */
+	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
+		DataType x = (static_cast<DataType>(mask) - 1);
+		return ((in_data ^ ~x) & (bit_mask | x));
+	}, num_data, data, edit_mask, result);
 
 }
 
@@ -121,50 +91,31 @@ template<typename DataType>
 inline void OperateBitwiseImplication(DataType bit_mask, size_t num_data,
 		DataType const *data, bool const *edit_mask, DataType *result) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	// cast bool array to uint8_t array
-	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
 	/* edit_mask = true: x = ~(mask8 - 1) = 11...1
 	 *                   -> (bit_mask & 11...1) = bit_mask,
 	 *                   -> (data[i] ^ 11...1) = ~data[i]
 	 *           = false: x = ~(mask8 - 1) = 00...0
 	 *                   -> (bit_mask & 00...0) = 00...0
-	 *                   (data[i] ^ 00...0) = data[i] */
-	for (size_t i = 0; i < num_data; ++i) {
-		DataType x = ~(static_cast<DataType>(mask8[i]) - 1);
-		result[i] = (data[i] ^ x) | (bit_mask & x);
-	}
-
+	 *                   (data[i] ^ 00...0) = data[i]
+	 *        where mask8 = (uint8_t) edit_mask  */
+	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
+		DataType x = ~(static_cast<DataType>(mask) - 1);
+		return ((in_data ^ x) | (bit_mask & x));
+	}, num_data, data, edit_mask, result);
 }
 
 template<typename DataType>
 inline void OperateBitwiseNot(size_t num_data, DataType const *data,
 bool const *edit_mask, DataType *result) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	// cast bool array to uint8_t array
-	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
 	/* edit_mask = true: ~(mask8 - 1) = 11...1
 	 *                   -> (data[i] ^ 11...1) = ~data[i],
 	 *           = false: ~(mask8 - 1) = 00...0
-	 *                   -> (data[i] ^ 00...0) = data[i] */
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] ^ ~(static_cast<DataType>(mask8[i]) - 1));
-	}
+	 *                   -> (data[i] ^ 00...0) = data[i]
+	 *        where mask8 = (uint8_t) edit_mask  */
+	OperateBitwise([](DataType in_data, uint8_t mask) {
+		return (in_data ^ ~(static_cast<DataType>(mask) - 1));
+	}, num_data, data, edit_mask, result);
 
 }
 
@@ -173,24 +124,14 @@ inline void OperateBitwiseOr(DataType bit_mask, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	// cast bool array to uint8_t array
-	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
 	/* edit_mask = true: ~(mask8 - 1) = 11...1
 	 *                   -> (bit_mask & 11...1) = bit_mask,
 	 *           = false: ~(mask8 - 1) = 00...0
-	 *                   -> (bit_mask & 00...0) = 00...0 */
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = data[i]
-				| (bit_mask & ~(static_cast<DataType>(mask8[i]) - 1));
-	}
+	 *                   -> (bit_mask & 00...0) = 00...0
+	 *        where mask8 = (uint8_t) edit_mask  */
+	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
+		return (in_data | (bit_mask & ~(static_cast<DataType>(mask) - 1)));
+	}, num_data, data, edit_mask, result);
 
 }
 
@@ -199,24 +140,14 @@ inline void OperateBitwiseXor(DataType bit_mask, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	// cast bool array to uint8_t array
-	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(mask8[0]));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-
 	/* edit_mask = true: ~(mask8 - 1) = 11...1
 	 *                   -> (bit_mask & 11...1) = bit_mask,
 	 *           = false: ~(mask8 - 1) = 00...0
-	 *                   -> (bit_mask & 00...0) = 00...0 */
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = data[i]
-				^ (bit_mask & ~(static_cast<DataType>(mask8[i]) - 1));
-	}
+	 *                   -> (bit_mask & 00...0) = 00...0
+	 *        where mask8 = (uint8_t) edit_mask  */
+	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
+		return (in_data ^ (bit_mask & ~(static_cast<DataType>(mask) - 1)));
+	}, num_data, data, edit_mask, result);
 
 }
 
