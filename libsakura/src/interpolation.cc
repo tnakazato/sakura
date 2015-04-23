@@ -485,26 +485,28 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 		// elements are normalized to 1.
 
 		// x_base is ascending order
-		auto a1 = base_position[1] - base_position[0];
+		WDataType a1 = static_cast<WDataType>(base_position[1]
+				- base_position[0]);
 		assert(a1 != decltype(a1)(0));
+		WDataType d1 = static_cast<WDataType>(base_data[1] - base_data[0]);
 		for (size_t i = 2; i < num_base; ++i) {
-			auto const a2 = base_position[i] - base_position[i - 1];
+			WDataType const a2 = static_cast<WDataType>(base_position[i]
+					- base_position[i - 1]);
 			assert(a2 != decltype(a2)(0));
-			auto const b1 = base_position[i] - base_position[i - 2];
+			WDataType const b1 = static_cast<WDataType>(base_position[i]
+					- base_position[i - 2]);
 			assert(b1 != decltype(b1)(0));
+			WDataType const d2 = static_cast<WDataType>(base_data[i]
+					- base_data[i - 1]);
 			auto const u = a2 / (decltype(a2)(2.0) * b1);
 			auto const l = a1 / (decltype(a1)(2.0) * b1);
-			WDataType const r = WDataType(3.0)
-					* (static_cast<WDataType>(base_data[i] - base_data[i - 1])
-							/ WDataType(a2)
-							- static_cast<WDataType>(base_data[i - 1]
-									- base_data[i - 2]) / WDataType(a1))
-					/ WDataType(b1);
-			WDataType const denominator = WDataType(1.0)
+			auto const r = (d2 / a2 - d1 / a1) * WDataType(3.0) / b1;
+			auto const denominator = WDataType(1.0)
 					- upper_triangular[i - 2] * l;
 			upper_triangular[i - 1] = u / denominator;
 			d2ydx2[i - 1] = (r - l * d2ydx2[i - 2]) / denominator;
 			a1 = a2;
+			d1 = d2;
 		}
 
 		// Solve the system by backsubstitution and store solution to d2ydx2
@@ -782,6 +784,7 @@ private:
 			XDataType const base_position[], YDataType const base_data[],
 			size_t lower_index, XDataType interpolated_position,
 			WorkingData const * const work_data) {
+		typedef typename WorkingData::WDataType WDataType;
 
 		// working pointers
 		auto const x_ptr = &(base_position[lower_index]);
@@ -791,7 +794,7 @@ private:
 		auto d = work_data->xholder[1].pointer;
 
 		for (size_t i = 0; i < work_data->num_elements; ++i) {
-			c[i] = static_cast<typename WorkingData::WDataType>(y_ptr[i]);
+			c[i] = static_cast<WDataType>(y_ptr[i]);
 			d[i] = c[i];
 		}
 
@@ -805,9 +808,9 @@ private:
 				auto cd = c[i + 1] - d[i];
 				auto const dx = x_ptr[i] - x_ptr[i + m];
 				assert(dx != 0);
-				cd /= dx;
-				c[i] = (x_ptr[i] - interpolated_position) * cd;
-				d[i] = (x_ptr[i + m] - interpolated_position) * cd;
+				cd /= static_cast<WDataType>(dx);
+				c[i] = static_cast<WDataType>(x_ptr[i] - interpolated_position) * cd;
+				d[i] = static_cast<WDataType>(x_ptr[i + m] - interpolated_position) * cd;
 			}
 
 			// In each step, c[0] holds Cm1 which is a correction between
