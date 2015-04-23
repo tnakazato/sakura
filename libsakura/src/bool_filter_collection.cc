@@ -128,45 +128,43 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 	}
 }
 
+template<typename Func, typename DataType>
+inline void SetTrueIfFunc(Func func, size_t num_data, DataType const *data,
+bool *result) {
+	auto adata = AssumeAligned(data);
+	auto aresult = AssumeAligned(result);
+	// No operation is done when num_data==0.
+	for (size_t i = 0; i < num_data; ++i) {
+		aresult[i] = func(adata[i]);
+	}
+}
+
 template<typename DataType>
 inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	auto adata = AssumeAligned(data);
-	auto aresult = AssumeAligned(result);
-	for (size_t i = 0; i < num_data; ++i) {
-		aresult[i] = (adata[i] > threshold);
-	}
+	SetTrueIfFunc([threshold](DataType value) {return (value > threshold);},
+			num_data, data, result);
 }
-//template<typename DataType>
-//inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
-//		DataType threshold, bool *result) {
-//	for (size_t i = 0; i < num_data; ++i) {
-//		result[i] = (data[i] > threshold);
-//	}
-//}
 
 template<typename DataType>
 inline void SetTrueIfGreaterThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] >= threshold);
-	}
+	SetTrueIfFunc([threshold](DataType value) {return (value >= threshold);},
+			num_data, data, result);
 }
 
 template<typename DataType>
 inline void SetTrueIfLessThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (threshold > data[i]);
-	}
+	SetTrueIfFunc([threshold](DataType value) {return (value < threshold);},
+			num_data, data, result);
 }
 
 template<typename DataType>
 inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (threshold >= data[i]);
-	}
+	SetTrueIfFunc([threshold](DataType value) {return (value <= threshold);},
+			num_data, data, result);
 }
 
 template<typename DataType>
@@ -175,10 +173,8 @@ bool *result) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 
-	// No operation is done when num_data==0.
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = std::isfinite(data[i]);
-	}
+	SetTrueIfFunc([](DataType value) {return std::isfinite(value);}, num_data,
+			data, result);
 }
 
 template<typename DataType>
@@ -186,9 +182,8 @@ inline void ToBool(size_t num_data, DataType const *data, bool *result) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	constexpr DataType kZero(0);
-	for (size_t i = 0; i < num_data; ++i) {
-		result[i] = (data[i] != kZero);
-	}
+	SetTrueIfFunc([kZero](DataType value) {return (value != kZero);}, num_data,
+			data, result);
 }
 
 inline void InvertBool(size_t num_data, bool const *data, bool *result) {
@@ -323,7 +318,7 @@ template<typename DataType>
 bool IsValidArray(DataType const data_array[]) {
 	if (data_array == nullptr) {
 		return false;
-	} else if (!( LIBSAKURA_SYMBOL(IsAligned)(data_array))) {
+	} else if (!(LIBSAKURA_SYMBOL(IsAligned)(data_array))) {
 		return false;
 	}
 	return true;
@@ -331,7 +326,7 @@ bool IsValidArray(DataType const data_array[]) {
 
 /* Test data and result arrays*/
 template<typename DataType>
-bool CheckArrays(DataType const data[], bool const result[]) {
+bool IsValidDataAndResult(DataType const data[], bool const result[]) {
 	if (!IsValidArray(data) || !IsValidArray(result)) {
 		return false;
 	}
@@ -340,7 +335,7 @@ bool CheckArrays(DataType const data[], bool const result[]) {
 
 /* Test range parameters */
 template<typename DataType>
-bool CheckRanges(size_t num_condition,
+bool IsValidBounds(size_t num_condition,
 		DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/]) {
 	if (!IsValidArray(lower_bounds) || !IsValidArray(upper_bounds)) {
@@ -365,8 +360,8 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
 	// Check parameter arguments.
-	if (!CheckArrays(data, result)
-			|| !CheckRanges(num_condition, lower_bounds, upper_bounds)) {
+	if (!IsValidDataAndResult(data, result)
+			|| !IsValidBounds(num_condition, lower_bounds, upper_bounds)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -387,7 +382,7 @@ LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], DataType threshold,
 		bool result[/*num_data*/]) {
 	// Check parameter arguments.
-	if (!CheckArrays(data, result)) {
+	if (!IsValidDataAndResult(data, result)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -401,7 +396,6 @@ LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
-
 }
 
 template<typename Func, typename DataType>
@@ -409,7 +403,7 @@ LIBSAKURA_SYMBOL(Status) DoSimpleBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool const result[/*num_data*/]) {
 
 	// Check parameter arguments.
-	if (!CheckArrays(data, result)) {
+	if (!IsValidDataAndResult(data, result)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
@@ -425,7 +419,8 @@ LIBSAKURA_SYMBOL(Status) DoSimpleBoolFilter(Func func, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-} /* anonymous namespace */
+}
+/* anonymous namespace */
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
