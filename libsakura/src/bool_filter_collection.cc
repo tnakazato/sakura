@@ -429,16 +429,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] > threshold)
 	return DoElementFuncBoolFilter(
-			[threshold](float value) {return (value > threshold);}, num_data,
-			data, result);
+			[threshold](decltype(data[0]) data_value) {
+		return (data_value > threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] > threshold)
-	return DoElementFuncBoolFilter([threshold](int value) {return (value > threshold);},
-			num_data, data, result);
+	return DoElementFuncBoolFilter([threshold](decltype(data[0]) data_value) {
+		return (data_value > threshold);
+	},	num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
@@ -446,8 +448,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] >= threshold)
 	return DoElementFuncBoolFilter(
-			[threshold](float value) {return (value >= threshold);}, num_data,
-			data, result);
+			[threshold](decltype(data[0]) data_value) {
+		return (data_value >= threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
@@ -455,8 +458,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] >= threshold)
 	return DoElementFuncBoolFilter(
-			[threshold](int value) {return (value >= threshold);}, num_data,
-			data, result);
+			[threshold](decltype(data[0]) data_value) {
+		return (data_value >= threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
@@ -464,16 +468,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] < threshold)
 	return DoElementFuncBoolFilter(
-			[threshold](float value) {return (value < threshold);}, num_data,
-			data, result);
+			[threshold](decltype(data[0]) data_value) {
+		return (data_value < threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] < threshold)
-	return DoElementFuncBoolFilter([threshold](int value) {return (value < threshold);},
-			num_data, data, result);
+	return DoElementFuncBoolFilter([threshold](decltype(data[0]) data_value) {
+		return (data_value < threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
@@ -481,8 +487,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFl
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] <= threshold)
 	return DoElementFuncBoolFilter(
-			[threshold](float value) {return (value <= threshold);}, num_data,
-			data, result);
+			[threshold](decltype(data[0]) data_value) {
+		return (data_value <= threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
@@ -490,16 +497,18 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsIn
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = (data[i] <= threshold)
 	return DoElementFuncBoolFilter(
-			[threshold](int value) {return (value <= threshold);}, num_data,
-			data, result);
+			[threshold](decltype(data[0]) data_value) {
+		return (data_value <= threshold);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
 	//Invoke result[i] = std::isfinite(data[i])
-	return DoElementFuncBoolFilter([](float value) {return std::isfinite(value);},
-			num_data, data, result);
+	return DoElementFuncBoolFilter([](decltype(data[0]) data_value) {
+		return std::isfinite(data_value);
+	}, num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
@@ -507,8 +516,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint8_t kZero(0);
 	//Invoke result[i] = (data[i] != 0)
-	return DoElementFuncBoolFilter([kZero](uint8_t value) {return (value != kZero);},
-			num_data, data, result);
+	return DoElementFuncBoolFilter([kZero](decltype(data[0]) data_value) {
+		return (data_value != kZero);
+	},	num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
@@ -516,11 +526,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint8_t kZero(0);
 	//Invoke result[i] = (data[i] != 0)
-	return DoElementFuncBoolFilter([kZero](uint32_t value) {return (value != kZero);},
-			num_data, data, result);
-	//	return DoSimpleBoolFilter(
-	//			[=] {SetTrueIfFunc([kZero](uint32_t value) {return (value != kZero);}, num_data, data, result);},
-	//			num_data, data, result);
+	return DoElementFuncBoolFilter([kZero](decltype(data[0]) data_value) {
+		return (data_value != kZero);
+	},	num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
