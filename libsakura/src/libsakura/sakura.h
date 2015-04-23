@@ -1870,16 +1870,17 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @n must-be-aligned
  * @return 終了ステータス。
  * @~english
- * @brief convolution is performed
- * @details it is performed according to setting of sakura_CreateConvolve1DContext
+ * @brief Convolution is performed
+ * @details Convolution operations are performed by shifting the kernel, created
+ * by the settings of sakura_CreateConvolve1DContext, over the input data.
  * @param[in] context context
  * and @a num_data, @a input_real_array
- * @param[in] num_data number of data
+ * @param[in] The number of elements in input_data and output_data. (0 < num_data <= INT_MAX)
  * @param[in] input_data input data
- * Its length equals to channel number
+ * Its length equals to @a num_data.
  * @n must-be-aligned
  * @param[out] output_data
- * Its length equals to channel number
+ * Its length equals to @a num_data.
  * @n must-be-aligned
  * @return status code.
  * @~
