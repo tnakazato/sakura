@@ -294,7 +294,16 @@ bool IsValidBounds(size_t num_condition,
 	return true;
 }
 
-/* Invoke Bool Filter of each interface type */
+/* Invoke Bool Filter of different interface types */
+/*
+ *  @brief Generate a boolean filter based on per array equation function @a func .
+ *
+ *  This function calls a function, @a func , with arrays, @a data ,
+ *  @a lower_bounds , and @a upper_bounds .
+ *
+ *  @param[in] func A function to return a boolean array, @a result, based on arrays @a data ,
+ *  @a lower_bounds , and @a upper_bounds . It should output a boolean @a result array.
+ */
 template<typename Func, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], size_t num_condition,
@@ -320,11 +329,12 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 }
 
 /*
- *  Generate a boolean filter by per element equation function @a func .
- *  This function loops over elements of array, @a data, and call function,
- *  @a func , with each @data element.
+ *  @brief Generate a boolean filter based per element equation function @a func .
  *
- *  @param[in] func A function to return a boolean value for each of @a data element.
+ *  This function loops over elements of an array, @a data, and call a function,
+ *  @a func , with each @a data element.
+ *
+ *  @param[in] func A function to return a boolean value for a @a data element.
  *  It should take a @a data element and return a boolean.
  */
 template<typename Func, typename DataType>
@@ -353,11 +363,11 @@ LIBSAKURA_SYMBOL(Status) DoElementFuncBoolFilter(Func func, size_t num_data,
 }
 
 /*
- *  Generate a boolean filter by per array equation function @a func .
- *  This function loops over elements of array, @a data, and call function,
- *  @a func , with each @data element.
+ *  @brief Generate a boolean filter based on per array equation function @a func .
  *
- *  @param[in] func A function to return a boolean array, @a result, out of a @a data array.
+ *  This function calls a function, @a func , with a @a data array.
+ *
+ *  @param[in] func A function to return a boolean array, @a result, based on a @a data array.
  *  It should take a @a data array and output a @result array.
  */
 template<typename Func, typename DataType>
