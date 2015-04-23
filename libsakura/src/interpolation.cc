@@ -484,10 +484,13 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 		// d2ydx2 stores right-hand-side vector. The diagonal
 		// elements are normalized to 1.
 
-		// x_base is ascending order
+		// base_position is ascending order
 		WDataType a1 = static_cast<WDataType>(base_position[1]
 				- base_position[0]);
 		assert(a1 != decltype(a1)(0));
+		constexpr WDataType kOne(1);
+		constexpr WDataType kTwo(2);
+		constexpr WDataType kThree(3);
 		WDataType d1 = static_cast<WDataType>(base_data[1] - base_data[0]);
 		for (size_t i = 2; i < num_base; ++i) {
 			WDataType const a2 = static_cast<WDataType>(base_position[i]
@@ -498,11 +501,10 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 			assert(b1 != decltype(b1)(0));
 			WDataType const d2 = static_cast<WDataType>(base_data[i]
 					- base_data[i - 1]);
-			auto const u = a2 / (decltype(a2)(2.0) * b1);
-			auto const l = a1 / (decltype(a1)(2.0) * b1);
-			auto const r = (d2 / a2 - d1 / a1) * WDataType(3.0) / b1;
-			auto const denominator = WDataType(1.0)
-					- upper_triangular[i - 2] * l;
+			auto const u = a2 / (kTwo * b1);
+			auto const l = a1 / (kTwo * b1);
+			auto const r = (d2 / a2 - d1 / a1) * kThree / b1;
+			auto const denominator = kOne - upper_triangular[i - 2] * l;
 			upper_triangular[i - 1] = u / denominator;
 			d2ydx2[i - 1] = (r - l * d2ydx2[i - 2]) / denominator;
 			a1 = a2;
@@ -809,8 +811,10 @@ private:
 				auto const dx = x_ptr[i] - x_ptr[i + m];
 				assert(dx != 0);
 				cd /= static_cast<WDataType>(dx);
-				c[i] = static_cast<WDataType>(x_ptr[i] - interpolated_position) * cd;
-				d[i] = static_cast<WDataType>(x_ptr[i + m] - interpolated_position) * cd;
+				c[i] = static_cast<WDataType>(x_ptr[i] - interpolated_position)
+						* cd;
+				d[i] = static_cast<WDataType>(x_ptr[i + m]
+						- interpolated_position) * cd;
 			}
 
 			// In each step, c[0] holds Cm1 which is a correction between
@@ -1518,7 +1522,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  *     base_data[M+1]   = data[1][0]
  *     ...
  *     base_data[M*N-1] = data[N][M]
- * where N and M correspond to num_y_base and num_x respectively.
+ * where N and M correspond to num_base and num_array respectively.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
