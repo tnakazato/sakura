@@ -512,7 +512,8 @@ TEST(Statistics, ComputeStatistics) {
 		sum = 0.;
 		sqsum = 0.;
 		count = 0;
-		size_t base = 1024 - 16;
+		size_t base = data.size() - 16;
+		data[base + 5] = data[base + 2] - 2;
 		auto put = [&](size_t offset) {
 			is_valid[base + offset] = true;
 			++count;
@@ -522,13 +523,14 @@ TEST(Statistics, ComputeStatistics) {
 		};
 		put(2);
 		put(3);
+		put(5);
 
 		rms2 = sqsum / count;
 		mean = sum / count;
 
 		ref.count = count;
-		ref.index_of_min = base + 2;
-		ref.min = data[base + 2];
+		ref.index_of_min = base + 5;
+		ref.min = data[base + 5];
 		ref.index_of_max = base + 3;
 		ref.max = data[base + 3];
 		ref.sum = sum;
@@ -536,7 +538,7 @@ TEST(Statistics, ComputeStatistics) {
 		ref.rms = std::sqrt(rms2);
 		ref.stddev = std::sqrt(rms2 - mean * mean);
 
-		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+		CallAndTestResult(ref, base + 7, data.data(), is_valid.data(),
 				TestResult, TestResult);
 	}
 	{
