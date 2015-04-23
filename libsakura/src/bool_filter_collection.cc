@@ -131,6 +131,8 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 template<typename Func, typename DataType>
 inline void SetTrueIfFunc(Func func, size_t num_data, DataType const *data,
 bool *result) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	auto adata = AssumeAligned(data);
 	auto aresult = AssumeAligned(result);
 	// No operation is done when num_data==0.
@@ -142,6 +144,7 @@ bool *result) {
 template<typename DataType>
 inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
+	//Invoke result[i] = (data[i] > threshold)
 	SetTrueIfFunc([threshold](DataType value) {return (value > threshold);},
 			num_data, data, result);
 }
@@ -149,6 +152,7 @@ inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
 template<typename DataType>
 inline void SetTrueIfGreaterThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
+	//Invoke  result[i] = (data[i] >= threshold)
 	SetTrueIfFunc([threshold](DataType value) {return (value >= threshold);},
 			num_data, data, result);
 }
@@ -156,6 +160,7 @@ inline void SetTrueIfGreaterThanOrEquals(size_t num_data, DataType const *data,
 template<typename DataType>
 inline void SetTrueIfLessThan(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
+	//Invoke result[i] = (data[i] < threshold)
 	SetTrueIfFunc([threshold](DataType value) {return (value < threshold);},
 			num_data, data, result);
 }
@@ -163,6 +168,7 @@ inline void SetTrueIfLessThan(size_t num_data, DataType const *data,
 template<typename DataType>
 inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
 		DataType threshold, bool *result) {
+	//Invoke result[i] = (data[i] <= threshold)
 	SetTrueIfFunc([threshold](DataType value) {return (value <= threshold);},
 			num_data, data, result);
 }
@@ -170,18 +176,15 @@ inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
 template<typename DataType>
 inline void SetFalseIfNanOrInf(size_t num_data, DataType const *data,
 bool *result) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-
+	//Invoke result[i] = std::isfinite(data[i])
 	SetTrueIfFunc([](DataType value) {return std::isfinite(value);}, num_data,
 			data, result);
 }
 
 template<typename DataType>
 inline void ToBool(size_t num_data, DataType const *data, bool *result) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	constexpr DataType kZero(0);
+	//Invoke result[i] = (data[i] !=0)
 	SetTrueIfFunc([kZero](DataType value) {return (value != kZero);}, num_data,
 			data, result);
 }
