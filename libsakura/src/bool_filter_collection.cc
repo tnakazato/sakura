@@ -128,67 +128,6 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 	}
 }
 
-template<typename Func, typename DataType>
-inline void SetTrueIfFunc(Func func, size_t num_data, DataType const *data,
-bool *result) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	auto adata = AssumeAligned(data);
-	auto aresult = AssumeAligned(result);
-	// No operation is done when num_data==0.
-	for (size_t i = 0; i < num_data; ++i) {
-		aresult[i] = func(adata[i]);
-	}
-}
-
-template<typename DataType>
-inline void SetTrueIfGreaterThan(size_t num_data, DataType const *data,
-		DataType threshold, bool *result) {
-	//Invoke result[i] = (data[i] > threshold)
-	SetTrueIfFunc([threshold](DataType value) {return (value > threshold);},
-			num_data, data, result);
-}
-
-template<typename DataType>
-inline void SetTrueIfGreaterThanOrEquals(size_t num_data, DataType const *data,
-		DataType threshold, bool *result) {
-	//Invoke  result[i] = (data[i] >= threshold)
-	SetTrueIfFunc([threshold](DataType value) {return (value >= threshold);},
-			num_data, data, result);
-}
-
-template<typename DataType>
-inline void SetTrueIfLessThan(size_t num_data, DataType const *data,
-		DataType threshold, bool *result) {
-	//Invoke result[i] = (data[i] < threshold)
-	SetTrueIfFunc([threshold](DataType value) {return (value < threshold);},
-			num_data, data, result);
-}
-
-template<typename DataType>
-inline void SetTrueIfLessThanOrEquals(size_t num_data, DataType const *data,
-		DataType threshold, bool *result) {
-	//Invoke result[i] = (data[i] <= threshold)
-	SetTrueIfFunc([threshold](DataType value) {return (value <= threshold);},
-			num_data, data, result);
-}
-
-template<typename DataType>
-inline void SetFalseIfNanOrInf(size_t num_data, DataType const *data,
-bool *result) {
-	//Invoke result[i] = std::isfinite(data[i])
-	SetTrueIfFunc([](DataType value) {return std::isfinite(value);}, num_data,
-			data, result);
-}
-
-template<typename DataType>
-inline void ToBool(size_t num_data, DataType const *data, bool *result) {
-	constexpr DataType kZero(0);
-	//Invoke result[i] = (data[i] !=0)
-	SetTrueIfFunc([kZero](DataType value) {return (value != kZero);}, num_data,
-			data, result);
-}
-
 inline void InvertBool(size_t num_data, bool const *data, bool *result) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
@@ -380,10 +319,17 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/*
+ *  Generate a boolean filter by per element equation function @a func .
+ *  This function loops over elements of array, @a data, and call function,
+ *  @a func , with each @data element.
+ *
+ *  @param[in] func A function to return a boolean value for each of @a data element.
+ *  It should take a @a data element and return a boolean.
+ */
 template<typename Func, typename DataType>
-LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
-		DataType const data[/*num_data*/], DataType threshold,
-		bool result[/*num_data*/]) {
+LIBSAKURA_SYMBOL(Status) DoElementFuncBoolFilter(Func func, size_t num_data,
+		DataType const data[/*num_data*/], bool result[/*num_data*/]) {
 	// Check parameter arguments.
 	if (!IsValidDataAndResult(data, result)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -391,7 +337,12 @@ LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
 
 	// Now actual operation
 	try {
-		func(/*num_data, data, threshold, result*/);
+		auto adata = AssumeAligned(data);
+		auto aresult = AssumeAligned(result);
+		// No operation is done when num_data==0.
+		for (size_t i = 0; i < num_data; ++i) {
+			aresult[i] = func(adata[i]);
+		}
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -401,8 +352,16 @@ LIBSAKURA_SYMBOL(Status) DoBoundaryBoolFilter(Func func, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/*
+ *  Generate a boolean filter by per array equation function @a func .
+ *  This function loops over elements of array, @a data, and call function,
+ *  @a func , with each @data element.
+ *
+ *  @param[in] func A function to return a boolean array, @a result, out of a @a data array.
+ *  It should take a @a data array and output a @result array.
+ */
 template<typename Func, typename DataType>
-LIBSAKURA_SYMBOL(Status) DoSimpleBoolFilter(Func func, size_t num_data,
+LIBSAKURA_SYMBOL(Status) DoArrayFuncBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool const result[/*num_data*/]) {
 
 	// Check parameter arguments.
@@ -468,91 +427,105 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveI
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfGreaterThan(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] > threshold)
+	return DoElementFuncBoolFilter(
+			[threshold](float value) {return (value > threshold);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfGreaterThan(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] > threshold)
+	return DoElementFuncBoolFilter([threshold](int value) {return (value > threshold);},
+			num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] >= threshold)
+	return DoElementFuncBoolFilter(
+			[threshold](float value) {return (value >= threshold);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfGreaterThanOrEquals(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] >= threshold)
+	return DoElementFuncBoolFilter(
+			[threshold](int value) {return (value >= threshold);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfLessThan(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] < threshold)
+	return DoElementFuncBoolFilter(
+			[threshold](float value) {return (value < threshold);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfLessThan(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] < threshold)
+	return DoElementFuncBoolFilter([threshold](int value) {return (value < threshold);},
+			num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
 		size_t num_data, float const data[/*num_data*/], float threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfLessThanOrEquals(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] <= threshold)
+	return DoElementFuncBoolFilter(
+			[threshold](float value) {return (value <= threshold);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
 		size_t num_data, int const data[/*num_data*/], int threshold,
 		bool result[/*num_data*/]) noexcept {
-	return DoBoundaryBoolFilter(
-			[=] {SetTrueIfLessThanOrEquals(num_data, data, threshold, result);},
-			num_data, data, threshold, result);
+	//Invoke result[i] = (data[i] <= threshold)
+	return DoElementFuncBoolFilter(
+			[threshold](int value) {return (value <= threshold);}, num_data,
+			data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	return DoSimpleBoolFilter([=] {SetFalseIfNanOrInf(num_data, data, result);},
+	//Invoke result[i] = std::isfinite(data[i])
+	return DoElementFuncBoolFilter([](float value) {return std::isfinite(value);},
 			num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	return DoSimpleBoolFilter([=] {ToBool(num_data, data, result);}, num_data,
-			data, result);
+	constexpr uint8_t kZero(0);
+	//Invoke result[i] = (data[i] != 0)
+	return DoElementFuncBoolFilter([kZero](uint8_t value) {return (value != kZero);},
+			num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		size_t num_data, uint32_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	return DoSimpleBoolFilter([=] {ToBool(num_data, data, result);}, num_data,
-			data, result);
+	constexpr uint8_t kZero(0);
+	//Invoke result[i] = (data[i] != 0)
+	return DoElementFuncBoolFilter([kZero](uint32_t value) {return (value != kZero);},
+			num_data, data, result);
+	//	return DoSimpleBoolFilter(
+	//			[=] {SetTrueIfFunc([kZero](uint32_t value) {return (value != kZero);}, num_data, data, result);},
+	//			num_data, data, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
 		size_t num_data,
 		bool const data[/*num_data*/], bool result[/*num_data*/]) noexcept {
-	return DoSimpleBoolFilter([=] {InvertBool(num_data, data, result);},
+	return DoArrayFuncBoolFilter([=] {InvertBool(num_data, data, result);},
 			num_data, data, result);
 }
