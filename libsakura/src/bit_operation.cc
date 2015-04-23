@@ -48,7 +48,7 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
 }
 
 template<typename Operation, typename DataType>
-LIBSAKURA_SYMBOL(Status) DoBitOperationNew(Operation operation, size_t num_data,
+LIBSAKURA_SYMBOL(Status) DoBitOperation(Operation operation, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 	// Check parameter arguments.
@@ -90,7 +90,7 @@ LIBSAKURA_SYMBOL(Status) DoBitOperationNew(Operation operation, size_t num_data,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				return (data_value & (bit_mask | (static_cast<decltype(data_value)>(mask) - 1)));
 			}, num_data, data, edit_mask, result);
@@ -99,7 +99,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				return (data_value & (bit_mask | (static_cast<decltype(data_value)>(mask) - 1)));
 			}, num_data, data, edit_mask, result);
@@ -116,7 +116,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				decltype(data_value) x = (static_cast<decltype(data_value)>(mask) - 1);
 				return ((data_value ^ ~x) & (bit_mask | x));
@@ -126,7 +126,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonIm
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				decltype(data_value) x = (static_cast<decltype(data_value)>(mask) - 1);
 				return ((data_value ^ ~x) & (bit_mask | x));
@@ -144,7 +144,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonIm
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				decltype(data_value) x = ~(static_cast<decltype(data_value)>(mask) - 1);
 				return ((data_value ^ x) | (bit_mask & x));
@@ -154,7 +154,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUi
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				decltype(data_value) x = ~(static_cast<decltype(data_value)>(mask) - 1);
 				return ((data_value ^ x) | (bit_mask & x));
@@ -170,7 +170,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUi
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[], bool const edit_mask[],
 		uint8_t result[]) noexcept {
-	return DoBitOperationNew([](decltype(data[0]) data_value, uint8_t mask) {
+	return DoBitOperation([](decltype(data[0]) data_value, uint8_t mask) {
 		return (data_value ^ ~(static_cast<decltype(data_value)>(mask) - 1));
 	}, num_data, data, edit_mask, result);
 }
@@ -178,7 +178,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[], bool const edit_mask[],
 		uint32_t result[]) noexcept {
-	return DoBitOperationNew([](decltype(data[0]) data_value, uint8_t mask) {
+	return DoBitOperation([](decltype(data[0]) data_value, uint8_t mask) {
 		return (data_value ^ ~(static_cast<decltype(data_value)>(mask) - 1));
 	}, num_data, data, edit_mask, result);
 }
@@ -192,7 +192,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				return (data_value | (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
 			}, num_data, data, edit_mask, result);
@@ -201,7 +201,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				return (data_value | (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
 			}, num_data, data, edit_mask, result);
@@ -217,7 +217,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				return (data_value ^ (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
 			}, num_data, data, edit_mask, result);
@@ -226,7 +226,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperationNew(
+	return DoBitOperation(
 			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
 				return (data_value ^ (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
 			}, num_data, data, edit_mask, result);
