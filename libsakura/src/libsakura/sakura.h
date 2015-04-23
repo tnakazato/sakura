@@ -218,7 +218,7 @@ double LIBSAKURA_SYMBOL(GetCurrentTime)() LIBSAKURA_NOEXCEPT;
  */
 /**
  * @~english
- * @brief Checks if @a ptr is aligned at the boundary Sakura Library requires.
+ * @brief Checks if @a ptr points the aligned address Sakura Library requires.
  *
  * @param[in] ptr An address to be checked. NULL is allowed.
  * @return true if the address is aligned, otherwise false
