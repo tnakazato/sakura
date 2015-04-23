@@ -464,20 +464,21 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 		// x_base is ascending order
 		auto a1 = base_position[1] - base_position[0];
 		assert(a1 != decltype(a1)(0));
-		for (size_t i = 1; i < num_base - 1; ++i) {
-			auto const a2 = base_position[i + 1] - base_position[i];
+		for (size_t i = 2; i < num_base; ++i) {
+			auto const a2 = base_position[i] - base_position[i - 1];
 			assert(a2 != decltype(a2)(0));
-			auto const b1 = base_position[i + 1] - base_position[i - 1];
+			auto const b1 = base_position[i] - base_position[i - 2];
 			assert(b1 != decltype(b1)(0));
-			auto const u = a2 / (2.0 * b1);
-			auto const l = a1 / (2.0 * b1);
-			YDataType const r = 3.0
-					* ((base_data[i + 1] - base_data[i]) / YDataType(a2)
-							- (base_data[i] - base_data[i - 1]) / YDataType(a1))
-					/ YDataType(b1);
-			YDataType const denominator = 1.0 - upper_triangular[i - 1] * l;
-			upper_triangular[i] = u / denominator;
-			d2ydx2[i] = (r - l * d2ydx2[i - 1]) / denominator;
+			auto const u = a2 / (decltype(a2)(2.0) * b1);
+			auto const l = a1 / (decltype(a1)(2.0) * b1);
+			YDataType const r = YDataType(3.0)
+					* ((base_data[i] - base_data[i - 1]) / YDataType(a2)
+							- (base_data[i - 1] - base_data[i - 2])
+									/ YDataType(a1)) / YDataType(b1);
+			YDataType const denominator = YDataType(1.0)
+					- upper_triangular[i - 2] * l;
+			upper_triangular[i - 1] = u / denominator;
+			d2ydx2[i - 1] = (r - l * d2ydx2[i - 2]) / denominator;
 			a1 = a2;
 		}
 
