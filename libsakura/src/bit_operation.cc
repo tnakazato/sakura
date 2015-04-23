@@ -33,124 +33,6 @@
 // Vectorization by Compiler
 namespace {
 
-template<typename Operation, typename DataType>
-inline void OperateBitwise(Operation operation, size_t num_data,
-		DataType const *data, bool const *edit_mask, DataType *result) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(edit_mask));
-	// cast bool array to uint8_t array
-	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	auto adata = AssumeAligned(data);
-	auto aresult = AssumeAligned(result);
-	auto amask = AssumeAligned(mask8);
-	STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(amask[0]));
-	STATIC_ASSERT(true == 1);
-	STATIC_ASSERT(false == 0);
-	for (size_t i = 0; i < num_data; ++i) {
-		aresult[i] = operation(adata[i], amask[i]);
-	}
-}
-
-template<typename DataType>
-inline void OperateBitwiseAnd(DataType bit_mask, size_t num_data,
-		DataType const *data,
-		bool const *edit_mask, DataType *result) {
-
-	/* edit_mask = true: (mask8 - 1) = 00...0
-	 *                   -> (bit_mask | 00...0) = bit_mask,
-	 *           = false: (mask8 - 1) = 11...1
-	 *                   -> (bit_mask | 11...1) = 11...1
-	 *        where mask8 = (uint8_t) edit_mask */
-	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
-		return (in_data & (bit_mask | (static_cast<DataType>(mask) - 1)));
-	}, num_data, data, edit_mask, result);
-}
-
-template<typename DataType>
-inline void OperateBitwiseConverseNonImplication(DataType bit_mask,
-		size_t num_data, DataType const *data, bool const *edit_mask,
-		DataType *result) {
-
-	/* edit_mask = true: x = (mask8 - 1) = 00...0
-	 *                   -> (bit_mask | 00...0) = bit_mask,
-	 *                   ~x = 11...1 -> (data[i] ^ ~x) = ~data[i]
-	 *           = false: x = (mask8 - 1) = 11...1
-	 *                   -> (bit_mask | 11...1) = 11...1
-	 *                   ~x = 00...0 -> (data[i] ^ ~x) = data[i]
-	 *        where mask8 = (uint8_t) edit_mask  */
-	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
-		DataType x = (static_cast<DataType>(mask) - 1);
-		return ((in_data ^ ~x) & (bit_mask | x));
-	}, num_data, data, edit_mask, result);
-
-}
-
-template<typename DataType>
-inline void OperateBitwiseImplication(DataType bit_mask, size_t num_data,
-		DataType const *data, bool const *edit_mask, DataType *result) {
-
-	/* edit_mask = true: x = ~(mask8 - 1) = 11...1
-	 *                   -> (bit_mask & 11...1) = bit_mask,
-	 *                   -> (data[i] ^ 11...1) = ~data[i]
-	 *           = false: x = ~(mask8 - 1) = 00...0
-	 *                   -> (bit_mask & 00...0) = 00...0
-	 *                   (data[i] ^ 00...0) = data[i]
-	 *        where mask8 = (uint8_t) edit_mask  */
-	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
-		DataType x = ~(static_cast<DataType>(mask) - 1);
-		return ((in_data ^ x) | (bit_mask & x));
-	}, num_data, data, edit_mask, result);
-}
-
-template<typename DataType>
-inline void OperateBitwiseNot(size_t num_data, DataType const *data,
-bool const *edit_mask, DataType *result) {
-
-	/* edit_mask = true: ~(mask8 - 1) = 11...1
-	 *                   -> (data[i] ^ 11...1) = ~data[i],
-	 *           = false: ~(mask8 - 1) = 00...0
-	 *                   -> (data[i] ^ 00...0) = data[i]
-	 *        where mask8 = (uint8_t) edit_mask  */
-	OperateBitwise([](DataType in_data, uint8_t mask) {
-		return (in_data ^ ~(static_cast<DataType>(mask) - 1));
-	}, num_data, data, edit_mask, result);
-
-}
-
-template<typename DataType>
-inline void OperateBitwiseOr(DataType bit_mask, size_t num_data,
-		DataType const *data,
-		bool const *edit_mask, DataType *result) {
-
-	/* edit_mask = true: ~(mask8 - 1) = 11...1
-	 *                   -> (bit_mask & 11...1) = bit_mask,
-	 *           = false: ~(mask8 - 1) = 00...0
-	 *                   -> (bit_mask & 00...0) = 00...0
-	 *        where mask8 = (uint8_t) edit_mask  */
-	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
-		return (in_data | (bit_mask & ~(static_cast<DataType>(mask) - 1)));
-	}, num_data, data, edit_mask, result);
-
-}
-
-template<typename DataType>
-inline void OperateBitwiseXor(DataType bit_mask, size_t num_data,
-		DataType const *data,
-		bool const *edit_mask, DataType *result) {
-
-	/* edit_mask = true: ~(mask8 - 1) = 11...1
-	 *                   -> (bit_mask & 11...1) = bit_mask,
-	 *           = false: ~(mask8 - 1) = 00...0
-	 *                   -> (bit_mask & 00...0) = 00...0
-	 *        where mask8 = (uint8_t) edit_mask  */
-	OperateBitwise([bit_mask](DataType in_data, uint8_t mask) {
-		return (in_data ^ (bit_mask & ~(static_cast<DataType>(mask) - 1)));
-	}, num_data, data, edit_mask, result);
-
-}
-
 template<typename DataType>
 bool IsValidArguments(DataType const *data, bool const *edit_mask,
 		DataType const *result) {
@@ -165,9 +47,9 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
 	return true;
 }
 
-template<typename Func, typename DataType>
-LIBSAKURA_SYMBOL(Status) DoBitOperation(Func func, DataType bit_mask,
-		size_t num_data, DataType const *data,
+template<typename Operation, typename DataType>
+LIBSAKURA_SYMBOL(Status) DoBitOperationNew(Operation operation, size_t num_data,
+		DataType const *data,
 		bool const *edit_mask, DataType *result) {
 	// Check parameter arguments.
 	if (!IsValidArguments(data, edit_mask, result)) {
@@ -175,7 +57,18 @@ LIBSAKURA_SYMBOL(Status) DoBitOperation(Func func, DataType bit_mask,
 	}
 	// Now actual operation
 	try {
-		func(/*bit_mask, num_data, data, edit_mask, result*/);
+		// cast bool array to uint8_t array
+		uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
+		assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
+		auto adata = AssumeAligned(data);
+		auto aresult = AssumeAligned(result);
+		auto amask = AssumeAligned(mask8);
+		STATIC_ASSERT(sizeof(edit_mask[0]) == sizeof(amask[0]));
+		STATIC_ASSERT(true == 1);
+		STATIC_ASSERT(false == 0);
+		for (size_t i = 0; i < num_data; ++i) {
+			aresult[i] = operation(adata[i], amask[i]);
+		}
 	} catch (...) {
 		// an exception is thrown during operation
 		// abort if assertion is enabled. if not, return kUnknownError status.
@@ -189,127 +82,152 @@ LIBSAKURA_SYMBOL(Status) DoBitOperation(Func func, DataType bit_mask,
 /* anonymous namespace */
 
 // Bit operation AND
+/* edit_mask = true: (mask8 - 1) = 00...0
+ *                   -> (bit_mask | 00...0) = bit_mask,
+ *           = false: (mask8 - 1) = 11...1
+ *                   -> (bit_mask | 11...1) = 11...1
+ *        where mask8 = (uint8_t) edit_mask */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				return (data_value & (bit_mask | (static_cast<decltype(data_value)>(mask) - 1)));
+			}, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseAnd(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				return (data_value & (bit_mask | (static_cast<decltype(data_value)>(mask) - 1)));
+			}, num_data, data, edit_mask, result);
 }
 
 // Bit operation, Converse Nonimplication
+/* edit_mask = true: x = (mask8 - 1) = 00...0
+ *                   -> (bit_mask | 00...0) = bit_mask,
+ *                   ~x = 11...1 -> (data[i] ^ ~x) = ~data[i]
+ *           = false: x = (mask8 - 1) = 11...1
+ *                   -> (bit_mask | 11...1) = 11...1
+ *                   ~x = 00...0 -> (data[i] ^ ~x) = data[i]
+ *        where mask8 = (uint8_t) edit_mask  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseConverseNonImplication(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				decltype(data_value) x = (static_cast<decltype(data_value)>(mask) - 1);
+				return ((data_value ^ ~x) & (bit_mask | x));
+			}, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseConverseNonImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseConverseNonImplication(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				decltype(data_value) x = (static_cast<decltype(data_value)>(mask) - 1);
+				return ((data_value ^ ~x) & (bit_mask | x));
+			}, num_data, data, edit_mask, result);
 }
 
 // Bit operation, Material Implication
+/* edit_mask = true: x = ~(mask8 - 1) = 11...1
+ *                   -> (bit_mask & 11...1) = bit_mask,
+ *                   -> (data[i] ^ 11...1) = ~data[i]
+ *           = false: x = ~(mask8 - 1) = 00...0
+ *                   -> (bit_mask & 00...0) = 00...0
+ *                   (data[i] ^ 00...0) = data[i]
+ *        where mask8 = (uint8_t) edit_mask  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				decltype(data_value) x = ~(static_cast<decltype(data_value)>(mask) - 1);
+				return ((data_value ^ x) | (bit_mask & x));
+			}, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseImplication(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				decltype(data_value) x = ~(static_cast<decltype(data_value)>(mask) - 1);
+				return ((data_value ^ x) | (bit_mask & x));
+			}, num_data, data, edit_mask, result);
 }
 
 // Bit operation NOT
+/* edit_mask = true: ~(mask8 - 1) = 11...1
+ *                   -> (data[i] ^ 11...1) = ~data[i],
+ *           = false: ~(mask8 - 1) = 00...0
+ *                   -> (data[i] ^ 00...0) = data[i]
+ *        where mask8 = (uint8_t) edit_mask  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
 		size_t num_data, uint8_t const data[], bool const edit_mask[],
 		uint8_t result[]) noexcept {
-	// Check parameter arguments.
-	if (!IsValidArguments(data, edit_mask, result)) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	// Now actual operation
-	try {
-		OperateBitwiseNot(num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperationNew([](decltype(data[0]) data_value, uint8_t mask) {
+		return (data_value ^ ~(static_cast<decltype(data_value)>(mask) - 1));
+	}, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint32)(
 		size_t num_data, uint32_t const data[], bool const edit_mask[],
 		uint32_t result[]) noexcept {
-	// Check parameter arguments.
-	if (!IsValidArguments(data, edit_mask, result)) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	// Now actual operation
-	try {
-		OperateBitwiseNot(num_data, data, edit_mask, result);
-	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
-	return LIBSAKURA_SYMBOL(Status_kOK);
+	return DoBitOperationNew([](decltype(data[0]) data_value, uint8_t mask) {
+		return (data_value ^ ~(static_cast<decltype(data_value)>(mask) - 1));
+	}, num_data, data, edit_mask, result);
 }
 
 // Bit operation OR
+/* edit_mask = true: ~(mask8 - 1) = 11...1
+ *                   -> (bit_mask & 11...1) = bit_mask,
+ *           = false: ~(mask8 - 1) = 00...0
+ *                   -> (bit_mask & 00...0) = 00...0
+ *        where mask8 = (uint8_t) edit_mask  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				return (data_value | (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
+			}, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseOr(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				return (data_value | (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
+			}, num_data, data, edit_mask, result);
 }
 
-// Bit operation XOR
+/* Bit operation XOR */
+/* edit_mask = true: ~(mask8 - 1) = 11...1
+ *                   -> (bit_mask & 11...1) = bit_mask,
+ *           = false: ~(mask8 - 1) = 00...0
+ *                   -> (bit_mask & 00...0) = 00...0
+ *        where mask8 = (uint8_t) edit_mask
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
 		uint8_t bit_mask, size_t num_data, uint8_t const data[],
 		bool const edit_mask[], uint8_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				return (data_value ^ (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
+			}, num_data, data, edit_mask, result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)(
 		uint32_t bit_mask, size_t num_data, uint32_t const data[],
 		bool const edit_mask[], uint32_t result[]) noexcept {
-	return DoBitOperation(
-			[=] {OperateBitwiseXor(bit_mask, num_data, data, edit_mask, result);},
-			bit_mask, num_data, data, edit_mask, result);
+	return DoBitOperationNew(
+			[bit_mask](decltype(data[0]) data_value, uint8_t mask) {
+				return (data_value ^ (bit_mask & ~(static_cast<decltype(data_value)>(mask) - 1)));
+			}, num_data, data, edit_mask, result);
 }
