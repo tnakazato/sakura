@@ -7,7 +7,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	set(NativeArch "-march=native")
 	set(DefaultArch "-mtune=generic")
 	set(SandyBridgeArch "-march=corei7-avx")
-	set(HaswellArch "-march=core-avx2 -ffast-math -mfma") # -ffast-math is required to enable FMA
+	set(HaswellArch "-march=core-avx2 -mfma") # -ffast-math is required to enable FMA
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	set(NativeArch "-march=native")
 	set(DefaultArch "-mtune=generic")
