@@ -888,6 +888,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
 	CHECK_ARGS(is_valid != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(is_valid));
+	CHECK_ARGS(degree_of_freedom > 0);
 	CHECK_ARGS(result != nullptr);
 
 #if 1
@@ -898,7 +899,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
 			sq_diff += diff * diff;
 		}
 	}
-	*result = sqrt(sq_diff / degree_of_freedom);
+	*result = std::sqrt(sq_diff / degree_of_freedom);
 #else
 	{
 		size_t n = 0;
@@ -917,7 +918,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStddevFloat)(
 		if (n < 2) {
 			*result = 0.;
 		}
-		*result = M2 / (n - 1);
+		*result = std::sqrt(M2 / (n - 1));
 	}
 #endif
 	return LIBSAKURA_SYMBOL(Status_kOK);
