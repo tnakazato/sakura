@@ -311,8 +311,8 @@ TEST(Statistics, ComputeStatistics) {
 			ref.mean = (data.size() - 1) / 2.;
 			auto rms2 = Rms2(data.size(), data.data(), is_valid.data())
 					/ data.size();
-			ref.rms = sqrt(rms2);
-			ref.stddev = sqrt(rms2 - ref.mean * ref.mean);
+			ref.rms = std::sqrt(rms2);
+			ref.stddev = std::sqrt(std::abs(rms2 - ref.mean * ref.mean));
 
 			CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
 					TestResult, TestResult);
@@ -345,8 +345,8 @@ TEST(Statistics, ComputeStatistics) {
 					v = data[min_index];
 					rms2 += v * v;
 					rms2 /= data.size();
-					ref.rms = sqrt(rms2);
-					ref.stddev = sqrt(rms2 - ref.mean * ref.mean);
+					ref.rms = std::sqrt(rms2);
+					ref.stddev = std::sqrt(std::abs(rms2 - ref.mean * ref.mean));
 
 					CallAndTestResult(ref, data.size(), data.data(), is_valid.data(), TestResult, TestResult);
 
@@ -372,8 +372,8 @@ TEST(Statistics, ComputeStatistics) {
 		ref.mean = (data.size() - 1) / 2.;
 		auto rms2 = Rms2(data.size(), data.data(), is_valid.data())
 				/ data.size();
-		ref.rms = sqrt(rms2);
-		ref.stddev = sqrt(rms2 - ref.mean * ref.mean);
+		ref.rms = std::sqrt(rms2);
+		ref.stddev = std::sqrt(std::abs(rms2 - ref.mean * ref.mean));
 
 		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
 				TestResult, TestResult);
@@ -503,7 +503,7 @@ TEST(Statistics, ComputeStatistics) {
 		ref.sum = sum;
 		ref.mean = mean;
 		ref.rms = std::sqrt(rms2);
-		ref.stddev = std::sqrt(rms2 - mean * mean);
+		ref.stddev = std::sqrt(std::abs(rms2 - mean * mean));
 
 		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
 				TestResult, TestResult);
@@ -536,7 +536,7 @@ TEST(Statistics, ComputeStatistics) {
 		ref.sum = sum;
 		ref.mean = mean;
 		ref.rms = std::sqrt(rms2);
-		ref.stddev = std::sqrt(rms2 - mean * mean);
+		ref.stddev = std::sqrt(std::abs(rms2 - mean * mean));
 
 		CallAndTestResult(ref, base + 7, data.data(), is_valid.data(),
 				TestResult, TestResult);
@@ -672,11 +672,11 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 				+ double(base + 7) * double(base + 7)
 				+ double(base + 13) * double(base + 13)
 				+ double(base + 16) * double(base + 16)) / 4.;
-		ref.rms = sqrt(rms2);
+		ref.rms = std::sqrt(rms2);
 		constexpr double variance = ((4. - 10.) * (4. - 10.)
 				+ (7. - 10.) * (7. - 10.) + (13. - 10.) * (13. - 10.)
 				+ (16. - 10.) * (16. - 10.)) / 4.;
-		ref.stddev = sqrt(variance);
+		ref.stddev = std::sqrt(variance);
 
 		auto compare = [](LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
 				LIBSAKURA_SYMBOL(StatisticsResultFloat) const &result) {
@@ -728,8 +728,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		double stddev = 0;
 		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, result.mean,
 				data.size(), data.data(), is_valid.data(), &stddev);
-		//std::cout << std::setprecision(16) << sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
-		EXPECT_DOUBLE_EQ(sqrt(variance), stddev);
+		//std::cout << std::setprecision(16) << std::sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
+		EXPECT_DOUBLE_EQ(std::sqrt(variance), stddev);
 	}
 	{
 		size_t elements = data.size() - 4 + 1;
@@ -761,7 +761,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 				+ double(data[3]) * double(data[3])) * ((elements - 1) / 4);
 		rms2 += double(spike) * double(spike);
 		rms2 /= elements;
-		ref.rms = sqrt(rms2);
+		ref.rms = std::sqrt(rms2);
 		double variance = (double(data[0] - ref.mean)
 				* double(data[0] - ref.mean)
 				+ double(data[1] - ref.mean) * double(data[1] - ref.mean)
@@ -770,7 +770,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 				* ((elements - 1) / 4);
 		variance += (spike - ref.mean) * (spike - ref.mean);
 		variance /= elements;
-		ref.stddev = sqrt(variance);
+		ref.stddev = std::sqrt(variance);
 
 		auto compare = [](LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
 				LIBSAKURA_SYMBOL(StatisticsResultFloat) const &result) {
@@ -839,9 +839,9 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		double stddev = 0;
 		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, result.mean,
 				elements, data.data(), is_valid.data(), &stddev);
-		//std::cout << std::setprecision(16) << sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
-		//EXPECT_DOUBLE_EQ(sqrt(variance), stddev);
-		EXPECT_NEAR(sqrt(variance), stddev, 3.89e-05);
+		//std::cout << std::setprecision(16) << std::sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
+		//EXPECT_DOUBLE_EQ(std::sqrt(variance), stddev);
+		EXPECT_NEAR(std::sqrt(variance), stddev, 3.89e-05);
 	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
