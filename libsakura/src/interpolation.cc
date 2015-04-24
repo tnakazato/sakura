@@ -498,6 +498,7 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 			assert(a2 != decltype(a2)(0));
 			WDataType const b1 = static_cast<WDataType>(base_position[i]
 					- base_position[i - 2]);
+			//WDataType const b1 = a2 + a1;
 			assert(b1 != decltype(b1)(0));
 			WDataType const d2 = static_cast<WDataType>(base_data[i]
 					- base_data[i - 1]);
@@ -710,12 +711,13 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 		XDataType const dydx = static_cast<XDataType>(base_data[lower_index + 1]
 				- base_data[lower_index])
 				/ (base_position[lower_index + 1] - base_position[lower_index]);
+		auto const position_lower = base_position[lower_index];
+		auto const data_lower = base_data[lower_index];
 		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
-					iarray, i)] = base_data[lower_index]
+					iarray, i)] = data_lower
 					+ static_cast<YDataType>(dydx
-							* (interpolated_position[i]
-									- base_position[lower_index]));
+							* (interpolated_position[i] - position_lower));
 		}
 	}
 };
@@ -880,16 +882,19 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 		auto const dx = base_position[lower_index + 1]
 				- base_position[lower_index];
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
+		auto const position_upper = base_position[lower_index + 1];
+		auto const data_lower = base_data[lower_index];
+		auto const data_upper = base_data[lower_index + 1];
+		auto const d2ydx2_lower = d2ydx2[lower_index];
+		auto const d2ydx2_upper = d2ydx2[lower_index + 1];
 		for (size_t i = index_from; i < index_to; ++i) {
-			auto const a = (base_position[lower_index + 1]
-					- interpolated_position[i]) / dx;
+			auto const a = (position_upper - interpolated_position[i]) / dx;
 			auto const b = decltype(a)(1.0) - a;
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
-					iarray, i)] = static_cast<YDataType>(a
-					* base_data[lower_index] + b * base_data[lower_index + 1]
-					+ ((a * a * a - a) * d2ydx2[lower_index]
-							+ (b * b * b - b) * d2ydx2[lower_index + 1])
-							* dx_factor);
+					iarray, i)] = static_cast<YDataType>(a * data_lower
+					+ b * data_upper
+					+ ((a * a * a - a) * d2ydx2_lower
+							+ (b * b * b - b) * d2ydx2_upper) * dx_factor);
 		}
 	}
 };
