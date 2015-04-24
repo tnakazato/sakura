@@ -1706,7 +1706,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 		double const base_position[/*num_base*/], size_t num_array,
 		float const base_data[/*num_base*num_array*/],
 		bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
-		double const interpolate_position[/*num_interpolated*/],
+		double const interpolated_position[/*num_interpolated*/],
 		float interpolated_data[/*num_interpolated*num_array*/],
 		bool interpolated_mask[/*num_interpolated*num_array*/])
 				LIBSAKURA_NOEXCEPT;
