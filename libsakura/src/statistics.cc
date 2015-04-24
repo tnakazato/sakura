@@ -649,16 +649,18 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 	assert(num_data <= INT32_MAX);
 	for (int32_t i = start; i < static_cast<int32_t>(num_data); ++i) {
 		if (is_valid[i]) {
+			auto const float_data = data[i];
+			double const double_data = float_data;
 			++counted;
-			total += data[i];
-			square_total += double(data[i]) * double(data[i]);
-			if (!std::isnan(data[i])) {
-				if (std::isnan(result.min) || data[i] < result.min) {
-					result.min = data[i];
+			total += double_data;
+			square_total += double_data * double_data;
+			if (!std::isnan(float_data)) {
+				if (std::isnan(result.min) || float_data < result.min) {
+					result.min = float_data;
 					result.index_of_min = i;
 				}
-				if (std::isnan(result.max) || data[i] > result.max) {
-					result.max = data[i];
+				if (std::isnan(result.max) || float_data > result.max) {
+					result.max = float_data;
 					result.index_of_max = i;
 				}
 			}
@@ -971,8 +973,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat
 		size_t valid_count = 0;
 		for (size_t i = 0; i < num_data; ++i) {
 			if (is_valid[i]) {
-				assert(!std::isnan(data[i]) && !std::isinf(data[i]));
-				data[valid_count] = data[i];
+				auto const the_data = data[i];
+				assert(!std::isnan(the_data) && !std::isinf(the_data));
+				data[valid_count] = the_data;
 				++valid_count;
 			}
 		}
