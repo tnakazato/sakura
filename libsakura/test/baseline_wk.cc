@@ -1985,8 +1985,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 		cout << "        " << bv_param_names[item]
 				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
 		size_t const num_pieces(1);
-		size_t num_data;
-		size_t num_basis_data(10);
+		size_t num_data(0);
 		switch (item) {
 		case BV_kDataLTNumBases:
 			num_data = 2;
@@ -2000,6 +1999,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 		default:
 			assert(false);
 		}
+		size_t num_basis_data(10);
 
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
@@ -2328,8 +2328,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 		cout << "        " << bv_param_names[item]
 				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
 		size_t const num_pieces(1);
-		size_t num_data;
-		size_t num_basis_data(10);
+		size_t num_data(0);
 		switch (item) {
 		case BV_kDataLTNumBases:
 			num_data = 2;
@@ -2343,6 +2342,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 		default:
 			assert(false);
 		}
+		size_t num_basis_data(10);
 
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
