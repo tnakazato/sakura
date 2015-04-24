@@ -305,24 +305,14 @@ void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
  */
 float *LIBSAKURA_SYMBOL(AlignFloat)(size_t elements_in_arena, float *arena,
 		size_t elements_required) LIBSAKURA_NOEXCEPT;
+
 /**
  * @~japanese
- * @brief @a arena がアラインされていないならば、
- * アドレスを必要最小限増加させ、アラインされたアドレスを返す
- *
- * @a arena がアラインされていれば@a arena を返す。
- *
- * @param[in] arena 確保されている領域の先頭アドレス
- * @param[in] elements_in_arena 確保されている要素数
- * @param[in] elements_required アライン後も利用可能でなければならない要素数
- * @return アラインされたアドレス。もし、 @a elements_required を格納するのに
- * 十分な大きさの@a elements_in_arena が無いならば、 NULL を返す。
+ * @copydoc sakura_AlignFloat()
  *
  * @~english
- * @brief Same as @ref sakura_AlignFloat except the type of the array's element is double rather than float.
+ * @copydoc sakura_AlignFloat()
  *
- * @~
- * MT-safe
  */
 double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 		size_t elements_required) LIBSAKURA_NOEXCEPT;
