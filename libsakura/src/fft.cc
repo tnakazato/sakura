@@ -23,6 +23,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
+#include <algorithm>
 
 #if defined(__SSE2__) && !defined(ARCH_SCALAR)
 #include "emmintrin.h"
@@ -54,15 +55,10 @@ struct LastDimFlip {
 			T *RESTRICT dst) {
 		auto src_aligned = AssumeAligned(src, sizeof(T));
 		auto dst_aligned = AssumeAligned(dst, sizeof(T));
-		size_t i;
+		assert(len >= dst_pos);
 		size_t end = len - dst_pos;
-		for (i = 0; i < end; ++i, ++dst_pos) {
-			dst_aligned[dst_pos] = src_aligned[i];
-		}
-		dst_pos = 0;
-		for (; i < len; ++i, ++dst_pos) {
-			dst_aligned[dst_pos] = src_aligned[i];
-		}
+		std::copy_n(&src_aligned[0], end, &dst_aligned[dst_pos]);
+		std::copy_n(&src_aligned[end], dst_pos, &dst_aligned[0]);
 	}
 };
 
@@ -72,9 +68,7 @@ struct LastDimNoFlip {
 			T *RESTRICT dst) {
 		auto src_aligned = AssumeAligned(src, sizeof(T));
 		auto dst_aligned = AssumeAligned(dst, sizeof(T));
-		for (size_t i = 0; i < len; ++i) {
-			dst_aligned[i] = src_aligned[i];
-		}
+		std::copy_n(src_aligned, len, dst_aligned);
 	}
 };
 
