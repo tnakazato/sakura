@@ -102,7 +102,6 @@ struct LIBSAKURA_SYMBOL(FMA) {
 			typename GetType<Packet, T>::type const &c) {
 		return (a * b) + c;	// compiler select fmadd instruction if possible
 	}
-
 	template<typename Packet, typename T>
 	static typename GetType<Packet, T>::type MultiplySub(
 			typename GetType<Packet, T>::type const &a,
@@ -111,6 +110,103 @@ struct LIBSAKURA_SYMBOL(FMA) {
 		return (a * b) - c;	// compiler select fmsub instruction if possible
 	}
 };
+
+#if defined(__AVX2__)
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type const &c) {
+	return _mm256_fmadd_pd(a, b, c);
+}
+
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), double>::type const &c) {
+	return _mm256_fmsub_pd(a, b, c);
+}
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type const &c) {
+	return _mm256_fmadd_ps(a, b, c);
+}
+
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketAVX), float>::type const &c) {
+	return _mm256_fmsub_ps(a, b, c);
+}
+
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type const &c) {
+	return _mm_fmadd_pd(a, b, c);
+}
+
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), double>::type const &c) {
+	return _mm_fmsub_pd(a, b, c);
+}
+
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type const &c) {
+	return _mm_fmadd_ps(a, b, c);
+}
+
+template<>
+typename LIBSAKURA_SYMBOL(FMA)::GetType<LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type LIBSAKURA_SYMBOL(FMA)::MultiplySub<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>(
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type const &a,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type const &b,
+		typename LIBSAKURA_SYMBOL(FMA)::GetType<
+		LIBSAKURA_SYMBOL(SimdPacketSSE), float>::type const &c) {
+	return _mm_fmsub_ps(a, b, c);
+}
+#endif
 
 /**
  * @~japanese
