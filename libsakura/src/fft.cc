@@ -23,7 +23,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdint>
-#include <algorithm>
 
 #if defined(__SSE2__) && !defined(ARCH_SCALAR)
 #include "emmintrin.h"
@@ -57,8 +56,14 @@ struct LastDimFlip {
 		auto dst_aligned = AssumeAligned(dst, sizeof(T));
 		assert(len >= dst_pos);
 		size_t end = len - dst_pos;
-		std::copy_n(&src_aligned[0], end, &dst_aligned[dst_pos]);
-		std::copy_n(&src_aligned[end], dst_pos, &dst_aligned[0]);
+		size_t i;
+		for (i = 0; i < end; ++i, ++dst_pos) {
+			dst_aligned[dst_pos] = src_aligned[i];
+		}
+		dst_pos = 0;
+		for (; i < len; ++i, ++dst_pos) {
+			dst_aligned[dst_pos] = src_aligned[i];
+		}
 	}
 };
 
@@ -68,7 +73,9 @@ struct LastDimNoFlip {
 			T *RESTRICT dst) {
 		auto src_aligned = AssumeAligned(src, sizeof(T));
 		auto dst_aligned = AssumeAligned(dst, sizeof(T));
-		std::copy_n(src_aligned, len, dst_aligned);
+		for (size_t i = 0; i < len; ++i) {
+			dst_aligned[i] = src_aligned[i];
+		}
 	}
 };
 
@@ -78,8 +85,9 @@ struct LastDimFlip<Type16> {
 	static void Flip(size_t len, size_t dst_pos, Type16 const *RESTRICT src,
 			Type16 *RESTRICT dst) {
 		STATIC_ASSERT(sizeof(__m128d) == sizeof(*src));
-		size_t i;
+		assert(len >= dst_pos);
 		size_t end = len - dst_pos;
+		size_t i;
 		for (i = 0; i < end; ++i, ++dst_pos) {
 			_mm_store_pd(reinterpret_cast<double*>(&dst[dst_pos]),
 			_mm_load_pd(reinterpret_cast<double const*>(&src[i])));
