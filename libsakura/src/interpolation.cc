@@ -599,7 +599,6 @@ struct InterpolatorInterface {
 	}
 };
 
-// TODO: documentation needs to be improved.
 /**
  * Nearest interpolation implementation.
  *
@@ -674,6 +673,7 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			LinearInterpolatorImpl<XDataType, YDataType>,
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	typedef typename TypePromotion<YDataType>::WiderType WDataType;
 	/**
 	 * Perform linear interpolation.
 	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
@@ -708,16 +708,19 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
-		XDataType const dydx = static_cast<XDataType>(base_data[lower_index + 1]
+		WDataType const dydx = static_cast<WDataType>(base_data[lower_index + 1]
 				- base_data[lower_index])
 				/ (base_position[lower_index + 1] - base_position[lower_index]);
-		auto const position_lower = base_position[lower_index];
-		auto const data_lower = base_data[lower_index];
+		WDataType const position_lower =
+				static_cast<WDataType>(base_position[lower_index]);
+		WDataType const data_lower =
+				static_cast<WDataType>(base_data[lower_index]);
 		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
-					iarray, i)] = data_lower
-					+ static_cast<YDataType>(dydx
-							* (interpolated_position[i] - position_lower));
+					iarray, i)] = static_cast<YDataType>(data_lower
+					+ dydx
+							* (static_cast<WDataType>(interpolated_position[i])
+									- position_lower));
 		}
 	}
 };
@@ -735,6 +738,7 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			PolynomialInterpolatorImpl<XDataType, YDataType>,
 			PolynomialWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	typedef typename TypePromotion<YDataType>::WiderType WDataType;
 	/**
 	 * Perform linear interpolation.
 	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
@@ -788,8 +792,6 @@ private:
 			XDataType const base_position[], YDataType const base_data[],
 			size_t lower_index, XDataType interpolated_position,
 			WorkingData const * const work_data) {
-		typedef typename WorkingData::WDataType WDataType;
-
 		// working pointers
 		auto const x_ptr = &(base_position[lower_index]);
 		auto const y_ptr = &(base_data[lower_index]);
@@ -810,7 +812,7 @@ private:
 			// d[n-m-1].
 			for (size_t i = 0; i < work_data->num_elements - m; ++i) {
 				auto cd = c[i + 1] - d[i];
-				auto const dx = x_ptr[i] - x_ptr[i + m];
+				auto const dx = static_cast<WDataType>(x_ptr[i] - x_ptr[i + m]);
 				assert(dx != 0);
 				cd /= static_cast<WDataType>(dx);
 				c[i] = static_cast<WDataType>(x_ptr[i] - interpolated_position)
@@ -842,6 +844,7 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			SplineInterpolatorImpl<XDataType, YDataType>,
 			SplineWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
+	typedef typename TypePromotion<YDataType>::WiderType WDataType;
 	/**
 	 * Perform spline interpolation.
 	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
@@ -879,16 +882,19 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
 		auto const * const d2ydx2 = work_data->second_derivative.pointer;
-		auto const dx = base_position[lower_index + 1]
-				- base_position[lower_index];
+		auto const dx = static_cast<WDataType>(base_position[lower_index + 1]
+				- base_position[lower_index]);
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
-		auto const position_upper = base_position[lower_index + 1];
-		auto const data_lower = base_data[lower_index];
-		auto const data_upper = base_data[lower_index + 1];
+		auto const position_upper =
+				static_cast<WDataType>(base_position[lower_index + 1]);
+		auto const data_lower = static_cast<WDataType>(base_data[lower_index]);
+		auto const data_upper =
+				static_cast<WDataType>(base_data[lower_index + 1]);
 		auto const d2ydx2_lower = d2ydx2[lower_index];
 		auto const d2ydx2_upper = d2ydx2[lower_index + 1];
 		for (size_t i = index_from; i < index_to; ++i) {
-			auto const a = (position_upper - interpolated_position[i]) / dx;
+			auto const a = (position_upper
+					- static_cast<WDataType>(interpolated_position[i])) / dx;
 			auto const b = decltype(a)(1.0) - a;
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
 					iarray, i)] = static_cast<YDataType>(a * data_lower
