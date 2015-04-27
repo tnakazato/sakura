@@ -372,12 +372,47 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 			if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
 				out_mask[i] = false;
 				clipped_indices[*num_clipped] = i;
-				(*num_clipped)++;
+				++(*num_clipped);
 			}
 		}
 	}
 }
 
+//------------
+inline void ClipDataPiecewise(size_t num_data, float const *data_arg,
+bool const *in_mask_arg, float const lower_bound, float const upper_bound,
+bool *out_mask_arg, size_t *clipped_indices_arg, size_t num_pieces,
+		double const *boundary, 
+		size_t *num_clipped) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	auto data = AssumeAligned(data_arg);
+	auto in_mask = AssumeAligned(in_mask_arg);
+	auto out_mask = AssumeAligned(out_mask_arg);
+	auto clipped_indices = AssumeAligned(clipped_indices_arg);
+
+	*num_clipped = 0;
+
+	for (size_t i = 0; i < num_pieces; ++i) {
+		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
+		size_t end_idx =
+				(i < num_pieces - 1) ?
+						static_cast<size_t>(boundary[i + 1]) : num_data;
+		for (size_t j = start_idx; j < end_idx; ++j) {
+			if (in_mask[j]) {
+				if ((data[j] - lower_bound) * (upper_bound - data[j]) < 0.0f) {
+					out_mask[j] = false;
+					clipped_indices[*num_clipped] = i;
+					++(*num_clipped);
+				}
+			}
+		}
+	}
+}
+//------------
+/*
 inline void ClipDataPiecewise(size_t num_data, float const *data_arg,
 bool const *in_mask_arg, float const lower_bound, float const upper_bound,
 bool *out_mask_arg, size_t *clipped_indices_arg, size_t num_pieces,
@@ -413,6 +448,7 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t num_pieces,
 		}
 	}
 }
+*/
 
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
@@ -603,7 +639,11 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_raw(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*coeff_raw) * num_coeff_raw, &coeff_raw));
+
 	uint16_t num_fitting_max = std::max((uint16_t) 1, num_fitting_max_arg);
+	size_t num_unmasked_data = num_data;
+	size_t num_clipped = num_data;
+	/*
 	size_t *num_unmasked_data = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_num_unmasked_data(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -616,6 +656,7 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*num_clipped) * num_pieces, &num_clipped));
 	GetUnmaskedDataNumbers(num_data, mask, num_pieces, boundary, num_clipped);
+	*/
 
 	for (size_t i = 0; i < num_data; ++i) {
 		final_mask[i] = mask[i];
@@ -636,6 +677,12 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 
 	try {
 		for (uint16_t i = 0; i < num_fitting_max; ++i) {
+			if (num_unmasked_data < num_bases) {
+				*baseline_status = LIBSAKURA_SYMBOL(
+						BaselineStatus_kNotEnoughData);
+				throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
+			}
+		        /*
 			for (size_t j = 0; j < num_pieces; ++j) {
 				if (num_unmasked_data[j] < baseline_context->num_bases) {
 					*baseline_status = LIBSAKURA_SYMBOL(
@@ -643,16 +690,11 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 					throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
 				}
 			}
+			*/
 			status = LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineNewDouble)(
 					num_data, data, final_mask, num_pieces,
 					baseline_context->basis_data, aux_basis, lsq_matrix,
 					lsq_vector);
-			//-------------------------------------------
-			/*
-			 LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineDouble)(
-			 num_data, data, final_mask, num_pieces, boundary,
-			 baseline_context->basis_data, lsq_matrix, lsq_vector);
-			 */
 			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in GetLeastSquareFittingCoefficients.");
@@ -680,6 +722,16 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 				float clip_threshold_lower = result.mean - clip_threshold_abs;
 				float clip_threshold_upper = result.mean + clip_threshold_abs;
+				//------------
+				ClipDataPiecewise(num_data, residual_data, final_mask,
+						clip_threshold_lower, clip_threshold_upper, final_mask,
+						clipped_indices, num_pieces, boundary, &num_clipped);
+				if (num_clipped == 0) {
+					break;
+				}
+				num_unmasked_data = result.count - num_clipped;
+				//------------
+				/*
 				size_t num_clipped_sum;
 				ClipDataPiecewise(num_data, residual_data, final_mask,
 						clip_threshold_lower, clip_threshold_upper, final_mask,
@@ -691,6 +743,7 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 				for (size_t j = 0; j < num_pieces; ++j) {
 					num_unmasked_data[j] = result.count - num_clipped[j];
 				}
+				*/
 			}
 		}
 		if (out != nullptr) {

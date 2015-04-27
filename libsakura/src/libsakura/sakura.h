@@ -2107,7 +2107,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  		size_t const num_data, float const data[/*num_data*/],
  		bool const mask[/*num_data*/], size_t const num_boundary,
  		double const basis_data[/*4*num_data*/],
- 		double const aux_basis_data[/*num_data * num_boundary*/],
+ 		double const aux_basis_data[/*num_boundary*num_data*/],
  		double lsq_matrix[/*(num_boundary+3)*(num_boundary+3)*/],
  		double lsq_vector[/*num_boundary+3*/])
  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
