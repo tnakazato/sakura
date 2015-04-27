@@ -24,6 +24,7 @@
 #include <cassert>
 #include <climits>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include <libsakura/localdef.h>
@@ -35,26 +36,6 @@ namespace {
 
 // a logger for this module
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("interpolation");
-
-/**
- * @a TypePromotion provides a mapping between base type and working data type
- * that will be a type for working array. In general, type with higher accuracy
- * (@a WiderType) will be set for working data type.
- *
- * @tparam Base base data type
- */
-template<typename Base> struct TypePromotion {
-};
-
-#define TYPE_PROMOTION(Base, Narrow, Wide)  \
-template<> \
-struct TypePromotion<Base> { \
-        using NarrowerType = Narrow; \
-        using WiderType = Wide; \
-}
-
-// Set WiderType to double for Base type of both float and double
-TYPE_PROMOTION(float, float, double);TYPE_PROMOTION(double, float, double);
 
 /**
  * @struct StorageAndAlignedPointer
@@ -362,7 +343,7 @@ struct CustomizedMemoryManagement {
  */
 template<class XDataType, class YDataType>
 struct PolynomialWorkingData: CustomizedMemoryManagement {
-	typedef typename TypePromotion<XDataType>::WiderType WDataType;
+	typedef typename std::common_type<XDataType, YDataType>::type WDataType;
 
 	/**
 	 * The @a Allocate method creates @a PolynomialWorkingData instance and return it.
@@ -424,7 +405,7 @@ struct PolynomialWorkingData: CustomizedMemoryManagement {
  */
 template<class XDataType, class YDataType>
 struct SplineWorkingData: public CustomizedMemoryManagement {
-	typedef typename TypePromotion<YDataType>::WiderType WDataType;
+	typedef typename std::common_type<XDataType, YDataType>::type WDataType;
 
 	/**
 	 * The @a Allocate method creates @a SplineWorkingData instance and return it.
@@ -498,7 +479,6 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 			assert(a2 != decltype(a2)(0));
 			WDataType const b1 = static_cast<WDataType>(base_position[i]
 					- base_position[i - 2]);
-			//WDataType const b1 = a2 + a1;
 			assert(b1 != decltype(b1)(0));
 			WDataType const d2 = static_cast<WDataType>(base_data[i]
 					- base_data[i - 1]);
@@ -673,7 +653,7 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			LinearInterpolatorImpl<XDataType, YDataType>,
 			NullWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	typedef typename TypePromotion<YDataType>::WiderType WDataType;
+	typedef typename std::common_type<XDataType, YDataType>::type WDataType;
 	/**
 	 * Perform linear interpolation.
 	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
@@ -738,7 +718,7 @@ struct PolynomialInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			PolynomialInterpolatorImpl<XDataType, YDataType>,
 			PolynomialWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	typedef typename TypePromotion<YDataType>::WiderType WDataType;
+	typedef typename std::common_type<XDataType, YDataType>::type WDataType;
 	/**
 	 * Perform linear interpolation.
 	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
@@ -844,7 +824,7 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 	typedef typename InterpolatorInterface<
 			SplineInterpolatorImpl<XDataType, YDataType>,
 			SplineWorkingData<XDataType, YDataType>, XDataType, YDataType>::WorkingData WorkingData;
-	typedef typename TypePromotion<YDataType>::WiderType WDataType;
+	typedef typename std::common_type<XDataType, YDataType>::type WDataType;
 	/**
 	 * Perform spline interpolation.
 	 * For each @a interpolated_position that locates in between @a base_position[lower_index]
