@@ -57,7 +57,6 @@ extern "C" {
 
 #endif
 
-
 /**
  * @~english
  * @brief A result of function call.
@@ -1977,7 +1976,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * emitted internally.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
@@ -2071,7 +2070,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * emitted internally.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsCubicSplineDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_boundary,
 		double const boundary[/*num_boundary*/],
@@ -2080,6 +2079,23 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double lsq_vector[/*num_boundary+3*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
+ //-------------------------------------------
+ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineNewDouble)(
+ 		size_t const num_data, float const data[/*num_data*/],
+ 		bool const mask[/*num_data*/], size_t const num_boundary,
+ 		double const basis_data[/*4*num_data*/],
+ 		double const aux_basis_data[/*num_data * num_boundary*/],
+ 		double lsq_matrix[/*(num_boundary+3)*(num_boundary+3)*/],
+ 		double lsq_vector[/*num_boundary+3*/])
+ 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+//-------------------------------------------
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetAuxiliaryBasisDataForCubicSplineDouble)(
+		size_t const num_data, size_t const num_boundary,
+		double const boundary[/*num_boundary*/],
+		double out[/*num_data * num_boundary*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+//-------------------------------------------
 /**
  * @~japanese
  * @brief 最小二乗フィットを解くための連立方程式の係数値を更新する。
@@ -2088,7 +2104,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  *
  * @image html GetCoefficientsForLeastSquareFitting.png
  *
- * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、先にGetLSQFittingCoefficients()によって求められた、上の連立方程式の係数値を更新するために用いる。即ち、データ点のうち幾つかを除外して連立方程式を計算し直す際に、先に計算した各成分から除外するデータ点に対応する値を差し引く。除外するデータ数が少ない（前回の計算に用いられたデータ数の半分未満）場合は、一から計算し直すよりも高速である。
+ * ここで、総和の記号は、マスクされていない全てのデータについて和を取ることを表す。この関数は、先にGetLSQCoefficients()によって求められた、上の連立方程式の係数値を更新するために用いる。即ち、データ点のうち幾つかを除外して連立方程式を計算し直す際に、先に計算した各成分から除外するデータ点に対応する値を差し引く。除外するデータ数が少ない（前回の計算に用いられたデータ数の半分未満）場合は、一から計算し直すよりも高速である。
  * @par
  * @param[in] num_data 配列 @a data 、及び、モデルを構成する各基底関数の離散的データ点の要素数。正の数でなければならない。
  * @param[in] data 入力データ。要素数は @a num_data でなければならない。
@@ -2173,7 +2189,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * exclude the same data duplicatedly.
  * @~
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQFittingCoefficientsDouble)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
 		size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/],

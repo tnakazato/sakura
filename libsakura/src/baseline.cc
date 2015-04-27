@@ -335,7 +335,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 					sizeof(*coeff) * num_coeff, &coeff));
 
 	LIBSAKURA_SYMBOL(Status) coeff_status =
-	LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDouble)(num_data, data, mask,
+	LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data, data, mask,
 			context->num_bases, context->basis_data, num_coeff, lsq_matrix,
 			lsq_vector);
 	if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
@@ -573,6 +573,8 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
+	LIBSAKURA_SYMBOL(Status) status;
+
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -619,6 +621,17 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 		final_mask[i] = mask[i];
 	}
 
+	double *aux_basis = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*aux_basis) * num_data * num_pieces, &aux_basis));
+	status = LIBSAKURA_SYMBOL(GetAuxiliaryBasisDataForCubicSplineDouble)(
+			num_data, num_pieces, boundary, aux_basis);
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		throw std::runtime_error(
+				"failed in GetAuxiliaryBasisDataForCubicSplineDouble.");
+	}
+
 	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 
 	try {
@@ -630,18 +643,23 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 					throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
 				}
 			}
-			LIBSAKURA_SYMBOL(Status) coeff_status =
-			LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsCubicSplineDouble)(
-					num_data, data, final_mask, num_pieces, boundary,
-					baseline_context->basis_data, lsq_matrix, lsq_vector);
-			if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			status = LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineNewDouble)(
+					num_data, data, final_mask, num_pieces,
+					baseline_context->basis_data, aux_basis, lsq_matrix,
+					lsq_vector);
+			//-------------------------------------------
+			/*
+			 LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineDouble)(
+			 num_data, data, final_mask, num_pieces, boundary,
+			 baseline_context->basis_data, lsq_matrix, lsq_vector);
+			 */
+			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in GetLeastSquareFittingCoefficients.");
 			}
-			LIBSAKURA_SYMBOL(Status) solve_status =
-			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(num_bases,
-					lsq_matrix, lsq_vector, coeff_raw);
-			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
+					num_bases, lsq_matrix, lsq_vector, coeff_raw);
+			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in SolveSimultaneousEquationsByLU.");
 			}
@@ -652,10 +670,9 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 					best_fit_model, residual_data);
 
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
-			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
+			status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
 					residual_data, final_mask, &result);
-			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in ComputeAccurateStatisticsFloat.");
 			}
@@ -709,6 +726,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
+	LIBSAKURA_SYMBOL(Status) status;
+
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -751,33 +770,29 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 			}
 
 			if (num_unmasked_data <= num_clipped) {
-				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(GetLSQFittingCoefficientsDouble)(num_data,
+				status = LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data,
 						data, final_mask, baseline_context->num_bases,
 						baseline_context->basis_data, num_coeff, lsq_matrix,
 						lsq_vector);
-				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 					throw std::runtime_error(
 							"failed in GetLeastSquareFittingCoefficients.");
 				}
 			} else {
-				LIBSAKURA_SYMBOL(Status) coeff_status =
-				LIBSAKURA_SYMBOL(UpdateLSQFittingCoefficientsDouble)(num_data,
+				status = LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(num_data,
 						data, num_clipped, clipped_indices,
 						baseline_context->num_bases,
 						baseline_context->basis_data, num_coeff, lsq_matrix,
 						lsq_vector);
-				if (coeff_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 					throw std::runtime_error(
 							"failed in UpdateLeastSquareFittingCoefficients.");
 				}
 			}
 
-			LIBSAKURA_SYMBOL(Status) solve_status =
-			LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(num_coeff,
-					lsq_matrix, lsq_vector, coeff);
-
-			if (solve_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
+					num_coeff, lsq_matrix, lsq_vector, coeff);
+			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in SolveSimultaneousEquationsByLU.");
 			}
@@ -786,10 +801,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 					num_coeff, coeff, best_fit_model, residual_data);
 
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
-			LIBSAKURA_SYMBOL(Status) stat_status =
-			LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
+			status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
 					residual_data, final_mask, &result);
-			if (stat_status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in ComputeAccurateStatisticsFloat.");
 			}
