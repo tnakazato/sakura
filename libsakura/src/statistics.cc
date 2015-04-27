@@ -33,10 +33,6 @@
 
 namespace {
 
-/*
- * See ../doc/misc/SakuraStatistics-algorithm.xlsx for detail of Traverse algorithm.
- */
-
 template<size_t kUnitSize, size_t kBlockSize, typename Reducer>
 typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 		int levels, size_t stride, size_t num_blocks, size_t full_blocks,
@@ -102,6 +98,30 @@ typename Reducer::MiddleLevelAccumulator BlockWiseTraverse(size_t offset,
 	return acc_stack[0][0];
 }
 
+/**
+ * @brief Traverses data in a range [@a offset, @a offset + @a num_data)
+ * to reduce them to @a Reducer::TopLevelAccumulator using @a reducer.
+ *
+ * This function reduces blocks to @a Reducer::MiddleLevelAccumulator
+ * using @a Reducer::LastLevelReduce() or remaining consecutive data less than @a kBlockSize
+ * to @a Reducer::MiddleLevelAccumulator using @a Reducer::SequentialReduce() .
+ * Every @a kUnitSize @a Reducer::MiddleLevelAccumulators are repeatedly reduced
+ * to a @a Reducer::MiddleLevelAccumulator
+ * using @a Reducer::MiddleLevelReduce() in the depth first order until all of them are reduced to a single one.
+ * Finally, the @a Reducer::MiddleLevelAccumulator is reduced to @a Reducer::TopLevelAccumulator
+ * using @a Reducer::TopLevelReduce() .
+ *
+ * @see ../doc/misc/SakuraStatistics-algorithm.xlsx for detail of Traverse algorithm.
+ *
+ * @tparam kUnitSize	The number of blocks in a unit. Unit is a processing unit of middle level reducer.
+ * @tparam kBlockSize	Size of a block. Block is a processing unit of low level reducer
+ * and consecutive @a kBlockSize data.
+ * @tparam Reducer	@a Reducer defines how to reduce data.
+ * @param offset	@a offset indicates a starting point of the range to be traversed.
+ * @param num_data	@a num_data indicates the number of data in the range to be traversed.
+ * @param reducer	@a reducer defines how to reduce data in the range.
+ * @return a reduced data
+ */
 template<size_t kUnitSize, size_t kBlockSize, typename Reducer>
 typename Reducer::TopLevelAccumulator Traverse(size_t offset,
 		size_t const num_data, Reducer *reducer) {
