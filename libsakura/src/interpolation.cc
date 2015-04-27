@@ -455,9 +455,9 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 
 		// This is a condition of natural cubic spline: second derivative of
 		// interpolated spline curve should be zero.
-		d2ydx2[0] = WDataType(0.0);
-		d2ydx2[num_base - 1] = WDataType(0.0);
-		upper_triangular[0] = WDataType(0.0);
+		d2ydx2[0] = WDataType(0);
+		d2ydx2[num_base - 1] = WDataType(0);
+		upper_triangular[0] = WDataType(0);
 
 		// Solve tridiagonal system.
 		// Here tridiagonal matrix is decomposed to upper triangular matrix.
@@ -466,22 +466,18 @@ struct SplineWorkingData: public CustomizedMemoryManagement {
 		// elements are normalized to 1.
 
 		// base_position is ascending order
-		WDataType a1 = static_cast<WDataType>(base_position[1]
-				- base_position[0]);
-		assert(a1 != decltype(a1)(0));
 		constexpr WDataType kOne(1);
 		constexpr WDataType kTwo(2);
 		constexpr WDataType kThree(3);
+		WDataType a1(base_position[1] - base_position[0]);
+		assert(a1 != decltype(a1)(0));
 		WDataType d1 = static_cast<WDataType>(base_data[1] - base_data[0]);
 		for (size_t i = 2; i < num_base; ++i) {
-			WDataType const a2 = static_cast<WDataType>(base_position[i]
-					- base_position[i - 1]);
+			WDataType const a2(base_position[i] - base_position[i - 1]);
 			assert(a2 != decltype(a2)(0));
-			WDataType const b1 = static_cast<WDataType>(base_position[i]
-					- base_position[i - 2]);
+			WDataType const b1(base_position[i] - base_position[i - 2]);
 			assert(b1 != decltype(b1)(0));
-			WDataType const d2 = static_cast<WDataType>(base_data[i]
-					- base_data[i - 1]);
+			WDataType const d2(base_data[i] - base_data[i - 1]);
 			auto const u = a2 / (kTwo * b1);
 			auto const l = a1 / (kTwo * b1);
 			auto const r = (d2 / a2 - d1 / a1) * kThree / b1;
@@ -688,13 +684,12 @@ struct LinearInterpolatorImpl: public InterpolatorInterface<
 			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
-		WDataType const dydx = static_cast<WDataType>(base_data[lower_index + 1]
-				- base_data[lower_index])
-				/ (base_position[lower_index + 1] - base_position[lower_index]);
-		WDataType const position_lower =
-				static_cast<WDataType>(base_position[lower_index]);
-		WDataType const data_lower =
-				static_cast<WDataType>(base_data[lower_index]);
+		WDataType const dydx(
+				(base_data[lower_index + 1] - base_data[lower_index])
+						/ (base_position[lower_index + 1]
+								- base_position[lower_index]));
+		WDataType const position_lower(base_position[lower_index]);
+		WDataType const data_lower(base_data[lower_index]);
 		for (size_t i = index_from; i < index_to; ++i) {
 			interpolated_data[Indexer::GetIndex(num_interpolated, num_array,
 					iarray, i)] = static_cast<YDataType>(data_lower
@@ -792,9 +787,9 @@ private:
 			// d[n-m-1].
 			for (size_t i = 0; i < work_data->num_elements - m; ++i) {
 				auto cd = c[i + 1] - d[i];
-				auto const dx = static_cast<WDataType>(x_ptr[i] - x_ptr[i + m]);
+				WDataType const dx(x_ptr[i] - x_ptr[i + m]);
 				assert(dx != 0);
-				cd /= static_cast<WDataType>(dx);
+				cd /= dx;
 				c[i] = static_cast<WDataType>(x_ptr[i] - interpolated_position)
 						* cd;
 				d[i] = static_cast<WDataType>(x_ptr[i + m]
@@ -861,17 +856,15 @@ struct SplineInterpolatorImpl: public InterpolatorInterface<
 			size_t index_to, size_t lower_index,
 			WorkingData const * const work_data, size_t num_array,
 			size_t iarray, YDataType interpolated_data[]) {
-		auto const * const d2ydx2 = work_data->second_derivative.pointer;
-		auto const dx = static_cast<WDataType>(base_position[lower_index + 1]
-				- base_position[lower_index]);
+		auto const * const d2ydx2(work_data->second_derivative.pointer);
+		WDataType const dx(
+				base_position[lower_index + 1] - base_position[lower_index]);
 		auto const dx_factor = dx * dx / decltype(dx)(6.0);
-		auto const position_upper =
-				static_cast<WDataType>(base_position[lower_index + 1]);
-		auto const data_lower = static_cast<WDataType>(base_data[lower_index]);
-		auto const data_upper =
-				static_cast<WDataType>(base_data[lower_index + 1]);
-		auto const d2ydx2_lower = d2ydx2[lower_index];
-		auto const d2ydx2_upper = d2ydx2[lower_index + 1];
+		WDataType const position_upper(base_position[lower_index + 1]);
+		WDataType const data_lower(base_data[lower_index]);
+		WDataType const data_upper(base_data[lower_index + 1]);
+		auto const d2ydx2_lower(d2ydx2[lower_index]);
+		auto const d2ydx2_upper(d2ydx2[lower_index + 1]);
 		for (size_t i = index_from; i < index_to; ++i) {
 			auto const a = (position_upper
 					- static_cast<WDataType>(interpolated_position[i])) / dx;
