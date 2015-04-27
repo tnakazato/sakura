@@ -405,8 +405,7 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
 		size_t num_data, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT
-		LIBSAKURA_WARN_UNUSED_RESULT;
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_ComputeStatisticsFloat
@@ -416,8 +415,7 @@ typedef struct {
  * num_data is large. This function is slower than @ref sakura_ComputeStatisticsFloat .
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
 		size_t num_data, float const data[], bool const is_valid[],
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT
-		LIBSAKURA_WARN_UNUSED_RESULT;
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) LIBSAKURA_NOEXCEPT;
 
 /**
  * @~japanese
@@ -446,8 +444,33 @@ typedef struct {
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
 		size_t num_data, bool const is_valid[], float data[],
-		size_t *new_num_data) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
-/**
+		size_t *new_num_data) LIBSAKURA_NOEXCEPT;
+
+ /**
+ * @~english
+ * @brief Computes median absolute deviation.
+ *
+ * This function applies abs(@a data[i] - median) for each element in @a data and
+ * stores results to @a new_data. Then it sorts @a new_data in ascending order.
+ * @a data must be sorted in advance using e.g. @ref sakura_SortValidValuesDenselyFloat .
+ * The median is a center value if @a num_data is odd. Otherwise, the median is
+ * an average of two center values.
+ * The caller is responsible to take a median value from @a new_data as
+ * a median absolute deviation.
+  *
+ * @param[in] num_data	The number of elements in @a data and @a new_data .
+ * @param[in] data	Each value in data must not be Inf nor NaN. @a data must be sorted.
+ * <br/>must-be-aligned
+ * @param[in] new_data	An array where the results are stored. @a new_data may points @a data.
+ * <br/>must-be-aligned
+ * @return status code
+ * @~
+ * MT-safe
+  */
+ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
+ 		size_t num_data, float const data[], float new_data[]) LIBSAKURA_NOEXCEPT;
+
+ /**
  * @~english
  * @brief Grids data with convolution.
  *

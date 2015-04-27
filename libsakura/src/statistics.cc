@@ -1008,3 +1008,42 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat
 	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
+
+namespace {
+
+template<typename T>
+LIBSAKURA_SYMBOL(Status) ComputeMedianAbsoluteDeviation(size_t num_data,
+		T const data[], T new_data[]) noexcept {
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(new_data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(new_data));
+
+	try {
+		if (num_data < 2) {
+			return LIBSAKURA_SYMBOL(Status_kOK);
+		}
+		auto data_aligned = AssumeAligned(data);
+		auto const new_data_aligned = AssumeAligned(new_data);
+		auto median = data_aligned[num_data / 2];
+		if (num_data % 2 == 0) {
+			median = (median + data_aligned[num_data / 2 + 1]) / 2;
+		}
+		for (size_t i = 0; i < num_data; ++i) {
+			new_data_aligned[i] = std::abs(data_aligned[i] - median);
+		}
+
+		QuickSort<T, AscendingOrder<T> >(num_data, new_data);
+	} catch (...) {
+		assert(false); // No exception should be raised for the current implementation.
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
+		size_t num_data, float const data[], float new_data[]) noexcept {
+	return ComputeMedianAbsoluteDeviation(num_data, data, new_data);
+}
