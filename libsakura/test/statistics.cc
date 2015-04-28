@@ -47,7 +47,7 @@
 #include "gtest/gtest.h"
 
 namespace {
-double Rms2(size_t elements, float const data[], bool const is_valid[]) {
+double SumSquared(size_t elements, float const data[], bool const is_valid[]) {
 	double result = 0;
 	for (size_t i = 0; i < elements; ++i) {
 		if (is_valid[i]) {
@@ -90,6 +90,8 @@ LIBSAKURA_SYMBOL(StatisticsResultFloat) const &result) {
 	ExpectEQ(ref.min, result.min);
 	//std::cout << "sum\n";
 	ExpectRealEQ(ref.sum, result.sum);
+	//std::cout << "square_sum\n";
+	ExpectRealEQ(ref.square_sum, result.square_sum);
 	//std::cout << "mean\n";
 	ExpectRealEQ(ref.mean, result.mean);
 	//std::cout << "rms\n";
@@ -170,11 +172,14 @@ bool CallAndTestResult(LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
 				}
 			};
 	value_test(&decltype(result)::sum);
+	value_test(&decltype(result)::square_sum);
 	value_test(&decltype(result)::rms);
 	value_test(&decltype(result)::stddev);
 
 	if ((!isnan(result.sum) && !isnan(result_accurate.sum)
 			&& result.sum != result_accurate.sum)
+			|| (!isnan(result.square_sum) && !isnan(result_accurate.square_sum)
+					&& result.square_sum != result_accurate.square_sum)
 			|| (!isnan(result.rms) && !isnan(result_accurate.rms)
 					&& result.rms != result_accurate.rms)
 			|| (!isnan(result.stddev) && !isnan(result_accurate.stddev)
@@ -182,6 +187,7 @@ bool CallAndTestResult(LIBSAKURA_SYMBOL(StatisticsResultFloat) const &ref,
 		if (false) { // for debug
 			std::cout << "error ratio: \n";
 			DisplayDiff("sum", ref.sum, result.sum, result_accurate.sum);
+			DisplayDiff("square_sum", ref.square_sum, result.square_sum, result_accurate.square_sum);
 			DisplayDiff("rms", ref.rms, result.rms, result_accurate.rms);
 			DisplayDiff("stddev", ref.stddev, result.stddev,
 					result_accurate.stddev);
@@ -308,9 +314,9 @@ TEST(Statistics, ComputeStatistics) {
 			ref.index_of_max = data.size() - 1;
 			ref.max = data.size() - 1;
 			ref.sum = (data.size() - 1) * (data.size() / 2);
+			ref.square_sum = SumSquared(data.size(), data.data(), is_valid.data());
 			ref.mean = (data.size() - 1) / 2.;
-			auto rms2 = Rms2(data.size(), data.data(), is_valid.data())
-					/ data.size();
+			auto rms2 = ref.square_sum / data.size();
 			ref.rms = std::sqrt(rms2);
 			ref.stddev = std::sqrt(std::abs(rms2 - ref.mean * ref.mean));
 
@@ -338,14 +344,14 @@ TEST(Statistics, ComputeStatistics) {
 					ref.index_of_max = max_index;
 					ref.max = data[max_index];
 					ref.sum = data[max_index] + data[min_index];
-					ref.mean = double(data[max_index] + data[min_index]) / data.size();
 
 					double v = data[max_index];
-					auto rms2 = v * v;
+					ref.square_sum = v * v;
 					v = data[min_index];
-					rms2 += v * v;
-					rms2 /= data.size();
+					ref.square_sum += v * v;
+					auto rms2 = ref.square_sum / data.size();
 					ref.rms = std::sqrt(rms2);
+					ref.mean = double(data[max_index] + data[min_index]) / data.size();
 					ref.stddev = std::sqrt(std::abs(rms2 - ref.mean * ref.mean));
 
 					CallAndTestResult(ref, data.size(), data.data(), is_valid.data(), TestResult, TestResult);
@@ -369,9 +375,9 @@ TEST(Statistics, ComputeStatistics) {
 		ref.index_of_max = data.size() - 1;
 		ref.max = data.size() - 1;
 		ref.sum = (data.size() - 1) * (data.size() / 2);
+		ref.square_sum = SumSquared(data.size(), data.data(), is_valid.data());
 		ref.mean = (data.size() - 1) / 2.;
-		auto rms2 = Rms2(data.size(), data.data(), is_valid.data())
-				/ data.size();
+		auto rms2 = ref.square_sum / data.size();
 		ref.rms = std::sqrt(rms2);
 		ref.stddev = std::sqrt(std::abs(rms2 - ref.mean * ref.mean));
 
@@ -391,6 +397,7 @@ TEST(Statistics, ComputeStatistics) {
 		ref.index_of_max = data.size() - 1;
 		ref.max = data[0];
 		ref.sum = data[0];
+		ref.square_sum = ref.sum * ref.sum;
 		ref.mean = data[0];
 		ref.rms = data[0];
 		ref.stddev = 0.;
@@ -411,6 +418,7 @@ TEST(Statistics, ComputeStatistics) {
 		ref.index_of_max = -1;
 		ref.max = NAN;
 		ref.sum = 0;
+		ref.square_sum = 0;
 		ref.mean = NAN;
 		ref.rms = NAN;
 		ref.stddev = NAN;
@@ -433,6 +441,7 @@ TEST(Statistics, ComputeStatistics) {
 		ref.index_of_max = -1;
 		ref.max = NAN;
 		ref.sum = 0;
+		ref.square_sum = 0;
 		ref.mean = NAN;
 		ref.rms = NAN;
 		ref.stddev = NAN;
@@ -450,6 +459,7 @@ TEST(Statistics, ComputeStatistics) {
 				ref.index_of_max = pos;
 				ref.max = data[pos];
 				ref.sum = data[pos];
+				ref.square_sum = ref.sum * ref.sum;
 				ref.mean = data[pos];
 				ref.rms = data[pos];
 				ref.stddev = 0.;
@@ -491,8 +501,6 @@ TEST(Statistics, ComputeStatistics) {
 				}
 			}
 		}
-		auto rms2 = sqsum / count;
-		auto mean = sum / count;
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = count;
@@ -501,6 +509,9 @@ TEST(Statistics, ComputeStatistics) {
 		ref.index_of_max = max_idx;
 		ref.max = max;
 		ref.sum = sum;
+		ref.square_sum = sqsum;
+		auto rms2 = sqsum / count;
+		auto mean = sum / count;
 		ref.mean = mean;
 		ref.rms = std::sqrt(rms2);
 		ref.stddev = std::sqrt(std::abs(rms2 - mean * mean));
@@ -525,15 +536,15 @@ TEST(Statistics, ComputeStatistics) {
 		put(3);
 		put(5);
 
-		rms2 = sqsum / count;
-		mean = sum / count;
-
 		ref.count = count;
 		ref.index_of_min = base + 5;
 		ref.min = data[base + 5];
 		ref.index_of_max = base + 3;
 		ref.max = data[base + 3];
 		ref.sum = sum;
+		ref.square_sum = sqsum;
+		rms2 = sqsum / count;
+		mean = sum / count;
 		ref.mean = mean;
 		ref.rms = std::sqrt(rms2);
 		ref.stddev = std::sqrt(std::abs(rms2 - mean * mean));
@@ -612,6 +623,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		ref.index_of_max = data.size() - 1 - 2;
 		ref.max = data[ref.index_of_max];
 		ref.sum = -1677721927680000.; // double(ref.max) + double(ref.min) * ref.count / 2.;
+		ref.square_sum = 91625995824881782489120.; // computed by bc
 		ref.mean = -40960008; // (double(ref.max) + double(ref.min)) / 2.;
 		ref.rms = 47296540.9802176008221133754;
 		ref.stddev = 23648267.02600718885921762;
@@ -624,6 +636,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.max, result.max);
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
+			//ExpectRealEQ(ref.square_sum, result.square_sum);
+			EXPECT_NEAR(ref.square_sum, result.square_sum, .0000000001e+22);
 			ExpectRealEQ(ref.mean, result.mean);
 			EXPECT_NEAR(ref.rms, result.rms, 7.283e-05);
 			EXPECT_NEAR(ref.stddev, result.stddev, 0.00014565);
@@ -637,6 +651,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectEQ(ref.max, result.max);
 					ExpectEQ(ref.min, result.min);
 					ExpectRealEQ(ref.sum, result.sum);
+					ExpectRealEQ(ref.square_sum, result.square_sum);
 					ExpectRealEQ(ref.mean, result.mean);
 					ExpectRealEQ(ref.rms, result.rms);
 					ExpectRealEQ(ref.stddev, result.stddev);
@@ -668,6 +683,10 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		ref.max = data[ref.index_of_max];
 		ref.mean = base + 10;
 		ref.sum = ref.mean * data.size();
+		ref.square_sum = (double(base + 4) * double(base + 4)
+				+ double(base + 7) * double(base + 7)
+				+ double(base + 13) * double(base + 13)
+				+ double(base + 16) * double(base + 16)) * (data.size() / 4);
 		constexpr double rms2 = (double(base + 4) * double(base + 4)
 				+ double(base + 7) * double(base + 7)
 				+ double(base + 13) * double(base + 13)
@@ -686,6 +705,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.max, result.max);
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
+			//ExpectRealEQ(ref.square_sum, result.square_sum);
+			EXPECT_NEAR(ref.square_sum, result.square_sum, .000000002e+19);
 			ExpectRealEQ(ref.mean, result.mean);
 			EXPECT_NEAR(ref.rms, result.rms, 0.0001332);
 			EXPECT_NEAR(ref.stddev, result.stddev, 11.4505);
@@ -699,6 +720,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectEQ(ref.max, result.max);
 					ExpectEQ(ref.min, result.min);
 					ExpectRealEQ(ref.sum, result.sum);
+					ExpectRealEQ(ref.square_sum, result.square_sum);
 					ExpectRealEQ(ref.mean, result.mean);
 					ExpectRealEQ(ref.rms, result.rms);
 					ExpectRealEQ(ref.stddev, result.stddev);
@@ -724,16 +746,19 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					data.data(), is_valid.data(), &result);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
+		EXPECT_LT(0, result.count);
 
+		auto const mean = result.sum / result.count;
 		double stddev = 0;
-		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, result.mean,
+		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, mean,
 				data.size(), data.data(), is_valid.data(), &stddev);
-		//std::cout << std::setprecision(16) << std::sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
+		// std::cout << std::setprecision(16) << std::sqrt(variance) << std::endl << stddev << std::endl;
 		EXPECT_DOUBLE_EQ(std::sqrt(variance), stddev);
 	}
 	{
 		size_t elements = data.size() - 4 + 1;
 		size_t spike_pos = elements - 1;
+		assert(spike_pos % 4 == 0);
 		for (size_t i = 0; i < spike_pos; i += 4) {
 			data[i] = -3;
 			data[i + 1] = -7;
@@ -754,13 +779,13 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 		ref.index_of_max = spike_pos;
 		ref.max = spike;
 		ref.sum = spike;
-		ref.mean = ref.sum / ref.count;
-		double rms2 = (double(data[0]) * double(data[0])
+		ref.square_sum = (double(data[0]) * double(data[0])
 				+ double(data[1]) * double(data[1])
 				+ double(data[2]) * double(data[2])
 				+ double(data[3]) * double(data[3])) * ((elements - 1) / 4);
-		rms2 += double(spike) * double(spike);
-		rms2 /= elements;
+		ref.square_sum += double(spike) * double(spike);
+		ref.mean = ref.sum / ref.count;
+		double rms2 = ref.square_sum / elements;
 		ref.rms = std::sqrt(rms2);
 		double variance = (double(data[0] - ref.mean)
 				* double(data[0] - ref.mean)
@@ -780,6 +805,8 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.max, result.max);
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
+			//ExpectRealEQ(ref.square_sum, result.square_sum);
+			EXPECT_NEAR(ref.square_sum, result.square_sum, 0.00000000502e+17);
 			ExpectRealEQ(ref.mean, result.mean);
 			EXPECT_NEAR(ref.rms, result.rms, 0.0001459);
 			EXPECT_NEAR(ref.stddev, result.stddev, 0.0001459);
@@ -793,6 +820,7 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectEQ(ref.max, result.max);
 					ExpectEQ(ref.min, result.min);
 					ExpectRealEQ(ref.sum, result.sum);
+					ExpectRealEQ(ref.square_sum, result.square_sum);
 					ExpectRealEQ(ref.mean, result.mean);
 					EXPECT_NEAR(ref.rms, result.rms, 1.6008e-10);
 					EXPECT_NEAR(ref.stddev, result.stddev, 1.6008e-10);
@@ -836,12 +864,15 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
 
+		EXPECT_LT(0, result.count);
+
+		auto const mean = result.sum / result.count;
 		double stddev = 0;
-		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, result.mean,
+		LIBSAKURA_SYMBOL(ComputeStddevFloat)(result.count, mean,
 				elements, data.data(), is_valid.data(), &stddev);
-		//std::cout << std::setprecision(16) << std::sqrt(variance) << std::endl << stddev << std::endl << result.stddev << std::endl;
+		//std::cout << std::setprecision(16) << std::sqrt(variance) << std::endl << stddev << std::endl;
 		//EXPECT_DOUBLE_EQ(std::sqrt(variance), stddev);
-		EXPECT_NEAR(std::sqrt(variance), stddev, 3.89e-05);
+		EXPECT_NEAR(std::sqrt(variance), stddev, .0000389);
 	}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }
