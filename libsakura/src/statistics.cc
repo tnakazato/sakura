@@ -688,6 +688,7 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 	}
 	result.count = counted;
 	result.sum = total;
+	result.square_sum = square_total;
 	double double_count = static_cast<double>(result.count);
 	double mean = NAN;
 	double rms2 = NAN;
@@ -784,6 +785,7 @@ LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_) {
 	data_.VisitWith(is_valid_, visitor);
 	result.count = visitor.count;
 	result.sum = visitor.sum;
+	result.square_sum = visitor.square_sum;
 	result.min = visitor.min;
 	result.index_of_min = visitor.index_of_min;
 	result.max = visitor.max;
@@ -843,6 +845,7 @@ void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 
 	result->count = stats.count;
 	result->sum = stats.sum;
+	result->square_sum = stats.square_sum;
 	result->min = stats.min;
 	result->index_of_min = stats.index_of_min;
 	result->max = stats.max;
