@@ -323,6 +323,11 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
  * @~english
  * @brief A structure to which the result of @ref sakura_ComputeStatisticsFloat and @ref sakura_ComputeAccurateStatisticsFloat is stored.
  *
+ * You can also figure out following statistics from the members of this struct if count > 0:
+ *  - mean = sum / count
+ *  - rms = sqrt(square_sum / count)
+ *  - variance = abs(square_sum / count - mean * mean)
+ *  - stddev = sqrt(variance)
  */
 typedef struct {
 	/**
@@ -335,6 +340,11 @@ typedef struct {
 	 * sum of valid data
 	 */
 	double sum;
+	/**
+	 * @~
+	 * sum of squared valid data
+	 */
+	double square_sum;
 	/**
 	 * @~
 	 * mean of valid data. NaN if no valid data.
