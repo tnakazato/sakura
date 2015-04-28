@@ -473,7 +473,7 @@ typedef struct {
  * The caller is responsible to take a median value from @a new_data as
  * a median absolute deviation.
  *
- *  mad = (@a new_data[@a num_data/2] + @a num_data[@a num_data/2 - @a num_data%2]) / 2 if @a num_data > 0
+ *  mad = (@a new_data[@a num_data/2] + @a new_data[@a num_data/2 - @a num_data%2]) / 2 if @a num_data > 0
   *
  * @param[in] num_data	The number of elements in @a data and @a new_data .
  * @param[in] data	Each value in data must not be Inf nor NaN. @a data must be sorted.
