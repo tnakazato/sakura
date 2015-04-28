@@ -1,7 +1,7 @@
 /*
  * @SAKURA_LICENSE_HEADER_START@
  * Copyright (C) 2013-2014
- * National Astronomical Observatory of JapaGetNumBasesn
+ * National Astronomical Observatory of Japan
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
  * 
  * This file is part of Sakura.
@@ -91,20 +91,29 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	return num_bases;
 }
 
+inline void DoSetBasisDataPolynomial(size_t num_loop, double const i_d,
+		size_t *idx, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto out = AssumeAligned(out_arg);
+
+	double val = 1.0;
+	out[*idx] = val;
+	++(*idx);
+	for (size_t j = 1; j < num_loop; ++j) {
+		val *= i_d;
+		out[*idx] = val;
+		++(*idx);
+	}
+}
+
 inline void SetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
 
 	size_t idx = 0;
 	for (size_t i = 0; i < context->num_basis_data; ++i) {
-		double val = 1.0;
-		data[idx] = val;
-		idx++;
-		for (size_t j = 1; j < context->num_bases; ++j) {
-			val *= static_cast<double>(i);
-			data[idx] = val;
-			idx++;
-		}
+		double i_d = static_cast<double>(i);
+		DoSetBasisDataPolynomial(context->num_bases, i_d, &idx, data);
 	}
 }
 
@@ -145,8 +154,12 @@ inline void SetBasisData(uint16_t const order,
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
 			order);
-	if (context->num_basis_data < context->num_bases) {
-		throw std::invalid_argument("num_bases exceeds num_basis_data!");
+	size_t min_num_basis =
+			(context->baseline_type
+					== LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
+					(context->num_bases - 1 + order) : context->num_bases;
+	if (context->num_basis_data < min_num_basis) {
+		throw std::invalid_argument("num_basis_data is too small!");
 	}
 	AllocateMemoryForBasisData(context);
 	switch (context->baseline_type) {
@@ -157,10 +170,6 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 		SetBasisDataChebyshev(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		if (order < 1) {
-			throw std::invalid_argument(
-					"order (number of pieces) must be a positive value!");
-		}
 		SetBasisDataCubicSpline(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
@@ -352,58 +361,31 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 	AddMulMatrix(num_coeff, coeff, num_data, context->num_bases, basis, out);
 }
 
-inline void ClipData(size_t num_data, float const *data_arg,
-bool const *in_mask_arg, float const lower_bound, float const upper_bound,
-bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
+inline void ClipData(size_t num_piece, size_t const *piece_start_arg,
+		size_t const *piece_end_arg, float const *data_arg,
+		bool const *in_mask_arg, float const lower_bound,
+		float const upper_bound, bool *out_mask_arg,
+		size_t *clipped_indices_arg, size_t *num_clipped) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(piece_start_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(piece_end_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
+	auto piece_start = AssumeAligned(piece_start_arg);
+	auto piece_end = AssumeAligned(piece_end_arg);
 	auto data = AssumeAligned(data_arg);
 	auto in_mask = AssumeAligned(in_mask_arg);
 	auto out_mask = AssumeAligned(out_mask_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 
 	*num_clipped = 0;
-
-	for (size_t i = 0; i < num_data; ++i) {
-		out_mask[i] = in_mask[i];
-		if (in_mask[i]) {
-			if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
-				out_mask[i] = false;
-				clipped_indices[*num_clipped] = i;
-				++(*num_clipped);
-			}
-		}
-	}
-}
-
-//------------
-inline void ClipDataPiecewise(size_t num_data, float const *data_arg,
-bool const *in_mask_arg, float const lower_bound, float const upper_bound,
-bool *out_mask_arg, size_t *clipped_indices_arg, size_t num_pieces,
-		double const *boundary, 
-		size_t *num_clipped) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	auto data = AssumeAligned(data_arg);
-	auto in_mask = AssumeAligned(in_mask_arg);
-	auto out_mask = AssumeAligned(out_mask_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-
-	*num_clipped = 0;
-
-	for (size_t i = 0; i < num_pieces; ++i) {
-		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
-		size_t end_idx =
-				(i < num_pieces - 1) ?
-						static_cast<size_t>(boundary[i + 1]) : num_data;
-		for (size_t j = start_idx; j < end_idx; ++j) {
-			if (in_mask[j]) {
-				if ((data[j] - lower_bound) * (upper_bound - data[j]) < 0.0f) {
-					out_mask[j] = false;
+	for (size_t ipiece = 0; ipiece < num_piece; ++ipiece) {
+		for (size_t i = piece_start[ipiece]; i < piece_end[ipiece]; ++i) {
+			out_mask[i] = in_mask[i];
+			if (in_mask[i]) {
+				if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
+					out_mask[i] = false;
 					clipped_indices[*num_clipped] = i;
 					++(*num_clipped);
 				}
@@ -411,44 +393,6 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t num_pieces,
 		}
 	}
 }
-//------------
-/*
-inline void ClipDataPiecewise(size_t num_data, float const *data_arg,
-bool const *in_mask_arg, float const lower_bound, float const upper_bound,
-bool *out_mask_arg, size_t *clipped_indices_arg, size_t num_pieces,
-		double const *boundary, size_t *num_clipped_arg,
-		size_t *num_clipped_sum) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(num_clipped_arg));
-	auto data = AssumeAligned(data_arg);
-	auto in_mask = AssumeAligned(in_mask_arg);
-	auto out_mask = AssumeAligned(out_mask_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto num_clipped = AssumeAligned(num_clipped_arg);
-
-	*num_clipped_sum = 0;
-	for (size_t i = 0; i < num_pieces; ++i) {
-		num_clipped[i] = 0;
-		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
-		size_t end_idx =
-				(i < num_pieces - 1) ?
-						static_cast<size_t>(boundary[i + 1]) : num_data;
-		for (size_t j = start_idx; j < end_idx; ++j) {
-			if (in_mask[j]) {
-				if ((data[j] - lower_bound) * (upper_bound - data[j]) < 0.0f) {
-					out_mask[j] = false;
-					++num_clipped[i];
-					clipped_indices[*num_clipped_sum] = i;
-					++(*num_clipped_sum);
-				}
-			}
-		}
-	}
-}
-*/
 
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
@@ -522,27 +466,6 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	}
 }
 
-inline void GetUnmaskedDataNumbers(size_t num_mask, bool const *mask_arg,
-		size_t num_pieces, double const *boundary_arg, size_t *num_clipped) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
-	auto mask = AssumeAligned(mask_arg);
-	auto boundary = AssumeAligned(boundary_arg);
-
-	for (size_t i = 0; i < num_pieces; ++i) {
-		num_clipped[i] = 0;
-		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
-		size_t end_idx =
-				(i < num_pieces - 1) ?
-						static_cast<size_t>(ceil(boundary[i + 1])) : num_mask;
-		for (size_t j = start_idx; j < end_idx; ++j) {
-			if (mask[j]) {
-				++num_clipped[i];
-			}
-		}
-	}
-}
-
 inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		double const *boundary_arg, double const *coeff_raw_arg,
 		double *coeff_arg) {
@@ -587,6 +510,64 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	}
 }
 
+inline void SetStandardCubicBases(double const i_d, size_t *idx,
+		double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto out = AssumeAligned(out_arg);
+
+	size_t num_cubic_bases = 4;
+	DoSetBasisDataPolynomial(num_cubic_bases, i_d, idx, out);
+}
+inline void SetAuxiliaryCubicBases(size_t const num_boundary,
+		double const *boundary_arg, double const boundary_final,
+		double const i_d, size_t *idx, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto boundary = AssumeAligned(boundary_arg);
+	auto out = AssumeAligned(out_arg);
+
+	auto cb = [](double v) {return v * v * v;};
+	auto p = [](double v) {return std::max(0.0, v);};
+	auto pcb = [&](double v) {return p(cb(v));};
+
+	--(*idx);
+	auto boundary_current = boundary[1];
+	out[*idx] -= pcb(i_d - boundary_current);
+	++(*idx);
+	for (size_t j = 1; j < num_boundary - 1; ++j) {
+		auto boundary_next = boundary[j + 1];
+		out[*idx] = p(cb(i_d - boundary_current) - pcb(i_d - boundary_next));
+		boundary_current = boundary_next;
+		++(*idx);
+	}
+	out[*idx] = pcb(i_d - boundary_final);
+	++(*idx);
+}
+
+inline void GetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
+		double const *boundary_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto boundary = AssumeAligned(boundary_arg);
+	auto out = AssumeAligned(out_arg);
+
+	size_t idx = 0;
+	if (num_boundary < 2) {
+		for (size_t i = 0; i < num_data; ++i) {
+			double i_d = static_cast<double>(i);
+			SetStandardCubicBases(i_d, &idx, out);
+		}
+	} else {
+		double boundary_final = boundary[num_boundary - 1];
+		for (size_t i = 0; i < num_data; ++i) {
+			double i_d = static_cast<double>(i);
+			SetStandardCubicBases(i_d, &idx, out);
+			SetAuxiliaryCubicBases(num_boundary, boundary, boundary_final, i_d,
+					&idx, out);
+		}
+	}
+
+}
 inline void DoSubtractBaselineCubicSpline(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_pieces,
 		double const *boundary_arg,
@@ -611,6 +592,22 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 
 	LIBSAKURA_SYMBOL(Status) status;
 
+	size_t *piece_start_indices = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_start_indices(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*piece_start_indices) * num_pieces,
+					&piece_start_indices));
+	size_t *piece_end_indices = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_end_indices(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*piece_end_indices) * num_pieces,
+					&piece_end_indices));
+	for (size_t i = 0; i < num_pieces; ++i) {
+		piece_start_indices[i] = static_cast<size_t>(ceil(boundary[i]));
+		piece_end_indices[i] =
+				(i < num_pieces - 1) ?
+						static_cast<size_t>(boundary[i + 1]) : num_data;
+	}
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -623,84 +620,53 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*clipped_indices) * num_data, &clipped_indices));
-	size_t num_bases = baseline_context->num_bases - 1 + num_pieces;
-	size_t num_lsq_matrix = num_bases * num_bases;
+	size_t num_lsq_matrix = num_coeff * num_coeff;
 	double *lsq_matrix = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*lsq_matrix) * num_lsq_matrix, &lsq_matrix));
-	size_t num_lsq_vector = num_bases;
+	size_t num_lsq_vector = num_coeff;
 	double *lsq_vector = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*lsq_vector) * num_lsq_vector, &lsq_vector));
-	size_t num_coeff_raw = num_bases;
-	double *coeff_raw = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_raw(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*coeff_raw) * num_coeff_raw, &coeff_raw));
 
 	uint16_t num_fitting_max = std::max((uint16_t) 1, num_fitting_max_arg);
 	size_t num_unmasked_data = num_data;
 	size_t num_clipped = num_data;
-	/*
-	size_t *num_unmasked_data = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_num_unmasked_data(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*num_unmasked_data) * num_pieces,
-					&num_unmasked_data));
-	GetUnmaskedDataNumbers(num_data, mask, num_pieces, boundary,
-			num_unmasked_data);
-	size_t *num_clipped = nullptr;
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_num_clipped(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*num_clipped) * num_pieces, &num_clipped));
-	GetUnmaskedDataNumbers(num_data, mask, num_pieces, boundary, num_clipped);
-	*/
 
 	for (size_t i = 0; i < num_data; ++i) {
 		final_mask[i] = mask[i];
 	}
 
-	double *aux_basis = nullptr;
+	double *cspline_basis = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_aux_data(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*aux_basis) * num_data * num_pieces, &aux_basis));
-	status = LIBSAKURA_SYMBOL(GetAuxiliaryBasisDataForCubicSplineDouble)(
-			num_data, num_pieces, boundary, aux_basis);
-	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		throw std::runtime_error(
-				"failed in GetAuxiliaryBasisDataForCubicSplineDouble.");
-	}
+					sizeof(*cspline_basis) * num_coeff * num_data,
+					&cspline_basis));
+	GetFullCubicSplineBasisData(num_data, num_pieces, boundary, cspline_basis);
+	double *coeff_raw = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_raw(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(*coeff_raw) * num_coeff, &coeff_raw));
 
 	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 
 	try {
 		for (uint16_t i = 0; i < num_fitting_max; ++i) {
-			if (num_unmasked_data < num_bases) {
+			if (num_unmasked_data < num_coeff) {
 				*baseline_status = LIBSAKURA_SYMBOL(
 						BaselineStatus_kNotEnoughData);
 				throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
 			}
-		        /*
-			for (size_t j = 0; j < num_pieces; ++j) {
-				if (num_unmasked_data[j] < baseline_context->num_bases) {
-					*baseline_status = LIBSAKURA_SYMBOL(
-							BaselineStatus_kNotEnoughData);
-					throw std::runtime_error(GetNotEnoughDataMessage(i + 1));
-				}
-			}
-			*/
-			status = LIBSAKURA_SYMBOL(GetLSQCoefficientsCubicSplineNewDouble)(
-					num_data, data, final_mask, num_pieces,
-					baseline_context->basis_data, aux_basis, lsq_matrix,
+			status = LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data, data,
+					final_mask, num_coeff, cspline_basis, num_coeff, lsq_matrix,
 					lsq_vector);
 			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error(
-						"failed in GetLeastSquareFittingCoefficients.");
+				throw std::runtime_error("failed in GetLSQCoefficients.");
 			}
 			status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
-					num_bases, lsq_matrix, lsq_vector, coeff_raw);
+					num_coeff, lsq_matrix, lsq_vector, coeff_raw);
 			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 				throw std::runtime_error(
 						"failed in SolveSimultaneousEquationsByLU.");
@@ -722,28 +688,14 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 				float clip_threshold_lower = result.mean - clip_threshold_abs;
 				float clip_threshold_upper = result.mean + clip_threshold_abs;
-				//------------
-				ClipDataPiecewise(num_data, residual_data, final_mask,
-						clip_threshold_lower, clip_threshold_upper, final_mask,
-						clipped_indices, num_pieces, boundary, &num_clipped);
+				ClipData(num_pieces, piece_start_indices, piece_end_indices,
+						residual_data, final_mask, clip_threshold_lower,
+						clip_threshold_upper, final_mask, clipped_indices,
+						&num_clipped);
 				if (num_clipped == 0) {
 					break;
 				}
 				num_unmasked_data = result.count - num_clipped;
-				//------------
-				/*
-				size_t num_clipped_sum;
-				ClipDataPiecewise(num_data, residual_data, final_mask,
-						clip_threshold_lower, clip_threshold_upper, final_mask,
-						clipped_indices, num_pieces, boundary, num_clipped,
-						&num_clipped_sum);
-				if (num_clipped_sum == 0) {
-					break;
-				}
-				for (size_t j = 0; j < num_pieces; ++j) {
-					num_unmasked_data[j] = result.count - num_clipped[j];
-				}
-				*/
 			}
 		}
 		if (out != nullptr) {
@@ -781,6 +733,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 
 	LIBSAKURA_SYMBOL(Status) status;
 
+	SIMD_ALIGN
+	size_t piece_start_index = 0;
+	SIMD_ALIGN
+	size_t piece_end_index = num_data;
 	float *best_fit_model = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -828,8 +784,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 						baseline_context->basis_data, num_coeff, lsq_matrix,
 						lsq_vector);
 				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-					throw std::runtime_error(
-							"failed in GetLeastSquareFittingCoefficients.");
+					throw std::runtime_error("failed in GetLSQCoefficients.");
 				}
 			} else {
 				status = LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(num_data,
@@ -839,7 +794,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 						lsq_vector);
 				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 					throw std::runtime_error(
-							"failed in UpdateLeastSquareFittingCoefficients.");
+							"failed in UpdateLSQCoefficients.");
 				}
 			}
 
@@ -864,9 +819,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
 				float clip_threshold_lower = result.mean - clip_threshold_abs;
 				float clip_threshold_upper = result.mean + clip_threshold_abs;
-				ClipData(num_data, residual_data, final_mask,
-						clip_threshold_lower, clip_threshold_upper, final_mask,
-						clipped_indices, &num_clipped);
+				ClipData(1, &piece_start_index, &piece_end_index, residual_data,
+						final_mask, clip_threshold_lower, clip_threshold_upper,
+						final_mask, clipped_indices, &num_clipped);
 				if (num_clipped == 0) {
 					break;
 				}
@@ -942,16 +897,15 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context, size_t num_pieces,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*boundary) * num_pieces, &boundary));
 	GetBoundariesOfPiecewiseData(num_data, mask, num_pieces, boundary);
-
-	size_t num_coeff = baseline_context->num_bases * num_pieces;
 	double *coeff = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*coeff) * num_coeff, &coeff));
-
+					sizeof(*coeff) * num_pieces * baseline_context->num_bases,
+					&coeff));
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, boundary,
 			baseline_context, clip_threshold_sigma, num_fitting_max_arg,
-			num_coeff, coeff, final_mask, get_residual, out, baseline_status);
+			baseline_context->num_bases - 1 + num_pieces, coeff, final_mask,
+			get_residual, out, baseline_status);
 
 }
 
@@ -1025,11 +979,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*boundary) * num_pieces, &boundary));
 	GetBoundariesOfPiecewiseData(num_data, mask, num_pieces, boundary);
-	size_t num_coeff = context->num_bases * num_pieces;
-
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, boundary,
-			context, clip_threshold_sigma, num_fitting_max, num_coeff, coeff,
-			final_mask, true, nullptr, baseline_status);
+			context, clip_threshold_sigma, num_fitting_max,
+			context->num_bases - 1 + num_pieces, coeff, final_mask, true,
+			nullptr, baseline_status);
 }
 
 inline void SubtractBaselineUsingCoefficientsFloat(
