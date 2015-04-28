@@ -215,7 +215,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		SIMD_ALIGN
 		static bool const is_valid[] = { true, true, true, true, true, true };
 		STATIC_ASSERT(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
-		size_t new_elements = static_cast<size_t>(-1);
+		size_t new_elements = size_t(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(ELEMENTSOF(data),
 				is_valid, data, &new_elements);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -227,7 +227,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		EXPECT_EQ(2.f, data[4]);
 		EXPECT_EQ(3.f, data[5]);
 
-		new_elements = static_cast<size_t>(-1);
+		new_elements = size_t(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(0, is_valid,
 				data, &new_elements);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -239,7 +239,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		SIMD_ALIGN
 		static bool const is_valid[] = { true, false, true, false, true, true };
 		STATIC_ASSERT(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
-		size_t new_elements = static_cast<size_t>(-1);
+		size_t new_elements = size_t(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(ELEMENTSOF(data),
 				is_valid, data, &new_elements);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -256,7 +256,7 @@ TEST(Statistics, SortValidValuesDensely) {
 		static bool const is_valid[] = { false, false, false, false, false,
 		false };
 		STATIC_ASSERT(ELEMENTSOF(data) == ELEMENTSOF(is_valid));
-		size_t new_elements = static_cast<size_t>(-1);
+		size_t new_elements = size_t(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(ELEMENTSOF(data),
 				is_valid, data, &new_elements);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -265,18 +265,18 @@ TEST(Statistics, SortValidValuesDensely) {
 	{
 		SIMD_ALIGN
 		static float data[] = { 2.f, -2.f, 3.f, 0.f, -2.f, -1.f };
-		size_t new_elements = static_cast<size_t>(-1);
+		size_t new_elements = size_t(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(ELEMENTSOF(data),
 				nullptr, data, &new_elements);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
-		EXPECT_EQ(static_cast<size_t>(-1), new_elements);
+		EXPECT_EQ(size_t(-1), new_elements);
 	}
 	{
 		SIMD_ALIGN
 		static float data[] = { 2.f, -2.f, 3.f, 0.f, -2.f, -1.f };
 		SIMD_ALIGN
 		static bool const is_valid[] = { true, false, true, false, true, true };
-		size_t new_elements = static_cast<size_t>(-1);
+		size_t new_elements = size_t(-1);
 		result = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
 		ELEMENTSOF(data) - 1, &is_valid[1], &data[1], &new_elements);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
@@ -847,6 +847,127 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 }
 
 namespace {
+template<typename T, typename FuncType>
+void TestComputeMedianAbsoluteDeviation(FuncType target) {
+	LIBSAKURA_SYMBOL(Status) result = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+			nullptr);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+
+	{
+		SIMD_ALIGN
+		static T data[] = { T(-3), T(-2), T(-1), T(0), T(2), T(3) };
+		SIMD_ALIGN
+		T new_data[ELEMENTSOF(data)];
+
+		{ // even
+			result = target(ELEMENTSOF(data), data, new_data);
+			constexpr auto median = (T(-1) + T(0)) / 2;
+			auto const test = [&]() {
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+				EXPECT_EQ(std::abs(T(0) - median), new_data[0]);
+				EXPECT_EQ(std::abs(T(-1) - median), new_data[1]);
+				EXPECT_EQ(std::abs(T(0) - median), new_data[1]);
+				EXPECT_EQ(std::abs(T(-1) - median), new_data[0]);
+				EXPECT_EQ(std::abs(T(-2) - median), new_data[2]);
+				EXPECT_EQ(std::abs(T(2) - median), new_data[3]);
+				EXPECT_EQ(std::abs(T(-3) - median), new_data[4]);
+				EXPECT_EQ(std::abs(T(2) - median), new_data[4]);
+				EXPECT_EQ(std::abs(T(-3) - median), new_data[3]);
+				EXPECT_EQ(std::abs(T(3) - median), new_data[5]);
+			};
+			test();
+
+			std::copy_n(data, ELEMENTSOF(data), new_data);
+			result = target(ELEMENTSOF(data), new_data, new_data);
+			test();
+		}
+
+		{ // odd
+			result = target(ELEMENTSOF(data) - 1, data, new_data);
+
+			constexpr auto median = T(-1);
+			auto const test = [&]() {
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+				EXPECT_EQ(std::abs(T(-1) - median), new_data[0]);
+				EXPECT_EQ(std::abs(T(-2) - median), new_data[1]);
+				EXPECT_EQ(std::abs(T(0) - median), new_data[2]);
+				EXPECT_EQ(std::abs(T(-2) - median), new_data[2]);
+				EXPECT_EQ(std::abs(T(0) - median), new_data[1]);
+				EXPECT_EQ(std::abs(T(-3) - median), new_data[3]);
+				EXPECT_EQ(std::abs(T(2) - median), new_data[4]);
+			};
+			test();
+
+			std::copy_n(data, ELEMENTSOF(data), new_data);
+			result = target(ELEMENTSOF(data) - 1, new_data, new_data);
+			test();
+		}
+		{ // 0
+			result = target(0, data, new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+
+			std::copy_n(data, ELEMENTSOF(data), new_data);
+			result = target(0, new_data, new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+		}
+		{ // 1
+			result = target(1, data, new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+			EXPECT_EQ(T(0), new_data[0]);
+
+			std::copy_n(data, ELEMENTSOF(data), new_data);
+			result = target(1, new_data, new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+			EXPECT_EQ(T(0), new_data[0]);
+		}
+		{ // 2
+			result = target(2, data, new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), result);
+			constexpr auto median = (T(-3) + T(-2)) / 2;
+			auto const test = [&]() {
+				EXPECT_EQ(std::abs(data[0] - median), new_data[0]);
+				EXPECT_EQ(std::abs(data[1] - median), new_data[1]);
+				EXPECT_EQ(std::abs(data[0] - median), new_data[1]);
+				EXPECT_EQ(std::abs(data[1] - median), new_data[0]);
+			};
+			test();
+
+			std::copy_n(data, ELEMENTSOF(data), new_data);
+			result = target(2, new_data, new_data);
+			test();
+		}
+		{ // unaligned
+			result = target(ELEMENTSOF(data), &data[1], new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = target(ELEMENTSOF(data), data, &new_data[1]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = target(ELEMENTSOF(data), &new_data[1], &new_data[1]);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+		}
+		{ // nullptr
+			result = target(ELEMENTSOF(data), nullptr, new_data);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = target(ELEMENTSOF(data), data, nullptr);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+
+			result = target(ELEMENTSOF(data), nullptr, nullptr);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), result);
+		}
+	}
+	LIBSAKURA_SYMBOL(CleanUp)();}
+
+}
+
+TEST(Statistics, ComputeMedianAbsoluteDeviation) {
+	TestComputeMedianAbsoluteDeviation<float,
+			decltype(LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat))>(
+			LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat));
+}
+
+namespace {
 
 template<typename MessageType>
 void ReportBenchmark(MessageType const &key, double sec) {
@@ -891,6 +1012,16 @@ TEST(Statistics, ComputeStatistics_Performance) {
 							is_valid.data(), &result);});
 		assert(data.size() % 2 == 0);
 		EXPECT_EQ(data.size() / 2, result.count);
-	}
+
+		size_t new_elements = 0;
+		Timing("SortValidValuesDenselyFloat",
+				[&]() {
+					return LIBSAKURA_SYMBOL (SortValidValuesDenselyFloat)(data.size() / 24, is_valid.data(), data.data(),
+							&new_elements);
+				});
+		Timing("ComputeMedianAbsoluteDeviationFloat",
+				[&]() {return LIBSAKURA_SYMBOL (ComputeMedianAbsoluteDeviationFloat)(new_elements, data.data(),
+							data.data());});
+}
 	LIBSAKURA_SYMBOL(CleanUp)();
 }

@@ -1020,14 +1020,14 @@ LIBSAKURA_SYMBOL(Status) ComputeMedianAbsoluteDeviation(size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(new_data));
 
 	try {
-		if (num_data < 2) {
+		if (num_data < 1) {
 			return LIBSAKURA_SYMBOL(Status_kOK);
 		}
 		auto data_aligned = AssumeAligned(data);
 		auto const new_data_aligned = AssumeAligned(new_data);
 		auto median = data_aligned[num_data / 2];
 		if (num_data % 2 == 0) {
-			median = (median + data_aligned[num_data / 2 + 1]) / 2;
+			median = (median + data_aligned[num_data / 2 - 1]) / 2;
 		}
 		for (size_t i = 0; i < num_data; ++i) {
 			new_data_aligned[i] = std::abs(data_aligned[i] - median);
