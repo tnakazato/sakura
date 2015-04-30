@@ -346,29 +346,6 @@ typedef struct {
 	 */
 	double square_sum;
 
-	/// @cond
-	// These fields will be removed since version 1.0.
-	/**
-	 * @~
-	 * mean of valid data. NaN if no valid data.
-	 */
-	double mean;
-	/**
-	 * @~
-	 * root-mean-square of valid data. NaN if no valid data.
-	 */
-	double rms;
-	/**
-	 * @~
-	 * stddev of valid data. NaN if no valid data.
-	 */
-	double stddev;
-	/**
-	 * @~
-	 * min value of valid data. NaN if no valid data.
-	 */
-	/// @endcond
-
 	float min;
 	/**
 	 * @~

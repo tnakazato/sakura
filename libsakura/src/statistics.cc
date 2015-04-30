@@ -689,16 +689,6 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 	result.count = counted;
 	result.sum = total;
 	result.square_sum = square_total;
-	double double_count = static_cast<double>(result.count);
-	double mean = NAN;
-	double rms2 = NAN;
-	if (result.count != 0) {
-		mean = total / double_count;
-		rms2 = square_total / double_count;
-	}
-	result.mean = mean;
-	result.rms = std::sqrt(rms2);
-	result.stddev = std::sqrt(std::abs(rms2 - mean * mean));
 	*result_arg = result;
 }
 
@@ -790,15 +780,6 @@ LIBSAKURA_SYMBOL(StatisticsResultFloat) *result_) {
 	result.index_of_min = visitor.index_of_min;
 	result.max = visitor.max;
 	result.index_of_max = visitor.index_of_max;
-	InternalDataType mean = NAN;
-	InternalDataType rms2 = NAN;
-	if (visitor.count != 0) {
-		mean = visitor.sum / result.count;
-		rms2 = visitor.square_sum / result.count;
-	}
-	result.mean = mean;
-	result.rms = std::sqrt(rms2);
-	result.stddev = std::sqrt(std::abs(rms2 - mean * mean));
 }
 
 } /* anonymous namespace */
@@ -850,15 +831,6 @@ void ComputeAccurateStatistics<float, LIBSAKURA_SYMBOL(StatisticsResultFloat)>(
 	result->index_of_min = stats.index_of_min;
 	result->max = stats.max;
 	result->index_of_max = stats.index_of_max;
-	double mean = NAN;
-	double rms2 = NAN;
-	if (stats.count != 0) {
-		mean = stats.sum / stats.count;
-		rms2 = stats.square_sum / stats.count;
-	}
-	result->mean = mean;
-	result->rms = std::sqrt(rms2);
-	result->stddev = std::sqrt(std::abs(rms2 - mean * mean));
 }
 
 } /* anonymous namespace */
