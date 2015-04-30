@@ -2281,55 +2281,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @~japanese
- * @brief 与えられたデータに対して、同じく与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求める。
- * @details
- * @param[in] context ベースラインモデルに関する情報を格納する構造体。
- * @param[in] order モデルのパラメータ。多項式(polynomial, chebyshev)では次数、三角関数では最大の波数。値は@a context を生成したときに指定した@a order より大きな数になってはならない。このパラメータに基いて構成されるベースラインモデルの基底関数の数はそれぞれ、 @a order+1 （多項式）、 @a order*2+1 （三角関数）となるが、これがデータ点の数 @a num_data より大きな数になってはならない。
- * @param[in] num_data 配列 @a data 、 @a mask 、 @a out 、及び、モデルを構成する各基底関数の離散的データ点の要素数。
- * @param[in] data 入力データ。要素数は @a num_data でなければならない。
- * @n must-be-aligned
- * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
- * @n must-be-aligned
- * @param[out] out 出力される配列。要素数は @a num_data でなければならない。 @a out を指すポインタは @a data と同じでもよい。
- * @n must-be-aligned
- * @param[out] baseline_status ベースライン固有のエラーコード。
- * @return 終了ステータス。
- * @~english
- * @brief Compute the best-fit model by least-square fitting.
- * @details
- * @param[in] context An object containing baseline model data.
- * @param[in] order Parameter for the specified function.
- * It is the order for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or the maximum wave number
- * for sakura_BaselineType_kSinusoid. The value should not exceed
- * the @a order specified in creation of @a context .
- * The number of model bases, which is @a order+1 for
- * sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or @a order*2+1 for
- * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
- * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a out , and also the number of elements in each model data
- * (i.e., discrete values of basis function) consisting the total model.
- * @param[in] data The input data with length of @a num_data .
- * @n must-be-aligned
- * @param[in] mask The input mask data with length of @a num_data .
- * @n must-be-aligned
- * @param[out] out The best-fit model with length of @a num_data . The
- * pointer of @a out can be identical with that of @a data .
- * @n must-be-aligned
- * @param[out] baseline_status Baseline-specific error code.
- * @return Status code.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		uint16_t const order, size_t num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/], float out[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
-
-/**
- * @~japanese
  * @brief 入力データに対して、与えられたモデル基底関数の線型結合で表されるもののうち最も良く合うものを最小二乗フィットにより求め、差し引く。
  * @details
  * @param[in] context ベースラインモデルに関する情報を格納する構造体。
@@ -2593,68 +2544,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*4*num_piece*/], bool final_mask[/*num_data*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
-				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
-
-/**
- * @~japanese
- * @brief 入力データに多項式ベースラインをフィットし差し引く。
- * @details
- * @param[in] num_data 配列 @a data 、 @a mask 、 @a final_mask 、 @a out の要素数。
- * @param[in] data 入力データ。要素数は @a num_data でなければならない。
- * @n must-be-aligned
- * @param[in] mask 入力データに対するマスク情報。要素数は @a num_data でなければならない。値がfalseの要素に対応する入力データはフィッティングに用いられない。
- * @n must-be-aligned
- * @param[in] order 多項式モデルの次数。 @a num_data-1 以下の値でなければならない。
- * @param[in] clip_threshold_sigma クリッピングの閾値。単位はσ。正値でなければならない。
- * @param[in] num_fitting_max フィッティングを(再帰的に)行う最大回数。
- * 値nが与えられた場合、最初のフィッティング＆差し引きを行った後、残差データのσを計算し、
- * 残差がその値の± @a clip_threshold_sigma
- * 倍を越えるものを除外して再度フィッティング＆差し引きを行うという操作を最大(n-1)回繰り返す。
- * デフォルト値は1、即ち、フィッティング＆差し引きは１回のみ行われ、クリッピングは行わない。
- * もし 0 が渡された場合は、自動的に 1 に変更される。
- * @param[in] get_residual trueの場合、入力データからフィットの結果を差し引いたものを出力として返す。falseの場合は、フィットの結果を出力として返す。
- * @param[out] final_mask 再帰的クリッピングを経た後の最終的なマスク情報。要素数は @a num_data でなければならない。
- * @n must-be-aligned
- * @param[out] out 出力データ。要素数は @a num_data でなければならない。
- * @n must-be-aligned
- * @param[out] baseline_status ベースライン固有のエラーコード。
- * @~english
- * @brief Fit a baseline and subtract it from input data.
- * @details
- * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out.
- * @param[in] data The input data with length of @a num_data .
- * @n must-be-aligned
- * @param[in] mask The input mask data with length of @a num_data .
- * @n must-be-aligned
- * @param[in] order Order of polynomial model. It must be equal or
- * smaller than @a num_data-1 .
- * @param[in] clip_threshold_sigma The threshold of clipping in unit
- * of sigma. It must be positive.
- * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
- * @param[in] get_residual Set the output to be (input - best-fit) if true,
- * or the best-fit value if false.
- * @param[out] final_mask The final mask data after recursive clipping
- * procedure. Its length must be @a num_data .
- * @n must-be-aligned
- * @param[out] out The output data. Its length must be @a num_data .
- * @n must-be-aligned
- * @param[out] baseline_status Baseline-specific error code.
- * @return Status code.
- * @~
- * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselinePolynomialFloat)(
-		size_t num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/], uint16_t order,
-		float clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 

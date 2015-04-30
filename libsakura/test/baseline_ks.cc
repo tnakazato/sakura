@@ -320,6 +320,7 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
  * {input order=3} < {the other for context generation=5}.
  * Fitting functions: polynomial, Chebyshev
  */
+/*
 TEST_F(BaselineKS, GetBestFitBaselineOrder) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
@@ -378,12 +379,13 @@ TEST_F(BaselineKS, GetBestFitBaselineOrder) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
-
+*/
 /*
  * Test sakura_SubtractBaselineFloat with
  * invalid input order (> order for context generation).
  * Fitting functions: polynomial, Chebyshev
  */
+/*
 TEST_F(BaselineKS, GetBestFitBaselineBadOrder) {
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
@@ -423,7 +425,7 @@ TEST_F(BaselineKS, GetBestFitBaselineBadOrder) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
-
+*/
 /*
  * Test sakura_GetNumberOfCoefficients with
  * {input order=2} < {the other for context generation=5}.
