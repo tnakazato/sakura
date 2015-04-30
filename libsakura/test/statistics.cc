@@ -805,8 +805,11 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 			ExpectEQ(ref.max, result.max);
 			ExpectEQ(ref.min, result.min);
 			ExpectRealEQ(ref.sum, result.sum);
-			//ExpectRealEQ(ref.square_sum, result.square_sum);
+#ifndef __AVX__
+			EXPECT_NEAR(ref.square_sum, result.square_sum, 0.0000000238e+17);
+#else
 			EXPECT_NEAR(ref.square_sum, result.square_sum, 0.00000000502e+17);
+#endif
 			ExpectRealEQ(ref.mean, result.mean);
 			EXPECT_NEAR(ref.rms, result.rms, 0.0001459);
 			EXPECT_NEAR(ref.stddev, result.stddev, 0.0001459);
@@ -820,7 +823,11 @@ TEST(Statistics, ComputeStatistics_Accuracy) {
 					ExpectEQ(ref.max, result.max);
 					ExpectEQ(ref.min, result.min);
 					ExpectRealEQ(ref.sum, result.sum);
+#ifndef __AVX__
+					EXPECT_NEAR(ref.square_sum, result.square_sum, .0000000000000244e+17);
+#else
 					ExpectRealEQ(ref.square_sum, result.square_sum);
+#endif
 					ExpectRealEQ(ref.mean, result.mean);
 					EXPECT_NEAR(ref.rms, result.rms, 1.6008e-10);
 					EXPECT_NEAR(ref.stddev, result.stddev, 1.6008e-10);
