@@ -685,9 +685,11 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 						"failed in ComputeAccurateStatisticsFloat.");
 			}
 			if (i < num_fitting_max - 1) {
-				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
-				float clip_threshold_lower = result.mean - clip_threshold_abs;
-				float clip_threshold_upper = result.mean + clip_threshold_abs;
+				double mean = result.sum / result.count;
+				float clip_threshold_abs = clip_threshold_sigma
+						* sqrt(result.square_sum / result.count - mean * mean);
+				float clip_threshold_lower = mean - clip_threshold_abs;
+				float clip_threshold_upper = mean + clip_threshold_abs;
 				ClipData(num_pieces, piece_start_indices, piece_end_indices,
 						residual_data, final_mask, clip_threshold_lower,
 						clip_threshold_upper, final_mask, clipped_indices,
@@ -816,9 +818,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *baseline_context,
 						"failed in ComputeAccurateStatisticsFloat.");
 			}
 			if (i < num_fitting_max - 1) {
-				float clip_threshold_abs = clip_threshold_sigma * result.stddev;
-				float clip_threshold_lower = result.mean - clip_threshold_abs;
-				float clip_threshold_upper = result.mean + clip_threshold_abs;
+				double mean = result.sum / result.count;
+				float clip_threshold_abs = clip_threshold_sigma
+						* sqrt(result.square_sum / result.count - mean * mean);
+				float clip_threshold_lower = mean - clip_threshold_abs;
+				float clip_threshold_upper = mean + clip_threshold_abs;
 				ClipData(1, &piece_start_index, &piece_end_index, residual_data,
 						final_mask, clip_threshold_lower, clip_threshold_upper,
 						final_mask, clipped_indices, &num_clipped);
