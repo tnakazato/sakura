@@ -73,12 +73,12 @@ __m256d NegMultiplyAdd(__m256d           const &a, __m256d           const &b, _
 
 #endif
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 void AddMulVectorTemplate(double k, double const *vec, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (NUM_BASES / pack_elements) * pack_elements;
+	size_t const end = (kNumBases / pack_elements) * pack_elements;
 	auto coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
@@ -88,17 +88,17 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 						_mm256_loadu_pd(&out[i])));
 	}
 #endif
-	for (; i < NUM_BASES; ++i) {
+	for (; i < kNumBases; ++i) {
 		out[i] += k * vec[i];
 	}
 }
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 void SubMulVectorTemplate(double k, double const *vec, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (NUM_BASES / pack_elements) * pack_elements;
+	size_t const end = (kNumBases / pack_elements) * pack_elements;
 	auto coeff = _mm256_set1_pd(k);
 	for (i = 0; i < end; i += pack_elements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
@@ -106,7 +106,7 @@ void SubMulVectorTemplate(double k, double const *vec, double *out) {
 				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
 	}
 #endif
-	for (; i < NUM_BASES; ++i) {
+	for (; i < kNumBases; ++i) {
 		out[i] -= k * vec[i];
 	}
 }
@@ -149,7 +149,7 @@ inline void SubMulVector(size_t const num_model_bases, double k,
 	}
 }
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 		size_t num_model_bases, double const *model_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -159,23 +159,23 @@ inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
-	for (size_t i = 0; i < NUM_BASES * NUM_BASES; ++i) {
+	for (size_t i = 0; i < kNumBases * kNumBases; ++i) {
 		out[i] = 0;
 	}
 	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (mask[i]) {
 			auto model_i = &model[i * num_model_bases];
-			for (size_t j = 0; j < NUM_BASES; ++j) {
-				auto out_matrix_i = &out[j * NUM_BASES];
-				AddMulVectorTemplate<NUM_BASES>(model_i[j], model_i,
+			for (size_t j = 0; j < kNumBases; ++j) {
+				auto out_matrix_i = &out[j * kNumBases];
+				AddMulVectorTemplate<kNumBases>(model_i[j], model_i,
 						out_matrix_i);
 			}
 			num_unmasked_data++;
 		}
 	}
 
-	if (num_unmasked_data < NUM_BASES) {
+	if (num_unmasked_data < kNumBases) {
 		throw std::runtime_error(
 				"GetLSQFittingMatrixTemplate: too many masked data.");
 	}
@@ -212,7 +212,7 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 	}
 }
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
@@ -225,14 +225,14 @@ inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
-	for (size_t i = 0; i < NUM_BASES * NUM_BASES; ++i) {
+	for (size_t i = 0; i < kNumBases * kNumBases; ++i) {
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
 		auto model_i = &model[clipped_indices[i] * num_model_bases];
-		for (size_t j = 0; j < NUM_BASES; ++j) {
-			auto out_matrix_j = &out[j * NUM_BASES];
-			SubMulVectorTemplate<NUM_BASES>(model_i[j], model_i, out_matrix_j);
+		for (size_t j = 0; j < kNumBases; ++j) {
+			auto out_matrix_j = &out[j * kNumBases];
+			SubMulVectorTemplate<kNumBases>(model_i[j], model_i, out_matrix_j);
 		}
 	}
 }
@@ -262,7 +262,7 @@ inline void UpdateLSQFittingMatrix(size_t num_clipped,
 	}
 }
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 inline void GetLSQFittingVectorTemplate(size_t num_data, float const *data_arg,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
@@ -275,14 +275,14 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
-	for (size_t i = 0; i < NUM_BASES; ++i) {
+	for (size_t i = 0; i < kNumBases; ++i) {
 		out[i] = 0;
 	}
 	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
 			auto model_i = &model[i * num_model_bases];
 			auto data_i = data[i];
-			AddMulVectorTemplate<NUM_BASES>(data_i, model_i, out);
+			AddMulVectorTemplate<kNumBases>(data_i, model_i, out);
 		}
 	}
 }
@@ -311,7 +311,7 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 }
 
-template<size_t NUM_BASES> inline void UpdateLSQFittingVectorTemplate(
+template<size_t kNumBases> inline void UpdateLSQFittingVectorTemplate(
 		float const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
@@ -326,13 +326,13 @@ template<size_t NUM_BASES> inline void UpdateLSQFittingVectorTemplate(
 	auto model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
-	for (size_t i = 0; i < NUM_BASES; ++i) {
+	for (size_t i = 0; i < kNumBases; ++i) {
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
 		auto model_i = &model[clipped_indices[i] * num_model_bases];
 		auto data_i = data[clipped_indices[i]];
-		SubMulVectorTemplate<NUM_BASES>(data_i, model_i, out);
+		SubMulVectorTemplate<kNumBases>(data_i, model_i, out);
 	}
 }
 
@@ -361,13 +361,13 @@ inline void UpdateLSQFittingVector(float const *data_arg, size_t num_clipped,
 	}
 }
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 inline void GetLSQCoefficientsTemplate(size_t num_data, float const *data,
 bool const *mask, size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
-	GetLSQFittingMatrixTemplate<NUM_BASES>(num_data, mask, num_model_bases,
+	GetLSQFittingMatrixTemplate<kNumBases>(num_data, mask, num_model_bases,
 			basis, lsq_matrix);
-	GetLSQFittingVectorTemplate<NUM_BASES>(num_data, data, mask,
+	GetLSQFittingVectorTemplate<kNumBases>(num_data, data, mask,
 			num_model_bases, basis, lsq_vector);
 }
 
@@ -380,15 +380,15 @@ bool const *mask, size_t const num_model_bases, double const *basis,
 			num_lsq_bases, lsq_vector);
 }
 
-template<size_t NUM_BASES>
+template<size_t kNumBases>
 inline void UpdateLSQCoefficientsTemplate(size_t const num_data,
 		float const *data, size_t const num_clipped,
 		size_t const *clipped_indices, size_t const num_model_bases,
 		double const *basis, size_t const num_lsq_bases, double *lsq_matrix,
 		double *lsq_vector) {
-	UpdateLSQFittingMatrixTemplate<NUM_BASES>(num_clipped, clipped_indices,
+	UpdateLSQFittingMatrixTemplate<kNumBases>(num_clipped, clipped_indices,
 			num_model_bases, lsq_matrix, basis, lsq_matrix);
-	UpdateLSQFittingVectorTemplate<NUM_BASES>(data, num_clipped,
+	UpdateLSQFittingVectorTemplate<kNumBases>(data, num_clipped,
 			clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
 }
 
