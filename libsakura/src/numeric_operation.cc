@@ -24,8 +24,8 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
 #include <memory>
+#include <stdexcept>
 
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 #	include <immintrin.h>

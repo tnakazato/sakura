@@ -32,10 +32,9 @@
 #include <climits>
 #include <cmath>
 #include <cstddef>
-#include <iomanip>
-#include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 #	include <immintrin.h>
