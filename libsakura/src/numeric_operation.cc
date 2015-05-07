@@ -167,9 +167,9 @@ inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 		if (mask[i]) {
 			auto model_i = &model[i * num_model_bases];
 			for (size_t j = 0; j < kNumBases; ++j) {
-				auto out_matrix_i = &out[j * kNumBases];
+				auto out_matrix_j = &out[j * kNumBases];
 				AddMulVectorTemplate<kNumBases>(model_i[j], model_i,
-						out_matrix_i);
+						out_matrix_j);
 			}
 			num_unmasked_data++;
 		}
