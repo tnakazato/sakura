@@ -224,6 +224,8 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
+	std::cout << std::setprecision(5) << "#x# benchmark Baseline_CreateBaselineContextWithPolynomial" << " " << elapsed_time
+			<< std::endl;
 }
 
 /*
