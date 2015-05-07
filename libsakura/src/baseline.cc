@@ -190,7 +190,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	work_context->baseline_type = baseline_type;
 	work_context->num_basis_data = num_basis_data;
 	GetBasisData(order, work_context.get());
-	*context = (LIBSAKURA_SYMBOL(BaselineContext) *) work_context.release();
+	*context = work_context.release();
 }
 
 inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
