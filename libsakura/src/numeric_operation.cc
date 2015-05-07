@@ -63,7 +63,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d        const &a, __m256d        const &b, __m256d        const &c) {
+__m256d NegMultiplyAdd(__m256d           const &a, __m256d           const &b, __m256d           const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -362,42 +362,18 @@ inline void UpdateLSQFittingVector(float const *data_arg, size_t num_clipped,
 }
 
 template<size_t NUM_BASES>
-inline void GetLSQCoefficientsTemplate(size_t num_data, float const *data_arg,
-		bool const *mask_arg, size_t const num_model_bases,
-		double const *basis_data, size_t const num_lsq_bases,
-		double *lsq_matrix_arg, double *lsq_vector_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto basis = AssumeAligned(basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-
+inline void GetLSQCoefficientsTemplate(size_t num_data, float const *data,
+bool const *mask, size_t const num_model_bases, double const *basis,
+		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
 	GetLSQFittingMatrixTemplate<NUM_BASES>(num_data, mask, num_model_bases,
 			basis, lsq_matrix);
 	GetLSQFittingVectorTemplate<NUM_BASES>(num_data, data, mask,
 			num_model_bases, basis, lsq_vector);
 }
 
-inline void GetLSQCoefficients(size_t num_data, float const *data_arg,
-bool const *mask_arg, size_t const num_model_bases, double const *basis_data,
-		size_t const num_lsq_bases, double *lsq_matrix_arg,
-		double *lsq_vector_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto basis = AssumeAligned(basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-
+inline void GetLSQCoefficients(size_t num_data, float const *data,
+bool const *mask, size_t const num_model_bases, double const *basis,
+		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
 	GetLSQFittingMatrix(num_data, mask, num_model_bases, basis, num_lsq_bases,
 			lsq_matrix);
 	GetLSQFittingVector(num_data, data, mask, num_model_bases, basis,
@@ -406,43 +382,20 @@ bool const *mask_arg, size_t const num_model_bases, double const *basis_data,
 
 template<size_t NUM_BASES>
 inline void UpdateLSQCoefficientsTemplate(size_t const num_data,
-		float const *data_arg, size_t const num_clipped,
-		size_t const *clipped_indices_arg, size_t const num_model_bases,
-		double const *basis_data, size_t const num_lsq_bases,
-		double *lsq_matrix_arg, double *lsq_vector_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	auto data = AssumeAligned(data_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto basis = AssumeAligned(basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-
+		float const *data, size_t const num_clipped,
+		size_t const *clipped_indices, size_t const num_model_bases,
+		double const *basis, size_t const num_lsq_bases, double *lsq_matrix,
+		double *lsq_vector) {
 	UpdateLSQFittingMatrixTemplate<NUM_BASES>(num_clipped, clipped_indices,
 			num_model_bases, lsq_matrix, basis, lsq_matrix);
 	UpdateLSQFittingVectorTemplate<NUM_BASES>(data, num_clipped,
 			clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
 }
 
-inline void UpdateLSQCoefficients(size_t const num_data, float const *data_arg,
-		size_t const num_clipped, size_t const *clipped_indices_arg,
-		size_t const num_model_bases, double const *basis_data,
-		size_t const num_lsq_bases, double *lsq_matrix_arg,
-		double *lsq_vector_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector_arg));
-	auto data = AssumeAligned(data_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto basis = AssumeAligned(basis_data);
-	auto lsq_matrix = AssumeAligned(lsq_matrix_arg);
-	auto lsq_vector = AssumeAligned(lsq_vector_arg);
-
+inline void UpdateLSQCoefficients(size_t const num_data, float const *data,
+		size_t const num_clipped, size_t const *clipped_indices,
+		size_t const num_model_bases, double const *basis,
+		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
 	UpdateLSQFittingMatrix(num_clipped, clipped_indices, num_lsq_bases,
 			lsq_matrix, num_model_bases, basis, lsq_matrix);
 	UpdateLSQFittingVector(data, num_clipped, clipped_indices, num_lsq_bases,
@@ -483,12 +436,6 @@ void GetLSQCoefficientsEntry(size_t const num_data,
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
-
 	typedef void (*GetLSQCoefficientsFunc)(size_t const num_data,
 			float const *data, bool const *mask, size_t const num_model_bases,
 			double const *basis_data, size_t const num_lsq_bases,
@@ -523,12 +470,6 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_matrix));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
-
 	typedef void (*UpdateLSQCoefficientsFunc)(size_t const num_data,
 			float const *data, size_t const num_clipped,
 			size_t const *clipped_indices, size_t const num_model_bases,
