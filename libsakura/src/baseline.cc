@@ -95,14 +95,14 @@ inline void DoGetBasisDataPolynomial(size_t num_loop, double const i_d,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto out = AssumeAligned(out_arg);
 
+	size_t i = *idx;
 	double val = 1.0;
-	out[*idx] = val;
-	++(*idx);
-	for (size_t j = 1; j < num_loop; ++j) {
+	for (size_t j = 0; j < num_loop; ++j) {
+		out[i] = val;
 		val *= i_d;
-		out[*idx] = val;
-		++(*idx);
+		++i;
 	}
+	*idx = i;
 }
 
 inline void GetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
