@@ -422,7 +422,8 @@ inline void GetStandardCubicBases(double const i_d, size_t *idx,
 inline void GetAuxiliaryCubicBases(size_t const num_boundary,
 		double const *boundary_arg, double const boundary_final,
 		double const i_d, size_t *idx, double *out_arg) {
-	assert(1 <= *idx);
+	size_t i = *idx;
+	assert(1 <= i);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto boundary = AssumeAligned(boundary_arg);
@@ -432,18 +433,19 @@ inline void GetAuxiliaryCubicBases(size_t const num_boundary,
 	auto p = [](double v) {return std::max(0.0, v);};
 	auto pcb = [&](double v) {return p(cb(v));};
 
-	--(*idx);
+	--i;
 	auto boundary_current = boundary[1];
-	out[*idx] -= pcb(i_d - boundary_current);
-	++(*idx);
+	out[i] -= pcb(i_d - boundary_current);
+	++i;
 	for (size_t j = 1; j < num_boundary - 1; ++j) {
 		auto boundary_next = boundary[j + 1];
-		out[*idx] = p(cb(i_d - boundary_current) - pcb(i_d - boundary_next));
+		out[i] = p(cb(i_d - boundary_current) - pcb(i_d - boundary_next));
 		boundary_current = boundary_next;
-		++(*idx);
+		++i;
 	}
-	out[*idx] = pcb(i_d - boundary_final);
-	++(*idx);
+	out[i] = pcb(i_d - boundary_final);
+	++i;
+	*idx = i;
 }
 
 inline void GetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
