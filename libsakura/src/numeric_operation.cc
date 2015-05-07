@@ -77,10 +77,10 @@ template<size_t kNumBases>
 void AddMulVectorTemplate(double k, double const *vec, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (kNumBases / pack_elements) * pack_elements;
+	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	constexpr size_t kEnd((kNumBases / kPackElements) * kPackElements);
 	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < end; i += pack_elements) {
+	for (i = 0; i < kEnd; i += kPackElements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
@@ -97,10 +97,10 @@ template<size_t kNumBases>
 void SubMulVectorTemplate(double k, double const *vec, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (kNumBases / pack_elements) * pack_elements;
+	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	constexpr size_t kEnd((kNumBases / kPackElements) * kPackElements);
 	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < end; i += pack_elements) {
+	for (i = 0; i < kEnd; i += kPackElements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
@@ -115,10 +115,10 @@ inline void AddMulVector(size_t const num_model_bases, double k,
 		double const *vec, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (num_model_bases / pack_elements) * pack_elements;
+	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	size_t const end = (num_model_bases / kPackElements) * kPackElements;
 	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < end; i += pack_elements) {
+	for (i = 0; i < end; i += kPackElements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
@@ -135,10 +135,10 @@ inline void SubMulVector(size_t const num_model_bases, double k,
 		double const *vec, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (num_model_bases / pack_elements) * pack_elements;
+	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	size_t const end = (num_model_bases / kPackElements) * kPackElements;
 	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < end; i += pack_elements) {
+	for (i = 0; i < end; i += kPackElements) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));

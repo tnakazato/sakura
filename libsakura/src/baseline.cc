@@ -232,13 +232,13 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 	auto out = AssumeAligned(out_arg);
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	size_t const pack_elements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (num_out / pack_elements) * pack_elements;
+	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	size_t const end = (num_out / kPackElements) * kPackElements;
 	auto const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
-	for (i = 0; i < end; i += pack_elements) {
+	for (i = 0; i < end; i += kPackElements) {
 		auto total = zero;
 		auto bases_row = &basis[num_bases * i];
 		for (size_t j = 0; j < num_coeff; ++j) {
@@ -276,12 +276,12 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces,
 						static_cast<size_t>(ceil(boundary[i + 1])) : num_out;
 		size_t j = start_idx;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-		size_t const pack_elements = sizeof(__m256d) / sizeof(double);
+		constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 		size_t const start =
-				(start_idx % pack_elements == 0) ?
+				(start_idx % kPackElements == 0) ?
 						start_idx :
-						(pack_elements
-								+ (start_idx / pack_elements) * pack_elements);
+						(kPackElements
+								+ (start_idx / kPackElements) * kPackElements);
 		for (j = start_idx; j < start; ++j) {
 			double out_double = 0.0;
 			for (size_t k = 0; k < num_bases; ++k) {
@@ -290,12 +290,12 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces,
 			out[j] = out_double;
 		}
 		size_t const end = start
-				+ ((end_idx - start) / pack_elements) * pack_elements;
+				+ ((end_idx - start) / kPackElements) * kPackElements;
 		auto const zero = _mm256_set1_pd(0.);
 		size_t const offset1 = num_bases * 1;
 		size_t const offset2 = num_bases * 2;
 		size_t const offset3 = num_bases * 3;
-		for (j = start; j < end; j += pack_elements) {
+		for (j = start; j < end; j += kPackElements) {
 			auto total = zero;
 			auto bases_row = &basis[num_bases * j];
 			for (size_t k = 0; k < num_bases; ++k) {
