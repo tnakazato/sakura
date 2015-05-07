@@ -171,7 +171,7 @@ inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 				AddMulVectorTemplate<kNumBases>(model_i[j], model_i,
 						out_matrix_j);
 			}
-			num_unmasked_data++;
+			++num_unmasked_data;
 		}
 	}
 
@@ -202,7 +202,7 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 				auto out_matrix_j = &out[j * num_lsq_bases];
 				AddMulVector(num_lsq_bases, model_i[j], model_i, out_matrix_j);
 			}
-			num_unmasked_data++;
+			++num_unmasked_data;
 		}
 	}
 

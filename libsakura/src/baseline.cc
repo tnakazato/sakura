@@ -135,7 +135,7 @@ inline void GetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 				val = 2.0 * x * data[idx - 1] - data[idx - 2];
 			}
 			data[idx] = val;
-			idx++;
+			++idx;
 		}
 	}
 }
