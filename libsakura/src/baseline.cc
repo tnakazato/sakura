@@ -175,8 +175,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	}
 }
 
-inline void FreeAllocatedMemoryForBaselineContext(
-		LIBSAKURA_SYMBOL(BaselineContext) *context) {
+inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (context != nullptr) {
 		if (context->basis_data_storage != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->basis_data_storage);
@@ -197,17 +196,15 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
 		}
+		work_context->basis_data_storage = nullptr;
 		work_context->baseline_type = baseline_type;
 		work_context->num_basis_data = num_basis_data;
 		GetBasisData(order, work_context.get());
 		*context = work_context.release();
 	} catch (...) {
-		FreeAllocatedMemoryForBaselineContext(*context);
+		DestroyBaselineContext(*context);
+		throw;
 	}
-}
-
-inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
-	FreeAllocatedMemoryForBaselineContext(context);
 }
 
 inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
