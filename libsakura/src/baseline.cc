@@ -224,8 +224,8 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 		size_t num_out, size_t num_bases, double const *basis_arg,
 		float *out_arg) {
-	auto coeff = AssumeAligned(coeff_arg);
-	auto basis = AssumeAligned(basis_arg);
+	auto const coeff = AssumeAligned(coeff_arg);
+	auto const basis = AssumeAligned(basis_arg);
 	auto out = AssumeAligned(out_arg);
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
@@ -261,9 +261,9 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 inline void AddMulMatrixCubicSpline(size_t num_pieces,
 		double const *boundary_arg, size_t num_bases, double const *coeff_arg,
 		size_t num_out, double const *basis_arg, float *out_arg) {
-	auto boundary = AssumeAligned(boundary_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto basis = AssumeAligned(basis_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
+	auto const coeff = AssumeAligned(coeff_arg);
+	auto const basis = AssumeAligned(basis_arg);
 	auto out = AssumeAligned(out_arg);
 	for (size_t i = 0; i < num_pieces; ++i) {
 		size_t coffset = num_bases * i;
@@ -347,7 +347,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(start_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(end_arg));
-	auto mask = AssumeAligned(mask_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 	auto start = AssumeAligned(start_arg);
 	auto end = AssumeAligned(end_arg);
@@ -388,8 +388,8 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_raw_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	auto boundary = AssumeAligned(boundary_arg);
-	auto coeff_raw = AssumeAligned(coeff_raw_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
+	auto const coeff_raw = AssumeAligned(coeff_raw_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 
 	size_t num_bases = 4;
@@ -400,7 +400,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		size_t ioffset = num_bases * i;
 		size_t ioffset_prev = ioffset - num_bases;
 		size_t j = num_bases - 1 + i;
-		auto c = coeff_raw[j] - coeff[ioffset_prev + 3];
+		auto const c = coeff_raw[j] - coeff[ioffset_prev + 3];
 		coeff[ioffset] = coeff[ioffset_prev]
 				- boundary[i] * boundary[i] * boundary[i] * c;
 		coeff[ioffset + 1] = coeff[ioffset_prev + 1]
@@ -426,7 +426,7 @@ inline void GetAuxiliaryCubicBases(size_t const num_boundary,
 	assert(1 <= i);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto boundary = AssumeAligned(boundary_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
 	auto cb = [](double v) {return v * v * v;};
@@ -452,7 +452,7 @@ inline void GetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 		double const *boundary_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto boundary = AssumeAligned(boundary_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
 	size_t idx = 0;
@@ -502,10 +502,10 @@ inline void ClipData(size_t num_piece, size_t const *piece_start_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	auto piece_start = AssumeAligned(piece_start_arg);
-	auto piece_end = AssumeAligned(piece_end_arg);
-	auto data = AssumeAligned(data_arg);
-	auto in_mask = AssumeAligned(in_mask_arg);
+	auto const piece_start = AssumeAligned(piece_start_arg);
+	auto const piece_end = AssumeAligned(piece_end_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const in_mask = AssumeAligned(in_mask_arg);
 	auto out_mask = AssumeAligned(out_mask_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 
@@ -543,9 +543,9 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(residual_data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(best_fit_model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto basis = AssumeAligned(basis_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto const basis = AssumeAligned(basis_arg);
 	auto piece_start_indices = AssumeAligned(piece_start_indices_arg);
 	auto piece_end_indices = AssumeAligned(piece_end_indices_arg);
 	auto coeff = AssumeAligned(coeff_arg);
@@ -653,8 +653,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, float clip_threshold_sigma,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
@@ -757,8 +757,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
@@ -787,8 +787,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
@@ -818,8 +818,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 
@@ -839,8 +839,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 
@@ -861,8 +861,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto coeff = AssumeAligned(coeff_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
 
 	float *best_fit_model = nullptr;
@@ -883,9 +883,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto boundary = AssumeAligned(boundary_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const coeff = AssumeAligned(coeff_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
 	float *best_fit_model = nullptr;

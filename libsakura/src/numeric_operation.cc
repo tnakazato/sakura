@@ -74,8 +74,10 @@ __m256d NegMultiplyAdd(__m256d           const &a, __m256d           const &b, _
 #endif
 
 template<size_t kNumBases>
-void AddMulVectorTemplate(double k, double const *vec, double *out) {
+void AddMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
 	size_t i = 0;
+	auto const vec = AssumeAligned(vec_arg);
+	auto out= AssumeAligned(out_arg);
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	constexpr size_t kEnd((kNumBases / kPackElements) * kPackElements);
@@ -94,8 +96,10 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 }
 
 template<size_t kNumBases>
-void SubMulVectorTemplate(double k, double const *vec, double *out) {
+void SubMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
 	size_t i = 0;
+	auto const vec = AssumeAligned(vec_arg);
+	auto out = AssumeAligned(out_arg);
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	constexpr size_t kEnd((kNumBases / kPackElements) * kPackElements);
@@ -112,8 +116,10 @@ void SubMulVectorTemplate(double k, double const *vec, double *out) {
 }
 
 inline void AddMulVector(size_t const num_model_bases, double k,
-		double const *vec, double *out) {
+		double const *vec_arg, double *out_arg) {
 	size_t i = 0;
+	auto const vec = AssumeAligned(vec_arg);
+	auto out = AssumeAligned(out_arg);
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	size_t const end = (num_model_bases / kPackElements) * kPackElements;
@@ -132,8 +138,10 @@ inline void AddMulVector(size_t const num_model_bases, double k,
 }
 
 inline void SubMulVector(size_t const num_model_bases, double k,
-		double const *vec, double *out) {
+		double const *vec_arg, double *out_arg) {
 	size_t i = 0;
+	auto const vec = AssumeAligned(vec_arg);
+	auto out = AssumeAligned(out_arg);
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	size_t const end = (num_model_bases / kPackElements) * kPackElements;
@@ -155,8 +163,8 @@ inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto mask = AssumeAligned(mask_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < kNumBases * kNumBases; ++i) {
@@ -165,7 +173,7 @@ inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (mask[i]) {
-			auto model_i = &model[i * num_model_bases];
+			auto const model_i = &model[i * num_model_bases];
 			for (size_t j = 0; j < kNumBases; ++j) {
 				auto out_matrix_j = &out[j * kNumBases];
 				AddMulVectorTemplate<kNumBases>(model_i[j], model_i,
@@ -187,8 +195,8 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto mask = AssumeAligned(mask_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_lsq_bases * num_lsq_bases; ++i) {
@@ -197,7 +205,7 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (mask[i]) {
-			auto model_i = &model[i * num_model_bases];
+			auto const model_i = &model[i * num_model_bases];
 			for (size_t j = 0; j < num_lsq_bases; ++j) {
 				auto out_matrix_j = &out[j * num_lsq_bases];
 				AddMulVector(num_lsq_bases, model_i[j], model_i, out_matrix_j);
@@ -220,16 +228,16 @@ inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto in = AssumeAligned(in_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
+	auto const in = AssumeAligned(in_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < kNumBases * kNumBases; ++i) {
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		auto model_i = &model[clipped_indices[i] * num_model_bases];
+		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		for (size_t j = 0; j < kNumBases; ++j) {
 			auto out_matrix_j = &out[j * kNumBases];
 			SubMulVectorTemplate<kNumBases>(model_i[j], model_i, out_matrix_j);
@@ -245,16 +253,16 @@ inline void UpdateLSQFittingMatrix(size_t num_clipped,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto in = AssumeAligned(in_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
+	auto const in = AssumeAligned(in_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_lsq_bases * num_lsq_bases; ++i) {
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		auto model_i = &model[clipped_indices[i] * num_model_bases];
+		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		for (size_t j = 0; j < num_lsq_bases; ++j) {
 			auto out_matrix_j = &out[j * num_lsq_bases];
 			SubMulVector(num_lsq_bases, model_i[j], model_i, out_matrix_j);
@@ -270,9 +278,9 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < kNumBases; ++i) {
@@ -280,7 +288,7 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
-			auto model_i = &model[i * num_model_bases];
+			auto const model_i = &model[i * num_model_bases];
 			auto data_i = data[i];
 			AddMulVectorTemplate<kNumBases>(data_i, model_i, out);
 		}
@@ -294,9 +302,9 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto mask = AssumeAligned(mask_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_lsq_bases; ++i) {
@@ -304,7 +312,7 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 	for (size_t i = 0; i < num_data; ++i) {
 		if (mask[i]) {
-			auto model_i = &model[i * num_model_bases];
+			auto const model_i = &model[i * num_model_bases];
 			auto data_i = data[i];
 			AddMulVector(num_lsq_bases, data_i, model_i, out);
 		}
@@ -320,17 +328,17 @@ template<size_t kNumBases> inline void UpdateLSQFittingVectorTemplate(
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto in = AssumeAligned(in_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
+	auto const in = AssumeAligned(in_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < kNumBases; ++i) {
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		auto model_i = &model[clipped_indices[i] * num_model_bases];
+		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		auto data_i = data[clipped_indices[i]];
 		SubMulVectorTemplate<kNumBases>(data_i, model_i, out);
 	}
@@ -345,17 +353,17 @@ inline void UpdateLSQFittingVector(float const *data_arg, size_t num_clipped,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto data = AssumeAligned(data_arg);
-	auto clipped_indices = AssumeAligned(clipped_indices_arg);
-	auto in = AssumeAligned(in_arg);
-	auto model = AssumeAligned(model_arg);
+	auto const data = AssumeAligned(data_arg);
+	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
+	auto const in = AssumeAligned(in_arg);
+	auto const model = AssumeAligned(model_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_lsq_bases; ++i) {
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		auto model_i = &model[clipped_indices[i] * num_model_bases];
+		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		auto data_i = data[clipped_indices[i]];
 		SubMulVector(num_lsq_bases, data_i, model_i, out);
 	}
