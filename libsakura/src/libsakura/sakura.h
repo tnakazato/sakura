@@ -2682,7 +2682,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  *
  * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
  * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
- * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
+ * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order. For example,
+ * when you have @code{.cpp}
+ * float matrix[4][3];
+ * @endcode
+ * this parameter should be @code
+ * { 3, 4 }
+ * @endcode
  * @param[in] src	Source matrix.
  * @n must-be-aligned
  * @param[in] dst	Destination matrix.
@@ -2717,7 +2723,13 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
  * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
- * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order.
+ * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order. For example,
+ * when you have @code{.cpp}
+ * float matrix[4][3];
+ * @endcode
+ * this parameter should be @code
+ * { 3, 4 }
+ * @endcode
  * @param[in] src	Source matrix.
  * @n must-be-aligned
  * @param[in] dst	Destination matrix.
