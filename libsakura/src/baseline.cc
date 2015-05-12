@@ -221,12 +221,9 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
-inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
-		size_t num_out, size_t num_bases, double const *basis_arg,
-		float *out_arg) {
-	auto const coeff = AssumeAligned(coeff_arg);
-	auto const basis = AssumeAligned(basis_arg);
-	auto out = AssumeAligned(out_arg);
+inline void AddMulMatrix(size_t num_coeff, double const *coeff,
+		size_t num_out, size_t num_bases, double const *basis,
+		float *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
@@ -259,12 +256,8 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff_arg,
 }
 
 inline void AddMulMatrixCubicSpline(size_t num_pieces,
-		double const *boundary_arg, size_t num_bases, double const *coeff_arg,
-		size_t num_out, double const *basis_arg, float *out_arg) {
-	auto const boundary = AssumeAligned(boundary_arg);
-	auto const coeff = AssumeAligned(coeff_arg);
-	auto const basis = AssumeAligned(basis_arg);
-	auto out = AssumeAligned(out_arg);
+		double const *boundary, size_t num_bases, double const *coeff,
+		size_t num_out, double const *basis, float *out) {
 	for (size_t i = 0; i < num_pieces; ++i) {
 		size_t coffset = num_bases * i;
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));

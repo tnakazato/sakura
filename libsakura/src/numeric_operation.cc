@@ -20,6 +20,8 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
+#include <iostream>
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -63,7 +65,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d           const &a, __m256d           const &b, __m256d           const &c) {
+__m256d NegMultiplyAdd(__m256d            const &a, __m256d            const &b, __m256d            const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -74,10 +76,8 @@ __m256d NegMultiplyAdd(__m256d           const &a, __m256d           const &b, _
 #endif
 
 template<size_t kNumBases>
-void AddMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
+void AddMulVectorTemplate(double k, double const *vec, double *out) {
 	size_t i = 0;
-	auto const vec = AssumeAligned(vec_arg);
-	auto out= AssumeAligned(out_arg);
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	constexpr size_t kEnd((kNumBases / kPackElements) * kPackElements);
@@ -86,7 +86,7 @@ void AddMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+						LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
 						_mm256_loadu_pd(&out[i])));
 	}
 #endif
@@ -95,11 +95,29 @@ void AddMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
 	}
 }
 
-template<size_t kNumBases>
-void SubMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
+inline void AddMulVector(size_t const num_model_bases, double k,
+		double const *vec, double *out) {
 	size_t i = 0;
-	auto const vec = AssumeAligned(vec_arg);
-	auto out = AssumeAligned(out_arg);
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	size_t const end = (num_model_bases / kPackElements) * kPackElements;
+	auto coeff = _mm256_set1_pd(k);
+	for (i = 0; i < end; i += kPackElements) {
+		auto v = _mm256_loadu_pd(&vec[i]);
+		_mm256_storeu_pd(&out[i],
+				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+						LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+						_mm256_loadu_pd(&out[i])));
+	}
+#endif
+	for (; i < num_model_bases; ++i) {
+		out[i] += k * vec[i];
+	}
+}
+
+template<size_t kNumBases>
+void SubMulVectorTemplate(double k, double const *vec, double *out) {
+	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	constexpr size_t kEnd((kNumBases / kPackElements) * kPackElements);
@@ -115,33 +133,9 @@ void SubMulVectorTemplate(double k, double const *vec_arg, double *out_arg) {
 	}
 }
 
-inline void AddMulVector(size_t const num_model_bases, double k,
-		double const *vec_arg, double *out_arg) {
-	size_t i = 0;
-	auto const vec = AssumeAligned(vec_arg);
-	auto out = AssumeAligned(out_arg);
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
-	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
-	size_t const end = (num_model_bases / kPackElements) * kPackElements;
-	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < end; i += kPackElements) {
-		auto v = _mm256_loadu_pd(&vec[i]);
-		_mm256_storeu_pd(&out[i],
-				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
-						_mm256_loadu_pd(&out[i])));
-	}
-#endif
-	for (; i < num_model_bases; ++i) {
-		out[i] += k * vec[i];
-	}
-}
-
 inline void SubMulVector(size_t const num_model_bases, double k,
-		double const *vec_arg, double *out_arg) {
+		double const *vec, double *out) {
 	size_t i = 0;
-	auto const vec = AssumeAligned(vec_arg);
-	auto out = AssumeAligned(out_arg);
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
 	size_t const end = (num_model_bases / kPackElements) * kPackElements;
