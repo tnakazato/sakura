@@ -25,6 +25,7 @@
 #include <cmath>
 #include <climits>
 #include <algorithm>
+#include <sys/types.h>
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -176,7 +177,7 @@ struct ScalarStats {
 		Accumulator sum;
 		Accumulator square_sum;
 		Scalar min, max;
-		int index_of_min, index_of_max;
+		int32_t index_of_min, index_of_max;
 
 		void Clear() {
 			count = 0;
@@ -485,7 +486,7 @@ struct SIMDStats<float, double> {
 			tmp_index.m256i = accumulator.index_of_min.m256i;
 
 			float r = tmp.floatv[0];
-			int result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
+			ssize_t result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
 			for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 				if (!std::isnan(tmp.floatv[i])) {
 					if (std::isnan(r) || tmp.floatv[i] < r) {
@@ -495,7 +496,7 @@ struct SIMDStats<float, double> {
 				}
 			}
 			result.min = r;
-			result_index = std::max(-1, result_index);
+			result_index = std::max(static_cast<ssize_t>(-1), result_index);
 			result.index_of_min = result_index;
 		}
 		{
@@ -505,7 +506,7 @@ struct SIMDStats<float, double> {
 			tmp_index.m256i = accumulator.index_of_max.m256i;
 
 			float r = tmp.floatv[0];
-			int result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
+			ssize_t result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
 			for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 				if (!std::isnan(tmp.floatv[i])) {
 					if (std::isnan(r) || tmp.floatv[i] > r) {
@@ -515,7 +516,7 @@ struct SIMDStats<float, double> {
 				}
 			}
 			result.max = r;
-			result_index = std::max(-1, result_index);
+			result_index = std::max(static_cast<ssize_t>(-1), result_index);
 			result.index_of_max = result_index;
 		}
 		return result;
@@ -626,7 +627,7 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 		tmp_index.m256i = index_of_min;
 
 		float r = tmp.floatv[0];
-		int result_index =
+		ssize_t result_index =
 				tmp_index.intv[0] == -1 ?
 						-1 : tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
@@ -638,7 +639,7 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 			}
 		}
 		result.min = r;
-		result_index = std::max(-1, result_index);
+		result_index = std::max(static_cast<ssize_t>(-1), result_index);
 		result.index_of_min = result_index;
 	}
 
@@ -649,7 +650,7 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 		tmp_index.m256i = index_of_max;
 
 		float r = tmp.floatv[0];
-		int result_index =
+		ssize_t result_index =
 				tmp_index.intv[0] == -1 ?
 						-1 : tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
@@ -661,10 +662,10 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 			}
 		}
 		result.max = r;
-		result_index = std::max(-1, result_index);
+		result_index = std::max(static_cast<ssize_t>(-1), result_index);
 		result.index_of_max = result_index;
 	}
-	int start = (num_data / (sizeof(__m256 ) / sizeof(float)))
+	int32_t start = (num_data / (sizeof(__m256 ) / sizeof(float)))
 			* (sizeof(__m256 ) / sizeof(float));
 	assert(num_data <= INT32_MAX);
 	for (int32_t i = start; i < static_cast<int32_t>(num_data); ++i) {

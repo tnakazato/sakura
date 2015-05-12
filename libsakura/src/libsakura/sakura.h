@@ -36,6 +36,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 #include <libsakura/config.h>
 
@@ -356,12 +357,12 @@ typedef struct {
 	 * @~
 	 * index for one of min value. -1 if there is no valid data.
 	 */
-	int index_of_min;
+	ssize_t index_of_min;
 	/**
 	 * @~
 	 * index for one of max value. -1 if there is no valid data.
 	 */
-	int index_of_max;
+	ssize_t index_of_max;
 }LIBSAKURA_SYMBOL(StatisticsResultFloat);
 
 /**
