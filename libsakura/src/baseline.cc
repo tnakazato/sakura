@@ -221,9 +221,8 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	}
 }
 
-inline void AddMulMatrix(size_t num_coeff, double const *coeff,
-		size_t num_out, size_t num_bases, double const *basis,
-		float *out) {
+inline void AddMulMatrix(size_t num_coeff, double const *coeff, size_t num_out,
+		size_t num_bases, double const *basis, float *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
@@ -255,9 +254,9 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 	}
 }
 
-inline void AddMulMatrixCubicSpline(size_t num_pieces,
-		double const *boundary, size_t num_bases, double const *coeff,
-		size_t num_out, double const *basis, float *out) {
+inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
+		size_t num_bases, double const *coeff, size_t num_out,
+		double const *basis, float *out) {
 	for (size_t i = 0; i < num_pieces; ++i) {
 		size_t coffset = num_bases * i;
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
@@ -517,14 +516,14 @@ inline void ClipData(size_t num_piece, size_t const *piece_start_arg,
 	}
 }
 
-template<typename FUNC1, typename FUNC2>
+template<typename FUNC>
 inline void DoSubtractBaselineEngine(size_t num_data, float const *data_arg,
 bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 		double const *basis_arg, size_t num_pieces,
 		size_t *piece_start_indices_arg, size_t *piece_end_indices_arg,
 		uint16_t num_fitting_max, float clip_threshold_sigma, bool get_residual,
 		double *coeff_arg, bool *final_mask_arg, float *residual_data_arg,
-		float *best_fit_model_arg, float *out_arg, FUNC1 func1, FUNC2 func2,
+		float *best_fit_model_arg, float *out_arg, FUNC func,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -590,8 +589,7 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 						"failed in SolveSimultaneousEquationsByLU.");
 			}
 
-			func1();
-			func2();
+			func();
 
 			if (i < num_fitting_max) {
 				LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
@@ -669,9 +667,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, float clip_threshold_sigma,
 			num_coeff, context->basis_data, 1, &piece_start_index,
 			&piece_end_index, std::max((uint16_t) 1, num_fitting_max_arg),
 			clip_threshold_sigma, get_residual, coeff, final_mask,
-			residual_data, best_fit_model, out, [&]() {},
-			[&]() {GetBestFitModelAndResidual(num_data, data,context, num_coeff,
-						coeff, best_fit_model, residual_data);},
+			residual_data, best_fit_model, out,
+			[&]() {GetBestFitModelAndResidual(num_data, data,context, num_coeff, coeff, best_fit_model, residual_data);},
 			baseline_status);
 }
 
@@ -732,11 +729,9 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 			cspline_basis, num_pieces, piece_start_indices, piece_end_indices,
 			std::max((uint16_t) 1, num_fitting_max_arg), clip_threshold_sigma,
 			get_residual, coeff, final_mask, residual_data, best_fit_model, out,
-			[&]() {GetFullCubicSplineCoefficients(
-						num_pieces, boundary, coeff, coeff_full);},
-			[&]() {GetBestFitModelAndResidualCubicSpline(
-						num_data, data, context, coeff_full, num_pieces, boundary,
-						best_fit_model, residual_data);}, baseline_status);
+			[&]() {GetFullCubicSplineCoefficients(num_pieces, boundary, coeff, coeff_full);
+				GetBestFitModelAndResidualCubicSpline(num_data, data, context, coeff_full, num_pieces, boundary, best_fit_model, residual_data);},
+			baseline_status);
 }
 
 inline void SubtractBaselineFloat(
