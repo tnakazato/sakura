@@ -53,7 +53,7 @@ namespace {
 namespace {
 
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("baseline");
-static constexpr size_t kNumBasesCubicSpline(4);
+constexpr size_t kNumBasesCubicSpline = 4;
 
 inline void AllocateMemoryForBasisData(
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
@@ -226,7 +226,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff, size_t num_out,
 		size_t num_bases, double const *basis, float *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
 	size_t const end = (num_out / kPackElements) * kPackElements;
 	auto const zero = _mm256_set1_pd(0.);
 	size_t const offset1 = num_bases * 1;
@@ -266,7 +266,7 @@ inline void AddMulMatrixCubicSpline(size_t num_pieces, double const *boundary,
 						static_cast<size_t>(ceil(boundary[i + 1])) : num_out;
 		size_t j = start_idx;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-		constexpr size_t kPackElements(sizeof(__m256d) / sizeof(double));
+		constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
 		size_t const start =
 				(start_idx % kPackElements == 0) ?
 						start_idx :
