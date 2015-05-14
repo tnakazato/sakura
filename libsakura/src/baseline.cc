@@ -91,7 +91,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	return num_bases;
 }
 
-inline void DoGetBasisDataPolynomial(size_t num_loop, double const i_d,
+inline void DoSetBasisDataPolynomial(size_t num_loop, double const i_d,
 		size_t *idx, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto out = AssumeAligned(out_arg);
@@ -106,18 +106,18 @@ inline void DoGetBasisDataPolynomial(size_t num_loop, double const i_d,
 	*idx = i;
 }
 
-inline void GetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
+inline void SetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
 
 	size_t idx = 0;
 	for (size_t i = 0; i < context->num_basis_data; ++i) {
 		double i_d = static_cast<double>(i);
-		DoGetBasisDataPolynomial(context->num_bases, i_d, &idx, data);
+		DoSetBasisDataPolynomial(context->num_bases, i_d, &idx, data);
 	}
 }
 
-inline void GetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
+inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
 
@@ -140,12 +140,12 @@ inline void GetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	}
 }
 
-inline void GetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
+inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	// TODO implement here.
 	assert(false);
 }
 
-inline void GetBasisData(uint16_t const order,
+inline void SetBasisData(uint16_t const order,
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
 			order);
@@ -159,16 +159,16 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	AllocateMemoryForBasisData(context);
 	switch (context->baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		GetBasisDataPolynomial(context);
+		SetBasisDataPolynomial(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		GetBasisDataChebyshev(context);
+		SetBasisDataChebyshev(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		GetBasisDataPolynomial(context);
+		SetBasisDataPolynomial(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		GetBasisDataSinusoid(context);
+		SetBasisDataSinusoid(context);
 		break;
 	default:
 		assert(false);
@@ -200,7 +200,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		work_context->basis_data_storage = nullptr;
 		work_context->baseline_type = baseline_type;
 		work_context->num_basis_data = num_basis_data;
-		GetBasisData(order, work_context.get());
+		SetBasisData(order, work_context.get());
 		*context = work_context.release();
 	} catch (...) {
 		DestroyBaselineContext(*context);
@@ -402,14 +402,14 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	}
 }
 
-inline void GetStandardCubicBases(double const i_d, size_t *idx,
+inline void SetStandardCubicBases(double const i_d, size_t *idx,
 		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto out = AssumeAligned(out_arg);
-	DoGetBasisDataPolynomial(kNumBasesCubicSpline, i_d, idx, out);
+	DoSetBasisDataPolynomial(kNumBasesCubicSpline, i_d, idx, out);
 }
 
-inline void GetAuxiliaryCubicBases(size_t const num_boundary,
+inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 		double const *boundary_arg, double const boundary_final,
 		double const i_d, size_t *idx, double *out_arg) {
 	size_t i = *idx;
@@ -449,14 +449,14 @@ inline void GetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	if (num_boundary < 2) {
 		for (size_t i = 0; i < num_data; ++i) {
 			double i_d = static_cast<double>(i);
-			GetStandardCubicBases(i_d, &idx, out);
+			SetStandardCubicBases(i_d, &idx, out);
 		}
 	} else {
 		double boundary_final = boundary[num_boundary - 1];
 		for (size_t i = 0; i < num_data; ++i) {
 			double i_d = static_cast<double>(i);
-			GetStandardCubicBases(i_d, &idx, out);
-			GetAuxiliaryCubicBases(num_boundary, boundary, boundary_final, i_d,
+			SetStandardCubicBases(i_d, &idx, out);
+			SetAuxiliaryCubicBases(num_boundary, boundary, boundary_final, i_d,
 					&idx, out);
 		}
 	}
@@ -1068,7 +1068,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficie
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
-		double coeff[/*num_pieces*kNumBasesCubicSpline*/], bool final_mask[/*num_data*/],
+		double coeff[/*num_pieces*kNumBasesCubicSpline*/],
+		bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(context->num_bases <= num_data);
