@@ -1047,7 +1047,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief Invoke bit operation AND between a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] & bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1080,7 +1080,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief ビットマスクと一次元配列のビット積を取る。
  * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (data[i] & bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] & bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1097,7 +1097,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
- * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット積を計算する。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_mask のビット積を計算する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
@@ -1123,7 +1123,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief Invoke bit operation, Converse Nonimplication, between a bit mask and an array.
  * @details Invokes the following bit operation to the @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (~data[i] & bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (~data[i] & bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1156,7 +1156,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief ビットマスクと一次元配列の非逆含意ビット演算を実行する。
  * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (~data[i] & bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (~data[i] & bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1175,7 +1175,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
- * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_mask のビット演算を実行する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
@@ -1201,7 +1201,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief Invoke bit operation, Material Implication, between a bit mask and an array.
  * @details Invokes the following bit operation to the @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (~data[i] | bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1234,7 +1234,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief ビットマスクと一次元配列の含意ビット演算を実行する。
  * @details 配列の@a i- 番目の要素に対して次の演算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (~data[i] | bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (~data[i] | bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1253,7 +1253,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
- * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット演算を実行する。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_mask のビット演算を実行する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
@@ -1340,7 +1340,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief Invoke bit operation OR between a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] | bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1373,7 +1373,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief ビットマスクと一次元配列のビット和を取る。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (data[i] | bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] | bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1390,7 +1390,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
- * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks のビット和を計算する。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_mask のビット和を計算する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
@@ -1416,7 +1416,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief Invoke bit operation XOR between a bit mask and an array.
  * @details Invokes the following bit operation to @a i- th element of @a result :
  * @code
- * result [i] = edit_mask[i] ? (data[i] ^ bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] ^ bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1449,7 +1449,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @brief ビットマスクと一次元配列の排他論理和ビット演算(XOR)を実行する。
  * @details 配列の@a i- 番目の要素に対して次の算を行い、出力@a result を返す:
  * @code
- * result [i] = edit_mask[i] ? (data[i] ^ bit_maks) : data[i]
+ * result [i] = edit_mask[i] ? (data[i] ^ bit_mask) : data[i]
  * @endcode
  *
  * @note
@@ -1466,7 +1466,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * @n must-be-aligned
  * @param[in] edit_mask データのマスク。要素数は@a num_data でなければならない。
- * この値が true だと、対応する入力配列@a data とビットマスク@a bit_maks の排他論理和ビット演算を実行する。
+ * この値が true だと、対応する入力配列@a data とビットマスク@a bit_mask の排他論理和ビット演算を実行する。
  * この値が false だと、その要素のビット演算は行われず、対応する入力配列@a data の要素がそのまま出力となる。
  * @n must-be-aligned
  * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
