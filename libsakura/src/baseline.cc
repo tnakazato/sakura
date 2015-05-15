@@ -66,6 +66,10 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->basis_data_storage = work_basis_data_storage.release();
 }
 
+inline size_t GetNumberOfCubicSplineLsqBases(size_t num_pieces) {
+	return kNumBasesCubicSpline - 1 + num_pieces;
+}
+
 inline size_t GetNumberOfBasesFromOrder(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	size_t num_bases = 0;
@@ -167,6 +171,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 		SetBasisDataChebyshev(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		assert(context->num_bases == kNumBasesCubicSpline);
 		SetBasisDataPolynomial(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
@@ -393,7 +398,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	for (size_t i = 1; i < num_pieces; ++i) {
 		size_t ioffset = kNumBasesCubicSpline * i;
 		size_t ioffset_prev = ioffset - kNumBasesCubicSpline;
-		size_t j = kNumBasesCubicSpline - 1 + i;
+		size_t j = GetNumberOfCubicSplineLsqBases(i);
 		auto const c = coeff_raw[j] - coeff[ioffset_prev + 3];
 		coeff[ioffset] = coeff[ioffset_prev]
 				- boundary[i] * boundary[i] * boundary[i] * c;
@@ -478,6 +483,7 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context, double const *coeff,
 		size_t num_pieces, double const *boundary, float *best_fit_model,
 		float *residual_data) {
+	assert(context->num_bases == kNumBasesCubicSpline);
 	AddMulMatrixCubicSpline(num_pieces, boundary, context->num_bases, coeff,
 			num_data, context->basis_data, best_fit_model);
 	OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
@@ -773,6 +779,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		throw std::invalid_argument(
 				"bad baseline context: baseline type must be cubic spline.");
 	}
+	assert(context->num_bases == kNumBasesCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -825,6 +832,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		uint16_t num_fitting_max, size_t num_pieces, double *coeff_arg,
 		bool *final_mask_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	assert(context->num_bases == kNumBasesCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -1016,7 +1024,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(context->num_bases <= num_data);
+	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
+	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
+	CHECK_ARGS(num_data_min <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1091,7 +1101,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(context->num_bases <= num_data);
+	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
+	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
+	CHECK_ARGS(num_data_min <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1157,8 +1169,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		double const boundary[/*num_pieces*/], float out[/*num_data*/])
 				noexcept {
 	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
+	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
+	CHECK_ARGS(num_data_min <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
-	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(num_pieces <= INT_MAX);
