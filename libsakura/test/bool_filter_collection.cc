@@ -935,8 +935,7 @@ TEST_F(BoolFilterSimple, InvertBoolInPlace) {
 	bool answer[] = { false, true, true, false };
 	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data));
 	size_t const num_data(ELEMENTSOF(data));
-	bool verbose = verbose_;
-	verbose_ = true;
+
 	if (verbose_)
 		PrintArray("data", num_data, data);
 
@@ -944,7 +943,7 @@ TEST_F(BoolFilterSimple, InvertBoolInPlace) {
 
 	if (verbose_)
 		PrintArray("result", num_data, data);
-	verbose_ = verbose;
+
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < num_data; ++i) {
