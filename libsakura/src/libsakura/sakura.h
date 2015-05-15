@@ -439,7 +439,7 @@ typedef struct {
 		size_t num_data, bool const is_valid[], float data[],
 		size_t *new_num_data) LIBSAKURA_NOEXCEPT;
 
- /**
+/**
  * @~english
  * @brief Computes median absolute deviation.
  *
@@ -452,7 +452,7 @@ typedef struct {
  * a median absolute deviation.
  *
  *  mad = (@a new_data[@a num_data/2] + @a new_data[@a num_data/2 - @a num_data%2]) / 2 if @a num_data > 0
-  *
+ *
  * @param[in] num_data	The number of elements in @a data and @a new_data .
  * @param[in] data	Each value in data must not be Inf nor NaN. @a data must be sorted.
  * <br/>must-be-aligned
@@ -461,11 +461,12 @@ typedef struct {
  * @return status code
  * @~
  * MT-safe
-  */
- LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
- 		size_t num_data, float const data[], float new_data[]) LIBSAKURA_NOEXCEPT;
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
+		size_t num_data, float const data[], float new_data[])
+				LIBSAKURA_NOEXCEPT;
 
- /**
+/**
  * @~english
  * @brief Grids data with convolution.
  *
@@ -2254,12 +2255,18 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * spline pieces (for sakura_BaselineType_kCubicSpline), or the
  * maximum wave number (for sakura_BaselineType_kSinusoid). It
  * must be positive for sakura_BaselineType_kCubicSpline, while
- * other models accept zero value. The number of model bases,
- * which is @a order+1 for sakura_BaselineType_kPolynomial and
+ * other models accept zero value.
+ * @param[in] num_data Number of data to fit baseline. It must
+ * be equal to or larger than the number of model bases, which
+ * is @a order+1 for sakura_BaselineType_kPolynomial and
  * sakura_BaselineType_kChebyshev, or @a order+3 for
  * sakura_BaselineType_kCubicSpline or @a order*2+1 for
- * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
- * @param[in] num_data Number of data to fit baseline.
+ * sakura_BaselineType_kSinusoid. The smallest value of
+ * @a num_data @a corresponding to the smallest possible order
+ * for each baseline type are: 1 for
+ * sakura_BaselineType_kPolynomial, sakura_BaselineType_kChebyshev
+ * and sakura_BaselineType_kSinusoid (with @a order @a = 0) and
+ * 4 for sakura_BaselineType_kCubicSpline (with @a order @a = 1).
  * @param[out] context An object containing baseline model data.
  * @return Status code.
  * @~

@@ -93,9 +93,9 @@ protected:
 
 	// TODO Set constant XXX type values into an array
 	template<typename T>
-	void Set_XXX_Constant(T value, size_t const num_data, T *data){
+	void Set_XXX_Constant(T value, size_t const num_data, T *data) {
 		for (size_t i = 0; i < num_data; ++i) {
-					data[i] = value;
+			data[i] = value;
 		}
 	}
 
@@ -151,45 +151,41 @@ protected:
 
 };
 
-
-void Create(LIBSAKURA_SYMBOL(BaselineContext) * context, size_t status, uint16_t const order, size_t const num_chan){
-	LIBSAKURA_SYMBOL (Status) create_status =
-			sakura_CreateBaselineContext(
+void Create(LIBSAKURA_SYMBOL(BaselineContext) * context, size_t status,
+		uint16_t const order, size_t const num_chan) {
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
 			&context);
-			EXPECT_EQ(status, create_status);
-			std::cout << "Create status : " << create_status << std::endl;
+	EXPECT_EQ(status, create_status);
+	std::cout << "Create status : " << create_status << std::endl;
 }
-
-
-
 
 /*
  *
-//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-	//		LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
-	//		&context);
-	//EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+ //LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+ //		LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
+ //		&context);
+ //EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
 
 
-LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
-			&context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+ LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+ LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
+ &context);
+ EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
 
-LIBSAKURA_SYMBOL (Status) create_status =
-	LIBSAKURA_SYMBOL(CreateBaselineContext)(
-			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
-			&context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-*/
+ LIBSAKURA_SYMBOL (Status) create_status =
+ LIBSAKURA_SYMBOL(CreateBaselineContext)(
+ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+ &context);
+ EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+ */
 
 //Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
-void Destroy(LIBSAKURA_SYMBOL(BaselineContext) *context, size_t status){
+void Destroy(LIBSAKURA_SYMBOL(BaselineContext) *context, size_t status) {
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-				context);
+			context);
 	EXPECT_EQ(status, destroy_status);
 	std::cout << "Destroy Status : " << destroy_status << std::endl;
 }
@@ -212,7 +208,6 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 
 		//Creat(context, sakura_CreateBaselineContext(LIBSAKURA_SYMBOL(BaselineType_kPolynomial)),order, num_data)
 
-
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_chan,
 				&context);
@@ -220,12 +215,12 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
-	std::cout << std::setprecision(5) << "#x# benchmark Baseline_CreateBaselineContextWithPolynomial" << " " << elapsed_time
-			<< std::endl;
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark Baseline_CreateBaselineContextWithPolynomial"
+			<< " " << elapsed_time << std::endl;
 }
 
 /*
@@ -247,7 +242,7 @@ TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -261,7 +256,7 @@ TEST_F(Baseline, CreateBaselineContextWithInvalidBaselineType) {
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 //TODO
-	Create(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument),order, num_chan);
+	Create(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument), order, num_chan);
 	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 	//		LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
 	//		&context);
@@ -296,13 +291,53 @@ TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
 
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 
-	Create(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument),order, num_chan);
+	Create(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument), order, num_chan);
 	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 	//		LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan,
 	//		&context);
 	//EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+}
+
+/*
+ * Test sakura_CreateBaselineContextWithTooSmallNumData
+ * failure case : num_data is smaller than minimum acceptable value
+ * returned value : Status_kInvalidArgument
+ */
+TEST_F(Baseline, CreateBaselineContextWithTooSmallNumData) {
+	uint16_t const order(20);
+
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status;
+
+	size_t const num_func_types = 3;
+	LIBSAKURA_SYMBOL(BaselineType) func_types[num_func_types] = {
+		LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
+		LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
+		LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)
+	};
+	string func_names[num_func_types] = {"Polynomial", "Chebyshev", "CubicSpline"};
+	for (size_t i = 0; i < num_func_types; ++i) {
+		std::cout << "testing for " << func_names[i] << "..." << std::flush;
+		size_t num_data_min;
+		switch (func_types[i]) {
+		case (LIBSAKURA_SYMBOL(BaselineType_kPolynomial)):
+		case (LIBSAKURA_SYMBOL(BaselineType_kChebyshev)):
+			num_data_min = order + 1;
+			break;
+		case (LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)):
+			num_data_min = 4;
+			break;
+		default:
+			assert(false);
+		};
+		size_t num_data = num_data_min - 1;
+		create_status = sakura_CreateBaselineContext(func_types[i], order, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		std::cout << "ok." << std::flush << std::endl;
+	}
 }
 
 /*
@@ -347,7 +382,7 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	size_t num_basis_data = context->num_basis_data;
 	ASSERT_EQ(num_chan, num_basis_data);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -493,7 +528,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 		Print1DArray("fmask ", num_data, final_mask);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -566,7 +601,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTim
 		Print1DArray("fmask ", num_data, final_mask);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -620,8 +655,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -744,7 +778,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_final_mask_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -849,7 +883,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_data_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -902,7 +936,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1069,7 +1103,7 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 		Print1DArray("answer", num_data, answer);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1135,7 +1169,7 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 		Print1DArray("answer", num_data, answer);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1324,7 +1358,7 @@ TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1373,7 +1407,7 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 			num_fitting_max, get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1466,7 +1500,7 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 			get_residual, final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1554,7 +1588,7 @@ TEST_F(Baseline, SubtractBaselineWithNumDataNumBasisDataNotEqual) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1648,7 +1682,7 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1839,7 +1873,7 @@ TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 			final_mask, out, subbl_blstatus_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -1886,7 +1920,7 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 			final_mask, out, &subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2158,7 +2192,7 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData), subbl_blstatus);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2176,13 +2210,13 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_real_distribution<float> rnd(-0.01,0.01);
+	std::uniform_real_distribution<float> rnd(-0.01, 0.01);
 	SIMD_ALIGN
 	float in_data[num_data];
-	float start_d = num_data/2.0;
-	for (size_t i = 0; i < num_data; ++i){
-		float x=i;
-		in_data[i]=0.001*pow(x-start_d,2.0)+ rnd(mt);
+	float start_d = num_data / 2.0;
+	for (size_t i = 0; i < num_data; ++i) {
+		float x = i;
+		in_data[i] = 0.001 * pow(x - start_d, 2.0) + rnd(mt);
 	}
 
 	SIMD_ALIGN
@@ -2233,7 +2267,7 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 		Print1DArray("answer", num_data, answer);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2285,7 +2319,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloat) {
 		Print1DArray("answer", num_data, answer);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2483,7 +2517,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 				num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	{ // out is nullpointer
 		size_t const num_data(NUM_DATA2);
@@ -2610,7 +2644,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 				bad_num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	{ // num_coeff > context->num_bases
 		size_t const num_data(NUM_DATA2);
@@ -2643,7 +2677,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 				num_data, in_data, bad_num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
-		Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 }
 
@@ -2699,7 +2733,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
 		EXPECT_EQ(answer[i], out[i]);
 	}
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK) );
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*
@@ -2780,7 +2814,7 @@ TEST_F(Baseline, GetNumberOfCoefficients) {
 			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, order, &num_coeff));
 	EXPECT_EQ(num_coeff, context->num_bases);
 
-	Destroy(context,LIBSAKURA_SYMBOL(Status_kOK));
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
 /*

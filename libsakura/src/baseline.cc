@@ -91,51 +91,53 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	return num_bases;
 }
 
-inline void DoSetBasisDataPolynomial(size_t num_loop, double const i_d,
+inline void DoSetBasisDataPolynomial(size_t num_bases, double const i_d,
 		size_t *idx, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto out = AssumeAligned(out_arg);
 
 	size_t i = *idx;
 	double val = 1.0;
-	for (size_t j = 0; j < num_loop; ++j) {
-		out[i] = val;
+	for (size_t j = 0; j < num_bases; ++j) {
+		out[i++] = val;
 		val *= i_d;
-		++i;
 	}
 	*idx = i;
 }
 
 inline void SetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
+	assert(0 < context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
 
+	size_t num_basis_data = context->num_basis_data;
+	size_t num_bases = context->num_bases;
 	size_t idx = 0;
-	for (size_t i = 0; i < context->num_basis_data; ++i) {
-		double i_d = static_cast<double>(i);
-		DoSetBasisDataPolynomial(context->num_bases, i_d, &idx, data);
+	for (size_t i = 0; i < num_basis_data; ++i) {
+		DoSetBasisDataPolynomial(num_bases, static_cast<double>(i), &idx, data);
 	}
 }
 
 inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
+	assert(0 < context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
 
+	size_t num_basis_data = context->num_basis_data;
+	size_t num_bases = context->num_bases;
 	size_t idx = 0;
-	double xrange = (double) (context->num_basis_data - 1);
-	for (size_t i = 0; i < context->num_basis_data; ++i) {
-		double x = 2.0 * (double) i / xrange - 1.0;
-		for (size_t j = 0; j < context->num_bases; ++j) {
-			double val = 0.0;
-			if (j == 0) {
-				val = 1.0;
-			} else if (j == 1) {
-				val = x;
-			} else {
-				val = 2.0 * x * data[idx - 1] - data[idx - 2];
+	if (num_basis_data == 1) {
+		data[idx] = 1.0;
+	} else {
+		double max_data_x_inv = 1.0 / (double) (num_basis_data - 1);
+		for (size_t i = 0; i < num_basis_data; ++i) {
+			data[idx++] = 1.0;
+			double x = 2.0 * (double) i * max_data_x_inv - 1.0;
+			data[idx++] = x;
+			for (size_t j = 2; j < num_bases; ++j) {
+				data[idx] = 2.0 * x * data[idx - 1] - data[idx - 2];
+				++idx;
 			}
-			data[idx] = val;
-			++idx;
 		}
 	}
 }
@@ -438,7 +440,7 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	*idx = i;
 }
 
-inline void GetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
+inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 		double const *boundary_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -710,7 +712,7 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*cspline_basis) * num_coeff * num_data,
 					&cspline_basis));
-	GetFullCubicSplineBasisData(num_data, num_pieces, boundary, cspline_basis);
+	SetFullCubicSplineBasisData(num_data, num_pieces, boundary, cspline_basis);
 	double *coeff = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -906,6 +908,23 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	CHECK_ARGS(baseline_type != LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
 	CHECK_ARGS(baseline_type < LIBSAKURA_SYMBOL(BaselineType_kNumElements));
 	CHECK_ARGS(context != nullptr);
+	size_t num_bases;
+	switch (baseline_type) {
+	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+		num_bases = order + 1;
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		num_bases = kNumBasesCubicSpline;
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		num_bases = 2 * order + 1;
+		break;
+	default:
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+		break;
+	}
+	CHECK_ARGS(num_bases <= num_data);
 
 	try {
 		CreateBaselineContext(baseline_type, order, num_data, context);
