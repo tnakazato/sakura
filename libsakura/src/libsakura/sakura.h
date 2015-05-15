@@ -1813,6 +1813,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * を返す。
  * 失敗した場合には
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * または
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * を返す。
  * @par
@@ -1869,6 +1870,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * を返す。
  * 失敗した場合には
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * または
  * @link sakura_Status::sakura_Status_kNoMemory sakura_Status_kNoMemory @endlink
  * を返す。
  * @param[in] context コンテキスト
