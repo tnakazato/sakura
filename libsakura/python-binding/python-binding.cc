@@ -224,11 +224,11 @@ PyObject *ComputeStatistics(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	return Py_BuildValue("{s:n,s:f,s:f,s:f,s:f,s:f,s:f,s:i,s:i}", "count",
-			static_cast<Py_ssize_t>(result.count), "sum", result.sum, "mean",
-			result.mean, "rms", result.rms, "stddev", result.stddev, "min",
-			result.min, "max", result.max, "index_of_min", result.index_of_min,
-			"index_of_max", result.index_of_max);
+	return Py_BuildValue("{s:n,s:n,s:n,s:f,s:f,s:d,s:d}", "count",
+			static_cast<Py_ssize_t>(result.count), "index_of_min",
+			result.index_of_min, "index_of_max", result.index_of_max, "min",
+			result.min, "max", result.max, "sum", result.sum, "square_sum",
+			result.square_sum);
 
 	invalid_arg:
 
@@ -455,7 +455,7 @@ LIBSAKURA_SYMBOL(InvertBool)>;
 
 constexpr FuncForPython SetFalseFloatIfNanOrInf = ConvertArray<float, bool,
 LIBSAKURA_SYMBOL(PyTypeId_kFloat), LIBSAKURA_SYMBOL(PyTypeId_kBool),
-LIBSAKURA_SYMBOL(SetFalseFloatIfNanOrInf)>;
+LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)>;
 
 
 inline void AlignedBoolAnd(size_t elements, bool const src1[], bool const src2[], bool dst[]) {
@@ -580,11 +580,11 @@ PyObject *RangeCheck(PyObject *self, PyObject *args) {
 
 constexpr FuncForPython Int32SetTrueIntInRangesExclusive = RangeCheck<int32_t,
 LIBSAKURA_SYMBOL(PyTypeId_kInt32),
-LIBSAKURA_SYMBOL(SetTrueIntInRangesExclusive)>;
+LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt)>;
 
 constexpr FuncForPython FloatSetTrueIntInRangesExclusive = RangeCheck<float,
 LIBSAKURA_SYMBOL(PyTypeId_kFloat),
-LIBSAKURA_SYMBOL(SetTrueFloatInRangesExclusive)>;
+LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)>;
 
 template<typename Type,
 LIBSAKURA_SYMBOL(PyTypeId) TypeId,
@@ -646,14 +646,19 @@ PyObject *BitOperation(PyObject *self, PyObject *args) {
 
 constexpr FuncForPython Uint8OperateBitsOr = BitOperation<uint8_t,
 		LIBSAKURA_SYMBOL(PyTypeId_kInt8),
-		LIBSAKURA_SYMBOL(OperateBitsUint8Or)>;
+		LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)>;
 
 
 template<typename Type,
 LIBSAKURA_SYMBOL(PyTypeId) TypeId,
-LIBSAKURA_SYMBOL(Status) (*Func)(LIBSAKURA_SYMBOL(InterpolationMethod),
-		uint8_t, size_t, double const *, size_t, Type const *, size_t,
-		double const *, Type *)>
+LIBSAKURA_SYMBOL(Status) (*Func)(LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
+				uint8_t polynomial_order, size_t num_base,
+				double const base_position[/*num_base*/], size_t num_array,
+				Type const base_data[/*num_base*num_array*/],
+				bool const base_mask[/*num_base*num_array*/], size_t num_interpolated,
+				double const interpolated_position[/*num_interpolated*/],
+				float interpolated_data[/*num_interpolated*num_array*/],
+				bool interpolated_mask[/*num_interpolated*num_array*/])>
 PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
 	int interpolate_type_py;
 	uint8_t polynomial_order;
@@ -661,17 +666,17 @@ PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
 	Py_ssize_t num_array_py;
 	Py_ssize_t num_interpolated_py;
 	enum {
-		kFromAxis, kFromData, kToAxis, kToData, kEnd
+		kFromAxis, kFromData, kMask, kToAxis, kToData, kToMask, kEnd
 	};
 	PyObject *capsules[kEnd];
 
-	if (!PyArg_ParseTuple(args, "ibnOnOnOO", &interpolate_type_py, &polynomial_order,
-			&num_base_py, &capsules[kFromAxis], &num_array_py, &capsules[kFromData],
-			&num_interpolated_py, &capsules[kToAxis], &capsules[kToData])) {
+	if (!PyArg_ParseTuple(args, "ibnOnOOnOOO", &interpolate_type_py, &polynomial_order,
+			&num_base_py, &capsules[kFromAxis], &num_array_py, &capsules[kFromData], &capsules[kMask],
+			&num_interpolated_py, &capsules[kToAxis], &capsules[kToData], &capsules[kMask])) {
 		return nullptr;
 	}
 	if (!(0 <= interpolate_type_py
-			&& interpolate_type_py < LIBSAKURA_SYMBOL(InterpolationMethod_kNumMethod))) {
+			&& interpolate_type_py < LIBSAKURA_SYMBOL(InterpolationMethod_kNumElements))) {
 		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
 		return nullptr;
 	}
@@ -691,17 +696,25 @@ PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
 	auto predToData =
 			[num_interpolated, num_array](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
 			{	return TotalElementsGreaterOrEqual(buf, num_interpolated*num_array);};
+	auto predMaskIn =
+			[num_base, num_array](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_base * num_array);};
+	auto predMaskOut =
+			[num_interpolated, num_array](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
+			{	return TotalElementsGreaterOrEqual(buf, num_interpolated * num_array);};
 	AlignedBufferConfiguration const conf[] = {
 
 	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), predFromAxis },
 
 	{ TypeId, predFromData },
 
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predMaskIn },
+
 	{ LIBSAKURA_SYMBOL(PyTypeId_kDouble), predToAxis },
 
-	{ TypeId, predToData }
+	{ TypeId, predToData },
 
-	};
+	{ LIBSAKURA_SYMBOL(PyTypeId_kBool), predMaskOut }, };
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
 	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
@@ -714,9 +727,11 @@ PyObject *InterpolateAxis(PyObject *self, PyObject *args) {
 				reinterpret_cast<double const*>(bufs[kFromAxis]->aligned_addr),
 				num_array,
 				reinterpret_cast<Type const*>(bufs[kFromData]->aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
 				num_interpolated,
 				reinterpret_cast<double const*>(bufs[kToAxis]->aligned_addr),
-				reinterpret_cast<Type *>(bufs[kToData]->aligned_addr));
+				reinterpret_cast<Type *>(bufs[kToData]->aligned_addr),
+				reinterpret_cast<bool *>(bufs[kToMask]->aligned_addr));
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -779,7 +794,7 @@ PyObject *ApplyPositionSwitchCalibration(PyObject *self, PyObject *args){
 	}
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
-		status = LIBSAKURA_SYMBOL(ApplyPositionSwitchCalibration)(
+		status = LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
 				num_scaling_factor,
 				reinterpret_cast<float const*>(bufs[kFactor]->aligned_addr),
 				num_data,
@@ -814,17 +829,17 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 		return nullptr;
 	}
 	if (!((0 <= kernel_type
-			&& kernel_type < LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumType))
+			&& kernel_type < LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements))
 			&& (use_fft == Py_True || use_fft == Py_False))) {
 		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
 		return nullptr;
 	}
 
-	LIBSAKURA_SYMBOL(Convolve1DContext) *context = nullptr;
+	LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
 		status =
-				LIBSAKURA_SYMBOL(CreateConvolve1DContext)(
+				LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 						static_cast<size_t>(num_data),
 						static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(kernel_type),
 						static_cast<size_t>(kernel_width), use_fft == Py_True,
@@ -837,8 +852,8 @@ PyObject *CreateConvolve1DContext(PyObject *self, PyObject *args) {
 		return nullptr;
 	}
 	PyCapsule_Destructor destructor = TCapsuleDesctructor<
-	LIBSAKURA_SYMBOL(Convolve1DContext), kConvolve1DContextName,
-	LIBSAKURA_SYMBOL(DestroyConvolve1DContext)>;
+	LIBSAKURA_SYMBOL(Convolve1DContextFloat), kConvolve1DContextName,
+	LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)>;
 	auto capsule = PyCapsule_New(context, kConvolve1DContextName, destructor);
 	if (capsule == nullptr) {
 		PyErr_SetString(PyExc_MemoryError, "No memory.");
@@ -858,7 +873,7 @@ PyObject *Convolve1D(PyObject *self, PyObject *args) {
 			&num_data_py, &capsules[kData], &capsules[kResult])) {
 		return nullptr;
 	}
-	auto context = reinterpret_cast<LIBSAKURA_SYMBOL(Convolve1DContext) *>(
+	auto context = reinterpret_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat) *>(
 			PyCapsule_GetPointer(context_capsule,
 					PyCapsule_GetName(context_capsule)));
 //	if (context == nullptr) {
@@ -884,7 +899,7 @@ PyObject *Convolve1D(PyObject *self, PyObject *args) {
 
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
-		status = LIBSAKURA_SYMBOL(Convolve1D)(
+		status = LIBSAKURA_SYMBOL(Convolve1DFloat)(
 				context, num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<float *>(bufs[kResult]->aligned_addr));
@@ -914,7 +929,7 @@ PyObject *CreateBaselineContext(PyObject *self, PyObject *args) {
 		return nullptr;
 	}
 	if (!(0 <= baseline_type
-			&& baseline_type < LIBSAKURA_SYMBOL(BaselineType_kNumType))) {
+			&& baseline_type < LIBSAKURA_SYMBOL(BaselineType_kNumElements))) {
 		PyErr_SetString(PyExc_ValueError, "Invalid argument.");
 		return nullptr;
 	}
@@ -950,6 +965,7 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	float clip_threshold_sigma;
 	unsigned int num_fitting_max;
+	uint16_t order = 3; // TODO make this python parameter.
 	enum {
 		kData, kMask, kFinalMask, kResult, kEnd
 	};
@@ -992,11 +1008,11 @@ PyObject *SubtractBaseline(PyObject *self, PyObject *args) {
 	LIBSAKURA_SYMBOL(Status) status;
 	LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
 	SAKURA_BEGIN_ALLOW_THREADS
-		status = LIBSAKURA_SYMBOL(SubtractBaseline)(
-				num_data,
+		status = LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
+				context, order, num_data,
 				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
 				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
-				context, clip_threshold_sigma,
+				clip_threshold_sigma,
 				static_cast<uint16_t>(num_fitting_max), (get_residual_py == Py_True),
 				reinterpret_cast<bool *>(bufs[kFinalMask]->aligned_addr),
 				reinterpret_cast<float *>(bufs[kResult]->aligned_addr),
