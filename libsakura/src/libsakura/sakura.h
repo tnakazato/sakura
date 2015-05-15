@@ -254,8 +254,8 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)() LIBSAKURA_NOEXCEPT;
  *
  * It returns @a arena if @a arena is already aligned.
  *
- * @param[in] arena start address of a memory region
  * @param[in] size_of_arena size of the memory region pointed by @a arena
+ * @param[in] arena start address of a memory region
  * @param[in] size_required required size after alignment
  * @return aligned address if at least @a size_required bytes are available in @a arena after alignment,
  * otherwise NULL.
@@ -266,8 +266,8 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)() LIBSAKURA_NOEXCEPT;
  *
  * @a arena がアラインされていれば@a arena を返す。
  *
- * @param[in] arena 確保されている領域の先頭アドレス
  * @param[in] size_of_arena 確保されている領域のサイズ
+ * @param[in] arena 確保されている領域の先頭アドレス
  * @param[in] size_required アライン後も利用可能でなければならないサイズ
  * @return アラインされたアドレス。もし、 @a size_required を格納するのに
  * 十分な大きさの@a size_of_arena が無いならば、 NULL を返す。
@@ -283,8 +283,8 @@ void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
  *
  * @a arena がアラインされていれば@a arena を返す。
  *
- * @param[in] arena 確保されている領域の先頭アドレス
  * @param[in] elements_in_arena 確保されている要素数
+ * @param[in] arena 確保されている領域の先頭アドレス
  * @param[in] elements_required アライン後も利用可能でなければならない要素数
  * @return アラインされたアドレス。もし、 @a elements_required を格納するのに
  * 十分な大きさの@a elements_in_arena が無いならば、 NULL を返す。
@@ -294,8 +294,8 @@ void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
  *
  * It returns @a arena if @a arena is already aligned.
  *
- * @param[in] arena start address of an array
  * @param[in] elements_in_arena The number of elements in @a arena , not a size in bytes.
+ * @param[in] arena start address of an array
  * @param[in] elements_required required number of elements after alignment
  * @return aligned address if at least @a elements_required are available in @a arena after alignment,
  * otherwise NULL.
@@ -2750,16 +2750,14 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @~english
- * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the matrixes.
+ * @copydoc sakura_FlipMatrixFloat
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @~english
- * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the matrixes.
+ * @copydoc sakura_UnflipMatrixFloat
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
