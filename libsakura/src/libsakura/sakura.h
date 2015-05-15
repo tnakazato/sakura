@@ -949,7 +949,7 @@ typedef struct {
  * @~english
  * @brief Returns if the values in input array are finite numbers.
  * @details Returns false if the corresponding element in the input array
- * is not a number (NaN) or infinity.
+ * is not a number (NaN) or infinity. Otherwise, returns true.
  *
  * @note No operation is done when the data array is zero length, i.e., @a num_data = 0.
  *
@@ -962,7 +962,7 @@ typedef struct {
  * @return status code
  * @~japanese
  * @brief 入力配列の値が、有限の値かどうかを検定する。
- * @details 入力配列の要素の値が非数（NaN）または無限大（Inf）ならば偽を返す。
+ * @details 入力配列の要素の値が非数（NaN）または無限大（Inf）ならば偽を、それ以外の場合は真を返す。
  *
  * @note 入力配列の要素数が0 (@a num_data = 0)の時は、演算は実行されない。
  *
