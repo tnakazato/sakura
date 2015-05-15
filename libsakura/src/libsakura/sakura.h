@@ -1025,6 +1025,8 @@ typedef struct {
  * @param[in] data The input array of of size, @a num_data.
  * @n must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
+ * The pointer of @a out is allowed to be equal to
+ * that of @a in (@a result == @a data), indicating in-place operation.
  * @n must-be-aligned
  * @return status code
  * @~japanese
@@ -1034,7 +1036,7 @@ typedef struct {
  * @param[in] num_data @a data 及び@a result の要素の数。
  * @param[in] data 入力配列。要素数は@a num_data でなければならない。
  * @n must-be-aligned
- * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。
+ * @param[out] result 結果の格納先。要素数は@a num_data でなければならない。インプレースな変換を許す(@a result == @a data)。
  * @n must-be-aligned
  * @return 終了ステータス
  *@~

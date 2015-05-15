@@ -928,6 +928,30 @@ TEST_F(BoolFilterSimple, InvertBool) {
 	}
 }
 
+TEST_F(BoolFilterSimple, InvertBoolInPlace) {
+	SIMD_ALIGN
+	bool data[] = { true, false, false, true };
+	SIMD_ALIGN
+	bool answer[] = { false, true, true, false };
+	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data));
+	size_t const num_data(ELEMENTSOF(data));
+	bool verbose = verbose_;
+	verbose_ = true;
+	if (verbose_)
+		PrintArray("data", num_data, data);
+
+	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, data);
+
+	if (verbose_)
+		PrintArray("result", num_data, data);
+	verbose_ = verbose;
+	// Verification
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	for (size_t i = 0; i < num_data; ++i) {
+		ASSERT_EQ(answer[i], data[i]);
+	}
+}
+
 /*
  * Test bool filter generation sakura_InvertBool
  * with a long array
