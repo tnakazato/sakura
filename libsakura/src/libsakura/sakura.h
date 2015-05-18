@@ -389,11 +389,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Returns if the values in input array are in any of specified range (inclusive).
- * @details Returns true if the corresponding element in the input array
+ * @brief Sets true if the values in an input array (@a data ) are in any of specified range (inclusive).
+ * @details Elements of the output array are set to true if the corresponding element in the input array
  * is in range of upper and lower boundary pairs,
  * @par
- * @a lower_bound[k] <= @a data[i] <= @a upper_bound[k].
+ * @a lower_bound[k] <= @a data[i] <= @a upper_bound[k] ,
+ *
+ * otherwise they are set to false.
  *
  * The function takes more than one upper and lower boundary pairs as arrays,
  * @a lower_bounds and @a upper_bounds.@n
@@ -435,11 +437,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Returns if the values in input array are in any of specified range (exclusive).
- * @details Returns true if the corresponding element in the input array
- * is in between upper and lower boundary pairs,
+ * @brief Sets true if the values in an input array (@a data ) are in any of specified range (exclusive).
+ * @details Elements of the output array are set to true if the corresponding element in the input array
+ * is in range of upper and lower boundary pairs,
  * @par
- * @a lower_bound[k] < @a data[i] < @a upper_bound[k].
+ * @a lower_bound[k] < @a data[i] < @a upper_bound[k] ,
+ *
+ * otherwise they are set to false.
  *
  * The function takes more than one upper and lower boundary pairs as arrays,
  * @a lower_bounds and @a upper_bounds.@n
@@ -482,11 +486,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Returns if the values in input array are greater than a threshold.
- * @details Returns true if the corresponding element in the input array
+ * @brief Sets true if the values in the input array (@a data ) are greater than a threshold.
+ * @details Elements of the output array are set to true if the corresponding element in the input array
  * is greater than a @a threshold,
  * @par
- * @a data[i] > @a threshold .
+ * @a data[i] > @a threshold ,
+ *
+ * otherwise they are set to false.
  *
  * @note
  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
@@ -515,11 +521,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Returns if the values in input array are greater than or equal to a threshold.
- * @details Returns true if the corresponding element in the input array
+ * @brief Sets true if the values in the input array (@a data ) are greater than or equal to a threshold.
+ * @details Elements of the output array are set to true if the corresponding element in the input array
  * is greater than or equals to a @a threshold,
  * @par
- * @a data[i] >= @a threshold .
+ * @a data[i] >= @a threshold ,
+ *
+ * otherwise they are set to false.
  *
  * @note
  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
@@ -548,11 +556,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Returns if the values in input array are less than a threshold.
- * @details Returns true if the corresponding element in the input array
+ * @brief Sets true if the values in the input array (@a data ) are less than a threshold.
+ * @details Elements of the output array are set to true if the corresponding element in the input array
  * is less than a @a threshold,
  * @par
- * @a data[i] < @a threshold .
+ * @a data[i] < @a threshold ,
+ *
+ * otherwise they are set to false.
  *
  * @note
  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
@@ -581,11 +591,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Returns if the values in input array are less than or equal to a threshold.
- * @details Returns true if the corresponding element in the input array
+ * @brief Sets true if the values in the input array (@a data ) are less than or equal to a threshold.
+ * @details Elements of the output array are set to true if the corresponding element in the input array
  * is less than or equals to a @a threshold,
  * @par
- * @a data[i] <= @a threshold .
+ * @a data[i] <= @a threshold ,
+ *
+ * otherwise they are set to false.
  *
  * @note
  * No evaluation is done when the data array is zero length, i.e., @a num_data = 0.@n
@@ -614,9 +626,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
 		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Returns if the values in input array are finite numbers.
- * @details Returns false if the corresponding element in the input array
- * is not a number (NaN) or infinity. Otherwise, returns true.
+ * @brief Sets false if the values in the input array (@a data ) are either NaN or infinity.
+ * @details Elements of the output array are set to false if the corresponding element in the input array
+ * is not a number (NaN) or infinity. Otherwise, they are set to true.
  *
  * @note No operation is done when the data array is zero length, i.e., @a num_data = 0.
  *
