@@ -1753,9 +1753,8 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * The function allows in-place calculation, i.e., @a result array can be either @a data or
  * @a reference. In this case, @a data or @a reference will be overwritten.
  * @pre
- * @a num_scaling_factor should be 1 or equal to @a num_data. These values corresponds to the case of
- * frequency-independent (channel averaged) or frequency-dependent system temperature,
- * respectively.
+ * @a num_scaling_factor should be 1 or equal to @a num_data. If @a num_scaling_factor is 1,
+ * @a scaling_factor[0] will be used to scale all @a data elements.
  *
  * @param[in] num_scaling_factor number of elements of @a scaling_factor. Its value should be
  * 1 or equal to @a num_data. If @a num_scaling_factor is 1, @a scaling_factor[0] will be
