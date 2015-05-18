@@ -453,7 +453,7 @@ protected:
 		for (size_t iop = 0; iop < num_operation; ++iop) {
 			// make sure number of elements for variation of conditions in RangesTestComponent
 			// is sufficient for iteration
-			assert(num_num_condition <= num_test);
+			assert(num_num_condition <= test_components[iop].GetNumTest());
 			for (size_t jc = 0; jc < num_num_condition; ++jc) {
 				auto kit = my_testcase.GetItem(num_operation, test_components,
 						iop, jc);
