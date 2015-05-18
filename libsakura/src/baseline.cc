@@ -133,10 +133,10 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (num_basis_data == 1) {
 		data[idx] = 1.0;
 	} else {
-		double max_data_x_inv = 1.0 / (double) (num_basis_data - 1);
+		double max_data_x = (double) (num_basis_data - 1);
 		for (size_t i = 0; i < num_basis_data; ++i) {
 			data[idx++] = 1.0;
-			double x = 2.0 * (double) i * max_data_x_inv - 1.0;
+			double x = 2.0 * (double) i / max_data_x - 1.0;
 			data[idx++] = x;
 			for (size_t j = 2; j < num_bases; ++j) {
 				data[idx] = 2.0 * x * data[idx - 1] - data[idx - 2];
