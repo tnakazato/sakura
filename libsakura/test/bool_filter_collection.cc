@@ -451,7 +451,6 @@ protected:
 
 		RangesTestHelper<DataType> my_testcase;
 		for (size_t iop = 0; iop < num_operation; ++iop) {
-			size_t const num_test = test_components[iop].GetNumTest();
 			// make sure number of elements for variation of conditions in RangesTestComponent
 			// is sufficient for iteration
 			assert(num_num_condition <= num_test);
