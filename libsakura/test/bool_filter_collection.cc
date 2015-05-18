@@ -744,7 +744,7 @@ TEST_F(BoolFilterFloat, NanOrInf) {
 	float in_data[num_data];
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
-	bool answer[] = { true, true, false, false, false, true, true, true };
+	bool const answer[] = { true, true, false, false, false, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
@@ -791,7 +791,7 @@ TEST_F(BoolFilterFloat, NanOrInfEleven) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	bool answer[] = { true, true, false, false, false, true, true, true };
+	bool const answer[] = { true, true, false, false, false, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
@@ -838,7 +838,7 @@ TEST_F(BoolFilterFloat, NanOrInfPerformance) {
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(in_data)];
 
-	bool answer[] = { true, true, false, false, false, true, true, true };
+	bool const answer[] = { true, true, false, false, false, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
 
 	// Create long input data by repeating data_
@@ -910,7 +910,7 @@ TEST_F(BoolFilterSimple, InvertBool) {
 	STATIC_ASSERT(ELEMENTSOF(data) == num_data);
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(data)];
-	bool answer[] = { false, true, true, false };
+	bool const answer[] = { false, true, true, false };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
 
 	if (verbose_)
@@ -932,7 +932,7 @@ TEST_F(BoolFilterSimple, InvertBoolInPlace) {
 	SIMD_ALIGN
 	bool data[] = { true, false, false, true };
 	SIMD_ALIGN
-	bool answer[] = { false, true, true, false };
+	bool const answer[] = { false, true, true, false };
 	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data));
 	size_t const num_data(ELEMENTSOF(data));
 
@@ -965,7 +965,7 @@ TEST_F(BoolFilterSimple, InvertBoolPerformance) {
 	SIMD_ALIGN
 	bool const data_base[] = { true, false, false, true };
 	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
-	bool answer[] = { false, true, true, false };
+	bool const answer[] = { false, true, true, false };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_base);
 	SIMD_ALIGN
 	bool data_long[num_long];
@@ -1032,7 +1032,7 @@ TEST_F(BoolFilterSimple, Uint8ToBool) {
 	STATIC_ASSERT(ELEMENTSOF(data) == num_data);
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(data)];
-	bool answer[] = { false, true, true, true, true, true, true, true };
+	bool const answer[] = { false, true, true, true, true, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
 
 //	if (verbose_) PrintArray("data", num_data, in);
@@ -1062,7 +1062,7 @@ TEST_F(BoolFilterSimple, Uint8ToBoolPerformance) {
 	size_t const num_long(NUM_IN_LONG);
 	uint8_t const data_base[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
 	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
-	bool answer[] = { false, true, true, true, true, true, true, true };
+	bool const answer[] = { false, true, true, true, true, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data_base));
 	SIMD_ALIGN
 	uint8_t data_long[num_long];
@@ -1129,7 +1129,7 @@ TEST_F(BoolFilterSimple, Uint32ToBool) {
 	STATIC_ASSERT(ELEMENTSOF(data) == num_data);
 	SIMD_ALIGN
 	bool result[ELEMENTSOF(data)];
-	bool answer[] = { false, true, true, true, true };
+	bool const answer[] = { false, true, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
 
 //	if (verbose_) PrintArray("data", num_data, in);
@@ -1159,7 +1159,7 @@ TEST_F(BoolFilterSimple, Uint32ToBoolPerformance) {
 	size_t const num_long(NUM_IN_LONG);
 	uint32_t const data_base[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
 	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
-	bool answer[] = { false, true, true, true, true };
+	bool const answer[] = { false, true, true, true, true };
 	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data_base));
 	SIMD_ALIGN
 	uint32_t data_long[num_long];
