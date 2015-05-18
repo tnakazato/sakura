@@ -73,7 +73,7 @@ CREATE_SUBDIRS         = YES
 # Polish, Portuguese, Romanian, Russian, Serbian, Slovak, Slovene, Spanish, 
 # Swedish, and Ukrainian.
 
-OUTPUT_LANGUAGE        = @DOC_LANG@
+OUTPUT_LANGUAGE        = English
 
 # This tag can be used to specify the encoding used in the generated output. 
 # The encoding is not always determined by the language that is chosen, 
