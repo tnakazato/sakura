@@ -151,7 +151,7 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(false);
 }
 
-inline void SetBasisData(uint16_t const order,
+inline void SetBasisData(size_t const order,
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
 			order);
@@ -193,8 +193,8 @@ inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 }
 
 inline void CreateBaselineContext(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_basis_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order,
+		size_t const npiece, size_t const num_basis_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
 	try {
 		std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContext),
@@ -207,7 +207,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		work_context->basis_data_storage = nullptr;
 		work_context->baseline_type = baseline_type;
 		work_context->num_basis_data = num_basis_data;
-		SetBasisData(order, work_context.get());
+		SetBasisData(
+				((baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
+						npiece : order), work_context.get());
 		*context = work_context.release();
 	} catch (...) {
 		DestroyBaselineContext(*context);
@@ -920,8 +922,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 } while (false)
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order,
+		size_t const npiece, size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) noexcept {
 	//--- should fail if sinusoid is specified as it is yet unavailable (2015/3/25 WK)
 	CHECK_ARGS(baseline_type != LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
@@ -946,7 +948,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	CHECK_ARGS(num_bases <= num_data);
 
 	try {
-		CreateBaselineContext(baseline_type, order, num_data, context);
+		CreateBaselineContext(baseline_type, order, npiece, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);

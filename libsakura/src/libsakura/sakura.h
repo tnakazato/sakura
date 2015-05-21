@@ -1157,19 +1157,19 @@ typedef enum {
 	 * @brief Gaussian
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),
 
-	 /**
+	/**
 	 * @brief Boxcar
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar),
 
-	 /**
+	/**
 	 * @brief Hanning
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning),
 
-	 /**
+	/**
 	 * @brief Hamming
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming),
 
-	 /**
+	/**
 	 * @brief Number of kernel type
 	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements)
 }LIBSAKURA_SYMBOL(Convolve1DKernelType);
@@ -1418,15 +1418,15 @@ typedef enum {
 	 * @brief OK
 	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0,
 
-	 /**
+	/**
 	 * @brief NG
 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNG) = 1,
 
-	 /**
+	/**
 	 * @brief Not enough data for baseline fitting
 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2,
 
-	 /**
+	/**
 	 * @brief Number of error codes implemented
 	 */LIBSAKURA_SYMBOL(BaselineStatus_kNumElements)
 }LIBSAKURA_SYMBOL(BaselineStatus);
@@ -1439,19 +1439,19 @@ typedef enum {
 	 * @brief Polynomial
 	 */LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
 
-	 /**
+	/**
 	 * @brief Chebyshev Polynomial
 	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
 
-	 /**
+	/**
 	 * @brief Cubic Spline
 	 */LIBSAKURA_SYMBOL(BaselineType_kCubicSpline),
 
-	 /**
+	/**
 	 * @brief Sinusoids
 	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid),
 
-	 /**
+	/**
 	 * @brief Number of baseline functions implemented
 	 */LIBSAKURA_SYMBOL(BaselineType_kNumElements)
 }LIBSAKURA_SYMBOL(BaselineType);
@@ -1465,13 +1465,15 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief Create an object containing baseline model data.
  * @details
  * @param[in] baseline_type Type of basis function.
- * @param[in] order Parameter for the specified function.
- * It is the maximum order (for sakura_BaselineType_kPolynomial
- * and sakura_BaselineType_kChebyshev), or the maximum number of
- * spline pieces (for sakura_BaselineType_kCubicSpline), or the
- * maximum wave number (for sakura_BaselineType_kSinusoid). It
- * must be positive for sakura_BaselineType_kCubicSpline, while
- * other models accept zero value.
+ * @param[in] order Parameter for the specified function other
+ * than cubic spline. It is the maximum order (for
+ * sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev) or the maximum wave number
+ * (for sakura_BaselineType_kSinusoid). It must be positive or
+ * zero.
+ * @param[in] npiece Number of spline pieces. It must be a
+ * positive value. It is used only when @a baseline_type @a is
+ * sakura_BaselineType_kCubicSpline.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
  * is @a order+1 for sakura_BaselineType_kPolynomial and
@@ -1488,8 +1490,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order,
+		size_t const npiece, size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 

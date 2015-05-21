@@ -70,7 +70,7 @@ TEST(Global, Init) {
 
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		auto status = LIBSAKURA_SYMBOL(CreateBaselineContext )(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 5, 100, &context);
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 5, 1, 100, &context);
 		EXPECT_EQ(status, sakura_Status_kOK);
 		EXPECT_NE(nullptr, context);
 		status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(context);
