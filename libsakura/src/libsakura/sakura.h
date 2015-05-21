@@ -1604,6 +1604,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order,
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
  * @param[in] num_coeff The number of elements in the arrays @a coeff.
+ * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
+ * fitting.
  * @param[out] coeff The coefficients of the polynomial fit. Its length
  * must be @a num_coeff .
  * @n must-be-aligned
