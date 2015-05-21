@@ -1300,24 +1300,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Update coefficients of simultaneous equations used for Least-Square fitting.
+ * @copybrief sakura_GetLSQCoefficientsDouble
  * @details
- * Suppose fitting ( @a num_mask ) discrete data points yi with a linear
- * combination of ( @a num_model_bases ) bases (ai, bi, ..., ni), which are
- * also given as ( @a num_mask ) discrete points. Assuming the best-fit model
- * is given as (A * ai + B * bi + ... + N * ni), where (A, B, C, ...) are
- * the coefficients to be solved, these values are connected via the following
- * simultaneous equations known as normal equation:
- *
- * @image html GetCoefficientsForLeastSquareFitting.png
- *
- * Note that the summation means all the data points except masked ones
- * are to be added.
- * This function updates the coefficients of the above simultaneous equations
- * by subtracting values corresponding to data points which have been used in
- * the previous calculation but not this time. this is faster than newly
- * calculating coefficients if the number of points to be excluded this time
- * is less than half of those previously used.
+ * This function updates the coefficients of normal equation for LSQ fitting
+ * created by sakura_GetLSQCoefficientsDouble(), by subtracting values
+ * corresponding to data points which have been used in the previous
+ * calculation but not this time. this is faster than newly calculating
+ * coefficients if the number of points to be excluded this time is less
+ * than half of those previously used.
  * @par
  * @param[in] num_data The number of elements in the arrays @a data and the
  * number of elements in each model data (i.e., discrete values of basis
