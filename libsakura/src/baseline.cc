@@ -133,10 +133,10 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (num_basis_data == 1) {
 		data[idx] = 1.0;
 	} else {
-		double max_data_x = (double) (num_basis_data - 1);
+		double max_data_x = static_cast<double>(num_basis_data - 1);
 		for (size_t i = 0; i < num_basis_data; ++i) {
 			data[idx++] = 1.0;
-			double x = 2.0 * (double) i / max_data_x - 1.0;
+			double x = 2.0 * static_cast<double>(i) / max_data_x - 1.0;
 			data[idx++] = x;
 			for (size_t j = 2; j < num_bases; ++j) {
 				data[idx] = 2.0 * x * data[idx - 1] - data[idx - 2];
@@ -676,7 +676,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, float clip_threshold_sigma,
 
 	DoSubtractBaselineEngine(num_data, data, mask, context->num_bases,
 			num_coeff, context->basis_data, 1, &piece_start_index,
-			&piece_end_index, std::max((uint16_t) 1, num_fitting_max_arg),
+			&piece_end_index,
+			std::max(static_cast<uint16_t>(1), num_fitting_max_arg),
 			clip_threshold_sigma, get_residual, coeff, final_mask,
 			residual_data, best_fit_model, out, [&]() {
 				GetBestFitModelAndResidual(num_data, data,context,
@@ -741,8 +742,9 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 
 	DoSubtractBaselineEngine(num_data, data, mask, num_coeff, num_coeff,
 			cspline_basis, num_pieces, piece_start_indices, piece_end_indices,
-			std::max((uint16_t) 1, num_fitting_max_arg), clip_threshold_sigma,
-			get_residual, coeff, final_mask, residual_data, best_fit_model, out,
+			std::max(static_cast<uint16_t>(1), num_fitting_max_arg),
+			clip_threshold_sigma, get_residual, coeff, final_mask,
+			residual_data, best_fit_model, out,
 			[&]() {
 				GetFullCubicSplineCoefficients(num_pieces, boundary, coeff, coeff_full);
 				GetBestFitModelAndResidualCubicSpline(num_data, data, context,
