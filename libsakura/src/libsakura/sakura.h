@@ -1213,7 +1213,6 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] num_data
  * The number of elements in @a input_data and @a output_data. (0 < @a num_data <= INT_MAX)
  * @param[in] input_data Input data.
- * Its length equals to the number of elements in input_data.
  * @n must-be-aligned
  * @param[out] output_data Output data.
  * @n must-be-aligned
