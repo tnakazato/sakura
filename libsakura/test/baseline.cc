@@ -320,7 +320,7 @@ TEST_F(Baseline, CreateBaselineContextWithTooSmallNumData) {
 	string func_names[num_func_types] = {"Polynomial", "Chebyshev", "CubicSpline"};
 	for (size_t i = 0; i < num_func_types; ++i) {
 		std::cout << "testing for " << func_names[i] << "..." << std::flush;
-		size_t num_data_min;
+		size_t num_data_min = 0;
 		switch (func_types[i]) {
 		case (LIBSAKURA_SYMBOL(BaselineType_kPolynomial)):
 		case (LIBSAKURA_SYMBOL(BaselineType_kChebyshev)):
