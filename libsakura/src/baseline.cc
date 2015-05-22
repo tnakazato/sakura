@@ -222,8 +222,8 @@ inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto in1 = AssumeAligned(in1_arg);
-	auto in2 = AssumeAligned(in2_arg);
+	auto const in1 = AssumeAligned(in1_arg);
+	auto const in2 = AssumeAligned(in2_arg);
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_in; ++i) {
@@ -702,12 +702,12 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	float const *data = AssumeAligned(data_arg);
-	bool const *mask = AssumeAligned(mask_arg);
-	double *boundary = AssumeAligned(boundary_arg);
-	double *coeff_full = AssumeAligned(coeff_full_arg);
-	bool *final_mask = AssumeAligned(final_mask_arg);
-	float *out = AssumeAligned(out_arg);
+	auto const *data = AssumeAligned(data_arg);
+	auto const *mask = AssumeAligned(mask_arg);
+	auto *boundary = AssumeAligned(boundary_arg);
+	auto *coeff_full = AssumeAligned(coeff_full_arg);
+	auto *final_mask = AssumeAligned(final_mask_arg);
+	auto *out = AssumeAligned(out_arg);
 
 	size_t *piece_start_indices = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_start_indices(
