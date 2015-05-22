@@ -65,7 +65,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d            const &a, __m256d            const &b, __m256d            const &c) {
+__m256d NegMultiplyAdd(__m256d              const &a, __m256d              const &b, __m256d              const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -86,7 +86,7 @@ void AddMulVectorTemplate(double k, double const *vec, double *out) {
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-						LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
 						_mm256_loadu_pd(&out[i])));
 	}
 #endif
@@ -106,7 +106,7 @@ inline void AddMulVector(size_t const num_model_bases, double k,
 		auto v = _mm256_loadu_pd(&vec[i]);
 		_mm256_storeu_pd(&out[i],
 				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-						LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
 						_mm256_loadu_pd(&out[i])));
 	}
 #endif
@@ -264,8 +264,8 @@ inline void UpdateLSQFittingMatrix(size_t num_clipped,
 	}
 }
 
-template<size_t kNumBases>
-inline void GetLSQFittingVectorTemplate(size_t num_data, float const *data_arg,
+template<size_t kNumBases, typename T>
+inline void GetLSQFittingVectorTemplate(size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -289,7 +289,8 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 }
 
-inline void GetLSQFittingVector(size_t num_data, float const *data_arg,
+template<typename T>
+inline void GetLSQFittingVector(size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 		size_t num_lsq_bases, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -313,8 +314,8 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 }
 
-template<size_t kNumBases> inline void UpdateLSQFittingVectorTemplate(
-		float const *data_arg, size_t num_clipped,
+template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplate(
+		T const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -338,7 +339,8 @@ template<size_t kNumBases> inline void UpdateLSQFittingVectorTemplate(
 	}
 }
 
-inline void UpdateLSQFittingVector(float const *data_arg, size_t num_clipped,
+template<typename T>
+inline void UpdateLSQFittingVector(T const *data_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_lsq_bases,
 		double const *in_arg, size_t num_model_bases, double const *model_arg,
 		double *out_arg) {
@@ -363,109 +365,113 @@ inline void UpdateLSQFittingVector(float const *data_arg, size_t num_clipped,
 	}
 }
 
-template<size_t kNumBases>
-inline void GetLSQCoefficientsTemplate(size_t num_data, float const *data,
+template<size_t kNumBases, typename T>
+inline void GetLSQCoefficientsTemplate(size_t num_data, T const *data,
 bool const *mask, size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
 	GetLSQFittingMatrixTemplate<kNumBases>(num_data, mask, num_model_bases,
 			basis, lsq_matrix);
-	GetLSQFittingVectorTemplate<kNumBases>(num_data, data, mask,
+	GetLSQFittingVectorTemplate<kNumBases, T>(num_data, data, mask,
 			num_model_bases, basis, lsq_vector);
 }
 
-inline void GetLSQCoefficients(size_t num_data, float const *data,
+template<typename T>
+inline void GetLSQCoefficients(size_t num_data, T const *data,
 bool const *mask, size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
 	GetLSQFittingMatrix(num_data, mask, num_model_bases, basis, num_lsq_bases,
 			lsq_matrix);
-	GetLSQFittingVector(num_data, data, mask, num_model_bases, basis,
+	GetLSQFittingVector<T>(num_data, data, mask, num_model_bases, basis,
 			num_lsq_bases, lsq_vector);
 }
 
-template<size_t kNumBases>
+template<size_t kNumBases, typename T>
 inline void UpdateLSQCoefficientsTemplate(size_t const num_data,
-		float const *data, size_t const num_clipped,
+		T const *data, size_t const num_clipped,
 		size_t const *clipped_indices, size_t const num_model_bases,
 		double const *basis, size_t const num_lsq_bases, double *lsq_matrix,
 		double *lsq_vector) {
 	UpdateLSQFittingMatrixTemplate<kNumBases>(num_clipped, clipped_indices,
 			num_model_bases, lsq_matrix, basis, lsq_matrix);
-	UpdateLSQFittingVectorTemplate<kNumBases>(data, num_clipped,
+	UpdateLSQFittingVectorTemplate<kNumBases, T>(data, num_clipped,
 			clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
 }
 
-inline void UpdateLSQCoefficients(size_t const num_data, float const *data,
+template<typename T>
+inline void UpdateLSQCoefficients(size_t const num_data, T const *data,
 		size_t const num_clipped, size_t const *clipped_indices,
 		size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
 	UpdateLSQFittingMatrix(num_clipped, clipped_indices, num_lsq_bases,
 			lsq_matrix, num_model_bases, basis, lsq_matrix);
-	UpdateLSQFittingVector(data, num_clipped, clipped_indices, num_lsq_bases,
+	UpdateLSQFittingVector<T>(data, num_clipped, clipped_indices, num_lsq_bases,
 			lsq_vector, num_model_bases, basis, lsq_vector);
 }
 
-inline void SolveSimultaneousEquationsByLUDouble(size_t num_equations,
-		double const *in_matrix_arg, double const *in_vector_arg, double *out) {
+template<typename T, typename MatrixT, typename VectorT>
+inline void SolveSimultaneousEquationsByLU(size_t num_equations,
+		T const *in_matrix_arg, T const *in_vector_arg, T *out) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_matrix_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_vector_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out));
-	Map<MatrixXd, Aligned, Stride<Dynamic, Dynamic> > in_matrix(
-			const_cast<double *>(in_matrix_arg), num_equations, num_equations,
+	Map<MatrixT, Aligned, Stride<Dynamic, Dynamic> > in_matrix(
+			const_cast<T *>(in_matrix_arg), num_equations, num_equations,
 			Stride<Dynamic, Dynamic>(1, num_equations));
-	Map < VectorXd, Aligned
-			> in_vector(const_cast<double *>(in_vector_arg), num_equations);
+	Map < VectorT, Aligned
+			> in_vector(const_cast<T *>(in_vector_arg), num_equations);
 
-	Map < VectorXd > (out, num_equations) = in_matrix.fullPivLu().solve(
-			in_vector);
+	Map<VectorT>(out, num_equations) = in_matrix.fullPivLu().solve(in_vector);
 }
 
-#define RepeatTen(func, start_idx) \
-		(func<start_idx + 0>), \
-		(func<start_idx + 1>), \
-		(func<start_idx + 2>), \
-		(func<start_idx + 3>), \
-		(func<start_idx + 4>), \
-		(func<start_idx + 5>), \
-		(func<start_idx + 6>), \
-		(func<start_idx + 7>), \
-		(func<start_idx + 8>), \
-		(func<start_idx + 9>)
+#define RepeatTen(func, start_idx, type) \
+		(func<start_idx + 0, type>), \
+		(func<start_idx + 1, type>), \
+		(func<start_idx + 2, type>), \
+		(func<start_idx + 3, type>), \
+		(func<start_idx + 4, type>), \
+		(func<start_idx + 5, type>), \
+		(func<start_idx + 6, type>), \
+		(func<start_idx + 7, type>), \
+		(func<start_idx + 8, type>), \
+		(func<start_idx + 9, type>)
 
+template<typename T>
 void GetLSQCoefficientsEntry(size_t const num_data,
-		float const data[/*num_data*/],
+		T const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
 	typedef void (*GetLSQCoefficientsFunc)(size_t const num_data,
-			float const *data, bool const *mask, size_t const num_model_bases,
+			T const *data, bool const *mask, size_t const num_model_bases,
 			double const *basis_data, size_t const num_lsq_bases,
 			double *lsq_matrix, double *lsq_vector);
 
 	static GetLSQCoefficientsFunc const funcs[] = { RepeatTen(
-			GetLSQCoefficientsTemplate, 0), RepeatTen(
-			GetLSQCoefficientsTemplate, 10), RepeatTen(
-			GetLSQCoefficientsTemplate, 20), RepeatTen(
-			GetLSQCoefficientsTemplate, 30), RepeatTen(
-			GetLSQCoefficientsTemplate, 40), RepeatTen(
-			GetLSQCoefficientsTemplate, 50), RepeatTen(
-			GetLSQCoefficientsTemplate, 60), RepeatTen(
-			GetLSQCoefficientsTemplate, 70), RepeatTen(
-			GetLSQCoefficientsTemplate, 80), RepeatTen(
-			GetLSQCoefficientsTemplate, 90), GetLSQCoefficientsTemplate<100> };
+			GetLSQCoefficientsTemplate, 0, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 10, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 20, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 30, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 40, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 50, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 60, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 70, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 80, T), RepeatTen(
+			GetLSQCoefficientsTemplate, 90, T), GetLSQCoefficientsTemplate<100, T> };
 
 	if (num_lsq_bases < ELEMENTSOF(funcs)) {
 		funcs[num_lsq_bases](num_data, data, mask, num_model_bases, basis_data,
 				num_lsq_bases, lsq_matrix, lsq_vector);
 	} else {
-		GetLSQCoefficients(num_data, data, mask, num_model_bases, basis_data,
+		GetLSQCoefficients<T>(num_data, data, mask, num_model_bases, basis_data,
 				num_lsq_bases, lsq_matrix, lsq_vector);
 	}
 }
 
+template<typename T>
 void UpdateLSQCoefficientsEntry(size_t const num_data,
-		float const data[/*num_data*/], size_t const num_clipped,
+		T const data[/*num_data*/], size_t const num_clipped,
 		size_t const clipped_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
@@ -473,30 +479,30 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
 	typedef void (*UpdateLSQCoefficientsFunc)(size_t const num_data,
-			float const *data, size_t const num_clipped,
+			T const *data, size_t const num_clipped,
 			size_t const *clipped_indices, size_t const num_model_bases,
 			double const *basis_data, size_t const num_lsq_bases,
 			double *lsq_matrix, double *lsq_vector);
 
 	static UpdateLSQCoefficientsFunc const funcs[] = { RepeatTen(
-			UpdateLSQCoefficientsTemplate, 0), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 10), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 20), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 30), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 40), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 50), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 60), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 70), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 80), RepeatTen(
-			UpdateLSQCoefficientsTemplate, 90), UpdateLSQCoefficientsTemplate<
-			100> };
+			UpdateLSQCoefficientsTemplate, 0, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 10, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 20, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 30, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 40, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 50, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 60, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 70, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 80, T), RepeatTen(
+			UpdateLSQCoefficientsTemplate, 90, T), UpdateLSQCoefficientsTemplate<
+			100, T> };
 
 	if (num_lsq_bases < ELEMENTSOF(funcs)) {
 		funcs[num_lsq_bases](num_data, data, num_clipped, clipped_indices,
 				num_model_bases, basis_data, num_lsq_bases, lsq_matrix,
 				lsq_vector);
 	} else {
-		UpdateLSQCoefficients(num_data, data, num_clipped, clipped_indices,
+		UpdateLSQCoefficients<T>(num_data, data, num_clipped, clipped_indices,
 				num_model_bases, basis_data, num_lsq_bases, lsq_matrix,
 				lsq_vector);
 	}
@@ -532,7 +538,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
-		GetLSQCoefficientsEntry(num_data, data, mask, num_model_bases,
+		GetLSQCoefficientsEntry<float>(num_data, data, mask, num_model_bases,
 				basis_data, num_lsq_bases, lsq_matrix, lsq_vector);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
@@ -572,7 +578,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
-		UpdateLSQCoefficientsEntry(num_data, data, num_exclude_indices,
+		UpdateLSQCoefficientsEntry<float>(num_data, data, num_exclude_indices,
 				exclude_indices, num_model_bases, basis_data, num_lsq_bases,
 				lsq_matrix, lsq_vector);
 	} catch (...) {
@@ -594,8 +600,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		SolveSimultaneousEquationsByLUDouble(num_equations, in_matrix,
-				in_vector, out);
+		SolveSimultaneousEquationsByLU<double, MatrixXd, VectorXd>(
+				num_equations, in_matrix, in_vector, out);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
