@@ -1,6 +1,6 @@
 /*
  * @SAKURA_LICENSE_HEADER_START@
- * Copyright (C) 2013-2014
+ * Copyright (C) 2013-2015
  * National Astronomical Observatory of Japan
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
  * 
@@ -11,7 +11,7 @@
  * Free Software Foundation, either version 3 of the License, or (at your 
  * option) any later version.
  * 
- * Sakura is distriburedefinitionted in the hope that it will be useful, but WITHOUT
+ * Sakura is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public 
  * License for more details.

@@ -1,7 +1,7 @@
 # $Id$
 #
 # @SAKURA_LICENSE_HEADER_START@
-# Copyright (C) 2013-2014
+# Copyright (C) 2013-2015
 # National Astronomical Observatory of Japan
 # 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
 # 
