@@ -30,7 +30,7 @@ replace() {
 	echo -n "Processing $file: "
 	(echo | cat - $file) | sed "1,/$header_pre$header_start/d" | grep --quiet "$header_pre$header_end" || { echo "Missing end marker. Skipped." ; return; }
 	prefix="`grep "$header_pre$header_start" $file | sed -n \"s/\\(.*\\)${header_pre}${header_start}.*/\\1/;1p\" `"
-	(echo | cat - $file) | sed -n "1,/$header_pre$header_start/p" | sed '1d'  > $tmp && sed "s/^/$prefix/" $notice >> $tmp && sed -n "/$header_pre$header_end/,\$p" $file >> $tmp && mv $tmp $file && echo "Done."
+	(echo | cat - $file) | sed -n "1,/$header_pre$header_start/p" | sed '1d'  > $tmp && sed "s/^/$prefix/" $notice >> $tmp && sed -n "/$header_pre$header_end/,\$p" $file >> $tmp && cat $tmp > $file && rm $tmp && echo "Done."
 }
 
 usage() {
