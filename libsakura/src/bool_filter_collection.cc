@@ -36,7 +36,7 @@ inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 		DataType const *upper_bounds,
 		bool *result) {
 	uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
-	constexpr DataType kZero(0);
+	constexpr DataType kZero = 0;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		uint8_t is_in_range = 0;
@@ -53,7 +53,7 @@ inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
-	constexpr DataType kZero(0);
+	constexpr DataType kZero = 0;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
@@ -73,7 +73,7 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
-	constexpr DataType kZero(0);
+	constexpr DataType kZero = 0;
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
@@ -93,7 +93,7 @@ inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
-	constexpr DataType kZero(0);
+	constexpr DataType kZero = 0;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
@@ -113,7 +113,7 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
 		DataType const *lower_bounds, DataType const *upper_bounds,
 		bool *result) {
-	constexpr DataType kZero(0);
+	constexpr DataType kZero = 0;
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
@@ -518,7 +518,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	constexpr uint8_t kZero(0);
+	constexpr uint8_t kZero = 0;
 	auto operation_for_element = [kZero](decltype(data[0]) data_value) {
 			return (data_value != kZero);
 		};
@@ -528,7 +528,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		size_t num_data, uint32_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
-	constexpr uint8_t kZero(0);
+	constexpr uint8_t kZero = 0;
 	auto operation_for_element = [kZero](decltype(data[0]) data_value) {
 			return (data_value != kZero);
 		};
