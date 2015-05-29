@@ -33,6 +33,7 @@
 // Vectorization by Compiler
 namespace {
 
+// Check parameter arguments.
 template<typename DataType>
 bool IsValidArguments(DataType const *data, bool const *edit_mask,
 		DataType const *result) {
@@ -51,13 +52,10 @@ template<typename Operation, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoBitOperation(Operation operation, size_t num_data,
 		DataType const *data,
 		bool const *edit_mask, DataType *result) {
-	// Check parameter arguments.
 	if (!IsValidArguments(data, edit_mask, result)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
-	// Now actual operation
 	try {
-		// cast bool array to uint8_t array
 		uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(edit_mask);
 		assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
 		auto adata = AssumeAligned(data);
