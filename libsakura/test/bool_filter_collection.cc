@@ -20,14 +20,15 @@
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
-#include <libsakura/sakura.h>
-
+#include <cxxabi.h>
 #include <iostream>
 #include <math.h>
 #include <string>
 #include <sys/time.h>
+#include <typeinfo>
 
 #include <libsakura/localdef.h>
+#include <libsakura/sakura.h>
 #include "aligned_memory.h"
 #include "loginit.h"
 #include "gtest/gtest.h"
@@ -443,6 +444,10 @@ protected:
 			PrintArray("lower_bound", num_condition, lower_bounds);
 			PrintArray("upper_bound", num_condition, upper_bounds);
 		}
+		// get data type name to identify benchmark tests
+		int success = 0 ;
+		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(), nullptr, nullptr, &success);
+		string_replace(data_type_name, " ", "_");
 
 		if (num_repeat > 1)
 			cout << "Iterating " << num_repeat
@@ -470,9 +475,13 @@ protected:
 							upper_bounds, result);
 				} // end of num_repeat loop
 				double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-				if (num_repeat > 1)
-					cout << "Elapse time of operation: " << end - start
-							<< " sec" << endl;
+				if (num_repeat > 1) {
+					string test_name = std::get<0>(kit);
+					string_replace(test_name, " ", "_");
+					cout << "#x# benchmark BoolFilter_" << test_name
+					<< "_" << data_type_name
+					<< " " << end - start << " sec" << endl;
+				}
 
 				if (verbose_) {
 					if (status == LIBSAKURA_SYMBOL(Status_kOK))
@@ -503,6 +512,10 @@ protected:
 			PrintArray("data", num_data, in_data);
 			cout << "threshold = " << threshold_ << endl;
 		}
+		// get data type name to identify benchmark tests
+		int success = 0 ;
+		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(), nullptr, nullptr, &success);
+		string_replace(data_type_name, " ", "_");
 
 		if (num_repeat > 1)
 			cout << "Iterating " << num_repeat
@@ -521,9 +534,13 @@ protected:
 						threshold_, result);
 			} // end of num_repeat loop
 			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			if (num_repeat > 1)
-				cout << "Elapse time of operation: " << end - start << " sec"
-						<< endl;
+			if (num_repeat > 1) {
+				string test_name = std::get<0>(kit);
+				string_replace(test_name, " ", "_");
+				cout << "#x# benchmark BoolFilter_" << test_name
+				<< "_" << data_type_name
+				<< " " << end - start << " sec" << endl;
+			}
 
 			if (verbose_) {
 				if (status == LIBSAKURA_SYMBOL(Status_kOK))
@@ -604,6 +621,15 @@ protected:
 				cout << (data_array[num_data - 1] ? "T" : "F");
 			}
 			cout << " ]" << endl;
+		}
+	}
+
+	void string_replace(string &invalue, string const &from, string const &to) {
+		assert(from.length()==to.length());
+		size_t pos = invalue.find(from, 0);
+		while (pos < string::npos) {
+			invalue.replace(pos, to.length(), to);
+			pos = invalue.find(from, pos);
 		}
 	}
 
@@ -864,8 +890,8 @@ TEST_F(BoolFilterFloat, NanOrInfPerformance) {
 		status = sakura_SetFalseIfNanOrInfFloat(num_data, in_data, result);
 	}
 	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
+	cout << "#x# benchmark BoolFilter_NanOrInf_float"
+			<< " " << end - start << " sec" << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -986,8 +1012,8 @@ TEST_F(BoolFilterSimple, InvertBoolPerformance) {
 		status = sakura_InvertBool(num_long, data_long, result);
 	}
 	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
+	cout << "#x# benchmark BoolFilter_InvertBool"
+			<< " " << end - start << " sec" << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1083,8 +1109,8 @@ TEST_F(BoolFilterSimple, Uint8ToBoolPerformance) {
 		status = sakura_Uint8ToBool(num_long, data_long, result);
 	}
 	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
+	cout << "#x# benchmark BoolFilter_Uint8ToBool"
+			<< " " << end - start << " sec" << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1180,8 +1206,8 @@ TEST_F(BoolFilterSimple, Uint32ToBoolPerformance) {
 		status = sakura_Uint32ToBool(num_long, data_long, result);
 	}
 	end = sakura_GetCurrentTime();
-	cout << "Elapse time of actual operation: " << end - start << " sec"
-			<< endl;
+	cout << "#x# benchmark BoolFilter_Uint32ToBool"
+			<< " " << end - start << " sec" << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);

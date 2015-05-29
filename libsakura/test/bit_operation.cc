@@ -531,9 +531,10 @@ private:
 	}
 
 
-	void string_replace(string &invalue, char const *from, string const &to) {
+	void string_replace(string &invalue, string const &from, string const &to) {
+		assert(from.length()==to.length());
 		size_t pos = invalue.find(from, 0);
-		while (pos < string::npos && pos+to.length() <= invalue.length()) {
+		while (pos < string::npos) {
 			invalue.replace(pos, to.length(), to);
 			pos = invalue.find(from, pos);
 		}
