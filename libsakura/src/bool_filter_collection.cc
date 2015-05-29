@@ -266,7 +266,7 @@ bool IsValidArray(DataType const data_array[]) {
 	return true;
 }
 
-/* Test data and result arrays*/
+/* Check parameter arguments. Test data and result arrays*/
 template<typename DataType>
 bool IsValidDataAndResult(DataType const data[], bool const result[]) {
 	if (!IsValidArray(data) || !IsValidArray(result)) {
@@ -275,7 +275,7 @@ bool IsValidDataAndResult(DataType const data[], bool const result[]) {
 	return true;
 }
 
-/* Test range parameters */
+/* Check parameter arguments. Test range parameters */
 template<typename DataType>
 bool IsValidBounds(size_t num_condition,
 		DataType const lower_bounds[/*num_condition*/],
@@ -300,6 +300,8 @@ bool IsValidBounds(size_t num_condition,
  *
  *  This function calls a function, @a func , with arrays, @a data ,
  *  @a lower_bounds , and @a upper_bounds .
+ *  In case an exception is thrown during operation, it aborts if assertion is
+ *  enabled. if not, return kUnknownError status.
  *
  *  @param[in] func A function to return a boolean array, @a result, based on arrays @a data ,
  *  @a lower_bounds , and @a upper_bounds . It should output a boolean @a result array.
@@ -310,18 +312,15 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 		DataType const lower_bounds[/*num_condition*/],
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
-	// Check parameter arguments.
+
 	if (!IsValidDataAndResult(data, result)
 			|| !IsValidBounds(num_condition, lower_bounds, upper_bounds)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
-	// Now actual operation
 	try {
 		func(/*num_data, data, num_condition, lower_bounds, upper_bounds, result*/);
 	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -333,6 +332,8 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
  *
  *  This function loops over elements of an array, @a data, and call a function,
  *  @a func , with each @a data element.
+ *  In case an exception is thrown during operation, it aborts if assertion is
+ *  enabled. if not, return kUnknownError status.
  *
  *  @param[in] func A function to return a boolean value for a @a data element.
  *  It should take a @a data element and return a boolean.
@@ -340,12 +341,11 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 template<typename Func, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoElementFuncBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool result[/*num_data*/]) {
-	// Check parameter arguments.
+
 	if (!IsValidDataAndResult(data, result)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
-	// Now actual operation
 	try {
 		auto adata = AssumeAligned(data);
 		auto aresult = AssumeAligned(result);
@@ -354,8 +354,6 @@ LIBSAKURA_SYMBOL(Status) DoElementFuncBoolFilter(Func func, size_t num_data,
 			aresult[i] = func(adata[i]);
 		}
 	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
@@ -366,6 +364,8 @@ LIBSAKURA_SYMBOL(Status) DoElementFuncBoolFilter(Func func, size_t num_data,
  *  @brief Generate a boolean filter based on per array equation function @a func .
  *
  *  This function calls a function, @a func , with a @a data array.
+ *  In case an exception is thrown during operation, it aborts if assertion is
+ *  enabled. if not, return kUnknownError status.
  *
  *  @param[in] func A function to return a boolean array, @a result, based on a @a data array.
  *  It should take a @a data array and output a @result array.
@@ -374,17 +374,13 @@ template<typename Func, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoArrayFuncBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool const result[/*num_data*/]) {
 
-	// Check parameter arguments.
 	if (!IsValidDataAndResult(data, result)) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 
-	// Now actual operation
 	try {
 		func(/*num_data, data, result*/);
 	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
