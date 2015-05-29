@@ -480,7 +480,7 @@ protected:
 					string_replace(test_name, " ", "_");
 					cout << "#x# benchmark BoolFilter_" << test_name
 					<< "_" << data_type_name
-					<< " " << end - start << " sec" << endl;
+					<< " " << end - start << endl;
 				}
 
 				if (verbose_) {
@@ -539,7 +539,7 @@ protected:
 				string_replace(test_name, " ", "_");
 				cout << "#x# benchmark BoolFilter_" << test_name
 				<< "_" << data_type_name
-				<< " " << end - start << " sec" << endl;
+				<< " " << end - start << endl;
 			}
 
 			if (verbose_) {
@@ -891,7 +891,7 @@ TEST_F(BoolFilterFloat, NanOrInfPerformance) {
 	}
 	end = sakura_GetCurrentTime();
 	cout << "#x# benchmark BoolFilter_NanOrInf_float"
-			<< " " << end - start << " sec" << endl;
+			<< " " << end - start << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1013,7 +1013,7 @@ TEST_F(BoolFilterSimple, InvertBoolPerformance) {
 	}
 	end = sakura_GetCurrentTime();
 	cout << "#x# benchmark BoolFilter_InvertBool"
-			<< " " << end - start << " sec" << endl;
+			<< " " << end - start << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1110,7 +1110,7 @@ TEST_F(BoolFilterSimple, Uint8ToBoolPerformance) {
 	}
 	end = sakura_GetCurrentTime();
 	cout << "#x# benchmark BoolFilter_Uint8ToBool"
-			<< " " << end - start << " sec" << endl;
+			<< " " << end - start << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1207,7 +1207,7 @@ TEST_F(BoolFilterSimple, Uint32ToBoolPerformance) {
 	}
 	end = sakura_GetCurrentTime();
 	cout << "#x# benchmark BoolFilter_Uint32ToBool"
-			<< " " << end - start << " sec" << endl;
+			<< " " << end - start << endl;
 
 	// Verification
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);

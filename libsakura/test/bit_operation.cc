@@ -598,7 +598,7 @@ private:
 				string_replace(test_name, " ", "_");
 				cout << "#x# benchmark Bit_" << test_name
 				<< "_" << data_type_name
-				<< " " << end - start << " sec" << endl;
+				<< " " << end - start << endl;
 			}
 			if (verbose_) {
 				if (status == LIBSAKURA_SYMBOL(Status_kOK))
