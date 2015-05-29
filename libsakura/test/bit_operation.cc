@@ -21,10 +21,12 @@
  * @SAKURA_LICENSE_HEADER_END@
  */
 #include <algorithm>
+#include <cxxabi.h>
 #include <iostream>
 #include <string>
 #include <sys/time.h>
 #include <tuple>
+#include <typeinfo>
 
 #include <libsakura/localdef.h>
 #include <libsakura/sakura.h>
@@ -528,6 +530,15 @@ private:
 		}
 	}
 
+
+	void string_replace(string &invalue, char const *from, string const &to) {
+		size_t pos = invalue.find(from, 0);
+		while (pos < string::npos && pos+to.length() <= invalue.length()) {
+			invalue.replace(pos, to.length(), to);
+			pos = invalue.find(from, pos);
+		}
+	}
+
 	/*
 	 * Compare data with reference array, and assert values of corresponding
 	 * elements are the exact match.
@@ -558,6 +569,9 @@ private:
 			PrintArray("data", num_data, in_data);
 			PrintArray("mask", num_data, mask);
 		}
+		int success = 0 ;
+		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(), nullptr, nullptr, &success);
+		string_replace(data_type_name, " ", "_");
 
 		if (num_repeat > 1)
 			cout << "Iterating " << num_repeat
@@ -578,10 +592,13 @@ private:
 						in_data, mask, out_data);
 			} // end of num_repeat loop
 			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
-			if (num_repeat > 1)
-				cout << "Elapse time of operation: " << end - start << " sec"
-						<< endl;
-
+			if (num_repeat > 1){
+				string test_name = std::get<0>(kit);
+				string_replace(test_name, " ", "_");
+				cout << "#x# benchmark Bit_" << test_name
+				<< "_" << data_type_name
+				<< " " << end - start << " sec" << endl;
+			}
 			if (verbose_) {
 				if (status == LIBSAKURA_SYMBOL(Status_kOK))
 					PrintArray("result", num_data, out_data);
