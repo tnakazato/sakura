@@ -218,16 +218,14 @@ struct VectorizedImpl {
 					pweight);
 			++vweight_of_grid;
 
-			vweight_sum[0] = LIBSAKURA_SYMBOL(SimdMath)<
-			LIBSAKURA_SYMBOL(SimdArchNative), double>::Add(vweight_sum[0],
-					LIBSAKURA_SYMBOL(SimdConvert)<
-					LIBSAKURA_SYMBOL(SimdArchNative)>::FloatToDouble(
-							pweight.v_prior.v[0]));
-			vweight_sum[1] = LIBSAKURA_SYMBOL(SimdMath)<
-			LIBSAKURA_SYMBOL(SimdArchNative), double>::Add(vweight_sum[1],
-					LIBSAKURA_SYMBOL(SimdConvert)<
-					LIBSAKURA_SYMBOL(SimdArchNative)>::FloatToDouble(
-							pweight.v_prior.v[1]));
+			using Math = LIBSAKURA_SYMBOL(SimdMath)<
+			LIBSAKURA_SYMBOL(SimdArchNative), double>;
+			using Converter = LIBSAKURA_SYMBOL(SimdConvert)<
+			LIBSAKURA_SYMBOL(SimdArchNative)>;
+			vweight_sum[0] = Math::Add(vweight_sum[0],
+					Converter::FloatToDouble(pweight.v_prior.v[0]));
+			vweight_sum[1] = Math::Add(vweight_sum[1],
+					Converter::FloatToDouble(pweight.v_prior.v[1]));
 			vweight_sum += 2;
 		}
 	}
