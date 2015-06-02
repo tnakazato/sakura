@@ -146,8 +146,9 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	for (size_t i = 0; i < num_data; ++i) {
 		float value = 0.0;
 		size_t jmax = std::min(num_kernel, num_data - i);
-		for (size_t j = 1; j < jmax + 1; ++j) {
-			value += input_data[i + j - 1] * kernel[j - 1];
+		//j=>j+1
+		for (size_t j = 0; j < jmax; ++j) {
+			value += input_data[i + j] * kernel[j];
 		}
 		jmax = std::min(num_kernel, i+1);
 		for (size_t j = 1; j < jmax; ++j) {
