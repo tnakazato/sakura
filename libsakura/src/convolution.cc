@@ -141,17 +141,19 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 	auto kernel = AssumeAligned(kernel_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 
-	for (size_t i = 1; i < (num_data + 1); ++i) {
+
+
+	for (size_t i = 0; i < num_data; ++i) {
 		float value = 0.0;
-		size_t jmax = std::min(num_kernel, num_data - (i - 1));
+		size_t jmax = std::min(num_kernel, num_data - i);
 		for (size_t j = 1; j < jmax + 1; ++j) {
-			value += input_data[i - 1 + j - 1] * kernel[j - 1];
+			value += input_data[i + j - 1] * kernel[j - 1];
 		}
-		jmax = std::min(num_kernel, i);
+		jmax = std::min(num_kernel, i+1);
 		for (size_t j = 1; j < jmax; ++j) {
-			value += input_data[i - 1 - j] * kernel[j];
+			value += input_data[i - j] * kernel[j];
 		}
-		output_data[i - 1] = value;
+		output_data[i] = value;
 	}
 
 }
@@ -162,6 +164,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 
 	assert(context != nullptr);
 	if (use_fft) {
+		size_t num_fft_kernel = num_data / 2 + 1;
 		float *real_kernel_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -173,17 +176,17 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 						sizeof(float) * num_data, &real_array));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(real_array));
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_kernel(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(num_fft_kernel), FreeFFTArray);
 		if (fft_applied_complex_kernel == nullptr) {
 			throw std::bad_alloc();
 		}
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(num_fft_kernel), FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(num_fft_kernel), FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
@@ -292,13 +295,14 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	if (context->use_fft) {
+		size_t num_fft_data = num_data / 2 + 1;
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(num_fft_data), FreeFFTArray);
 		if (fft_applied_complex_input_data == nullptr) {
 			throw std::bad_alloc();
 		}
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> multiplied_complex_data(
-				AllocateFFTArray(num_data / 2 + 1), FreeFFTArray);
+				AllocateFFTArray(num_fft_data), FreeFFTArray);
 		if (multiplied_complex_data == nullptr) {
 			throw std::bad_alloc();
 		}
@@ -306,18 +310,18 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 				const_cast<float*>(input_data),
 				fft_applied_complex_input_data.get());
 		float scale = 1.0f / static_cast<float>(num_data);
-		for (size_t i = 1; i < num_data / 2 + 1 + 1; ++i) {
-			multiplied_complex_data[i - 1][0] =
-					(context->fft_applied_complex_kernel[i - 1][0]
-							* fft_applied_complex_input_data[i - 1][0]
-							- context->fft_applied_complex_kernel[i - 1][1]
-									* fft_applied_complex_input_data[i - 1][1])
+		for (size_t i = 0; i < num_fft_data; ++i) {
+			multiplied_complex_data[i][0] =
+					(context->fft_applied_complex_kernel[i][0]
+							* fft_applied_complex_input_data[i][0]
+							- context->fft_applied_complex_kernel[i][1]
+									* fft_applied_complex_input_data[i][1])
 							* scale;
-			multiplied_complex_data[i - 1][1] =
-					(context->fft_applied_complex_kernel[i - 1][0]
-							* fft_applied_complex_input_data[i - 1][1]
-							+ context->fft_applied_complex_kernel[i - 1][1]
-									* fft_applied_complex_input_data[i - 1][0])
+			multiplied_complex_data[i][1] =
+					(context->fft_applied_complex_kernel[i][0]
+							* fft_applied_complex_input_data[i][1]
+							+ context->fft_applied_complex_kernel[i][1]
+									* fft_applied_complex_input_data[i][0])
 							* scale;
 		}
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
