@@ -324,7 +324,7 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
-		ConvolutionWithoutFFT(num_data, const_cast<float*>(input_data),
+		ConvolutionWithoutFFT(num_data, input_data,
 				context->kernel_width, context->real_kernel_array, output_data);
 	}
 }
