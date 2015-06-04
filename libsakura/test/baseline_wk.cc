@@ -199,6 +199,8 @@ protected:
 	}
 
 	bool verbose;
+	size_t num_nwave = 1;
+	uint16_t const nwave = {0};
 
 };
 
@@ -233,7 +235,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 			LIBSAKURA_SYMBOL (Status) create_status =
 					sakura_CreateBaselineContext(
 							LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
-							num_pieces, num_data, &context);
+							num_pieces, num_nwave, &nwave, num_data, &context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 			SIMD_ALIGN
 			double out[ELEMENTSOF(coeff)];
@@ -1668,7 +1670,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			LIBSAKURA_SYMBOL (Status) create_status =
 					sakura_CreateBaselineContext(
 							LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
-							num_pieces, num_data, &context);
+							num_pieces, num_nwave, &nwave, num_data, &context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 			SIMD_ALIGN
 			double out[ELEMENTSOF(coeff)];
@@ -1781,7 +1783,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-			num_data, &context);
+			num_nwave, &nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
 	double out[ELEMENTSOF(answer)];
@@ -1846,7 +1848,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				num_data, &context);
+				num_nwave, &nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -1926,7 +1928,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				num_data, &context);
+				num_nwave, &nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2025,7 +2027,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				num_basis_data, &context);
+				num_nwave, &nwave, num_basis_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2070,7 +2072,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
 			LIBSAKURA_SYMBOL (Status) create_status =
 					sakura_CreateBaselineContext(
 							LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
-							num_pieces, num_data, &context);
+							num_pieces, num_nwave, &nwave, num_data, &context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 			SIMD_ALIGN
 			float out[ELEMENTSOF(in_data)];
@@ -2126,7 +2128,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-			num_data, &context);
+			num_nwave, &nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -2194,7 +2196,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesNullPointer) {
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				num_data, &context);
+				num_nwave, &nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2274,7 +2276,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesUnaligned) {
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				num_data, &context);
+				num_nwave, &nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2373,7 +2375,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				num_basis_data, &context);
+				num_nwave, &nwave, num_basis_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 

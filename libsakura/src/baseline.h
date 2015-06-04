@@ -39,6 +39,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext) {
 	void *basis_data_storage; /**< 基底関数データを格納する領域を確保した時に返されるアドレス。アラインされておらず、解放時に用いる目的のみのために保持される。 */
 	double *basis_data; /**< 基底関数データを指すポインタ。アドレスはアラインされている。要素数は @a num_bases * @a num_basis_data 。i 番目の点の j 番目の基底関数のデータは [ @a num_basis_data * i + j ] 番目の要素に格納される。 */
 	LIBSAKURA_SYMBOL(BaselineType) baseline_type; /**< ベースラインの関数形 */
+	size_t num_baseline_param; /** number of elements of baseline_param */
+	uint16_t *baseline_param; /** a pointer to an array storing baseline parameters such as order, npiece, or wave numbers. for sinusoidal fitting, the order of basis_data should follow this array. address is not aligned. */
 };
 }
 

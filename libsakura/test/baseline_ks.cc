@@ -194,6 +194,8 @@ protected:
 	}
 
 	bool verbose;
+	size_t num_nwave = 1;
+	uint16_t const nwave = {0};
 
 };
 
@@ -241,7 +243,7 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_pieces, num_data, &context);
+				type, gen_order, num_pieces, num_nwave, &nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
@@ -302,7 +304,7 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_pieces, num_data, &context);
+				type, gen_order, num_pieces, num_nwave, &nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
@@ -457,10 +459,10 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 		LIBSAKURA_SYMBOL (Status) create_status;
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 			create_status = sakura_CreateBaselineContext(
-				type, num_dummy, gen_order, num_data, &context);
+				type, num_dummy, gen_order, num_nwave, &nwave, num_data, &context);
 		} else {
 			create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_dummy, num_data, &context);
+				type, gen_order, num_dummy, num_nwave, &nwave, num_data, &context);
 		}
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 			// Sinusoid must fail until implemented (2015/3/25 WK)
@@ -499,7 +501,7 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_pieces, num_data, &context);
+				type, gen_order, num_pieces, num_nwave, &nwave, num_data, &context);
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 			// Sinusoid must fail until implemented (2015/3/25 WK)
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
@@ -546,7 +548,7 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatNumCoeff) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, order, num_pieces, num_data, &context);
+				type, order, num_pieces, num_nwave, &nwave, num_data, &context);
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 			// Sinusoid must fail until implemented (2015/3/25 WK)
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
@@ -607,7 +609,7 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, order, num_pieces, num_data, &context);
+				type, order, num_pieces, num_nwave, &nwave, num_data, &context);
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 			// Sinusoid must fail until implemented (2015/3/25 WK)
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);

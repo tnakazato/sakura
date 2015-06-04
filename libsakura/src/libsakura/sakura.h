@@ -1464,6 +1464,12 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @param[in] npiece Number of spline pieces. It must be a
  * positive value. It is used only when @a baseline_type @a is
  * sakura_BaselineType_kCubicSpline.
+ * @param[in] num_nwave Number of sinusoidal wave numbers. It
+ * must be a positive value. It is used only when
+ * @a baseline_type @a is sakura_BaselineType_kSinusoid.
+ * @param[in] nwave an array to store wave numbers to be used
+ * for sinusoidal fitting. Same values must not be given
+ * duplicatedly.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
  * is @a order+1 for sakura_BaselineType_kPolynomial and
@@ -1480,8 +1486,9 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order,
-		size_t const npiece, size_t const num_data,
+		LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+		size_t const npiece, size_t num_nwave, uint16_t const nwave[/*num_nwave*/],
+		size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
