@@ -82,7 +82,7 @@ inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 	size_t num_data_for_gauss = (use_fft) ? num_kernel : 2 * num_kernel - 1;
 	assert(kernel_width != 0);
 	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ kernel_width; // sqrt(log(16)) / kernel_width
+			/ static_cast<float>(kernel_width); // sqrt(log(16)) / kernel_width
 	float const height = .939437278699651333772340328410
 			/ static_cast<float>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	float center =
