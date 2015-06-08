@@ -121,10 +121,13 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 		Create1DGaussianKernel(num_kernel, use_fft, kernel_width, kernel);
 		break;
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar):
+		assert(false); //remove this line when implemented.
 		break;
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning):
+		assert(false);//remove this line when implemented.
 		break;
 	case LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming):
+		assert(false);//remove this line when implemented.
 		break;
 	default:
 		assert(false);
