@@ -1486,9 +1486,9 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
-		LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const npiece, size_t num_nwave, uint16_t const nwave[/*num_nwave*/],
-		size_t const num_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+		size_t const npiece, size_t num_nwave,
+		uint16_t const nwave[/*num_nwave*/], size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1731,11 +1731,16 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * sakura_BaselineType_kCubicSpline, while other models accept
  * zero value. The value should not exceed the @a order specified
  * in creation of @a context .
- * @param[in] num_coeff Number of basis functions.
+ * @param[in] num_nwave Number of parameter nwave. Used only for
+ * sinusoidal fitting.
+ * @param[in] nwave An array to store wave numbers of sinusoids.
+ * Used only for sinusoidal fitting.
+ * @param[out] num_coeff Number of basis functions.
  * @return Status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
-		size_t *num_coeff) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+		size_t num_nwave, uint16_t const *nwave, size_t *num_coeff)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder

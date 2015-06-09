@@ -1117,10 +1117,16 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) noexcept {
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
-		size_t *num_coeff) noexcept {
+		size_t num_nwave, uint16_t const *nwave, size_t *num_coeff) noexcept {
 	CHECK_ARGS(context != nullptr);
-	uint16_t param = { order };
-	size_t num_out(GetNumberOfBasesFromOrder(context->baseline_type, 1, &param));
+
+	size_t num_out;
+	if (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+		num_out = GetNumberOfBasesFromOrder(context->baseline_type, num_nwave, nwave);
+	} else {
+		uint16_t arr_order = { order };
+		num_out = GetNumberOfBasesFromOrder(context->baseline_type, 1, &arr_order);
+	}
 	CHECK_ARGS(num_out <= context->num_bases);
 	*num_coeff = num_out;
 	return LIBSAKURA_SYMBOL(Status_kOK);
