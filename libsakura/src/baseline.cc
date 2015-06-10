@@ -71,26 +71,22 @@ inline size_t GetNumberOfCubicSplineLsqBases(size_t num_pieces) {
 }
 
 inline size_t GetNumberOfBasesFromOrder(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const num_param,
-		uint16_t const *param) {
-	if (num_param < 1) {
-		throw std::invalid_argument("baseline parameter length must be positive.");
-	}
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	size_t num_bases = 0;
 	switch (baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		num_bases = param[0] + 1;
+		num_bases = order + 1;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		if (param[0] < 1) {
+		if (order < 1) {
 			throw std::invalid_argument(
-					"number of pieces must be a positive value!");
+					"order (number of pieces) must be a positive value!");
 		}
 		num_bases = kNumBasesCubicSpline;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		num_bases = (param[0] == 0) ? (2 * num_param - 1) : (2 * num_param);
+		num_bases = 2 * order + 1;
 		break;
 	default:
 		assert(false);
@@ -98,32 +94,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const num_param,
 	}
 	return num_bases;
 }
-/*
- inline size_t GetNumberOfBasesFromOrder(
- LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
- size_t num_bases = 0;
- switch (baseline_type) {
- case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
- case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
- num_bases = order + 1;
- break;
- case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
- if (order < 1) {
- throw std::invalid_argument(
- "order (number of pieces) must be a positive value!");
- }
- num_bases = kNumBasesCubicSpline;
- break;
- case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
- num_bases = 2 * order + 1;
- break;
- default:
- assert(false);
- break;
- }
- return num_bases;
- }
- */
 
 inline void DoSetBasisDataPolynomial(size_t num_bases, double const i_d,
 		size_t *idx, double *out_arg) {
@@ -182,20 +152,17 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	auto data = AssumeAligned(context->basis_data);
 
 	size_t num_basis_data = context->num_basis_data;
-	size_t num_nwave = context->num_baseline_param;
+	size_t max_nwave = context->baseline_param;
 	size_t idx = 0;
 	if (num_basis_data == 1) {
 		data[idx] = 1.0;
 	} else {
 		double max_data_x = static_cast<double>(num_basis_data - 1);
+		double norm = 2.0 * M_PI / max_data_x;
 		for (size_t i = 0; i < num_basis_data; ++i) {
-			size_t iwave = 0;
-			if (context->baseline_param[iwave] == 0) {
-				data[idx++] = 1.0;
-				++iwave;
-			}
-			for (; iwave < num_nwave; ++iwave) {
-				double x = static_cast<double>(i) / max_data_x * 2.0 * M_PI * context->baseline_param[iwave];
+			data[idx++] = 1.0;
+			for (size_t nwave = 1; nwave <= max_nwave; ++nwave) {
+				double x = static_cast<double>(i) * nwave * norm;
 				data[idx++] = sin(x);
 				data[idx++] = cos(x);
 			}
@@ -203,15 +170,14 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	}
 }
 
-inline void SetBasisData(size_t const num_param, uint16_t const *param,
+inline void SetBasisData(size_t const order,
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
-			num_param, param);
+			order);
 	size_t min_num_basis_data =
 			(context->baseline_type
 					== LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
-					GetNumberOfCubicSplineLsqBases(param[0]) :
-					context->num_bases;
+					GetNumberOfCubicSplineLsqBases(order) : context->num_bases;
 	if (context->num_basis_data < min_num_basis_data) {
 		throw std::invalid_argument("num_basis_data is too small!");
 	}
@@ -235,47 +201,11 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 		break;
 	}
 }
-/*
- inline void SetBasisData(size_t const order,
- LIBSAKURA_SYMBOL(BaselineContext) *context) {
- context->num_bases = GetNumberOfBasesFromOrder(context->baseline_type,
- order);
- size_t min_num_basis_data =
- (context->baseline_type
- == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
- GetNumberOfCubicSplineLsqBases(order) : context->num_bases;
- if (context->num_basis_data < min_num_basis_data) {
- throw std::invalid_argument("num_basis_data is too small!");
- }
- AllocateMemoryForBasisData(context);
- switch (context->baseline_type) {
- case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
- SetBasisDataPolynomial(context);
- break;
- case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
- SetBasisDataChebyshev(context);
- break;
- case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
- assert(context->num_bases == kNumBasesCubicSpline);
- SetBasisDataPolynomial(context);
- break;
- case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
- SetBasisDataSinusoid(context);
- break;
- default:
- assert(false);
- break;
- }
- }
- */
 
 inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (context != nullptr) {
 		if (context->basis_data_storage != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->basis_data_storage);
-		}
-		if (context->baseline_param != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(context->baseline_param);
 		}
 		LIBSAKURA_PREFIX::Memory::Free(context);
 	}
@@ -283,7 +213,7 @@ inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 
 inline void CreateBaselineContext(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const npiece, size_t num_nwave, uint16_t const *nwave,
+		uint16_t const npiece, uint16_t const nwave,
 		size_t const num_basis_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) {
 	try {
@@ -297,44 +227,23 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		work_context->basis_data_storage = nullptr;
 		work_context->baseline_type = baseline_type;
 		work_context->num_basis_data = num_basis_data;
-		work_context->num_baseline_param =
-				(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) ?
-						num_nwave : 1;
-		work_context->baseline_param = nullptr;
-
-		std::unique_ptr<uint16_t, LIBSAKURA_PREFIX::Memory> storage_for_nwave(
-				static_cast<uint16_t *>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(*work_context->baseline_param)
-								* work_context->num_baseline_param)));
-		if (storage_for_nwave == nullptr) {
-			throw std::bad_alloc();
-		}
-		work_context->baseline_param = storage_for_nwave.release();
 		switch (baseline_type) {
 		case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
 		case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-			work_context->baseline_param[0] = order;
+			work_context->baseline_param = order;
 			break;
 		case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-			work_context->baseline_param[0] = npiece;
+			work_context->baseline_param = npiece;
 			break;
 		case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-			for (size_t i = 0; i < num_nwave; ++i) {
-				work_context->baseline_param[i] = nwave[i];
-			}
+			work_context->baseline_param = nwave;
 			break;
 		default:
 			assert(false);
 			break;
 		}
 
-		SetBasisData(work_context->num_baseline_param,
-				work_context->baseline_param, work_context.get());
-		/*
-		 SetBasisData(
-		 ((baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
-		 npiece : order), work_context.get());
-		 */
+		SetBasisData(work_context->baseline_param, work_context.get());
 		*context = work_context.release();
 	} catch (...) {
 		DestroyBaselineContext(*context);
@@ -375,7 +284,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff, size_t num_out,
 					bases_row[j + offset2], bases_row[j + offset1],
 					bases_row[j]);
 			total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
+					LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 		}
 		_mm256_store_pd(&out[i], total);
 	}
@@ -893,8 +802,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
-	uint16_t param = { order };
-	size_t num_coeff = GetNumberOfBasesFromOrder(context->baseline_type, 1, &param);
+	size_t num_coeff = GetNumberOfBasesFromOrder(context->baseline_type, order);
 	double *coeff = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -1051,41 +959,32 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const npiece, size_t const num_nwave,
-		uint16_t const nwave[/*num_nwave*/], size_t const num_data,
+		uint16_t const npiece, uint16_t const nwave, size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContext) **context) noexcept {
 	CHECK_ARGS(baseline_type < LIBSAKURA_SYMBOL(BaselineType_kNumElements));
 	CHECK_ARGS(context != nullptr);
-	size_t num_bases;
+	size_t param;
 	switch (baseline_type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		num_bases = order + 1;
+		param = order;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		num_bases = kNumBasesCubicSpline;
+		param = npiece;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		CHECK_ARGS(0 < num_nwave);
-		//check if nwave is unique and in ascending order.
-		for (size_t i = 0; i < num_nwave - 1; ++i) {
-			for (size_t j = i + 1; j < num_nwave; ++j) {
-				if (nwave[i] >= nwave[j]) {
-					return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-				}
-			}
-		}
-		num_bases = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		param = nwave;
 		break;
 	default:
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		break;
 	}
+	size_t num_bases = GetNumberOfBasesFromOrder(baseline_type, param);
 	CHECK_ARGS(num_bases <= num_data);
 
 	try {
-		CreateBaselineContext(baseline_type, order, npiece, num_nwave, nwave,
-				num_data, context);
+		CreateBaselineContext(baseline_type, order, npiece, nwave, num_data,
+				context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1117,16 +1016,12 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) noexcept {
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
-		size_t num_nwave, uint16_t const *nwave, size_t *num_coeff) noexcept {
+		size_t *num_coeff) noexcept {
 	CHECK_ARGS(context != nullptr);
 
 	size_t num_out;
-	if (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
-		num_out = GetNumberOfBasesFromOrder(context->baseline_type, num_nwave, nwave);
-	} else {
-		uint16_t arr_order = { order };
-		num_out = GetNumberOfBasesFromOrder(context->baseline_type, 1, &arr_order);
-	}
+	LIBSAKURA_SYMBOL(BaselineType) type = context->baseline_type;
+	num_out = GetNumberOfBasesFromOrder(type, order);
 	CHECK_ARGS(num_out <= context->num_bases);
 	*num_coeff = num_out;
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -1140,9 +1035,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
-	uint16_t param = { order };
-	size_t num_bases_from_order(
-			GetNumberOfBasesFromOrder(context->baseline_type, 1, &param));
+	size_t num_bases_from_order = GetNumberOfBasesFromOrder(
+			context->baseline_type, order);
 	CHECK_ARGS(num_bases_from_order <= context->num_bases);
 	CHECK_ARGS(num_bases_from_order <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);

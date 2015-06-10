@@ -1464,12 +1464,9 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @param[in] npiece Number of spline pieces. It must be a
  * positive value. It is used only when @a baseline_type @a is
  * sakura_BaselineType_kCubicSpline.
- * @param[in] num_nwave Number of sinusoidal wave numbers. It
- * must be a positive value. It is used only when
- * @a baseline_type @a is sakura_BaselineType_kSinusoid.
- * @param[in] nwave an array to store wave numbers to be used
- * for sinusoidal fitting. Same values must not be given
- * duplicatedly.
+ * @param[in] nwave Maximum wave number of sinusoids. It is
+ * used only when @a baseline_type @a is
+ * sakura_BaselineType_kSinusoid.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
  * is @a order+1 for sakura_BaselineType_kPolynomial and
@@ -1487,8 +1484,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContext)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const npiece, size_t num_nwave,
-		uint16_t const nwave[/*num_nwave*/], size_t const num_data,
+		uint16_t const npiece, uint16_t const nwave, size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContext) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1731,16 +1727,11 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * sakura_BaselineType_kCubicSpline, while other models accept
  * zero value. The value should not exceed the @a order specified
  * in creation of @a context .
- * @param[in] num_nwave Number of parameter nwave. Used only for
- * sinusoidal fitting.
- * @param[in] nwave An array to store wave numbers of sinusoids.
- * Used only for sinusoidal fitting.
  * @param[out] num_coeff Number of basis functions.
  * @return Status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
-		size_t num_nwave, uint16_t const *nwave, size_t *num_coeff)
-				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+		size_t *num_coeff) LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
