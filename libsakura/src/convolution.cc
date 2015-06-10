@@ -354,6 +354,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) noexcept {
+	if(kernel_type != LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)){
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 	if (context == nullptr) {
 		LOG4CXX_ERROR(logger, "context should not be NULL");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
