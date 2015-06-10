@@ -1849,6 +1849,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
+/**
+ *
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(float fraction,
+		double pixel_scale, size_t num_data, double x[], double y[],
+		bool mask[]);
+
 #ifdef __cplusplus
 }
 /* extern "C" */

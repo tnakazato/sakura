@@ -76,7 +76,7 @@ message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 set(SOURCES baseline.cc bit_operation.cc bool_filter_collection.cc 
 	convolution.cc gridding.cc interpolation.cc 
 	normalization.cc numeric_operation.cc statistics.cc fft.cc
-	gen_util.cc concurrent.cc 
+	gen_util.cc concurrent.cc mask_edge.cc
 	)
 configure_file (
   "${PROJECT_SOURCE_DIR}/libsakura/config.h.in"
