@@ -219,7 +219,6 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
-	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark Baseline_CreateBaselineContextWithPolynomial"
 			<< " " << elapsed_time << std::endl;
@@ -603,7 +602,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTim
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
-	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark Baseline_GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTime"
+			<< " " << elapsed_time << std::endl;
 
 	for (size_t i = 0; i < num_coeff; ++i) {
 		cout.precision();
@@ -1186,7 +1187,9 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
-	cout << "Elapsed Time: " << elapsed_time << " sec." << endl;
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark Baseline_SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel"
+			<< " " << elapsed_time << std::endl;
 
 	if (verbose) {
 		Print1DArray("fmask ", num_data, final_mask);
@@ -2299,6 +2302,10 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 			final_mask, out, &subbl_blstatus);
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark Baseline_SubtractBaselineFromBigDataUsingBigChebyshevModel"
+			<< " " << (end - start) << std::endl;
+
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	float limit_residual = 0.04f;
@@ -2838,7 +2845,9 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
 	double end_time = sakura_GetCurrentTime();
-	std::cout << "Elapsed Time: " << end_time - start_time << "sec\n";
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark Baseline_SubtractBaselineUsingCoefficientsFloatPerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		EXPECT_EQ(answer[i], out[i]);

@@ -284,7 +284,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff, size_t num_out,
 					bases_row[j + offset2], bases_row[j + offset1],
 					bases_row[j]);
 			total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-					LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
+			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 		}
 		_mm256_store_pd(&out[i], total);
 	}
@@ -677,10 +677,9 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 }
 
 inline void DoSubtractBaseline(size_t num_data, float const *data_arg,
-bool const *mask_arg,
-LIBSAKURA_SYMBOL(BaselineContext) const *context, float clip_threshold_sigma,
-		uint16_t num_fitting_max_arg, size_t num_coeff, double *coeff_arg,
-		bool *final_mask_arg,
+		bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
+		size_t num_coeff, double *coeff_arg, bool *final_mask_arg,
 		bool get_residual, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -723,8 +722,7 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_pieces,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max_arg,
-		size_t num_coeff, double *coeff_full_arg, double *boundary_arg,
-		bool *final_mask_arg,
+		double *coeff_full_arg, double *boundary_arg, bool *final_mask_arg,
 		bool get_residual, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
@@ -742,6 +740,8 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	auto *coeff_full = AssumeAligned(coeff_full_arg);
 	auto *final_mask = AssumeAligned(final_mask_arg);
 	auto *out = AssumeAligned(out_arg);
+
+	size_t num_coeff = GetNumberOfCubicSplineLsqBases(num_pieces);
 
 	size_t *piece_start_indices = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_start_indices(
@@ -845,8 +845,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*boundary) * num_pieces, &boundary));
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
-			clip_threshold_sigma, num_fitting_max,
-			context->num_bases - 1 + num_pieces, coeff_full, boundary,
+			clip_threshold_sigma, num_fitting_max, coeff_full, boundary,
 			final_mask, get_residual, out, baseline_status);
 }
 
@@ -895,8 +894,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*boundary) * num_pieces, &boundary));
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
-			clip_threshold_sigma, num_fitting_max,
-			context->num_bases - 1 + num_pieces, coeff, boundary, final_mask,
+			clip_threshold_sigma, num_fitting_max, coeff, boundary, final_mask,
 			true, nullptr, baseline_status);
 }
 

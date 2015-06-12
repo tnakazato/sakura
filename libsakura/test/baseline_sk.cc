@@ -755,7 +755,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
 	double end_time = sakura_GetCurrentTime();
-	std::cout << "Elapsed Time: " << end_time - start_time << "sec\n";
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark BaselineSK_SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
 
 	for (size_t i = 0; i < num_data; ++i) {
 		EXPECT_EQ(answer[i], out[i]);

@@ -1787,6 +1787,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	SIMD_ALIGN
 	double out[ELEMENTSOF(answer)];
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL (Status) coeff_status = LIBSAKURA_SYMBOL(
 				GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
@@ -1794,6 +1795,11 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 				&baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 	}
+	double end_time = sakura_GetCurrentTime();
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark BaselineWK_GetBestFitBaselineCoefficientsCubicSplinePerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
+
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
 	if (verbose) {
@@ -2135,6 +2141,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	SIMD_ALIGN
 	double answer[ELEMENTSOF(in_data)];
 	SetDoubleConstant(0.0, ELEMENTSOF(in_data), answer);
+	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, num_pieces,
@@ -2142,6 +2149,10 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 				&baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 	}
+	double end_time = sakura_GetCurrentTime();
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark BaselineWK_SubtractBaselineCubicSplinePerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
 	if (verbose) {
