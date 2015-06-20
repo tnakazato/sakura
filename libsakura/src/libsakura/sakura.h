@@ -64,8 +64,7 @@ extern "C" {
 typedef enum {
 	/**
 	 * @brief Success or normal end
-	 */LIBSAKURA_SYMBOL
-	(Status_kOK) = 0,
+	 */LIBSAKURA_SYMBOL(Status_kOK) = 0,
 	/**
 	 * @brief Failure or abnormal end
 	 */LIBSAKURA_SYMBOL(Status_kNG) = 1,
@@ -1853,7 +1852,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(float fraction,
-		double pixel_scale, size_t num_data, double x[], double y[],
+		double pixel_scale, size_t num_data, double const x[], double const y[],
 		bool mask[]);
 
 #ifdef __cplusplus

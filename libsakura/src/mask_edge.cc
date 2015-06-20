@@ -185,7 +185,7 @@ inline size_t SearchForward(size_t start, size_t increment, size_t n,
 template<typename DataType>
 inline size_t SearchBackward(size_t start, size_t increment, size_t n,
 		DataType const mask[]) {
-	for (ssize_t i = 0; i < n; ++ i) {
+	for (ssize_t i = 0; i < n; ++i) {
 		assert(i * increment <= start);
 		size_t index = start - i * increment;
 		if (mask[index] > 0) {
@@ -275,9 +275,9 @@ inline void DetectEdge(size_t num_horizontal, size_t num_vertical,
 			if (pixel_mask[index] == 1) {
 				size_t index_below = index - num_vertical;
 				size_t index_above = index + num_vertical;
-				size_t surroundings = pixel_mask[index - 1] * pixel_mask[index + 1]
-						* pixel_mask[index_below - 1] * pixel_mask[index_below]
-						* pixel_mask[index_below + 1]
+				size_t surroundings = pixel_mask[index - 1]
+						* pixel_mask[index + 1] * pixel_mask[index_below - 1]
+						* pixel_mask[index_below] * pixel_mask[index_below + 1]
 						* pixel_mask[index_above - 1] * pixel_mask[index_above]
 						* pixel_mask[index_above - 1];
 				edge[index] = (surroundings == 0) ? 1 : 0;
@@ -362,7 +362,7 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
  * @param[in,out] mask boolean mask
  */
 inline LIBSAKURA_SYMBOL(Status) ImproveDetection(size_t num_mask,
-bool mask[]) {
+		bool mask[]) {
 	constexpr size_t kIsolationThreshold = 3;
 	size_t isolation_count = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
@@ -375,8 +375,7 @@ bool mask[]) {
 				}
 			}
 			isolation_count = 0;
-		}
-		else {
+		} else {
 			++isolation_count;
 		}
 	}
@@ -410,8 +409,8 @@ bool mask[]) {
  */
 template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) MaskDataNearEdge(float fraction,
-		DataType pixel_scale, size_t num_data, DataType x[], DataType y[],
-		bool mask[]) {
+		DataType pixel_scale, size_t num_data, DataType const x[],
+		DataType const y[], bool mask[]) {
 
 	// ConvertToPixel
 	// allocate storage for two aligned arrays by one allocation call
@@ -487,9 +486,8 @@ inline LIBSAKURA_SYMBOL(Status) MaskDataNearEdge(float fraction,
 } while (false)
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(
-		float fraction, double pixel_scale, size_t num_data, double x[],
-		double y[],
-		bool mask[]) {
+		float fraction, double pixel_scale, size_t num_data, double const x[],
+		double const y[], bool mask[]) {
 	CHECK_ARGS(0.0f < pixel_scale);
 	CHECK_ARGS(fraction < 1.0f);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(x));
