@@ -1269,6 +1269,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] num_lsq_bases The number of model basis functions to be used
  * in actual fitting. It must be a positive number and must not exceed
  * @a num_model_bases .
+ * @a param[in] use_bases_idx A 1D array containing indices of basis model
+ * that are to be used for fitting. As for baseline types other than
+ * sakura_BaselineType_kSinusoid, it should be always [0, 1, 2, ...,
+ * (num_lsq_bases-1)]. Element values must be in ascending order.
+ * @n must-be-aligned
  * @param[out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
  * Its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
@@ -1294,6 +1299,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		bool const mask[/*num_data*/], size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
+		size_t const use_bases_idx[/*num_lsq_bases*/],
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
@@ -1332,6 +1338,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] num_lsq_bases The number of model basis functions to be used
  * in actual fitting. It must be a positive number and must not exceed
  * @a num_model_bases .
+ * @a param[in] use_bases_idx A 1D array containing indices of basis model
+ * that are to be used for fitting. As for baseline types other than
+ * sakura_BaselineType_kSinusoid, it should be always [0, 1, 2, ...,
+ * (num_lsq_bases-1)]. Element values must be in ascending order.
+ * @n must-be-aligned
  * @param[in,out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
  * Its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
@@ -1361,6 +1372,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
+		size_t const use_bases_idx[/*num_lsq_bases*/],
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
@@ -1587,6 +1599,54 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @brief Recursively fit a sinusoidal baseline and subtract it from input spectrum.
+ * @details
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_nwave The number of elements in the array @a nwave .
+ * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
+ * The values must be positive or zero (for constant term), but not
+ * exceed the @a maximum wave number specified in creation of
+ * @a context . The values must be stored in ascending order and
+ * must not be duplicate. The number of model bases, which will be
+ * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
+ * contains zero or not, respectively, must not exceed @a num_data.
+ * @param[in] num_data The number of elements in the arrays @a data,
+ * @a mask, @a final_mask, and @a out.
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask The input mask data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit of
+ * sigma. must be positive.
+ * @param[in] num_fitting_max The maximum of total number of times
+ * baseline fitting is performed recursively. In case n is given, after
+ * the first baseline fitting, subsequent clipping and baseline fitting
+ * based on the updated mask are executed (n-1) times at maximum.
+ * The default is 1 (i.e., baseline fitting done just once and no
+ * clipping applied). In case zero is given, @a num_fitting_max will be
+ * automatically changed to 1.
+ * @param[in] get_residual Set the output to be (input - best-fit) if true,
+ * or the best-fit value if false.
+ * @param[out] final_mask The final mask data after recursive clipping
+ * procedure. its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] out The output data. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t const num_nwave, size_t const nwave[/*num_nwave*/],
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, bool get_residual,
+		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
  * @brief Extraction of the coefficients of the polynomial fit.
  * @details
  * @param[in] context An object containing baseline model data.
@@ -1667,6 +1727,56 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
+ * @brief Extraction of the coefficients of the sinusoidal fit.
+ * @details
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_data The number of elements in the arrays @a data,
+ * @a mask, and @a final_mask.
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask The input mask data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma The threshold of clipping in unit
+ * of sigma. must be positive.
+ * @param[in] num_fitting_max The maximum of total number of times
+ * baseline fitting is performed recursively. In case n is given, after
+ * the first baseline fitting, subsequent clipping and baseline fitting
+ * based on the updated mask are executed (n-1) times at maximum.
+ * The default is 1 (i.e., baseline fitting done just once and no
+ * clipping applied). In case zero is given, @a num_fitting_max will be
+ * automatically changed to 1.
+ * @param[in] num_nwave The number of elements in the array @a nwave .
+ * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
+ * The values must be positive or zero (for constant term), but not
+ * exceed the @a maximum wave number specified in creation of
+ * @a context . The values must be stored in ascending order and
+ * must not be duplicate. The number of model bases, which will be
+ * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
+ * contains zero or not, respectively, must not exceed @a num_data.
+ * @param[in] num_coeff The number of elements in the arrays @a coeff.
+ * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
+ * fitting.
+ * @param[out] coeff The coefficients of the polynomial fit. Its length
+ * must be @a num_coeff .
+ * @n must-be-aligned
+ * @param[out] final_mask The final mask data after recursive clipping
+ * procedure. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, size_t num_nwave,
+		size_t const nwave[/*num_nwave*/], size_t num_coeff,
+		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
  * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
  * @details
  * @param[in] context An object containing baseline model data.
@@ -1715,7 +1825,38 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Return the number of basis functions composing baseline model.
+ * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
+ * @details
+ * @param[in] context An object containing baseline model data.
+ * @param[in] num_data The number of elements in @a data and @a out.
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] num_nwave The number of elements in the array @a nwave .
+ * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
+ * The values must be positive or zero (for constant term), but not
+ * exceed the @a maximum wave number specified in creation of
+ * @a context . The values must be stored in ascending order and
+ * must not be duplicate. The number of model bases, which will be
+ * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
+ * contains zero or not, respectively, must not exceed @a num_data.
+ * @param[in] num_coeff The number of elements in @a coeff .
+ * The value must be positive and must not exceed the number of
+ * model bases defined in @a context .
+ * @param[in] coeff Coefficients of model data. Its length must
+ * be @a num_coeff.
+ * @n must-be-aligned
+ * @param[out] out The output data. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @return Status code.
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
+		size_t const nwave[/*num_nwave*/], size_t num_coeff,
+		double const coeff[/*num_data*/], float out[/*num_data*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @brief Return the number of basis functions used for baseline fitting.
  * @details
  * @param[in] context An object containing baseline model data.
  * @param[in] order Parameter for the specified function.
@@ -1726,7 +1867,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * sakura_BaselineType_kCubicSpline, while other models accept
  * zero value. The value should not exceed the @a order specified
  * in creation of @a context .
- * @param[out] num_coeff Number of basis functions.
+ * @param[out] num_coeff Number of basis functions to be used for
+ * baseline fitting. This value should be the actual number of
+ * simultaneous equations of least-square fitting.
  * @return Status code.
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,

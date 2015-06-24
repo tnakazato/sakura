@@ -477,6 +477,17 @@ TEST_F(NumericOperation, GetLSQCoefficients) {
 		throw bad_alloc();
 	}
 
+	size_t *use_idx = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_use_idx(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*use_idx) * num_model, &use_idx));
+	if (use_idx == nullptr) {
+		throw bad_alloc();
+	}
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+
 	double *out = nullptr;
 	unique_ptr<void, DefaultAlignedMemory> storage_for_out(
 			DefaultAlignedMemory::AlignedAllocateOrException(
@@ -534,8 +545,8 @@ TEST_F(NumericOperation, GetLSQCoefficients) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		start = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(
-				num_data, in_data, in_mask, num_model, model, num_model, out,
-				out_vector);
+				num_data, in_data, in_mask, num_model, model, num_model,
+				use_idx, out, out_vector);
 		end = sakura_GetCurrentTime();
 		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -568,6 +579,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsNumDataZero) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -575,7 +591,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsNumDataZero) {
 	double model[num_model * ELEMENTSOF(in_data)];
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -591,6 +607,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithDataNullPointer) {
 	bool in_mask[num_data];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -601,7 +622,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithDataNullPointer) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -619,6 +640,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithDataNotAligned) {
 	bool in_mask[num_data];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -630,7 +656,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithDataNotAligned) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data_unaligned, in_mask, num_model, model, num_model, out,
+			in_data_unaligned, in_mask, num_model, model, num_model, use_idx, out,
 			out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
@@ -647,6 +673,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithMaskNullPointer) {
 	bool *in_mask = nullptr;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -657,7 +688,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithMaskNullPointer) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -675,6 +706,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithMaskNotAligned) {
 	bool *in_mask_unaligned = in_mask + 1;
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -686,8 +722,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithMaskNotAligned) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask_unaligned, num_model, model, num_model, out,
-			out_vector);
+			in_data, in_mask_unaligned, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -704,6 +739,8 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithNumModelBasesZero) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(0);
 	SIMD_ALIGN
+	size_t use_idx[num_model]; // not initialize since it has zero length
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -715,7 +752,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithNumModelBasesZero) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -732,6 +769,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithNumDataLessThanNumModelBases) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -743,7 +785,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithNumDataLessThanNumModelBases) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -760,6 +802,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithBasisDataNullPointer) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -769,7 +816,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithBasisDataNullPointer) {
 	SetBoolConstant(true, num_data, in_mask);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -786,6 +833,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithBasisDataNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -798,8 +850,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithBasisDataNotAligned) {
 	SetChebyshevModel(num_data, num_model, model_unaligned);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model_unaligned, num_model, out,
-			out_vector);
+			in_data, in_mask, num_model, model_unaligned, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -815,6 +866,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqMatrixNullPointer) {
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
 	double *out = nullptr;
 	SIMD_ALIGN
 	double out_vector[num_model];
@@ -826,7 +882,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqMatrixNullPointer) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -843,6 +899,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqMatrixNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model + 1];
 	double *out_unaligned = out + 1;
 	SIMD_ALIGN
@@ -855,8 +916,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqMatrixNotAligned) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out_unaligned,
-			out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out_unaligned, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -873,6 +933,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqVectorNullPointer) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double *out_vector = nullptr;
@@ -884,7 +949,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqVectorNullPointer) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -901,6 +966,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqVectorNotAligned) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
 	double out_vector[num_model + 1];
@@ -913,8 +983,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsWithLsqVectorNotAligned) {
 	SetChebyshevModel(num_data, num_model, model);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out,
-			out_vector_unaligned);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector_unaligned);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -930,6 +999,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsTooManyMaskedData) {
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_model(NUM_MODEL);
+	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
 	SIMD_ALIGN
 	double out[num_model * num_model];
 	SIMD_ALIGN
@@ -950,7 +1024,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsTooManyMaskedData) {
 	}
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_model, out, out_vector);
+			in_data, in_mask, num_model, model, num_model, use_idx, out, out_vector);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
 }
 
@@ -980,6 +1054,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 	SIMD_ALIGN
 	double in_lsq_vector_orig[num_model];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double answer[num_model * num_model];
 	SIMD_ALIGN
 	double answer_vector[num_model];
@@ -992,8 +1071,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 	}
 	SetChebyshevModel(num_data, num_model, model);
 	LIBSAKURA_SYMBOL (Status) status_getlsq = sakura_GetLSQCoefficientsDouble(
-			num_data, in_data, in_mask, num_model, model, num_model, answer,
-			answer_vector);
+			num_data, in_data, in_mask, num_model, model, num_model, use_idx, answer, answer_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_getlsq);
 
 	if (verbose) {
@@ -1016,7 +1094,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 		double start = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 				num_data, in_data, num_exclude_indices, exclude_indices,
-				num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
+				num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 		double end = sakura_GetCurrentTime();
 		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1072,6 +1150,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsNumDataZero) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1088,7 +1171,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsNumDataZero) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix, in_lsq_vector);
+			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1110,6 +1193,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithDataNullPointer) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1126,7 +1214,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithDataNullPointer) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, data_np, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix, in_lsq_vector);
+			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1149,6 +1237,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithDataNotAligned) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_mask)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1165,7 +1258,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithDataNotAligned) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data_unaligned, num_exclude_indices, exclude_indices,
-			num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1188,6 +1281,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesNullPointer) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1199,12 +1297,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesNullPointer) {
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
-			in_lsq_vector);
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices_np,
-			num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1227,6 +1324,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesNotAligned) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1243,7 +1345,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesNotAligned) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices_unaligned,
-			num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1266,6 +1368,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumExcludeIndicesGreaterThanNu
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1282,7 +1389,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumExcludeIndicesGreaterThanNu
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices_toolarge, exclude_indices,
-			num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1304,6 +1411,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesHasValueEqualToN
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1321,7 +1433,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesHasValueEqualToN
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix, in_lsq_vector);
+			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1343,6 +1455,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesHasValueGreaterT
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1360,7 +1477,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesHasValueGreaterT
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix, in_lsq_vector);
+			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1383,6 +1500,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumModelBasisZero) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1399,7 +1521,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumModelBasisZero) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices,
-			num_model_zero, model, num_model, in_lsq_matrix, in_lsq_vector);
+			num_model_zero, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1422,6 +1544,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumModelBasisGreaterThanNumDat
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1433,12 +1560,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumModelBasisGreaterThanNumDat
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix,
-			in_lsq_vector);
+	SetAnswers(num_data, in_data, num_model, model, num_model, in_lsq_matrix, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices,
-			num_model_toolarge, model, num_model, in_lsq_matrix, in_lsq_vector);
+			num_model_toolarge, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1461,6 +1587,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithBasisDataNullPointer) {
 	double model[num_model * ELEMENTSOF(in_data)];
 	double *model_np = nullptr;
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1477,7 +1608,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithBasisDataNullPointer) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model_np, num_model, in_lsq_matrix, in_lsq_vector);
+			model_np, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1500,6 +1631,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithBasisDataNotAligned) {
 	double model[num_model * ELEMENTSOF(in_data) + 1];
 	double *model_unaligned = model + 1;
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1516,7 +1652,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithBasisDataNotAligned) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model_unaligned, num_model, in_lsq_matrix, in_lsq_vector);
+			model_unaligned, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1538,6 +1674,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqMatrixNullPointer) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	double *in_lsq_matrix_np = nullptr;
 	SIMD_ALIGN
@@ -1555,7 +1696,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqMatrixNullPointer) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix_np, in_lsq_vector);
+			model, num_model, use_idx, in_lsq_matrix_np, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1577,6 +1718,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqMatrixNotAligned) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model + 1];
 	double *in_lsq_matrix_unaligned = in_lsq_matrix + 1;
 	SIMD_ALIGN
@@ -1594,7 +1740,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqMatrixNotAligned) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix_unaligned, in_lsq_vector);
+			model, num_model, use_idx, in_lsq_matrix_unaligned, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1616,6 +1762,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqVectorNullPointer) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
@@ -1633,7 +1784,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqVectorNullPointer) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix, in_lsq_vector_np);
+			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector_np);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1655,6 +1806,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqVectorNotAligned) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[num_model * num_model];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model + 1];
@@ -1672,7 +1828,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqVectorNotAligned) {
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, in_lsq_matrix, in_lsq_vector_unaligned);
+			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector_unaligned);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1692,6 +1848,11 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 	SIMD_ALIGN
 	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
 	SIMD_ALIGN
 	double out[ELEMENTSOF(lsq_vector)];
@@ -1709,9 +1870,7 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 		PrintArray("model", num_data, num_model, model);
 	}
 
-	LIBSAKURA_SYMBOL (Status) coeff_status = sakura_GetLSQCoefficientsDouble(
-			num_data, in_data, in_mask, num_model, model, num_model, lsq_matrix,
-			lsq_vector);
+	LIBSAKURA_SYMBOL (Status) coeff_status = sakura_GetLSQCoefficientsDouble(num_data, in_data, in_mask, num_model, model, num_model, use_idx, lsq_matrix, lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 
 	if (verbose) {
@@ -1752,6 +1911,11 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 	SIMD_ALIGN
 	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
 	SIMD_ALIGN
 	double out[ELEMENTSOF(lsq_vector)];
@@ -1769,9 +1933,7 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 		PrintArray("model", num_data, num_model, model);
 	}
 
-	LIBSAKURA_SYMBOL (Status) coeff_status = sakura_GetLSQCoefficientsDouble(
-			num_data, in_data, in_mask, num_model, model, num_model, lsq_matrix,
-			lsq_vector);
+	LIBSAKURA_SYMBOL (Status) coeff_status = sakura_GetLSQCoefficientsDouble(num_data, in_data, in_mask, num_model, model, num_model, use_idx, lsq_matrix, lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 
 	if (verbose) {
@@ -2017,6 +2179,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsOrder) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double out_vector[num_coeff];
 	SIMD_ALIGN
 	double out[ELEMENTSOF(out_vector) * ELEMENTSOF(out_vector)];
@@ -2039,7 +2206,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsOrder) {
 	cout << "number of fitting coefficients = " << num_coeff << " (model = "
 			<< num_model << ")" << endl;
 	LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(num_data,
-			in_data, in_mask, num_model, model, num_coeff, out, out_vector);
+			in_data, in_mask, num_model, model, num_coeff, use_idx, out, out_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
@@ -2072,6 +2239,11 @@ TEST_F(NumericOperation, GetLSQCoefficientsBadOrder) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
 
 	for (size_t i = 0; i < ELEMENTSOF(bad_coeffs); ++i) {
 		size_t num_coeff = bad_coeffs[i];
@@ -2082,8 +2254,7 @@ TEST_F(NumericOperation, GetLSQCoefficientsBadOrder) {
 		cout << "number of fitting coefficients = " << num_coeff << " (model = "
 				<< num_model << ")" << endl;
 		LIBSAKURA_SYMBOL (Status) status = sakura_GetLSQCoefficientsDouble(
-				num_data, in_data, in_mask, num_model, model, num_coeff, out,
-				out_vector);
+				num_data, in_data, in_mask, num_model, model, num_coeff, use_idx, out, out_vector);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 	}
 }
@@ -2110,6 +2281,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsOrder) {
 	SIMD_ALIGN
 	double in_lsq_vector_orig[ELEMENTSOF(in_lsq_vector)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_matrix[ELEMENTSOF(in_lsq_vector) * ELEMENTSOF(in_lsq_vector)];
 	SIMD_ALIGN
 	double in_lsq_matrix_orig[ELEMENTSOF(in_lsq_matrix)];
@@ -2125,9 +2301,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsOrder) {
 		in_mask[exclude_indices[i]] = false;
 	}
 	SetChebyshevModel(num_data, num_model, model);
-	LIBSAKURA_SYMBOL (Status) status_getlsq = sakura_GetLSQCoefficientsDouble(
-			num_data, in_data, in_mask, num_model, model, num_coeff, answer,
-			answer_vector);
+	LIBSAKURA_SYMBOL (Status) status_getlsq = sakura_GetLSQCoefficientsDouble(num_data, in_data, in_mask, num_model, model, num_coeff, use_idx, answer, answer_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_getlsq);
 
 	if (verbose) {
@@ -2148,7 +2322,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsOrder) {
 	}
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_coeff, in_lsq_matrix, in_lsq_vector);
+			model, num_coeff, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
 		double deviation;
@@ -2202,6 +2376,11 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
 	double in_lsq_vector[good_coeff];
 	SIMD_ALIGN
 	double in_lsq_matrix[ELEMENTSOF(in_lsq_vector) * ELEMENTSOF(in_lsq_vector)];
@@ -2211,7 +2390,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 	SetChebyshevModel(num_data, num_model, model);
 	LIBSAKURA_SYMBOL (Status) status_getlsq = sakura_GetLSQCoefficientsDouble(
 			num_data, in_data, in_mask, num_model, model, good_coeff,
-			in_lsq_matrix, in_lsq_vector);
+			use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_getlsq);
 
 	if (verbose) {
@@ -2225,7 +2404,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 
 		LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
 				num_data, in_data, num_exclude_indices, exclude_indices,
-				num_model, model, num_coeff, in_lsq_matrix, in_lsq_vector);
+				num_model, model, num_coeff, use_idx, in_lsq_matrix, in_lsq_vector);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 	}
 }

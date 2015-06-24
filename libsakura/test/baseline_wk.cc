@@ -26,7 +26,10 @@
  * - sakura_SubtractBaselineCubicSplineFloat
  * - sakura_GetBestFitBaselineCoefficientsCubicSplineFloat
  * test cases are as follows:
- *     (1) simple successful case (num_pieces=1,2,3, num_data=4*num_pieces+a where a=0,1,2,3,10
+ * - for cubic spline functions:
+ *     (1) simple successful case
+ *     	 for cubic spline ones: (num_pieces=1,2,3, num_data=4*num_pieces+a where a=0,1,2,3,10)
+ *     	 for sinusoidal ones: ()
  *     (2) time-consuming successful case for performance measurement
  *     (3) error cases
  *         (3-1) null pointer cases
@@ -94,6 +97,27 @@ protected:
 			double x = (double) i;
 			data[i] = (float) (coeff_answer[0] + coeff_answer[1] * x
 					+ coeff_answer[2] * x * x + coeff_answer[3] * x * x * x);
+		}
+	}
+
+	//Set sinusoidal values of float into an array
+	void SetFloatSinusoidal(size_t num_nwave, size_t const *nwave,
+			double const *coeff, size_t num_data, float *data) {
+		double factor = 2.0 * M_PI / (double) (num_data - 1);
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = 0.0f;
+			double x = factor * (double) i;
+			size_t coeff_idx = 0;
+			for (size_t j = 0; j < num_nwave; ++j) {
+				//amplitude of each sinusoid is unity
+				if (nwave[j] == 0) {
+					data[i] += coeff[coeff_idx++];
+				} else {
+					double theta = nwave[j] * x;
+					data[i] += (float) (coeff[coeff_idx++] * sin(theta));
+					data[i] += (float) (coeff[coeff_idx++] * cos(theta));
+				}
+			}
 		}
 	}
 
@@ -199,7 +223,7 @@ protected:
 	}
 
 	bool verbose;
-	uint16_t const nwave = 0;
+	uint16_t const dummy_nwave = 0;
 
 };
 
@@ -234,7 +258,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 			LIBSAKURA_SYMBOL (Status) create_status =
 					sakura_CreateBaselineContext(
 							LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
-							num_pieces, nwave, num_data, &context);
+							num_pieces, dummy_nwave, num_data, &context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 			SIMD_ALIGN
 			double out[ELEMENTSOF(coeff)];
@@ -278,8 +302,10 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS6999) {
 	uint16_t const order = 0;
 	for (size_t num_pieces = 1; num_pieces <= 10; ++num_pieces) {
-		cout << "    Testing for num_pieces = " << num_pieces
-				<< " cases: num_data = ";
+		/*
+		 cout << "    Testing for num_pieces = " << num_pieces
+		 << " cases: num_data = ";
+		 */
 		size_t num_extra_max = 0;	//3;
 		for (size_t num_extra = 0; num_extra <= num_extra_max; ++num_extra) {
 			SIMD_ALIGN
@@ -1661,7 +1687,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			for (size_t i = 3960; i < 4080; ++i) {
 				mask[i] = false;
 			}
-			cout << num_data << ((num_extra < num_extra_max) ? ", " : "");
+			//cout << num_data << ((num_extra < num_extra_max) ? ", " : "");
 			if (verbose) {
 				PrintArray("in_data", num_data, in_data);
 			}
@@ -1669,7 +1695,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			LIBSAKURA_SYMBOL (Status) create_status =
 					sakura_CreateBaselineContext(
 							LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
-							num_pieces, nwave, num_data, &context);
+							num_pieces, dummy_nwave, num_data, &context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 			SIMD_ALIGN
 			double out[ELEMENTSOF(coeff)];
@@ -1680,14 +1706,6 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			}
 
 			LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
-			/*
-			 LIBSAKURA_SYMBOL (Status) coeff_status = LIBSAKURA_SYMBOL(
-			 GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
-			 num_data, in_data, mask, 5.0f, 1, num_pieces, out, mask,
-			 &baseline_status);
-			 EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
-			 EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
-			 */
 			LIBSAKURA_SYMBOL (Status) sub_status =
 			LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context,
 					num_pieces, num_data, in_data, mask, 5.0f, 1, true, mask,
@@ -1699,13 +1717,13 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 				//CheckAlmostEqual(answer[i], out[i], 1.0e-6);
 			}
 
-			//if (verbose) {
-			//PrintArray("data  ", num_data, in_data);
-			PrintArray("out   ", ELEMENTSOF(answer), out);
-			std::cout << endl;
-			//PrintArray("out2   ", ELEMENTSOF(out2), out2);
-			//PrintArray("answer", ELEMENTSOF(answer), answer);
-			//}
+			if (verbose) {
+				//PrintArray("data  ", num_data, in_data);
+				PrintArray("out   ", ELEMENTSOF(answer), out);
+				std::cout << endl;
+				//PrintArray("out2   ", ELEMENTSOF(out2), out2);
+				//PrintArray("answer", ELEMENTSOF(answer), answer);
+			}
 
 			size_t count_big = 0;
 			float out_min = 10000.0;
@@ -1714,7 +1732,6 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			size_t idx_max = 0;
 			double out_mean = 0.0;
 			double out_sqmean = 0.0;
-			double out_stddev = 0.0;
 			size_t num_gooddata = 0;
 			for (size_t i = 120; i < 3960; ++i) {
 				num_gooddata++;
@@ -1733,23 +1750,25 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 					//cout << "******  at i = " << i << ", out2 = " << out2[i] << endl;
 				}
 			}
-			cout << "number of deviated values (abs>0.3) : " << count_big
-					<< endl;
-			out_mean /= (double) num_gooddata;
-			out_sqmean /= (double) num_gooddata;
-			out_stddev = sqrt(out_sqmean - out_mean * out_mean);
-			cout << "rms = " << out_stddev << endl;
-			cout << "out2_min = " << out_min << "[at i = " << idx_min
-					<< "],     ";
-			cout << "out2_max = " << out_max << "[at i = " << idx_max << "]"
-					<< endl;
-			//cout << "out2[0] = " << out2[0] << ",     ";
-			//cout << "out2[4079] = " << out2[4079] << endl;
+			/*
+			 cout << "number of deviated values (abs>0.3) : " << count_big
+			 << endl;
+			 out_mean /= (double) num_gooddata;
+			 out_sqmean /= (double) num_gooddata;
+			 double out_stddev = sqrt(out_sqmean - out_mean * out_mean);
+			 cout << "rms = " << out_stddev << endl;
+			 cout << "out2_min = " << out_min << "[at i = " << idx_min
+			 << "],     ";
+			 cout << "out2_max = " << out_max << "[at i = " << idx_max << "]"
+			 << endl;
+			 //cout << "out2[0] = " << out2[0] << ",     ";
+			 //cout << "out2[4079] = " << out2[4079] << endl;
+			 */
 			LIBSAKURA_SYMBOL (Status) destroy_status =
 					sakura_DestroyBaselineContext(context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 		}
-		cout << endl;
+		//cout << endl;
 	}
 }
 
@@ -1782,7 +1801,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-			nwave, num_data, &context);
+			dummy_nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
 	double out[ELEMENTSOF(answer)];
@@ -1853,7 +1872,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+				dummy_nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -1933,7 +1952,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+				dummy_nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2032,7 +2051,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_basis_data, &context);
+				dummy_nwave, num_basis_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2077,7 +2096,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
 			LIBSAKURA_SYMBOL (Status) create_status =
 					sakura_CreateBaselineContext(
 							LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
-							num_pieces, nwave, num_data, &context);
+							num_pieces, dummy_nwave, num_data, &context);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 			SIMD_ALIGN
 			float out[ELEMENTSOF(in_data)];
@@ -2133,7 +2152,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-			nwave, num_data, &context);
+			dummy_nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
@@ -2206,7 +2225,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesNullPointer) {
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+				dummy_nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2286,7 +2305,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesUnaligned) {
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+				dummy_nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2385,7 +2404,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_basis_data, &context);
+				dummy_nwave, num_basis_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -2399,4 +2418,969 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 				sakura_DestroyBaselineContext(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
+}
+
+/*
+ * Test GetBestFitBaselineCoefficientsSinusoid
+ * successful cases
+ * compute the best-fit baseline coefficients for sinusoid
+ * context is created with maximum nwave of 2 in all cases, that is,
+ * context contains bases with nwave of 0(constant), 1(sin/cos)
+ * and 2(sin/cos).
+ * test cases: all combinations of nwave between 0 and 2.
+ */
+TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCase) {
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const nwave_set_length[3] = { 3, 3, 1 };
+	size_t nwave_set1[3][1] = { { 0 }, { 1 }, { 2 } };
+	size_t nwave_set2[3][2] = { { 0, 1 }, { 0, 2 }, { 1, 2 } };
+	size_t nwave_set3[1][3] = { { 0, 1, 2 } };
+	cout << "    Baseline context has sinusoidal bases with nwave up to 2..."
+			<< endl;
+
+	for (size_t num_nwave = 1; num_nwave <= 3; ++num_nwave) {
+		cout << "    Testing for num_nwave = " << num_nwave << ": nwave = ";
+
+		size_t const num_cases = nwave_set_length[num_nwave - 1];
+		size_t nwave[num_nwave];
+		for (size_t j = 0; j < num_cases; ++j) {
+			cout << "{";
+			for (size_t k = 0; k < num_nwave; ++k) {
+				if (num_nwave == 1) {
+					nwave[k] = nwave_set1[j][k];
+				} else if (num_nwave == 2) {
+					nwave[k] = nwave_set2[j][k];
+				} else if (num_nwave == 3) {
+					nwave[k] = nwave_set3[j][k];
+				}
+				cout << nwave[k];
+				if (k < num_nwave - 1) {
+					cout << ", ";
+				}
+			}
+			cout << "}";
+			if (j < num_cases - 1) {
+				cout << ", ";
+			}
+			size_t num_coeff =
+					(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+			double coeff[num_coeff];
+			SetDoubleConstant(1.0, num_coeff, coeff);
+			size_t const num_data(NUM_DATA2);
+			SIMD_ALIGN
+			float in_data[num_data];
+			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+			SIMD_ALIGN
+			bool mask[ELEMENTSOF(in_data)];
+			SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+			LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+			LIBSAKURA_SYMBOL (Status) create_status =
+					sakura_CreateBaselineContext(
+							LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy,
+							dummy, context_nwave, num_data, &context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+			SIMD_ALIGN
+			double out[ELEMENTSOF(coeff)];
+			double answer[ELEMENTSOF(coeff)];
+			for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+				answer[i] = coeff[i];
+			}
+			LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+			LIBSAKURA_SYMBOL (Status) coeff_status = LIBSAKURA_SYMBOL(
+					GetBestFitBaselineCoefficientsSinusoidFloat)(context,
+					num_data, in_data, mask, 5.0f, 1, num_nwave, nwave,
+					num_coeff, out, mask, &baseline_status);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+			for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+				CheckAlmostEqual(answer[i], out[i], 1.0e-6);
+			}
+			if (verbose) {
+				PrintArray("data  ", num_data, in_data);
+				PrintArray("out   ", ELEMENTSOF(answer), out);
+				PrintArray("answer", ELEMENTSOF(answer), answer);
+			}
+
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		}
+		cout << endl;
+	}
+}
+
+/*
+ * Test GetBestFitBaselineCoefficientsSinusoid
+ * time-consuming successful case for performance measurement
+ */
+TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidPerformanceTest) {
+	size_t const num_repeat(100);
+	size_t const num_data(50000);
+	size_t const dummy = 1;
+	size_t const context_nwave = 10;
+	size_t const num_nwave = 10;
+	size_t nwave[num_nwave] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	size_t num_coeff = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+	double coeff[num_coeff];
+	SetDoubleConstant(1.0, num_coeff, coeff);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+			context_nwave, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	SIMD_ALIGN
+	double out[ELEMENTSOF(coeff)];
+	double answer[ELEMENTSOF(coeff)];
+	for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+		answer[i] = coeff[i];
+	}
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	LIBSAKURA_SYMBOL (Status) coeff_status;
+	double start_time = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		coeff_status = LIBSAKURA_SYMBOL(
+				GetBestFitBaselineCoefficientsSinusoidFloat)(context, num_data,
+				in_data, mask, 5.0f, 1, num_nwave, nwave, num_coeff, out, mask,
+				&baseline_status);
+	}
+	double end_time = sakura_GetCurrentTime();
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark BaselineWK_GetBestFitBaselineCoefficientsSinusoidPerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+		CheckAlmostEqual(answer[i], out[i], 1.0e-6);
+	}
+	if (verbose) {
+		PrintArray("data  ", num_data, in_data);
+		PrintArray("out   ", ELEMENTSOF(answer), out);
+		PrintArray("answer", ELEMENTSOF(answer), answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+}
+
+/*
+ * Test GetBestFitBaselineCoefficientsSinusoid
+ * erroneous cases: null pointer cases
+ * parameters to be tested include context, data, mask, nwave, coeff, final_mask and baseline_status.
+ */
+TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesNullPointer) {
+	enum NPItems {
+		NP_kContext,
+		NP_kData,
+		NP_kMask,
+		NP_kNwave,
+		NP_kCoeff,
+		NP_kFinalMask,
+		NP_kBaselineStatus,
+		NP_kNumElems
+	};
+	vector<string> np_param_names = { "context", "data", "mask", "nwave",
+			"coeff", "final_mask", "baseline_status" };
+	cout << "    Testing for ";
+
+	size_t const num_data(10);
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+
+	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
+			static_cast<NPItems>(item + 1)) {
+		cout << np_param_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+		size_t nwave[num_nwave] = { 0, 1, 2 };
+		size_t num_coeff =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		bool final_mask[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		double out[ELEMENTSOF(coeff)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+		float *in_data_ptr = in_data;
+		bool *mask_ptr = mask;
+		size_t *nwave_ptr = nwave;
+		bool *final_mask_ptr = final_mask;
+		double *out_ptr = out;
+		LIBSAKURA_SYMBOL(BaselineContext) *context_ptr = context;
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status_ptr = &baseline_status;
+
+		switch (item) {
+		case NP_kData:
+			in_data_ptr = nullptr;
+			break;
+		case NP_kMask:
+			mask_ptr = nullptr;
+			break;
+		case NP_kNwave:
+			nwave_ptr = nullptr;
+			break;
+		case NP_kCoeff:
+			out_ptr = nullptr;
+			break;
+		case NP_kFinalMask:
+			final_mask_ptr = nullptr;
+			break;
+		case NP_kContext:
+			context_ptr = nullptr;
+			break;
+		case NP_kBaselineStatus:
+			baseline_status_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) coeff_status =
+		LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
+				context_ptr, num_data, in_data_ptr, mask_ptr, 5.0f, 1,
+				num_nwave, nwave_ptr, num_coeff, out_ptr, final_mask_ptr,
+				baseline_status_ptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test GetBestFitBaselineCoefficientsSinusoid
+ * erroneous cases: unaligned cases
+ * parameters to be tested include data, mask, coeff and final_mask.
+ */
+TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesUnaligned) {
+	enum UAItems {
+		UA_kData, UA_kMask, UA_kCoeff, UA_kFinalMask, UA_kNumElems
+	};
+	vector<string> ua_param_names = { "data", "mask", "coeff", "final_mask" };
+	cout << "    Testing for ";
+
+	size_t const num_data(10);
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+
+	for (UAItems item = static_cast<UAItems>(0); item < UA_kNumElems; item =
+			static_cast<UAItems>(item + 1)) {
+		cout << ua_param_names[item] << ((item < UA_kNumElems - 1) ? ", " : "");
+		size_t nwave[num_nwave] = { 0, 1, 2 };
+		size_t num_coeff =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data + 1];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		bool final_mask[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		double out[ELEMENTSOF(coeff) + 1];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+		float *in_data_ptr = in_data;
+		bool *mask_ptr = mask;
+		bool *final_mask_ptr = final_mask;
+		double *out_ptr = out;
+
+		switch (item) {
+		case UA_kData:
+			++in_data_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_ptr));
+			break;
+		case UA_kMask:
+			++mask_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(mask_ptr));
+			break;
+		case UA_kCoeff:
+			++out_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(out_ptr));
+			break;
+		case UA_kFinalMask:
+			++final_mask_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(final_mask_ptr));
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) coeff_status =
+		LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(context,
+				num_data, in_data_ptr, mask_ptr, 5.0f, 1, num_nwave, nwave,
+				num_coeff, out_ptr, final_mask_ptr, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test SubtractBaselineSinusoid
+ * successful cases
+ * compute the best-fit sinusoidal baseline and subtract it
+ * context is created with maximum nwave of 2 in all cases, that is,
+ * context contains bases with nwave of 0(constant), 1(sin/cos)
+ * and 2(sin/cos).
+ * test cases: all combinations of nwave between 0 and 2.
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const nwave_set_length[3] = { 3, 3, 1 };
+	size_t nwave_set1[3][1] = { { 0 }, { 1 }, { 2 } };
+	size_t nwave_set2[3][2] = { { 0, 1 }, { 0, 2 }, { 1, 2 } };
+	size_t nwave_set3[1][3] = { { 0, 1, 2 } };
+	cout << "    Baseline context has sinusoidal bases with nwave up to 2..."
+			<< endl;
+
+	for (size_t num_nwave = 1; num_nwave <= 3; ++num_nwave) {
+		cout << "    Testing for num_nwave = " << num_nwave << ": nwave = ";
+
+		size_t const num_cases = nwave_set_length[num_nwave - 1];
+		size_t nwave[num_nwave];
+		for (size_t j = 0; j < num_cases; ++j) {
+			cout << "{";
+			for (size_t k = 0; k < num_nwave; ++k) {
+				if (num_nwave == 1) {
+					nwave[k] = nwave_set1[j][k];
+				} else if (num_nwave == 2) {
+					nwave[k] = nwave_set2[j][k];
+				} else if (num_nwave == 3) {
+					nwave[k] = nwave_set3[j][k];
+				}
+				cout << nwave[k];
+				if (k < num_nwave - 1) {
+					cout << ", ";
+				}
+			}
+			cout << "}";
+			if (j < num_cases - 1) {
+				cout << ", ";
+			}
+			size_t num_coeff =
+					(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+			double coeff[num_coeff];
+			SetDoubleConstant(1.0, num_coeff, coeff);
+			size_t const num_data(NUM_DATA2);
+			SIMD_ALIGN
+			float in_data[num_data];
+			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+			SIMD_ALIGN
+			bool mask[ELEMENTSOF(in_data)];
+			SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+			LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+			LIBSAKURA_SYMBOL (Status) create_status =
+					sakura_CreateBaselineContext(
+							LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy,
+							dummy, context_nwave, num_data, &context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+			SIMD_ALIGN
+			float out[ELEMENTSOF(in_data)];
+			float answer[ELEMENTSOF(in_data)];
+			for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+				SetFloatConstant(0.0f, ELEMENTSOF(answer), answer);
+			}
+			LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+			LIBSAKURA_SYMBOL (Status) sub_status =
+			LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context, num_nwave,
+					nwave, num_data, in_data, mask, 5.0f, 1,
+					true, mask, out, &baseline_status);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+			for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+				CheckAlmostEqual(answer[i], out[i], 1.0e-6);
+			}
+			if (verbose) {
+				PrintArray("data  ", num_data, in_data);
+				PrintArray("out   ", ELEMENTSOF(answer), out);
+				PrintArray("answer", ELEMENTSOF(answer), answer);
+			}
+
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		}
+		cout << endl;
+	}
+}
+
+/*
+ * Test SubtractBaselineSinusoid
+ * time-consuming successful case for performance measurement
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidPerformanceTest) {
+	size_t const num_repeat(100);
+	size_t const num_data(50000);
+	size_t const dummy = 1;
+	size_t const context_nwave = 10;
+	size_t const num_nwave = 10;
+	size_t nwave[num_nwave] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	size_t num_coeff = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+	double coeff[num_coeff];
+	SetDoubleConstant(1.0, num_coeff, coeff);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+			context_nwave, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+		SetFloatConstant(0.0f, ELEMENTSOF(answer), answer);
+	}
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	LIBSAKURA_SYMBOL (Status) sub_status;
+	double start_time = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		sub_status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
+				num_nwave, nwave, num_data, in_data, mask, 5.0f, 1, true, mask,
+				out, &baseline_status);
+	}
+	double end_time = sakura_GetCurrentTime();
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark BaselineWK_SubtractBaselineSinusoidPerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+		CheckAlmostEqual(answer[i], out[i], 5.0e-6);
+	}
+	if (verbose) {
+		PrintArray("data  ", num_data, in_data);
+		PrintArray("out   ", ELEMENTSOF(answer), out);
+		PrintArray("answer", ELEMENTSOF(answer), answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+}
+
+/*
+ * Test SubtractBaselineSinusoid
+ * erroneous cases: null pointer cases
+ * parameters to be tested include context, data, mask, nwave, coeff, final_mask and baseline_status.
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesNullPointer) {
+	enum NPItems {
+		NP_kContext,
+		NP_kNwave,
+		NP_kData,
+		NP_kMask,
+		NP_kFinalMask,
+		NP_kOut,
+		NP_kBaselineStatus,
+		NP_kNumElems
+	};
+	vector<string> np_param_names = { "context", "nwave", "data", "mask",
+			"final_mask", "out", "baseline_status" };
+	cout << "    Testing for ";
+
+	size_t const num_data(10);
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+
+	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
+			static_cast<NPItems>(item + 1)) {
+		cout << np_param_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+		size_t nwave[num_nwave] = { 0, 1, 2 };
+		size_t num_coeff =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		bool final_mask[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+		float *in_data_ptr = in_data;
+		bool *mask_ptr = mask;
+		size_t *nwave_ptr = nwave;
+		bool *final_mask_ptr = final_mask;
+		float *out_ptr = out;
+		LIBSAKURA_SYMBOL(BaselineContext) *context_ptr = context;
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status_ptr = &baseline_status;
+
+		switch (item) {
+		case NP_kData:
+			in_data_ptr = nullptr;
+			break;
+		case NP_kMask:
+			mask_ptr = nullptr;
+			break;
+		case NP_kNwave:
+			nwave_ptr = nullptr;
+			break;
+		case NP_kOut:
+			out_ptr = nullptr;
+			break;
+		case NP_kFinalMask:
+			final_mask_ptr = nullptr;
+			break;
+		case NP_kContext:
+			context_ptr = nullptr;
+			break;
+		case NP_kBaselineStatus:
+			baseline_status_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) sub_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context_ptr, num_nwave,
+				nwave_ptr, num_data, in_data_ptr, mask_ptr, 5.0f, 1, true,
+				final_mask_ptr, out_ptr, baseline_status_ptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test SubtractBaselineSinusoidFloat
+ * erroneous cases: unaligned cases
+ * parameters to be tested include data, mask, final_mask and out
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
+	enum UAItems {
+		UA_kData, UA_kMask, UA_kFinalMask, UA_kOut, UA_kNumElems
+	};
+	vector<string> ua_param_names = { "data", "mask", "final_mask", "out" };
+	cout << "    Testing for ";
+
+	size_t const num_data(10);
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+
+	for (UAItems item = static_cast<UAItems>(0); item < UA_kNumElems; item =
+			static_cast<UAItems>(item + 1)) {
+		cout << ua_param_names[item] << ((item < UA_kNumElems - 1) ? ", " : "");
+		size_t nwave[num_nwave] = { 0, 1, 2 };
+		size_t num_coeff =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data + 1];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		bool final_mask[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+		float *in_data_ptr = in_data;
+		bool *mask_ptr = mask;
+		bool *final_mask_ptr = final_mask;
+		float *out_ptr = out;
+
+		switch (item) {
+		case UA_kData:
+			++in_data_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_ptr));
+			break;
+		case UA_kMask:
+			++mask_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(mask_ptr));
+			break;
+		case UA_kFinalMask:
+			++final_mask_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(final_mask_ptr));
+			break;
+		case UA_kOut:
+			++out_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(out_ptr));
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL(Status) sub_status =
+				LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
+						num_nwave, nwave, num_data, in_data_ptr, mask_ptr, 5.0f,
+						1, true, final_mask_ptr, out_ptr, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test SubtractBaselineSinusoidUsingCoefficientsFloat
+ * successful cases
+ * subtract sinusoidal baseline with given coefficients
+ * context is created with maximum nwave of 2 in all cases, that is,
+ * context contains bases with nwave of 0(constant), 1(sin/cos)
+ * and 2(sin/cos).
+ * test cases: all combinations of nwave between 0 and 2.
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase) {
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const nwave_set_length[3] = { 3, 3, 1 };
+	size_t nwave_set1[3][1] = { { 0 }, { 1 }, { 2 } };
+	size_t nwave_set2[3][2] = { { 0, 1 }, { 0, 2 }, { 1, 2 } };
+	size_t nwave_set3[1][3] = { { 0, 1, 2 } };
+	cout << "    Baseline context has sinusoidal bases with nwave up to 2..."
+			<< endl;
+
+	for (size_t num_nwave = 1; num_nwave <= 3; ++num_nwave) {
+		cout << "    Testing for num_nwave = " << num_nwave << ": nwave = ";
+
+		size_t const num_cases = nwave_set_length[num_nwave - 1];
+		size_t nwave[num_nwave];
+		for (size_t j = 0; j < num_cases; ++j) {
+			cout << "{";
+			for (size_t k = 0; k < num_nwave; ++k) {
+				if (num_nwave == 1) {
+					nwave[k] = nwave_set1[j][k];
+				} else if (num_nwave == 2) {
+					nwave[k] = nwave_set2[j][k];
+				} else if (num_nwave == 3) {
+					nwave[k] = nwave_set3[j][k];
+				}
+				cout << nwave[k];
+				if (k < num_nwave - 1) {
+					cout << ", ";
+				}
+			}
+			cout << "}";
+			if (j < num_cases - 1) {
+				cout << ", ";
+			}
+			size_t num_coeff =
+					(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+			SIMD_ALIGN
+			double coeff[num_coeff];
+			SetDoubleConstant(1.0, num_coeff, coeff);
+			size_t const num_data(NUM_DATA2);
+			SIMD_ALIGN
+			float in_data[num_data];
+			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+			SIMD_ALIGN
+			bool mask[ELEMENTSOF(in_data)];
+			SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+			LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+			LIBSAKURA_SYMBOL (Status) create_status =
+					sakura_CreateBaselineContext(
+							LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy,
+							dummy, context_nwave, num_data, &context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+			SIMD_ALIGN
+			float out[ELEMENTSOF(in_data)];
+			float answer[ELEMENTSOF(in_data)];
+			for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+				SetFloatConstant(0.0f, ELEMENTSOF(answer), answer);
+			}
+			LIBSAKURA_SYMBOL (Status) sub_status =
+			LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+					context, num_data, in_data, num_nwave, nwave, num_coeff,
+					coeff, out);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
+
+			for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+				CheckAlmostEqual(answer[i], out[i], 1.0e-6);
+			}
+			if (verbose) {
+				PrintArray("data  ", num_data, in_data);
+				PrintArray("out   ", ELEMENTSOF(answer), out);
+				PrintArray("answer", ELEMENTSOF(answer), answer);
+			}
+
+			LIBSAKURA_SYMBOL (Status) destroy_status =
+					sakura_DestroyBaselineContext(context);
+			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+		}
+		cout << endl;
+	}
+}
+
+/*
+ * Test SubtractBaselineSinusoidUsingCoefficientsFloat
+ * time-consuming successful case for performance measurement
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsPerformanceTest) {
+	size_t const num_repeat(2000);
+	size_t const num_data(50000);
+	size_t const dummy = 1;
+	size_t const context_nwave = 10;
+	size_t const num_nwave = 10;
+	size_t nwave[num_nwave] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+	size_t num_coeff = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+	double coeff[num_coeff];
+	SetDoubleConstant(1.0, num_coeff, coeff);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+			context_nwave, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+		SetFloatConstant(0.0f, ELEMENTSOF(answer), answer);
+	}
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	LIBSAKURA_SYMBOL (Status) sub_status;
+	double start_time = sakura_GetCurrentTime();
+	for (size_t i = 0; i < num_repeat; ++i) {
+		sub_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+				context, num_data, in_data, num_nwave, nwave, num_coeff, coeff,
+				out);
+	}
+	double end_time = sakura_GetCurrentTime();
+	std::cout << std::setprecision(5)
+			<< "#x# benchmark BaselineWK_SubtractBaselineSinusoidUsingCoefficientsPerformanceTest"
+			<< " " << (end_time - start_time) << std::endl;
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+		CheckAlmostEqual(answer[i], out[i], 5.0e-6);
+	}
+	if (verbose) {
+		PrintArray("data  ", num_data, in_data);
+		PrintArray("out   ", ELEMENTSOF(answer), out);
+		PrintArray("answer", ELEMENTSOF(answer), answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+}
+
+/*
+ * Test SubtractBaselineSinusoidUsingCoefficients
+ * erroneous cases: null pointer cases
+ * parameters to be tested include context, data, mask, nwave, coeff, final_mask and baseline_status.
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesNullPointer) {
+	enum NPItems {
+		NP_kContext, NP_kData, NP_kNwave, NP_kCoeff, NP_kOut, NP_kNumElems
+	};
+	vector<string> np_param_names =
+			{ "context", "data", "nwave", "coeff", "out" };
+	cout << "    Testing for ";
+
+	size_t const num_data(10);
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+
+	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
+			static_cast<NPItems>(item + 1)) {
+		cout << np_param_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+		size_t nwave[num_nwave] = { 0, 1, 2 };
+		size_t num_coeff =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		SIMD_ALIGN
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+		float *in_data_ptr = in_data;
+		size_t *nwave_ptr = nwave;
+		double *coeff_ptr = coeff;
+		float *out_ptr = out;
+		LIBSAKURA_SYMBOL(BaselineContext) *context_ptr = context;
+
+		switch (item) {
+		case NP_kContext:
+			context_ptr = nullptr;
+			break;
+		case NP_kData:
+			in_data_ptr = nullptr;
+			break;
+		case NP_kNwave:
+			nwave_ptr = nullptr;
+			break;
+		case NP_kCoeff:
+			coeff_ptr = nullptr;
+			break;
+		case NP_kOut:
+			out_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) sub_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+				context_ptr, num_data, in_data_ptr, num_nwave, nwave_ptr,
+				num_coeff, coeff_ptr, out_ptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	cout << endl;
+}
+
+/*
+ * Test SubtractBaselineSinusoidUsingCoefficients
+ * erroneous cases: unaligned cases
+ * parameters to be tested include data, mask, final_mask and out
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesUnaligned) {
+	enum UAItems {
+		UA_kData, UA_kCoeff, UA_kOut, UA_kNumElems
+	};
+	vector<string> ua_param_names = { "data", "coeff", "out" };
+	cout << "    Testing for ";
+
+	size_t const num_data(10);
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+
+	for (UAItems item = static_cast<UAItems>(0); item < UA_kNumElems; item =
+			static_cast<UAItems>(item + 1)) {
+		cout << ua_param_names[item] << ((item < UA_kNumElems - 1) ? ", " : "");
+		size_t nwave[num_nwave] = { 0, 1, 2 };
+		size_t num_coeff =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+		SIMD_ALIGN
+		double coeff[num_coeff + 1];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data + 1];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+		float *in_data_ptr = in_data;
+		double *coeff_ptr = coeff;
+		float *out_ptr = out;
+
+		switch (item) {
+		case UA_kData:
+			++in_data_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(in_data_ptr));
+			break;
+		case UA_kCoeff:
+			++coeff_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_ptr));
+			break;
+		case UA_kOut:
+			++out_ptr;
+			assert(!LIBSAKURA_SYMBOL(IsAligned)(out_ptr));
+			break;
+		default:
+			assert(false);
+		}
+
+		LIBSAKURA_SYMBOL (Status) sub_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+				context, num_data, in_data_ptr, num_nwave, nwave,
+				num_coeff, coeff_ptr, out_ptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+	cout << endl;
 }
