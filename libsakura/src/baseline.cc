@@ -272,6 +272,20 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	}
 }
 
+inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
+	//check if elements in nwave are
+	// (1) stored in ascending order and
+	// (2) not duplicate.
+	bool res = true;
+	for (size_t i = 0; i < num_nwave - 1; ++i) {
+		if (nwave[i] >= nwave[i + 1]) {
+			res = false;
+			break;
+		}
+	}
+	return res;
+}
+
 inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
 		double const *in2_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
@@ -1254,17 +1268,19 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
+	CHECK_ARGS(context->num_bases <= num_data);
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
+	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
+	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
 	size_t num_bases_from_nwave = GetNumberOfBasesFromOrder(
 			context->baseline_type, 0, num_nwave, nwave);
 	CHECK_ARGS(num_bases_from_nwave <= context->num_bases);
-	CHECK_ARGS(num_bases_from_nwave <= num_data);
-	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(clip_threshold_sigma > 0.0f);
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
@@ -1295,6 +1311,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(
+			(context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
 	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
@@ -1375,18 +1393,22 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(
+			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
 	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(clip_threshold_sigma > 0.0f);
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
+	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
+	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
 	size_t num_coeff_by_nwave = GetNumberOfBasesFromOrder(
 			context->baseline_type, 0, num_nwave, nwave);
 	CHECK_ARGS(num_coeff == num_coeff_by_nwave);
-	CHECK_ARGS(num_coeff <= num_data);
+	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
@@ -1415,6 +1437,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_coeff,
 		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
 	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(
+			(context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(num_coeff != 0);
 	CHECK_ARGS(num_coeff <= context->num_bases);
@@ -1481,16 +1505,19 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
 	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(
+			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
+	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
-	CHECK_ARGS(num_coeff != 0);
-	CHECK_ARGS(num_coeff <= context->num_bases);
-	CHECK_ARGS(num_coeff <= num_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
+	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
 	size_t num_coeff_by_nwave = GetNumberOfBasesFromOrder(
 			context->baseline_type, 0, num_nwave, nwave);
 	CHECK_ARGS(num_coeff == num_coeff_by_nwave);
+	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(out != nullptr);

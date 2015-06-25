@@ -311,7 +311,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
 			SIMD_ALIGN
 			double coeff[4 * num_pieces];
 			SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
-			size_t const num_data(4080);
+			size_t const num_data = 4080;
 			SIMD_ALIGN
 			float in_data[num_data] = { 0.0142482891679, -0.0291637405753,
 					0.00779710942879, 0.0181236378849, 0.0748615264893,
@@ -1778,8 +1778,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseForCAS
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	size_t const order = 0;
-	size_t const num_repeat(300);
-	size_t const num_pieces(2);
+	size_t const num_repeat = 300;
+	size_t const num_pieces = 2;
 	SIMD_ALIGN
 	double answer[4 * num_pieces];
 	for (size_t i = 0; i < ELEMENTSOF(answer); i += 4) {
@@ -1788,7 +1788,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 		answer[i + 2] = 1e-8;
 		answer[i + 3] = 1e-12;
 	}
-	size_t const num_data(70000);
+	size_t const num_data = 70000;
 	SIMD_ALIGN
 	float in_data[num_data];
 	SetFloatPolynomial(num_data, in_data, answer);
@@ -1855,8 +1855,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
 			static_cast<NPItems>(item + 1)) {
 		cout << np_param_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
-		size_t const num_pieces(2);
-		size_t const num_data(10);
+		size_t const num_pieces = 2;
+		size_t const num_data = 10;
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 		SIMD_ALIGN
@@ -1935,8 +1935,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 	for (UAItems item = static_cast<UAItems>(0); item < UA_kNumElems; item =
 			static_cast<UAItems>(item + 1)) {
 		cout << ua_param_names[item] << ((item < UA_kNumElems - 1) ? ", " : "");
-		size_t const num_pieces(2);
-		size_t const num_data(10);
+		size_t const num_pieces = 2;
+		size_t const num_data = 10;
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 		SIMD_ALIGN
@@ -2019,8 +2019,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 			static_cast<BVItems>(item + 1)) {
 		cout << "        " << bv_param_names[item]
 				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
-		size_t const num_pieces(1);
-		size_t num_data(0);
+		size_t const num_pieces = 1;
+		size_t num_data = 0;
 		switch (item) {
 		case BV_kDataLTNumBases:
 			num_data = 2;
@@ -2034,7 +2034,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 		default:
 			assert(false);
 		}
-		size_t num_basis_data(10);
+		size_t num_basis_data = 10;
 
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
@@ -2079,7 +2079,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
 				<< " cases: num_data = ";
 		size_t num_extra_max = 3;
 		for (size_t num_extra = 0; num_extra <= num_extra_max; ++num_extra) {
-			size_t const num_data(4 * num_pieces + num_extra);
+			size_t const num_data = 4 * num_pieces + num_extra;
 			cout << num_data << ((num_extra < num_extra_max) ? ", " : "");
 			double coeff[4];
 			SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
@@ -2136,9 +2136,9 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
  */
 TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	size_t const order = 0;
-	size_t const num_repeat(300);
-	size_t const num_pieces(2);
-	size_t const num_data(70000);
+	size_t const num_repeat = 300;
+	size_t const num_pieces = 2;
+	size_t const num_data = 70000;
 	SIMD_ALIGN
 	float in_data[num_data];
 	double coeff[4] = { 1.0, 1e-4, 1e-8, 1e-12 };
@@ -2208,8 +2208,8 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesNullPointer) {
 	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
 			static_cast<NPItems>(item + 1)) {
 		cout << np_param_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
-		size_t const num_pieces(2);
-		size_t const num_data(10);
+		size_t const num_pieces = 2;
+		size_t const num_data = 10;
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 		SIMD_ALIGN
@@ -2288,8 +2288,8 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesUnaligned) {
 	for (UAItems item = static_cast<UAItems>(0); item < UA_kNumElems; item =
 			static_cast<UAItems>(item + 1)) {
 		cout << ua_param_names[item] << ((item < UA_kNumElems - 1) ? ", " : "");
-		size_t const num_pieces(2);
-		size_t const num_data(10);
+		size_t const num_pieces = 2;
+		size_t const num_data = 10;
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 		SIMD_ALIGN
@@ -2372,8 +2372,8 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 			static_cast<BVItems>(item + 1)) {
 		cout << "        " << bv_param_names[item]
 				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
-		size_t const num_pieces(1);
-		size_t num_data(0);
+		size_t const num_pieces = 1;
+		size_t num_data = 0;
 		switch (item) {
 		case BV_kDataLTNumBases:
 			num_data = 2;
@@ -2387,7 +2387,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 		default:
 			assert(false);
 		}
-		size_t num_basis_data(10);
+		size_t num_basis_data = 10;
 
 		double coeff[4];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
@@ -2431,15 +2431,19 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCase) {
 	size_t const dummy = 1;
-	size_t const context_nwave = 2;
-	size_t const nwave_set_length[3] = { 3, 3, 1 };
-	size_t nwave_set1[3][1] = { { 0 }, { 1 }, { 2 } };
-	size_t nwave_set2[3][2] = { { 0, 1 }, { 0, 2 }, { 1, 2 } };
-	size_t nwave_set3[1][3] = { { 0, 1, 2 } };
-	cout << "    Baseline context has sinusoidal bases with nwave up to 2..."
+	size_t const context_nwave = 3;
+	size_t const num_nwave_set = 4;
+	size_t const nwave_set_length[num_nwave_set] = { 4, 6, 4, 1 };
+	size_t nwave_set1[4][1] = { { 0 }, { 1 }, { 2 }, { 3 } };
+	size_t nwave_set2[6][2] = { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 },
+			{ 1, 3 }, { 2, 3 } };
+	size_t nwave_set3[4][3] = { { 0, 1, 2 }, { 0, 1, 3 }, { 0, 2, 3 },
+			{ 1, 2, 3 } };
+	size_t nwave_set4[1][4] = { { 0, 1, 2, 3 } };
+	cout << "    Baseline context has sinusoidal bases with nwave up to 3..."
 			<< endl;
 
-	for (size_t num_nwave = 1; num_nwave <= 3; ++num_nwave) {
+	for (size_t num_nwave = 1; num_nwave <= num_nwave_set; ++num_nwave) {
 		cout << "    Testing for num_nwave = " << num_nwave << ": nwave = ";
 
 		size_t const num_cases = nwave_set_length[num_nwave - 1];
@@ -2453,6 +2457,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCase) {
 					nwave[k] = nwave_set2[j][k];
 				} else if (num_nwave == 3) {
 					nwave[k] = nwave_set3[j][k];
+				} else if (num_nwave == 4) {
+					nwave[k] = nwave_set4[j][k];
 				}
 				cout << nwave[k];
 				if (k < num_nwave - 1) {
@@ -2467,7 +2473,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCase) {
 					(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
 			double coeff[num_coeff];
 			SetDoubleConstant(1.0, num_coeff, coeff);
-			size_t const num_data(NUM_DATA2);
+			size_t const num_data = NUM_DATA2;
 			SIMD_ALIGN
 			float in_data[num_data];
 			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
@@ -2517,8 +2523,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCase) {
  * time-consuming successful case for performance measurement
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidPerformanceTest) {
-	size_t const num_repeat(100);
-	size_t const num_data(50000);
+	size_t const num_repeat = 100;
+	size_t const num_data = 50000;
 	size_t const dummy = 1;
 	size_t const context_nwave = 10;
 	size_t const num_nwave = 10;
@@ -2594,7 +2600,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesNullPoint
 			"coeff", "final_mask", "baseline_status" };
 	cout << "    Testing for ";
 
-	size_t const num_data(10);
+	size_t const num_data = 10;
 	size_t const dummy = 1;
 	size_t const context_nwave = 2;
 	size_t const num_nwave = 3;
@@ -2684,7 +2690,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesUnaligned
 	vector<string> ua_param_names = { "data", "mask", "coeff", "final_mask" };
 	cout << "    Testing for ";
 
-	size_t const num_data(10);
+	size_t const num_data = 10;
 	size_t const dummy = 1;
 	size_t const context_nwave = 2;
 	size_t const num_nwave = 3;
@@ -2754,6 +2760,134 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesUnaligned
 }
 
 /*
+ * Test GetBestFitBaselineCoefficientsSinusoid
+ * erroneous cases: bad parameter value cases as follows:
+ *     (1) num_data < context->num_bases
+ *     (2) num_data < (!=) context->num_basis_data
+ *     (3) num_data > (!=) context->num_basis_data
+ *     (4) clip_threshold_sigma == 0
+ *     (5) clip_threshold_sigma < 0
+ *     (6) num_nwave == 0
+ *     (7) nwave with duplicated elements
+ *     (8) nwave with not in ascending order
+ *     (9) num_coeff < (!=) proper value for given nwave
+ *     (10) num_coeff > (!=) proper value for given nwave
+ *     (11) num_coeff > context->num_bases
+ */
+TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesBadParameterValue) {
+	enum BVItems {
+		BV_kDataLTNumBases,
+		BV_kDataLTNumBasisData,
+		BV_kDataGTNumBasisData,
+		BV_kClipThresholdZero,
+		BV_kClipThresholdNegative,
+		BV_kNumNWaveZero,
+		BV_kNWaveDuplicated,
+		BV_kNWaveNotAscending,
+		BV_kNumCoeffLTProperValue,
+		BV_kNumCoeffGTProperValue,
+		BV_kNumCoeffGTNumBases,
+		BV_kNumElems
+	};
+	vector<string> bv_param_names = { "(num_data < context->num_bases)",
+			"(num_data < context->num_basis_data)",
+			"(num_data > context->num_basis_data)",
+			"(clip_threshold_sigma == 0)", "(clip_threshold_sigma < 0)",
+			"(num_nwave == 0)", "(nwave duplicated)", "(nwave not ascending)",
+			"(num_coeff < proper value)", "(num_coeff > proper value)",
+			"(num_coeff > context->num_bases)" };
+	cout << "    Testing for cases " << endl;
+
+	size_t const num_basis_data = 10;
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+
+	for (BVItems item = static_cast<BVItems>(0); item < BV_kNumElems; item =
+			static_cast<BVItems>(item + 1)) {
+		cout << "        " << bv_param_names[item]
+				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
+		size_t num_data = num_basis_data;
+		float clip_threshold_sigma = 5.0f;
+		size_t num_nwave = 3;
+		size_t nwave[num_nwave];
+		for (size_t i = 0; i < num_nwave; ++i) {
+			nwave[i] = i;
+		}
+		size_t tmp_nwave = nwave[0];
+		size_t num_coeff = 5;
+		size_t num_coeff_by_nwave =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+
+		switch (item) {
+		case BV_kDataLTNumBases:
+			num_data = 2;
+			break;
+		case BV_kDataLTNumBasisData:
+			num_data = 5;
+			break;
+		case BV_kDataGTNumBasisData:
+			num_data = 15;
+			break;
+		case BV_kClipThresholdZero:
+			clip_threshold_sigma = 0.0f;
+			break;
+		case BV_kClipThresholdNegative:
+			clip_threshold_sigma = -5.0f;
+			break;
+		case BV_kNumNWaveZero:
+			num_nwave = 0;
+			break;
+		case BV_kNWaveDuplicated:
+			nwave[1] = nwave[0];
+			break;
+		case BV_kNWaveNotAscending:
+			tmp_nwave = nwave[1];
+			nwave[1] = nwave[0];
+			nwave[0] = tmp_nwave;
+			break;
+		case BV_kNumCoeffLTProperValue:
+			num_coeff = num_coeff_by_nwave - 1;
+			break;
+		case BV_kNumCoeffGTProperValue:
+		case BV_kNumCoeffGTNumBases:
+			num_coeff = num_coeff_by_nwave + 1;
+			break;
+		default:
+			assert(false);
+		}
+
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		bool final_mask[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		double out[ELEMENTSOF(coeff)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_basis_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+		LIBSAKURA_SYMBOL (Status) coeff_status =
+		LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(context,
+				num_data, in_data, mask, clip_threshold_sigma, 1, num_nwave,
+				nwave, num_coeff, out, final_mask, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+}
+
+/*
  * Test SubtractBaselineSinusoid
  * successful cases
  * compute the best-fit sinusoidal baseline and subtract it
@@ -2764,15 +2898,19 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesUnaligned
  */
 TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
 	size_t const dummy = 1;
-	size_t const context_nwave = 2;
-	size_t const nwave_set_length[3] = { 3, 3, 1 };
-	size_t nwave_set1[3][1] = { { 0 }, { 1 }, { 2 } };
-	size_t nwave_set2[3][2] = { { 0, 1 }, { 0, 2 }, { 1, 2 } };
-	size_t nwave_set3[1][3] = { { 0, 1, 2 } };
-	cout << "    Baseline context has sinusoidal bases with nwave up to 2..."
+	size_t const context_nwave = 3;
+	size_t const num_nwave_set = 4;
+	size_t const nwave_set_length[num_nwave_set] = { 4, 6, 4, 1 };
+	size_t nwave_set1[4][1] = { { 0 }, { 1 }, { 2 }, { 3 } };
+	size_t nwave_set2[6][2] = { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 },
+			{ 1, 3 }, { 2, 3 } };
+	size_t nwave_set3[4][3] = { { 0, 1, 2 }, { 0, 1, 3 }, { 0, 2, 3 },
+			{ 1, 2, 3 } };
+	size_t nwave_set4[1][4] = { { 0, 1, 2, 3 } };
+	cout << "    Baseline context has sinusoidal bases with nwave up to 3..."
 			<< endl;
 
-	for (size_t num_nwave = 1; num_nwave <= 3; ++num_nwave) {
+	for (size_t num_nwave = 1; num_nwave <= num_nwave_set; ++num_nwave) {
 		cout << "    Testing for num_nwave = " << num_nwave << ": nwave = ";
 
 		size_t const num_cases = nwave_set_length[num_nwave - 1];
@@ -2786,6 +2924,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
 					nwave[k] = nwave_set2[j][k];
 				} else if (num_nwave == 3) {
 					nwave[k] = nwave_set3[j][k];
+				} else if (num_nwave == 4) {
+					nwave[k] = nwave_set4[j][k];
 				}
 				cout << nwave[k];
 				if (k < num_nwave - 1) {
@@ -2800,7 +2940,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
 					(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
 			double coeff[num_coeff];
 			SetDoubleConstant(1.0, num_coeff, coeff);
-			size_t const num_data(NUM_DATA2);
+			size_t const num_data = NUM_DATA2;
 			SIMD_ALIGN
 			float in_data[num_data];
 			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
@@ -2850,8 +2990,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
  * time-consuming successful case for performance measurement
  */
 TEST_F(BaselineWK, SubtractBaselineSinusoidPerformanceTest) {
-	size_t const num_repeat(100);
-	size_t const num_data(50000);
+	size_t const num_repeat = 100;
+	size_t const num_data = 50000;
 	size_t const dummy = 1;
 	size_t const context_nwave = 10;
 	size_t const num_nwave = 10;
@@ -2926,7 +3066,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesNullPointer) {
 			"final_mask", "out", "baseline_status" };
 	cout << "    Testing for ";
 
-	size_t const num_data(10);
+	size_t const num_data = 10;
 	size_t const dummy = 1;
 	size_t const context_nwave = 2;
 	size_t const num_nwave = 3;
@@ -3015,7 +3155,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
 	vector<string> ua_param_names = { "data", "mask", "final_mask", "out" };
 	cout << "    Testing for ";
 
-	size_t const num_data(10);
+	size_t const num_data = 10;
 	size_t const dummy = 1;
 	size_t const context_nwave = 2;
 	size_t const num_nwave = 3;
@@ -3072,9 +3212,9 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
 		}
 
 		LIBSAKURA_SYMBOL(Status) sub_status =
-				LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
-						num_nwave, nwave, num_data, in_data_ptr, mask_ptr, 5.0f,
-						1, true, final_mask_ptr, out_ptr, &baseline_status);
+		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context, num_nwave,
+				nwave, num_data, in_data_ptr, mask_ptr, 5.0f, 1, true,
+				final_mask_ptr, out_ptr, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -3082,6 +3222,123 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	cout << endl;
+}
+
+/*
+ * Test SubtractBaselineSinusoidFloat
+ * erroneous cases: bad parameter value cases as follows:
+ *     (1) num_data < context->num_bases
+ *     (2) num_data < (!=) context->num_basis_data
+ *     (3) num_data > (!=) context->num_basis_data
+ *     (4) clip_threshold_sigma == 0
+ *     (5) clip_threshold_sigma < 0
+ *     (6) num_nwave == 0
+ *     (7) nwave with duplicated elements
+ *     (8) nwave with not in ascending order
+ *     (9) num_bases computed for given nwave > context->num_bases
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesBadParameterValue) {
+	enum BVItems {
+		BV_kDataLTNumBases,
+		BV_kDataLTNumBasisData,
+		BV_kDataGTNumBasisData,
+		BV_kClipThresholdZero,
+		BV_kClipThresholdNegative,
+		BV_kNumNWaveZero,
+		BV_kNWaveDuplicated,
+		BV_kNWaveNotAscending,
+		BV_kNumBasesByNWaveGTNumBases,
+		BV_kNumElems
+	};
+	vector<string> bv_param_names = { "(num_data < context->num_bases)",
+			"(num_data < context->num_basis_data)",
+			"(num_data > context->num_basis_data)",
+			"(clip_threshold_sigma == 0)", "(clip_threshold_sigma < 0)",
+			"(num_nwave == 0)", "(nwave duplicated)", "(nwave not ascending)",
+			"(num_bases by given nwave > context->num_bases)" };
+	cout << "    Testing for cases " << endl;
+
+	size_t const num_basis_data = 10;
+	size_t const dummy = 1;
+
+	for (BVItems item = static_cast<BVItems>(0); item < BV_kNumElems; item =
+			static_cast<BVItems>(item + 1)) {
+		cout << "        " << bv_param_names[item]
+				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
+		size_t num_data = num_basis_data;
+		float clip_threshold_sigma = 5.0f;
+		size_t context_nwave = 2;
+		size_t num_nwave = 3;
+		size_t nwave[num_nwave];
+		for (size_t i = 0; i < num_nwave; ++i) {
+			nwave[i] = i;
+		}
+		size_t tmp_nwave = nwave[0];
+		size_t num_coeff = 5;
+
+		switch (item) {
+		case BV_kDataLTNumBases:
+			num_data = 2;
+			break;
+		case BV_kDataLTNumBasisData:
+			num_data = 5;
+			break;
+		case BV_kDataGTNumBasisData:
+			num_data = 15;
+			break;
+		case BV_kClipThresholdZero:
+			clip_threshold_sigma = 0.0f;
+			break;
+		case BV_kClipThresholdNegative:
+			clip_threshold_sigma = -5.0f;
+			break;
+		case BV_kNumNWaveZero:
+			num_nwave = 0;
+			break;
+		case BV_kNWaveDuplicated:
+			nwave[1] = nwave[0];
+			break;
+		case BV_kNWaveNotAscending:
+			tmp_nwave = nwave[1];
+			nwave[1] = nwave[0];
+			nwave[0] = tmp_nwave;
+			break;
+		case BV_kNumBasesByNWaveGTNumBases:
+			context_nwave = 1;
+			break;
+		default:
+			assert(false);
+		}
+
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		bool final_mask[ELEMENTSOF(in_data)];
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_basis_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+		LIBSAKURA_SYMBOL(Status) sub_status =
+		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context, num_nwave,
+				nwave, num_data, in_data, mask, clip_threshold_sigma, 1, true,
+				final_mask, out, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
 
 /*
@@ -3095,15 +3352,19 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
  */
 TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase) {
 	size_t const dummy = 1;
-	size_t const context_nwave = 2;
-	size_t const nwave_set_length[3] = { 3, 3, 1 };
-	size_t nwave_set1[3][1] = { { 0 }, { 1 }, { 2 } };
-	size_t nwave_set2[3][2] = { { 0, 1 }, { 0, 2 }, { 1, 2 } };
-	size_t nwave_set3[1][3] = { { 0, 1, 2 } };
-	cout << "    Baseline context has sinusoidal bases with nwave up to 2..."
+	size_t const context_nwave = 3;
+	size_t const num_nwave_set = 4;
+	size_t const nwave_set_length[num_nwave_set] = { 4, 6, 4, 1 };
+	size_t nwave_set1[4][1] = { { 0 }, { 1 }, { 2 }, { 3 } };
+	size_t nwave_set2[6][2] = { { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 },
+			{ 1, 3 }, { 2, 3 } };
+	size_t nwave_set3[4][3] = { { 0, 1, 2 }, { 0, 1, 3 }, { 0, 2, 3 },
+			{ 1, 2, 3 } };
+	size_t nwave_set4[1][4] = { { 0, 1, 2, 3 } };
+	cout << "    Baseline context has sinusoidal bases with nwave up to 3..."
 			<< endl;
 
-	for (size_t num_nwave = 1; num_nwave <= 3; ++num_nwave) {
+	for (size_t num_nwave = 1; num_nwave <= num_nwave_set; ++num_nwave) {
 		cout << "    Testing for num_nwave = " << num_nwave << ": nwave = ";
 
 		size_t const num_cases = nwave_set_length[num_nwave - 1];
@@ -3117,6 +3378,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase)
 					nwave[k] = nwave_set2[j][k];
 				} else if (num_nwave == 3) {
 					nwave[k] = nwave_set3[j][k];
+				} else if (num_nwave == 4) {
+					nwave[k] = nwave_set4[j][k];
 				}
 				cout << nwave[k];
 				if (k < num_nwave - 1) {
@@ -3132,7 +3395,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase)
 			SIMD_ALIGN
 			double coeff[num_coeff];
 			SetDoubleConstant(1.0, num_coeff, coeff);
-			size_t const num_data(NUM_DATA2);
+			size_t const num_data = NUM_DATA2;
 			SIMD_ALIGN
 			float in_data[num_data];
 			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
@@ -3180,8 +3443,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase)
  * time-consuming successful case for performance measurement
  */
 TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsPerformanceTest) {
-	size_t const num_repeat(2000);
-	size_t const num_data(50000);
+	size_t const num_repeat = 2000;
+	size_t const num_data = 50000;
 	size_t const dummy = 1;
 	size_t const context_nwave = 10;
 	size_t const num_nwave = 10;
@@ -3250,7 +3513,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesNullPo
 			{ "context", "data", "nwave", "coeff", "out" };
 	cout << "    Testing for ";
 
-	size_t const num_data(10);
+	size_t const num_data = 10;
 	size_t const dummy = 1;
 	size_t const context_nwave = 2;
 	size_t const num_nwave = 3;
@@ -3326,7 +3589,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesUnalig
 	vector<string> ua_param_names = { "data", "coeff", "out" };
 	cout << "    Testing for ";
 
-	size_t const num_data(10);
+	size_t const num_data = 10;
 	size_t const dummy = 1;
 	size_t const context_nwave = 2;
 	size_t const num_nwave = 3;
@@ -3374,8 +3637,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesUnalig
 
 		LIBSAKURA_SYMBOL (Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
-				context, num_data, in_data_ptr, num_nwave, nwave,
-				num_coeff, coeff_ptr, out_ptr);
+				context, num_data, in_data_ptr, num_nwave, nwave, num_coeff,
+				coeff_ptr, out_ptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -3383,4 +3646,118 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesUnalig
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	cout << endl;
+}
+
+/*
+ * Test SubtractBaselineSinusoidUsingCoefficientsFloat
+ * erroneous cases: bad parameter value cases as follows:
+ *     (1) num_data < context->num_bases
+ *     (2) num_data < (!=) context->num_basis_data
+ *     (3) num_data > (!=) context->num_basis_data
+ *     (4) num_nwave == 0
+ *     (5) nwave with duplicated elements
+ *     (6) nwave with not in ascending order
+ *     (7) num_coeff < (!=) proper value for given nwave
+ *     (8) num_coeff > (!=) proper value for given nwave
+ *     (9) num_coeff > context->num_bases
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadParameterValue) {
+	enum BVItems {
+		BV_kDataLTNumBases,
+		BV_kDataLTNumBasisData,
+		BV_kDataGTNumBasisData,
+		BV_kNumNWaveZero,
+		BV_kNWaveDuplicated,
+		BV_kNWaveNotAscending,
+		BV_kNumCoeffLTProperValue,
+		BV_kNumCoeffGTProperValue,
+		BV_kNumCoeffGTNumBases,
+		BV_kNumElems
+	};
+	vector<string> bv_param_names = { "(num_data < context->num_bases)",
+			"(num_data < context->num_basis_data)",
+			"(num_data > context->num_basis_data)",
+			"(clip_threshold_sigma == 0)", "(clip_threshold_sigma < 0)",
+			"(num_nwave == 0)", "(nwave duplicated)", "(nwave not ascending)",
+			"(num_coeff < proper value)", "(num_coeff > proper value)",
+			"(num_coeff > context->num_bases)" };
+	cout << "    Testing for cases " << endl;
+
+	size_t const num_basis_data = 10;
+	size_t const dummy = 1;
+
+	for (BVItems item = static_cast<BVItems>(0); item < BV_kNumElems; item =
+			static_cast<BVItems>(item + 1)) {
+		cout << "        " << bv_param_names[item]
+				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
+		size_t num_data = num_basis_data;
+		size_t context_nwave = 2;
+		size_t num_nwave = 3;
+		size_t nwave[num_nwave];
+		for (size_t i = 0; i < num_nwave; ++i) {
+			nwave[i] = i;
+		}
+		size_t tmp_nwave = nwave[0];
+		size_t num_coeff = 5;
+		size_t num_coeff_by_nwave =
+				(nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+
+		switch (item) {
+		case BV_kDataLTNumBases:
+			num_data = 2;
+			break;
+		case BV_kDataLTNumBasisData:
+			num_data = 5;
+			break;
+		case BV_kDataGTNumBasisData:
+			num_data = 15;
+			break;
+		case BV_kNumNWaveZero:
+			num_nwave = 0;
+			break;
+		case BV_kNWaveDuplicated:
+			nwave[1] = nwave[0];
+			break;
+		case BV_kNWaveNotAscending:
+			tmp_nwave = nwave[1];
+			nwave[1] = nwave[0];
+			nwave[0] = tmp_nwave;
+			break;
+		case BV_kNumCoeffLTProperValue:
+			num_coeff = num_coeff_by_nwave - 1;
+			break;
+		case BV_kNumCoeffGTProperValue:
+		case BV_kNumCoeffGTNumBases:
+			num_coeff = num_coeff_by_nwave + 1;
+			break;
+		default:
+			assert(false);
+		}
+
+		double coeff[num_coeff];
+		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
+		SIMD_ALIGN
+		float in_data[num_data];
+		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+		SIMD_ALIGN
+		bool mask[ELEMENTSOF(in_data)];
+		SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+		SIMD_ALIGN
+		float out[ELEMENTSOF(in_data)];
+		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+				LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+				context_nwave, num_basis_data, &context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+		LIBSAKURA_SYMBOL(Status) sub_status =
+				LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+						context, num_data, in_data, num_nwave, nwave, num_coeff,
+						coeff, out);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
+
+		LIBSAKURA_SYMBOL (Status) destroy_status =
+				sakura_DestroyBaselineContext(context);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
 }
