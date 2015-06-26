@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cassert>
+#include <new>
 
 template<size_t kAlign>
 class AlignedMemory {
