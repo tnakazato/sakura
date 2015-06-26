@@ -43,9 +43,10 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("mask_edge");
 template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 		size_t num_data, DataType const x[], DataType const y[],
-		DataType pixel_x[], DataType pixel_y[], DataType *center_x,
-		DataType *center_y, size_t *num_horizontal, size_t *num_vertical,
-		DataType *pixel_width) {
+		DataType pixel_x[], DataType pixel_y[], DataType const *blc_x_in,
+		DataType const *blc_y_in, DataType const *trc_x_in,
+		DataType const *trc_y_in, DataType *center_x, DataType *center_y,
+		size_t *num_horizontal, size_t *num_vertical, DataType *pixel_width) {
 	// To derive median separation between two neighboring data points
 	// use pixel_x and pixel_y as a working storage
 	STATIC_ASSERT(sizeof(DataType) >= sizeof(bool));
@@ -89,6 +90,22 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 		blc_y = std::min(blc_y, local_y);
 		trc_y = std::max(trc_y, local_y);
 	}
+	if (blc_x_in != nullptr) {
+		blc_x = *blc_x_in;
+	}
+	if (blc_y_in != nullptr) {
+		blc_y = *blc_y_in;
+	}
+	if (trc_x_in != nullptr) {
+		trc_x = *trc_x_in;
+	}
+	if (trc_y_in != nullptr) {
+		trc_y = *trc_y_in;
+	}
+	//std::cout << "blc = [" << blc_x << "," << blc_y << "] trc = [" << trc_x << "," << trc_y << "]" << std::endl;
+	if (blc_x >= trc_x || blc_y >= trc_y) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 
 	// number of pixels
 	constexpr DataType kMargin = DataType(1.1);
@@ -105,9 +122,22 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 	// compute pixel_x and pixel_y
 	DataType pixel_center_x = static_cast<DataType>(*num_horizontal - 1) / kTwo;
 	DataType pixel_center_y = static_cast<DataType>(*num_vertical - 1) / kTwo;
+	constexpr DataType kOutOfRangeValue = -1.0;
 	for (size_t i = 0; i < num_data; ++i) {
-		pixel_x[i] = pixel_center_x + (x[i] - *center_x) / *pixel_width;
-		pixel_y[i] = pixel_center_y + (y[i] - *center_y) / *pixel_width;
+		double xi = x[i];
+		double yi = y[i];
+		if (blc_x <= xi && xi <= trc_x) {
+			pixel_x[i] = pixel_center_x + (x[i] - *center_x) / *pixel_width;
+		}
+		else {
+			pixel_x[i] = kOutOfRangeValue;
+		}
+		if (blc_y <= yi && yi <= trc_y) {
+			pixel_y[i] = pixel_center_y + (y[i] - *center_y) / *pixel_width;
+		}
+		else {
+			pixel_y[i] = kOutOfRangeValue;
+		}
 	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -139,13 +169,17 @@ inline LIBSAKURA_SYMBOL(Status) CountUp(size_t num_data,
 
 	// data counts for each pixel
 	for (size_t i = 0; i < num_data; ++i) {
-		size_t ix = static_cast<size_t>(std::round(pixel_x[i]));
-		size_t iy = static_cast<size_t>(std::round(pixel_y[i]));
-		assert(ix < num_horizontal);
-		assert(iy < num_vertical);
-		size_t index = ix * num_vertical + iy;
-		assert(index < num_horizontal * num_vertical);
-		counts[index] += 1;
+		auto pxi = pixel_x[i];
+		auto pyi = pixel_y[i];
+		if (pxi >= 0.0 && pyi >= 0.0) {
+			size_t ix = static_cast<size_t>(std::round(pxi));
+			size_t iy = static_cast<size_t>(std::round(pyi));
+			assert(ix < num_horizontal);
+			assert(iy < num_vertical);
+			size_t index = ix * num_vertical + iy;
+			assert(index < num_horizontal * num_vertical);
+			counts[index] += 1;
+		}
 	}
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
@@ -369,7 +403,7 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
  * @param[in,out] mask boolean mask
  */
 inline LIBSAKURA_SYMBOL(Status) ImproveDetection(size_t num_mask,
-		bool mask[]) {
+bool mask[]) {
 	constexpr size_t kIsolationThreshold = 3;
 	size_t isolation_count = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
@@ -417,7 +451,8 @@ inline LIBSAKURA_SYMBOL(Status) ImproveDetection(size_t num_mask,
 template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 		DataType pixel_scale, size_t num_data, DataType const x[],
-		DataType const y[], bool mask[]) {
+		DataType const y[], DataType const *blc_x, DataType const *blc_y, DataType const *trc_x,
+		DataType const *trc_y, bool mask[]) {
 	// do nothing if effective fraction is zero
 	if (fraction * static_cast<float>(num_data) < 1.0f) {
 		for (size_t i = 0; i < num_data; ++i) {
@@ -445,8 +480,12 @@ inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 	size_t num_vertical = 0;
 
 	LIBSAKURA_SYMBOL(Status) status = ConvertToPixel(pixel_scale, num_data, x,
-			y, pixel_x, pixel_y, &center_x, &center_y, &num_horizontal,
-			&num_vertical, &pixel_width);
+			y, pixel_x, pixel_y, blc_x, blc_y, trc_x, trc_y, &center_x,
+			&center_y, &num_horizontal, &num_vertical, &pixel_width);
+
+	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		return status;
+	}
 
 	// CountUp
 	size_t *counts = nullptr;
@@ -501,7 +540,9 @@ inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 		float fraction, double pixel_scale, size_t num_data, double const x[],
-		double const y[], bool mask[]) {
+		double const y[], double const *blc_x, double const *blc_y,
+		double const *trc_x, double const *trc_y,
+		bool mask[]) {
 	// Argument check
 	CHECK_ARGS(0.0 <= fraction && fraction <= 1.0);
 	CHECK_ARGS(0.0 < pixel_scale);
@@ -510,7 +551,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
 
 	try {
-		return CreateMaskNearEdge(fraction, pixel_scale, num_data, x, y, mask);
+		return CreateMaskNearEdge(fraction, pixel_scale, num_data, x, y, blc_x,
+				blc_y, trc_x, trc_y, mask);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");

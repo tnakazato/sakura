@@ -2029,13 +2029,18 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * must-be-aligned
  * @param[in] y List of vertical positions. The length must be @a num_data.
  * must-be-aligned
+ * @param[in] blc_x
+ * @param[in] blc_y
+ * @param[in] trc_x
+ * @param[in] trc_y
  * @param[out] mask Output mask. The points near edge will be masked, i.e., mask value
  * will be set to true for those points.
  * must-be-aligned
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(float fraction,
-		double pixel_scale, size_t num_data, double const x[], double const y[],
-		bool mask[]);
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
+		float fraction, double pixel_scale, size_t num_data, double const x[],
+		double const y[], double const *blc_x, double const *blc_y,
+		double const *trc_x, double const *trc_y, bool mask[]);
 
 #ifdef __cplusplus
 }
