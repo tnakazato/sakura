@@ -279,7 +279,7 @@ inline void DetectEdge(size_t num_horizontal, size_t num_vertical,
 						* pixel_mask[index + 1] * pixel_mask[index_below - 1]
 						* pixel_mask[index_below] * pixel_mask[index_below + 1]
 						* pixel_mask[index_above - 1] * pixel_mask[index_above]
-						* pixel_mask[index_above - 1];
+						* pixel_mask[index_above + 1];
 				edge[index] = (surroundings == 0) ? 1 : 0;
 			}
 		}
@@ -318,6 +318,12 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 	assert(fraction < 1.0f);
 	size_t threshold = static_cast<size_t>(static_cast<float>(num_data)
 			* fraction);
+
+	if (threshold == 0) {
+		// do nothing
+		return LIBSAKURA_SYMBOL(Status_kOK);
+	}
+
 	size_t num_masked_local = 0;
 
 	// working array to store edge information
@@ -348,7 +354,8 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 
 		// trimming
 		TrimEdge(num_horizontal, num_vertical, edge, pixel_mask);
-	} while (num_masked_local <= threshold);
+
+	} while (num_masked_local < threshold);
 
 	*num_masked = num_masked_local;
 
@@ -411,6 +418,13 @@ template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) MaskDataNearEdge(float fraction,
 		DataType pixel_scale, size_t num_data, DataType const x[],
 		DataType const y[], bool mask[]) {
+	// do nothing if effective fraction is zero
+	if (fraction * static_cast<float>(num_data) < 1.0f) {
+		for (size_t i = 0; i < num_data; ++i) {
+			mask[i] = false;
+		}
+		return sakura_Status_kOK;
+	}
 
 	// ConvertToPixel
 	// allocate storage for two aligned arrays by one allocation call
@@ -488,8 +502,9 @@ inline LIBSAKURA_SYMBOL(Status) MaskDataNearEdge(float fraction,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(
 		float fraction, double pixel_scale, size_t num_data, double const x[],
 		double const y[], bool mask[]) {
-	CHECK_ARGS(0.0f < pixel_scale);
-	CHECK_ARGS(fraction < 1.0f);
+	// Argument check
+	CHECK_ARGS(0.0 <= fraction && fraction <= 1.0);
+	CHECK_ARGS(0.0 < pixel_scale);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(x));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(y));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
