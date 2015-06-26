@@ -34,6 +34,8 @@
 
 template<typename Initializer, typename Printer, typename Checker>
 void RunTest(size_t num_data, float fraction, double pixel_scale,
+		double const *blc_x = NULL, double const *blc_y = NULL,
+		double const *trc_x = NULL, double const *trc_y = NULL,
 		std::string const test_name = "") {
 	// Initialize Sakura
 	sakura_Status init_status = sakura_Initialize(nullptr, nullptr);
@@ -55,8 +57,8 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 			mask_storage, &x, &y, &mask, mask_expected, &status_expected);
 
 	double start_time = sakura_GetCurrentTime();
-	sakura_Status status = sakura_CreateMaskNearEdgeDouble(fraction, pixel_scale,
-			num_data, x, y, mask);
+	sakura_Status status = sakura_CreateMaskNearEdgeDouble(fraction,
+			pixel_scale, num_data, x, y, blc_x, blc_y, trc_x, trc_y, mask);
 	double end_time = sakura_GetCurrentTime();
 	Printer::Print(test_name, end_time - start_time);
 
@@ -169,8 +171,8 @@ struct SquareShapeInitializer {
 		constexpr double kInnerLength = ParamSet::kInnerLength;
 		for (size_t i = 0; i < kNumSquare - 2; ++i) {
 			size_t start_index = (i + 2) * num_data_per_square;
-			DrawSquare(start_index, num_data_per_square, kInnerLength,
-					*x_out, *y_out);
+			DrawSquare(start_index, num_data_per_square, kInnerLength, *x_out,
+					*y_out);
 		}
 
 		// expected mask
@@ -219,6 +221,41 @@ private:
 		start_index_local += num_points_side;
 		DrawSide(start_index_local, num_points_side, -half_length, 0.0,
 				-half_length, separation, x, y);
+	}
+};
+
+template<typename ParamSet>
+struct FailedSquareShapeInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
+				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
+		*status_expected = sakura_Status_kInvalidArgument;
+	}
+};
+
+template<typename ParamSet>
+struct UserDefinedRangeSquareShapeInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
+				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
+		for (size_t i = 0; i < num_data; ++i) {
+			mask_expected[i] = false;
+		}
+		// outermost square is excluded by the user-defined range
+		size_t mask_length = fraction * static_cast<float>(num_data);
+		for (size_t i = 0; i < mask_length; ++i) {
+			mask_expected[i + 100] = true;
+		}
 	}
 };
 
@@ -292,8 +329,9 @@ struct CircularShapeInitializer {
 
 typedef SquareShapeInitializer<StandardSquareParamSet> StandardSquare;
 typedef SquareShapeInitializer<WiderSquareParamSet> WiderSquare;
+typedef FailedSquareShapeInitializer<StandardSquareParamSet> FailedSquare;
+typedef UserDefinedRangeSquareShapeInitializer<WiderSquareParamSet> UserDefinedRangeSquare;
 typedef CircularShapeInitializer<StandardCircularParamSet> StandardCircle;
-
 
 struct NullChecker {
 	static void Check(size_t num_data, bool const mask[],
@@ -312,8 +350,8 @@ struct StandardChecker {
 
 struct PerformanceTestOutput {
 	static void Print(std::string const test_name, double elapsed_time) {
-		std::cout << "#x# benchmark " << test_name << " "
-				<< elapsed_time << std::endl;
+		std::cout << "#x# benchmark " << test_name << " " << elapsed_time
+				<< std::endl;
 	}
 };
 
@@ -324,13 +362,12 @@ struct NullOutput {
 
 // FAILURE CASES
 TEST_MASK(NagativeFraction) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10,
-			-0.1f, 0.5);
+	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, -0.1f,
+			0.5);
 }
 
 TEST_MASK(FractionLargerThanOne) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 1.5f,
-			0.5);
+	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 1.5f, 0.5);
 }
 
 TEST_MASK(NegativePixelScale) {
@@ -339,22 +376,40 @@ TEST_MASK(NegativePixelScale) {
 }
 
 TEST_MASK(ZeroPixelScale) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f,
-			0.0);
+	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f, 0.0);
 }
 
 TEST_MASK(ArrayNotAligned) {
 	// x is not aligned
-	RunTest<NotAlignedXInitializer, NullOutput, NullChecker>(10, 0.1f,
-			0.5);
+	RunTest<NotAlignedXInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
 
 	// y is not aligned
-	RunTest<NotAlignedYInitializer, NullOutput, NullChecker>(10, 0.1f,
-			0.5);
+	RunTest<NotAlignedYInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
 
 	// mask is not aligned
-	RunTest<NotAlignedMaskInitializer, NullOutput, NullChecker>(10, 0.1f,
-			0.5);
+	RunTest<NotAlignedMaskInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
+}
+
+TEST_MASK(InvalidUserDefinedRange) {
+	// all data are located at left side of user defined bottom left corner
+	double blc_x = 11.0;
+	RunTest<FailedSquare, NullOutput, NullChecker>(1000, 0.1f, 0.5, &blc_x,
+	NULL, NULL, NULL);
+
+	// all data are located at right side of user defined top right corner
+	double trc_x = -11.0;
+	RunTest<FailedSquare, NullOutput, NullChecker>(1000, 0.1f, 0.5, NULL,
+	NULL, &trc_x, NULL);
+
+	// all data are located at lower side of user defined bottom left corner
+	double blc_y = 11.0;
+	RunTest<FailedSquare, NullOutput, NullChecker>(1000, 0.1f, 0.5, NULL,
+			&blc_y, NULL, NULL);
+
+	// all data are located at lower side of user defined top right corner
+	double trc_y = -11.0;
+	RunTest<FailedSquare, NullOutput, NullChecker>(1000, 0.1f, 0.5, NULL,
+	NULL, NULL, &trc_y);
 }
 
 // SUCCESSFUL CASES
@@ -386,12 +441,25 @@ TEST_MASK(FractionTwentyPercent) {
 	RunTest<StandardCircle, NullOutput, StandardChecker>(1000, 0.2f, 0.5);
 }
 
+TEST_MASK(ValidUserDefinedRange) {
+	double blc_x = -5.0;
+	double blc_y = -5.0;
+	double trc_x = 5.0;
+	double trc_y = 5.0;
+	RunTest<UserDefinedRangeSquare, NullOutput, StandardChecker>(1000, 0.1f,
+			0.5, &blc_x, &blc_y, &trc_x, &trc_y);
+}
+
+// PERFORMANCE TEST
 TEST_MASK(LargeNumDataPerforamnce) {
-	RunTest<StandardSquare, PerformanceTestOutput, StandardChecker>(40000,
-			0.1f, 0.5, "MaskDataNearEdge_LargeNumDataPerformance");
+	RunTest<StandardSquare, PerformanceTestOutput, StandardChecker>(40000, 0.1f,
+			0.5, NULL, NULL, NULL, NULL,
+			"MaskDataNearEdge_LargeNumDataPerformance");
 }
 
 TEST_MASK(LargeAreaPerformance) {
 	RunTest<WiderSquare, PerformanceTestOutput, StandardChecker>(1000, 0.1f,
-			0.5, "MaskDataNearEdge_LargeAreaPerformance");
+			0.5, NULL, NULL, NULL, NULL,
+			"MaskDataNearEdge_LargeAreaPerformance");
 }
+
