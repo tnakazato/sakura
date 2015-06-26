@@ -1992,7 +1992,46 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 /**
+ * @brief Create mask
  *
+ * Based on two dimensional position distribution given by @a x and @a y,
+ * CreateMaskNearEdgeDouble creates mask for each data point. The algorithm
+ * is as follows:
+ *
+ * -# Conversion stage
+ * Position distribution given by @a x and @a y are converted to pixel coordinate.
+ * Pixel size is calculated based on median separation between neighboring two positions
+ * with scaling factor provided by user, @a pixel_scale.
+ *
+ * -# Count stage
+ * Prepare pixel data that covers all positions. Count up data points in each pixel.
+ *
+ * -# Binalization stage
+ * Binarize pixel data. Pixel value is set to one if it has non-zero value. Zero remains zero.
+ *
+ * -# Fill stage
+ * Fill zero pixels bracketed by one with one. It is repeated until there is no update on
+ * pixel values.
+ *
+ * -# Detection stage
+ * Find the area that has non-zero value, detect edge of the area, and mask data points
+ * that belong to edges, i.e., mask for data in the edge are set to true. The process is
+ * repeated until number of masked position exceeds the threshold given by
+ * @a num_data times @a fraction.
+ *
+ * @param[in] fraction Fraction of the data to be masked. Threshold for mask operation
+ * is evaluated by @a fraction times @a num_data. 0 <= @a fraction <= 1.
+ * @param[in] pixel_scale Size of the pixel as a fraction of median separation between
+ * neighboring two positions that are provided by @a x and @a y. @a pixel_size must be
+ * greater than 0. Setting 0.5 works most of the case.
+ * @param[in] num_data Number of data.
+ * @param[in] x List of horizontal positions. The length must be @a num_data.
+ * must-be-aligned
+ * @param[in] y List of vertical positions. The length must be @a num_data.
+ * must-be-aligned
+ * @param[out] mask Output mask. The points near edge will be masked, i.e., mask value
+ * will be set to true for those points.
+ * must-be-aligned
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(float fraction,
 		double pixel_scale, size_t num_data, double const x[], double const y[],
