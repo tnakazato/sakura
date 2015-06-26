@@ -55,7 +55,7 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 			mask_storage, &x, &y, &mask, mask_expected, &status_expected);
 
 	double start_time = sakura_GetCurrentTime();
-	sakura_Status status = sakura_MaskDataNearEdge(fraction, pixel_scale,
+	sakura_Status status = sakura_CreateMaskNearEdgeDouble(fraction, pixel_scale,
 			num_data, x, y, mask);
 	double end_time = sakura_GetCurrentTime();
 	Printer::Print(test_name, end_time - start_time);
@@ -66,7 +66,7 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 	sakura_CleanUp();
 }
 
-#define TEST_MASK(Name) TEST(MaskDataNearEdgeTest, Name)
+#define TEST_MASK(Name) TEST(CreateMaskNearEdgeTest, Name)
 
 struct InvalidArgumentInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],

@@ -415,7 +415,7 @@ inline LIBSAKURA_SYMBOL(Status) ImproveDetection(size_t num_mask,
  *        isolated unmasked points are masked.
  */
 template<typename DataType>
-inline LIBSAKURA_SYMBOL(Status) MaskDataNearEdge(float fraction,
+inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 		DataType pixel_scale, size_t num_data, DataType const x[],
 		DataType const y[], bool mask[]) {
 	// do nothing if effective fraction is zero
@@ -499,7 +499,7 @@ inline LIBSAKURA_SYMBOL(Status) MaskDataNearEdge(float fraction,
 	} \
 } while (false)
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 		float fraction, double pixel_scale, size_t num_data, double const x[],
 		double const y[], bool mask[]) {
 	// Argument check
@@ -510,7 +510,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
 
 	try {
-		return MaskDataNearEdge(fraction, pixel_scale, num_data, x, y, mask);
+		return CreateMaskNearEdge(fraction, pixel_scale, num_data, x, y, mask);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");

@@ -1994,7 +1994,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 /**
  *
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(MaskDataNearEdge)(float fraction,
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(float fraction,
 		double pixel_scale, size_t num_data, double const x[], double const y[],
 		bool mask[]);
 

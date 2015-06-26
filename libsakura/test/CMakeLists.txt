@@ -88,7 +88,7 @@ add_executable(testNumericOperation      numeric_operation.cc)
 add_executable(testStatistics            statistics.cc)
 add_executable(testFFT fft.cc)
 add_executable(testCInterface c_interface.c)
-add_executable(testMaskDataNearEdge      mask_edge.cc)
+add_executable(testCreateMaskNearEdge    mask_edge.cc)
 
 target_link_libraries (testBaseline              gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBaselineKS            gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
@@ -106,7 +106,7 @@ target_link_libraries (testNumericOperation      gtest_main gtest sakura -L${PRO
 target_link_libraries (testStatistics            gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testFFT 						gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testCInterface sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testMaskDataNearEdge      gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testCreateMaskNearEdge      gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 
 add_dependencies(testInit logConfig)
 
@@ -129,7 +129,7 @@ add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --
 add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX --gtest_filter="-*Performance*"   DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY --gtest_filter="-*Performance*"   DEPENDS testInterpolationY)
 add_custom_target(testCInterfaceRun            COMMAND ./testCInterface            DEPENDS testCInterface)
-add_custom_target(testMaskDataNearEdgeRun      COMMAND ./testMaskDataNearEdge      DEPENDS testMaskDataNearEdge)
+add_custom_target(testCreateMaskNearEdgeRun      COMMAND ./testCreateMaskNearEdge      DEPENDS testCreateMaskNearEdge)
 
 # テストの順序
 # 1 より低レベルのもの(他のテストの前提となる、初期化とかログとかメモリー管理とか)
@@ -153,5 +153,5 @@ add_custom_target(test
 	COMMAND ./testConvolution
 	COMMAND ./testFFT
 	COMMAND ./testCInterface
-	COMMAND ./testMaskDataNearEdge
+	COMMAND ./testCreateMaskNearEdge
 	)
