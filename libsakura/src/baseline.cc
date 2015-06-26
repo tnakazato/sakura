@@ -286,7 +286,7 @@ inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
 	return res;
 }
 
-inline void OperateFloatSubtraction(size_t num_in, float const *in1_arg,
+inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
 		double const *in2_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
@@ -585,7 +585,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 		float *residual_data) {
 	AddMulMatrix(num_coeff, coeff, use_idx, num_data, context->num_bases,
 			context->basis_data, best_fit_model);
-	OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
+	OperateSubtractionFloat(num_data, data, best_fit_model, residual_data);
 }
 
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
@@ -597,7 +597,7 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 	assert(context->num_bases == kNumBasesCubicSpline);
 	AddMulMatrixCubicSpline(num_pieces, boundary, coeff_full, num_data,
 			context->basis_data, best_fit_model);
-	OperateFloatSubtraction(num_data, data, best_fit_model, residual_data);
+	OperateSubtractionFloat(num_data, data, best_fit_model, residual_data);
 }
 
 inline void ClipData(size_t num_piece, size_t const *piece_start_arg,
