@@ -1198,6 +1198,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		//float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1219,7 +1220,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms;
+		float rms; //<----------remove when rms is added as an argument
 		SubtractBaselineFloat(context, order, 0, nullptr, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
 				&rms, out, baseline_status);
@@ -1242,6 +1243,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		//float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1262,7 +1264,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms;
+		float rms; //<----------remove when rms is added as an argument
 		SubtractBaselineCubicSplineFloat(context, num_pieces, num_data, data,
 				mask, clip_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, &rms, out, baseline_status);
@@ -1286,6 +1288,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/],
+		//float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1310,7 +1313,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms;
+		float rms; //<----------remove when rms is added as an argument
 		SubtractBaselineFloat(context, 0, num_nwave, nwave, num_data, data,
 				mask, clip_threshold_sigma, num_fitting_max, get_residual,
 				final_mask, &rms, out, baseline_status);
@@ -1332,6 +1335,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
+		//float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1350,7 +1354,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms;
+		float rms; //<----------remove when rms is added as an argument
 		GetBestFitBaselineCoefficientsFloat(context, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, 0, nullptr, num_coeff,
 				coeff, final_mask, &rms, baseline_status);
@@ -1373,6 +1377,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*kNumBasesCubicSpline*/],
 		bool final_mask[/*num_data*/],
+		//float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1393,7 +1398,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms;
+		float rms; //<----------remove when rms is added as an argument
 		GetBestFitBaselineCoefficientsCubicSplineFloat(context, num_data, data,
 				mask, clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
 				final_mask, &rms, baseline_status);
@@ -1416,6 +1421,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
+		//float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1441,7 +1447,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms;
+		float rms; //<----------remove when rms is added as an argument
 		GetBestFitBaselineCoefficientsFloat(context, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, num_nwave, nwave,
 				num_coeff, coeff, final_mask, &rms, baseline_status);
