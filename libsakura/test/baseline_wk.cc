@@ -2551,36 +2551,34 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCaseWithMaske
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) coeff_status;
 	for (size_t i = 0; i < 4; ++i) {
+		size_t num_masked_idx = 1;
+		if (i == 3) num_masked_idx = 2;
+		size_t masked_idx[num_masked_idx];
 		if (i == 0) { // masked at about the middle
-			size_t masked_idx = ELEMENTSOF(in_data)/2;
-			mask[masked_idx] = false;
-			in_data[masked_idx] = 10.0; // spike, which should not affect the fitting result
+			masked_idx[0] = ELEMENTSOF(in_data)/2;
 		} else if (i == 1) { // masked at left edge
-			size_t masked_idx = 0;
-			mask[masked_idx] = false;
-			in_data[masked_idx] = 10.0; // spike, which should not affect the fitting result
+			masked_idx[0] = 0;
 		} else if (i == 2) { // masked at right edge
-			size_t masked_idx = ELEMENTSOF(in_data)-1;
-			mask[masked_idx] = false;
-			in_data[masked_idx] = 10.0; // spike, which should not affect the fitting result
+			masked_idx[0] = ELEMENTSOF(in_data)-1;
 		} else if (i == 3) { // masked at both edges
-			size_t masked_idx[2] = {0, ELEMENTSOF(in_data)-1};
-			for (size_t j = 0; j < 2; ++j) {
-				mask[masked_idx[j]] = false;
-				in_data[masked_idx[j]] = 10.0; // spike, which should not affect the fitting result
-			}
+			masked_idx[0] = 0;
+			masked_idx[1] = ELEMENTSOF(in_data)-1;
+		}
+		for (size_t j = 0; j < num_masked_idx; ++j) {
+			mask[masked_idx[j]] = false;
+			in_data[masked_idx[j]] = 10.0; // spike, which should not affect the fitting result
 		}
 		coeff_status = LIBSAKURA_SYMBOL(
 				GetBestFitBaselineCoefficientsSinusoidFloat)(context, num_data,
 				in_data, mask, 5.0f, 1, num_nwave, nwave, num_coeff, out, mask,
 				&baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+		for (size_t j = 0; j < ELEMENTSOF(answer); ++j) {
+		        CheckAlmostEqual(answer[j], out[j], 1.0e-6);
+		}
 	}
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
-	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
-		CheckAlmostEqual(answer[i], out[i], 1.0e-6);
-	}
 	if (verbose) {
 		PrintArray("data  ", num_data, in_data);
 		PrintArray("out   ", ELEMENTSOF(answer), out);
@@ -3106,7 +3104,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCaseWithMaskedData) {
 			masked_idx[0] = 0;
 			masked_idx[1] = ELEMENTSOF(in_data)-1;
 		}
-		for (size_t j = 0; j < 2; ++j) {
+		for (size_t j = 0; j < num_masked_idx; ++j) {
 			mask[masked_idx[j]] = false;
 			in_data[masked_idx[j]] = 10.0; // spike, which should not affect the fitting result
 		}
@@ -3115,9 +3113,9 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCaseWithMaskedData) {
 				out, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
-		for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
-			if (mask[i]) {
-				CheckAlmostEqual(answer[i], out[i], 5.0e-6);
+		for (size_t k = 0; k < ELEMENTSOF(answer); ++k) {
+			if (mask[k]) {
+				CheckAlmostEqual(answer[k], out[k], 5.0e-6);
 			}
 		}
 	}
