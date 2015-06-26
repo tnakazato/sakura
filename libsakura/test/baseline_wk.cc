@@ -2520,6 +2520,81 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCase) {
 
 /*
  * Test GetBestFitBaselineCoefficientsSinusoid
+ * successful cases with masked data
+ */
+TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidSuccessfulCaseWithMaskedData) {
+	size_t const num_data = NUM_DATA2;
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+	size_t nwave[num_nwave] = { 0, 1, 2 };
+	size_t num_coeff = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+	double coeff[num_coeff];
+	SetDoubleConstant(1.0, num_coeff, coeff);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+			context_nwave, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	SIMD_ALIGN
+	double out[ELEMENTSOF(coeff)];
+	double answer[ELEMENTSOF(coeff)];
+	for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+		answer[i] = coeff[i];
+	}
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	LIBSAKURA_SYMBOL (Status) coeff_status;
+	for (size_t i = 0; i < 4; ++i) {
+		if (i == 0) { // masked at about the middle
+			size_t masked_idx = ELEMENTSOF(in_data)/2;
+			mask[masked_idx] = false;
+			in_data[masked_idx] = 10.0; // spike, which should not affect the fitting result
+		} else if (i == 1) { // masked at left edge
+			size_t masked_idx = 0;
+			mask[masked_idx] = false;
+			in_data[masked_idx] = 10.0; // spike, which should not affect the fitting result
+		} else if (i == 2) { // masked at right edge
+			size_t masked_idx = ELEMENTSOF(in_data)-1;
+			mask[masked_idx] = false;
+			in_data[masked_idx] = 10.0; // spike, which should not affect the fitting result
+		} else if (i == 3) { // masked at both edges
+			size_t masked_idx[2] = {0, ELEMENTSOF(in_data)-1};
+			for (size_t j = 0; j < 2; ++j) {
+				mask[masked_idx[j]] = false;
+				in_data[masked_idx[j]] = 10.0; // spike, which should not affect the fitting result
+			}
+		}
+		coeff_status = LIBSAKURA_SYMBOL(
+				GetBestFitBaselineCoefficientsSinusoidFloat)(context, num_data,
+				in_data, mask, 5.0f, 1, num_nwave, nwave, num_coeff, out, mask,
+				&baseline_status);
+	}
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+		CheckAlmostEqual(answer[i], out[i], 1.0e-6);
+	}
+	if (verbose) {
+		PrintArray("data  ", num_data, in_data);
+		PrintArray("out   ", ELEMENTSOF(answer), out);
+		PrintArray("answer", ELEMENTSOF(answer), answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+}
+
+/*
+ * Test GetBestFitBaselineCoefficientsSinusoid
  * time-consuming successful case for performance measurement
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidPerformanceTest) {
@@ -2983,6 +3058,80 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
 		}
 		cout << endl;
 	}
+}
+
+/*
+ * Test SubtractBaselineSinusoid
+ * successful cases with masked data
+ */
+TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCaseWithMaskedData) {
+	size_t const num_data = NUM_DATA2;
+	size_t const dummy = 1;
+	size_t const context_nwave = 2;
+	size_t const num_nwave = 3;
+	size_t nwave[num_nwave] = { 0, 1, 2 };
+	size_t num_coeff = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
+	double coeff[num_coeff];
+	SetDoubleConstant(1.0, num_coeff, coeff);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, in_data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(in_data)];
+	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
+			context_nwave, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	SIMD_ALIGN
+	float out[ELEMENTSOF(in_data)];
+	float answer[ELEMENTSOF(in_data)];
+	for (size_t i = 0; i < ELEMENTSOF(coeff); ++i) {
+		SetFloatConstant(0.0f, ELEMENTSOF(answer), answer);
+	}
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+	LIBSAKURA_SYMBOL (Status) sub_status;
+	for (size_t i = 0; i < 4; ++i) {
+		size_t num_masked_idx = 1;
+		if (i == 3) num_masked_idx = 2;
+		size_t masked_idx[num_masked_idx];
+		if (i == 0) { // masked at about the middle
+			masked_idx[0] = ELEMENTSOF(in_data)/2;
+		} else if (i == 1) { // masked at left edge
+			masked_idx[0] = 0;
+		} else if (i == 2) { // masked at right edge
+			masked_idx[0] = ELEMENTSOF(in_data)-1;
+		} else if (i == 3) { // masked at both edges
+			masked_idx[0] = 0;
+			masked_idx[1] = ELEMENTSOF(in_data)-1;
+		}
+		for (size_t j = 0; j < 2; ++j) {
+			mask[masked_idx[j]] = false;
+			in_data[masked_idx[j]] = 10.0; // spike, which should not affect the fitting result
+		}
+		sub_status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
+				num_nwave, nwave, num_data, in_data, mask, 5.0f, 1, true, mask,
+				out, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+		for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
+			if (mask[i]) {
+				CheckAlmostEqual(answer[i], out[i], 5.0e-6);
+			}
+		}
+	}
+
+	if (verbose) {
+		PrintArray("data  ", num_data, in_data);
+		PrintArray("out   ", ELEMENTSOF(answer), out);
+		PrintArray("answer", ELEMENTSOF(answer), answer);
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
+			context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
 }
 
 /*
