@@ -2843,9 +2843,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesUnaligned
  *     (6) num_nwave == 0
  *     (7) nwave with duplicated elements
  *     (8) nwave with not in ascending order
- *     (9) num_coeff < (!=) proper value for given nwave
- *     (10) num_coeff > (!=) proper value for given nwave
- *     (11) num_coeff > context->num_bases
+ *     (9) maximum nwave to create context < maximum given nwave
+ *     (10) num_coeff > context->num_bases
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesBadParameterValue) {
 	enum BVItems {
@@ -2857,8 +2856,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesBadParame
 		BV_kNumNWaveZero,
 		BV_kNWaveDuplicated,
 		BV_kNWaveNotAscending,
-		BV_kNumCoeffLTProperValue,
-		BV_kNumCoeffGTProperValue,
+		BV_kGivenTooLargeMaximumNWave,
 		BV_kNumCoeffGTNumBases,
 		BV_kNumElems
 	};
@@ -2867,7 +2865,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesBadParame
 			"(num_data > context->num_basis_data)",
 			"(clip_threshold_sigma == 0)", "(clip_threshold_sigma < 0)",
 			"(num_nwave == 0)", "(nwave duplicated)", "(nwave not ascending)",
-			"(num_coeff < proper value)", "(num_coeff > proper value)",
+			"(context_max_nwave < given_max_nwave)",
 			"(num_coeff > context->num_bases)" };
 	cout << "    Testing for cases " << endl;
 
@@ -2918,10 +2916,9 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidErroneousCasesBadParame
 			nwave[1] = nwave[0];
 			nwave[0] = tmp_nwave;
 			break;
-		case BV_kNumCoeffLTProperValue:
-			num_coeff = num_coeff_by_nwave - 1;
+		case BV_kGivenTooLargeMaximumNWave:
+			nwave[num_nwave-1] = context_nwave + 10;
 			break;
-		case BV_kNumCoeffGTProperValue:
 		case BV_kNumCoeffGTNumBases:
 			num_coeff = num_coeff_by_nwave + 1;
 			break;
@@ -3382,7 +3379,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
  *     (6) num_nwave == 0
  *     (7) nwave with duplicated elements
  *     (8) nwave with not in ascending order
- *     (9) num_bases computed for given nwave > context->num_bases
+ *     (9) max_nwave in context < given max_nwave
+ *     (10) num_bases computed for given nwave > context->num_bases
  */
 TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesBadParameterValue) {
 	enum BVItems {
@@ -3394,6 +3392,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesBadParameterValue) {
 		BV_kNumNWaveZero,
 		BV_kNWaveDuplicated,
 		BV_kNWaveNotAscending,
+		BV_kGivenTooLargeMaximumNWave,
 		BV_kNumBasesByNWaveGTNumBases,
 		BV_kNumElems
 	};
@@ -3402,6 +3401,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesBadParameterValue) {
 			"(num_data > context->num_basis_data)",
 			"(clip_threshold_sigma == 0)", "(clip_threshold_sigma < 0)",
 			"(num_nwave == 0)", "(nwave duplicated)", "(nwave not ascending)",
+			"(context_max_nwave < given_max_nwave)",
 			"(num_bases by given nwave > context->num_bases)" };
 	cout << "    Testing for cases " << endl;
 
@@ -3449,6 +3449,9 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesBadParameterValue) {
 			tmp_nwave = nwave[1];
 			nwave[1] = nwave[0];
 			nwave[0] = tmp_nwave;
+			break;
+		case BV_kGivenTooLargeMaximumNWave:
+			nwave[num_nwave-1] = context_nwave + 10;
 			break;
 		case BV_kNumBasesByNWaveGTNumBases:
 			context_nwave = 1;
@@ -3804,9 +3807,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesUnalig
  *     (4) num_nwave == 0
  *     (5) nwave with duplicated elements
  *     (6) nwave with not in ascending order
- *     (7) num_coeff < (!=) proper value for given nwave
- *     (8) num_coeff > (!=) proper value for given nwave
- *     (9) num_coeff > context->num_bases
+ *     (7) max_nwave in context < given max_nwave
+ *     (8) num_coeff > context->num_bases
  */
 TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadParameterValue) {
 	enum BVItems {
@@ -3816,8 +3818,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadPar
 		BV_kNumNWaveZero,
 		BV_kNWaveDuplicated,
 		BV_kNWaveNotAscending,
-		BV_kNumCoeffLTProperValue,
-		BV_kNumCoeffGTProperValue,
+		BV_kGivenTooLargeMaximumNWave,
 		BV_kNumCoeffGTNumBases,
 		BV_kNumElems
 	};
@@ -3826,7 +3827,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadPar
 			"(num_data > context->num_basis_data)",
 			"(clip_threshold_sigma == 0)", "(clip_threshold_sigma < 0)",
 			"(num_nwave == 0)", "(nwave duplicated)", "(nwave not ascending)",
-			"(num_coeff < proper value)", "(num_coeff > proper value)",
+			"(context_max_nwave < given_max_nwave)",
 			"(num_coeff > context->num_bases)" };
 	cout << "    Testing for cases " << endl;
 
@@ -3870,10 +3871,9 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadPar
 			nwave[1] = nwave[0];
 			nwave[0] = tmp_nwave;
 			break;
-		case BV_kNumCoeffLTProperValue:
-			num_coeff = num_coeff_by_nwave - 1;
+		case BV_kGivenTooLargeMaximumNWave:
+			nwave[num_nwave-1] = context_nwave + 10;
 			break;
-		case BV_kNumCoeffGTProperValue:
 		case BV_kNumCoeffGTNumBases:
 			num_coeff = num_coeff_by_nwave + 1;
 			break;

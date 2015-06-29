@@ -1316,9 +1316,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
-	size_t num_bases_from_nwave = GetNumberOfBasesFromOrder(
-			context->baseline_type, 0, num_nwave, nwave);
-	CHECK_ARGS(num_bases_from_nwave <= context->num_bases);
+	CHECK_ARGS(nwave[num_nwave-1] <= context->baseline_param);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
@@ -1456,9 +1454,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
-	size_t num_coeff_by_nwave = GetNumberOfBasesFromOrder(
-			context->baseline_type, 0, num_nwave, nwave);
-	CHECK_ARGS(num_coeff == num_coeff_by_nwave);
+	CHECK_ARGS(nwave[num_nwave-1] <= context->baseline_param);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -1566,9 +1562,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
-	size_t num_coeff_by_nwave = GetNumberOfBasesFromOrder(
-			context->baseline_type, 0, num_nwave, nwave);
-	CHECK_ARGS(num_coeff == num_coeff_by_nwave);
+	CHECK_ARGS(nwave[num_nwave-1] <= context->baseline_param);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
