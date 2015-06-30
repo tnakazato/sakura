@@ -349,7 +349,7 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 		size_t num_data, DataType const pixel_x[], DataType const pixel_y[],
 		bool mask[], size_t *num_masked) {
 
-	assert(fraction < 1.0f);
+	assert(fraction <= 1.0f);
 	size_t threshold = static_cast<size_t>(static_cast<float>(num_data)
 			* fraction);
 
