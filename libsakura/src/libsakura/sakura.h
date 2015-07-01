@@ -1554,8 +1554,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t const order, size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		//float *rms,
+		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1600,8 +1599,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_pieces, size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		//float *rms, double boundary[/*num_pieces*/],
+		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
+		double boundary[/*num_pieces*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1650,8 +1649,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		//float *rms,
+		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1693,8 +1691,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
-		bool final_mask[/*num_data*/],
-		//float *rms,
+		bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1738,7 +1735,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*4*num_piece*/], bool final_mask[/*num_data*/],
-		//float *rms, double boundary[/*num_pieces*/],
+		float *rms, double boundary[/*num_pieces*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1789,8 +1786,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
-		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
-		//float *rms,
+		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 

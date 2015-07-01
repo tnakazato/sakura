@@ -906,7 +906,7 @@ inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
 }
 
 inline void SubtractBaselineFloat(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
 		size_t const num_nwave, size_t const *nwave, size_t num_data,
 		float const *data_arg, bool const *mask_arg, float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual, bool *final_mask_arg,
@@ -1026,8 +1026,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		}
 	}
 	DoSubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
-			num_fitting_max, num_coeff, use_bases_idx, coeff, final_mask, rms, true,
-			nullptr, baseline_status);
+			num_fitting_max, num_coeff, use_bases_idx, coeff, final_mask, rms,
+			true, nullptr, baseline_status);
 }
 
 inline void GetBestFitBaselineCoefficientsCubicSplineFloat(
@@ -1211,8 +1211,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		//float *rms,
+		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1234,10 +1233,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms; //<----------remove when rms is added as an argument
 		SubtractBaselineFloat(context, order, 0, nullptr, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, get_residual, final_mask,
-				&rms, out, baseline_status);
+				rms, out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1252,12 +1250,12 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		//float *rms, double boundary[/*num_pieces*/],
+		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
+		double boundary[/*num_pieces*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1273,18 +1271,16 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	CHECK_ARGS(clip_threshold_sigma > 0.0f);
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
-	//CHECK_ARGS(boundary != nullptr);
-	//CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
+	CHECK_ARGS(boundary != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms; //<----------remove when rms is added as an argument
-		double *boundary = nullptr; //<----------remove when boundary is added as an argument
 		SubtractBaselineCubicSplineFloat(context, num_pieces, num_data, data,
 				mask, clip_threshold_sigma, num_fitting_max, get_residual,
-				final_mask, &rms, boundary, out, baseline_status);
+				final_mask, rms, boundary, out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1299,13 +1295,12 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
-		size_t const nwave[/*num_nwave*/], size_t num_data,
-		float const data[/*num_data*/],
+		LIBSAKURA_SYMBOL(BaselineContext) const *context,
+		size_t const num_nwave, size_t const nwave[/*num_nwave*/],
+		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
-		bool final_mask[/*num_data*/], float out[/*num_data*/],
-		//float *rms,
+		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1316,7 +1311,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
-	CHECK_ARGS(nwave[num_nwave-1] <= context->baseline_param);
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
@@ -1328,10 +1323,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms; //<----------remove when rms is added as an argument
 		SubtractBaselineFloat(context, 0, num_nwave, nwave, num_data, data,
 				mask, clip_threshold_sigma, num_fitting_max, get_residual,
-				final_mask, &rms, out, baseline_status);
+				final_mask, rms, out, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1346,11 +1340,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
-		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
-		//float *rms,
+		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1369,10 +1362,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms; //<----------remove when rms is added as an argument
 		GetBestFitBaselineCoefficientsFloat(context, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, 0, nullptr, num_coeff,
-				coeff, final_mask, &rms, baseline_status);
+				coeff, final_mask, rms, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1387,12 +1379,12 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*kNumBasesCubicSpline*/],
-		bool final_mask[/*num_data*/],
-		//float *rms, double boundary[/*num_pieces*/],
+		bool final_mask[/*num_data*/], float *rms,
+		double boundary[/*num_pieces*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1410,16 +1402,14 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
-	//CHECK_ARGS(boundary != nullptr);  //<---will uncomment
-	//CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));  //<---will uncomment
+	CHECK_ARGS(boundary != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms; //<----------remove when rms is added as an argument
-		double * boundary = nullptr; //<----------remove when boundary is added as an argument
 		GetBestFitBaselineCoefficientsCubicSplineFloat(context, num_data, data,
 				mask, clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
-				final_mask, &rms, boundary, baseline_status);
+				final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1434,12 +1424,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
-		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/],
-		//float *rms,
+		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1454,7 +1443,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
-	CHECK_ARGS(nwave[num_nwave-1] <= context->baseline_param);
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -1463,10 +1452,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		float rms; //<----------remove when rms is added as an argument
 		GetBestFitBaselineCoefficientsFloat(context, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, num_nwave, nwave,
-				num_coeff, coeff, final_mask, &rms, baseline_status);
+				num_coeff, coeff, final_mask, rms, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1562,7 +1550,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
-	CHECK_ARGS(nwave[num_nwave-1] <= context->baseline_param);
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
