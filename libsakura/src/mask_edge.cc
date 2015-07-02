@@ -128,14 +128,12 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 		double yi = y[i];
 		if (blc_x <= xi && xi <= trc_x) {
 			pixel_x[i] = pixel_center_x + (x[i] - *center_x) / *pixel_width;
-		}
-		else {
+		} else {
 			pixel_x[i] = kOutOfRangeValue;
 		}
 		if (blc_y <= yi && yi <= trc_y) {
 			pixel_y[i] = pixel_center_y + (y[i] - *center_y) / *pixel_width;
-		}
-		else {
+		} else {
 			pixel_y[i] = kOutOfRangeValue;
 		}
 	}
@@ -376,13 +374,15 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 		for (size_t i = 0; i < num_data; ++i) {
 			size_t ix = static_cast<size_t>(std::round(pixel_x[i]));
 			size_t iy = static_cast<size_t>(std::round(pixel_y[i]));
-			assert(ix < num_horizontal);
-			assert(iy < num_vertical);
-			size_t index = ix * num_vertical + iy;
-			assert(index < num_pixel);
-			if (mask[i] == false && edge[index] == 1) {
-				mask[i] = true;
-				++num_masked_local;
+			if (ix < num_horizontal && iy < num_vertical) {
+				assert(ix < num_horizontal);
+				assert(iy < num_vertical);
+				size_t index = ix * num_vertical + iy;
+				assert(index < num_pixel);
+				if (mask[i] == false && edge[index] == 1) {
+					mask[i] = true;
+					++num_masked_local;
+				}
 			}
 		}
 
@@ -451,8 +451,8 @@ bool mask[]) {
 template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 		DataType pixel_scale, size_t num_data, DataType const x[],
-		DataType const y[], DataType const *blc_x, DataType const *blc_y, DataType const *trc_x,
-		DataType const *trc_y, bool mask[]) {
+		DataType const y[], DataType const *blc_x, DataType const *blc_y,
+		DataType const *trc_x, DataType const *trc_y, bool mask[]) {
 	// do nothing if effective fraction is zero
 	if (fraction * static_cast<float>(num_data) < 1.0f) {
 		for (size_t i = 0; i < num_data; ++i) {
