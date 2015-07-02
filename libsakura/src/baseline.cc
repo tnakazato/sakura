@@ -957,7 +957,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		size_t num_data, float const *data_arg,
 		bool const *mask_arg, float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual, bool *final_mask_arg,
-		float *rms, double *boundary, float *out_arg,
+		float *rms, double *boundary_arg, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	if (context->baseline_type != LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 		throw std::invalid_argument(
@@ -970,12 +970,12 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	//assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg)); //<-- will uncomment
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));  //<-- will uncomment
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto const data = AssumeAligned(data_arg);
 	auto const mask = AssumeAligned(mask_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
-	//auto boundary = AssumeAligned(boundary_arg); //<-- will uncomment
+	auto boundary = AssumeAligned(boundary_arg); //<-- will uncomment
 	auto out = AssumeAligned(out_arg);
 
 	double *coeff_full = nullptr;
@@ -987,9 +987,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	//remove the following lines after boundary added to args of *CubicSpline().
 	//start ---------------------------------------------------------
 	//double *boundary = nullptr;
+	/*
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_boundary(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*boundary) * num_pieces, &boundary));
+	*/
 	//end ---------------------------------------------------------
 
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
@@ -1034,7 +1036,7 @@ inline void GetBestFitBaselineCoefficientsCubicSplineFloat(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const *data_arg, bool const *mask_arg, float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_pieces, double *coeff_arg,
-		bool *final_mask_arg, float *rms, double *boundary,
+		bool *final_mask_arg, float *rms, double *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1044,19 +1046,21 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	//assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	auto const data = AssumeAligned(data_arg);
 	auto const mask = AssumeAligned(mask_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
-	//auto bounary = AssumeAligned(boundary_arg);
+	auto boundary = AssumeAligned(boundary_arg);
 
 	//remove the following lines after boundary added to args of GetCoeffCSpline()
 	//start------------------------------------------------------
 	//double *boundary = nullptr;
+	/*
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_boundary(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*boundary) * num_pieces, &boundary));
+	*/
 	//end------------------------------------------------------
 
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
