@@ -105,9 +105,14 @@ inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 		float value = (i - center) * reciprocal_of_denominator;
 		kernel[middle - i] = height * exp(-(value * value));
 	}
+
+	size_t i_start = 1;
+	size_t idx_fwd = middle + plus_one_for_odd + i_start;
+	size_t idx_back = middle - i_start;
+
 	if (use_fft) {
-		for (size_t i = 1; i < loop_max; ++i) {
-			kernel[middle + i + plus_one_for_odd] = kernel[middle - i];
+		for (size_t i = i_start; i < loop_max; ++i) {
+			kernel[idx_fwd++] =kernel[idx_back--];
 		}
 	}
 
