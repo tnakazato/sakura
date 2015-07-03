@@ -35,9 +35,9 @@
 
 #include <Eigen/Core>
 #include <Eigen/LU>
-#include <Eigen/Dense>
-#include <unsupported/Eigen/NonLinearOptimization>
-#include <unsupported/Eigen/NumericalDiff>
+//#include <Eigen/Dense>
+//#include <unsupported/Eigen/NonLinearOptimization>
+//#include <unsupported/Eigen/NumericalDiff>
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -48,15 +48,16 @@ namespace {
 #include "libsakura/packed_operation.h"
 }
 
+
 using ::Eigen::Map;
 using ::Eigen::MatrixXd;
 using ::Eigen::VectorXd;
 using ::Eigen::Aligned;
 using ::Eigen::Stride;
 using ::Eigen::Dynamic;
-using ::Eigen::Matrix;
-using ::Eigen::NumericalDiff;
-using ::Eigen::LevenbergMarquardt;
+//using ::Eigen::Matrix;
+//using ::Eigen::NumericalDiff;
+//using ::Eigen::LevenbergMarquardt;
 
 namespace {
 
@@ -892,6 +893,7 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 }
 
 //--LM part--------------------------------------
+/*
 template<typename _Scalar, int NX=Dynamic, int NY=Dynamic>
 struct Functor {
 	typedef _Scalar Scalar;
@@ -921,7 +923,7 @@ struct misra1a_functor : Functor<double> {
 	int values() const { return values_; }
 };
 
-void LM(size_t const num_data, double const xa[/*num_data*/], double const ya[/*num_data*/],
+void LM(size_t const num_data, double const xa[], double const ya[],
 		double *amplitude, double *mean, double *sigma) {
 	size_t const num_value = 3;
 	VectorXd p(num_value);
@@ -938,6 +940,7 @@ void LM(size_t const num_data, double const xa[/*num_data*/], double const ya[/*
 	*mean = p[1];
 	*sigma = p[2];
 }
+*/
 //--End LM part----------------------------------
 
 } /* anonymous namespace */
@@ -951,6 +954,7 @@ void LM(size_t const num_data, double const xa[/*num_data*/], double const ya[/*
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianFloat)(
 		size_t const num_data, float const data[], bool const mask[],
 		double *amplitude, double *mean, double *sigma) noexcept {
+	/*
 	try {
 		double data_x[num_data];
 		double data_y[num_data];
@@ -962,6 +966,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianFloat)(
 	} catch (...) {
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*/
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
