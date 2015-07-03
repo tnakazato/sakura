@@ -87,8 +87,8 @@ inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 			/ static_cast<double>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	double center =
 			(num_data_for_gauss % 2 != 0) ?
-					static_cast<double>(num_data_for_gauss - 1) / 2.f :
-					static_cast<double>(num_data_for_gauss) / 2.f;
+					static_cast<double>(num_data_for_gauss - 1) / 2.d :
+					static_cast<double>(num_data_for_gauss) / 2.d;
 	size_t middle = (num_data_for_gauss) / 2;
 	size_t loop_max = middle;
 	kernel[0] = height;
