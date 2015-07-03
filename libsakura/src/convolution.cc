@@ -81,14 +81,14 @@ inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 	assert((2 * num_kernel - 1) >= 0);
 	size_t num_data_for_gauss = (use_fft) ? num_kernel : 2 * num_kernel - 1;
 	assert(kernel_width != 0);
-	float const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ static_cast<float>(kernel_width); // sqrt(log(16)) / kernel_width
-	float const height = .939437278699651333772340328410
-			/ static_cast<float>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-	float center =
+	double const reciprocal_of_denominator = 1.66510922231539551270632928979040
+			/ static_cast<double>(kernel_width); // sqrt(log(16)) / kernel_width
+	double const height = .939437278699651333772340328410
+			/ static_cast<double>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
+	double center =
 			(num_data_for_gauss % 2 != 0) ?
-					static_cast<float>(num_data_for_gauss - 1) / 2.f :
-					static_cast<float>(num_data_for_gauss) / 2.f;
+					static_cast<double>(num_data_for_gauss - 1) / 2.f :
+					static_cast<double>(num_data_for_gauss) / 2.f;
 	size_t middle = (num_data_for_gauss) / 2;
 	size_t loop_max = middle;
 	kernel[0] = height;
