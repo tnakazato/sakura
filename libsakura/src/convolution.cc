@@ -168,6 +168,11 @@ LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type, size_t kernel_width,
 bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 
 	assert(context != nullptr);
+	std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
+			LIBSAKURA_PREFIX::Memory> work_context(
+					static_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat)*>(LIBSAKURA_PREFIX::Memory::Allocate(
+							sizeof(LIBSAKURA_SYMBOL(Convolve1DContextFloat)))),
+					LIBSAKURA_PREFIX::Memory());
 	if (use_fft) {
 		size_t num_fft_kernel = num_data / 2 + 1;
 		float *real_kernel_array = nullptr;
@@ -229,11 +234,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 				real_kernel_array);
 		fftwf_execute(plan_real_to_complex_float_kernel);
 		guard_for_fft_plan_kernel.CleanUpNow();
-		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
-		LIBSAKURA_PREFIX::Memory> work_context(
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat)*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(Convolve1DContextFloat)))),
-				LIBSAKURA_PREFIX::Memory());
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
 		}
@@ -268,11 +268,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
 		Create1DKernel(num_kernel, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
-		std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
-		LIBSAKURA_PREFIX::Memory> work_context(
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat)*>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(Convolve1DContextFloat)))),
-				LIBSAKURA_PREFIX::Memory());
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
 		}
