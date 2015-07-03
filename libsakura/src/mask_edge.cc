@@ -249,12 +249,10 @@ inline LIBSAKURA_SYMBOL(Status) Fill(size_t num_max_iteration,
 		num_masked = 0;
 		for (size_t i = 0; i < num_horizontal; ++i) {
 			size_t search_start = num_vertical * i;
-			size_t search_end = search_start + num_vertical;
 			size_t increment = 1;
 			size_t start = SearchForward(search_start, increment, num_vertical,
 					pixel_mask);
 			search_start += num_vertical - 1;
-			search_end = start;
 			size_t end = SearchBackward(search_start, increment, num_vertical,
 					pixel_mask);
 			for (size_t j = start; j <= end; ++j) {
@@ -267,11 +265,9 @@ inline LIBSAKURA_SYMBOL(Status) Fill(size_t num_max_iteration,
 		for (size_t i = 0; i < num_vertical; ++i) {
 			size_t search_start = i;
 			size_t increment = num_vertical;
-			size_t search_end = search_start + increment * num_horizontal;
 			size_t start = SearchForward(search_start, increment,
 					num_horizontal, pixel_mask);
 			search_start += (num_horizontal - 1) * increment;
-			search_end = start;
 			size_t end = SearchBackward(search_start, increment, num_horizontal,
 					pixel_mask);
 			for (size_t j = start; j <= end; j += increment) {
@@ -364,6 +360,9 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					num_pixel * sizeof(size_t), &edge));
+	for (size_t i = 0; i < num_pixel; ++i) {
+		edge[i] = 0;
+	}
 
 	// iteration loop for detection of data points and edge trimming
 	do {
