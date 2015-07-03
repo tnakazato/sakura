@@ -35,6 +35,9 @@
 
 #include <Eigen/Core>
 #include <Eigen/LU>
+#include <Eigen/Dense>
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -51,6 +54,9 @@ using ::Eigen::VectorXd;
 using ::Eigen::Aligned;
 using ::Eigen::Stride;
 using ::Eigen::Dynamic;
+using ::Eigen::Matrix;
+using ::Eigen::NumericalDiff;
+using ::Eigen::LevenbergMarquardt;
 
 namespace {
 
@@ -885,6 +891,55 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 	}
 }
 
+//--LM part--------------------------------------
+template<typename _Scalar, int NX=Dynamic, int NY=Dynamic>
+struct Functor {
+	typedef _Scalar Scalar;
+	enum {
+		InputsAtCompileTime = NX,
+		ValuesAtCompileTime = NY
+	};
+	typedef Matrix<Scalar, InputsAtCompileTime, 1> InputType;
+	typedef Matrix<Scalar, ValuesAtCompileTime, 1> ValueType;
+	typedef Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime> JacobianType;
+};
+
+struct misra1a_functor : Functor<double> {
+	misra1a_functor(int inputs, int values, double *x, double *y) : inputs_(inputs), values_(values), x(x), y(y) {}
+	double *x;
+	double *y;
+	int operator()(const VectorXd &b, VectorXd &fvec) const {
+		for (int i = 0; i < values_; ++i) {
+			double v = (x[i]-b[1])/b[2];
+			fvec[i] = b[0]*exp(-0.5/M_PI*v*v) - y[i];
+		}
+		return 0;
+	}
+	const int inputs_;
+	const int values_;
+	int inputs() const { return inputs_; }
+	int values() const { return values_; }
+};
+
+void LM(size_t const num_data, double const xa[/*num_data*/], double const ya[/*num_data*/],
+		double *amplitude, double *mean, double *sigma) {
+	size_t const num_value = 3;
+	VectorXd p(num_value);
+	p << 1.0, 1.0, 1.0;
+
+	std::vector<double> x(&xa[0], &xa[num_data]);
+	std::vector<double> y(&ya[0], &ya[num_data]);
+	misra1a_functor functor(num_value, x.size(), &x[0], &y[0]);
+	NumericalDiff<misra1a_functor> numDiff(functor);
+	LevenbergMarquardt<NumericalDiff<misra1a_functor> > lm(numDiff);
+	int info = lm.minimize(p);
+	std::cout << p[0] << " " << p[1] << " " << p[2] << std::endl;
+	*amplitude = p[0];
+	*mean = p[1];
+	*sigma = p[2];
+}
+//--End LM part----------------------------------
+
 } /* anonymous namespace */
 
 #define CHECK_ARGS(x) do { \
@@ -892,6 +947,23 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument); \
 	} \
 } while (false)
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianFloat)(
+		size_t const num_data, float const data[], bool const mask[],
+		double *amplitude, double *mean, double *sigma) noexcept {
+	try {
+		double data_x[num_data];
+		double data_y[num_data];
+		for (size_t i = 0; i < num_data; ++i) {
+			data_x[i] = static_cast<double>(i);
+			data_y[i] = static_cast<double>(data[i]);
+		}
+		LM(num_data, data_x, data_y, amplitude, mean, sigma);
+	} catch (...) {
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
