@@ -152,8 +152,12 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	size_t num_basis_data = context->num_basis_data;
 	size_t num_bases = context->num_bases;
 	size_t idx = 0;
-	if (num_basis_data == 1) {
+	if (num_basis_data == 1) {   // order == 0
 		data[idx] = 1.0;
+	} else if (num_bases == 1) { // order == 0
+		for (size_t i = 0; i < num_basis_data; ++i) {
+			data[idx++] = 1.0;
+		}
 	} else {
 		double max_data_x = static_cast<double>(num_basis_data - 1);
 		for (size_t i = 0; i < num_basis_data; ++i) {
@@ -1265,6 +1269,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSpline
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
+	CHECK_ARGS(0 < num_pieces);
 	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
 	CHECK_ARGS(num_data_min <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
@@ -1394,6 +1399,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficie
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
+	CHECK_ARGS(0 < num_pieces);
 	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
 	CHECK_ARGS(num_data_min <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
@@ -1513,6 +1519,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
+	CHECK_ARGS(0 < num_pieces);
 	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
 	CHECK_ARGS(num_data_min <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
