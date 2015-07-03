@@ -166,8 +166,8 @@ protected:
 		double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < loop_max && expected_status == sakura_Status_kOK;
 				++i) {
-			status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data,
-					input_data, output_data);
+			status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFloat)(context,
+					num_data, input_data, output_data);
 			ASSERT_EQ(expected_status, status_Convolve);
 		}
 		double end_time = sakura_GetCurrentTime();
@@ -291,6 +291,61 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 				output_data, sakura_Status_kInvalidArgument, align_check,
 				verbose, loop_max);
 	}
+	{//KernelType = LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar)
+	 //Remove this test when Convolve1DKernelType_kBoxcar is implemented.
+		auto invalid_kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar);
+				size_t const kernel_width(NUM_WIDTH);
+				size_t const input_data_size(NUM_IN_LARGE);
+				size_t const num_data(input_data_size);
+				bool const use_dummy_num_data = false;
+				bool const align_check = false;
+				bool const use_fft = true;
+				bool const verbose = false;
+				size_t loop_max(1);
+				SIMD_ALIGN
+				float output_data[input_data_size];
+				RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
+						use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
+						output_data, sakura_Status_kInvalidArgument, align_check,
+						verbose, loop_max);
+	}
+	{//KernelType = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning)
+	 //Remove this test when Convolve1DKernelType_kHanning is implemented.
+		auto invalid_kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning);
+				size_t const kernel_width(NUM_WIDTH);
+				size_t const input_data_size(NUM_IN_LARGE);
+				size_t const num_data(input_data_size);
+				bool const use_dummy_num_data = false;
+				bool const align_check = false;
+				bool const use_fft = true;
+				bool const verbose = false;
+				size_t loop_max(1);
+				SIMD_ALIGN
+				float output_data[input_data_size];
+				RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
+						use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
+						output_data, sakura_Status_kInvalidArgument, align_check,
+						verbose, loop_max);
+	}
+	{//KernelType = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
+	 //Remove this test when Convolve1DKernelType_kHamming is implemented.
+		auto invalid_kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming);
+				size_t const kernel_width(NUM_WIDTH);
+				size_t const input_data_size(NUM_IN_LARGE);
+				size_t const num_data(input_data_size);
+				bool const use_dummy_num_data = false;
+				bool const align_check = false;
+				bool const use_fft = true;
+				bool const verbose = false;
+				size_t loop_max(1);
+				SIMD_ALIGN
+				float output_data[input_data_size];
+				RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
+						use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
+						output_data, sakura_Status_kInvalidArgument, align_check,
+						verbose, loop_max);
+	}
+
 	{ // KernelType == Convolve1DKernelType_kNumType
 		size_t const kernel_width(NUM_WIDTH);
 		size_t const input_data_size(NUM_IN_LARGE);
@@ -303,7 +358,8 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements),
+				use_dummy_num_data,
+				LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements),
 				kernel_width, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
