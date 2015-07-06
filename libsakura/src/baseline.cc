@@ -716,7 +716,6 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 
 			func();
 
-			//
 			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 			status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
 					residual_data, final_mask, &result);
@@ -727,28 +726,9 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 			assert(0 < result.count);
 			double mean = result.sum / result.count;
 			rms_d = sqrt(fabs(result.square_sum / result.count - mean * mean));
-			//
+
 			if (i < num_fitting_max) {
-				/*
-				 LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
-				 status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(
-				 num_data, residual_data, final_mask, &result);
-				 if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				 throw std::runtime_error(
-				 "failed in ComputeAccurateStatisticsFloat.");
-				 }
-				 assert(0 < result.count);
-				 double mean = result.sum / result.count;
-				 rms_d = sqrt(fabs(result.square_sum / result.count - mean * mean));
-				 */
 				float clip_threshold_abs = clip_threshold_sigma * rms_d;
-				/*
-				 float clip_threshold_abs = clip_threshold_sigma
-				 * sqrt(
-				 fabs(
-				 result.square_sum / result.count
-				 - mean * mean));
-				 */
 				float clip_threshold_lower = mean - clip_threshold_abs;
 				float clip_threshold_upper = mean + clip_threshold_abs;
 				ClipData(num_pieces, piece_start_indices, piece_end_indices,
