@@ -35,9 +35,11 @@
 
 #include <Eigen/Core>
 #include <Eigen/LU>
-//#include <Eigen/Dense>
-//#include <unsupported/Eigen/NonLinearOptimization>
-//#include <unsupported/Eigen/NumericalDiff>
+//LM start----------------------------------
+#include <Eigen/Dense>
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <unsupported/Eigen/NumericalDiff>
+//LM end----------------------------------
 
 #include "libsakura/sakura.h"
 #include "libsakura/localdef.h"
@@ -48,16 +50,17 @@ namespace {
 #include "libsakura/packed_operation.h"
 }
 
-
 using ::Eigen::Map;
 using ::Eigen::MatrixXd;
 using ::Eigen::VectorXd;
 using ::Eigen::Aligned;
 using ::Eigen::Stride;
 using ::Eigen::Dynamic;
-//using ::Eigen::Matrix;
-//using ::Eigen::NumericalDiff;
-//using ::Eigen::LevenbergMarquardt;
+//LM start----------------------------------
+using ::Eigen::Matrix;
+using ::Eigen::NumericalDiff;
+using ::Eigen::LevenbergMarquardt;
+//LM end---------------------------------
 
 namespace {
 
@@ -72,7 +75,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d               const &a, __m256d               const &b, __m256d               const &c) {
+__m256d NegMultiplyAdd(__m256d                const &a, __m256d                const &b, __m256d                const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -82,47 +85,6 @@ __m256d NegMultiplyAdd(__m256d               const &a, __m256d               con
 
 #endif
 
-/*
- template<size_t kNumBases>
- void AddMulVectorTemplate(double k, double const *vec, double *out) {
- size_t i = 0;
- #if defined(__AVX__) && !defined(ARCH_SCALAR)
- constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
- constexpr size_t kEnd = (kNumBases / kPackElements) * kPackElements;
- auto coeff = _mm256_set1_pd(k);
- for (i = 0; i < kEnd; i += kPackElements) {
- auto v = _mm256_loadu_pd(&vec[i]);
- _mm256_storeu_pd(&out[i],
- LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
- LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
- _mm256_loadu_pd(&out[i])));
- }
- #endif
- for (; i < kNumBases; ++i) {
- out[i] += k * vec[i];
- }
- }
-
- inline void AddMulVector(size_t const num_model_bases, double k,
- double const *vec, double *out) {
- size_t i = 0;
- #if defined(__AVX__) && !defined(ARCH_SCALAR)
- constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
- size_t const end = (num_model_bases / kPackElements) * kPackElements;
- auto coeff = _mm256_set1_pd(k);
- for (i = 0; i < end; i += kPackElements) {
- auto v = _mm256_loadu_pd(&vec[i]);
- _mm256_storeu_pd(&out[i],
- LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
- LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
- _mm256_loadu_pd(&out[i])));
- }
- #endif
- for (; i < num_model_bases; ++i) {
- out[i] += k * vec[i];
- }
- }
- */
 template<size_t kNumBases>
 void AddMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 		double *out) {
@@ -166,43 +128,6 @@ inline void AddMulVector(size_t const num_model_bases, size_t const *use_idx,
 	}
 }
 
-/*
- template<size_t kNumBases>
- void SubMulVectorTemplate(double k, double const *vec, double *out) {
- size_t i = 0;
- #if defined(__AVX__) && !defined(ARCH_SCALAR)
- constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
- constexpr size_t kEnd = (kNumBases / kPackElements) * kPackElements;
- auto coeff = _mm256_set1_pd(k);
- for (i = 0; i < kEnd; i += kPackElements) {
- auto v = _mm256_loadu_pd(&vec[i]);
- _mm256_storeu_pd(&out[i],
- NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
- }
- #endif
- for (; i < kNumBases; ++i) {
- out[i] -= k * vec[i];
- }
- }
-
- inline void SubMulVector(size_t const num_model_bases, double k,
- double const *vec, double *out) {
- size_t i = 0;
- #if defined(__AVX__) && !defined(ARCH_SCALAR)
- constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
- size_t const end = (num_model_bases / kPackElements) * kPackElements;
- auto coeff = _mm256_set1_pd(k);
- for (i = 0; i < end; i += kPackElements) {
- auto v = _mm256_loadu_pd(&vec[i]);
- _mm256_storeu_pd(&out[i],
- NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
- }
- #endif
- for (; i < num_model_bases; ++i) {
- out[i] -= k * vec[i];
- }
- }
- */
 template<size_t kNumBases>
 void SubMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 		double *out) {
@@ -242,70 +167,6 @@ inline void SubMulVector(size_t const num_model_bases, size_t const *use_idx,
 	}
 }
 
-/*
- template<size_t kNumBases>
- inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
- size_t num_model_bases, double const *model_arg, double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const mask = AssumeAligned(mask_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < kNumBases * kNumBases; ++i) {
- out[i] = 0;
- }
- size_t num_unmasked_data = 0;
- for (size_t i = 0; i < num_mask; ++i) {
- if (mask[i]) {
- auto const model_i = &model[i * num_model_bases];
- for (size_t j = 0; j < kNumBases; ++j) {
- auto out_matrix_j = &out[j * kNumBases];
- AddMulVectorTemplate<kNumBases>(model_i[j], model_i,
- out_matrix_j);
- }
- ++num_unmasked_data;
- }
- }
-
- if (num_unmasked_data < kNumBases) {
- throw std::runtime_error(
- "GetLSQFittingMatrixTemplate: too many masked data.");
- }
- }
-
- inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
- size_t num_model_bases, double const *model_arg, size_t num_lsq_bases,
- double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const mask = AssumeAligned(mask_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < num_lsq_bases * num_lsq_bases; ++i) {
- out[i] = 0;
- }
- size_t num_unmasked_data = 0;
- for (size_t i = 0; i < num_mask; ++i) {
- if (mask[i]) {
- auto const model_i = &model[i * num_model_bases];
- for (size_t j = 0; j < num_lsq_bases; ++j) {
- auto out_matrix_j = &out[j * num_lsq_bases];
- AddMulVector(num_lsq_bases, model_i[j], model_i, out_matrix_j);
- }
- ++num_unmasked_data;
- }
- }
-
- if (num_unmasked_data < num_model_bases) {
- throw std::runtime_error(
- "GetLSQFittingMatrix: too many data are masked.");
- }
- }
- */
 template<size_t kNumBases>
 inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 		size_t num_model_bases, double const *model_arg,
@@ -375,57 +236,6 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 	}
 }
 
-/*
- template<size_t kNumBases>
- inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
- size_t const *clipped_indices_arg, size_t num_model_bases,
- double const *in_arg, double const *model_arg, double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const clipped_indices = AssumeAligned(clipped_indices_arg);
- auto const in = AssumeAligned(in_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < kNumBases * kNumBases; ++i) {
- out[i] = in[i];
- }
- for (size_t i = 0; i < num_clipped; ++i) {
- auto const model_i = &model[clipped_indices[i] * num_model_bases];
- for (size_t j = 0; j < kNumBases; ++j) {
- auto out_matrix_j = &out[j * kNumBases];
- SubMulVectorTemplate<kNumBases>(model_i[j], model_i, out_matrix_j);
- }
- }
- }
-
- inline void UpdateLSQFittingMatrix(size_t num_clipped,
- size_t const *clipped_indices_arg, size_t num_lsq_bases,
- double const *in_arg, size_t num_model_bases, double const *model_arg,
- double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const clipped_indices = AssumeAligned(clipped_indices_arg);
- auto const in = AssumeAligned(in_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < num_lsq_bases * num_lsq_bases; ++i) {
- out[i] = in[i];
- }
- for (size_t i = 0; i < num_clipped; ++i) {
- auto const model_i = &model[clipped_indices[i] * num_model_bases];
- for (size_t j = 0; j < num_lsq_bases; ++j) {
- auto out_matrix_j = &out[j * num_lsq_bases];
- SubMulVector(num_lsq_bases, model_i[j], model_i, out_matrix_j);
- }
- }
- }
- */
 template<size_t kNumBases>
 inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
@@ -483,108 +293,6 @@ inline void UpdateLSQFittingMatrix(size_t num_clipped,
 	}
 }
 
-/*
- template<size_t kNumBases, typename T>
- inline void GetLSQFittingVectorTemplate(size_t num_data, T const *data_arg,
- bool const *mask_arg, size_t num_model_bases, double const *model_arg,
- double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const data = AssumeAligned(data_arg);
- auto const mask = AssumeAligned(mask_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < kNumBases; ++i) {
- out[i] = 0;
- }
- for (size_t i = 0; i < num_data; ++i) {
- if (mask[i]) {
- auto const model_i = &model[i * num_model_bases];
- auto data_i = data[i];
- AddMulVectorTemplate<kNumBases>(data_i, model_i, out);
- }
- }
- }
-
- template<typename T>
- inline void GetLSQFittingVector(size_t num_data, T const *data_arg,
- bool const *mask_arg, size_t num_model_bases, double const *model_arg,
- size_t num_lsq_bases, double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const data = AssumeAligned(data_arg);
- auto const mask = AssumeAligned(mask_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < num_lsq_bases; ++i) {
- out[i] = 0;
- }
- for (size_t i = 0; i < num_data; ++i) {
- if (mask[i]) {
- auto const model_i = &model[i * num_model_bases];
- auto data_i = data[i];
- AddMulVector(num_lsq_bases, data_i, model_i, out);
- }
- }
- }
-
- template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplate(
- T const *data_arg, size_t num_clipped,
- size_t const *clipped_indices_arg, size_t num_model_bases,
- double const *in_arg, double const *model_arg, double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const data = AssumeAligned(data_arg);
- auto const clipped_indices = AssumeAligned(clipped_indices_arg);
- auto const in = AssumeAligned(in_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < kNumBases; ++i) {
- out[i] = in[i];
- }
- for (size_t i = 0; i < num_clipped; ++i) {
- auto const model_i = &model[clipped_indices[i] * num_model_bases];
- auto data_i = data[clipped_indices[i]];
- SubMulVectorTemplate<kNumBases>(data_i, model_i, out);
- }
- }
-
- template<typename T>
- inline void UpdateLSQFittingVector(T const *data_arg, size_t num_clipped,
- size_t const *clipped_indices_arg, size_t num_lsq_bases,
- double const *in_arg, size_t num_model_bases, double const *model_arg,
- double *out_arg) {
- assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
- assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
- auto const data = AssumeAligned(data_arg);
- auto const clipped_indices = AssumeAligned(clipped_indices_arg);
- auto const in = AssumeAligned(in_arg);
- auto const model = AssumeAligned(model_arg);
- auto out = AssumeAligned(out_arg);
-
- for (size_t i = 0; i < num_lsq_bases; ++i) {
- out[i] = in[i];
- }
- for (size_t i = 0; i < num_clipped; ++i) {
- auto const model_i = &model[clipped_indices[i] * num_model_bases];
- auto data_i = data[clipped_indices[i]];
- SubMulVector(num_lsq_bases, data_i, model_i, out);
- }
- }
- */
 template<size_t kNumBases, typename T>
 inline void GetLSQFittingVectorTemplate(size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
@@ -697,53 +405,9 @@ inline void UpdateLSQFittingVector(T const *data_arg, size_t num_clipped,
 	}
 }
 
-/*
- template<size_t kNumBases, typename T>
- inline void GetLSQCoefficientsTemplate(size_t num_data, T const *data,
- bool const *mask, size_t const num_model_bases, double const *basis,
- size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
- GetLSQFittingMatrixTemplate<kNumBases>(num_data, mask, num_model_bases,
- basis, lsq_matrix);
- GetLSQFittingVectorTemplate<kNumBases, T>(num_data, data, mask,
- num_model_bases, basis, lsq_vector);
- }
-
- template<typename T>
- inline void GetLSQCoefficients(size_t num_data, T const *data,
- bool const *mask, size_t const num_model_bases, double const *basis,
- size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
- GetLSQFittingMatrix(num_data, mask, num_model_bases, basis, num_lsq_bases,
- lsq_matrix);
- GetLSQFittingVector<T>(num_data, data, mask, num_model_bases, basis,
- num_lsq_bases, lsq_vector);
- }
-
- template<size_t kNumBases, typename T>
- inline void UpdateLSQCoefficientsTemplate(size_t const num_data,
- T const *data, size_t const num_clipped,
- size_t const *clipped_indices, size_t const num_model_bases,
- double const *basis, size_t const num_lsq_bases, double *lsq_matrix,
- double *lsq_vector) {
- UpdateLSQFittingMatrixTemplate<kNumBases>(num_clipped, clipped_indices,
- num_model_bases, lsq_matrix, basis, lsq_matrix);
- UpdateLSQFittingVectorTemplate<kNumBases, T>(data, num_clipped,
- clipped_indices, num_model_bases, lsq_vector, basis, lsq_vector);
- }
-
- template<typename T>
- inline void UpdateLSQCoefficients(size_t const num_data, T const *data,
- size_t const num_clipped, size_t const *clipped_indices,
- size_t const num_model_bases, double const *basis,
- size_t const num_lsq_bases, double *lsq_matrix, double *lsq_vector) {
- UpdateLSQFittingMatrix(num_clipped, clipped_indices, num_lsq_bases,
- lsq_matrix, num_model_bases, basis, lsq_matrix);
- UpdateLSQFittingVector<T>(data, num_clipped, clipped_indices, num_lsq_bases,
- lsq_vector, num_model_bases, basis, lsq_vector);
- }
- */
 template<size_t kNumBases, typename T>
 inline void GetLSQCoefficientsTemplate(size_t num_data, T const *data,
-		bool const *mask, size_t const num_model_bases, double const *basis,
+bool const *mask, size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, size_t const *use_bases_idx,
 		double *lsq_matrix, double *lsq_vector) {
 	GetLSQFittingMatrixTemplate<kNumBases>(num_data, mask, num_model_bases,
@@ -824,10 +488,9 @@ bool const mask[/*num_data*/], size_t const num_model_bases,
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
 	typedef void (*GetLSQCoefficientsFunc)(size_t const num_data, T const *data,
-			bool const *mask, size_t const num_model_bases,
-			double const *basis_data, size_t const num_lsq_bases,
-			size_t const *use_bases_idx, double *lsq_matrix,
-			double *lsq_vector);
+	bool const *mask, size_t const num_model_bases, double const *basis_data,
+			size_t const num_lsq_bases, size_t const *use_bases_idx,
+			double *lsq_matrix, double *lsq_vector);
 
 	static GetLSQCoefficientsFunc const funcs[] = { RepeatTen(
 			GetLSQCoefficientsTemplate, 0, T), RepeatTen(
@@ -894,51 +557,69 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 
 //--LM part--------------------------------------
 /*
-template<typename _Scalar, int NX=Dynamic, int NY=Dynamic>
+template<typename T, int NX = Dynamic, int NY = Dynamic>
 struct Functor {
-	typedef _Scalar Scalar;
+	typedef T Scalar;
 	enum {
-		InputsAtCompileTime = NX,
-		ValuesAtCompileTime = NY
+		InputsAtCompileTime = NX, ValuesAtCompileTime = NY
 	};
-	typedef Matrix<Scalar, InputsAtCompileTime, 1> InputType;
-	typedef Matrix<Scalar, ValuesAtCompileTime, 1> ValueType;
-	typedef Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime> JacobianType;
+	typedef Matrix<Scalar, NX, 1> InputType;
+	typedef Matrix<Scalar, NY, 1> ValueType;
+	typedef Matrix<Scalar, NY, NX> JacobianType;
 };
 
-struct misra1a_functor : Functor<double> {
-	misra1a_functor(int inputs, int values, double *x, double *y) : inputs_(inputs), values_(values), x(x), y(y) {}
-	double *x;
-	double *y;
-	int operator()(const VectorXd &b, VectorXd &fvec) const {
-		for (int i = 0; i < values_; ++i) {
-			double v = (x[i]-b[1])/b[2];
-			fvec[i] = b[0]*exp(-0.5/M_PI*v*v) - y[i];
-		}
+struct FunctorDouble: Functor<double> {
+	FunctorDouble(int inputs, int values, double *x, double *y) :
+			inputs_(inputs), values_(values), x(x), y(y) {
+	}
+	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
 		return 0;
 	}
 	const int inputs_;
 	const int values_;
-	int inputs() const { return inputs_; }
-	int values() const { return values_; }
+	int inputs() const {
+		return inputs_;
+	}
+	int values() const {
+		return values_;
+	}
+	double *x;
+	double *y;
 };
 
-void LM(size_t const num_data, double const xa[], double const ya[],
-		double *amplitude, double *mean, double *sigma) {
-	size_t const num_value = 3;
-	VectorXd p(num_value);
-	p << 1.0, 1.0, 1.0;
+struct GaussianFunctorDouble: FunctorDouble {
+	GaussianFunctorDouble(int inputs, int values, double *x, double *y) :
+			FunctorDouble(inputs, values, x, y) {
+	};
+	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
+		//params are {peak_amplitude, peak_position, sigma}.
+		for (int i = 0; i < values_; ++i) {
+			double v = (x[i] - params[1]) / params[2];
+			values_to_minimize[i] = params[0] * exp(-0.5 / M_PI * v * v) - y[i];
+		}
+		return 0;
+	}
+};
 
-	std::vector<double> x(&xa[0], &xa[num_data]);
-	std::vector<double> y(&ya[0], &ya[num_data]);
-	misra1a_functor functor(num_value, x.size(), &x[0], &y[0]);
-	NumericalDiff<misra1a_functor> numDiff(functor);
-	LevenbergMarquardt<NumericalDiff<misra1a_functor> > lm(numDiff);
-	int info = lm.minimize(p);
-	std::cout << p[0] << " " << p[1] << " " << p[2] << std::endl;
-	*amplitude = p[0];
-	*mean = p[1];
-	*sigma = p[2];
+void DoFitGaussianByLMDouble(size_t const num_data, double const x_data[], double const y_data[],
+		double *peak_amplitude, double *peak_position, double *sigma) {
+	size_t const num_parameters = 3;
+	VectorXd params(num_parameters);
+	params << *peak_amplitude, *peak_position, *sigma;
+
+	std::vector<double> x(&x_data[0], &x_data[num_data]);
+	std::vector<double> y(&y_data[0], &y_data[num_data]);
+	GaussianFunctorDouble functor(num_parameters, x.size(), &x[0], &y[0]);
+	NumericalDiff<GaussianFunctorDouble> num_diff(functor);
+	LevenbergMarquardt < NumericalDiff<GaussianFunctorDouble> > lm(num_diff);
+	int info = lm.minimize(params);
+	if (info == 0) {
+		throw std::runtime_error(
+				"FitGaussianByLMDouble: invalid data or parameter for Gaussian fitting.");
+	}
+	*peak_amplitude = params[0];
+	*peak_position = params[1];
+	*sigma = params[2];
 }
 */
 //--End LM part----------------------------------
@@ -951,22 +632,29 @@ void LM(size_t const num_data, double const xa[], double const ya[],
 	} \
 } while (false)
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
 		size_t const num_data, float const data[], bool const mask[],
-		double *amplitude, double *mean, double *sigma) noexcept {
-	/*
+		double *amplitude, double *position, double *sigma) noexcept {
 	try {
 		double data_x[num_data];
 		double data_y[num_data];
+		size_t num_data_effective = 0;
 		for (size_t i = 0; i < num_data; ++i) {
-			data_x[i] = static_cast<double>(i);
-			data_y[i] = static_cast<double>(data[i]);
+			if (mask[i]) {
+				data_x[num_data_effective] = static_cast<double>(i);
+				data_y[num_data_effective] = static_cast<double>(data[i]);
+				++num_data_effective;
+			}
 		}
-		LM(num_data, data_x, data_y, amplitude, mean, sigma);
+		//DoFitGaussianByLMDouble(num_data_effective, data_x, data_y, amplitude, position, sigma);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
+		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-	*/
+
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 

@@ -1411,7 +1411,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double out[/*num_equations*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
- LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianFloat)(
+ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
 		 size_t const num_data, float const data[/*num_data*/],
 		 bool const mask[/*num_data*/],
 		 double *amplitude, double *mean, double *sigma)
