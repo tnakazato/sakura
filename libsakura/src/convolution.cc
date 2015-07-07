@@ -85,24 +85,24 @@ inline void Create1DGaussianKernel(size_t num_kernel, bool use_fft,
 			/ static_cast<double>(kernel_width); // sqrt(log(16)) / kernel_width
 	double const height = .939437278699651333772340328410
 			/ static_cast<double>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-	double center =
+	double modified_center =
 			(num_data_for_gauss % 2 != 0) ?
-					static_cast<double>(num_data_for_gauss - 1) / 2.0 :
-					static_cast<double>(num_data_for_gauss) / 2.0;
+					static_cast<double>(num_data_for_gauss - 1) / 2.0 * reciprocal_of_denominator :
+					static_cast<double>(num_data_for_gauss) / 2.0 * reciprocal_of_denominator ;
 	size_t middle = (num_data_for_gauss) / 2;
 	size_t loop_max = middle;
 	kernel[0] = height;
 	kernel[middle] = height
 			* exp(
-					-(center * reciprocal_of_denominator)
-							* (center * reciprocal_of_denominator));
+					-(modified_center)
+							* (modified_center));
 	size_t plus_one_for_odd = 0;
 	if (num_data_for_gauss % 2 != 0) {
 		plus_one_for_odd = 1;
 		kernel[middle + 1] = kernel[middle];
 	}
 	for (size_t i = 1; i < loop_max; ++i) {
-		double value = (i - center) * reciprocal_of_denominator;
+		double value = i * reciprocal_of_denominator - modified_center;
 		kernel[middle - i] = height * exp(-(value * value));
 	}
 
@@ -173,6 +173,12 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 					static_cast<LIBSAKURA_SYMBOL(Convolve1DContextFloat)*>(LIBSAKURA_PREFIX::Memory::Allocate(
 							sizeof(LIBSAKURA_SYMBOL(Convolve1DContextFloat)))),
 					LIBSAKURA_PREFIX::Memory());
+	if (work_context == nullptr) {
+				throw std::bad_alloc();
+			}
+	work_context->num_data = num_data;
+	work_context->use_fft = use_fft;
+
 	if (use_fft) {
 		size_t num_fft_kernel = num_data / 2 + 1;
 		float *real_kernel_array = nullptr;
@@ -234,9 +240,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 				real_kernel_array);
 		fftwf_execute(plan_real_to_complex_float_kernel);
 		guard_for_fft_plan_kernel.CleanUpNow();
-		if (work_context == nullptr) {
-			throw std::bad_alloc();
-		}
 		work_context->fft_applied_complex_kernel =
 				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array;
@@ -247,9 +250,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		guard_for_fft_plan.Disable();
 		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
 		guard_for_ifft_plan.Disable();
-		work_context->num_data = num_data;
 		work_context->kernel_width = kernel_width;
-		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	} else {
 		size_t threshold = kernel_width / 2;
@@ -268,9 +269,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
 		Create1DKernel(num_kernel, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
-		if (work_context == nullptr) {
-			throw std::bad_alloc();
-		}
 		work_context->fft_applied_complex_kernel = nullptr;
 		work_context->plan_complex_to_real_float = nullptr;
 		work_context->plan_real_to_complex_float = nullptr;
@@ -278,9 +276,7 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		work_context->real_array_work = nullptr;
 		work_context->real_kernel_array = real_kernel_array;
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
-		work_context->num_data = num_data;
 		work_context->kernel_width = num_kernel;
-		work_context->use_fft = use_fft;
 		*context = work_context.release();
 	}
 }
@@ -350,6 +346,15 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 
 } /* anonymous namespace */
 
+//TODO
+/*
+#define CHECK_ARGS(x) do { \
+	if (!(x)) { \
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument); \
+	} \
+} while (false)
+*/
+
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
 		size_t kernel_width, bool use_fft,
@@ -394,6 +399,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data[/*num_data*/], float output_data[/*num_data*/])
 				noexcept {
+	//TODO
+	//CHECK_ARGS(context == nullptr);
 	if (context == nullptr) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
