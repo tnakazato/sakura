@@ -251,7 +251,6 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
 		guard_for_ifft_plan.Disable();
 		work_context->kernel_width = kernel_width;
-		*context = work_context.release();
 	} else {
 		size_t threshold = kernel_width / 2;
 		if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) {
@@ -277,8 +276,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		work_context->real_kernel_array = real_kernel_array;
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
 		work_context->kernel_width = num_kernel;
-		*context = work_context.release();
 	}
+	*context = work_context.release();
 }
 
 inline void Convolve1DFloat(
