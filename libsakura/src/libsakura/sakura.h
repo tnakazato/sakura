@@ -1676,7 +1676,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * The default is 1 (i.e., baseline fitting done just once and no
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
- * @param[in] num_coeff The number of elements in the arrays @a coeff.
+ * @param[in] num_coeff The number of elements in the array @a coeff.
  * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
  * fitting.
  * @param[out] coeff The coefficients of the polynomial fit. Its length
@@ -1770,7 +1770,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * must not be duplicate. The number of model bases, which will be
  * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
  * contains zero or not, respectively, must not exceed @a num_data.
- * @param[in] num_coeff The number of elements in the arrays @a coeff.
+ * @param[in] num_coeff The number of elements in the array @a coeff.
  * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
  * fitting.
  * @param[out] coeff The coefficients of the polynomial fit. Its length
