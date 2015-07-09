@@ -304,40 +304,6 @@ inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
 	}
 }
 
-/*
- inline void AddMulMatrix(size_t num_coeff, double const *coeff,
- size_t num_out, size_t num_bases, double const *basis, double *out) {
- size_t i = 0;
- #if defined(__AVX__) && !defined(ARCH_SCALAR)
- constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
- size_t const end = (num_out / kPackElements) * kPackElements;
- auto const zero = _mm256_set1_pd(0.);
- size_t const offset1 = num_bases * 1;
- size_t const offset2 = num_bases * 2;
- size_t const offset3 = num_bases * 3;
- for (i = 0; i < end; i += kPackElements) {
- auto total = zero;
- auto bases_row = &basis[num_bases * i];
- for (size_t j = 0; j < num_coeff; ++j) {
- auto ce = _mm256_set1_pd(coeff[j]);
- auto bs = _mm256_set_pd(bases_row[j + offset3],
- bases_row[j + offset2], bases_row[j + offset1],
- bases_row[j]);
- total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
- LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
- }
- _mm256_store_pd(&out[i], total);
- }
- #endif
- for (; i < num_out; ++i) {
- double out_double = 0.0;
- for (size_t j = 0; j < num_coeff; ++j) {
- out_double += coeff[j] * basis[num_bases * i + j];
- }
- out[i] = out_double;
- }
- }
- */
 inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 		size_t const *use_idx, size_t num_out, size_t num_bases,
 		double const *basis, double *out) {
@@ -349,15 +315,26 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 	size_t const offset1 = num_bases * 1;
 	size_t const offset2 = num_bases * 2;
 	size_t const offset3 = num_bases * 3;
+#if defined(__AVX2__) && 0 // <--- will make this part effective
+	// once _mm256_i64gather_pd gets faster in future version.
+	// cf. #744 (2015/7/9 WK)
+	auto vindex = _mm256_set_epi64x(offset3, offset2, offset1, 0);
+#endif
 	for (i = 0; i < end; i += kPackElements) {
 		auto total = zero;
 		auto bases_row = &basis[num_bases * i];
 		for (size_t j = 0; j < num_coeff; ++j) {
 			auto ce = _mm256_set1_pd(coeff[j]);
 			auto idx = use_idx[j];
+#if defined(__AVX2__) && 0 // <--- will make this part effective
+			// once _mm256_i64gather_pd gets faster in future version.
+			// cf. #744(2015/7/9 WK)
+			auto bs = _mm256_i64gather_pd(bases_row+idx, vindex, sizeof(double));
+#else
 			auto bs = _mm256_set_pd(bases_row[idx + offset3],
 					bases_row[idx + offset2], bases_row[idx + offset1],
 					bases_row[idx]);
+#endif
 			total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
 			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 		}
@@ -404,14 +381,25 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		size_t const offset1 = kNumBasesCubicSpline * 1;
 		size_t const offset2 = kNumBasesCubicSpline * 2;
 		size_t const offset3 = kNumBasesCubicSpline * 3;
+#if defined(__AVX2__) && 0 // <--- will make this part effective
+		// once _mm256_i64gather_pd gets faster in future version.
+		// cf. #744 (2015/7/9 WK)
+		auto vindex = _mm256_set_epi64x(offset3, offset2, offset1, 0);
+#endif
 		for (j = start; j < end; j += kPackElements) {
 			auto total = zero;
 			auto bases_row = &basis[kNumBasesCubicSpline * j];
 			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
 				auto ce = _mm256_set1_pd(coeff_full[k + coffset]);
+#if defined(__AVX2__) && 0 // <--- will make this part effective
+				// once _mm256_i64gather_pd gets faster in future
+				// version. cf. #744 (2015/7/9 WK)
+				auto bs = _mm256_i64gather_pd(bases_row, vindex, sizeof(double));
+#else
 				auto bs = _mm256_set_pd(bases_row[k + offset3],
 						bases_row[k + offset2], bases_row[k + offset1],
 						bases_row[k]);
+#endif
 				total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
 				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 			}
@@ -968,16 +956,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 					sizeof(*coeff_full) * num_pieces * context->num_bases,
 					&coeff_full));
 
-	//remove the following lines after boundary added to args of *CubicSpline().
-	//start ---------------------------------------------------------
-	//double *boundary = nullptr;
-	/*
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_boundary(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*boundary) * num_pieces, &boundary));
-	*/
-	//end ---------------------------------------------------------
-
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
 			clip_threshold_sigma, num_fitting_max, coeff_full, boundary,
 			final_mask, rms, get_residual, out, baseline_status);
@@ -1036,16 +1014,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
-
-	//remove the following lines after boundary added to args of GetCoeffCSpline()
-	//start------------------------------------------------------
-	//double *boundary = nullptr;
-	/*
-	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_boundary(
-			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*boundary) * num_pieces, &boundary));
-	*/
-	//end------------------------------------------------------
 
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
 			clip_threshold_sigma, num_fitting_max, coeff, boundary, final_mask,
