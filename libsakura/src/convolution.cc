@@ -176,8 +176,8 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 	if (work_context == nullptr) {
 				throw std::bad_alloc();
 			}
-	work_context->num_data = num_data;
 	work_context->use_fft = use_fft;
+	work_context->num_data = num_data;
 
 	if (use_fft) {
 		size_t num_fft_kernel = num_data / 2 + 1;
@@ -240,17 +240,20 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 				real_kernel_array);
 		fftwf_execute(plan_real_to_complex_float_kernel);
 		guard_for_fft_plan_kernel.CleanUpNow();
+
+
+		work_context->kernel_width = kernel_width;
+		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
+		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
 		work_context->fft_applied_complex_kernel =
 				fft_applied_complex_kernel.release();
 		work_context->real_array = real_array;
 		work_context->real_array_work = real_array_work.release();
 		work_context->real_kernel_array = nullptr;
 		work_context->real_kernel_array_work = nullptr;
-		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
 		guard_for_fft_plan.Disable();
-		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
 		guard_for_ifft_plan.Disable();
-		work_context->kernel_width = kernel_width;
+
 	} else {
 		size_t threshold = kernel_width / 2;
 		if (kernel_type == LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian)) {
@@ -268,14 +271,16 @@ bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
 		Create1DKernel(num_kernel, use_fft, kernel_type, kernel_width,
 				real_kernel_array);
-		work_context->fft_applied_complex_kernel = nullptr;
-		work_context->plan_complex_to_real_float = nullptr;
+
+		work_context->kernel_width = num_kernel;
 		work_context->plan_real_to_complex_float = nullptr;
+		work_context->plan_complex_to_real_float = nullptr;
+		work_context->fft_applied_complex_kernel = nullptr;
 		work_context->real_array = nullptr;
 		work_context->real_array_work = nullptr;
 		work_context->real_kernel_array = real_kernel_array;
 		work_context->real_kernel_array_work = real_kernel_array_work.release();
-		work_context->kernel_width = num_kernel;
+
 	}
 	*context = work_context.release();
 }
