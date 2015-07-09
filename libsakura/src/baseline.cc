@@ -1133,6 +1133,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		param = order;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		CHECK_ARGS(0 < npiece);
 		param = npiece;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):

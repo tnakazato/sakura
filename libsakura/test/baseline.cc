@@ -248,6 +248,23 @@ TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
 }
 
 /*
+ * Test sakura_CreateBaselineContextWithZeroNumPieces
+ * failure case : npiece = 0
+ * returned value : Status_kInvalidArgument
+ */
+TEST_F(Baseline, CreateBaselineContextWithZeroNumPieces) {
+	uint16_t const dummy(0);
+	uint16_t const npiece(0);
+	size_t const num_chan(4096);
+
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), dummy, npiece, dummy,
+			num_chan, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+}
+
+/*
  * Test sakura_CreateBaselineContextWithInvalidBaselineType
  * failure case : invalid baseline type
  * returned value : Status_kInvalidArgument
@@ -671,7 +688,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 	LIBSAKURA_SYMBOL (Status) get_coeff_status =
 	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, num_data,
 			in_data_unaligned, in_mask, clipping_threshold_sigma,
-			num_fitting_max, num_coeff, coeff, final_mask, &rms, &subbl_blstatus);
+			num_fitting_max, num_coeff, coeff, final_mask, &rms,
+			&subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
 
@@ -1452,7 +1470,8 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, order, num_data,
 			in_data_unaligned, in_mask, clipping_threshold_sigma,
-			num_fitting_max, get_residual, final_mask, out, &rms, &subbl_blstatus);
+			num_fitting_max, get_residual, final_mask, out, &rms,
+			&subbl_blstatus);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));

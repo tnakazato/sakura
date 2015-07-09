@@ -1472,17 +1472,15 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * @brief Create an object containing baseline model data.
  * @details
  * @param[in] baseline_type Type of basis function.
- * @param[in] order Parameter for the specified function other
- * than cubic spline. It is the maximum order (for
- * sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev) or the maximum wave number
- * (for sakura_BaselineType_kSinusoid). It must be positive or
- * zero.
+ * @param[in] order Polynomial order. It must be positive or
+ * zero. It is used when @a baseline_type @a is
+ * sakura_BaselineType_kPolynomial or
+ * sakura_BaselineType_kChebyshev.
  * @param[in] npiece Number of spline pieces. It must be a
  * positive value. It is used only when @a baseline_type @a is
  * sakura_BaselineType_kCubicSpline.
- * @param[in] nwave Maximum wave number of sinusoids. It is
- * used only when @a baseline_type @a is
+ * @param[in] nwave Maximum wave number of sinusoids. It must be
+ * positive or zero. It is used only when @a baseline_type @a is
  * sakura_BaselineType_kSinusoid.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
