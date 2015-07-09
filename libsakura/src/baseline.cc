@@ -424,16 +424,22 @@ inline std::string GetNotEnoughDataMessage(
 	ss << idx_erroneous_fitting;
 	ss << " ";
 
-	uint16_t imod10 = idx_erroneous_fitting % 10;
+	uint16_t mod100 = idx_erroneous_fitting % 100;
+	uint16_t ones_digit = mod100 % 10;//idx_erroneous_fitting % 10;
+	uint16_t tens_digit = mod100 / 10;
 	std::string isuffix;
-	if (imod10 == 1) {
-		isuffix = "st";
-	} else if (imod10 == 2) {
-		isuffix = "nd";
-	} else if (imod10 == 3) {
-		isuffix = "rd";
-	} else {
+	if (tens_digit == 1) {
 		isuffix = "th";
+	} else {
+		if (ones_digit == 1) {
+			isuffix = "st";
+		} else if (ones_digit == 2) {
+			isuffix = "nd";
+		} else if (ones_digit == 3) {
+			isuffix = "rd";
+		} else {
+			isuffix = "th";
+		}
 	}
 	ss << isuffix << " fitting.";
 
@@ -713,7 +719,8 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 			}
 			assert(0 < result.count);
 			double mean = result.sum / result.count;
-			rms_d = std::sqrt(std::fabs(result.square_sum / result.count - mean * mean));
+			rms_d = std::sqrt(
+					std::fabs(result.square_sum / result.count - mean * mean));
 
 			if (i < num_fitting_max) {
 				float clip_threshold_abs = clip_threshold_sigma * rms_d;
@@ -1207,7 +1214,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
@@ -1253,9 +1260,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSpline
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t const num_nwave, size_t const nwave[/*num_nwave*/],
-		size_t num_data, float const data[/*num_data*/],
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
+		size_t const nwave[/*num_nwave*/], size_t num_data,
+		float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
@@ -1298,7 +1305,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFlo
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
@@ -1337,7 +1344,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficie
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*kNumBasesCubicSpline*/],
@@ -1383,7 +1390,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficie
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
