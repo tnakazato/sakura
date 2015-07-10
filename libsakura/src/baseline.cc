@@ -720,7 +720,7 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 			assert(0 < result.count);
 			double mean = result.sum / result.count;
 			rms_d = std::sqrt(
-					std::fabs(result.square_sum / result.count - mean * mean));
+					std::abs(result.square_sum / result.count - mean * mean));
 
 			if (i < num_fitting_max) {
 				float clip_threshold_abs = clip_threshold_sigma * rms_d;
