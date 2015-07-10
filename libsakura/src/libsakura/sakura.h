@@ -1314,7 +1314,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * coefficients if the number of points to be excluded this time is less
  * than half of those previously used.
  * @par
- * @param[in] num_data The number of elements in the arrays @a data and the
+ * @param[in] num_data The number of elements in the array @a data and the
  * number of elements in each model data (i.e., discrete values of basis
  * function) consisting the entire model.
  * It must be a positive number.
