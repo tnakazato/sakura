@@ -332,7 +332,7 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 	map<LIBSAKURA_SYMBOL(BaselineType), size_t> answers;
 	answers[LIBSAKURA_SYMBOL(BaselineType_kPolynomial)] = test_order + 1;
 	answers[LIBSAKURA_SYMBOL(BaselineType_kChebyshev)] = test_order + 1;
-	answers[LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)] = 4 + test_order - 1;
+	answers[LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)] = 4 * test_order;
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] = { LIBSAKURA_SYMBOL(
 			BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
 			BaselineType_kChebyshev), LIBSAKURA_SYMBOL(

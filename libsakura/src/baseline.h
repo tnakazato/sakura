@@ -38,6 +38,8 @@ struct LIBSAKURA_SYMBOL(BaselineContext) {
 	size_t num_basis_data; /**< 個々の基底関数を表現するデータ点の数 */
 	void *basis_data_storage; /**< 基底関数データを格納する領域を確保した時に返されるアドレス。アラインされておらず、解放時に用いる目的のみのために保持される。 */
 	double *basis_data; /**< 基底関数データを指すポインタ。アドレスはアラインされている。要素数は @a num_bases * @a num_basis_data 。i 番目の点の j 番目の基底関数のデータは [ @a num_basis_data * i + j ] 番目の要素に格納される。 */
+	//------------------------
+	//------------------------
 	LIBSAKURA_SYMBOL(BaselineType) baseline_type; /**< ベースラインの関数形 */
 	uint16_t baseline_param; /** order for Polynomial or Chebyshev, npiece for CubicSpline, or maximum wave number for Sinusoid.*/
 };
