@@ -2270,11 +2270,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase)
 			<< endl;
 
 	SIMD_ALIGN
-	bool mask[num_data];
-	SetBoolConstant(true, ELEMENTSOF(mask), mask);
-	SIMD_ALIGN
-	float out[ELEMENTSOF(mask)];
-	float answer[ELEMENTSOF(mask)];
+	float out[num_data];
+	float answer[ELEMENTSOF(out)];
 	SetFloatConstant(0.0f, ELEMENTSOF(answer), answer);
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
@@ -2315,7 +2312,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsFloatSuccessfulCase)
 			double coeff[num_coeff];
 			SetDoubleConstant(1.0, num_coeff, coeff);
 			SIMD_ALIGN
-			float data[ELEMENTSOF(mask)];
+			float data[ELEMENTSOF(out)];
 			SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, data);
 
 			LIBSAKURA_SYMBOL (Status) sub_status =
@@ -2353,14 +2350,12 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsPerformanceTest) {
 	size_t const num_nwave = 10;
 	size_t nwave[num_nwave] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	size_t num_coeff = GetNumberOfSinusoidalCoefficients(num_nwave, nwave);
+	SIMD_ALIGN
 	double coeff[num_coeff];
 	SetDoubleConstant(1.0, num_coeff, coeff);
 	SIMD_ALIGN
 	float data[num_data];
 	SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, data);
-	SIMD_ALIGN
-	bool mask[ELEMENTSOF(data)];
-	SetBoolConstant(true, ELEMENTSOF(data), mask);
 	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kSinusoid), dummy, dummy,
@@ -2631,14 +2626,12 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadPar
 			assert(false);
 		}
 
+		SIMD_ALIGN
 		double coeff[num_coeff];
 		SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 		SIMD_ALIGN
 		float data[num_data];
 		SetFloatSinusoidal(num_nwave, nwave, coeff, num_data, data);
-		SIMD_ALIGN
-		bool mask[ELEMENTSOF(data)];
-		SetBoolConstant(true, ELEMENTSOF(data), mask);
 		SIMD_ALIGN
 		float out[ELEMENTSOF(data)];
 		LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
