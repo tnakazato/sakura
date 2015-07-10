@@ -66,6 +66,20 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->basis_data_storage = work_basis_data_storage.release();
 }
 
+inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
+	//check if elements in nwave are
+	// (1) stored in ascending order and
+	// (2) not duplicate.
+	bool res = true;
+	for (size_t i = 1; i < num_nwave; ++i) {
+		if (nwave[i-1] >= nwave[i]) {
+			res = false;
+			break;
+		}
+	}
+	return res;
+}
+
 inline size_t GetNumberOfCubicSplineLsqBases(size_t num_pieces) {
 	return kNumBasesCubicSpline - 1 + num_pieces;
 }
@@ -91,7 +105,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	return num_bases;
 }
 
-inline size_t GetNumberOfBasesFromOrder(
+inline size_t GetNumberOfLsqBases(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_nwave, size_t const *nwave) {
 	size_t num_bases = 0;
@@ -108,6 +122,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		num_bases = GetNumberOfCubicSplineLsqBases(order);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		if (!IsNWaveUniqueAndAscending(num_nwave, nwave)) {
+			throw std::invalid_argument(
+					"nwave elements must be in ascending order and not duplicate.");
+		}
 		num_bases = (nwave[0] == 0) ? (2 * num_nwave - 1) : (2 * num_nwave);
 		break;
 	default:
@@ -276,20 +294,6 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	}
 }
 
-inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
-	//check if elements in nwave are
-	// (1) stored in ascending order and
-	// (2) not duplicate.
-	bool res = true;
-	for (size_t i = 0; i < num_nwave - 1; ++i) {
-		if (nwave[i] >= nwave[i + 1]) {
-			res = false;
-			break;
-		}
-	}
-	return res;
-}
-
 inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
 		double const *in2_arg, float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
@@ -425,7 +429,7 @@ inline std::string GetNotEnoughDataMessage(
 	ss << " ";
 
 	uint16_t mod100 = idx_erroneous_fitting % 100;
-	uint16_t ones_digit = mod100 % 10;//idx_erroneous_fitting % 10;
+	uint16_t ones_digit = mod100 % 10;			//idx_erroneous_fitting % 10;
 	uint16_t tens_digit = mod100 / 10;
 	std::string isuffix;
 	if (tens_digit == 1) {
@@ -909,7 +913,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t order,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto out = AssumeAligned(out_arg);
 
-	size_t num_coeff = GetNumberOfBasesFromOrder(context->baseline_type, order,
+	size_t num_coeff = GetNumberOfLsqBases(context->baseline_type, order,
 			num_nwave, nwave);
 	size_t *use_bases_idx = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_use_bases_idx(
@@ -1153,7 +1157,6 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) noexcept {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-#include <iostream>
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		size_t *num_coeff) noexcept {
@@ -1162,7 +1165,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 			(context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)));
 	size_t num_out;
 	LIBSAKURA_SYMBOL(BaselineType) type = context->baseline_type;
-	num_out = GetNumberOfBasesFromOrder(type, order, 0, nullptr);
+	num_out = GetNumberOfLsqBases(type, order, 0, nullptr);
 	if (context->baseline_type != LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 		CHECK_ARGS(num_out <= context->num_bases);
 	}
@@ -1180,16 +1183,13 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			(context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
-	size_t num_bases_from_order = GetNumberOfBasesFromOrder(
-			context->baseline_type, order, 0, nullptr);
-	CHECK_ARGS(num_bases_from_order <= context->num_bases);
-	CHECK_ARGS(num_bases_from_order <= num_data);
+	CHECK_ARGS(order <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(clip_threshold_sigma > 0.0f);
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
@@ -1224,16 +1224,14 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
-	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
-	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
-	CHECK_ARGS(num_data_min <= num_data);
+	CHECK_ARGS(num_pieces <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(clip_threshold_sigma > 0.0f);
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(boundary != nullptr);
@@ -1270,17 +1268,16 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t const num_nwave,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
-	CHECK_ARGS(context->num_bases <= num_data);
-	CHECK_ARGS(num_data == context->num_basis_data);
-	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
@@ -1313,13 +1310,14 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			(context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
-	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(clip_threshold_sigma > 0.0f);
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
+	CHECK_ARGS(0 < num_coeff);
+	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
@@ -1354,16 +1352,14 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
-	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
-	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
-	CHECK_ARGS(num_data_min <= num_data);
+	CHECK_ARGS(num_pieces <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
-	CHECK_ARGS(clip_threshold_sigma > 0.0f);
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
@@ -1399,7 +1395,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
-	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1410,6 +1405,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	size_t num_lsq_bases = GetNumberOfLsqBases(context->baseline_type, 0,
+			num_nwave, nwave);
+	CHECK_ARGS(num_lsq_bases <= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -1442,11 +1440,10 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(
 			(context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
 	CHECK_ARGS(num_data == context->num_basis_data);
-	CHECK_ARGS(num_coeff != 0);
-	CHECK_ARGS(num_coeff <= context->num_bases);
-	CHECK_ARGS(num_coeff <= num_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(0 < num_coeff);
+	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(out != nullptr);
@@ -1474,14 +1471,11 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
-	CHECK_ARGS(context->num_bases == kNumBasesCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
-	size_t num_data_min = GetNumberOfCubicSplineLsqBases(num_pieces);
-	CHECK_ARGS(num_data_min <= num_data);
+	CHECK_ARGS(num_pieces <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
-	CHECK_ARGS(num_pieces <= INT_MAX);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(boundary != nullptr);
@@ -1510,7 +1504,6 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
-	CHECK_ARGS(context->num_bases <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1518,6 +1511,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	size_t num_lsq_bases = GetNumberOfLsqBases(context->baseline_type, 0,
+			num_nwave, nwave);
+	CHECK_ARGS(num_lsq_bases <= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
