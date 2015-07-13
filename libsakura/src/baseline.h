@@ -38,8 +38,32 @@ struct LIBSAKURA_SYMBOL(BaselineContext) {
 	size_t num_basis_data; /**< 個々の基底関数を表現するデータ点の数 */
 	void *basis_data_storage; /**< 基底関数データを格納する領域を確保した時に返されるアドレス。アラインされておらず、解放時に用いる目的のみのために保持される。 */
 	double *basis_data; /**< 基底関数データを指すポインタ。アドレスはアラインされている。要素数は @a num_bases * @a num_basis_data 。i 番目の点の j 番目の基底関数のデータは [ @a num_basis_data * i + j ] 番目の要素に格納される。 */
-	//------------------------
-	//------------------------
+	// work spaces for all baseline types----
+	size_t num_lsq_bases_max; /** Maximum number of simultaneous equations for least-square fitting: @a baseline_param + 1 @a for Polynomial and Chebyshev, @a baseilne_param + 3 @a for CubicSpline, and @a 2 * baseline_param + 1 @a for Sinusoid. */
+	void *lsq_matrix_storage; /** An address returned when allocating @a lsq_matrix @a . This one itself is not aligned, and is hold just for deallocating. */
+	double *lsq_matrix; /** A pointer to aligned 1D array for matrix data used in least-square fitting. Its size is @a num_lsq_bases_max * num_lsq_bases_max @a . */
+	void *lsq_vector_storage; /** An address returned when allocating @a lsq_vector @a . This one itself is not aligned, and is hold just for deallocating. */
+	double *lsq_vector; /** A pointer to aligned 1D array for vector data used in least-square fitting. Its size is @a num_lsq_bases_max @a . */
+	void *clipped_indices_storage; /** An address returned when allocating @a clipped_indices @a . This one itself is not aligned, and is hold just for deallocating. */
+	size_t *clipped_indices; /** A pointer to aligned 1D array for clipped indices. Its size is @a num_basis_data @a . */
+	void *best_fit_model_storage; /** An address returned when allocating @a best_fit_model @a . This one itself is not aligned, and is hold just for deallocating. */
+	double *best_fit_model; /** A pointer to aligned 1D array for best-fit model. Its size is @a num_basis_data @a . */
+	void *residual_data_storage; /** An address returned when allocating @a residual_data @a . This one itself is not aligned, and is hold just for deallocating. */
+	float *residual_data; /** A pointer to aligned 1D array for baseline-subtracted data. Its size is @a num_basis_data @a . */
+	void *use_bases_idx_storage; /** An address returned when allocating @a use_bases_idx @a . This one itself is not aligned, and is hold just for deallocating. */
+	size_t *use_bases_idx; /** A pointer to aligned 1D array for indices of bases that are used for fitting. Its size is @a num_lsq_bases_max @a . For baseline type other than Sinusoid, the element values should be equal to their index. */
+	void *coeff_full_storage; /** An address returned when allocating @a coeff_full @a . This one itself is not aligned, and is hold just for deallocating. */
+	double *coeff_full; /** A pointer to aligned 1D array for storing full coefficients. Its size is @a baseline_param * 4 @a for CubicSpline, and @a num_lsq_bases_max @a for other baseline types. */
+	// work spaces specific for cubic spline----
+	void *piece_start_indices_storage; /** An address returned when allocating @a piece_start_indices @a . This one itself is not aligned, and is hold just for deallocating. */
+	size_t *piece_start_indices; /** A pointer to aligned 1D array for indices of starting points of spline pieces. Its size is @a baseline_param @a . */
+	void *piece_end_indices_storage; /** An address returned when allocating @a piece_end_indices @a . This one itself is not aligned, and is hold just for deallocating. */
+	size_t *piece_end_indices; /** A pointer to aligned 1D array for indices of end points of spline pieces. Its size is @a baseline_param @a . */
+	void *cspline_basis_storage; /** An address returned when allocating @a cspline_basis @a . This one itself is not aligned, and is hold just for deallocating. */
+	double *cspline_basis; /** A pointer to aligned 1D array for basis functions used in cubic spline fitting. Its size is @a num_basis_data * num_lsq_bases_max @a . */
+	void *cspline_lsq_coeff_storage; /** An address returned when allocating @a cspline_lsq_coeff @a . This one itself is not aligned, and is hold just for deallocating. */
+	double *cspline_lsq_coeff; /** A pointer to aligned 1D array for least-square fitting results. Its size is @a num_lsq_bases_max @a . */
+	//---------------------------------
 	LIBSAKURA_SYMBOL(BaselineType) baseline_type; /**< ベースラインの関数形 */
 	uint16_t baseline_param; /** order for Polynomial or Chebyshev, npiece for CubicSpline, or maximum wave number for Sinusoid.*/
 };

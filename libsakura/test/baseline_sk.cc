@@ -706,7 +706,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceTest) {
 	size_t const num_dummy(0);
 	size_t const num_data(300000);
-	size_t const num_pieces(65000);
+	size_t const num_pieces(1650);
 	SIMD_ALIGN
 	float in_data[num_data];
 	for (size_t i = 0; i < num_data; ++i) {
