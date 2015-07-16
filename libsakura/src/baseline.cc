@@ -214,37 +214,9 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	}
 }
 
-inline void SetBasisData(size_t const order,
-LIBSAKURA_SYMBOL(BaselineContext) *context) {
+inline void AllocateWorkSpaces(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	auto const type = context->baseline_type;
-	context->num_bases = GetNumberOfContextBases(type, order);
-	size_t min_num_basis_data =
-			(type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
-					GetNumberOfCubicSplineLsqBases(order) : context->num_bases;
-	if (context->num_basis_data < min_num_basis_data) {
-		throw std::invalid_argument("num_basis_data is too small!");
-	}
-	AllocateMemoryForBasisData(context);
-	switch (type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		SetBasisDataPolynomial(context);
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		SetBasisDataChebyshev(context);
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		assert(context->num_bases == kNumBasesCubicSpline);
-		SetBasisDataPolynomial(context);
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		SetBasisDataSinusoid(context);
-		break;
-	default:
-		assert(false);
-		break;
-	}
-	//Allocate work areas-----------------
-	//size_t num_lsq_bases_max = 0;
+
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 		context->num_lsq_bases_max = GetNumberOfCubicSplineLsqBases(
 				context->baseline_param);
@@ -252,6 +224,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 		context->num_lsq_bases_max = GetNumberOfContextBases(type,
 				context->baseline_param);
 	}
+
 	size_t num_lsq_matrix = context->num_lsq_bases_max * context->num_lsq_bases_max;
 	context->lsq_matrix = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
@@ -317,8 +290,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->coeff_full));
 	context->coeff_full_storage = storage_for_coeff_full.release();
 
-	//---------------------------------------------
-	//Allocate CubicSpline-specific work areas ----
+	//CubicSpline-specific ones
 	context->piece_start_indices = nullptr;
 	context->piece_start_indices_storage = nullptr;
 	context->piece_end_indices = nullptr;
@@ -327,7 +299,7 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->cspline_basis_storage = nullptr;
 	context->cspline_lsq_coeff = nullptr;
 	context->cspline_lsq_coeff_storage = nullptr;
-	if (context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_start_indices(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(*context->piece_start_indices) * context->baseline_param,
@@ -353,7 +325,38 @@ LIBSAKURA_SYMBOL(BaselineContext) *context) {
 		assert(LIBSAKURA_SYMBOL(IsAligned)(context->cspline_lsq_coeff));
 		context->cspline_lsq_coeff_storage = storage_for_cspline_lsq_coeff.release();
 	}
-	//---------------------------------------------
+}
+
+inline void SetBasisData(size_t const order,
+LIBSAKURA_SYMBOL(BaselineContext) *context) {
+	auto const type = context->baseline_type;
+	context->num_bases = GetNumberOfContextBases(type, order);
+	size_t min_num_basis_data =
+			(type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
+					GetNumberOfCubicSplineLsqBases(order) : context->num_bases;
+	if (context->num_basis_data < min_num_basis_data) {
+		throw std::invalid_argument("num_basis_data is too small!");
+	}
+	AllocateMemoryForBasisData(context);
+	switch (type) {
+	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+		SetBasisDataPolynomial(context);
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+		SetBasisDataChebyshev(context);
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		assert(context->num_bases == kNumBasesCubicSpline);
+		SetBasisDataPolynomial(context);
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		SetBasisDataSinusoid(context);
+		break;
+	default:
+		assert(false);
+		break;
+	}
+	AllocateWorkSpaces(context);
 }
 
 inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
