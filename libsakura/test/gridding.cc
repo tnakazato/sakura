@@ -1819,7 +1819,7 @@ TEST(Gridding, Typical) {
 
 TEST(Gridding, Odd) {
 	typedef TestTypical TestCase;
-	typedef RowBase<512, 1, TestCase::kNVisChan, TestCase::kNVisPol> RowType;
+	typedef RowBase<256, 1, TestCase::kNVisChan, TestCase::kNVisPol> RowType;
 
 	TestCase *test_case;
 	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
@@ -1906,8 +1906,8 @@ TEST(Gridding, Odd) {
 					bool weight_only = false;
 					tc->TrySpeed(false, weight_only, rows, sumwt2, wgrid2, grid2, "Gridding_Odd_2");
 					ASSERT_DOUBLE_EQ(0, tc->sumwt[0][0]);
-					ASSERT_DOUBLE_EQ(173489.9988609105348587, tc->sumwt[0][1]);
-					ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][2]);
+					ASSERT_DOUBLE_EQ(86660.2047096043825150, tc->sumwt[0][1]);
+					ASSERT_DOUBLE_EQ(43245.307633951306, tc->sumwt[0][2]);
 					EXPECT_TRUE(all_of(&tc->sumwt[0][3], &tc->sumwt[0][ELEMENTSOF(tc->sumwt[0])],
 									[tc](decltype(tc->sumwt[0][0]++) x) -> bool {return x == tc->sumwt[0][2];}));
 					for (size_t i = 1; i < rows->kNVisPol-2; ++i) {
@@ -2032,7 +2032,7 @@ TEST(Gridding, PerformanceVectorized) {
 
 TEST(Gridding, PerformanceScalar) {
 	typedef TestTypical TestCase;
-	typedef RowBase<512, 2, TestCase::kNVisChan, TestCase::kNVisPol> RowType;
+	typedef RowBase<256, 1, TestCase::kNVisChan, TestCase::kNVisPol> RowType;
 
 	TestCase *test_case;
 	unique_ptr<void, DefaultAlignedMemory> test_case_storage(
