@@ -192,10 +192,10 @@ void Destroy(LIBSAKURA_SYMBOL(BaselineContext) *context, size_t status) {
 }
 
 /*
- * Test sakura_CreateBaselineContextWithPolynomial
+ * Test sakura_CreateBaselineContextWithPolynomialPerformanceTest
  * successful case (with normal polynomial model)
  */
-TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
+TEST_F(Baseline, CreateBaselineContextWithPolynomialPerformanceTest) {
 	uint16_t const order(8000);
 	uint16_t const npiece(1);
 	size_t const num_chan(65535);
@@ -220,7 +220,7 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomial) {
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	std::cout << std::setprecision(5)
-			<< "#x# benchmark Baseline_CreateBaselineContextWithPolynomial"
+			<< "#x# benchmark Baseline_CreateBaselineContextWithPolynomialPerformanceTest"
 			<< " " << elapsed_time << std::endl;
 }
 
@@ -564,13 +564,13 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 
 /*
  * Following the test code of sakura_SubtractBaseline
- * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClipping
+ * Test sakura_GetBestFitBaselineCoefficientsFloatPerformanceTest
  * successful case that will take a few seconds.
  * the input data have smooth shape and no spiky feature, and
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
  * clipping.
  */
-TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTime) {
+TEST_F(Baseline, GetBestFitBaselineCoefficientsFloatPerformanceTest) {
 	size_t const num_data(100000);
 	size_t const num_model(NUM_MODEL2);
 	size_t const num_coeff(NUM_MODEL2);
@@ -622,7 +622,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTim
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
 	std::cout << std::setprecision(5)
-			<< "#x# benchmark Baseline_GetBestFitBaselineCoeffFromSmoothDataWithoutClipping_ElapsedTime"
+			<< "#x# benchmark Baseline_GetBestFitBaselineCoefficientsFloatPerformanceTest"
 			<< " " << elapsed_time << std::endl;
 
 	for (size_t i = 0; i < num_coeff; ++i) {
@@ -1161,14 +1161,14 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 }
 
 /*
- * Test sakura_SubtractBaselineFromNormalDataWithoutClippingBigDataBigModel
+ * Test sakura_SubtractBaselineFloatPerformanceTest
  * successful case
  * the input data have smooth shape and no spiky feature, and
  * sakura_SubtractBaseline is executed without doing recursive
  * clipping.
  * the baseline-subtracted data should be zero throughout.
  */
-TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
+TEST_F(Baseline, SubtractBaselineFloatPerformanceTest) {
 	size_t const num_data(NUM_DATA2 * 250);
 	size_t const num_model(NUM_MODEL * 250);
 
@@ -1218,7 +1218,7 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
 	std::cout << std::setprecision(5)
-			<< "#x# benchmark Baseline_SubtractBaselineFromSmoothDataWithoutClippingBigDataBigModel"
+			<< "#x# benchmark Baseline_SubtractBaselineFloatPerformanceTest"
 			<< " " << elapsed_time << std::endl;
 
 	if (verbose) {
@@ -2294,7 +2294,7 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 }
 
 /*
- * Test sakura_SubtractBaselineFromBigDataUsingBigChebyshevModel
+ * Test sakura_SubtractBaselineFloatChebyshevPerformanceTest
  * successful case
  * subtract baseline from a realistic spectrum data with 3840 channels.
  * the data used here are taken from the first spectrum of the test
@@ -2302,8 +2302,8 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
  * also are identical with those used in e2e test. the baseline model
  * here is a big set of Chebyshev polynomials with order up to 400.
  */
-TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
-	size_t const num_data(3840);
+TEST_F(Baseline, SubtractBaselineFloatChebyshevPerformanceTest) {
+	size_t const num_data(13840);
 	size_t const num_model(400);
 
 	std::random_device rd;
@@ -2355,7 +2355,7 @@ TEST_F(Baseline, SubtractBaselineFromBigDataUsingBigChebyshevModel) {
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	std::cout << std::setprecision(5)
-			<< "#x# benchmark Baseline_SubtractBaselineFromBigDataUsingBigChebyshevModel"
+			<< "#x# benchmark Baseline_SubtractBaselineFloatChebyshevPerformanceTest"
 			<< " " << (end - start) << std::endl;
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
