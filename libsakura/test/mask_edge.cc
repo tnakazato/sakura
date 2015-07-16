@@ -451,7 +451,7 @@ TEST_MASK(ValidUserDefinedRange) {
 }
 
 // PERFORMANCE TEST
-TEST_MASK(LargeNumDataPerforamnce) {
+TEST_MASK(LargeNumDataPerformance) {
 	RunTest<StandardSquare, PerformanceTestOutput, StandardChecker>(40000, 0.1f,
 			0.5, NULL, NULL, NULL, NULL,
 			"MaskDataNearEdge_LargeNumDataPerformance");
