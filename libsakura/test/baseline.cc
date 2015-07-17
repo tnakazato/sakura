@@ -127,24 +127,6 @@ protected:
 			cout << endl;
 	}
 
-
-
-/*
-	template<typename T>
-	void Print1DArray(char const *name, size_t print_length, T const *data,
-			size_t start_idx = 0, bool print_name = true, bool newline = true) {
-		if (print_name)
-			cout << name << " = ";
-		cout << "[";
-		for (size_t i = start_idx; i < start_idx + print_length - 1; ++i)
-			cout << data[i] << ", ";
-		cout << data[start_idx + print_length - 1];
-		cout << " ]";
-		if (newline)
-			cout << endl;
-	}
-*/
-
 	//given as 1D float array but actually stores (num_row * num_column) 2D data
 	//for which column loop comes inside row loop.
 	template<typename T>
@@ -159,32 +141,6 @@ protected:
 				cout << " ]" << endl;
 	}
 
-
-	//given as 1D float array but actually stores (num_row * num_column) 2D data
-	//for which column loop comes inside row loop.
-/*	void PrintArray(char const *name, size_t num_row, size_t num_column,
-			float const *data) {
-		cout << name << " = [";
-		for (size_t i = 0; i < num_row; ++i) {
-			Print1DArray(name, num_column, data, num_column * i, false, false);
-			if (i < num_row - 1)
-				cout << ", " << endl;
-		}
-		cout << " ]" << endl;
-	}
-	//given as 1D double array but actually stores (num_row * num_column) 2D data
-	//for which column loop comes inside row loop.
-	void PrintArray(char const *name, size_t num_row, size_t num_column,
-			double const *data) {
-		cout << name << " = [";
-		for (size_t i = 0; i < num_row; ++i) {
-			Print1DArray(name, num_column, data, num_column * i, false, false);
-			if (i < num_row - 1)
-				cout << ", " << endl;
-		}
-		cout << " ]" << endl;
-	}
-*/
 	bool verbose;
 	uint16_t const nwave = 0;
 };
