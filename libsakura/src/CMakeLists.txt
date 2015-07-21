@@ -29,8 +29,8 @@ find_package(FFTW3 REQUIRED)
 include(SetArchFlags)
 
 project(libsakura)
-set(libsakura_VERSION_MAJOR 1)
-set(libsakura_VERSION_MINOR 1)
+#set(libsakura_VERSION_MAJOR 1)
+#set(libsakura_VERSION_MINOR 1)
 set(libsakura_PREFIX sakura)
 set(CMAKE_INSTALL_PREFIX /usr/local)
 
