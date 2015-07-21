@@ -86,8 +86,10 @@ struct NotAlignedXInitializer {
 			bool const mask_in[], double **x_out, double **y_out,
 			bool **mask_out,
 			bool mask_expected[], sakura_Status *status_expected) {
+		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
+				mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
 		*x_out = const_cast<double *>(x_in + 1);
-		*status_expected = sakura_Status_kInvalidArgument;
 	}
 };
 
@@ -97,8 +99,10 @@ struct NotAlignedYInitializer {
 			bool const mask_in[], double **x_out, double **y_out,
 			bool **mask_out,
 			bool mask_expected[], sakura_Status *status_expected) {
+		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
+				mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
 		*y_out = const_cast<double *>(y_in + 1);
-		*status_expected = sakura_Status_kInvalidArgument;
 	}
 };
 
@@ -108,8 +112,49 @@ struct NotAlignedMaskInitializer {
 			bool const mask_in[], double **x_out, double **y_out,
 			bool **mask_out,
 			bool mask_expected[], sakura_Status *status_expected) {
+		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
+				mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
 		*mask_out = const_cast<bool *>(mask_in + 1);
-		*status_expected = sakura_Status_kInvalidArgument;
+	}
+};
+
+struct NullXInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
+				mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
+		*x_out = nullptr;
+	}
+};
+
+struct NullYInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
+				mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
+		*y_out = nullptr;
+	}
+};
+
+struct NullMaskInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
+				mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
+		*mask_out = nullptr;
 	}
 };
 
@@ -388,6 +433,17 @@ TEST_MASK(ArrayNotAligned) {
 
 	// mask is not aligned
 	RunTest<NotAlignedMaskInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
+}
+
+TEST_MASK(ArrayIsNull) {
+	// x is nullptr
+	RunTest<NullXInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
+
+	// y is nullptr
+	RunTest<NullYInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
+
+	// mask is nullptr
+	RunTest<NullMaskInitializer, NullOutput, NullChecker>(10, 0.1f, 0.5);
 }
 
 TEST_MASK(InvalidUserDefinedRange) {

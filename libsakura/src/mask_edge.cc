@@ -545,6 +545,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	// Argument check
 	CHECK_ARGS(0.0 <= fraction && fraction <= 1.0);
 	CHECK_ARGS(0.0 < pixel_scale);
+	CHECK_ARGS(x != nullptr);
+	CHECK_ARGS(y != nullptr);
+	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(x));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(y));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
