@@ -2448,8 +2448,10 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 	}
 }
+
+//LM start---------------------------------------
 /*
-TEST_F(NumericOperation, FitGaussian) {
+TEST_F(NumericOperation, FitGaussianSingleComponent) {
 	size_t const num_data = 100;
 	SIMD_ALIGN
 	float data[num_data];
@@ -2467,7 +2469,6 @@ TEST_F(NumericOperation, FitGaussian) {
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
-
 	// Add bad data and mask them
 	for (size_t i = 0; i < 10; ++i) {
 		data[i] = 100.0;
@@ -2481,19 +2482,84 @@ TEST_F(NumericOperation, FitGaussian) {
 		data[i] = 300.0;
 		mask[i] = false;
 	}
+	for (size_t i = 0; i < num_data; ++i) {
+		//std::cout << i << "   " << data[i] << std::endl;
+	}
+
 	// Initial guess of Gaussian parameters
 	double out_ampl = 1.0;
 	double out_peak = 50.0;
 	double out_sigma = 1.0;
 	LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
-			data, mask, &out_ampl, &out_peak, &out_sigma);
+			data, mask, 1, &out_ampl, &out_peak, &out_sigma);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
-	for (size_t i = 0; i < num_data; ++i) {
-		//std::cout << i << "   " << data[i] << std::endl;
-	}
 	std::cout << "[out] ampl = " << out_ampl << ", peak = " << out_peak
 			<< ", sigma = " << out_sigma << std::endl;
 	std::cout << "[ans] ampl = " << ans_ampl << ", peak = " << ans_peak
 			<< ", sigma = " << ans_sigma << std::endl;
 }
+
+TEST_F(NumericOperation, FitGaussianDoubleComponents) {
+	size_t const num_data = 100;
+	SIMD_ALIGN
+	float data[num_data];
+	float sigma_noise = 0.10;
+	SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
+	// Answer of Gaussian parameters
+	size_t const num_line = 2;
+	double ans_ampl[num_line] = {7.0, 6.0};
+	double ans_peak[num_line] = {27.0, 70.0};
+	double ans_sigma[num_line] = {1.0, 1.5};
+	// Add Gaussian profile to the input data
+	for (size_t iline = 0; iline < num_line; ++iline) {
+		for (size_t i = 0; i < num_data; ++i) {
+			double value = ((double) i - ans_peak[iline]) / ans_sigma[iline];
+			data[i] += ans_ampl[iline] * exp(-0.5 / M_PI * value * value);
+		}
+	}
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	// Add bad data and mask them
+	for (size_t i = 0; i < 10; ++i) {
+		data[i] = 100.0;
+		mask[i] = false;
+	}
+	for (size_t i = 50; i < 52; ++i) {
+		data[i] = -300.0;
+		mask[i] = false;
+	}
+	for (size_t i = 90; i < 100; ++i) {
+		data[i] = 300.0;
+		mask[i] = false;
+	}
+	for (size_t i = 0; i < num_data; ++i) {
+		//std::cout << i << "   " << data[i] << std::endl;
+	}
+
+	// Initial guess of Gaussian parameters
+	double out_ampl[num_line] = {10.0, 10.0};
+	double out_peak[num_line] = {25.0, 69.0};
+	double out_sigma[num_line] = {1.0, 1.0};
+
+	for (size_t iline = 0; iline < num_line; ++iline) {
+		for (size_t i = 0; i < num_data; ++i) {
+			mask[i] = false;
+		}
+		size_t i_min = out_peak[iline]-5.0*out_sigma[iline];
+		size_t i_max = out_peak[iline]+5.0*out_sigma[iline];
+		for (size_t i = i_min; i < i_max; ++i) {
+			mask[i] = true;
+		}
+		LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
+				data, mask, 1, &out_ampl[iline], &out_peak[iline], &out_sigma[iline]);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		std::cout << "[out" << iline << "] ampl = " << out_ampl[iline] << ", peak = " << out_peak[iline]
+				<< ", sigma = " << out_sigma[iline] << std::endl;
+		std::cout << "[ans" << iline << "] ampl = " << ans_ampl[iline] << ", peak = " << ans_peak[iline]
+				<< ", sigma = " << ans_sigma[iline] << std::endl;
+	}
+}
 */
+//LM end ----------------------

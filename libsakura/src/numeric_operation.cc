@@ -556,7 +556,6 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 }
 
 //--LM part--------------------------------------
-/*
 template<typename T, int NX = Dynamic, int NY = Dynamic>
 struct Functor {
 	typedef T Scalar;
@@ -588,28 +587,35 @@ struct FunctorDouble: Functor<double> {
 };
 
 struct GaussianFunctorDouble: FunctorDouble {
-	GaussianFunctorDouble(int inputs, int values, double *x, double *y) :
-			FunctorDouble(inputs, values, x, y) {
+	GaussianFunctorDouble(size_t num_components, int inputs, int values, double *x, double *y) :
+			FunctorDouble(inputs, values, x, y), num_components_(num_components) {
 	};
 	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
 		//params are {peak_amplitude, peak_position, sigma}.
 		for (int i = 0; i < values_; ++i) {
-			double v = (x[i] - params[1]) / params[2];
-			values_to_minimize[i] = params[0] * exp(-0.5 / M_PI * v * v) - y[i];
+			values_to_minimize[i] = 0.0;
+			for (size_t iline = 0; iline < num_components_; ++iline) {
+				double v = (x[i] - params[3*iline+1]) / params[3*iline+2];
+				values_to_minimize[i] += params[3*iline] * exp(-0.5 / M_PI * v * v);
+			}
+			values_to_minimize[i] -= y[i];
 		}
 		return 0;
 	}
+	size_t num_components_;
 };
 
-void DoFitGaussianByLMDouble(size_t const num_data, double const x_data[], double const y_data[],
-		double *peak_amplitude, double *peak_position, double *sigma) {
-	size_t const num_parameters = 3;
+void DoFitGaussianByLMDouble(size_t const n, size_t const num_data, double const x_data[], double const y_data[],
+		double peak_amplitude[], double peak_position[], double sigma[]) {
+	size_t const num_parameters = 3 * n;
 	VectorXd params(num_parameters);
-	params << *peak_amplitude, *peak_position, *sigma;
+	for (size_t i = 0; i < n; ++i) {
+		params << peak_amplitude[i], peak_position[i], sigma[i];
+	}
 
 	std::vector<double> x(&x_data[0], &x_data[num_data]);
 	std::vector<double> y(&y_data[0], &y_data[num_data]);
-	GaussianFunctorDouble functor(num_parameters, x.size(), &x[0], &y[0]);
+	GaussianFunctorDouble functor(n, num_parameters, x.size(), &x[0], &y[0]);
 	NumericalDiff<GaussianFunctorDouble> num_diff(functor);
 	LevenbergMarquardt < NumericalDiff<GaussianFunctorDouble> > lm(num_diff);
 	int info = lm.minimize(params);
@@ -617,11 +623,12 @@ void DoFitGaussianByLMDouble(size_t const num_data, double const x_data[], doubl
 		throw std::runtime_error(
 				"FitGaussianByLMDouble: invalid data or parameter for Gaussian fitting.");
 	}
-	*peak_amplitude = params[0];
-	*peak_position = params[1];
-	*sigma = params[2];
+	for (size_t i = 0; i < n; ++i) {
+		peak_amplitude[i] = params[3*i];
+		peak_position[i] = params[3*i+1];
+		sigma[i] = params[3*i+2];
+	}
 }
-*/
 //--End LM part----------------------------------
 
 } /* anonymous namespace */
@@ -632,9 +639,17 @@ void DoFitGaussianByLMDouble(size_t const num_data, double const x_data[], doubl
 	} \
 } while (false)
 
+//--LM part--------------------------------------
+/*
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
 		size_t const num_data, float const data[], bool const mask[],
-		double *amplitude, double *position, double *sigma) noexcept {
+		size_t const num_lines, double amplitude[//num_lines
+		],
+		double position[//num_lines
+		],
+		double sigma[//num_lines
+		]
+		) noexcept {
 	try {
 		double data_x[num_data];
 		double data_y[num_data];
@@ -646,7 +661,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
 				++num_data_effective;
 			}
 		}
-		//DoFitGaussianByLMDouble(num_data_effective, data_x, data_y, amplitude, position, sigma);
+		DoFitGaussianByLMDouble(num_lines, num_data_effective, data_x, data_y, amplitude, position, sigma);
 	} catch (const std::runtime_error &e) {
 		LOG4CXX_ERROR(logger, e.what());
 		return LIBSAKURA_SYMBOL(Status_kNG);
@@ -657,6 +672,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
 
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
+*/
+//--End LM part----------------------------------
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],

@@ -1411,11 +1411,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 		double out[/*num_equations*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
- LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
-		 size_t const num_data, float const data[/*num_data*/],
-		 bool const mask[/*num_data*/],
-		 double *amplitude, double *mean, double *sigma)
-			LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+//LM part----------------------------------------------------------------
+//LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
+//		 size_t const num_data, float const data[/*num_data*/],
+//		 bool const mask[/*num_data*/], size_t const num_lines,
+//		 double amplitude[/*num_lines*/], double mean[/*num_lines*/],
+//		 double sigma[/*num_lines*/])
+//			LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+//end LM part----------------------------------------------------------------
 
  /**
  * @brief Enumerations to define baseline-specific error code.
