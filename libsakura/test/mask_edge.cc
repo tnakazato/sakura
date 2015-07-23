@@ -70,6 +70,7 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 
 #define TEST_MASK(Name) TEST(CreateMaskNearEdgeTest, Name)
 
+template<typename XInitializer, typename YInitializer, typename MaskInitializer>
 struct InvalidArgumentInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
 			double const y_in[],
@@ -77,86 +78,46 @@ struct InvalidArgumentInitializer {
 			bool **mask_out,
 			bool mask_expected[], sakura_Status *status_expected) {
 		*status_expected = sakura_Status_kInvalidArgument;
+		XInitializer::Initialize(x_in, x_out);
+		YInitializer::Initialize(y_in, y_out);
+		MaskInitializer::Initialize(mask_in, mask_out);
 	}
 };
 
-struct NotAlignedXInitializer {
-	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
-		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
-				mask_in, x_out, y_out, mask_out, mask_expected,
-				status_expected);
-		*x_out = const_cast<double *>(x_in + 1);
+template<typename T>
+struct NullInitializer {
+	static void Initialize(T const in[], T **out) {
 	}
 };
 
-struct NotAlignedYInitializer {
-	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
-		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
-				mask_in, x_out, y_out, mask_out, mask_expected,
-				status_expected);
-		*y_out = const_cast<double *>(y_in + 1);
+template<typename T>
+struct NotAlignedInitializer {
+	static void Initialize(T const in[], T **out) {
+		*out = const_cast<T *>(in + 1);
 	}
 };
 
-struct NotAlignedMaskInitializer {
-	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
-		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
-				mask_in, x_out, y_out, mask_out, mask_expected,
-				status_expected);
-		*mask_out = const_cast<bool *>(mask_in + 1);
+template<typename T>
+struct NullPointerInitializer {
+	static void Initialize(T const in[], T **out) {
+		*out = nullptr;
 	}
 };
 
-struct NullXInitializer {
-	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
-		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
-				mask_in, x_out, y_out, mask_out, mask_expected,
-				status_expected);
-		*x_out = nullptr;
-	}
-};
-
-struct NullYInitializer {
-	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
-		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
-				mask_in, x_out, y_out, mask_out, mask_expected,
-				status_expected);
-		*y_out = nullptr;
-	}
-};
-
-struct NullMaskInitializer {
-	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
-		InvalidArgumentInitializer::Initialize(num_data, fraction, x_in, y_in,
-				mask_in, x_out, y_out, mask_out, mask_expected,
-				status_expected);
-		*mask_out = nullptr;
-	}
-};
+typedef InvalidArgumentInitializer<NullInitializer<double>,
+		NullInitializer<double>, NullInitializer<bool> > BasicInvalidArgumentInitializer;
+typedef InvalidArgumentInitializer<NotAlignedInitializer<double>,
+		NullInitializer<double>, NullInitializer<bool> > NotAlignedXInitializer;
+typedef InvalidArgumentInitializer<NullInitializer<double>,
+		NotAlignedInitializer<double>, NullInitializer<bool> > NotAlignedYInitializer;
+typedef InvalidArgumentInitializer<NullInitializer<double>,
+		NullInitializer<double>, NotAlignedInitializer<bool> > NotAlignedMaskInitializer;
+typedef InvalidArgumentInitializer<NullPointerInitializer<double>,
+		NullInitializer<double>, NullInitializer<bool> > NullXInitializer;
+typedef InvalidArgumentInitializer<NullInitializer<double>,
+		NullPointerInitializer<double>, NullInitializer<bool> > NullYInitializer;
+typedef InvalidArgumentInitializer<NullInitializer<double>,
+		NullInitializer<double>, NullPointerInitializer<bool> > NullMaskInitializer;
 
 struct BaseInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
@@ -407,21 +368,21 @@ struct NullOutput {
 
 // FAILURE CASES
 TEST_MASK(NagativeFraction) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, -0.1f,
+	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, -0.1f,
 			0.5);
 }
 
 TEST_MASK(FractionLargerThanOne) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 1.5f, 0.5);
+	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 1.5f, 0.5);
 }
 
 TEST_MASK(NegativePixelScale) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f,
+	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f,
 			-0.5);
 }
 
 TEST_MASK(ZeroPixelScale) {
-	RunTest<InvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f, 0.0);
+	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f, 0.0);
 }
 
 TEST_MASK(ArrayNotAligned) {
