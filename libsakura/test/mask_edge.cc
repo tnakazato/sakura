@@ -84,40 +84,40 @@ struct InvalidArgumentInitializer {
 	}
 };
 
-template<typename T>
 struct NullInitializer {
+	template<typename T>
 	static void Initialize(T const in[], T **out) {
 	}
 };
 
-template<typename T>
 struct NotAlignedInitializer {
+	template<typename T>
 	static void Initialize(T const in[], T **out) {
 		*out = const_cast<T *>(in + 1);
 	}
 };
 
-template<typename T>
 struct NullPointerInitializer {
+	template<typename T>
 	static void Initialize(T const in[], T **out) {
 		*out = nullptr;
 	}
 };
 
-typedef InvalidArgumentInitializer<NullInitializer<double>,
-		NullInitializer<double>, NullInitializer<bool> > BasicInvalidArgumentInitializer;
-typedef InvalidArgumentInitializer<NotAlignedInitializer<double>,
-		NullInitializer<double>, NullInitializer<bool> > NotAlignedXInitializer;
-typedef InvalidArgumentInitializer<NullInitializer<double>,
-		NotAlignedInitializer<double>, NullInitializer<bool> > NotAlignedYInitializer;
-typedef InvalidArgumentInitializer<NullInitializer<double>,
-		NullInitializer<double>, NotAlignedInitializer<bool> > NotAlignedMaskInitializer;
-typedef InvalidArgumentInitializer<NullPointerInitializer<double>,
-		NullInitializer<double>, NullInitializer<bool> > NullXInitializer;
-typedef InvalidArgumentInitializer<NullInitializer<double>,
-		NullPointerInitializer<double>, NullInitializer<bool> > NullYInitializer;
-typedef InvalidArgumentInitializer<NullInitializer<double>,
-		NullInitializer<double>, NullPointerInitializer<bool> > NullMaskInitializer;
+typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
+		NullInitializer> BasicInvalidArgumentInitializer;
+typedef InvalidArgumentInitializer<NotAlignedInitializer, NullInitializer,
+		NullInitializer> NotAlignedXInitializer;
+typedef InvalidArgumentInitializer<NullInitializer, NotAlignedInitializer,
+		NullInitializer> NotAlignedYInitializer;
+typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
+		NotAlignedInitializer> NotAlignedMaskInitializer;
+typedef InvalidArgumentInitializer<NullPointerInitializer, NullInitializer,
+		NullInitializer> NullXInitializer;
+typedef InvalidArgumentInitializer<NullInitializer, NullPointerInitializer,
+		NullInitializer> NullYInitializer;
+typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
+		NullPointerInitializer> NullMaskInitializer;
 
 struct BaseInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
@@ -373,7 +373,8 @@ TEST_MASK(NagativeFraction) {
 }
 
 TEST_MASK(FractionLargerThanOne) {
-	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 1.5f, 0.5);
+	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 1.5f,
+			0.5);
 }
 
 TEST_MASK(NegativePixelScale) {
@@ -382,7 +383,8 @@ TEST_MASK(NegativePixelScale) {
 }
 
 TEST_MASK(ZeroPixelScale) {
-	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f, 0.0);
+	RunTest<BasicInvalidArgumentInitializer, NullOutput, NullChecker>(10, 0.1f,
+			0.0);
 }
 
 TEST_MASK(ArrayNotAligned) {
