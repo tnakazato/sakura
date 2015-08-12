@@ -58,6 +58,17 @@ double SumSquared(size_t elements, float const data[], bool const is_valid[]) {
 	return result;
 }
 
+void CheckStatInvalidArg(size_t num_data, float const data[], bool const is_valid[],
+LIBSAKURA_SYMBOL(StatisticsResultFloat) *result) {
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
+			num_data, data, is_valid, result);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+
+	status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data, data,
+			is_valid, result);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
 template<typename T>
 void ExpectEQ(T const &ref, T const &result) {
 	if (std::isnan(ref)) {
@@ -286,6 +297,21 @@ TEST(Statistics, ComputeStatistics) {
 
 	{
 		SIMD_ALIGN
+		static std::array<float, 4> data;
+		SIMD_ALIGN
+		static std::array<bool, data.size()> is_valid;
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
+
+		CheckStatInvalidArg(0, nullptr, nullptr, nullptr);
+		CheckStatInvalidArg(1, nullptr, is_valid.data(), &result);
+		CheckStatInvalidArg(1, data.data(), nullptr, &result);
+		CheckStatInvalidArg(1, data.data(), is_valid.data(), nullptr);
+
+		CheckStatInvalidArg(1, data.data()+1, is_valid.data(), &result);
+		CheckStatInvalidArg(1, data.data(), is_valid.data()+1, &result);
+	}
+	{
+		SIMD_ALIGN
 		static std::array<float, 256> data;
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
@@ -400,7 +426,7 @@ TEST(Statistics, ComputeStatistics) {
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
 		is_valid.fill(false);
-		std::iota(data.begin(), data.end(), 0);
+		std::iota(data.begin(), data.end(), 2.f);
 
 		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = 0;
