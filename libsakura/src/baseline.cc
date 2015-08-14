@@ -1199,7 +1199,16 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, uint16_t const order,
 		CHECK_ARGS(0 < order);
 	}
 	CHECK_ARGS(order <= context->baseline_param);
-	*num_coeff = DoGetNumberOfCoefficients(type, order, 0, nullptr);
+
+	try {
+		*num_coeff = DoGetNumberOfCoefficients(type, order, 0, nullptr);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 

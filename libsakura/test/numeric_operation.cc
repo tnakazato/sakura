@@ -1066,25 +1066,26 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_exclude_indices(NUM_EXCLUDE);
 	SIMD_ALIGN
-	size_t exclude_indices[NUM_EXCLUDE];
+	size_t exclude_indices[num_exclude_indices] = {};
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
+	size_t const num_lsq_matrix(num_model * num_model);
 	SIMD_ALIGN
-	double in_lsq_matrix[num_model * num_model];
+	double in_lsq_matrix[num_lsq_matrix];
 	SIMD_ALIGN
-	double in_lsq_matrix_orig[num_model * num_model];
+	double in_lsq_matrix_orig[num_lsq_matrix];
 	SIMD_ALIGN
 	double in_lsq_vector[num_model];
 	SIMD_ALIGN
 	double in_lsq_vector_orig[num_model];
 	SIMD_ALIGN
-	size_t use_idx[num_model];
+	size_t use_idx[num_model] = {};
 	for (size_t i = 0; i < num_model; ++i) {
 		use_idx[i] = i;
 	}
 	SIMD_ALIGN
-	double answer[num_model * num_model];
+	double answer[num_lsq_matrix];
 	SIMD_ALIGN
 	double answer_vector[num_model];
 
@@ -1941,15 +1942,25 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 	size_t const num_model(NUM_MODEL3);
 	SIMD_ALIGN
 	double lsq_vector[num_model];
-	SIMD_ALIGN
-	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
+	double *model = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_model(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*model) * ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data), &model));
+	if (model == nullptr) {
+		throw bad_alloc();
+	}
 	SIMD_ALIGN
 	size_t use_idx[num_model];
 	for (size_t i = 0; i < num_model; ++i) {
 		use_idx[i] = i;
 	}
-	SIMD_ALIGN
-	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
+	double *lsq_matrix = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_lsq_matrix(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*lsq_matrix) * ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector), &lsq_matrix));
+	if (lsq_matrix == nullptr) {
+		throw bad_alloc();
+	}
 	SIMD_ALIGN
 	double out[ELEMENTSOF(lsq_vector)];
 	SIMD_ALIGN
@@ -2403,7 +2414,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsOrder) {
 TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 	size_t const num_data(NUM_DATA);
 	size_t const num_model(NUM_MODEL);
-	size_t const bad_coeffs[] = { num_model + 1, 0 };
+	size_t const bad_coeffs[2] = { num_model + 1, 0 };
 	size_t const good_coeff(num_model);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -2412,10 +2423,13 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 	size_t const num_exclude_indices(NUM_EXCLUDE);
 	SIMD_ALIGN
 	size_t exclude_indices[NUM_EXCLUDE];
+	for (size_t i = 0; i < num_exclude_indices; ++i) {
+		exclude_indices[i] = i * i;
+	}
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
-	size_t use_idx[num_model];
+	size_t use_idx[num_model] = {};
 	for (size_t i = 0; i < num_model; ++i) {
 		use_idx[i] = i;
 	}

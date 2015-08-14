@@ -82,21 +82,17 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	// Set (1+x+x*x) float values into an array
-	void SetFloatPolynomial(size_t const num_data, float *data) {
+	//Set (coeff[0]+coeff[1]*x+coeff[2]*x*x+...) float values into an array
+	void SetFloatPolynomial(size_t num_coeff, double const *coeff,
+			size_t num_data, float *data) {
 		for (size_t i = 0; i < num_data; ++i) {
+			double val = 0.0;
 			double x = (double) i;
-			data[i] = (float) (1.0 + x + x * x);
-		}
-	}
-
-	//Set (A[0]+A[1]*x+A[2]*x*x+A[3]*x*x*x) float values into an array
-	void SetFloatPolynomial(size_t num_data, float *data,
-			double *coeff_answer) {
-		for (size_t i = 0; i < num_data; ++i) {
-			double x = (double) i;
-			data[i] = (float) (coeff_answer[0] + coeff_answer[1] * x
-					+ coeff_answer[2] * x * x + coeff_answer[3] * x * x * x);
+			for (size_t j = 0; j < num_coeff; ++j) {
+				val *= x;
+				val += coeff[num_coeff - 1 - j];
+			}
+			data[i] = static_cast<float>(val);
 		}
 	}
 
@@ -260,7 +256,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 			size_t const num_data = ELEMENTSOF(answer) + num_extra;
 			SIMD_ALIGN
 			float data[num_data];
-			SetFloatPolynomial(num_data, data, answer);
+			SetFloatPolynomial(4, answer, num_data, data);
 			SIMD_ALIGN
 			bool mask[ELEMENTSOF(data)];
 			SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -327,7 +323,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseWithMa
 	size_t const num_data = 100;
 	SIMD_ALIGN
 	float data[num_data];
-	SetFloatPolynomial(num_data, data, answer);
+	SetFloatPolynomial(4, answer, num_data, data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -424,7 +420,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	size_t const num_data = 70000;
 	SIMD_ALIGN
 	float in_data[num_data];
-	SetFloatPolynomial(num_data, in_data, answer);
+	SetFloatPolynomial(ELEMENTSOF(answer), answer, num_data, in_data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(in_data)];
 	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
@@ -495,7 +491,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	SIMD_ALIGN
 	float data[num_data];
-	SetFloatPolynomial(num_data, data, coeff);
+	SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -585,7 +581,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	SIMD_ALIGN
 	float data[num_data + 1];
-	SetFloatPolynomial(num_data, data, coeff);
+	SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -709,7 +705,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 
 		SIMD_ALIGN
 		float data[num_data];
-		SetFloatPolynomial(num_data, data, coeff);
+		SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 		SIMD_ALIGN
 		bool mask[ELEMENTSOF(data)];
 		SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -752,7 +748,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
 			cout << num_data << ((num_extra < num_extra_max) ? ", " : "");
 			SIMD_ALIGN
 			float data[num_data];
-			SetFloatPolynomial(num_data, data, coeff);
+			SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 			SIMD_ALIGN
 			bool mask[ELEMENTSOF(data)];
 			SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -807,7 +803,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	SIMD_ALIGN
 	float data[num_data];
 	double coeff[4] = { 1.0, 1e-4, 1e-8, 1e-12 };
-	SetFloatPolynomial(num_data, data, coeff);
+	SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -880,7 +876,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesNullPointer) {
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	SIMD_ALIGN
 	float data[num_data];
-	SetFloatPolynomial(num_data, data, coeff);
+	SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -971,7 +967,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesUnaligned) {
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	SIMD_ALIGN
 	float data[num_data + 1];
-	SetFloatPolynomial(num_data, data, coeff);
+	SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(data)];
 	SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -1093,7 +1089,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 
 		SIMD_ALIGN
 		float data[num_data];
-		SetFloatPolynomial(num_data, data, coeff);
+		SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, data);
 		SIMD_ALIGN
 		bool mask[ELEMENTSOF(data)];
 		SetBoolConstant(true, ELEMENTSOF(data), mask);
@@ -2649,5 +2645,58 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadPar
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContext(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+	}
+}
+
+TEST_F(BaselineWK, CreateBaselineContext) {
+	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
+			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
+					BaselineType_kChebyshev), LIBSAKURA_SYMBOL(
+					BaselineType_kCubicSpline), LIBSAKURA_SYMBOL(
+					BaselineType_kSinusoid) };
+	uint16_t order_valid_min = 0;
+	size_t num_data_valid_min = 0;
+	for (size_t itype = 0; itype < ELEMENTSOF(bltypes); ++itype) {
+		order_valid_min =
+				(bltypes[itype] == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
+						1 : 0;
+		for (uint16_t order = 0; order < order_valid_min + 3; ++order) {
+			if (bltypes[itype] == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) {
+				num_data_valid_min = order + 1;
+			} else if (bltypes[itype]
+					== LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) {
+				num_data_valid_min = order + 1;
+			} else if (bltypes[itype]
+					== LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+				num_data_valid_min = order + 3;
+			} else if (bltypes[itype]
+					== LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+				num_data_valid_min = 2 * order + 1;
+			}
+			for (size_t num_data = 0; num_data < num_data_valid_min + 3;
+					++num_data) {
+				if (verbose) {
+					cout << "   testing [bltype=" << itype << ", order="
+							<< order << ", num_data=" << num_data << "] ... ";
+				}
+				LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
+				LIBSAKURA_SYMBOL (Status) status = sakura_CreateBaselineContext(
+						bltypes[itype], order, order, order, num_data,
+						&context);
+				if ((num_data < num_data_valid_min)
+						|| (order < order_valid_min)) {
+					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+							status);
+				} else {
+					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				}
+				if (verbose) {
+					if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+						cout << "(InvalidArgument)";
+					}
+					cout << "OK" << endl;
+				}
+			}
+		}
 	}
 }

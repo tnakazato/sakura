@@ -75,21 +75,17 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	// Set (1+x+x*x) float values into an array
-	void SetFloatPolynomial(size_t const num_data, float *data) {
+	//Set (coeff[0]+coeff[1]*x+coeff[2]*x*x+...) float values into an array
+	void SetFloatPolynomial(size_t num_coeff, double const *coeff,
+			size_t num_data, float *data) {
 		for (size_t i = 0; i < num_data; ++i) {
-			double x = (double) i;
-			data[i] = (float) (1.0 + x + x * x);
-		}
-	}
-
-	//Set (A[0]+A[1]*x+A[2]*x*x+A[3]*x*x*x) float values into an array
-	void SetFloatPolynomial(size_t num_data, float *data,
-			double *coeff_answer) {
-		for (size_t i = 0; i < num_data; ++i) {
-			double x = (double) i;
-			data[i] = (float) (coeff_answer[0] + coeff_answer[1] * x
-					+ coeff_answer[2] * x * x + coeff_answer[3] * x * x * x);
+			double val = 0.0;
+			double x = (double)i;
+			for (size_t j = 0; j < num_coeff; ++j) {
+				val *= x;
+				val += coeff[num_coeff-1-j];
+			}
+			data[i] = static_cast<float>(val);
 		}
 	}
 
@@ -206,8 +202,7 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 	SIMD_ALIGN
 	float in_data[num_data];
 	double coeff[] = { 4., 1., -1., 0.25 };
-	STATIC_ASSERT(ELEMENTSOF(coeff)==4); // SetFloatPolynomial requires 4 elements array
-	SetFloatPolynomial(num_data, in_data, coeff);
+	SetFloatPolynomial(ELEMENTSOF(coeff), coeff, num_data, in_data);
 	SIMD_ALIGN
 	bool in_mask[ELEMENTSOF(in_data)];
 	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);

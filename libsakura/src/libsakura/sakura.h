@@ -1489,7 +1489,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * be equal to or larger than the number of model bases, which
  * is @a order+1 for sakura_BaselineType_kPolynomial and
  * sakura_BaselineType_kChebyshev, or @a order+3 for
- * sakura_BaselineType_kCubicSpline or @a order*2+1 for
+ * sakura_BaselineType_kCubicSpline, or @a order*2+1 for
  * sakura_BaselineType_kSinusoid. The smallest value of
  * @a num_data @a corresponding to the smallest possible order
  * for each baseline type are: 1 for
@@ -1521,16 +1521,14 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @details
  * @param[in] context An object containing baseline model data.
  * @param[in] order Parameter for the specified function.
- * It is the order for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or the maximum wave number
+ * It is the polynomial order for sakura_BaselineType_kPolynomial
+ * and sakura_BaselineType_kChebyshev, or the maximum wave number
  * for sakura_BaselineType_kSinusoid. The value should not exceed
  * the @a order specified in creation of @a context .
- * The number of model bases, which is @a order+1 for
- * sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or @a order*2+1 for
- * sakura_BaselineType_kSinusoid, must not exceed @a num_data.
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out.
+ * @a mask, @a final_mask, and @a out. It must be equal to @a num_data @a
+ * which was given to sakura_CreateBaselineContext() to create
+ * @a context @a .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
