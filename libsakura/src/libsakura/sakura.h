@@ -1256,7 +1256,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * It must be a positive number.
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask Input mask data with length of @a num_mask .
+ * @param[in] mask Input mask data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_model_bases Number of model basis functions. It must be a
  * positive number, also it must be equal to or less than @a num_data .
