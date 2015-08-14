@@ -1395,6 +1395,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	CHECK_ARGS(0 < num_pieces);
 	CHECK_ARGS(num_pieces <= context->baseline_param);
+	CHECK_ARGS(GetNumberOfCubicSplineLsqBases(num_pieces) <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));

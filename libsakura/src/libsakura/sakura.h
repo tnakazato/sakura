@@ -1705,7 +1705,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @details
  * @param[in] context An object containing baseline model data.
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, and @a final_mask.
+ * @a mask, and @a final_mask. It must be equal to or greater than
+ * ( @a num_pieces + 3), the number of basis functions of cubic spline.
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
@@ -1719,7 +1720,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * The default is 1 (i.e., baseline fitting done just once and no
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
- * @param[in] num_pieces The number of spline pieces.
+ * @param[in] num_pieces The number of spline pieces. It must be a
+ * positive number.
  * @param[out] coeff The coefficients of the best-fit cubic spline curve.
  * Its length must be @a num_pieces * 4 .
  * @n must-be-aligned
