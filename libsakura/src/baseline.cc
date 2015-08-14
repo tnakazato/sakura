@@ -508,7 +508,7 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		size_t coffset = kNumBasesCubicSpline * i;
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
 		size_t end_idx =
-				(i < num_boundary - 1) ?
+				(i + 1 < num_boundary) ?
 						static_cast<size_t>(ceil(boundary[i + 1])) : num_out;
 		size_t j = start_idx;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
