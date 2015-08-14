@@ -211,7 +211,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 			nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
-	double coeff[num_data] = { 2.0, 1.0, -1.0, 0.2, 2.0, 1.0, -1.0, 0.2 };
+	double coeff[2][4] = {{ 2.0, 1.0, -1.0, 0.2}, {2.0, 1.0, -1.0, 0.2 }};
 	SIMD_ALIGN
 	double boundary[num_pieces] = { 0.0f, 4.0f };
 	LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -268,7 +268,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[8] = { 1.0f, 1.0f, -1.0f, 0.5f, 1.0f, 1.0f, -1.0f, 0.5f };
+		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
 		SIMD_ALIGN
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -309,7 +309,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 
 		SIMD_ALIGN
 		double coeff[4 * num_pieces + 1];
-		double *coeff_unaligned = coeff + 1;
+		double (*coeff_unaligned)[4] = reinterpret_cast<double (*)[4]>(coeff + 1);
 		assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_unaligned));
 		SIMD_ALIGN
 		double boundary[2] = { 0.0f, 4.0f };
@@ -350,7 +350,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[8] = { 1.0f, 1.0f, -1.0f, 0.5f, 1.0f, 1.0f, -1.0f, 0.5f };
+		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
 		SIMD_ALIGN
 		double boundary[num_pieces + 1];
 		double *boundary_unaligned = boundary + 1;
@@ -394,7 +394,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[8] = { 1.0f, 1.0f, -1.0f, 0.5f, 1.0f, 1.0f, -1.0f, 0.5f };
+		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
 		SIMD_ALIGN
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -439,7 +439,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[8] = { 1.0f, 1.0f, -1.0f, 0.5f, 1.0f, 1.0f, -1.0f, 0.5f };
+		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -475,7 +475,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double *coeff = nullptr;
+		double (*coeff)[4] = nullptr;
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -507,8 +507,10 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[4 * num_pieces];
-		//SetFloatConstant(0.0f, (4*num_pieces), coeff);
+		double coeff[num_pieces][4];
+		for (size_t i = 0; i < num_pieces; ++i) {
+			SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[i]));
+		}
 		double *boundary = nullptr;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -540,8 +542,10 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[4 * num_pieces];
-		//SetFloatConstant(0.0f, 4*num_pieces, coeff);
+		double coeff[num_pieces][4];
+		for (size_t i = 0; i < num_pieces; ++i) {
+			SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[i]));
+		}
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -568,8 +572,10 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 
 		SIMD_ALIGN
 		size_t num_pieces = 2;
-		double coeff[4 * num_pieces];
-		//SetFloatConstant(0.0f, 4*num_pieces, coeff);
+		double coeff[num_pieces][4];
+		for (size_t i = 0; i < num_pieces; ++i) {
+			SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[i]));
+		}
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -612,7 +618,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[4];
+		double coeff[1][4];
+		SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[0]));
 		double boundary[2] = { 0.0f, 4.0f };
 		size_t const bad_num_data(num_data + 1);
 		LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -647,7 +654,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[4];
+		double coeff[1][4];
 		double boundary[2] = { 0.0f, 4.0f };
 		size_t bad_num_data = context->num_bases - 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -682,10 +689,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		//size_t num_pieces = 2;
-		//double coeff[4*num_pieces];
-		double coeff[4];
-		//SetFloatConstant(0.0f, 4*num_pieces, coeff);
+		double coeff[1][4];
+		SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[0]));
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -727,15 +732,18 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy, num_pieces,
 			nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	size_t const num_data_div_4(num_data/4);
 	SIMD_ALIGN
-	double coeff[num_data];
+	double coeff[num_data_div_4][4];
 	SIMD_ALIGN
 	double tmp_coeff[4] = { 0.00001, -0.00001, 0.00001, 0.00001 };
-	for (size_t i = 0; i < num_data; ++i) {
-		coeff[i] = tmp_coeff[i % 4];
+	for (size_t j = 0; j < num_data_div_4; ++j) {
+		for (size_t i = 0; i < 4; ++i) {
+			coeff[j][i] = tmp_coeff[i];
+		}
 	}
 	if (verbose) {
-		PrintArray("coeff", num_data, coeff);
+		//PrintArray("coeff", num_data, coeff);
 	}
 	SIMD_ALIGN
 	double boundary[num_pieces];

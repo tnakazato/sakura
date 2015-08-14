@@ -502,10 +502,10 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 }
 
 inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
-		double const *coeff_full, size_t num_out, double const *basis,
+		double const (*coeff_full)[4],
+		size_t num_out, double const *basis,
 		double *out) {
 	for (size_t i = 0; i < num_boundary; ++i) {
-		size_t coffset = kNumBasesCubicSpline * i;
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
 		size_t end_idx =
 				(i + 1 < num_boundary) ?
@@ -521,7 +521,7 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		for (j = start_idx; j < start; ++j) {
 			double out_double = 0.0;
 			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				out_double += coeff_full[k + coffset]
+				out_double += coeff_full[i][k]
 						* basis[kNumBasesCubicSpline * j + k];
 			}
 			out[j] = out_double;
@@ -541,7 +541,7 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 			auto total = zero;
 			auto bases_row = &basis[kNumBasesCubicSpline * j];
 			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				auto ce = _mm256_set1_pd(coeff_full[k + coffset]);
+				auto ce = _mm256_set1_pd(coeff_full[i][k]);
 #if defined(__AVX2__) && 0 // <--- will make this part effective
 				// once _mm256_i64gather_pd gets faster in future
 				// version. cf. #744 (2015/7/9 WK)
@@ -560,7 +560,7 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		for (; j < end_idx; ++j) {
 			double out_double = 0.0;
 			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				out_double += coeff_full[k + coffset]
+				out_double += coeff_full[i][k]
 						* basis[kNumBasesCubicSpline * j + k];
 			}
 			out[j] = out_double;
@@ -640,9 +640,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 
 }
 
-inline void GetFullCubicSplineCoefficients(size_t num_pieces,
-		double const *boundary_arg, double const *coeff_raw_arg,
-		double *coeff_arg) {
+inline void GetFullCubicSplineCoefficients(size_t num_pieces, double const *boundary_arg, double const *coeff_raw_arg, double (*coeff_arg)[4]) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_raw_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
@@ -651,19 +649,17 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	auto coeff = AssumeAligned(coeff_arg);
 
 	for (size_t i = 0; i < kNumBasesCubicSpline; ++i) {
-		coeff[i] = coeff_raw[i];
+		coeff[0][i] = coeff_raw[i];
 	}
 	for (size_t i = 1; i < num_pieces; ++i) {
-		size_t ioffset = kNumBasesCubicSpline * i;
-		size_t ioffset_prev = ioffset - kNumBasesCubicSpline;
 		size_t j = GetNumberOfCubicSplineLsqBases(i);
-		auto const c = coeff_raw[j] - coeff[ioffset_prev + 3];
-		coeff[ioffset] = coeff[ioffset_prev]
+		auto const c = coeff_raw[j] - coeff[i-1][3];
+		coeff[i][0] = coeff[i-1][0]
 				- boundary[i] * boundary[i] * boundary[i] * c;
-		coeff[ioffset + 1] = coeff[ioffset_prev + 1]
+		coeff[i][1] = coeff[i-1][1]
 				+ 3.0 * boundary[i] * boundary[i] * c;
-		coeff[ioffset + 2] = coeff[ioffset_prev + 2] - 3.0 * boundary[i] * c;
-		coeff[ioffset + 3] = coeff_raw[j];
+		coeff[i][2] = coeff[i-1][2] - 3.0 * boundary[i] * c;
+		coeff[i][3] = coeff_raw[j];
 	}
 }
 
@@ -738,7 +734,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		float const *data, LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t num_pieces, double const *boundary, double const *coeff_full,
+		size_t num_pieces, double const *boundary, double const (*coeff_full)[4],
 		double *best_fit_model, float *residual_data) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -922,7 +918,7 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_pieces,
 		LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		float clip_threshold_sigma, uint16_t num_fitting_max,
-		double *coeff_full_arg, double *boundary_arg, bool *final_mask_arg,
+		double (*coeff_full_arg)[4], double *boundary_arg, bool *final_mask_arg,
 		float *rms, bool get_residual, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
@@ -1024,7 +1020,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 	auto out = AssumeAligned(out_arg);
 
 	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
-			clip_threshold_sigma, num_fitting_max, context->coeff_full,
+			clip_threshold_sigma, num_fitting_max,
+			reinterpret_cast<double (*)[kNumBasesCubicSpline]>(context->coeff_full),
 			boundary, final_mask, rms, get_residual, out, baseline_status);
 }
 
@@ -1059,7 +1056,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 inline void GetBestFitBaselineCoefficientsCubicSplineFloat(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const *data_arg, bool const *mask_arg, float clip_threshold_sigma,
-		uint16_t num_fitting_max, size_t num_pieces, double *coeff_arg,
+		uint16_t num_fitting_max, size_t num_pieces, double (*coeff_arg)[4],
 		bool *final_mask_arg, float *rms, double *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
@@ -1105,7 +1102,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 
 inline void SubtractBaselineCubicSplineUsingCoefficientsFloat(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
-		float const *data_arg, size_t num_pieces, double const *coeff_arg,
+		float const *data_arg, size_t num_pieces, double const (*coeff_arg)[4],
 		double const *boundary_arg, float *out_arg) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1382,14 +1379,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
-LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
-		float const data[/*num_data*/], bool const mask[/*num_data*/],
-		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
-		double coeff[/*num_pieces*kNumBasesCubicSpline*/],
-		bool final_mask[/*num_data*/], float *rms,
-		double boundary[/*num_pieces*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/], float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces, double coeff[][kNumBasesCubicSpline], bool final_mask[/*num_data*/], float *rms, double boundary[/*num_pieces*/], LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1508,7 +1498,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_pieces,
-		double const coeff[/*num_pieces*kNumBasesCubicSpline*/],
+		double const coeff[/*num_pieces*/][kNumBasesCubicSpline],
 		double const boundary[/*num_pieces*/], float out[/*num_data*/])
 				noexcept {
 	CHECK_ARGS(context != nullptr);

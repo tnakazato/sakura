@@ -248,7 +248,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 		double answer[4 * num_pieces];
 		SetDoubleConstant(1.0, ELEMENTSOF(answer), answer);
 		SIMD_ALIGN
-		double out[ELEMENTSOF(answer)];
+		double out[num_pieces][4];
 		float rms;
 		LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
@@ -279,13 +279,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
 			for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
-				CheckAlmostEqual(answer[i], out[i], 1.0e-6);
-			}
-
-			if (verbose) {
-				PrintArray("data  ", ELEMENTSOF(data), data);
-				PrintArray("out   ", ELEMENTSOF(out), out);
-				PrintArray("answer", ELEMENTSOF(answer), answer);
+				CheckAlmostEqual(answer[i], out[i/4][i%4], 1.0e-6);
 			}
 
 			LIBSAKURA_SYMBOL (Status) destroy_status =
@@ -315,7 +309,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseWithMa
 	double answer[4 * num_pieces];
 	SetDoubleConstant(1.0, ELEMENTSOF(answer), answer);
 	SIMD_ALIGN
-	double out[ELEMENTSOF(answer)];
+	double out[num_pieces][4];
 	float rms;
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) coeff_status;
@@ -384,13 +378,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseWithMa
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
-		if (verbose) {
-			PrintArray("data  ", ELEMENTSOF(data), data);
-			PrintArray("out   ", ELEMENTSOF(out), out);
-			PrintArray("answer", ELEMENTSOF(answer), answer);
-		}
 		for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
-			CheckAlmostEqual(answer[i], out[i], 1.0e-5);
+			CheckAlmostEqual(answer[i], out[i/4][i%4], 1.0e-5);
 		}
 	}
 
@@ -433,7 +422,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 			dummy_nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
-	double out[ELEMENTSOF(answer)];
+	double out[num_pieces][4];
 	float rms;
 	SIMD_ALIGN
 	double boundary[num_pieces];
@@ -452,12 +441,6 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 			<< " " << (end_time - start_time) << std::endl;
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
-
-	if (verbose) {
-		PrintArray("data  ", num_data, in_data);
-		PrintArray("out   ", ELEMENTSOF(answer), out);
-		PrintArray("answer", ELEMENTSOF(answer), answer);
-	}
 
 	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
 			context);
@@ -498,7 +481,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(data)];
 	SIMD_ALIGN
-	double out[ELEMENTSOF(coeff)];
+	double out[1][4];
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), dummy, num_pieces,
@@ -516,7 +499,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 		float *data_ptr = data;
 		bool *mask_ptr = mask;
 		bool *final_mask_ptr = final_mask;
-		double *out_ptr = out;
+		double (*out_ptr)[4] = out;
 		double *boundary_ptr = boundary;
 		LIBSAKURA_SYMBOL(BaselineContext) *context_ptr = context;
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status_ptr = &baseline_status;
@@ -570,8 +553,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 	enum UAItems {
 		UA_kData, UA_kMask, UA_kCoeff, UA_kFinalMask, UA_kBoundary, UA_kNumElems
 	};
-	vector<string> ua_param_names = { "data", "mask", "coeff", "final_mask",
-			"boundary" };
+	vector<string> ua_param_names = { "data", "mask", "coeff", "final_mask", "boundary" };
 	cout << "    Testing for ";
 
 	uint16_t const dummy = 0;
@@ -588,7 +570,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 	SIMD_ALIGN
 	bool final_mask[ELEMENTSOF(data)];
 	SIMD_ALIGN
-	double out[ELEMENTSOF(coeff) + 1];
+	double out[num_pieces+1][4];
 	float rms;
 	SIMD_ALIGN
 	double boundary[num_pieces + 1];
@@ -606,7 +588,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 		float *data_ptr = data;
 		bool *mask_ptr = mask;
 		bool *final_mask_ptr = final_mask;
-		double *out_ptr = out;
+		double *out_unaligned = reinterpret_cast<double *>(out) + 1;
+		double (*out_ptr)[4] = out;
 		double *boundary_ptr = boundary;
 
 		switch (item) {
@@ -619,7 +602,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
 			assert(!LIBSAKURA_SYMBOL(IsAligned)(mask_ptr));
 			break;
 		case UA_kCoeff:
-			++out_ptr;
+			out_ptr = reinterpret_cast<double (*)[4]>(out_unaligned);
 			assert(!LIBSAKURA_SYMBOL(IsAligned)(out_ptr));
 			break;
 		case UA_kFinalMask:
@@ -675,7 +658,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 	double coeff[4 * num_boundary];
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	SIMD_ALIGN
-	double out[ELEMENTSOF(coeff)];
+	double out[num_boundary][4];
 	float rms;
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(

@@ -1723,7 +1723,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] num_pieces The number of spline pieces. It must be a
  * positive number.
  * @param[out] coeff The coefficients of the best-fit cubic spline curve.
- * Its length must be @a num_pieces * 4 .
+ * Its total size must be @a num_pieces * 4 .
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
  * procedure. Its length must be @a num_data .
@@ -1741,7 +1741,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_pieces,
-		double coeff[/*4*num_piece*/], bool final_mask[/*num_data*/],
+		double coeff[/*num_piece*/][4], bool final_mask[/*num_data*/],
 		float *rms, double boundary[/*num_pieces*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
@@ -1828,7 +1828,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[in] num_pieces The number of spline pieces. If zero is
  * given, no subtraction executed.
- * @param[in] coeff Coefficients of cubic spline curve. Its length
+ * @param[in] coeff Coefficients of cubic spline curve. Its total size
  * must be @a num_pieces * 4.
  * @n must-be-aligned
  * @param[in] boundary A 1D array containing the left edge positions of
@@ -1841,7 +1841,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
-		double const coeff[/*4*num_pieces*/],
+		double const coeff[/*num_pieces*/][4],
 		double const boundary[/*num_pieces*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
