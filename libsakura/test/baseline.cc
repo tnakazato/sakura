@@ -691,7 +691,7 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 }
 
 /*
- * Test sakura_GetBestFitBaselineCoeffFromNormalDataWithoutClippingWithMaskNotAligned
+ * Test sakura_GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNotAligned
  * failure case
  * the input data have smooth shape and no spiky feature, and
  * sakura_GetBestFitBaselineCoeff is executed without doing recursive
@@ -740,23 +740,10 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, num_data,
-			in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
+			in_data, in_mask_unaligned, clipping_threshold_sigma, num_fitting_max,
 			num_coeff, coeff, final_mask, &rms, &subbl_blstatus);
 
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-
-	for (size_t i = 0; i < num_coeff; ++i) {
-		cout.precision();
-		cout << "diff between coeff_answer and coeff "
-				<< coeff_answer[i] - coeff[i] << endl;
-		ASSERT_EQ((float )coeff_answer[i], (float )coeff[i]);
-	}
-
-	if (verbose) {
-		Print1DArray("fmask ", num_data, final_mask);
-		Print1DArray("answer", num_data, answer);
-	}
-
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
 
@@ -2855,17 +2842,31 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	size_t const num_model(NUM_MODEL);
 	size_t const num_coeff(NUM_MODEL);
 
-	SIMD_ALIGN
-	float in_data[num_data];
+	float *in_data = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_in_data(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*in_data) * num_data, &in_data));
+	if (in_data == nullptr) {
+		throw bad_alloc();
+	}
 	for (size_t i = 0; i < num_data; ++i) {
 		in_data[i] = i * i + 2 * i + 3;
 	}
-
-	SIMD_ALIGN
-	float out[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float answer[ELEMENTSOF(in_data)];
-	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
+	float *out = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_out(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*out) * num_data, &out));
+	if (out == nullptr) {
+		throw bad_alloc();
+	}
+	float *answer = nullptr;
+	unique_ptr<void, DefaultAlignedMemory> storage_for_answer(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(*answer) * num_data, &answer));
+	if (answer == nullptr) {
+		throw bad_alloc();
+	}
+	Set_XXX_Constant(0.0f, num_data, answer);
 
 	if (verbose) {
 		Print1DArray("in_data", num_data, in_data);
