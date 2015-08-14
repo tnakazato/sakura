@@ -600,7 +600,7 @@ inline std::string GetNotEnoughDataMessage(
 inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 		size_t num_pieces, double *boundary_arg, size_t *start_arg,
 		size_t *end_arg) {
-	assert(num_pieces > 0);
+	assert(0 < num_pieces);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(start_arg));
@@ -634,7 +634,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	for (size_t i = 0; i < num_pieces; ++i) {
 		start[i] = static_cast<size_t>(ceil(boundary[i]));
 		end[i] =
-				(i < num_pieces - 1) ?
+				(i + 1 < num_pieces) ?
 						static_cast<size_t>(boundary[i + 1]) : num_mask;
 	}
 
