@@ -25,6 +25,9 @@
  * functions to be tested include:
  * - sakura_SubtractBaselineCubicSplineFloat
  * - sakura_GetBestFitBaselineCoefficientsCubicSplineFloat
+ * - sakura_SubtractBaselineSinusoidFloat
+ * - sakura_GetBestFitBaselineCoefficientsSinusoidFloat
+ * - sakura_SubtractBaselineSinusoidUsingCoefficientsFloat
  * test cases are as follows:
  * - for cubic spline functions:
  *     (1) simple successful case
@@ -637,17 +640,20 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesUnalig
  *     (1) num_data < context->num_bases
  *     (2) num_data < (!=) context->num_basis_data
  *     (3) num_data > (!=) context->num_basis_data
+ *     (4) num_pieces == 0
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadParameterValue) {
 	enum BVItems {
 		BV_kDataLTNumBases,
 		BV_kDataLTNumBasisData,
 		BV_kDataGTNumBasisData,
+		BV_kNumPiecesZero,
 		BV_kNumElems
 	};
 	vector<string> bv_param_names = { "(num_data < context->num_bases)",
 			"(num_data < context->num_basis_data)",
-			"(num_data > context->num_basis_data)" };
+			"(num_data > context->num_basis_data)",
+			"(num_pieces == 0)" };
 	cout << "    Testing for cases " << endl;
 
 	uint16_t const dummy = 0;
@@ -671,7 +677,8 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 			static_cast<BVItems>(item + 1)) {
 		cout << "        " << bv_param_names[item]
 				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
-		size_t num_data = 0;
+		size_t num_data = num_basis_data;
+		size_t num_pieces = num_boundary;
 		switch (item) {
 		case BV_kDataLTNumBases:
 			num_data = 2;
@@ -681,6 +688,9 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 			break;
 		case BV_kDataGTNumBasisData:
 			num_data = 15;
+			break;
+		case BV_kNumPiecesZero:
+			num_pieces = 0;
 			break;
 		default:
 			assert(false);
@@ -697,7 +707,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 
 		LIBSAKURA_SYMBOL (Status) coeff_status = LIBSAKURA_SYMBOL(
 				GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
-				num_data, data, mask, 5.0f, 1, num_boundary, out, final_mask,
+				num_data, data, mask, 5.0f, 1, num_pieces, out, final_mask,
 				&rms, boundary, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), coeff_status);
 	}
@@ -1023,17 +1033,20 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesUnaligned) {
  *     (1) num_data < context->num_bases
  *     (2) num_data < (!=) context->num_basis_data
  *     (3) num_data > (!=) context->num_basis_data
+ *     (4) num_pieces == 0
  */
 TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 	enum BVItems {
 		BV_kDataLTNumBases,
 		BV_kDataLTNumBasisData,
 		BV_kDataGTNumBasisData,
+		BV_kNumPiecesZero,
 		BV_kNumElems
 	};
 	vector<string> bv_param_names = { "(num_data < context->num_bases)",
 			"(num_data < context->num_basis_data)",
-			"(num_data > context->num_basis_data)" };
+			"(num_data > context->num_basis_data)",
+			"(num_pieces == 0)"};
 	cout << "    Testing for cases " << endl;
 
 	size_t const num_basis_data = 10;
@@ -1041,12 +1054,12 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 	double coeff[4];
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	float rms;
-	size_t const num_pieces = 1;
+	size_t const num_pieces_context = 1;
 	SIMD_ALIGN
-	double boundary[num_pieces];
+	double boundary[num_pieces_context];
 	LIBSAKURA_SYMBOL(BaselineContext) *context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), dummy, num_pieces,
+			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), dummy, num_pieces_context,
 			dummy, num_basis_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
@@ -1055,7 +1068,8 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 			static_cast<BVItems>(item + 1)) {
 		cout << "        " << bv_param_names[item]
 				<< ((item < BV_kNumElems - 1) ? ", " : "") << endl;
-		size_t num_data = 0;
+		size_t num_data = num_basis_data;
+		size_t num_pieces = num_pieces_context;
 		switch (item) {
 		case BV_kDataLTNumBases:
 			num_data = 2;
@@ -1065,6 +1079,9 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 			break;
 		case BV_kDataGTNumBasisData:
 			num_data = 15;
+			break;
+		case BV_kNumPiecesZero:
+			num_pieces = 0;
 			break;
 		default:
 			assert(false);

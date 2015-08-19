@@ -1722,7 +1722,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
  * @param[in] num_pieces The number of spline pieces. It must be a
- * positive number.
+ * positive number and must not exceed ( @a num_data - 3).
  * @param[out] coeff The coefficients of the best-fit cubic spline curve.
  * It must be a 2-Dimensional array of total size ( @a num_pieces * 4),
  * i.e., its type must be double[num_pieces][4].
