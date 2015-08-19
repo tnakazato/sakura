@@ -1487,10 +1487,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * sakura_BaselineType_kSinusoid.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
- * is @a order+1 for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, or @a order+3 for
- * sakura_BaselineType_kCubicSpline, or @a order*2+1 for
- * sakura_BaselineType_kSinusoid. The smallest value of
+ * is ( @a order + 1 ) for sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, ( @a order + 3 ) for
+ * sakura_BaselineType_kCubicSpline, or ( @a order * 2 + 1 )
+ * for sakura_BaselineType_kSinusoid. The smallest value of
  * @a num_data @a corresponding to the smallest possible order
  * for each baseline type are: 1 for
  * sakura_BaselineType_kPolynomial, sakura_BaselineType_kChebyshev
@@ -1568,9 +1568,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @details
  * @param[in] context An object containing baseline model data.
  * @param[in] num_pieces Number of spline pieces. It must be positive
- * and also must not exceed ( @a num_data * 4 ).
+ * and also must not exceed ( @a num_data - 3).
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out.
+ * @a mask, @a final_mask, and @a out. It must be equal to or greater than
+ * ( @a num_pieces + 3), the number of basis functions of cubic spline.
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .

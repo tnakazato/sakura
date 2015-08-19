@@ -80,10 +80,6 @@ inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
 	return res;
 }
 
-inline size_t GetNumberOfCubicSplineLsqBases(size_t num_pieces) {
-	return kNumBasesCubicSpline - 1 + num_pieces;
-}
-
 inline size_t GetNumberOfContextBases(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	size_t num_bases = 0;
@@ -97,6 +93,25 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
 		num_bases = 2 * order + 1;
+		break;
+	default:
+		assert(false);
+		break;
+	}
+	return num_bases;
+}
+
+inline size_t GetNumberOfLsqBases(
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order) {
+	size_t num_bases = 0;
+	switch (baseline_type) {
+	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		num_bases = GetNumberOfContextBases(baseline_type, order);
+		break;
+	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		num_bases = kNumBasesCubicSpline - 1 + order;
 		break;
 	default:
 		assert(false);
@@ -216,16 +231,10 @@ inline void SetBasisDataSinusoid(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 
 inline void AllocateWorkSpaces(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	auto const type = context->baseline_type;
-
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
-		context->num_lsq_bases_max = GetNumberOfCubicSplineLsqBases(
-				context->baseline_param);
-	} else {
-		context->num_lsq_bases_max = GetNumberOfContextBases(type,
-				context->baseline_param);
-	}
-
-	size_t num_lsq_matrix = context->num_lsq_bases_max * context->num_lsq_bases_max;
+	context->num_lsq_bases_max = GetNumberOfLsqBases(type,
+			context->baseline_param);
+	size_t num_lsq_matrix = context->num_lsq_bases_max
+			* context->num_lsq_bases_max;
 	context->lsq_matrix = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -267,7 +276,8 @@ inline void AllocateWorkSpaces(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->use_bases_idx = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_use_bases_idx(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(*context->use_bases_idx) * context->num_lsq_bases_max,
+					sizeof(*context->use_bases_idx)
+							* context->num_lsq_bases_max,
 					&context->use_bases_idx));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->use_bases_idx));
 	if (type != LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
@@ -302,28 +312,36 @@ inline void AllocateWorkSpaces(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_start_indices(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(*context->piece_start_indices) * context->baseline_param,
+						sizeof(*context->piece_start_indices)
+								* context->baseline_param,
 						&context->piece_start_indices));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(context->piece_start_indices));
-		context->piece_start_indices_storage = storage_for_piece_start_indices.release();
+		context->piece_start_indices_storage =
+				storage_for_piece_start_indices.release();
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_end_indices(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(*context->piece_end_indices) * context->baseline_param,
+						sizeof(*context->piece_end_indices)
+								* context->baseline_param,
 						&context->piece_end_indices));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(context->piece_end_indices));
-		context->piece_end_indices_storage = storage_for_piece_end_indices.release();
+		context->piece_end_indices_storage =
+				storage_for_piece_end_indices.release();
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_basis(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(*context->cspline_basis) * context->num_lsq_bases_max * context->num_basis_data,
+						sizeof(*context->cspline_basis)
+								* context->num_lsq_bases_max
+								* context->num_basis_data,
 						&context->cspline_basis));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(context->cspline_basis));
 		context->cspline_basis_storage = storage_for_cspline_basis.release();
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_lsq_coeff(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(*context->cspline_lsq_coeff) * context->num_lsq_bases_max,
+						sizeof(*context->cspline_lsq_coeff)
+								* context->num_lsq_bases_max,
 						&context->cspline_lsq_coeff));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(context->cspline_lsq_coeff));
-		context->cspline_lsq_coeff_storage = storage_for_cspline_lsq_coeff.release();
+		context->cspline_lsq_coeff_storage =
+				storage_for_cspline_lsq_coeff.release();
 	}
 }
 
@@ -331,9 +349,8 @@ inline void SetBasisData(size_t const order,
 LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	auto const type = context->baseline_type;
 	context->num_bases = GetNumberOfContextBases(type, order);
-	size_t min_num_basis_data =
-			(type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
-					GetNumberOfCubicSplineLsqBases(order) : context->num_bases;
+	size_t min_num_basis_data = GetNumberOfLsqBases(type, order);
+
 	if (context->num_basis_data < min_num_basis_data) {
 		throw std::invalid_argument("num_basis_data is too small!");
 	}
@@ -386,7 +403,8 @@ inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 			LIBSAKURA_PREFIX::Memory::Free(context->coeff_full_storage);
 		}
 		if (context->piece_start_indices != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(context->piece_start_indices_storage);
+			LIBSAKURA_PREFIX::Memory::Free(
+					context->piece_start_indices_storage);
 		}
 		if (context->piece_end_indices != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->piece_end_indices_storage);
@@ -502,8 +520,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 }
 
 inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
-		double const (*coeff_full)[4],
-		size_t num_out, double const *basis,
+		double const (*coeff_full)[4], size_t num_out, double const *basis,
 		double *out) {
 	for (size_t i = 0; i < num_boundary; ++i) {
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
@@ -640,7 +657,9 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 
 }
 
-inline void GetFullCubicSplineCoefficients(size_t num_pieces, double const *boundary_arg, double const *coeff_raw_arg, double (*coeff_arg)[4]) {
+inline void GetFullCubicSplineCoefficients(size_t num_pieces,
+		double const *boundary_arg, double const *coeff_raw_arg,
+		double (*coeff_arg)[4]) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_raw_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
@@ -652,13 +671,12 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces, double const *boun
 		coeff[0][i] = coeff_raw[i];
 	}
 	for (size_t i = 1; i < num_pieces; ++i) {
-		size_t j = GetNumberOfCubicSplineLsqBases(i);
-		auto const c = coeff_raw[j] - coeff[i-1][3];
-		coeff[i][0] = coeff[i-1][0]
+		size_t j = GetNumberOfLsqBases(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), i);
+		auto const c = coeff_raw[j] - coeff[i - 1][3];
+		coeff[i][0] = coeff[i - 1][0]
 				- boundary[i] * boundary[i] * boundary[i] * c;
-		coeff[i][1] = coeff[i-1][1]
-				+ 3.0 * boundary[i] * boundary[i] * c;
-		coeff[i][2] = coeff[i-1][2] - 3.0 * boundary[i] * c;
+		coeff[i][1] = coeff[i - 1][1] + 3.0 * boundary[i] * boundary[i] * c;
+		coeff[i][2] = coeff[i - 1][2] - 3.0 * boundary[i] * c;
 		coeff[i][3] = coeff_raw[j];
 	}
 }
@@ -734,8 +752,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		float const *data, LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		size_t num_pieces, double const *boundary, double const (*coeff_full)[4],
-		double *best_fit_model, float *residual_data) {
+		size_t num_pieces, double const *boundary,
+		double const (*coeff_full)[4], double *best_fit_model,
+		float *residual_data) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	assert(context->num_bases == kNumBasesCubicSpline);
@@ -882,8 +901,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 
 inline void DoSubtractBaseline(size_t num_data, float const *data_arg,
 bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
-		float clip_threshold_sigma, uint16_t num_fitting_max,
-		size_t num_coeff, double *coeff_arg,
+		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
+		double *coeff_arg,
 		bool *final_mask_arg, float *rms, bool get_residual, float *out_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -939,14 +958,16 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 
 	GetBoundariesOfPiecewiseData(num_data, mask, num_pieces, boundary,
 			context->piece_start_indices, context->piece_end_indices);
-	SetFullCubicSplineBasisData(num_data, num_pieces, boundary, context->cspline_basis);
-	size_t num_coeff = GetNumberOfCubicSplineLsqBases(num_pieces);
+	SetFullCubicSplineBasisData(num_data, num_pieces, boundary,
+			context->cspline_basis);
+	size_t num_coeff = GetNumberOfLsqBases(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
 	DoSubtractBaselineEngine(context, num_data, data, mask, num_coeff,
-			num_coeff, context->cspline_basis, num_pieces, context->piece_start_indices,
-			context->piece_end_indices,
+			num_coeff, context->cspline_basis, num_pieces,
+			context->piece_start_indices, context->piece_end_indices,
 			std::max(static_cast<uint16_t>(1), num_fitting_max),
-			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff, final_mask, rms,
-			context->residual_data, context->best_fit_model, out,
+			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff,
+			final_mask, rms, context->residual_data, context->best_fit_model,
+			out,
 			[&]() {
 				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff_full);
 				GetBestFitModelAndResidualCubicSpline(num_data, data, context,
@@ -1379,13 +1400,19 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data, float const data[/*num_data*/], bool const mask[/*num_data*/], float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces, double coeff[][kNumBasesCubicSpline], bool final_mask[/*num_data*/], float *rms, double boundary[/*num_pieces*/], LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
+		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
+		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
+		double coeff[][kNumBasesCubicSpline], bool final_mask[/*num_data*/],
+		float *rms, double boundary[/*num_pieces*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	CHECK_ARGS(0 < num_pieces);
 	CHECK_ARGS(num_pieces <= context->baseline_param);
-	CHECK_ARGS(GetNumberOfCubicSplineLsqBases(num_pieces) <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces) <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
