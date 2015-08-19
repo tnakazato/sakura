@@ -1594,7 +1594,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[out] rms Root-mean-square of the output data.
  * @param[out] boundary Starting positions of the cubic spline pieces.
- * Its length must be @a num_pieces .
+ * Its length must be ( @a num_pieces + 1). Note that the last element
+ * will be @a num_data , the next of the last data index.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
  * @return Status code.
@@ -1606,7 +1607,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
-		double boundary[/*num_pieces*/],
+		double boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1732,7 +1733,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
  * @param[out] boundary Starting positions of the cubic spline pieces.
- * Its length must be @a num_pieces .
+ * Its length must be ( @a num_pieces + 1). Note that the last element
+ * will be @a num_data , the next of the last data index.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
  * @return Status code.
@@ -1744,7 +1746,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*/][4], bool final_mask[/*num_data*/],
-		float *rms, double boundary[/*num_pieces*/],
+		float *rms, double boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 

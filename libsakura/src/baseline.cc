@@ -301,31 +301,11 @@ inline void AllocateWorkSpaces(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	context->coeff_full_storage = storage_for_coeff_full.release();
 
 	//CubicSpline-specific ones
-	context->piece_start_indices = nullptr;
-	context->piece_start_indices_storage = nullptr;
-	context->piece_end_indices = nullptr;
-	context->piece_end_indices_storage = nullptr;
 	context->cspline_basis = nullptr;
 	context->cspline_basis_storage = nullptr;
 	context->cspline_lsq_coeff = nullptr;
 	context->cspline_lsq_coeff_storage = nullptr;
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_start_indices(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(*context->piece_start_indices)
-								* context->baseline_param,
-						&context->piece_start_indices));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(context->piece_start_indices));
-		context->piece_start_indices_storage =
-				storage_for_piece_start_indices.release();
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_piece_end_indices(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(*context->piece_end_indices)
-								* context->baseline_param,
-						&context->piece_end_indices));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(context->piece_end_indices));
-		context->piece_end_indices_storage =
-				storage_for_piece_end_indices.release();
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_basis(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(*context->cspline_basis)
@@ -401,13 +381,6 @@ inline void DestroyBaselineContext(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 		}
 		if (context->coeff_full != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->coeff_full_storage);
-		}
-		if (context->piece_start_indices != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(
-					context->piece_start_indices_storage);
-		}
-		if (context->piece_end_indices != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(context->piece_end_indices_storage);
 		}
 		if (context->cspline_basis != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->cspline_basis_storage);
@@ -615,8 +588,7 @@ inline std::string GetNotEnoughDataMessage(
 }
 
 inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
-		size_t num_pieces, double *boundary_arg, size_t *start_arg,
-		size_t *end_arg) {
+		size_t num_pieces, double *boundary_arg) {
 	assert(0 < num_pieces);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -624,8 +596,6 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(end_arg));
 	auto const mask = AssumeAligned(mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
-	auto start = AssumeAligned(start_arg);
-	auto end = AssumeAligned(end_arg);
 
 	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
@@ -648,13 +618,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 			++count_unmasked_data;
 		}
 	}
-	for (size_t i = 0; i < num_pieces; ++i) {
-		start[i] = static_cast<size_t>(ceil(boundary[i]));
-		end[i] =
-				(i + 1 < num_pieces) ?
-						static_cast<size_t>(boundary[i + 1]) : num_mask;
-	}
-
+	boundary[num_pieces] = static_cast<double>(num_mask);
 }
 
 inline void GetFullCubicSplineCoefficients(size_t num_pieces,
@@ -757,27 +721,26 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 	OperateSubtractionFloat(num_data, data, best_fit_model, residual_data);
 }
 
-inline void ClipData(size_t num_piece, size_t const *piece_start_arg,
-		size_t const *piece_end_arg, float const *data_arg,
-		bool const *in_mask_arg, float const lower_bound,
+inline void ClipData(size_t num_piece, double *boundary_arg,
+		float const *data_arg, bool const *in_mask_arg, float const lower_bound,
 		float const upper_bound, bool *out_mask_arg,
 		size_t *clipped_indices_arg, size_t *num_clipped) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(piece_start_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(piece_end_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
-	auto const piece_start = AssumeAligned(piece_start_arg);
-	auto const piece_end = AssumeAligned(piece_end_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
 	auto const data = AssumeAligned(data_arg);
 	auto const in_mask = AssumeAligned(in_mask_arg);
 	auto out_mask = AssumeAligned(out_mask_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 
 	*num_clipped = 0;
+	size_t piece_start = 0;
 	for (size_t ipiece = 0; ipiece < num_piece; ++ipiece) {
-		for (size_t i = piece_start[ipiece]; i < piece_end[ipiece]; ++i) {
+		size_t piece_end = static_cast<size_t>(ceil(boundary[ipiece + 1])) - 1;
+		for (size_t i = piece_start; i < piece_end; ++i) {
 			out_mask[i] = in_mask[i];
 			if (in_mask[i]) {
 				if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
@@ -787,6 +750,7 @@ inline void ClipData(size_t num_piece, size_t const *piece_start_arg,
 				}
 			}
 		}
+		piece_start = piece_end + 1;
 	}
 }
 
@@ -795,16 +759,15 @@ inline void DoSubtractBaselineEngine(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_context_bases,
 		size_t num_coeff, double const *basis_arg, size_t num_pieces,
-		size_t *piece_start_indices_arg, size_t *piece_end_indices_arg,
-		uint16_t num_fitting_max, float clip_threshold_sigma, bool get_residual,
-		double *coeff_arg, bool *final_mask_arg, float *rms,
-		float *residual_data_arg, double *best_fit_model_arg, float *out_arg,
-		FUNC func, LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		double *boundary_arg, uint16_t num_fitting_max,
+		float clip_threshold_sigma, bool get_residual, double *coeff_arg,
+		bool *final_mask_arg, float *rms, float *residual_data_arg,
+		double *best_fit_model_arg, float *out_arg, FUNC func,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(piece_start_indices_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(piece_end_indices_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(residual_data_arg));
@@ -813,8 +776,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 	auto const data = AssumeAligned(data_arg);
 	auto const mask = AssumeAligned(mask_arg);
 	auto const basis = AssumeAligned(basis_arg);
-	auto piece_start_indices = AssumeAligned(piece_start_indices_arg);
-	auto piece_end_indices = AssumeAligned(piece_end_indices_arg);
+	auto const boundary = AssumeAligned(boundary_arg);
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto residual_data = AssumeAligned(residual_data_arg);
@@ -869,9 +831,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 				float clip_threshold_abs = clip_threshold_sigma * rms_d;
 				float clip_threshold_lower = mean - clip_threshold_abs;
 				float clip_threshold_upper = mean + clip_threshold_abs;
-				ClipData(num_pieces, piece_start_indices, piece_end_indices,
-						residual_data, final_mask, clip_threshold_lower,
-						clip_threshold_upper, final_mask,
+				ClipData(num_pieces, boundary, residual_data, final_mask,
+						clip_threshold_lower, clip_threshold_upper, final_mask,
 						context->clipped_indices, &num_clipped);
 				if (num_clipped == 0) {
 					break;
@@ -912,18 +873,15 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 	auto out = AssumeAligned(out_arg);
 
 	SIMD_ALIGN
-	size_t piece_start_index = 0;
-	SIMD_ALIGN
-	size_t piece_end_index = num_data;
+	double boundary[2] = { 0.0, static_cast<double>(num_data + 1) };
 
 	DoSubtractBaselineEngine(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 1, &piece_start_index,
-			&piece_end_index,
+			num_coeff, context->basis_data, 1, boundary,
 			std::max(static_cast<uint16_t>(1), num_fitting_max),
 			clip_threshold_sigma, get_residual, coeff, final_mask, rms,
 			context->residual_data, context->best_fit_model, out,
-			[&]() {GetBestFitModelAndResidual(num_data, data, context,
-						num_coeff, coeff, context->best_fit_model, context->residual_data);},
+			[&]() {GetBestFitModelAndResidual(num_data, data, context, num_coeff,
+						coeff, context->best_fit_model, context->residual_data);},
 			baseline_status);
 }
 
@@ -950,15 +908,14 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	auto *final_mask = AssumeAligned(final_mask_arg);
 	auto *out = AssumeAligned(out_arg);
 
-	GetBoundariesOfPiecewiseData(num_data, mask, num_pieces, boundary,
-			context->piece_start_indices, context->piece_end_indices);
+	GetBoundariesOfPiecewiseData(num_data, mask, num_pieces, boundary);
+
 	SetFullCubicSplineBasisData(num_data, num_pieces, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
 	DoSubtractBaselineEngine(context, num_data, data, mask, num_coeff,
-			num_coeff, context->cspline_basis, num_pieces,
-			context->piece_start_indices, context->piece_end_indices,
+			num_coeff, context->cspline_basis, num_pieces, boundary,
 			std::max(static_cast<uint16_t>(1), num_fitting_max),
 			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff,
 			final_mask, rms, context->residual_data, context->best_fit_model,
@@ -1118,7 +1075,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 }
 
 inline void SubtractBaselineCubicSplineUsingCoefficientsFloat(
-		LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const *data_arg, size_t num_pieces,
 		double const (*coeff_arg)[kNumBasesCubicSpline],
 		double const *boundary_arg, float *out_arg) {
@@ -1274,7 +1231,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_pieces,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual,
 		bool final_mask[/*num_data*/], float out[/*num_data*/], float *rms,
-		double boundary[/*num_pieces*/],
+		double boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1403,7 +1360,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*/][kNumBasesCubicSpline],
 		bool final_mask[/*num_data*/], float *rms,
-		double boundary[/*num_pieces*/],
+		double boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(

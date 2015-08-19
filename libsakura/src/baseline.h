@@ -53,10 +53,6 @@ struct LIBSAKURA_SYMBOL(BaselineContext) {
 	size_t *use_bases_idx; /** A pointer to aligned 1D array for indices of bases that are used for fitting. Its size is @a num_lsq_bases_max @a . For baseline type other than Sinusoid, the element values should be equal to their index. */
 	void *coeff_full_storage; /** An address returned when allocating @a coeff_full @a . This one itself is not aligned, and is hold just for deallocating. */
 	double *coeff_full; /** A pointer to aligned 1D array for storing full coefficients. Its size is @a baseline_param * 4 @a for CubicSpline, and @a num_lsq_bases_max @a for other baseline types. */
-	void *piece_start_indices_storage; /** An address returned when allocating @a piece_start_indices @a . This one itself is not aligned, and is hold just for deallocating. */
-	size_t *piece_start_indices; /** A pointer to aligned 1D array for indices of starting points of spline pieces. Its size is @a baseline_param @a . */
-	void *piece_end_indices_storage; /** An address returned when allocating @a piece_end_indices @a . This one itself is not aligned, and is hold just for deallocating. */
-	size_t *piece_end_indices; /** A pointer to aligned 1D array for indices of end points of spline pieces. Its size is @a baseline_param @a . */
 	void *cspline_basis_storage; /** An address returned when allocating @a cspline_basis @a . This one itself is not aligned, and is hold just for deallocating. */
 	double *cspline_basis; /** A pointer to aligned 1D array for basis functions used in cubic spline fitting. Its size is @a num_basis_data * num_lsq_bases_max @a . */
 	void *cspline_lsq_coeff_storage; /** An address returned when allocating @a cspline_lsq_coeff @a . This one itself is not aligned, and is hold just for deallocating. */
