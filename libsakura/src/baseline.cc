@@ -1171,8 +1171,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 		break;
 	}
-	size_t num_bases = GetNumberOfContextBases(baseline_type, param);
-	CHECK_ARGS(num_bases <= num_data);
+	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, param);
+	CHECK_ARGS(num_lsq_bases <= num_data);
 
 	try {
 		CreateBaselineContext(baseline_type, order, npiece, nwave, num_data,
