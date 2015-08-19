@@ -592,8 +592,6 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	assert(0 < num_pieces);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(start_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(end_arg));
 	auto const mask = AssumeAligned(mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
