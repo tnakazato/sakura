@@ -682,13 +682,6 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	}
 }
 
-inline void SetStandardCubicBases(double const i_d, size_t *idx,
-		double *out_arg) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	auto out = AssumeAligned(out_arg);
-	DoSetBasisDataPolynomial(kNumBasesCubicSpline, i_d, idx, out);
-}
-
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 		double const *boundary_arg, double const boundary_final,
 		double const i_d, size_t *idx, double *out_arg) {
@@ -729,13 +722,13 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	if (num_boundary < 2) {
 		for (size_t i = 0; i < num_data; ++i) {
 			double i_d = static_cast<double>(i);
-			SetStandardCubicBases(i_d, &idx, out);
+			DoSetBasisDataPolynomial(kNumBasesCubicSpline, i_d, &idx, out);
 		}
 	} else {
 		double boundary_final = boundary[num_boundary - 1];
 		for (size_t i = 0; i < num_data; ++i) {
 			double i_d = static_cast<double>(i);
-			SetStandardCubicBases(i_d, &idx, out);
+			DoSetBasisDataPolynomial(kNumBasesCubicSpline, i_d, &idx, out);
 			SetAuxiliaryCubicBases(num_boundary, boundary, boundary_final, i_d,
 					&idx, out);
 		}
