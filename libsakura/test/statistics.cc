@@ -461,51 +461,61 @@ TEST(Statistics, ComputeStatistics) {
 	}
 	{
 		SIMD_ALIGN
-		static std::array<float, 1024> data;
+		static std::array<float, 1023> data;
 		SIMD_ALIGN
 		static std::array<bool, data.size()> is_valid;
-		size_t count = 0;
-		double sum = 0;
-		float max = -1;
-		float min = data.size() + 1;
-		size_t max_idx = -1;
-		size_t min_idx = -1;
-		double sqsum = 0.;
+		float invalid_data[] { std::numeric_limits<float>::infinity(),
+				-std::numeric_limits<float>::infinity(), std::numeric_limits<
+						float>::quiet_NaN(),
+				std::numeric_limits<float>::signaling_NaN() };
+		std::for_each(std::begin(invalid_data), std::end(invalid_data),
+				[](float invalid_data) {
+					size_t count = 0;
+					double sum = 0;
+					float max = -1;
+					float min = data.size() + 1;
+					size_t max_idx = -1;
+					size_t min_idx = -1;
+					double sqsum = 0.;
+					std::iota(data.begin(), data.end(), 0);
+					for (size_t i = 0; i < is_valid.size(); ++i) {
+						is_valid[i] = i % 7 == 0;
+						if (is_valid[i]) {
+							++count;
+							double v = data[i];
+							sum += v;
+							sqsum += v * v;
+							if (max < data[i]) {
+								max = data[i];
+								max_idx = i;
+							}
+							if (min > data[i]) {
+								min = data[i];
+								min_idx = i;
+							}
+						} else {
+							data[i] = invalid_data;
+						}
+					}
+
+					LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
+					ref.count = count;
+					ref.index_of_min = min_idx;
+					ref.min = min;
+					ref.index_of_max = max_idx;
+					ref.max = max;
+					ref.sum = sum;
+					ref.square_sum = sqsum;
+
+					CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
+							TestResult, TestResult);
+				});
+
 		std::iota(data.begin(), data.end(), 0);
-		for (size_t i = 0; i < is_valid.size(); ++i) {
-			is_valid[i] = i % 7 == 0;
-			if (is_valid[i]) {
-				++count;
-				double v = data[i];
-				sum += v;
-				sqsum += v * v;
-				if (max < data[i]) {
-					max = data[i];
-					max_idx = i;
-				}
-				if (min > data[i]) {
-					min = data[i];
-					min_idx = i;
-				}
-			}
-		}
-
-		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
-		ref.count = count;
-		ref.index_of_min = min_idx;
-		ref.min = min;
-		ref.index_of_max = max_idx;
-		ref.max = max;
-		ref.sum = sum;
-		ref.square_sum = sqsum;
-
-		CallAndTestResult(ref, data.size(), data.data(), is_valid.data(),
-				TestResult, TestResult);
-
 		is_valid.fill(false);
-		sum = 0.;
-		sqsum = 0.;
-		count = 0;
+		double sum = 0.;
+		double sqsum = 0.;
+		size_t count = 0;
 		size_t base = data.size() - 16;
 		data[base + 5] = data[base + 2] - 2;
 		auto put = [&](size_t offset) {
@@ -519,6 +529,7 @@ TEST(Statistics, ComputeStatistics) {
 		put(3);
 		put(5);
 
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) ref;
 		ref.count = count;
 		ref.index_of_min = base + 5;
 		ref.min = data[base + 5];

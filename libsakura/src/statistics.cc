@@ -202,10 +202,12 @@ struct ScalarStats {
 			accumulator.max = increment.max;
 		} else {
 			if (increment.min < accumulator.min) {
+				assert(increment.index_of_min >= 0);
 				accumulator.index_of_min = increment.index_of_min;
 				accumulator.min = increment.min;
 			}
 			if (increment.max > accumulator.max) {
+				assert(increment.index_of_max >= 0);
 				accumulator.index_of_max = increment.index_of_max;
 				accumulator.max = increment.max;
 			}
@@ -486,9 +488,10 @@ struct SIMDStats<float, double> {
 			tmp_index.m256i = accumulator.index_of_min.m256i;
 
 			float r = tmp.floatv[0];
-			ssize_t result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
+			auto result_index = tmp_index.intv[0] + 0;
 			for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 				if (!std::isnan(tmp.floatv[i])) {
+					assert(tmp_index.intv[i] >= 0);
 					if (std::isnan(r) || tmp.floatv[i] < r) {
 						r = tmp.floatv[i];
 						result_index = tmp_index.intv[i] + i;
@@ -496,7 +499,7 @@ struct SIMDStats<float, double> {
 				}
 			}
 			result.min = r;
-			result_index = std::max(static_cast<ssize_t>(-1), result_index);
+			result_index = std::max(static_cast<ssize_t>(-1), static_cast<ssize_t>(result_index));
 			result.index_of_min = result_index;
 		}
 		{
@@ -506,9 +509,10 @@ struct SIMDStats<float, double> {
 			tmp_index.m256i = accumulator.index_of_max.m256i;
 
 			float r = tmp.floatv[0];
-			ssize_t result_index = tmp_index.intv[0] == -1 ? -1 : tmp_index.intv[0];
+			auto result_index = tmp_index.intv[0] + 0;
 			for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 				if (!std::isnan(tmp.floatv[i])) {
+					assert(tmp_index.intv[i] >= 0);
 					if (std::isnan(r) || tmp.floatv[i] > r) {
 						r = tmp.floatv[i];
 						result_index = tmp_index.intv[i] + i;
@@ -516,7 +520,7 @@ struct SIMDStats<float, double> {
 				}
 			}
 			result.max = r;
-			result_index = std::max(static_cast<ssize_t>(-1), result_index);
+			result_index = std::max(static_cast<ssize_t>(-1), static_cast<ssize_t>(result_index));
 			result.index_of_max = result_index;
 		}
 		return result;
@@ -632,6 +636,7 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 						-1 : tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 			if (!std::isnan(tmp.floatv[i])) {
+				assert(tmp_index.intv[i] >= 0);
 				if (std::isnan(r) || tmp.floatv[i] < r) {
 					r = tmp.floatv[i];
 					result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
@@ -655,6 +660,7 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 						-1 : tmp_index.intv[0] * ELEMENTSOF(tmp.intv);
 		for (unsigned i = 1; i < ELEMENTSOF(tmp.floatv); ++i) {
 			if (!std::isnan(tmp.floatv[i])) {
+				assert(tmp_index.intv[i] >= 0);
 				if (std::isnan(r) || tmp.floatv[i] > r) {
 					r = tmp.floatv[i];
 					result_index = tmp_index.intv[i] * ELEMENTSOF(tmp.intv) + i;
