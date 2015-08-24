@@ -181,6 +181,7 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(0 < context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(0 < context->num_bases);
+	assert(context->num_bases <= context->num_basis_data);
 	auto data = AssumeAligned(context->basis_data);
 
 	size_t num_basis_data = context->num_basis_data;
