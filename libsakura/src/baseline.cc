@@ -664,16 +664,17 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
-	auto cb = [](double v) {return v * v * v;};
-	auto p = [](double v) {return std::max(0.0, v);};
+	auto cube = [](double v) {return v * v * v;};
+	auto force_non_negative = [](double v) {return std::max(0.0, v);};
 
-	auto cb_prev = cb(i_d - boundary[1]);
-	out[i - 1] -= p(cb_prev);
+	auto cube_prev = cube(i_d - boundary[1]);
+	out[i - 1] -= force_non_negative(cube_prev);
 
 	for (size_t j = 2; j < num_boundary; ++j) {
-		auto cb_current = cb(i_d - boundary[j]);
-		out[i] = p(cb_prev - p(cb_current));
-		cb_prev = cb_current;
+		auto cube_current = cube(i_d - boundary[j]);
+		out[i] = force_non_negative(
+				cube_prev - force_non_negative(cube_current));
+		cube_prev = cube_current;
 		++i;
 	}
 	*idx = i;
