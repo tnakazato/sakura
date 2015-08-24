@@ -1497,9 +1497,10 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * and sakura_BaselineType_kSinusoid (with @a order @a = 0) and
  * 4 for sakura_BaselineType_kCubicSpline (with @a order @a = 1).
  * @param[out] context An object containing baseline model data.
- * Note that a baseline context object can not be shared between
- * threads, as it contains working areas exclusive for a specific
- * thread.
+ * When @a context @a is no longer used, it must be destroyed by
+ * sakura_DestroyBaselineContext(). Note also that a baseline
+ * context object can not be shared between threads, as it
+ * contains working areas exclusive for a specific thread.
  * @return Status code.
  *
  * MT-safe
