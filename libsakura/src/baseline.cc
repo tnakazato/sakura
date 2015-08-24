@@ -694,7 +694,6 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 			SetAuxiliaryCubicBases(num_boundary, boundary, i_d, &idx, out);
 		}
 	}
-
 }
 
 inline void GetBestFitModelAndResidual(size_t num_data, float const *data,
@@ -733,7 +732,7 @@ inline void ClipData(size_t num_piece, double *boundary_arg,
 	auto out_mask = AssumeAligned(out_mask_arg);
 	auto clipped_indices = AssumeAligned(clipped_indices_arg);
 
-	*num_clipped = 0;
+	size_t num_clipped_tmp = 0;
 	size_t piece_start = 0;
 	for (size_t ipiece = 0; ipiece < num_piece; ++ipiece) {
 		size_t piece_end = static_cast<size_t>(ceil(boundary[ipiece + 1])) - 1;
@@ -742,13 +741,13 @@ inline void ClipData(size_t num_piece, double *boundary_arg,
 			if (in_mask[i]) {
 				if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
 					out_mask[i] = false;
-					clipped_indices[*num_clipped] = i;
-					++(*num_clipped);
+					clipped_indices[num_clipped_tmp++] = i;
 				}
 			}
 		}
 		piece_start = piece_end + 1;
 	}
+	*num_clipped = num_clipped_tmp;
 }
 
 template<typename Func>
