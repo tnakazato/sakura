@@ -1474,6 +1474,9 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
 /**
  * @brief Create an object containing baseline model data.
  * @details
+ * @note A baseline context object can not be shared between
+ * threads, as it contains working areas exclusive for a specific
+ * thread.
  * @param[in] baseline_type Type of basis function.
  * @param[in] order Polynomial order. It must be positive or
  * zero. It is used when @a baseline_type @a is
@@ -1498,9 +1501,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * 4 for sakura_BaselineType_kCubicSpline (with @a order @a = 1).
  * @param[out] context An object containing baseline model data.
  * When @a context @a is no longer used, it must be destroyed by
- * @ref sakura_DestroyBaselineContext . Note also that a baseline
- * context object can not be shared between threads, as it
- * contains working areas exclusive for a specific thread.
+ * @ref sakura_DestroyBaselineContext .
  * @return Status code.
  *
  * MT-safe
@@ -1521,13 +1522,22 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		struct LIBSAKURA_SYMBOL(BaselineContext) *context) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Recursively fit a baseline and subtract it from input spectrum.
- * @details
+ * @brief Fit a baseline and subtract it from input spectrum.
+ * @details A polynomial or Chebyshev polynomial curve is fitted to the
+ * input spectrum via Least-Square method, then it is subtracted from
+ * input spectrum. If @a num_fitting_max greater than 1 is given, fitting
+ * is executed recursively. Once best-fit curve is subtracted from input
+ * data, mean and standard deviation of the residual is computed to update
+ * @a mask so that @a mask has false value at data points where residual
+ * value exceeds threshold defined by @a clip_threshold_sigma , then
+ * Least-Square fitting is again performed to the input data with updated
+ * @a mask . This procedure is repeatedly done for ( @a num_fitting_max - 1)
+ * times or until the fitting result converges. Once fitting is done, the
+ * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] order Parameter for the specified function.
  * It is the polynomial order for sakura_BaselineType_kPolynomial
- * and sakura_BaselineType_kChebyshev, or the maximum wave number
- * for sakura_BaselineType_kSinusoid. The value should not exceed
+ * and sakura_BaselineType_kChebyshev. The value should not exceed
  * the @a order specified in creation of @a context .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out. It must be equal to @a num_data @a
@@ -1568,8 +1578,18 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Recursively fit a cubic spline baseline and subtract it from input spectrum.
- * @details
+ * @brief Fit a cubic spline baseline and subtract it from input spectrum.
+ * @details A cubic spline curve is fitted to the input spectrum via
+ * Least-Square method, then it is subtracted from input spectrum. If
+ * @a num_fitting_max greater than 1 is given, fitting is executed
+ * recursively. Once best-fit curve is subtracted from input data, mean
+ * and standard deviation of the residual is computed to update @a mask
+ * so that @a mask has false value at data points where residual value
+ * exceeds threshold defined by @a clip_threshold_sigma , then Least-Square
+ * fitting is again performed to the input data with updated @a mask .
+ * This procedure is repeatedly done for ( @a num_fitting_max - 1) times
+ * or until the fitting result converges. Once fitting is done, the
+ * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_pieces Number of spline pieces. It must be positive
  * and also must not exceed ( @a num_data - 3).
@@ -1616,8 +1636,18 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Recursively fit a sinusoidal baseline and subtract it from input spectrum.
- * @details
+ * @brief Fit a sinusoidal baseline and subtract it from input spectrum.
+ * @details A sinusoidal curve is fitted to the input spectrum via
+ * Least-Square method, then it is subtracted from input spectrum. If
+ * @a num_fitting_max greater than 1 is given, fitting is executed
+ * recursively. Once best-fit curve is subtracted from input data, mean
+ * and standard deviation of the residual is computed to update @a mask
+ * so that @a mask has false value at data points where residual value
+ * exceeds threshold defined by @a clip_threshold_sigma , then Least-Square
+ * fitting is again performed to the input data with updated @a mask .
+ * This procedure is repeatedly done for ( @a num_fitting_max - 1) times
+ * or until the fitting result converges. Once fitting is done, the
+ * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
@@ -1666,7 +1696,19 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @brief Extraction of the coefficients of the polynomial fit.
- * @details
+ * @details A polynomial or Chebyshev polynomial curve is fitted to
+ * the input spectrum via Least-Square method, then the coefficients
+ * of the best-fit curve is stored in @a coeff . If @a num_fitting_max
+ * greater than 1 is given, fitting is executed recursively. Once
+ * best-fit curve is subtracted from input data, mean and standard
+ * deviation of the residual is computed to update @a mask so that
+ * @a mask has false value at data points where residual value exceeds
+ * threshold defined by @a clip_threshold_sigma , then Least-Square
+ * fitting is again performed to the input data with updated @a mask
+ * to update @a coeff values. This procedure is repeatedly done for (
+ * @a num_fitting_max - 1) times or until the fitting result converges.
+ * Once fitting is done, the updated mask information is stored in
+ * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask.
@@ -1708,7 +1750,19 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @brief Extraction of the coefficients of cubic spline fit.
- * @details
+ * @details A cubic spline curve is fitted to the input spectrum
+ * via Least-Square method, then the coefficients of the best-fit
+ * curve is stored in @a coeff . If @a num_fitting_max greater
+ * than 1 is given, fitting is executed recursively. Once best-fit
+ * curve is subtracted from input data, mean and standard deviation
+ * of the residual is computed to update @a mask so that @a mask
+ * has false value at data points where residual value exceeds
+ * threshold defined by @a clip_threshold_sigma , then Least-Square
+ * fitting is again performed to the input data with updated @a mask
+ * to update @a coeff values. This procedure is repeatedly done for (
+ * @a num_fitting_max - 1) times or until the fitting result converges.
+ * Once fitting is done, the updated mask information is stored in
+ * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask. It must be equal to or greater than
@@ -1756,7 +1810,19 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 
 /**
  * @brief Extraction of the coefficients of the sinusoidal fit.
- * @details
+ * @details A sinusoidal curve is fitted to the input spectrum
+ * via Least-Square method, then the coefficients of the best-fit
+ * curve is stored in @a coeff . If @a num_fitting_max greater
+ * than 1 is given, fitting is executed recursively. Once best-fit
+ * curve is subtracted from input data, mean and standard deviation
+ * of the residual is computed to update @a mask so that @a mask
+ * has false value at data points where residual value exceeds
+ * threshold defined by @a clip_threshold_sigma , then Least-Square
+ * fitting is again performed to the input data with updated @a mask
+ * to update @a coeff values. This procedure is repeatedly done for (
+ * @a num_fitting_max - 1) times or until the fitting result converges.
+ * Once fitting is done, the updated mask information is stored in
+ * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask.
