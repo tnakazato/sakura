@@ -607,9 +607,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 		if (idx == num_pieces)
 			break;
 		if (mask[i]) {
-			if (count_unmasked_data
-					>= static_cast<double>(num_unmasked_data * idx)
-							/ static_cast<double>(num_pieces)) {
+			if (num_unmasked_data * idx <= count_unmasked_data * num_pieces) {
 				boundary[idx] = static_cast<double>(i);
 				++idx;
 			}
