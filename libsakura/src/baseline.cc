@@ -473,6 +473,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 			// cf. #744(2015/7/9 WK)
 			auto bs = _mm256_i64gather_pd(bases_row+idx, vindex, sizeof(double));
 #else
+			assert(num_bases * i + idx + offset3 < num_bases * num_out);
 			auto bs = _mm256_set_pd(bases_row[idx + offset3],
 					bases_row[idx + offset2], bases_row[idx + offset1],
 					bases_row[idx]);
@@ -486,7 +487,9 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 	for (; i < num_out; ++i) {
 		double out_double = 0.0;
 		for (size_t j = 0; j < num_coeff; ++j) {
-			out_double += coeff[j] * basis[num_bases * i + use_idx[j]];
+			size_t k = num_bases * i + use_idx[j];
+			assert(k < num_bases * num_out);
+			out_double += coeff[j] * basis[k];
 		}
 		out[i] = out_double;
 	}
@@ -511,8 +514,9 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		for (j = start_idx; j < start; ++j) {
 			double out_double = 0.0;
 			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				out_double += coeff_full[i][k]
-						* basis[kNumBasesCubicSpline * j + k];
+				size_t l = kNumBasesCubicSpline * j + k;
+				assert(l < kNumBasesCubicSpline * num_out);
+				out_double += coeff_full[i][k] * basis[l];
 			}
 			out[j] = out_double;
 		}
@@ -537,6 +541,7 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 				// version. cf. #744 (2015/7/9 WK)
 				auto bs = _mm256_i64gather_pd(bases_row, vindex, sizeof(double));
 #else
+				assert(kNumBasesCubicSpline * j + k + offset3 < kNumBasesCubicSpline * num_out);
 				auto bs = _mm256_set_pd(bases_row[k + offset3],
 						bases_row[k + offset2], bases_row[k + offset1],
 						bases_row[k]);
@@ -550,8 +555,9 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		for (; j < end_idx; ++j) {
 			double out_double = 0.0;
 			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				out_double += coeff_full[i][k]
-						* basis[kNumBasesCubicSpline * j + k];
+				size_t l = kNumBasesCubicSpline * j + k;
+				assert(l < kNumBasesCubicSpline * num_out);
+				out_double += coeff_full[i][k] * basis[l];
 			}
 			out[j] = out_double;
 		}
