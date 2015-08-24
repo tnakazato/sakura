@@ -1498,7 +1498,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * 4 for sakura_BaselineType_kCubicSpline (with @a order @a = 1).
  * @param[out] context An object containing baseline model data.
  * When @a context @a is no longer used, it must be destroyed by
- * sakura_DestroyBaselineContext(). Note also that a baseline
+ * @ref sakura_DestroyBaselineContext . Note also that a baseline
  * context object can not be shared between threads, as it
  * contains working areas exclusive for a specific thread.
  * @return Status code.
@@ -1513,7 +1513,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Destroy an object containing baseline model data.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @return Status code.
  *
  * MT-safe
@@ -1523,7 +1523,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Recursively fit a baseline and subtract it from input spectrum.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] order Parameter for the specified function.
  * It is the polynomial order for sakura_BaselineType_kPolynomial
  * and sakura_BaselineType_kChebyshev, or the maximum wave number
@@ -1570,7 +1570,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Recursively fit a cubic spline baseline and subtract it from input spectrum.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_pieces Number of spline pieces. It must be positive
  * and also must not exceed ( @a num_data - 3).
  * @param[in] num_data The number of elements in the arrays @a data,
@@ -1618,7 +1618,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Recursively fit a sinusoidal baseline and subtract it from input spectrum.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
  * The values must be positive or zero (for constant term), but not
@@ -1667,7 +1667,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Extraction of the coefficients of the polynomial fit.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask.
  * @param[in] data The input data with length of @a num_data .
@@ -1709,7 +1709,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Extraction of the coefficients of cubic spline fit.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask. It must be equal to or greater than
  * ( @a num_pieces + 3), the number of basis functions of cubic spline.
@@ -1757,7 +1757,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Extraction of the coefficients of the sinusoidal fit.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask.
  * @param[in] data The input data with length of @a num_data .
@@ -1808,7 +1808,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in @a data and @a out.
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
@@ -1830,7 +1830,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
  * @details
- * @param[in] context An object containing model data of cubic curve.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in @a data and @a out .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
@@ -1857,7 +1857,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in @a data and @a out.
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
@@ -1888,7 +1888,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 /**
  * @brief Return the number of basis functions used for baseline fitting.
  * @details
- * @param[in] context An object containing baseline model data.
+ * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] order Parameter for the specified function.
  * It is the order (for sakura_BaselineType_kPolynomial and
  * sakura_BaselineType_kChebyshev), or the number of pieces (for
