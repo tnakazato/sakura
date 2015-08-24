@@ -46,7 +46,7 @@ struct LIBSAKURA_SYMBOL(BaselineContext) {
 	void *clipped_indices_storage; /** An address returned when allocating @a clipped_indices @a . This one itself is not aligned, and is hold just for deallocating. */
 	size_t *clipped_indices; /** A pointer to aligned 1D array for clipped indices. Its size is @a num_basis_data @a . */
 	void *best_fit_model_storage; /** An address returned when allocating @a best_fit_model @a . This one itself is not aligned, and is hold just for deallocating. */
-	double *best_fit_model; /** A pointer to aligned 1D array for best-fit model. Its size is @a num_basis_data @a . */
+	float *best_fit_model; /** A pointer to aligned 1D array for best-fit model. Its size is @a num_basis_data @a . */
 	void *residual_data_storage; /** An address returned when allocating @a residual_data @a . This one itself is not aligned, and is hold just for deallocating. */
 	float *residual_data; /** A pointer to aligned 1D array for baseline-subtracted data. Its size is @a num_basis_data @a . */
 	void *use_bases_idx_storage; /** An address returned when allocating @a use_bases_idx @a . This one itself is not aligned, and is hold just for deallocating. */

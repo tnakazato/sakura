@@ -433,7 +433,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 }
 
 inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
-		double const *in2_arg, float *out_arg) {
+		float const *in2_arg, //double const *in2_arg,
+		float *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -442,13 +443,13 @@ inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_in; ++i) {
-		out[i] = in1[i] - static_cast<float>(in2[i]);
+		out[i] = in1[i] - in2[i]; //static_cast<float>(in2[i]);
 	}
 }
 
 inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 		size_t const *use_idx, size_t num_out, size_t num_bases,
-		double const *basis, double *out) {
+		double const *basis, float *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -481,7 +482,8 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 			total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
 			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 		}
-		_mm256_store_pd(&out[i], total);
+		//_mm256_store_pd(&out[i], total);
+		_mm_store_ps(&out[i], _mm256_cvtpd_ps(total));
 	}
 #endif
 	for (; i < num_out; ++i) {
@@ -497,7 +499,7 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 
 inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
-		double const *basis, double *out) {
+		double const *basis, float *out) {
 	for (size_t i = 0; i < num_boundary; ++i) {
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
 		size_t end_idx =
@@ -541,7 +543,8 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 				// version. cf. #744 (2015/7/9 WK)
 				auto bs = _mm256_i64gather_pd(bases_row, vindex, sizeof(double));
 #else
-				assert(kNumBasesCubicSpline * j + k + offset3 < kNumBasesCubicSpline * num_out);
+				assert(
+						kNumBasesCubicSpline * j + k + offset3 < kNumBasesCubicSpline * num_out);
 				auto bs = _mm256_set_pd(bases_row[k + offset3],
 						bases_row[k + offset2], bases_row[k + offset1],
 						bases_row[k]);
@@ -549,7 +552,8 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
 				total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
 				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
 			}
-			_mm256_store_pd(&out[j], total);
+			//_mm256_store_pd(&out[j], total);
+			_mm_store_ps(&out[j], _mm256_cvtpd_ps(total));
 		}
 #endif
 		for (; j < end_idx; ++j) {
@@ -614,7 +618,8 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 		if (idx == boundary_last_idx)
 			break;
 		if (mask[i]) {
-			if (num_unmasked_data * idx <= count_unmasked_data * boundary_last_idx) {
+			if (num_unmasked_data * idx
+					<= count_unmasked_data * boundary_last_idx) {
 				boundary[idx] = static_cast<double>(i);
 				++idx;
 			}
@@ -650,8 +655,8 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 }
 
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
-		double const *boundary_arg,
-		double const i_d, size_t *idx, double *out_arg) {
+		double const *boundary_arg, double const i_d, size_t *idx,
+		double *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -663,7 +668,7 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	auto p = [](double v) {return std::max(0.0, v);};
 
 	auto cb_prev = cb(i_d - boundary[1]);
-	out[i-1] -= p(cb_prev);
+	out[i - 1] -= p(cb_prev);
 
 	for (size_t j = 2; j < num_boundary; ++j) {
 		auto cb_current = cb(i_d - boundary[j]);
@@ -698,7 +703,7 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 
 inline void GetBestFitModelAndResidual(size_t num_data, float const *data,
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
-		double const *coeff, double *best_fit_model, float *residual_data) {
+		double const *coeff, float *best_fit_model, float *residual_data) {
 	AddMulMatrix(num_coeff, coeff, context->use_bases_idx, num_data,
 			context->num_bases, context->basis_data, best_fit_model);
 	OperateSubtractionFloat(num_data, data, best_fit_model, residual_data);
@@ -707,8 +712,8 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_coeff,
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		float const *data, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 		size_t num_pieces, double const *boundary,
-		double const (*coeff_full)[kNumBasesCubicSpline],
-		double *best_fit_model, float *residual_data) {
+		double const (*coeff_full)[kNumBasesCubicSpline], float *best_fit_model,
+		float *residual_data) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	assert(context->num_bases == kNumBasesCubicSpline);
@@ -758,7 +763,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		double *boundary_arg, uint16_t num_fitting_max,
 		float clip_threshold_sigma, bool get_residual, double *coeff_arg,
 		bool *final_mask_arg, float *rms, float *residual_data_arg,
-		double *best_fit_model_arg, float *out_arg, Func func,
+		float *best_fit_model_arg, float *out_arg, Func func,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -837,8 +842,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 			}
 		}
 		if (out != nullptr) {
+			auto src = get_residual ? residual_data : best_fit_model;
 			for (size_t i = 0; i < num_data; ++i) {
-				out[i] = get_residual ? residual_data[i] : best_fit_model[i];
+				out[i] = src[i];
 			}
 		}
 		*rms = rms_d;
@@ -869,7 +875,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 	auto out = AssumeAligned(out_arg);
 
 	SIMD_ALIGN
-	double boundary[2] = { 0.0, static_cast<double>(num_data + 1) };
+	double boundary[2] = { 0.0, static_cast<double>(num_data) };
 
 	DoSubtractBaselineEngine(context, num_data, data, mask, context->num_bases,
 			num_coeff, context->basis_data, 1, boundary,
