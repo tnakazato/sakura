@@ -556,15 +556,15 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 }
 
 //--LM part--------------------------------------
-template<typename T, int NX = Dynamic, int NY = Dynamic>
+template<typename T, int Nx = Dynamic, int Ny = Dynamic>
 struct Functor {
 	typedef T Scalar;
 	enum {
-		InputsAtCompileTime = NX, ValuesAtCompileTime = NY
+		InputsAtCompileTime = Nx, ValuesAtCompileTime = Ny
 	};
-	typedef Matrix<Scalar, NX, 1> InputType;
-	typedef Matrix<Scalar, NY, 1> ValueType;
-	typedef Matrix<Scalar, NY, NX> JacobianType;
+	typedef Matrix<Scalar, Nx, 1> InputType;
+	typedef Matrix<Scalar, Ny, 1> ValueType;
+	typedef Matrix<Scalar, Ny, Nx> JacobianType;
 };
 
 struct FunctorDouble: Functor<double> {

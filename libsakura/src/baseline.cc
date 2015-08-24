@@ -751,7 +751,7 @@ inline void ClipData(size_t num_piece, double *boundary_arg,
 	}
 }
 
-template<typename FUNC>
+template<typename Func>
 inline void DoSubtractBaselineEngine(
 LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		float const *data_arg, bool const *mask_arg, size_t num_context_bases,
@@ -759,7 +759,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		double *boundary_arg, uint16_t num_fitting_max,
 		float clip_threshold_sigma, bool get_residual, double *coeff_arg,
 		bool *final_mask_arg, float *rms, float *residual_data_arg,
-		double *best_fit_model_arg, float *out_arg, FUNC func,
+		double *best_fit_model_arg, float *out_arg, Func func,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
