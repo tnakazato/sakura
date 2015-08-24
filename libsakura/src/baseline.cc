@@ -180,14 +180,13 @@ inline void SetBasisDataPolynomial(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 	assert(0 < context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
+	assert(0 < context->num_bases);
 	auto data = AssumeAligned(context->basis_data);
 
 	size_t num_basis_data = context->num_basis_data;
 	size_t num_bases = context->num_bases;
 	size_t idx = 0;
-	if (num_basis_data == 1) {   // order == 0
-		data[idx] = 1.0;
-	} else if (num_bases == 1) { // order == 0
+	if (num_bases == 1) { // order == 0
 		for (size_t i = 0; i < num_basis_data; ++i) {
 			data[idx++] = 1.0;
 		}
