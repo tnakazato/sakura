@@ -594,8 +594,8 @@ inline std::string GetNotEnoughDataMessage(
 }
 
 inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
-		size_t num_pieces, double *boundary_arg) {
-	assert(0 < num_pieces);
+		size_t num_boundary, double *boundary_arg) {
+	assert(2 <= num_boundary);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	auto const mask = AssumeAligned(mask_arg);
@@ -609,18 +609,19 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	boundary[0] = 0.0; // the first value of boundary[] must always point the first element.
 	size_t idx = 1;
 	size_t count_unmasked_data = 0;
+	size_t boundary_last_idx = num_boundary - 1;
 	for (size_t i = 0; i < num_mask; ++i) {
-		if (idx == num_pieces)
+		if (idx == boundary_last_idx)
 			break;
 		if (mask[i]) {
-			if (num_unmasked_data * idx <= count_unmasked_data * num_pieces) {
+			if (num_unmasked_data * idx <= count_unmasked_data * boundary_last_idx) {
 				boundary[idx] = static_cast<double>(i);
 				++idx;
 			}
 			++count_unmasked_data;
 		}
 	}
-	boundary[num_pieces] = static_cast<double>(num_mask);
+	boundary[boundary_last_idx] = static_cast<double>(num_mask);
 }
 
 inline void GetFullCubicSplineCoefficients(size_t num_pieces,
@@ -649,7 +650,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 }
 
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
-		double const *boundary_arg, double const boundary_final,
+		double const *boundary_arg,
 		double const i_d, size_t *idx, double *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
@@ -660,19 +661,16 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 
 	auto cb = [](double v) {return v * v * v;};
 	auto p = [](double v) {return std::max(0.0, v);};
-	auto pcb = [&](double v) {return p(cb(v));};
 
-	auto boundary_current = boundary[1];
-	out[i-1] -= pcb(i_d - boundary_current);
+	auto cb_prev = cb(i_d - boundary[1]);
+	out[i-1] -= p(cb_prev);
 
-	for (size_t j = 1; j < num_boundary - 1; ++j) {
-		auto boundary_next = boundary[j + 1];
-		out[i] = p(cb(i_d - boundary_current) - pcb(i_d - boundary_next));
-		boundary_current = boundary_next;
+	for (size_t j = 2; j < num_boundary; ++j) {
+		auto cb_current = cb(i_d - boundary[j]);
+		out[i] = p(cb_prev - p(cb_current));
+		cb_prev = cb_current;
 		++i;
 	}
-	out[i] = pcb(i_d - boundary_final);
-	++i;
 	*idx = i;
 }
 
@@ -684,18 +682,16 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	auto out = AssumeAligned(out_arg);
 
 	size_t idx = 0;
-	if (num_boundary < 2) {
+	if (num_boundary <= 2) {
 		for (size_t i = 0; i < num_data; ++i) {
 			double i_d = static_cast<double>(i);
 			DoSetBasisDataPolynomial(kNumBasesCubicSpline, i_d, &idx, out);
 		}
 	} else {
-		double boundary_final = boundary[num_boundary - 1];
 		for (size_t i = 0; i < num_data; ++i) {
 			double i_d = static_cast<double>(i);
 			DoSetBasisDataPolynomial(kNumBasesCubicSpline, i_d, &idx, out);
-			SetAuxiliaryCubicBases(num_boundary, boundary, boundary_final, i_d,
-					&idx, out);
+			SetAuxiliaryCubicBases(num_boundary, boundary, i_d, &idx, out);
 		}
 	}
 
@@ -909,9 +905,9 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 	auto *final_mask = AssumeAligned(final_mask_arg);
 	auto *out = AssumeAligned(out_arg);
 
-	GetBoundariesOfPiecewiseData(num_data, mask, num_pieces, boundary);
-
-	SetFullCubicSplineBasisData(num_data, num_pieces, boundary,
+	size_t const num_boundary = num_pieces + 1;
+	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
+	SetFullCubicSplineBasisData(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
