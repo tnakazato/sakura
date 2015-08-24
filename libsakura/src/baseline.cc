@@ -742,13 +742,16 @@ inline void ClipData(size_t num_piece, double *boundary_arg,
 	for (size_t ipiece = 0; ipiece < num_piece; ++ipiece) {
 		size_t piece_end = static_cast<size_t>(ceil(boundary[ipiece + 1])) - 1;
 		for (size_t i = piece_start; i < piece_end; ++i) {
-			out_mask[i] = in_mask[i];
-			if (in_mask[i]) {
-				if ((data[i] - lower_bound) * (upper_bound - data[i]) < 0.0f) {
-					out_mask[i] = false;
+			bool in_mask_i = in_mask[i];
+			bool out_mask_i = in_mask_i;
+			if (in_mask_i) {
+				float data_i = data[i];
+				if ((data_i - lower_bound) * (upper_bound - data_i) < 0.0f) {
+					out_mask_i = false;
 					clipped_indices[num_clipped_tmp++] = i;
 				}
 			}
+			out_mask[i] = out_mask_i;
 		}
 		piece_start = piece_end + 1;
 	}
