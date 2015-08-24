@@ -663,8 +663,8 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	auto pcb = [&](double v) {return p(cb(v));};
 
 	auto boundary_current = boundary[1];
-	assert(1 <= i);
 	out[i-1] -= pcb(i_d - boundary_current);
+
 	for (size_t j = 1; j < num_boundary - 1; ++j) {
 		auto boundary_next = boundary[j + 1];
 		out[i] = p(cb(i_d - boundary_current) - pcb(i_d - boundary_next));
