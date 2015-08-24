@@ -646,10 +646,10 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		size_t j = GetNumberOfLsqBases(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
-		coeff[i][0] = coeff[i - 1][0]
-				- boundary[i] * boundary[i] * boundary[i] * c;
-		coeff[i][1] = coeff[i - 1][1] + 3.0 * boundary[i] * boundary[i] * c;
-		coeff[i][2] = coeff[i - 1][2] - 3.0 * boundary[i] * c;
+		auto const b = boundary[i];
+		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
+		coeff[i][1] = coeff[i - 1][1] + 3.0 * b * b * c;
+		coeff[i][2] = coeff[i - 1][2] - 3.0 * b * c;
 		coeff[i][3] = coeff_raw[j];
 	}
 }

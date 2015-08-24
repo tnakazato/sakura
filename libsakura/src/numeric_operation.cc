@@ -371,8 +371,9 @@ template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplat
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		auto const model_i = &model[clipped_indices[i] * num_model_bases];
-		auto data_i = data[clipped_indices[i]];
+		auto const cii = clipped_indices[i];
+		auto const model_i = &model[cii * num_model_bases];
+		auto data_i = data[cii];
 		SubMulVectorTemplate<kNumBases>(use_bases_idx, data_i, model_i, out);
 	}
 }
@@ -399,8 +400,9 @@ inline void UpdateLSQFittingVector(T const *data_arg, size_t num_clipped,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		auto const model_i = &model[clipped_indices[i] * num_model_bases];
-		auto data_i = data[clipped_indices[i]];
+		auto const cii = clipped_indices[i];
+		auto const model_i = &model[cii * num_model_bases];
+		auto data_i = data[cii];
 		SubMulVector(num_lsq_bases, use_bases_idx, data_i, model_i, out);
 	}
 }
