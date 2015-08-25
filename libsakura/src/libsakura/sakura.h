@@ -1479,28 +1479,29 @@ struct LIBSAKURA_SYMBOL(BaselineContext);
  * thread.
  * @param[in] baseline_type Type of basis function.
  * @param[in] order Polynomial order. It must be positive or
- * zero. It is used when @a baseline_type @a is
+ * zero. It is used when @a baseline_type is
  * sakura_BaselineType_kPolynomial or
  * sakura_BaselineType_kChebyshev.
  * @param[in] npiece Number of spline pieces. It must be a
- * positive value. It is used only when @a baseline_type @a is
+ * positive value. It is used only when @a baseline_type is
  * sakura_BaselineType_kCubicSpline.
  * @param[in] nwave Maximum wave number of sinusoids. It must be
- * positive or zero. It is used only when @a baseline_type @a is
+ * positive or zero. It is used only when @a baseline_type is
  * sakura_BaselineType_kSinusoid.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
- * is ( @a order + 1 ) for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, ( @a order + 3 ) for
- * sakura_BaselineType_kCubicSpline, or ( @a order * 2 + 1 )
- * for sakura_BaselineType_kSinusoid. The smallest value of
- * @a num_data @a corresponding to the smallest possible order
- * for each baseline type are: 1 for
- * sakura_BaselineType_kPolynomial, sakura_BaselineType_kChebyshev
- * and sakura_BaselineType_kSinusoid (with @a order @a = 0) and
- * 4 for sakura_BaselineType_kCubicSpline (with @a order @a = 1).
+ * is ( @a order+1 ) for sakura_BaselineType_kPolynomial and
+ * sakura_BaselineType_kChebyshev, ( @a order+3 ) for
+ * sakura_BaselineType_kCubicSpline, or ( @a order*2+1 ) for
+ * sakura_BaselineType_kSinusoid. The smallest value of
+ * @a num_data corresponding to the smallest possible order
+ * for each baseline type are 1 for
+ * sakura_BaselineType_kPolynomial with @a order = 0 and
+ * sakura_BaselineType_kChebyshev with @a order = 0 and
+ * sakura_BaselineType_kSinusoid with @a nwave = 0, or 4 for
+ * sakura_BaselineType_kCubicSpline with @a npiece = 1.
  * @param[out] context An object containing baseline model data.
- * When @a context @a is no longer used, it must be destroyed by
+ * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyBaselineContext .
  * @return Status code.
  *
@@ -1531,7 +1532,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @a mask so that @a mask has false value at data points where residual
  * value exceeds threshold defined by @a clip_threshold_sigma , then
  * Least-Square fitting is again performed to the input data with updated
- * @a mask . This procedure is repeatedly done for ( @a num_fitting_max - 1)
+ * @a mask . This procedure is repeatedly done for ( @a num_fitting_max-1 )
  * times or until the fitting result converges. Once fitting is done, the
  * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
@@ -1540,12 +1541,15 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * and sakura_BaselineType_kChebyshev. The value should not exceed
  * the @a order specified in creation of @a context .
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out. It must be equal to @a num_data @a
+ * @a mask, @a final_mask, and @a out. It must be equal to @a num_data
  * which was given to sakura_CreateBaselineContext() to create
- * @a context @a .
+ * @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. must be positive.
@@ -1587,18 +1591,21 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * so that @a mask has false value at data points where residual value
  * exceeds threshold defined by @a clip_threshold_sigma , then Least-Square
  * fitting is again performed to the input data with updated @a mask .
- * This procedure is repeatedly done for ( @a num_fitting_max - 1) times
+ * This procedure is repeatedly done for ( @a num_fitting_max-1) times
  * or until the fitting result converges. Once fitting is done, the
  * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_pieces Number of spline pieces. It must be positive
- * and also must not exceed ( @a num_data - 3).
+ * and also must not exceed ( @a num_data-3 ).
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out. It must be equal to or greater than
- * ( @a num_pieces + 3), the number of basis functions of cubic spline.
+ * ( @a num_pieces+3 ), the number of basis functions of cubic spline.
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] mask The input mask data with length of @a num_data .
+ * @param[in] mask The input mask data with length of @a num_data . The
+ * @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. must be positive.
@@ -1618,7 +1625,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[out] rms Root-mean-square of the output data.
  * @param[out] boundary Starting positions of the cubic spline pieces.
- * Its length must be ( @a num_pieces + 1). Note that the last element
+ * Its length must be ( @a num_pieces+1 ). Note that the last element
  * will be @a num_data , the next of the last data index.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
@@ -1645,7 +1652,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * so that @a mask has false value at data points where residual value
  * exceeds threshold defined by @a clip_threshold_sigma , then Least-Square
  * fitting is again performed to the input data with updated @a mask .
- * This procedure is repeatedly done for ( @a num_fitting_max - 1) times
+ * This procedure is repeatedly done for ( @a num_fitting_max-1 ) times
  * or until the fitting result converges. Once fitting is done, the
  * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
@@ -1662,6 +1669,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. must be positive.
@@ -1706,7 +1716,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * threshold defined by @a clip_threshold_sigma , then Least-Square
  * fitting is again performed to the input data with updated @a mask
  * to update @a coeff values. This procedure is repeatedly done for (
- * @a num_fitting_max - 1) times or until the fitting result converges.
+ * @a num_fitting_max-1 ) times or until the fitting result converges.
  * Once fitting is done, the updated mask information is stored in
  * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
@@ -1715,6 +1725,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. must be positive.
@@ -1760,16 +1773,19 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * threshold defined by @a clip_threshold_sigma , then Least-Square
  * fitting is again performed to the input data with updated @a mask
  * to update @a coeff values. This procedure is repeatedly done for (
- * @a num_fitting_max - 1) times or until the fitting result converges.
+ * @a num_fitting_max-1 ) times or until the fitting result converges.
  * Once fitting is done, the updated mask information is stored in
  * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, and @a final_mask. It must be equal to or greater than
- * ( @a num_pieces + 3), the number of basis functions of cubic spline.
+ * ( @a num_pieces+3 ), the number of basis functions of cubic spline.
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. must be positive.
@@ -1781,9 +1797,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * clipping applied). In case zero is given, @a num_fitting_max will be
  * automatically changed to 1.
  * @param[in] num_pieces The number of spline pieces. It must be a
- * positive number and must not exceed ( @a num_data - 3).
+ * positive number and must not exceed ( @a num_data-3 ).
  * @param[out] coeff The coefficients of the best-fit cubic spline curve.
- * It must be a 2-Dimensional array of total size ( @a num_pieces * 4),
+ * It must be a 2-Dimensional array of total size ( @a num_pieces*4 ),
  * i.e., its type must be double[num_pieces][4].
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
@@ -1791,7 +1807,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
  * @param[out] boundary Starting positions of the cubic spline pieces.
- * Its length must be ( @a num_pieces + 1). Note that the last element
+ * Its length must be ( @a num_pieces+1 ). Note that the last element
  * will be @a num_data , the next of the last data index.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
@@ -1820,7 +1836,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * threshold defined by @a clip_threshold_sigma , then Least-Square
  * fitting is again performed to the input data with updated @a mask
  * to update @a coeff values. This procedure is repeatedly done for (
- * @a num_fitting_max - 1) times or until the fitting result converges.
+ * @a num_fitting_max-1 ) times or until the fitting result converges.
  * Once fitting is done, the updated mask information is stored in
  * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContext .
@@ -1829,6 +1845,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. must be positive.
@@ -1903,7 +1922,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] num_pieces The number of spline pieces. If zero is
  * given, no subtraction executed.
  * @param[in] coeff Coefficients of cubic spline curve. It must be
- * a 2-Dimensional array of total size ( @a num_pieces * 4), i.e.,
+ * a 2-Dimensional array of total size ( @a num_pieces*4 ), i.e.,
  * its type must be double[num_pieces][4].
  * @n must-be-aligned
  * @param[in] boundary A 1D array containing the left edge positions of
@@ -1934,7 +1953,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @a context . The values must be stored in ascending order and
  * must not be duplicate. The number of model bases, which will be
  * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
- * contains zero or not, respectively, must not exceed @a num_data.
+ * contains zero or not, respectively, must not exceed @a num_data .
  * @param[in] num_coeff The number of elements in @a coeff .
  * The value must be positive and must not exceed the number of
  * model bases defined in @a context .
