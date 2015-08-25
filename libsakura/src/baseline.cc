@@ -192,8 +192,8 @@ inline void SetBasisDataChebyshev(LIBSAKURA_SYMBOL(BaselineContext) *context) {
 			data[idx++] = 1.0;
 		}
 	} else {
-		assert(2 <= num_basis_data);
 		double max_data_x = static_cast<double>(num_basis_data - 1);
+		assert(0.0 < max_data_x);
 		for (size_t i = 0; i < num_basis_data; ++i) {
 			data[idx++] = 1.0;
 			double x = 2.0 * static_cast<double>(i) / max_data_x - 1.0;
@@ -848,10 +848,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 			}
 		}
 		if (out != nullptr) {
-			auto src = get_residual ? residual_data : best_fit_model;
-			for (size_t i = 0; i < num_data; ++i) {
-				out[i] = src[i];
-			}
+			auto src = AssumeAligned(
+					get_residual ? residual_data : best_fit_model);
+			std::copy(src, src + num_data, out);
 		}
 		*rms = rms_d;
 	} catch (...) {
