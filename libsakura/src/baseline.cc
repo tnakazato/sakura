@@ -659,6 +659,7 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 		double *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
+	assert(i_d <= boundary_arg[num_boundary-1]);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto const boundary = AssumeAligned(boundary_arg);
