@@ -23,7 +23,7 @@ Requirements for End Users
 ### Mac OS X requirement ###
 
    * xcode(5.1 or higher)
-      * There is a case where command line tools is need 
+      * There is a case where command line tools is needed 
 
  The followings are common requirements for Linux and Mac:
 
@@ -87,16 +87,22 @@ clang: (especially for Mac users)
    $ env CC=clang CXX=clang++ cmake -D CMAKE_MODULE_PATH=../cmake-modules -D CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/lib/libsakura -D BUILD_DOC:BOOL=ON ..
 
 
- FFTW3_ROOT_DIR option is needed in case you installed fftw3 library on '/opt/fftw3' which is your preferred place. EIGEN3_INCLUDE_DIR option is also needed in case you put Eigen-3.2.2 directory on current directory same as libsakura directory.
+ For external libraries, fftw3 and eigen, you may need to set FFTW3_ROOT_DIR and/or EIGEN3_INCLUDE_DIR to tell cmake where you installed these libraries in case your install path is not a standard place.
 
 cmake option:
 * CMAKE_MODULE_PATH
    Specify the place where supplemental module (e.g. FindFFTW3.cmake etc.) is placed.
 * CMAKE_BUILD_TYPE
    Specify a build type. This allows you to select a compiler flag as the following 3 types:
-   * Debug	     Debug mode. Compiler flag is -g
-   * Release	     Release mode. Compiler flag is -O3 -DNDEBUG
-   * RelWithDebInfo  Debug+Release mode. Compiler flag is -g -O3 -DNDEBUG
+   * Debug          Debug mode. Compiler flag is -g
+   * Release        Release mode. Compiler flag is -O3 -DNDEBUG
+   * RelWithDebInfo Debug+Release mode. Compiler flag is -g -O3 -DNDEBUG
+* SIMD_ARCH
+   Specify an optimization option. 
+   * SSE4   Most conservative optimization
+   * AVX    Use AVX instruction set 
+   * AVX2   Use AVX2 instruction set 
+   * NATIVE Use appropriate instruction set on your machine
 * CMAKE_INSTALL_PREFIX:
    Specify the directory path which you intend to install..
 * FFTW3_ROOT_DIR:
