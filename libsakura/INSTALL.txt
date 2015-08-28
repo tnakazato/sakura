@@ -40,11 +40,6 @@ Requirements for End Users
  If you build FFTW3 from source, use the configure options, "--enable-float" and "--enable-shared", to build a shared library, libfftw3f.
 
 
-### Hardware requirements ###
-
- CPU which supports SSE4.2 or higher is required. AVX or AVX2 is preferred.
-
-
 Getting the Source
 ------------------
 
