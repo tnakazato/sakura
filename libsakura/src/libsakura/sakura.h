@@ -1929,8 +1929,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * its type must be double[num_pieces][4].
  * @n must-be-aligned
  * @param[in] boundary A 1D array containing the left edge positions of
- * pieces of the spline curve. The values should be stored in
- * left-to-right order. Its length must be @a num_pieces .
+ * spline pieces. The values should be stored in left-to-right order.
+ * Also the values must be in range 0 <= @a boundary[i] <= ( @a num_data-1 )
+ * as they are index of @a data . Its length must be @a num_pieces .
  * @n must-be-aligned
  * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
