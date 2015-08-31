@@ -1929,6 +1929,69 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLU) {
 }
 
 /*
+ * Test sakura_SolveSimultaneousEquationsByLU
+ * successful case, with a parameter 'out' of the same pointer with 'in_vector'.
+ */
+TEST_F(NumericOperation, SolveSimultaneousEquationsByLUInPlaceTest) {
+	size_t const num_data(NUM_DATA2);
+	SIMD_ALIGN
+	float in_data[num_data];
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	size_t const num_model(NUM_MODEL2);
+	SIMD_ALIGN
+	double lsq_vector[num_model];
+	SIMD_ALIGN
+	double model[ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	size_t use_idx[num_model];
+	for (size_t i = 0; i < num_model; ++i) {
+		use_idx[i] = i;
+	}
+	SIMD_ALIGN
+	double lsq_matrix[ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector)];
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(lsq_vector)];
+
+	SetFloatPolynomial(num_data, in_data);
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
+	SetPolynomialModel(ELEMENTSOF(in_data), ELEMENTSOF(lsq_vector), model);
+	SetFloatConstant(1.0, ELEMENTSOF(lsq_vector), answer);
+
+	if (verbose) {
+		PrintArray("in_data", num_data, in_data);
+		PrintArray("in_mask", num_data, in_mask);
+		PrintArray("model", num_data, num_model, model);
+	}
+
+	LIBSAKURA_SYMBOL (Status) coeff_status = sakura_GetLSQCoefficientsDouble(
+			num_data, in_data, in_mask, num_model, model, num_model, use_idx,
+			lsq_matrix, lsq_vector);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
+
+	if (verbose) {
+		PrintArray("lsq_matrix", num_model, num_model, lsq_matrix);
+		PrintArray("lsq_vector", num_model, lsq_vector);
+	}
+
+	double *out = lsq_vector;
+	LIBSAKURA_SYMBOL (Status) solve_status =
+			sakura_SolveSimultaneousEquationsByLUDouble(num_model, lsq_matrix,
+					lsq_vector, out);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
+
+	for (size_t i = 0; i < num_model; ++i) {
+		float deviation = (out[i] - answer[i]) / out[i];
+		ASSERT_LE(deviation, 1e-7);
+	}
+
+	if (verbose) {
+		PrintArray("out   ", num_model, out);
+		PrintArray("answer", num_model, answer);
+	}
+}
+
+/*
  * Test sakura_SolveSimultaneousEquationsByLUBigOrderModel
  * successful case
  * note : repeating NUM_REPEAT3 times for performance measurement
