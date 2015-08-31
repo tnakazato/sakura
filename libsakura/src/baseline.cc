@@ -800,6 +800,7 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 
 	try {
 		double rms_d = 0.0;
+		assert(0.0 < clip_threshold_sigma);
 		for (uint16_t i = 1; i <= num_fitting_max; ++i) {
 			if (num_unmasked_data < num_coeff) {
 				*baseline_status = LIBSAKURA_SYMBOL(
@@ -849,7 +850,9 @@ LIBSAKURA_SYMBOL(BaselineContext) const *context, size_t num_data,
 		}
 		if (out != nullptr) {
 			auto src = AssumeAligned(
-					get_residual ? residual_data : best_fit_model);
+					(num_fitting_max == 0) ?
+							data :
+							(get_residual ? residual_data : best_fit_model));
 			std::copy(src, src + num_data, out);
 		}
 		*rms = rms_d;
@@ -883,8 +886,7 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContext) const *context,
 	double boundary[2] = { 0.0, static_cast<double>(num_data) };
 
 	DoSubtractBaselineEngine(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 1, boundary,
-			std::max(static_cast<uint16_t>(1), num_fitting_max),
+			num_coeff, context->basis_data, 1, boundary, num_fitting_max,
 			clip_threshold_sigma, get_residual, coeff, final_mask, rms,
 			context->residual_data, context->best_fit_model, out,
 			[&]() {GetBestFitModelAndResidual(num_data, data, context, num_coeff,
@@ -923,10 +925,9 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
 	DoSubtractBaselineEngine(context, num_data, data, mask, num_coeff,
 			num_coeff, context->cspline_basis, num_pieces, boundary,
-			std::max(static_cast<uint16_t>(1), num_fitting_max),
-			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff,
-			final_mask, rms, context->residual_data, context->best_fit_model,
-			out,
+			num_fitting_max, clip_threshold_sigma, get_residual,
+			context->cspline_lsq_coeff, final_mask, rms, context->residual_data,
+			context->best_fit_model, out,
 			[&]() {
 				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff_full);
 				GetBestFitModelAndResidualCubicSpline(num_data, data, context,

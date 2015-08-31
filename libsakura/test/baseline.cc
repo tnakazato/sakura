@@ -1083,6 +1083,174 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNu
 }
 
 /*
+ * Test sakura_GetBestFitBaselineCoeffWithZeroClipThreshold
+ * failure case: clip_threshold_sigma == 0.0
+ * returned value : Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineCoeffWithZeroClipThreshold) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data)];
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
+	}
+
+	uint16_t const npiece(1);
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
+			num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 0.0;
+	uint16_t num_fitting_max = 1;
+	float rms;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, num_data,
+			in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &rms, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffWithNegativeClipThreshold
+ * failure case: clip_threshold_sigma < 0.0
+ * returned value : Status_kInvalidArgument
+ */
+TEST_F(Baseline, GetBestFitBaselineCoeffWithNegativeClipThreshold) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[num_data];
+	Set_XXX_Constant(true, ELEMENTSOF(in_mask), in_mask);
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	SIMD_ALIGN
+	float answer[ELEMENTSOF(in_data)];
+	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
+
+	if (verbose) {
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
+	}
+
+	uint16_t const npiece(1);
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
+			num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = -3.0;
+	uint16_t num_fitting_max = 1;
+	float rms;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) get_coeff_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, num_data,
+			in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &rms, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), get_coeff_status);
+
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
+}
+
+/*
+ * Test sakura_GetBestFitBaselineCoeffWithZeroNumFittingMax
+ * successful case: num_fitting_max == 0
+ * in case num_fitting_max==0 is given, baseline subtraction
+ * is not executed and values of coeff should not be modified.
+ */
+TEST_F(Baseline, GetBestFitBaselineCoeffWithZeroNumFittingMax) {
+	size_t const num_data(NUM_DATA2);
+	size_t const num_model(NUM_MODEL2);
+	size_t const num_coeff(NUM_MODEL2);
+
+	SIMD_ALIGN
+	double coeff_answer[num_coeff] = { 4.0, 3.0, 2.0, 1.0 };
+	SIMD_ALIGN
+	float in_data[num_data];
+	SetFloatPolynomial(num_data, in_data, coeff_answer);
+	SIMD_ALIGN
+	bool in_mask[ELEMENTSOF(in_data)];
+	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
+	SIMD_ALIGN
+	bool final_mask[ELEMENTSOF(in_data)];
+	double coeff_orig[num_coeff] = { 1.1, 2.2, 3.3, 4.4 };
+	SIMD_ALIGN
+	double coeff[num_coeff];
+	for (size_t i = 0; i < num_coeff; ++i) {
+		coeff[i] = coeff_orig[i];
+	}
+
+	if (verbose) {
+		Print1DArray("in_data", num_data, in_data);
+		Print1DArray("in_mask", num_data, in_mask);
+	}
+
+	uint16_t const npiece(1);
+	size_t order = num_model - 1;
+	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
+			num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+
+	float clipping_threshold_sigma = 3.0;
+	uint16_t num_fitting_max = 0;
+	float rms;
+
+	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
+	LIBSAKURA_SYMBOL (Status) subbl_status =
+	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, num_data,
+			in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
+			num_coeff, coeff, final_mask, &rms, &subbl_blstatus);
+
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
+	for (size_t i = 0; i < num_coeff; ++i) {
+		ASSERT_EQ(coeff_orig[i], coeff[i]);
+	}
+
+
+	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
+}
+
+/*
  * Test sakura_SubtractBaselineFromNormalDataWithoutClipping
  * successful case
  * the input data have smooth shape and no spiky feature, and
@@ -2049,10 +2217,8 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
  * successful case : num_fitting_max == 0
  * the input data have smooth shape and no spiky feature, and
  * execute sakura_SubtractBaseline with num_fitting_max == 0.
- * in case zero or negative value is given, num_fitting_max
- * should be changed to 1 inside SubtractBaseline so that
- * baseline subtraction IS executed.
- * hence the resulting data should be zero throughout.
+ * in case num_fitting_max==0 is given, baseline subtraction
+ * is not executed and output data should be identical to input.
  */
 TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 	size_t const num_data(NUM_DATA2);
@@ -2068,8 +2234,6 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)];
-	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 
 	if (verbose) {
 		Print1DArray("in_data", num_data, in_data);
@@ -2098,80 +2262,12 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 
 	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
+		ASSERT_EQ(in_data[i], out[i]);
 	}
 
 	if (verbose) {
 		Print1DArray("fmask ", num_data, final_mask);
 		Print1DArray("out   ", num_data, out);
-		Print1DArray("answer", num_data, answer);
-	}
-
-	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
-}
-
-/*
- * Test sakura_SubtractBaselineWithNegativeNumFittingMax
- * successful case : num_fitting_max < 0
- * the input data have smooth shape and no spiky feature, and
- * execute sakura_SubtractBaseline with negative value of
- * num_fitting_max.
- * in case zero or negative value is given, num_fitting_max
- * should be changed to 1 inside SubtractBaseline so that
- * baseline subtraction IS executed.
- * hence the resulting data should be zero throughout.
- */
-TEST_F(Baseline, SubtractBaselineWithNegativeNumFittingMax) {
-	size_t const num_data(NUM_DATA2);
-	size_t const num_model(NUM_MODEL);
-
-	SIMD_ALIGN
-	float in_data[num_data];
-	SetFloatPolynomial(num_data, in_data);
-	SIMD_ALIGN
-	bool in_mask[ELEMENTSOF(in_data)];
-	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
-	SIMD_ALIGN
-	bool final_mask[ELEMENTSOF(in_data)];
-	SIMD_ALIGN
-	float out[ELEMENTSOF(in_data)];
-	float answer[ELEMENTSOF(in_data)];
-	Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
-
-	if (verbose) {
-		Print1DArray("in_data", num_data, in_data);
-		Print1DArray("in_mask", num_data, in_mask);
-	}
-
-	uint16_t const npiece(1);
-	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
-			num_data, &context);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-
-	float clipping_threshold_sigma = 3.0;
-	uint16_t num_fitting_max = -5;
-	bool get_residual = true;
-	float rms;
-
-	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
-
-	LIBSAKURA_SYMBOL (Status) subbl_status =
-	LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, order, num_data, in_data,
-			in_mask, clipping_threshold_sigma, num_fitting_max, get_residual,
-			final_mask, out, &rms, &subbl_blstatus);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], out[i]);
-	}
-
-	if (verbose) {
-		Print1DArray("fmask ", num_data, final_mask);
-		Print1DArray("out   ", num_data, out);
-		Print1DArray("answer", num_data, answer);
 	}
 
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));

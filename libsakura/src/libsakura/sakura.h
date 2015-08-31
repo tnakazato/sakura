@@ -1560,9 +1560,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
+ * If 1 is given, baseline fitting is done just once and no clipping
+ * will be applied. If 0 is given, baseline fitting is not executed and
+ * the values of @a out should be identical with those of @a data .
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask The final mask data after recursive clipping
@@ -1616,9 +1616,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
+ * If 1 is given, baseline fitting is done just once and no clipping
+ * will be applied. If 0 is given, baseline fitting is not executed and
+ * the values of @a out should be identical with those of @a data .
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask The final mask data after recursive clipping
@@ -1682,9 +1682,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
+ * If 1 is given, baseline fitting is done just once and no clipping
+ * will be applied. If 0 is given, baseline fitting is not executed and
+ * the values of @a out should be identical with those of @a data .
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] final_mask The final mask data after recursive clipping
@@ -1738,9 +1738,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
+ * If 1 is given, baseline fitting is done just once and no clipping
+ * will be applied. If 0 is given, baseline fitting is not executed and
+ * the values of @a coeff should remain as they were.
  * @param[in] num_coeff The number of elements in the array @a coeff.
  * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
  * fitting.
@@ -1796,9 +1796,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
+ * If 1 is given, baseline fitting is done just once and no clipping
+ * will be applied. If 0 is given, baseline fitting is not executed and
+ * the values of @a coeff should remain as they were.
  * @param[in] num_pieces The number of spline pieces. It must be a
  * positive number and must not exceed ( @a num_data-3 ).
  * @param[out] coeff The coefficients of the best-fit cubic spline curve.
@@ -1858,9 +1858,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
  * based on the updated mask are executed (n-1) times at maximum.
- * The default is 1 (i.e., baseline fitting done just once and no
- * clipping applied). In case zero is given, @a num_fitting_max will be
- * automatically changed to 1.
+ * If 1 is given, baseline fitting is done just once and no clipping
+ * will be applied. If 0 is given, baseline fitting is not executed and
+ * the values of @a coeff should remain as they were.
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
  * The values must be positive or zero (for constant term), but not
