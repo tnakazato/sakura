@@ -1258,8 +1258,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @n must-be-aligned
  * @param[in] mask Input mask data with length of @a num_data .
  * @n must-be-aligned
- * @param[in] num_model_bases Number of model basis functions. It must be a
- * positive number, also it must be equal to or less than @a num_data .
+ * @param[in] num_model_bases Number of model basis functions. It must be
+ * in range 0 < @a num_model_bases <= @a num_data .
  * @param[in] basis_data A 1D array containing values of all basis functions
  * concatenated. Loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
@@ -1327,8 +1327,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * must be stored in the first @a num_exclude_indices elements. Its length
  * should be @a num_exclude_indices .
  * @n must-be-aligned
- * @param[in] num_model_bases Number of model basis functions. It must be a
- * positive number, also it must be equal to or less than @a num_data .
+ * @param[in] num_model_bases Number of model basis functions. It must be
+ * in range 0 < @a num_model_bases <= @a num_data .
  * @param[in] basis_data A 1D array containing values of all basis functions
  * concatenated. Loop for basis index must be inside of that for data index,
  * i.e., the @a n -th data of the @a m -th model should be stored at
@@ -1336,8 +1336,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * equal to ( @a num_model_bases * @a num_data ).
  * @n must-be-aligned
  * @param[in] num_lsq_bases The number of model basis functions to be used
- * in actual fitting. It must be a positive number and must not exceed
- * @a num_model_bases .
+ * in actual fitting. It must be in range 0 < @a num_lsq_bases <=
+ * @a num_model_bases.
  * @a param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for baseline types other than
  * sakura_BaselineType_kSinusoid, it should be always [0, 1, 2, ...,
@@ -1552,7 +1552,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
- * sigma. must be positive.
+ * sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
@@ -1608,7 +1608,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
- * sigma. must be positive.
+ * sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
@@ -1674,7 +1674,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
- * sigma. must be positive.
+ * sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
@@ -1730,7 +1730,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
- * of sigma. must be positive.
+ * of sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
@@ -1788,7 +1788,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
- * of sigma. must be positive.
+ * of sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
@@ -1850,7 +1850,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * spectrum if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
- * of sigma. must be positive.
+ * of sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
  * baseline fitting is performed recursively. In case n is given, after
  * the first baseline fitting, subsequent clipping and baseline fitting
