@@ -836,7 +836,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
 
 			LIBSAKURA_SYMBOL(Status) sub_status =
 			LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context,
-					num_pieces, num_data, data, mask, 5.0f, 1, true, mask, out,
+					num_pieces, num_data, data, mask, 5.0f, 1, true, out, mask,
 					&rms, boundary, &baseline_status);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
@@ -893,7 +893,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineWithZeroNumClippingMax) {
 	double boundary[num_pieces];
 	LIBSAKURA_SYMBOL(Status) sub_status =
 	LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, num_pieces,
-			num_data, data, mask, 5.0f, 0, true, mask, out, &rms, boundary,
+			num_data, data, mask, 5.0f, 0, true, out, mask, &rms, boundary,
 			&baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
@@ -949,7 +949,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, num_pieces,
-				num_data, data, mask, 5.0f, 1, true, mask, out, &rms, boundary,
+				num_data, data, mask, 5.0f, 1, true, out, mask, &rms, boundary,
 				&baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 	}
@@ -1056,7 +1056,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesNullPointer) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context_ptr,
 				num_pieces, num_data, data_ptr, mask_ptr, 5.0f, 1, true,
-				final_mask_ptr, out_ptr, &rms, boundary_ptr,
+				out_ptr, final_mask_ptr, &rms, boundary_ptr,
 				baseline_status_ptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 	}
@@ -1143,8 +1143,8 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesUnaligned) {
 
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, num_pieces,
-				num_data, data_ptr, mask_ptr, 5.0f, 1, true, final_mask_ptr,
-				out_ptr, &rms, boundary_ptr, &baseline_status);
+				num_data, data_ptr, mask_ptr, 5.0f, 1, true, out_ptr,
+				final_mask_ptr, &rms, boundary_ptr, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 	}
 
@@ -1241,7 +1241,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, num_pieces,
 				num_data, data, mask, clip_threshold, num_fitting_max, true,
-				final_mask, out, &rms, boundary, &baseline_status);
+				out, final_mask, &rms, boundary, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 	}
 
@@ -1943,7 +1943,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCase) {
 			LIBSAKURA_SYMBOL (Status) sub_status =
 			LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context, num_nwave,
 					nwave, num_data, data, mask, 5.0f, 1,
-					true, mask, out, &rms, &baseline_status);
+					true, out, mask, &rms, &baseline_status);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 			EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
@@ -2046,8 +2046,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidSuccessfulCaseWithMaskedData) {
 			data[masked_idx[i]] = 10.0; // spike, which should not affect the fitting result
 		}
 		sub_status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
-				num_nwave, nwave, num_data, data, mask, 5.0f, 1, true, mask,
-				out, &rms, &baseline_status);
+				num_nwave, nwave, num_data, data, mask, 5.0f, 1, true, out,
+				mask, &rms, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
 
@@ -2105,7 +2105,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidWithZeroNumClippingMax) {
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) sub_status;
 	sub_status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
-			num_nwave, nwave, num_data, data, mask, 5.0f, 0, true, mask, out,
+			num_nwave, nwave, num_data, data, mask, 5.0f, 0, true, out, mask,
 			&rms, &baseline_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
@@ -2161,8 +2161,8 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidPerformanceTest) {
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		sub_status = LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context,
-				num_nwave, nwave, num_data, data, mask, 5.0f, 1, true, mask,
-				out, &rms, &baseline_status);
+				num_nwave, nwave, num_data, data, mask, 5.0f, 1, true, out,
+				mask, &rms, &baseline_status);
 	}
 	double end_time = sakura_GetCurrentTime();
 	std::cout << std::setprecision(5)
@@ -2272,7 +2272,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesNullPointer) {
 		LIBSAKURA_SYMBOL (Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context_ptr, num_nwave,
 				nwave_ptr, num_data, data_ptr, mask_ptr, 5.0f, 1, true,
-				final_mask_ptr, out_ptr, &rms, baseline_status_ptr);
+				out_ptr, final_mask_ptr, &rms, baseline_status_ptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 	}
 
@@ -2354,7 +2354,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesUnaligned) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context, num_nwave,
 				nwave, num_data, data_ptr, mask_ptr, 5.0f, 1, true,
-				final_mask_ptr, out_ptr, &rms, &baseline_status);
+				out_ptr, final_mask_ptr, &rms, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 	}
 
@@ -2482,7 +2482,7 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidErroneousCasesBadParameterValue) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(context, num_nwave,
 				nwave, num_data, data, mask, clip_threshold_sigma, 1, true,
-				final_mask, out, &rms, &baseline_status);
+				out, final_mask, &rms, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), sub_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =

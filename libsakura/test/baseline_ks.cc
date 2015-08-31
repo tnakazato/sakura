@@ -243,7 +243,7 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 		LIBSAKURA_SYMBOL (Status) op_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, in_order, num_data,
 				in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
-				get_residual, final_mask, out, &rms, &op_blstatus);
+				get_residual, out, final_mask, &rms, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), op_status);
 		for (size_t i = 0; i < num_data; ++i) {
 			ASSERT_EQ(answer[i], out[i]);
@@ -305,7 +305,7 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 		LIBSAKURA_SYMBOL (Status) op_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineFloat)(context, in_order, num_data,
 				in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
-				get_residual, final_mask, out, &rms, &op_blstatus);
+				get_residual, out, final_mask, &rms, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), op_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContext(context);
