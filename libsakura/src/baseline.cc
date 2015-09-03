@@ -620,8 +620,9 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	size_t count_unmasked_data = 0;
 	size_t boundary_last_idx = num_boundary - 1;
 	for (size_t i = 0; i < num_mask; ++i) {
-		if (idx == boundary_last_idx)
+		if (idx >= boundary_last_idx) {
 			break;
+		}
 		if (mask[i]) {
 			if (num_unmasked_data * idx
 					<= count_unmasked_data * boundary_last_idx) {
