@@ -1457,7 +1457,7 @@ typedef enum {
 	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
 
 	/**
-	 * @brief Cubic Spline
+	 * @brief Natural Cubic Spline
 	 */LIBSAKURA_SYMBOL(BaselineType_kCubicSpline),
 
 	/**
