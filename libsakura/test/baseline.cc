@@ -111,17 +111,17 @@ protected:
 
 	template<typename T>
 	void Print1DArray(char const *name, size_t print_length, T const *data,
-				size_t start_idx = 0, bool print_name = true, bool newline = true) {
+			size_t start_idx = 0, bool print_name = true, bool newline = true) {
 		if (print_name)
 			cout << name << " = [";
 		size_t index = start_idx + print_length - 1;
-		if(typeid(float const*)==typeid(data)){
-					for (size_t i = start_idx; i < index; ++i)
-						cout << data[i] << ", ";
-		}else if(typeid(double const*)==typeid(data)){
+		if (typeid(float const*) == typeid(data)) {
 			for (size_t i = start_idx; i < index; ++i)
 				cout << data[i] << ", ";
-		}else if(typeid(bool const*)==typeid(data)){
+		} else if (typeid(double const*) == typeid(data)) {
+			for (size_t i = start_idx; i < index; ++i)
+				cout << data[i] << ", ";
+		} else if (typeid(bool const*) == typeid(data)) {
 			for (size_t i = start_idx; i < index; ++i)
 				cout << (data[i] ? "T" : "F") << ", ";
 		}
@@ -141,17 +141,17 @@ protected:
 			if (i < num_row - 1)
 				cout << ", " << endl;
 		}
-				cout << " ]" << endl;
+		cout << " ]" << endl;
 	}
 
 	bool verbose;
 	uint16_t const nwave = 0;
 };
 
-void Create(LIBSAKURA_SYMBOL(BaselineContext) * context, size_t status,
+void Create(LIBSAKURA_SYMBOL(BaselineContextFloat) * context, size_t status,
 		uint16_t const order, uint16_t const npiece, uint16_t const nwave,
 		size_t const num_chan) {
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, npiece, nwave,
 			num_chan, &context);
 	EXPECT_EQ(status, create_status);
@@ -160,44 +160,44 @@ void Create(LIBSAKURA_SYMBOL(BaselineContext) * context, size_t status,
 
 /*
  *
- //LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+ //LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
  //		LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
  //		&context);
  //EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
 
 
- LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+ LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
  LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
  &context);
  EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
 
  LIBSAKURA_SYMBOL (Status) create_status =
- LIBSAKURA_SYMBOL(CreateBaselineContext)(
+ LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
  LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
  &context);
  EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
  */
 
 //Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
-void Destroy(LIBSAKURA_SYMBOL(BaselineContext) *context, size_t status) {
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
+void Destroy(LIBSAKURA_SYMBOL(BaselineContextFloat) *context, size_t status) {
+	LIBSAKURA_SYMBOL (Status) destroy_status =
+			sakura_DestroyBaselineContextFloat(context);
 	EXPECT_EQ(status, destroy_status);
 	std::cout << "Destroy Status : " << destroy_status << std::endl;
 }
 
 /*
- * Test sakura_CreateBaselineContextWithPolynomialPerformanceTest
+ * Test sakura_CreateBaselineContextFloatWithPolynomialPerformanceTest
  * successful case (with normal polynomial model)
  */
-TEST_F(Baseline, CreateBaselineContextWithPolynomialPerformanceTest) {
+TEST_F(Baseline, CreateBaselineContextFloatWithPolynomialPerformanceTest) {
 	uint16_t const order(8000);
 	uint16_t const npiece(1);
 	size_t const num_chan(65535);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
 	size_t const num_repeat(1);
 	double start, end;
@@ -205,11 +205,12 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomialPerformanceTest) {
 	for (size_t i = 0; i < num_repeat; ++i) {
 		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 
-		//Create(context, sakura_CreateBaselineContext(LIBSAKURA_SYMBOL(BaselineType_kPolynomial)),order, num_data)
+		//Create(context, sakura_CreateBaselineContextFloat(LIBSAKURA_SYMBOL(BaselineType_kPolynomial)),order, num_data)
 
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_chan, &context);
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_chan, &context);
 		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -217,24 +218,24 @@ TEST_F(Baseline, CreateBaselineContextWithPolynomialPerformanceTest) {
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 	}
 	std::cout << std::setprecision(5)
-			<< "#x# benchmark Baseline_CreateBaselineContextWithPolynomialPerformanceTest"
+			<< "#x# benchmark Baseline_CreateBaselineContextFloatWithPolynomialPerformanceTest"
 			<< " " << elapsed_time << std::endl;
 }
 
 /*
- * Test sakura_CreateBaselineContextWithChebyshevPolynomial
+ * Test sakura_CreateBaselineContextFloatWithChebyshevPolynomial
  * successful case (with Chebyshev polynomial model)
  */
-TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
+TEST_F(Baseline, CreateBaselineContextFloatWithChebyshevPolynomial) {
 	uint16_t const order(7000);
 	uint16_t const npiece(1);
 	size_t const num_chan(65535);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 	//TODO
 	//Create(context, LIBSAKURA_SYMBOL(Status_kOK),order, num_chan);
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_chan, &context);
 	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
@@ -245,75 +246,75 @@ TEST_F(Baseline, CreateBaselineContextWithChebyshevPolynomial) {
 }
 
 /*
- * Test sakura_CreateBaselineContextWithZeroNumPieces
+ * Test sakura_CreateBaselineContextFloatWithZeroNumPieces
  * failure case : npiece = 0
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, CreateBaselineContextWithZeroNumPieces) {
+TEST_F(Baseline, CreateBaselineContextFloatWithZeroNumPieces) {
 	uint16_t const dummy(0);
 	uint16_t const npiece(0);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), dummy, npiece, dummy,
 			num_chan, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 }
 
 /*
- * Test sakura_CreateBaselineContextWithInvalidBaselineType
+ * Test sakura_CreateBaselineContextFloatWithInvalidBaselineType
  * failure case : invalid baseline type
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, CreateBaselineContextWithInvalidBaselineType) {
+TEST_F(Baseline, CreateBaselineContextFloatWithInvalidBaselineType) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 //TODO
 	Create(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument), order, npiece,
 			nwave, num_chan);
-	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 	//		LIBSAKURA_SYMBOL(BaselineType_kNumElements), order, num_chan,
 	//		&context);
 	//EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 }
 
 /*
- * Test sakura_CreateBaselineContextWithContextNullPointer
+ * Test sakura_CreateBaselineContextFloatWithContextNullPointer
  * failure case : context is a null pointer
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, CreateBaselineContextWithContextNullPointer) {
+TEST_F(Baseline, CreateBaselineContextFloatWithContextNullPointer) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * *context_ptr_ptr = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * *context_ptr_ptr = nullptr;
 
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_chan, context_ptr_ptr);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 }
 
 /*
- * Test sakura_CreateBaselineContextWithOrderLargerThanNumData
+ * Test sakura_CreateBaselineContextFloatWithOrderLargerThanNumData
  * failure case : order is too large (> num_data)
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
+TEST_F(Baseline, CreateBaselineContextFloatWithOrderLargerThanNumData) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 	size_t const num_chan(10);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
 	Create(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument), order, npiece,
 			nwave, num_chan);
-	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 	//		LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_chan,
 	//		&context);
 	//EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
@@ -322,15 +323,15 @@ TEST_F(Baseline, CreateBaselineContextWithOrderLargerThanNumData) {
 }
 
 /*
- * Test sakura_CreateBaselineContextWithTooSmallNumData
+ * Test sakura_CreateBaselineContextFloatWithTooSmallNumData
  * failure case : num_data is smaller than minimum acceptable value
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, CreateBaselineContextWithTooSmallNumData) {
+TEST_F(Baseline, CreateBaselineContextFloatWithTooSmallNumData) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status;
 
 	size_t const num_func_types = 3;
@@ -355,7 +356,7 @@ TEST_F(Baseline, CreateBaselineContextWithTooSmallNumData) {
 			assert(false);
 		};
 		size_t num_data = num_data_min - 1;
-		create_status = sakura_CreateBaselineContext(func_types[i], order,
+		create_status = sakura_CreateBaselineContextFloat(func_types[i], order,
 				npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
@@ -390,8 +391,8 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	}
 	//---------------------------------
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_chan, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -441,8 +442,8 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 	}
 	//---------------------------------
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_chan, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -455,10 +456,10 @@ TEST_F(Baseline, GetBaselineModelChebyshev) {
 }
 
 /*
- * Test sakura_DestroyBaselineContext
+ * Test sakura_DestroyBaselineContextFloat
  * successful case
  */
-TEST_F(Baseline, DestroyBaselineContext) {
+TEST_F(Baseline, DestroyBaselineContextFloat) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 	size_t const num_chan(4096);
@@ -467,15 +468,16 @@ TEST_F(Baseline, DestroyBaselineContext) {
 	double elapsed_time = 0.0;
 	size_t const num_repeat(NUM_REPEAT);
 	for (size_t i = 0; i < num_repeat; ++i) {
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_chan, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_chan, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -484,12 +486,12 @@ TEST_F(Baseline, DestroyBaselineContext) {
 }
 
 /*
- * Test sakura_DestroyBaselineContext
+ * Test sakura_DestroyBaselineContextFloat
  * failure case : context is a null pointer
  * returned value must be Status_kInvalidArgument
  */
-TEST_F(Baseline, DestroyBaselineContextWithContextNullPointer) {
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+TEST_F(Baseline, DestroyBaselineContextFloatWithContextNullPointer) {
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
@@ -527,8 +529,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClipping) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -593,9 +595,9 @@ TEST_F(Baseline, GetBestFitBaselineCoefficientsFloatPerformanceTest) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 
@@ -671,8 +673,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNot
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -730,8 +732,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -743,8 +745,9 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNot
 	LIBSAKURA_SYMBOL (BaselineStatus) subbl_blstatus;
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(context, num_data,
-			in_data, in_mask_unaligned, clipping_threshold_sigma, num_fitting_max,
-			num_coeff, coeff, final_mask, &rms, &subbl_blstatus);
+			in_data, in_mask_unaligned, clipping_threshold_sigma,
+			num_fitting_max, num_coeff, coeff, final_mask, &rms,
+			&subbl_blstatus);
 
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
@@ -786,8 +789,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -843,8 +846,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNo
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -895,8 +898,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithDataNul
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -950,8 +953,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithMaskNul
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1005,8 +1008,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithFinalMa
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1061,8 +1064,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffFromSmoothDataWithoutClippingWithCoeffNu
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1115,8 +1118,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffWithZeroClipThreshold) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1169,8 +1172,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffWithNegativeClipThreshold) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1225,8 +1228,8 @@ TEST_F(Baseline, GetBestFitBaselineCoeffWithZeroNumFittingMax) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1245,7 +1248,6 @@ TEST_F(Baseline, GetBestFitBaselineCoeffWithZeroNumFittingMax) {
 	for (size_t i = 0; i < num_coeff; ++i) {
 		ASSERT_EQ(coeff_orig[i], coeff[i]);
 	}
-
 
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
 }
@@ -1282,8 +1284,8 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithoutClipping) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1344,8 +1346,8 @@ TEST_F(Baseline, SubtractBaselineFloatPerformanceTest) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1416,8 +1418,8 @@ TEST_F(Baseline, SubtractBaselineFromSmoothDataWithClipping) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1499,8 +1501,8 @@ TEST_F(Baseline, SubtractBaselineFromSpikyDataWithClipping) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1555,8 +1557,8 @@ TEST_F(Baseline, SubtractBaselineWithDataNullPointer) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1606,8 +1608,8 @@ TEST_F(Baseline, SubtractBaselineWithDataNotAligned) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1653,8 +1655,8 @@ TEST_F(Baseline, SubtractBaselineWithMaskNullPointer) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1704,8 +1706,8 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1727,11 +1729,11 @@ TEST_F(Baseline, SubtractBaselineWithMaskNotAligned) {
 }
 
 /*
- * Test sakura_SubtractBaselineWithBaselineContextNullPointer
+ * Test sakura_SubtractBaselineWithBaselineContextFloatNullPointer
  * failure case : context is a null pointer
  * returned value : Status_kInvalidArgument
  */
-TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
+TEST_F(Baseline, SubtractBaselineWithBaselineContextFloatNullPointer) {
 	size_t const num_data(NUM_DATA2);
 
 	SIMD_ALIGN
@@ -1751,7 +1753,7 @@ TEST_F(Baseline, SubtractBaselineWithBaselineContextNullPointer) {
 		Print1DArray("in_mask", num_data, in_mask);
 	}
 
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
 	float clipping_threshold_sigma = 3.0;
 	uint16_t num_fitting_max = 5;
@@ -1794,8 +1796,8 @@ TEST_F(Baseline, SubtractBaselineWithNumDataNumBasisDataNotEqual) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data_for_context, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1844,8 +1846,8 @@ TEST_F(Baseline, SubtractBaselineWithNumDataLessThanNumBases) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data_for_context, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1893,8 +1895,8 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNullPointer) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1944,8 +1946,8 @@ TEST_F(Baseline, SubtractBaselineWithFinalMaskNotAligned) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -1992,8 +1994,8 @@ TEST_F(Baseline, SubtractBaselineWithOutNullPointer) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2043,8 +2045,8 @@ TEST_F(Baseline, SubtractBaselineWithOutNotAligned) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2092,8 +2094,8 @@ TEST_F(Baseline, SubtractBaselineWithBaselineStatusNullPointer) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2141,8 +2143,8 @@ TEST_F(Baseline, SubtractBaselineWithZeroClipThreshold) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2190,8 +2192,8 @@ TEST_F(Baseline, SubtractBaselineWithNegativeClipThreshold) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2242,8 +2244,8 @@ TEST_F(Baseline, SubtractBaselineWithZeroNumFittingMax) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2293,8 +2295,8 @@ TEST_F(Baseline, SubtractBaselineWithTooManyMaskedData) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2342,8 +2344,8 @@ TEST_F(Baseline, SubtractBaselineTooManyDataClipped) {
 	Set_XXX_Constant(true, ELEMENTSOF(in_data), in_mask);
 	uint16_t const npiece(1);
 	size_t order = 3;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2409,8 +2411,8 @@ TEST_F(Baseline, SubtractBaselineFloatChebyshevPerformanceTest) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2482,8 +2484,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloat) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2539,10 +2541,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		size_t num_coeff = context->num_bases;
@@ -2580,10 +2583,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		size_t num_coeff = context->num_bases;
@@ -2601,7 +2605,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // out is not aligned
@@ -2627,10 +2631,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNotAligned) {
 
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		size_t num_coeff = context->num_bases;
@@ -2663,10 +2668,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		float out[num_data];
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = context->num_bases;
 		SIMD_ALIGN
@@ -2694,10 +2700,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		float out[num_data];
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		size_t num_coeff = context->num_bases;
@@ -2720,10 +2727,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		float *out = nullptr;
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = context->num_bases;
 		SIMD_ALIGN
@@ -2747,7 +2755,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithNullPointer) {
 		}
 		SIMD_ALIGN
 		float out[ELEMENTSOF(in_data)];
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		size_t num_coeff = 2;
 		SIMD_ALIGN
 		double coeff[num_coeff];
@@ -2787,10 +2795,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = context->num_bases;
 		SIMD_ALIGN
@@ -2820,10 +2829,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = context->num_bases;
 		SIMD_ALIGN
@@ -2854,10 +2864,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatInvalidArguments) {
 		Set_XXX_Constant(0.0f, ELEMENTSOF(in_data), answer);
 		uint16_t const npiece(1);
 		size_t order = num_model - 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order,
+						npiece, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = context->num_bases;
 		SIMD_ALIGN
@@ -2901,8 +2912,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatWithCoeffZeroPadding) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -2973,8 +2984,8 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 
 	uint16_t const npiece(1);
 	size_t order = num_model - 1;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -3017,8 +3028,8 @@ TEST_F(Baseline, GetNumberOfCoefficients) {
 	size_t const num_model(NUM_MODEL);
 	uint16_t const npiece(1);
 	size_t order = num_model - 2;
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, npiece, nwave,
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -3037,7 +3048,7 @@ TEST_F(Baseline, GetNumberOfCoefficients) {
  * failed case : context is nullpointer
  */
 TEST_F(Baseline, GetNumberOfCoefficientsWithNullPointer) {
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	uint16_t order(1);
 	size_t num_coeff = 0;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),

@@ -205,13 +205,13 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
 	}
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
 			nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	SIMD_ALIGN
-	double coeff[2][4] = {{ 2.0, 1.0, -1.0, 0.2}, {2.0, 1.0, -1.0, 0.2 }};
+	double coeff[2][4] = { { 2.0, 1.0, -1.0, 0.2 }, { 2.0, 1.0, -1.0, 0.2 } };
 	SIMD_ALIGN
 	double boundary[num_pieces] = { 0.0f, 4.0f };
 	LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -228,8 +228,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 		PrintArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
+	LIBSAKURA_SYMBOL (Status) destroy_status =
+			sakura_DestroyBaselineContextFloat(context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
 
@@ -261,14 +261,16 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
+		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
+				0.5f } };
 		SIMD_ALIGN
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -278,7 +280,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // coeff is not aligned
@@ -301,15 +303,17 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
 		double coeff[4 * num_pieces + 1];
-		double (*coeff_unaligned)[4] = reinterpret_cast<double (*)[4]>(coeff + 1);
+		double (*coeff_unaligned)[4] =
+				reinterpret_cast<double (*)[4]>(coeff + 1);
 		assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_unaligned));
 		SIMD_ALIGN
 		double boundary[2] = { 0.0f, 4.0f };
@@ -320,7 +324,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // boundary is not aligned
@@ -343,14 +347,16 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
+		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
+				0.5f } };
 		SIMD_ALIGN
 		double boundary[num_pieces + 1];
 		double *boundary_unaligned = boundary + 1;
@@ -362,7 +368,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // out is not aligned
@@ -387,14 +393,16 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
+		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
+				0.5f } };
 		SIMD_ALIGN
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
@@ -404,7 +412,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -432,14 +440,16 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
-		double coeff[][4] = {{1.0f, 1.0f, -1.0f, 0.5f}, {1.0f, 1.0f, -1.0f, 0.5f}};
+		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
+				0.5f } };
 		double boundary[2] = { 0.0f, 4.0f };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -447,7 +457,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // coeff is nullpointer
@@ -468,10 +478,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
@@ -483,7 +494,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // boundary is nullpointer
@@ -500,10 +511,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
@@ -518,7 +530,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // out is nullpointer
@@ -535,10 +547,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 
 		size_t const order = 0;
 		size_t num_pieces = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order, num_pieces,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), order,
+						num_pieces, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
@@ -553,7 +566,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // context is nullpointer
@@ -568,7 +581,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		float answer[ELEMENTSOF(in_data)];
 		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
 		SIMD_ALIGN
 		size_t num_pieces = 2;
@@ -583,7 +596,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), destroy_status);
 	}
 }
@@ -611,10 +624,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 		size_t const order = 1;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy, order,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy,
+						order, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
@@ -629,7 +643,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // num_data < context->num_bases
@@ -647,10 +661,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 		size_t const order = 1;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy, order,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy,
+						order, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
@@ -664,7 +679,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 	{ // num_pieces > INT_MAX
@@ -682,10 +697,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
 		size_t order = 2;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy, order,
-				nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(
+						LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy,
+						order, nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		SIMD_ALIGN
@@ -698,7 +714,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -727,12 +743,12 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
 	}
-	LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_dummy, num_pieces,
 			nwave, num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
-	size_t const num_data_div_4(num_data/4);
+	size_t const num_data_div_4(num_data / 4);
 	SIMD_ALIGN
 	double coeff[num_data_div_4][4];
 	SIMD_ALIGN
@@ -776,8 +792,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 		PrintArray("answer", num_data, answer);
 	}
 
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyBaselineContext(
-			context);
+	LIBSAKURA_SYMBOL (Status) destroy_status =
+			sakura_DestroyBaselineContextFloat(context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
 

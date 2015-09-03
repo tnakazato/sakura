@@ -33,7 +33,7 @@
 #include <libsakura/sakura.h>
 
 extern "C" {
-struct LIBSAKURA_SYMBOL(BaselineContext) {
+struct LIBSAKURA_SYMBOL(BaselineContextFloat) {
 	size_t num_bases; /**< ベースラインモデルを構成する基底関数の数 */
 	size_t num_basis_data; /**< 個々の基底関数を表現するデータ点の数 */
 	size_t num_lsq_bases_max; /** Maximum number of simultaneous equations for least-square fitting: @a baseline_param + 1 @a for Polynomial and Chebyshev, @a baseilne_param + 3 @a for CubicSpline, and @a 2 * baseline_param + 1 @a for Sinusoid. */

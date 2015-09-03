@@ -80,10 +80,10 @@ protected:
 			size_t num_data, float *data) {
 		for (size_t i = 0; i < num_data; ++i) {
 			double val = 0.0;
-			double x = (double)i;
+			double x = (double) i;
 			for (size_t j = 0; j < num_coeff; ++j) {
 				val *= x;
-				val += coeff[num_coeff-1-j];
+				val += coeff[num_coeff - 1 - j];
 			}
 			data[i] = static_cast<float>(val);
 		}
@@ -174,7 +174,8 @@ protected:
 		cout << " ]" << endl;
 	}
 
-	void GenerateFromContext(LIBSAKURA_SYMBOL(BaselineContext) const *context,
+	void GenerateFromContext(
+			LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 			size_t const num_data, float *in_data, size_t const num_coeff,
 			double *coeff) {
 		assert(num_data == context->num_basis_data);
@@ -234,9 +235,10 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_pieces, nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(type, gen_order, num_pieces,
+						nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
@@ -256,7 +258,7 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 		}
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -296,9 +298,10 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_pieces, nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(type, gen_order, num_pieces,
+						nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
@@ -308,7 +311,7 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 				get_residual, out, final_mask, &rms, &op_blstatus);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), op_status);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -337,13 +340,13 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		if (answers.find(type) == answers.end())
 			continue;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status;
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
-			create_status = sakura_CreateBaselineContext(type, num_dummy,
+			create_status = sakura_CreateBaselineContextFloat(type, num_dummy,
 					gen_order, nwave, num_data, &context);
 		} else {
-			create_status = sakura_CreateBaselineContext(type, gen_order,
+			create_status = sakura_CreateBaselineContextFloat(type, gen_order,
 					num_dummy, nwave, num_data, &context);
 		}
 
@@ -356,7 +359,7 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), num_status);
 		EXPECT_EQ(num_coeff, reference);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -378,9 +381,10 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, gen_order, num_pieces, nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(type, gen_order, num_pieces,
+						nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = 0;
 		LIBSAKURA_SYMBOL (Status) num_status;
@@ -389,7 +393,7 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_status);
 		EXPECT_EQ(num_coeff, 0);
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -422,9 +426,10 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatNumCoeff) {
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, order, num_pieces, nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(type, order, num_pieces,
+						nwave, num_data, &context);
 
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
@@ -447,7 +452,7 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatNumCoeff) {
 			PrintArray("answer", num_data, answer);
 		}
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
@@ -478,9 +483,10 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
 	for (size_t i = 0; i < ELEMENTSOF(bltypes); ++i) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
-		LIBSAKURA_SYMBOL(BaselineContext) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContext(
-				type, order, num_pieces, nwave, num_data, &context);
+		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+		LIBSAKURA_SYMBOL (Status) create_status =
+				sakura_CreateBaselineContextFloat(type, order, num_pieces,
+						nwave, num_data, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		for (size_t j = 0; j < ELEMENTSOF(bad_coeffs); ++j) {
 			size_t num_coeff = bad_coeffs[j];
@@ -492,7 +498,7 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
 			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
 		}
 		LIBSAKURA_SYMBOL (Status) destroy_status =
-				sakura_DestroyBaselineContext(context);
+				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
 }
