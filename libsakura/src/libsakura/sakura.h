@@ -1494,15 +1494,11 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
  * is ( @a order+1 ) for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, ( @a order+3 ) for
- * sakura_BaselineType_kCubicSpline, or ( @a order*2+1 ) for
- * sakura_BaselineType_kSinusoid. The smallest value of
- * @a num_data corresponding to the smallest possible order
- * for each baseline type are 1 for
- * sakura_BaselineType_kPolynomial with @a order = 0 and
- * sakura_BaselineType_kChebyshev with @a order = 0 and
- * sakura_BaselineType_kSinusoid with @a nwave = 0, or 4 for
- * sakura_BaselineType_kCubicSpline with @a npiece = 1.
+ * sakura_BaselineType_kChebyshev, ( @a npiece+3 ) for
+ * sakura_BaselineType_kCubicSpline, or ( @a nwave*2+1 ) for
+ * sakura_BaselineType_kSinusoid. Hence the smallest allowed
+ * value of @a num_data is 4 for @a baseline_type of
+ * sakura_BaselineType_kCubicSpline or 1 for the others.
  * @param[out] context An object containing baseline model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyBaselineContextFloat .
@@ -1540,9 +1536,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * times or until the fitting result converges. Once fitting is done, the
  * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
- * @param[in] order Parameter for the specified function.
- * It is the polynomial order for sakura_BaselineType_kPolynomial
- * and sakura_BaselineType_kChebyshev. The value should not exceed
+ * @param[in] order The polynomial order. The value should not exceed
  * the @a order specified in creation of @a context .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out. It must be equal to @a num_data
@@ -1600,7 +1594,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_pieces Number of spline pieces. It must be positive
- * and also must not exceed ( @a num_data-3 ).
+ * and also must not exceed the number of spline pieces specified in
+ * creation of @a context .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out. It must be equal to or greater than
  * ( @a num_pieces+3 ), the number of basis functions of cubic spline.
@@ -1661,13 +1656,14 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * updated mask information is stored in @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_nwave The number of elements in the array @a nwave .
- * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
- * The values must be positive or zero (for constant term), but not
- * exceed the @a maximum wave number specified in creation of
- * @a context . The values must be stored in ascending order and
- * must not be duplicate. The number of model bases, which will be
- * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
- * contains zero or not, respectively, must not exceed @a num_data.
+ * @param[in] nwave Wave numbers within the index range of @a data
+ * to be used for sinusoidal fitting. The values must be positive or
+ * zero (for constant term), but not exceed the @a maximum wave number
+ * specified in creation of @a context . The values must be stored in
+ * ascending order and must not be duplicate. The number of model
+ * bases, which will be ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in
+ * cases @a num_nwave contains zero or not, respectively, must not
+ * exceed @a num_data.
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out.
  * @param[in] data The input data with length of @a num_data .
@@ -1743,10 +1739,12 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * will be applied. If 0 is given, baseline fitting is not executed and
  * the values of @a coeff should remain as they were.
  * @param[in] num_coeff The number of elements in the array @a coeff.
- * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
- * fitting.
+ * It must be in range (0 < @a num_coeff <= order+1), where order is the
+ * polynomial or Chebyshev polynomial order specified in creation of
+ * @a context .
  * @param[out] coeff The coefficients of the polynomial fit. Its length
- * must be @a num_coeff .
+ * must be @a num_coeff . Coefficient of constant term comes first,
+ * followed by those of first order, second order, and so on.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
  * procedure. Its length must be @a num_data .
@@ -1801,10 +1799,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * will be applied. If 0 is given, baseline fitting is not executed and
  * the values of @a coeff should remain as they were.
  * @param[in] num_pieces The number of spline pieces. It must be a
- * positive number and must not exceed ( @a num_data-3 ).
+ * positive number and must not exceed the number of spline pieces
+ * specified in creation of @a context .
  * @param[out] coeff The coefficients of the best-fit cubic spline curve.
- * It must be a 2-Dimensional array of total size ( @a num_pieces*4 ),
- * i.e., its type must be double[num_pieces][4].
+ * It must be a 2D array with type of double[ @a num_pieces ][4].
+ * @a coeff[i] is for the @a i th spline piece from the left side.
+ * The first element in each @a coeff[i] is of constant term, followed
+ * by those of first, second, and third orders.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
  * procedure. Its length must be @a num_data .
@@ -1863,18 +1864,21 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * will be applied. If 0 is given, baseline fitting is not executed and
  * the values of @a coeff should remain as they were.
  * @param[in] num_nwave The number of elements in the array @a nwave .
- * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
- * The values must be positive or zero (for constant term), but not
- * exceed the @a maximum wave number specified in creation of
- * @a context . The values must be stored in ascending order and
- * must not be duplicate. The number of model bases, which will be
- * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
- * contains zero or not, respectively, must not exceed @a num_data.
+ * @param[in] nwave Wave numbers within the index range of @a data
+ * to be used for sinusoidal fitting. The values must be positive or
+ * zero (for constant term), but not exceed the @a maximum wave number
+ * specified in creation of @a context . The values must be stored in
+ * ascending order and must not be duplicate.
  * @param[in] num_coeff The number of elements in the array @a coeff.
- * It must be (maximum order)+1 for polynomial or Chebyshev polynomial
- * fitting.
- * @param[out] coeff The coefficients of the polynomial fit. Its length
- * must be @a num_coeff .
+ * It must be ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases
+ * @a nwave contains zero or not, respectively, and must not exceed
+ * @a num_data.
+ * @param[out] coeff Coefficients of the sinusoidal fit. Its length
+ * must be @a num_coeff . If @a nwave contains zero, the first element
+ * is of the constant term. If not, the first and the second elements
+ * are for sine and cosine terms for the smallest wave number in
+ * @a nwave, respectively. Coefficients of sine and cosine terms for
+ * the second-smallest wave number come next, and so on.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
  * procedure. Its length must be @a num_data .
@@ -1902,10 +1906,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_coeff The number of elements in @a coeff .
- * The value must be positive and must not exceed the number of
- * model bases defined in @a context .
+ * It must be in range (0 < @a num_coeff <= @a order+1 ), where
+ * @a order is the polynomial or Chebyshev polynomial order
+ * specified in creation of @a context .
  * @param[in] coeff Coefficients of model data. Its length must
- * be @a num_coeff.
+ * be @a num_coeff. Its first element must be of constant term,
+ * followed by those of first order, second order,
+ * and so on.
  * @n must-be-aligned
  * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
@@ -1926,8 +1933,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] num_pieces The number of spline pieces. If zero is
  * given, no subtraction executed.
  * @param[in] coeff Coefficients of cubic spline curve. It must be
- * a 2-Dimensional array of total size ( @a num_pieces*4 ), i.e.,
- * its type must be double[num_pieces][4].
+ * a 2D array with type of double[ @a num_pieces ][4]. @a coeff[i]
+ * is for the @a i th spline piece from the left side. The first
+ * element in each @a coeff[i] must be of constant term, followed
+ * by the ones of first, second, and third orders.
  * @n must-be-aligned
  * @param[in] boundary A 1D array containing the left edge positions of
  * spline pieces. The values should be stored in left-to-right order.
@@ -1952,18 +1961,23 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_nwave The number of elements in the array @a nwave .
- * @param[in] nwave Wave numbers to be used for sinusoidal fitting.
- * The values must be positive or zero (for constant term), but not
- * exceed the @a maximum wave number specified in creation of
- * @a context . The values must be stored in ascending order and
- * must not be duplicate. The number of model bases, which will be
- * ( @a num_nwave*2-1 ) or ( @a num_nwave*2 ) in cases @a num_nwave
- * contains zero or not, respectively, must not exceed @a num_data .
+ * @param[in] nwave Wave numbers within the index range of @a data
+ * to be used for sinusoidal fitting. The values must be positive
+ * or zero (for constant term), but not exceed the maximum wave
+ * number specified in creation of @a context . The values must
+ * be stored in ascending order and must not be duplicate.
  * @param[in] num_coeff The number of elements in @a coeff .
- * The value must be positive and must not exceed the number of
- * model bases defined in @a context .
+ * It must be in range (0 < @a num_coeff <= @a num_model_bases ),
+ * where @a num_model_bases is ( @a num_nwave*2-1 ) or
+ * ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
+ * respectively. Also it must not exceed @a num_data .
  * @param[in] coeff Coefficients of model data. Its length must
- * be @a num_coeff.
+ * be @a num_coeff. If @a nwave contains zero, the first element
+ * must be of the constant term. If not, the first and the second
+ * elements are for sine and cosine terms for the smallest wave
+ * number in @a nwave, respectively. Coefficients of sine and
+ * cosine terms for the second-smallest wave number come next,
+ * and so on.
  * @n must-be-aligned
  * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
