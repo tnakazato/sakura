@@ -54,8 +54,8 @@ namespace {
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("baseline");
 constexpr size_t kNumBasesCubicSpline = 4;
 
-inline void AllocateMemoryForBasisData(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void AllocateMemoryForBasisData(T *context) {
 	size_t num_total_basis_data = context->num_bases * context->num_basis_data;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -163,8 +163,8 @@ inline void DoSetBasisDataPolynomial(size_t num_bases, double const i_d,
 	*idx = i;
 }
 
-inline void SetBasisDataPolynomial(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void SetBasisDataPolynomial(T *context) {
 	assert(0 < context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
@@ -177,8 +177,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	}
 }
 
-inline void SetBasisDataChebyshev(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void SetBasisDataChebyshev(T *context) {
 	assert(0 < context->num_basis_data);
 	assert(0 < context->num_bases);
 	assert(context->num_bases <= context->num_basis_data);
@@ -207,8 +207,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	}
 }
 
-inline void SetBasisDataSinusoid(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void SetBasisDataSinusoid(T *context) {
 	assert(0 < context->num_basis_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	auto data = AssumeAligned(context->basis_data);
@@ -232,8 +232,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	}
 }
 
-inline void AllocateWorkSpaces(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void AllocateWorkSpaces(T *context) {
 	auto const type = context->baseline_type;
 	context->num_lsq_bases_max = GetNumberOfLsqBases(type,
 			context->baseline_param);
@@ -329,8 +329,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	}
 }
 
-inline void SetBasisData(size_t const order,
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void SetBasisData(size_t const order, T *context) {
 	auto const type = context->baseline_type;
 	context->num_bases = GetNumberOfContextBases(type, order);
 	size_t min_num_basis_data = GetNumberOfLsqBases(type, order);
@@ -338,30 +338,30 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	if (context->num_basis_data < min_num_basis_data) {
 		throw std::invalid_argument("num_basis_data is too small!");
 	}
-	AllocateMemoryForBasisData(context);
+	AllocateMemoryForBasisData<T>(context);
 	switch (type) {
 	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		SetBasisDataPolynomial(context);
+		SetBasisDataPolynomial<T>(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		SetBasisDataChebyshev(context);
+		SetBasisDataChebyshev<T>(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
 		assert(context->num_bases == kNumBasesCubicSpline);
-		SetBasisDataPolynomial(context);
+		SetBasisDataPolynomial<T>(context);
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		SetBasisDataSinusoid(context);
+		SetBasisDataSinusoid<T>(context);
 		break;
 	default:
 		assert(false);
 		break;
 	}
-	AllocateWorkSpaces(context);
+	AllocateWorkSpaces<T>(context);
 }
 
-inline void DestroyBaselineContextFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
+template<typename T>
+inline void DestroyBaselineContext(T *context) {
 	if (context != nullptr) {
 		if (context->basis_data_storage != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->basis_data_storage);
@@ -397,16 +397,15 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	}
 }
 
-inline void CreateBaselineContextFloat(
+template<typename T>
+inline void CreateBaselineContext(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		uint16_t const npiece, uint16_t const nwave,
-		size_t const num_basis_data,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) {
+		size_t const num_basis_data, T **context) {
 	try {
-		std::unique_ptr<LIBSAKURA_SYMBOL(BaselineContextFloat),
-		LIBSAKURA_PREFIX::Memory> work_context(
-				static_cast<LIBSAKURA_SYMBOL(BaselineContextFloat) *>(LIBSAKURA_PREFIX::Memory::Allocate(
-						sizeof(LIBSAKURA_SYMBOL(BaselineContextFloat)))), LIBSAKURA_PREFIX::Memory());
+		std::unique_ptr<T, LIBSAKURA_PREFIX::Memory> work_context(
+				static_cast<T *>(LIBSAKURA_PREFIX::Memory::Allocate(sizeof(T))),
+				LIBSAKURA_PREFIX::Memory());
 		if (work_context == nullptr) {
 			throw std::bad_alloc();
 		}
@@ -429,17 +428,17 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 			break;
 		}
 
-		SetBasisData(work_context->baseline_param, work_context.get());
+		SetBasisData<T>(work_context->baseline_param, work_context.get());
 		*context = work_context.release();
 	} catch (...) {
-		DestroyBaselineContextFloat(*context);
+		DestroyBaselineContext<T>(*context);
 		throw;
 	}
 }
 
-inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
-		float const *in2_arg, //double const *in2_arg,
-		float *out_arg) {
+template<typename T>
+inline void OperateSubtraction(size_t num_in, T const *in1_arg,
+		T const *in2_arg, T *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in1_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in2_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -448,11 +447,19 @@ inline void OperateSubtractionFloat(size_t num_in, float const *in1_arg,
 	auto out = AssumeAligned(out_arg);
 
 	for (size_t i = 0; i < num_in; ++i) {
-		out[i] = in1[i] - in2[i]; //static_cast<float>(in2[i]);
+		out[i] = in1[i] - in2[i];
 	}
 }
 
+template<typename T>
 inline void AddMulMatrix(size_t num_coeff, double const *coeff,
+		size_t const *use_idx, size_t num_out, size_t num_bases,
+		double const *basis, T *out) {
+	assert(((void)"Not yet implemented", false));
+}
+
+template<>
+inline void AddMulMatrix<float>(size_t num_coeff, double const *coeff,
 		size_t const *use_idx, size_t num_out, size_t num_bases,
 		double const *basis, float *out) {
 	size_t i = 0;
@@ -502,7 +509,16 @@ inline void AddMulMatrix(size_t num_coeff, double const *coeff,
 	}
 }
 
+template<typename T>
 inline void AddMulMatrixCubicSpline(size_t num_boundary, double const *boundary,
+		double const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
+		double const *basis, T *out) {
+	assert(((void)"Not yet implemented", false));
+}
+
+template<>
+inline void AddMulMatrixCubicSpline<float>(size_t num_boundary,
+		double const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
 		double const *basis, float *out) {
 	for (size_t i = 0; i < num_boundary; ++i) {
@@ -709,32 +725,33 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	}
 }
 
-inline void GetBestFitModelAndResidual(size_t num_data, float const *data,
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_coeff,
-		double const *coeff, float *best_fit_model, float *residual_data) {
-	AddMulMatrix(num_coeff, coeff, context->use_bases_idx, num_data,
+template<typename T, typename U>
+inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
+		U const *context, size_t num_coeff, double const *coeff,
+		T *best_fit_model, T *residual_data) {
+	AddMulMatrix<T>(num_coeff, coeff, context->use_bases_idx, num_data,
 			context->num_bases, context->basis_data, best_fit_model);
-	OperateSubtractionFloat(num_data, data, best_fit_model, residual_data);
+	OperateSubtraction<T>(num_data, data, best_fit_model, residual_data);
 }
 
+template<typename T, typename U>
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
-		float const *data,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		size_t num_pieces, double const *boundary,
-		double const (*coeff_full)[kNumBasesCubicSpline], float *best_fit_model,
-		float *residual_data) {
+		T const *data, U const *context, size_t num_pieces,
+		double const *boundary,
+		double const (*coeff_full)[kNumBasesCubicSpline], T *best_fit_model,
+		T *residual_data) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	assert(context->num_bases == kNumBasesCubicSpline);
-	AddMulMatrixCubicSpline(num_pieces, boundary, coeff_full, num_data,
+	AddMulMatrixCubicSpline<T>(num_pieces, boundary, coeff_full, num_data,
 			context->basis_data, best_fit_model);
-	OperateSubtractionFloat(num_data, data, best_fit_model, residual_data);
+	OperateSubtraction<T>(num_data, data, best_fit_model, residual_data);
 }
 
-inline void ClipData(size_t num_piece, double *boundary_arg,
-		float const *data_arg, bool const *in_mask_arg, float const lower_bound,
-		float const upper_bound, bool *out_mask_arg,
-		size_t *clipped_indices_arg, size_t *num_clipped) {
+template<typename T>
+inline void ClipData(size_t num_piece, double *boundary_arg, T const *data_arg,
+bool const *in_mask_arg, T const lower_bound, T const upper_bound,
+bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
@@ -755,7 +772,7 @@ inline void ClipData(size_t num_piece, double *boundary_arg,
 			bool out_mask_i = in_mask_i;
 			if (in_mask_i) {
 				float data_i = data[i];
-				if ((data_i - lower_bound) * (upper_bound - data_i) < 0.0f) {
+				if ((data_i - lower_bound) * (upper_bound - data_i) < 0.0) {
 					out_mask_i = false;
 					clipped_indices[num_clipped_tmp++] = i;
 				}
@@ -767,15 +784,13 @@ inline void ClipData(size_t num_piece, double *boundary_arg,
 	*num_clipped = num_clipped_tmp;
 }
 
-template<typename Func>
-inline void DoSubtractBaselineEngine(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
-		float const *data_arg, bool const *mask_arg, size_t num_context_bases,
+template<typename T, typename U, typename Func>
+inline void DoSubtractBaselineEngine(U const *context, size_t num_data,
+		T const *data_arg, bool const *mask_arg, size_t num_context_bases,
 		size_t num_coeff, double const *basis_arg, size_t num_pieces,
-		double *boundary_arg, uint16_t num_fitting_max,
-		float clip_threshold_sigma, bool get_residual, double *coeff_arg,
-		float *out_arg, bool *final_mask_arg, float *rms,
-		float *residual_data_arg, float *best_fit_model_arg, Func func,
+		double *boundary_arg, uint16_t num_fitting_max, T clip_threshold_sigma,
+		bool get_residual, double *coeff_arg, T *out_arg, bool *final_mask_arg,
+		T *rms, T *residual_data_arg, T *best_fit_model_arg, Func func,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -845,7 +860,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 				float clip_threshold_abs = clip_threshold_sigma * rms_d;
 				float clip_threshold_lower = mean - clip_threshold_abs;
 				float clip_threshold_upper = mean + clip_threshold_abs;
-				ClipData(num_pieces, boundary, residual_data, final_mask,
+				ClipData<T>(num_pieces, boundary, residual_data, final_mask,
 						clip_threshold_lower, clip_threshold_upper, final_mask,
 						context->clipped_indices, &num_clipped);
 				if (num_clipped == 0) {
@@ -870,11 +885,11 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	}
 }
 
-inline void DoSubtractBaseline(size_t num_data, float const *data_arg,
-bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
-		double *coeff_arg, float *out_arg, bool *final_mask_arg, float *rms,
-		bool get_residual,
+template<typename T, typename U>
+inline void DoSubtractBaseline(size_t num_data, T const *data_arg,
+bool const *mask_arg, U const *context, T clip_threshold_sigma,
+		uint16_t num_fitting_max, size_t num_coeff, double *coeff_arg,
+		T *out_arg, bool *final_mask_arg, T *rms, bool get_residual,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -891,21 +906,21 @@ bool const *mask_arg, LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 	SIMD_ALIGN
 	double boundary[2] = { 0.0, static_cast<double>(num_data) };
 
-	DoSubtractBaselineEngine(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 1, boundary, num_fitting_max,
-			clip_threshold_sigma, get_residual, coeff, out, final_mask, rms,
-			context->residual_data, context->best_fit_model,
+	DoSubtractBaselineEngine<T, U>(context, num_data, data, mask,
+			context->num_bases, num_coeff, context->basis_data, 1, boundary,
+			num_fitting_max, clip_threshold_sigma, get_residual, coeff, out,
+			final_mask, rms, context->residual_data, context->best_fit_model,
 			[&]() {GetBestFitModelAndResidual(num_data, data, context, num_coeff,
 						coeff, context->best_fit_model, context->residual_data);},
 			baseline_status);
 }
 
-inline void DoSubtractBaselineCubicSpline(size_t num_data,
-		float const *data_arg, bool const *mask_arg, size_t num_pieces,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		float clip_threshold_sigma, uint16_t num_fitting_max,
+template<typename T, typename U>
+inline void DoSubtractBaselineCubicSpline(size_t num_data, T const *data_arg,
+bool const *mask_arg, size_t num_pieces, U const *context,
+		T clip_threshold_sigma, uint16_t num_fitting_max,
 		double (*coeff_full_arg)[kNumBasesCubicSpline], double *boundary_arg,
-		float *out_arg, bool *final_mask_arg, float *rms, bool get_residual,
+		T *out_arg, bool *final_mask_arg, T *rms, bool get_residual,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -929,14 +944,14 @@ inline void DoSubtractBaselineCubicSpline(size_t num_data,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
 			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
-	DoSubtractBaselineEngine(context, num_data, data, mask, num_coeff,
+	DoSubtractBaselineEngine<T, U>(context, num_data, data, mask, num_coeff,
 			num_coeff, context->cspline_basis, num_pieces, boundary,
 			num_fitting_max, clip_threshold_sigma, get_residual,
 			context->cspline_lsq_coeff, out, final_mask, rms,
 			context->residual_data, context->best_fit_model,
 			[&]() {
 				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff_full);
-				GetBestFitModelAndResidualCubicSpline(num_data, data, context,
+				GetBestFitModelAndResidualCubicSpline<T, U>(num_data, data, context,
 						num_pieces, boundary, coeff_full, context->best_fit_model, context->residual_data);
 			}, baseline_status);
 }
@@ -954,12 +969,12 @@ inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
 	}
 }
 
-inline void SubtractBaselineFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
+template<typename T, typename U>
+inline void SubtractBaseline(U const *context, uint16_t order,
 		size_t const num_nwave, size_t const *nwave, size_t num_data,
-		float const *data_arg, bool const *mask_arg, float clip_threshold_sigma,
-		uint16_t num_fitting_max, bool get_residual, float *out_arg,
-		bool *final_mask_arg, float *rms,
+		T const *data_arg, bool const *mask_arg, T clip_threshold_sigma,
+		uint16_t num_fitting_max, bool get_residual, T *out_arg,
+		bool *final_mask_arg, T *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	auto const type = context->baseline_type;
 	assert(
@@ -977,19 +992,19 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 		SetSinusoidUseBasesIndex(num_nwave, nwave, context->use_bases_idx);
 	}
-	DoSubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
-			num_fitting_max,
+	DoSubtractBaseline<T, U>(num_data, data, mask, context,
+			clip_threshold_sigma, num_fitting_max,
 			DoGetNumberOfCoefficients(type, order, num_nwave, nwave),
 			context->coeff_full, out, final_mask, rms, get_residual,
 			baseline_status);
 }
 
-inline void SubtractBaselineCubicSplineFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
-		size_t num_data, float const *data_arg,
-		bool const *mask_arg, float clip_threshold_sigma,
-		uint16_t num_fitting_max, bool get_residual, float *out_arg,
-		bool *final_mask_arg, float *rms, double *boundary_arg,
+template<typename T, typename U>
+inline void SubtractBaselineCubicSpline(U const *context, size_t num_pieces,
+		size_t num_data, T const *data_arg,
+		bool const *mask_arg, T clip_threshold_sigma, uint16_t num_fitting_max,
+		bool get_residual, T *out_arg, bool *final_mask_arg, float *rms,
+		double *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1006,18 +1021,18 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
-			clip_threshold_sigma, num_fitting_max,
+	DoSubtractBaselineCubicSpline<T, U>(num_data, data, mask, num_pieces,
+			context, clip_threshold_sigma, num_fitting_max,
 			reinterpret_cast<double (*)[kNumBasesCubicSpline]>(context->coeff_full),
 			boundary, out, final_mask, rms, get_residual, baseline_status);
 }
 
-inline void GetBestFitBaselineCoefficientsFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
-		float const *data_arg, bool const *mask_arg, float clip_threshold_sigma,
+template<typename T, typename U>
+inline void GetBestFitBaselineCoefficients(U const *context, size_t num_data,
+		T const *data_arg, bool const *mask_arg, T clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_nwave, size_t const *nwave,
 		size_t num_coeff, double *coeff_arg,
-		bool *final_mask_arg, float *rms,
+		bool *final_mask_arg, T *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	auto const type = context->baseline_type;
 	assert(
@@ -1035,17 +1050,17 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 		SetSinusoidUseBasesIndex(num_nwave, nwave, context->use_bases_idx);
 	}
-	DoSubtractBaseline(num_data, data, mask, context, clip_threshold_sigma,
-			num_fitting_max, num_coeff, coeff, nullptr, final_mask, rms, true,
-			baseline_status);
+	DoSubtractBaseline<T, U>(num_data, data, mask, context,
+			clip_threshold_sigma, num_fitting_max, num_coeff, coeff, nullptr,
+			final_mask, rms, true, baseline_status);
 }
 
-inline void GetBestFitBaselineCoefficientsCubicSplineFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
-		float const *data_arg, bool const *mask_arg, float clip_threshold_sigma,
-		uint16_t num_fitting_max, size_t num_pieces,
-		double (*coeff_arg)[kNumBasesCubicSpline], bool *final_mask_arg,
-		float *rms, double *boundary_arg,
+template<typename T, typename U>
+inline void GetBestFitBaselineCoefficientsCubicSpline(U const *context,
+		size_t num_data, T const *data_arg, bool const *mask_arg,
+		T clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
+		double (*coeff_arg)[kNumBasesCubicSpline], bool *final_mask_arg, T *rms,
+		double *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1062,15 +1077,15 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	DoSubtractBaselineCubicSpline(num_data, data, mask, num_pieces, context,
-			clip_threshold_sigma, num_fitting_max, coeff, boundary, nullptr,
-			final_mask, rms, true, baseline_status);
+	DoSubtractBaselineCubicSpline<T, U>(num_data, data, mask, num_pieces,
+			context, clip_threshold_sigma, num_fitting_max, coeff, boundary,
+			nullptr, final_mask, rms, true, baseline_status);
 }
 
-inline void SubtractBaselineUsingCoefficientsFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
-		float const *data_arg, size_t num_coeff, double const *coeff_arg,
-		size_t num_nwave, size_t const *nwave, float *out_arg) {
+template<typename T, typename U>
+inline void SubtractBaselineUsingCoefficients(U const *context, size_t num_data,
+		T const *data_arg, size_t num_coeff, double const *coeff_arg,
+		size_t num_nwave, size_t const *nwave, T *out_arg) {
 	auto const type = context->baseline_type;
 	assert(
 			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial))||(type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev))||(type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)));
@@ -1084,15 +1099,15 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 		SetSinusoidUseBasesIndex(num_nwave, nwave, context->use_bases_idx);
 	}
-	GetBestFitModelAndResidual(num_data, data, context, num_coeff, coeff,
+	GetBestFitModelAndResidual<T, U>(num_data, data, context, num_coeff, coeff,
 			context->best_fit_model, out);
 }
 
-inline void SubtractBaselineCubicSplineUsingCoefficientsFloat(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
-		float const *data_arg, size_t num_pieces,
+template<typename T, typename U>
+inline void SubtractBaselineCubicSplineUsingCoefficients(U const *context,
+		size_t num_data, T const *data_arg, size_t num_pieces,
 		double const (*coeff_arg)[kNumBasesCubicSpline],
-		double const *boundary_arg, float *out_arg) {
+		double const *boundary_arg, T *out_arg) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -1104,8 +1119,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
-	GetBestFitModelAndResidualCubicSpline(num_data, data, context, num_pieces,
-			boundary, coeff, context->best_fit_model, out);
+	GetBestFitModelAndResidualCubicSpline<T, U>(num_data, data, context,
+			num_pieces, boundary, coeff, context->best_fit_model, out);
 }
 
 } /* anonymous namespace */
@@ -1143,8 +1158,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	CHECK_ARGS(num_lsq_bases <= num_data);
 
 	try {
-		CreateBaselineContextFloat(baseline_type, order, npiece, nwave,
-				num_data, context);
+		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
+				baseline_type, order, npiece, nwave, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1166,7 +1181,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
 	CHECK_ARGS(context != nullptr);
 
 	try {
-		DestroyBaselineContextFloat(context);
+		DestroyBaselineContext< LIBSAKURA_SYMBOL(BaselineContextFloat)
+		>(context);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
@@ -1174,7 +1190,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		size_t *num_coeff) noexcept {
 	CHECK_ARGS(context != nullptr);
@@ -1223,9 +1239,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		SubtractBaselineFloat(context, order, 0, nullptr, num_data, data, mask,
-				clip_threshold_sigma, num_fitting_max, get_residual, out,
-				final_mask, rms, baseline_status);
+		SubtractBaseline<float, LIBSAKURA_SYMBOL(BaselineContextFloat)>(context,
+				order, 0, nullptr, num_data, data, mask, clip_threshold_sigma,
+				num_fitting_max, get_residual, out, final_mask, rms,
+				baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1267,9 +1284,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		SubtractBaselineCubicSplineFloat(context, num_pieces, num_data, data,
-				mask, clip_threshold_sigma, num_fitting_max, get_residual, out,
-				final_mask, rms, boundary, baseline_status);
+		SubtractBaselineCubicSpline<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_pieces, num_data,
+				data, mask, clip_threshold_sigma, num_fitting_max, get_residual,
+				out, final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1311,9 +1329,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		SubtractBaselineFloat(context, 0, num_nwave, nwave, num_data, data,
-				mask, clip_threshold_sigma, num_fitting_max, get_residual, out,
-				final_mask, rms, baseline_status);
+		SubtractBaseline<float, LIBSAKURA_SYMBOL(BaselineContextFloat)>(context,
+				0, num_nwave, nwave, num_data, data, mask, clip_threshold_sigma,
+				num_fitting_max, get_residual, out, final_mask, rms,
+				baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1352,7 +1371,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		GetBestFitBaselineCoefficientsFloat(context, num_data, data, mask,
+		GetBestFitBaselineCoefficients<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, 0, nullptr, num_coeff,
 				coeff, final_mask, rms, baseline_status);
 	} catch (const std::bad_alloc &e) {
@@ -1398,8 +1418,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		GetBestFitBaselineCoefficientsCubicSplineFloat(context, num_data, data,
-				mask, clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
+		GetBestFitBaselineCoefficientsCubicSpline<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
+				clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
 				final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -1445,7 +1466,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
-		GetBestFitBaselineCoefficientsFloat(context, num_data, data, mask,
+		GetBestFitBaselineCoefficients<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, num_nwave, nwave,
 				num_coeff, coeff, final_mask, rms, baseline_status);
 	} catch (const std::bad_alloc &e) {
@@ -1480,7 +1502,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		SubtractBaselineUsingCoefficientsFloat(context, num_data, data,
+		SubtractBaselineUsingCoefficients<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
 				num_coeff, coeff, 0, nullptr, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -1514,8 +1537,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		SubtractBaselineCubicSplineUsingCoefficientsFloat(context, num_data,
-				data, num_pieces, coeff, boundary, out);
+		SubtractBaselineCubicSplineUsingCoefficients<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+				num_pieces, coeff, boundary, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1551,7 +1575,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		SubtractBaselineUsingCoefficientsFloat(context, num_data, data,
+		SubtractBaselineUsingCoefficients<float,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
 				num_coeff, coeff, num_nwave, nwave, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");

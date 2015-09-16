@@ -23,10 +23,10 @@
 /*
  * Test cases to be implemented.
  * test order parameters in
- * - sakura_GetNumberOfCoefficients
+ * - sakura_GetNumberOfCoefficientsFloat
  * - sakura_SubtractBaselineFloat
  * the test cases necessary are,
- * - successful cases, order is smaller than max available number by context (polynomial, chebychev, cspline=only for GetNumberOfCoefficients)
+ * - successful cases, order is smaller than max available number by context (polynomial, chebychev, cspline=only for GetNumberOfCoefficientsFloat)
  * - failure cases where order is larger than max available number by context (polynomial, chebychev)
  */
 
@@ -317,11 +317,11 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 }
 
 /*
- * Test sakura_GetNumberOfCoefficients with
+ * Test sakura_GetNumberOfCoefficientsFloat with
  * {input order=2} < {the other for context generation=5}.
  * Fitting function: polynomial, Chebyshev, CubicSpline
  */
-TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
+TEST_F(BaselineKS, GetNumberOfCoefficientsFloatOrder) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_dummy(1);
 	size_t gen_order = 5; // the order to generate a context
@@ -354,7 +354,7 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 		size_t reference(answers[type]);
 		size_t num_coeff = 0;
 		LIBSAKURA_SYMBOL (Status) num_status;
-		num_status = sakura_GetNumberOfCoefficients(context, test_order,
+		num_status = sakura_GetNumberOfCoefficientsFloat(context, test_order,
 				&num_coeff);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), num_status);
 		EXPECT_EQ(num_coeff, reference);
@@ -365,11 +365,11 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsOrder) {
 }
 
 /*
- * Test sakura_GetNumberOfCoefficients with
+ * Test sakura_GetNumberOfCoefficientsFloat with
  * invalid input order (> order for context generation).
  * Fitting functions: polynomial, Chebyshev
  */
-TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
+TEST_F(BaselineKS, GetNumberOfCoefficientsFloatBadOrder) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_pieces(1);
 	size_t gen_order = 5; // the order to generate a context
@@ -388,7 +388,7 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsBadOrder) {
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = 0;
 		LIBSAKURA_SYMBOL (Status) num_status;
-		num_status = sakura_GetNumberOfCoefficients(context, test_order,
+		num_status = sakura_GetNumberOfCoefficientsFloat(context, test_order,
 				&num_coeff);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_status);
 		EXPECT_EQ(num_coeff, 0);

@@ -3019,11 +3019,11 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 }
 
 /*
- * Test sakura_GetNumberOfCoefficientss
+ * Test sakura_GetNumberOfCoefficientsFloats
  * It can get number of Coefficients from context
  * successful case
  */
-TEST_F(Baseline, GetNumberOfCoefficients) {
+TEST_F(Baseline, GetNumberOfCoefficientsFloat) {
 	size_t const num_data(NUM_DATA2);
 	size_t const num_model(NUM_MODEL);
 	uint16_t const npiece(1);
@@ -3034,7 +3034,7 @@ TEST_F(Baseline, GetNumberOfCoefficients) {
 			num_data, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	size_t num_coeff = 0;
-	LIBSAKURA_SYMBOL (Status) num_status = sakura_GetNumberOfCoefficients(
+	LIBSAKURA_SYMBOL (Status) num_status = sakura_GetNumberOfCoefficientsFloat(
 			context, order, &num_coeff);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), num_status);
 	EXPECT_EQ(num_coeff, context->num_bases);
@@ -3043,15 +3043,15 @@ TEST_F(Baseline, GetNumberOfCoefficients) {
 }
 
 /*
- * Test sakura_sakura_GetNumberOfCoefficientssWithNullPointer
+ * Test sakura_sakura_GetNumberOfCoefficientsFloatsWithNullPointer
  * It can get number of Coefficients from context
  * failed case : context is nullpointer
  */
-TEST_F(Baseline, GetNumberOfCoefficientsWithNullPointer) {
+TEST_F(Baseline, GetNumberOfCoefficientsFloatWithNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	uint16_t order(1);
 	size_t num_coeff = 0;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-			LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(context, order, &num_coeff));
+			LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(context, order, &num_coeff));
 }
 

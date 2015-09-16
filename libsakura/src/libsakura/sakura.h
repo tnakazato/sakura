@@ -2005,7 +2005,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * baseline fitting. This value should be the actual number of
  * simultaneous equations of least-square fitting.
  * @return Status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficients)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 		uint16_t order, size_t *num_coeff)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;

@@ -23,7 +23,7 @@
 /*
  * Test calses to be implemented.
  * test order parameters in
- * - sakura_GetNumberOfCoefficients
+ * - sakura_GetNumberOfCoefficientsFloat
  * - sakura_SubtractBaselineFloat
  * - sakura_GetBestFitBaselineFloat
  *
