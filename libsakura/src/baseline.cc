@@ -591,31 +591,64 @@ inline void AddMulMatrixCubicSpline<float>(size_t num_boundary,
 
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
-	std::stringstream ss;
-	ss << "SubtractBaseline: available data became too few in the ";
-	ss << idx_erroneous_fitting;
-	ss << " ";
+	/*
+	 //std::basic_stringstream<char, std::char_traits<char>, LIBSAKURA_PREFIX::Allocator<char> > ss;
+	 std::stringstream ss;
+	 ss << "SubtractBaseline: available data became too few in the ";
+	 ss << idx_erroneous_fitting;
+	 ss << " ";
+
+	 uint16_t mod100 = idx_erroneous_fitting % 100;
+	 uint16_t ones_digit = mod100 % 10;
+	 uint16_t tens_digit = mod100 / 10;
+	 std::string isuffix;
+	 if (tens_digit == 1) {
+	 isuffix = "th";
+	 } else {
+	 if (ones_digit == 1) {
+	 isuffix = "st";
+	 } else if (ones_digit == 2) {
+	 isuffix = "nd";
+	 } else if (ones_digit == 3) {
+	 isuffix = "rd";
+	 } else {
+	 isuffix = "th";
+	 }
+	 }
+	 ss << isuffix << " fitting.";
+
+	 return ss.str();
+	 */
+
+	size_t const len_idx =
+			(0 < idx_erroneous_fitting) ?
+					(floor(log10(idx_erroneous_fitting)) + 1) : 1;
+	size_t const len_str = len_idx + 67;
+	char str[len_str];
+	char isuffix[2];
 
 	uint16_t mod100 = idx_erroneous_fitting % 100;
 	uint16_t ones_digit = mod100 % 10;
 	uint16_t tens_digit = mod100 / 10;
-	std::string isuffix;
 	if (tens_digit == 1) {
-		isuffix = "th";
+		snprintf(isuffix, sizeof(isuffix), "th");
 	} else {
 		if (ones_digit == 1) {
-			isuffix = "st";
+			snprintf(isuffix, sizeof(isuffix), "st");
 		} else if (ones_digit == 2) {
-			isuffix = "nd";
+			snprintf(isuffix, sizeof(isuffix), "nd");
 		} else if (ones_digit == 3) {
-			isuffix = "rd";
+			snprintf(isuffix, sizeof(isuffix), "rd");
 		} else {
-			isuffix = "th";
+			snprintf(isuffix, sizeof(isuffix), "th");
 		}
 	}
-	ss << isuffix << " fitting.";
 
-	return ss.str();
+	snprintf(str, sizeof(str),
+			"SubtractBaseline: available data became too few in the %d %2s fitting.",
+			idx_erroneous_fitting, isuffix);
+
+	return str;
 }
 
 inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
