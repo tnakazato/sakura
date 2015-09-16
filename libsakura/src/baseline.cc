@@ -1133,33 +1133,74 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(U const *context,
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		uint16_t const npiece, uint16_t const nwave, size_t const num_data,
+		size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
-	CHECK_ARGS(baseline_type < LIBSAKURA_SYMBOL(BaselineType_kNumElements));
+	CHECK_ARGS(
+			(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) ||(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
 	CHECK_ARGS(context != nullptr);
-	size_t param;
-	switch (baseline_type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-		param = order;
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
-		CHECK_ARGS(0 < npiece);
-		param = npiece;
-		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		param = nwave;
-		break;
-	default:
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-		break;
-	}
-	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, param);
+	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, order);
 	CHECK_ARGS(num_lsq_bases <= num_data);
 
 	try {
 		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
-				baseline_type, order, npiece, nwave, num_data, context);
+				baseline_type, order, 1, 0, num_data, context);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "Order must be smaller than num_data.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
+		uint16_t const npiece, size_t const num_data,
+		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
+	LIBSAKURA_SYMBOL(BaselineType) const baseline_type = LIBSAKURA_SYMBOL(
+			BaselineType_kCubicSpline);
+	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(0 < npiece);
+	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, npiece);
+	CHECK_ARGS(num_lsq_bases <= num_data);
+
+	try {
+		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
+				baseline_type, 0, npiece, 0, num_data, context);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "Order must be smaller than num_data.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
+		uint16_t const nwave, size_t const num_data,
+		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
+	LIBSAKURA_SYMBOL(BaselineType) const baseline_type = LIBSAKURA_SYMBOL(
+			BaselineType_kSinusoid);
+	CHECK_ARGS(context != nullptr);
+	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, nwave);
+	CHECK_ARGS(num_lsq_bases <= num_data);
+
+	try {
+		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
+				baseline_type, 0, 1, nwave, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);

@@ -175,7 +175,7 @@ protected:
 	}
 
 	void GenerateFromContext(
-			LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+	LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 			size_t const num_data, float *in_data, size_t const num_coeff,
 			double *coeff) {
 		assert(num_data == context->num_basis_data);
@@ -213,7 +213,6 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 	float out[ELEMENTSOF(in_data)];
 	float answer[ELEMENTSOF(in_data)];
 	SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
-	size_t const num_pieces(1);
 	size_t const gen_order(5);
 	size_t const in_order(3);
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
@@ -237,8 +236,8 @@ TEST_F(BaselineKS, SubtractBaselineOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
-				sakura_CreateBaselineContextFloat(type, gen_order, num_pieces,
-						nwave, num_data, &context);
+				sakura_CreateBaselineContextFloat(type, gen_order, num_data,
+						&context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
@@ -278,7 +277,6 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 	bool final_mask[ELEMENTSOF(in_data)];
 	SIMD_ALIGN
 	float out[ELEMENTSOF(in_data)];
-	size_t const num_pieces(1);
 	size_t const gen_order(5);
 	size_t const in_order(6);
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
@@ -300,8 +298,8 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
-				sakura_CreateBaselineContextFloat(type, gen_order, num_pieces,
-						nwave, num_data, &context);
+				sakura_CreateBaselineContextFloat(type, gen_order, num_data,
+						&context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 		LIBSAKURA_SYMBOL (BaselineStatus) op_blstatus;
@@ -323,7 +321,6 @@ TEST_F(BaselineKS, SubtractBaselineBadOrder) {
  */
 TEST_F(BaselineKS, GetNumberOfCoefficientsFloatOrder) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_dummy(1);
 	size_t gen_order = 5; // the order to generate a context
 	size_t test_order = 2; // the order to test
 	//uint16_t const test_nwave = 2;
@@ -343,11 +340,11 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsFloatOrder) {
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status;
 		if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
-			create_status = sakura_CreateBaselineContextFloat(type, num_dummy,
-					gen_order, nwave, num_data, &context);
+			create_status = sakura_CreateBaselineContextCubicSplineFloat(
+					gen_order, num_data, &context);
 		} else {
 			create_status = sakura_CreateBaselineContextFloat(type, gen_order,
-					num_dummy, nwave, num_data, &context);
+					num_data, &context);
 		}
 
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
@@ -371,7 +368,6 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsFloatOrder) {
  */
 TEST_F(BaselineKS, GetNumberOfCoefficientsFloatBadOrder) {
 	size_t const num_data(NUM_DATA2);
-	size_t const num_pieces(1);
 	size_t gen_order = 5; // the order to generate a context
 	size_t test_order = 6; // the order to test
 	LIBSAKURA_SYMBOL(BaselineType) bltypes[] = { LIBSAKURA_SYMBOL(
@@ -383,8 +379,8 @@ TEST_F(BaselineKS, GetNumberOfCoefficientsFloatBadOrder) {
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
-				sakura_CreateBaselineContextFloat(type, gen_order, num_pieces,
-						nwave, num_data, &context);
+				sakura_CreateBaselineContextFloat(type, gen_order, num_data,
+						&context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		size_t num_coeff = 0;
 		LIBSAKURA_SYMBOL (Status) num_status;
@@ -427,9 +423,14 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatNumCoeff) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status =
-				sakura_CreateBaselineContextFloat(type, order, num_pieces,
-						nwave, num_data, &context);
+		LIBSAKURA_SYMBOL (Status) create_status;
+		if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+			create_status = sakura_CreateBaselineContextCubicSplineFloat(
+					num_pieces, num_data, &context);
+		} else {
+			create_status = sakura_CreateBaselineContextFloat(type, order,
+					num_data, &context);
+		}
 
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
@@ -465,7 +466,6 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatNumCoeff) {
  * Fitting function: Polynomial, Chebyshev, Sinusoid
  */
 TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
-	size_t const num_pieces(1);
 	size_t const num_data(NUM_DATA2);
 	SIMD_ALIGN
 	float in_data[num_data];
@@ -484,9 +484,14 @@ TEST_F(BaselineKS, SubtractBaselineUsingCoefficientsFloatBadNumCoeff) {
 		LIBSAKURA_SYMBOL(BaselineType) type(bltypes[i]);
 		cout << "Testing baseline type = " << type << endl;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-		LIBSAKURA_SYMBOL (Status) create_status =
-				sakura_CreateBaselineContextFloat(type, order, num_pieces,
-						nwave, num_data, &context);
+		LIBSAKURA_SYMBOL (Status) create_status;
+		if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+			create_status = sakura_CreateBaselineContextSinusoidFloat(nwave,
+					num_data, &context);
+		} else {
+			create_status = sakura_CreateBaselineContextFloat(type, order,
+					num_data, &context);
+		}
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		for (size_t j = 0; j < ELEMENTSOF(bad_coeffs); ++j) {
 			size_t num_coeff = bad_coeffs[j];

@@ -1480,25 +1480,15 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @note A baseline context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
  * thread.
- * @param[in] baseline_type Type of basis function.
- * @param[in] order Polynomial order. It must be positive or
- * zero. It is used when @a baseline_type is
- * sakura_BaselineType_kPolynomial or
+ * @param[in] baseline_type Type of basis function. It should
+ * be either of sakura_BaselineType_kPolynomial or
  * sakura_BaselineType_kChebyshev.
- * @param[in] npiece Number of spline pieces. It must be a
- * positive value. It is used only when @a baseline_type is
- * sakura_BaselineType_kCubicSpline.
- * @param[in] nwave Maximum wave number of sinusoids. It must be
- * positive or zero. It is used only when @a baseline_type is
- * sakura_BaselineType_kSinusoid.
+ * @param[in] order Polynomial order. It must be positive or
+ * zero.
  * @param[in] num_data Number of data to fit baseline. It must
  * be equal to or larger than the number of model bases, which
- * is ( @a order+1 ) for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev, ( @a npiece+3 ) for
- * sakura_BaselineType_kCubicSpline, or ( @a nwave*2+1 ) for
- * sakura_BaselineType_kSinusoid. Hence the smallest allowed
- * value of @a num_data is 4 for @a baseline_type of
- * sakura_BaselineType_kCubicSpline or 1 for the others.
+ * is ( @a order+1 ), thus the smallest allowed value of
+ * @a num_data is 1.
  * @param[out] context An object containing baseline model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyBaselineContextFloat .
@@ -1506,8 +1496,54 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		uint16_t const npiece, uint16_t const nwave, size_t const num_data,
+		LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
+		uint16_t const order, size_t const num_data,
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @copybrief sakura_CreateBaselineContextFloat
+ * @details
+ * @note A baseline context object can not be shared between
+ * threads, as it contains working areas exclusive for a specific
+ * thread.
+ * @param[in] npiece Number of spline pieces. It must be a
+ * positive value.
+ * @param[in] num_data Number of data to fit baseline. It must
+ * be equal to or larger than the number of model bases (
+ * @a npiece+3 ), thus the smallest allowed value of @a num_data
+ * is 4.
+ * @param[out] context An object containing baseline model data.
+ * When @a context is no longer used, it must be destroyed by
+ * @ref sakura_DestroyBaselineContextFloat .
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
+		uint16_t const npiece, size_t const num_data,
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @copybrief sakura_CreateBaselineContextFloat
+ * @details
+ * @note A baseline context object can not be shared between
+ * threads, as it contains working areas exclusive for a specific
+ * thread.
+ * @param[in] nwave Maximum wave number of sinusoids. It must be
+ * positive or zero.
+ * @param[in] num_data Number of data to fit baseline. It must
+ * be equal to or larger than the number of model bases, which
+ * is ( @a nwave*2+1 ), thus the smallest allowed value of
+ * @a num_data is 1.
+ * @param[out] context An object containing baseline model data.
+ * When @a context is no longer used, it must be destroyed by
+ * @ref sakura_DestroyBaselineContextFloat .
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
+		uint16_t const nwave, size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
