@@ -1066,7 +1066,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 	bool in_mask[ELEMENTSOF(in_data)];
 	size_t const num_exclude_indices(NUM_EXCLUDE);
 	SIMD_ALIGN
-	size_t exclude_indices[num_exclude_indices] = {};
+	size_t exclude_indices[num_exclude_indices] = { };
 	size_t const num_model(NUM_MODEL);
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
@@ -1080,7 +1080,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 	SIMD_ALIGN
 	double in_lsq_vector_orig[num_model];
 	SIMD_ALIGN
-	size_t use_idx[num_model] = {};
+	size_t use_idx[num_model] = { };
 	for (size_t i = 0; i < num_model; ++i) {
 		use_idx[i] = i;
 	}
@@ -1109,6 +1109,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 	SetAnswers(num_data, in_data, num_model, model, num_model,
 			in_lsq_matrix_orig, in_lsq_vector_orig);
 
+	SetBoolConstant(true, num_data, in_mask);
 	size_t const num_repeat(NUM_REPEAT2);
 	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
@@ -1120,9 +1121,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 		}
 		double start = sakura_GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-				num_data, in_data, num_exclude_indices, exclude_indices,
-				num_model, model, num_model, use_idx, in_lsq_matrix,
-				in_lsq_vector);
+				num_data, in_data, in_mask, num_exclude_indices,
+				exclude_indices, num_model, model, num_model, use_idx,
+				in_lsq_matrix, in_lsq_vector);
 		double end = sakura_GetCurrentTime();
 		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -1198,8 +1199,8 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsNumDataZero) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1241,8 +1242,8 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithDataNullPointer) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, data_np, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, data_np, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1285,8 +1286,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithDataNotAligned) {
 			in_lsq_matrix, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data_unaligned, num_exclude_indices, exclude_indices,
-			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data_unaligned, in_mask, num_exclude_indices,
+			exclude_indices, num_model, model, num_model, use_idx,
+			in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1329,7 +1331,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesNullPointer) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices_np,
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices_np,
 			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
@@ -1373,8 +1375,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesNotAligned) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices_unaligned,
-			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices,
+			exclude_indices_unaligned, num_model, model, num_model, use_idx,
+			in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1417,8 +1420,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumExcludeIndicesGreaterThanNu
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices_toolarge, exclude_indices,
-			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices_toolarge,
+			exclude_indices, num_model, model, num_model, use_idx,
+			in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1461,8 +1465,8 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesHasValueEqualToN
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1505,8 +1509,8 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithExcludeIndicesHasValueGreaterT
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1549,7 +1553,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumModelBasisZero) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices,
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
 			num_model_zero, model, num_model, use_idx, in_lsq_matrix,
 			in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1594,7 +1598,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithNumModelBasisGreaterThanNumDat
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices,
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
 			num_model_toolarge, model, num_model, use_idx, in_lsq_matrix,
 			in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
@@ -1639,8 +1643,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithBasisDataNullPointer) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model_np, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model_np, num_model, use_idx, in_lsq_matrix,
+			in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1683,8 +1688,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithBasisDataNotAligned) {
 			in_lsq_matrix, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model_unaligned, num_model, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model_unaligned, num_model, use_idx, in_lsq_matrix,
+			in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1727,8 +1733,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqMatrixNullPointer) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix_np, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix_np,
+			in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1771,8 +1778,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqMatrixNotAligned) {
 			in_lsq_matrix_unaligned, in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix_unaligned, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix_unaligned,
+			in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1815,8 +1823,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqVectorNullPointer) {
 			in_lsq_vector);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector_np);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix,
+			in_lsq_vector_np);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -1859,8 +1868,9 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsWithLsqVectorNotAligned) {
 			in_lsq_vector_unaligned);
 
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_model, use_idx, in_lsq_matrix, in_lsq_vector_unaligned);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_model, use_idx, in_lsq_matrix,
+			in_lsq_vector_unaligned);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
@@ -2008,7 +2018,9 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 	double *model = nullptr;
 	unique_ptr<void, DefaultAlignedMemory> storage_for_model(
 			DefaultAlignedMemory::AlignedAllocateOrException(
-					sizeof(*model) * ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data), &model));
+					sizeof(*model)
+							* ELEMENTSOF(lsq_vector) * ELEMENTSOF(in_data),
+					&model));
 	if (model == nullptr) {
 		throw bad_alloc();
 	}
@@ -2020,7 +2032,9 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 	double *lsq_matrix = nullptr;
 	unique_ptr<void, DefaultAlignedMemory> storage_for_lsq_matrix(
 			DefaultAlignedMemory::AlignedAllocateOrException(
-					sizeof(*lsq_matrix) * ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector), &lsq_matrix));
+					sizeof(*lsq_matrix)
+							* ELEMENTSOF(lsq_vector) * ELEMENTSOF(lsq_vector),
+					&lsq_matrix));
 	if (lsq_matrix == nullptr) {
 		throw bad_alloc();
 	}
@@ -2427,6 +2441,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsOrder) {
 	SetAnswers(num_data, in_data, num_model, model, num_coeff,
 			in_lsq_matrix_orig, in_lsq_vector_orig);
 
+	SetBoolConstant(true, ELEMENTSOF(in_data), in_mask);
 	for (size_t j = 0; j < ELEMENTSOF(in_lsq_matrix); ++j) {
 		in_lsq_matrix[j] = in_lsq_matrix_orig[j];
 	}
@@ -2434,8 +2449,8 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsOrder) {
 		in_lsq_vector[j] = in_lsq_vector_orig[j];
 	}
 	LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-			num_data, in_data, num_exclude_indices, exclude_indices, num_model,
-			model, num_coeff, use_idx, in_lsq_matrix, in_lsq_vector);
+			num_data, in_data, in_mask, num_exclude_indices, exclude_indices,
+			num_model, model, num_coeff, use_idx, in_lsq_matrix, in_lsq_vector);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
 		double deviation;
@@ -2492,7 +2507,7 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 	SIMD_ALIGN
 	double model[num_model * ELEMENTSOF(in_data)];
 	SIMD_ALIGN
-	size_t use_idx[num_model] = {};
+	size_t use_idx[num_model] = { };
 	for (size_t i = 0; i < num_model; ++i) {
 		use_idx[i] = i;
 	}
@@ -2519,124 +2534,124 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 				<< num_model << ")" << endl;
 
 		LIBSAKURA_SYMBOL (Status) status = sakura_UpdateLSQCoefficientsDouble(
-				num_data, in_data, num_exclude_indices, exclude_indices,
-				num_model, model, num_coeff, use_idx, in_lsq_matrix,
-				in_lsq_vector);
+				num_data, in_data, in_mask, num_exclude_indices,
+				exclude_indices, num_model, model, num_coeff, use_idx,
+				in_lsq_matrix, in_lsq_vector);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 	}
 }
 
 //LM start---------------------------------------
 /*
-TEST_F(NumericOperation, FitGaussianSingleComponent) {
-	size_t const num_data = 100;
-	SIMD_ALIGN
-	float data[num_data];
-	float sigma_noise = 1.0;
-	SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
-	// Answer of Gaussian parameters
-	double ans_ampl = 7.0;
-	double ans_peak = 37.0;
-	double ans_sigma = 3.5;
-	// Add Gaussian profile to the input data
-	for (size_t i = 0; i < num_data; ++i) {
-		double value = ((double) i - ans_peak) / ans_sigma;
-		data[i] += ans_ampl * exp(-0.5 / M_PI * value * value);
-	}
-	SIMD_ALIGN
-	bool mask[ELEMENTSOF(data)];
-	SetBoolConstant(true, ELEMENTSOF(data), mask);
-	// Add bad data and mask them
-	for (size_t i = 0; i < 10; ++i) {
-		data[i] = 100.0;
-		mask[i] = false;
-	}
-	for (size_t i = 50; i < 52; ++i) {
-		data[i] = -300.0;
-		mask[i] = false;
-	}
-	for (size_t i = 80; i < 100; ++i) {
-		data[i] = 300.0;
-		mask[i] = false;
-	}
-	for (size_t i = 0; i < num_data; ++i) {
-		//std::cout << i << "   " << data[i] << std::endl;
-	}
+ TEST_F(NumericOperation, FitGaussianSingleComponent) {
+ size_t const num_data = 100;
+ SIMD_ALIGN
+ float data[num_data];
+ float sigma_noise = 1.0;
+ SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
+ // Answer of Gaussian parameters
+ double ans_ampl = 7.0;
+ double ans_peak = 37.0;
+ double ans_sigma = 3.5;
+ // Add Gaussian profile to the input data
+ for (size_t i = 0; i < num_data; ++i) {
+ double value = ((double) i - ans_peak) / ans_sigma;
+ data[i] += ans_ampl * exp(-0.5 / M_PI * value * value);
+ }
+ SIMD_ALIGN
+ bool mask[ELEMENTSOF(data)];
+ SetBoolConstant(true, ELEMENTSOF(data), mask);
+ // Add bad data and mask them
+ for (size_t i = 0; i < 10; ++i) {
+ data[i] = 100.0;
+ mask[i] = false;
+ }
+ for (size_t i = 50; i < 52; ++i) {
+ data[i] = -300.0;
+ mask[i] = false;
+ }
+ for (size_t i = 80; i < 100; ++i) {
+ data[i] = 300.0;
+ mask[i] = false;
+ }
+ for (size_t i = 0; i < num_data; ++i) {
+ //std::cout << i << "   " << data[i] << std::endl;
+ }
 
-	// Initial guess of Gaussian parameters
-	double out_ampl = 1.0;
-	double out_peak = 50.0;
-	double out_sigma = 1.0;
-	LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
-			data, mask, 1, &out_ampl, &out_peak, &out_sigma);
-	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+ // Initial guess of Gaussian parameters
+ double out_ampl = 1.0;
+ double out_peak = 50.0;
+ double out_sigma = 1.0;
+ LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
+ data, mask, 1, &out_ampl, &out_peak, &out_sigma);
+ ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 
-	std::cout << "[out] ampl = " << out_ampl << ", peak = " << out_peak
-			<< ", sigma = " << out_sigma << std::endl;
-	std::cout << "[ans] ampl = " << ans_ampl << ", peak = " << ans_peak
-			<< ", sigma = " << ans_sigma << std::endl;
-}
+ std::cout << "[out] ampl = " << out_ampl << ", peak = " << out_peak
+ << ", sigma = " << out_sigma << std::endl;
+ std::cout << "[ans] ampl = " << ans_ampl << ", peak = " << ans_peak
+ << ", sigma = " << ans_sigma << std::endl;
+ }
 
-TEST_F(NumericOperation, FitGaussianDoubleComponents) {
-	size_t const num_data = 100;
-	SIMD_ALIGN
-	float data[num_data];
-	float sigma_noise = 0.10;
-	SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
-	// Answer of Gaussian parameters
-	size_t const num_line = 2;
-	double ans_ampl[num_line] = {7.0, 6.0};
-	double ans_peak[num_line] = {27.0, 70.0};
-	double ans_sigma[num_line] = {1.0, 1.5};
-	// Add Gaussian profile to the input data
-	for (size_t iline = 0; iline < num_line; ++iline) {
-		for (size_t i = 0; i < num_data; ++i) {
-			double value = ((double) i - ans_peak[iline]) / ans_sigma[iline];
-			data[i] += ans_ampl[iline] * exp(-0.5 / M_PI * value * value);
-		}
-	}
-	SIMD_ALIGN
-	bool mask[ELEMENTSOF(data)];
-	SetBoolConstant(true, ELEMENTSOF(data), mask);
-	// Add bad data and mask them
-	for (size_t i = 0; i < 10; ++i) {
-		data[i] = 100.0;
-		mask[i] = false;
-	}
-	for (size_t i = 50; i < 52; ++i) {
-		data[i] = -300.0;
-		mask[i] = false;
-	}
-	for (size_t i = 90; i < 100; ++i) {
-		data[i] = 300.0;
-		mask[i] = false;
-	}
-	for (size_t i = 0; i < num_data; ++i) {
-		//std::cout << i << "   " << data[i] << std::endl;
-	}
+ TEST_F(NumericOperation, FitGaussianDoubleComponents) {
+ size_t const num_data = 100;
+ SIMD_ALIGN
+ float data[num_data];
+ float sigma_noise = 0.10;
+ SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
+ // Answer of Gaussian parameters
+ size_t const num_line = 2;
+ double ans_ampl[num_line] = {7.0, 6.0};
+ double ans_peak[num_line] = {27.0, 70.0};
+ double ans_sigma[num_line] = {1.0, 1.5};
+ // Add Gaussian profile to the input data
+ for (size_t iline = 0; iline < num_line; ++iline) {
+ for (size_t i = 0; i < num_data; ++i) {
+ double value = ((double) i - ans_peak[iline]) / ans_sigma[iline];
+ data[i] += ans_ampl[iline] * exp(-0.5 / M_PI * value * value);
+ }
+ }
+ SIMD_ALIGN
+ bool mask[ELEMENTSOF(data)];
+ SetBoolConstant(true, ELEMENTSOF(data), mask);
+ // Add bad data and mask them
+ for (size_t i = 0; i < 10; ++i) {
+ data[i] = 100.0;
+ mask[i] = false;
+ }
+ for (size_t i = 50; i < 52; ++i) {
+ data[i] = -300.0;
+ mask[i] = false;
+ }
+ for (size_t i = 90; i < 100; ++i) {
+ data[i] = 300.0;
+ mask[i] = false;
+ }
+ for (size_t i = 0; i < num_data; ++i) {
+ //std::cout << i << "   " << data[i] << std::endl;
+ }
 
-	// Initial guess of Gaussian parameters
-	double out_ampl[num_line] = {10.0, 10.0};
-	double out_peak[num_line] = {25.0, 69.0};
-	double out_sigma[num_line] = {1.0, 1.0};
+ // Initial guess of Gaussian parameters
+ double out_ampl[num_line] = {10.0, 10.0};
+ double out_peak[num_line] = {25.0, 69.0};
+ double out_sigma[num_line] = {1.0, 1.0};
 
-	for (size_t iline = 0; iline < num_line; ++iline) {
-		for (size_t i = 0; i < num_data; ++i) {
-			mask[i] = false;
-		}
-		size_t i_min = out_peak[iline]-5.0*out_sigma[iline];
-		size_t i_max = out_peak[iline]+5.0*out_sigma[iline];
-		for (size_t i = i_min; i < i_max; ++i) {
-			mask[i] = true;
-		}
-		LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
-				data, mask, 1, &out_ampl[iline], &out_peak[iline], &out_sigma[iline]);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-		std::cout << "[out" << iline << "] ampl = " << out_ampl[iline] << ", peak = " << out_peak[iline]
-				<< ", sigma = " << out_sigma[iline] << std::endl;
-		std::cout << "[ans" << iline << "] ampl = " << ans_ampl[iline] << ", peak = " << ans_peak[iline]
-				<< ", sigma = " << ans_sigma[iline] << std::endl;
-	}
-}
-*/
+ for (size_t iline = 0; iline < num_line; ++iline) {
+ for (size_t i = 0; i < num_data; ++i) {
+ mask[i] = false;
+ }
+ size_t i_min = out_peak[iline]-5.0*out_sigma[iline];
+ size_t i_max = out_peak[iline]+5.0*out_sigma[iline];
+ for (size_t i = i_min; i < i_max; ++i) {
+ mask[i] = true;
+ }
+ LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
+ data, mask, 1, &out_ampl[iline], &out_peak[iline], &out_sigma[iline]);
+ ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+ std::cout << "[out" << iline << "] ampl = " << out_ampl[iline] << ", peak = " << out_peak[iline]
+ << ", sigma = " << out_sigma[iline] << std::endl;
+ std::cout << "[ans" << iline << "] ampl = " << ans_ampl[iline] << ", peak = " << ans_peak[iline]
+ << ", sigma = " << ans_sigma[iline] << std::endl;
+ }
+ }
+ */
 //LM end ----------------------

@@ -861,12 +861,23 @@ inline void DoSubtractBaselineEngine(U const *context, size_t num_data,
 						BaselineStatus_kNotEnoughData);
 				throw std::runtime_error(GetNotEnoughDataMessage(i));
 			}
-			status = LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data, data,
-					final_mask, num_context_bases, basis, num_coeff,
-					context->use_bases_idx, context->lsq_matrix,
-					context->lsq_vector);
-			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error("failed in GetLSQCoefficients.");
+			if (num_unmasked_data <= num_clipped) {
+				status = LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data,
+						data, final_mask, num_context_bases, basis, num_coeff,
+						context->use_bases_idx, context->lsq_matrix,
+						context->lsq_vector);
+				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+					throw std::runtime_error("failed in GetLSQCoefficients.");
+				}
+			} else {
+				status = LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(num_data,
+						data, mask, num_clipped, context->clipped_indices,
+						num_context_bases, basis, num_coeff,
+						context->use_bases_idx, context->lsq_matrix,
+						context->lsq_vector);
+				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+					throw std::runtime_error("failed in UpdateLSQCoefficients.");
+				}
 			}
 			status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
 					num_coeff, context->lsq_matrix, context->lsq_vector, coeff);

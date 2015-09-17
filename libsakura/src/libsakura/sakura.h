@@ -1275,7 +1275,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @a param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for baseline types other than
  * sakura_BaselineType_kSinusoid, it should be always [0, 1, 2, ...,
- * (num_lsq_bases-1)]. Element values must be in ascending order.
+ * (num_lsq_bases-1)]. Element values must not be duplicate, and must
+ * be in ascending order.
  * @n must-be-aligned
  * @param[out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
@@ -1322,6 +1323,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * function) consisting the entire model.
  * It must be a positive number.
  * @param[in] data Input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask The input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input data if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * data if the corresponding element of @a mask is false.
  * @n must-be-aligned
  * @param[in] num_exclude_indices The number of data points to be excluded
  * this time. The range of allowed value is between 0 and @a num_data .
@@ -1370,6 +1376,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/],
 		size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/],
 		size_t const num_model_bases,

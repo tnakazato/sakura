@@ -75,7 +75,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d                const &a, __m256d                const &b, __m256d                const &c) {
+__m256d NegMultiplyAdd(__m256d                   const &a, __m256d                   const &b, __m256d                   const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -237,15 +237,17 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 }
 
 template<size_t kNumBases>
-inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
-		size_t const *clipped_indices_arg, size_t num_model_bases,
-		double const *in_arg, double const *model_arg,
+inline void UpdateLSQFittingMatrixTemplate(bool const *mask_arg,
+		size_t num_clipped, size_t const *clipped_indices_arg,
+		size_t num_model_bases, double const *in_arg, double const *model_arg,
 		size_t const *use_bases_idx_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(use_bases_idx_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto const mask = AssumeAligned(mask_arg);
 	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto const in = AssumeAligned(in_arg);
 	auto const model = AssumeAligned(model_arg);
@@ -256,6 +258,7 @@ inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
+		if (!mask[clipped_indices[i]]) continue;
 		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		for (size_t j = 0; j < kNumBases; ++j) {
 			auto out_matrix_j = &out[j * kNumBases];
@@ -265,15 +268,17 @@ inline void UpdateLSQFittingMatrixTemplate(size_t num_clipped,
 	}
 }
 
-inline void UpdateLSQFittingMatrix(size_t num_clipped,
+inline void UpdateLSQFittingMatrix(bool const *mask_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_lsq_bases,
 		double const *in_arg, size_t num_model_bases, double const *model_arg,
 		size_t const *use_bases_idx_arg, double *out_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(use_bases_idx_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
+	auto const mask = AssumeAligned(mask_arg);
 	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto const in = AssumeAligned(in_arg);
 	auto const model = AssumeAligned(model_arg);
@@ -284,6 +289,7 @@ inline void UpdateLSQFittingMatrix(size_t num_clipped,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
+		if (!mask[clipped_indices[i]]) continue;
 		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		for (size_t j = 0; j < num_lsq_bases; ++j) {
 			auto out_matrix_j = &out[j * num_lsq_bases];
@@ -350,17 +356,19 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 }
 
 template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplate(
-		T const *data_arg, size_t num_clipped,
+		T const *data_arg, bool const *mask_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
 		double const *in_arg, double const *model_arg,
 		size_t const *use_bases_idx_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(use_bases_idx_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto const in = AssumeAligned(in_arg);
 	auto const model = AssumeAligned(model_arg);
@@ -371,6 +379,7 @@ template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplat
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
+		if (!mask[clipped_indices[i]]) continue;
 		auto const cii = clipped_indices[i];
 		auto const model_i = &model[cii * num_model_bases];
 		auto data_i = data[cii];
@@ -379,17 +388,19 @@ template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplat
 }
 
 template<typename T>
-inline void UpdateLSQFittingVector(T const *data_arg, size_t num_clipped,
-		size_t const *clipped_indices_arg, size_t num_lsq_bases,
+inline void UpdateLSQFittingVector(T const *data_arg, bool const *mask_arg,
+		size_t num_clipped, size_t const *clipped_indices_arg, size_t num_lsq_bases,
 		double const *in_arg, size_t num_model_bases, double const *model_arg,
 		size_t const *use_bases_idx_arg, double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(model_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(use_bases_idx_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
 	auto const clipped_indices = AssumeAligned(clipped_indices_arg);
 	auto const in = AssumeAligned(in_arg);
 	auto const model = AssumeAligned(model_arg);
@@ -400,6 +411,7 @@ inline void UpdateLSQFittingVector(T const *data_arg, size_t num_clipped,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
+		if (!mask[clipped_indices[i]]) continue;
 		auto const cii = clipped_indices[i];
 		auto const model_i = &model[cii * num_model_bases];
 		auto data_i = data[cii];
@@ -431,26 +443,26 @@ inline void GetLSQCoefficients(size_t num_data, T const *data, bool const *mask,
 
 template<size_t kNumBases, typename T>
 inline void UpdateLSQCoefficientsTemplate(size_t const num_data, T const *data,
-		size_t const num_clipped, size_t const *clipped_indices,
+		bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
 		size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, size_t const *use_bases_idx,
 		double *lsq_matrix, double *lsq_vector) {
-	UpdateLSQFittingMatrixTemplate<kNumBases>(num_clipped, clipped_indices,
+	UpdateLSQFittingMatrixTemplate<kNumBases>(mask, num_clipped, clipped_indices,
 			num_model_bases, lsq_matrix, basis, use_bases_idx, lsq_matrix);
-	UpdateLSQFittingVectorTemplate<kNumBases, T>(data, num_clipped,
+	UpdateLSQFittingVectorTemplate<kNumBases, T>(data, mask, num_clipped,
 			clipped_indices, num_model_bases, lsq_vector, basis, use_bases_idx,
 			lsq_vector);
 }
 
 template<typename T>
 inline void UpdateLSQCoefficients(size_t const num_data, T const *data,
-		size_t const num_clipped, size_t const *clipped_indices,
+		bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
 		size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, size_t const *use_bases_idx,
 		double *lsq_matrix, double *lsq_vector) {
-	UpdateLSQFittingMatrix(num_clipped, clipped_indices, num_lsq_bases,
+	UpdateLSQFittingMatrix(mask, num_clipped, clipped_indices, num_lsq_bases,
 			lsq_matrix, num_model_bases, basis, use_bases_idx, lsq_matrix);
-	UpdateLSQFittingVector<T>(data, num_clipped, clipped_indices, num_lsq_bases,
+	UpdateLSQFittingVector<T>(data, mask, num_clipped, clipped_indices, num_lsq_bases,
 			lsq_vector, num_model_bases, basis, use_bases_idx, lsq_vector);
 }
 
@@ -489,8 +501,8 @@ bool const mask[/*num_data*/], size_t const num_model_bases,
 		size_t const use_bases_idx[/*num_lsq_bases*/],
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
-	typedef void (*GetLSQCoefficientsFunc)(size_t const num_data, T const *data,
-	bool const *mask, size_t const num_model_bases, double const *basis_data,
+	using GetLSQCoefficientsFunc = void (*)(size_t const num_data, T const *data,
+			bool const *mask, size_t const num_model_bases, double const *basis_data,
 			size_t const num_lsq_bases, size_t const *use_bases_idx,
 			double *lsq_matrix, double *lsq_vector);
 
@@ -518,16 +530,16 @@ bool const mask[/*num_data*/], size_t const num_model_bases,
 
 template<typename T>
 void UpdateLSQCoefficientsEntry(size_t const num_data,
-		T const data[/*num_data*/], size_t const num_clipped,
-		size_t const clipped_indices[/*num_data*/],
+		T const data[/*num_data*/], bool const mask[/*num_data*/],
+		size_t const num_clipped, size_t const clipped_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
 		size_t const num_lsq_bases,
 		size_t const use_bases_idx[/*num_lsq_bases*/],
 		double lsq_matrix[/*num_lsq_bases*num_lsq_bases*/],
 		double lsq_vector[/*num_lsq_bases*/]) {
-	typedef void (*UpdateLSQCoefficientsFunc)(size_t const num_data,
-			T const *data, size_t const num_clipped,
+	using UpdateLSQCoefficientsFunc = void (*)(size_t const num_data,
+			T const *data, bool const *mask, size_t const num_clipped,
 			size_t const *clipped_indices, size_t const num_model_bases,
 			double const *basis_data, size_t const num_lsq_bases,
 			size_t const *use_bases_idx, double *lsq_matrix,
@@ -547,17 +559,18 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 			UpdateLSQCoefficientsTemplate<100, T> };
 
 	if (num_lsq_bases < ELEMENTSOF(funcs)) {
-		funcs[num_lsq_bases](num_data, data, num_clipped, clipped_indices,
+		funcs[num_lsq_bases](num_data, data, mask, num_clipped, clipped_indices,
 				num_model_bases, basis_data, num_lsq_bases, use_bases_idx,
 				lsq_matrix, lsq_vector);
 	} else {
-		UpdateLSQCoefficients<T>(num_data, data, num_clipped, clipped_indices,
+		UpdateLSQCoefficients<T>(num_data, data, mask, num_clipped, clipped_indices,
 				num_model_bases, basis_data, num_lsq_bases, use_bases_idx,
 				lsq_matrix, lsq_vector);
 	}
 }
 
 //--LM part--------------------------------------
+/*
 template<typename T, int Nx = Dynamic, int Ny = Dynamic>
 struct Functor {
 	typedef T Scalar;
@@ -589,16 +602,20 @@ struct FunctorDouble: Functor<double> {
 };
 
 struct GaussianFunctorDouble: FunctorDouble {
-	GaussianFunctorDouble(size_t num_components, int inputs, int values, double *x, double *y) :
+	GaussianFunctorDouble(size_t num_components, int inputs, int values,
+			double *x, double *y) :
 			FunctorDouble(inputs, values, x, y), num_components_(num_components) {
-	};
+	}
+	;
 	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
 		//params are {peak_amplitude, peak_position, sigma}.
 		for (int i = 0; i < values_; ++i) {
 			values_to_minimize[i] = 0.0;
 			for (size_t iline = 0; iline < num_components_; ++iline) {
-				double v = (x[i] - params[3*iline+1]) / params[3*iline+2];
-				values_to_minimize[i] += params[3*iline] * exp(-0.5 / M_PI * v * v);
+				double v = (x[i] - params[3 * iline + 1])
+						/ params[3 * iline + 2];
+				values_to_minimize[i] += params[3 * iline]
+						* exp(-0.5 / M_PI * v * v);
 			}
 			values_to_minimize[i] -= y[i];
 		}
@@ -607,8 +624,9 @@ struct GaussianFunctorDouble: FunctorDouble {
 	size_t num_components_;
 };
 
-void DoFitGaussianByLMDouble(size_t const n, size_t const num_data, double const x_data[], double const y_data[],
-		double peak_amplitude[], double peak_position[], double sigma[]) {
+void DoFitGaussianByLMDouble(size_t const n, size_t const num_data,
+		double const x_data[], double const y_data[], double peak_amplitude[],
+		double peak_position[], double sigma[]) {
 	size_t const num_parameters = 3 * n;
 	VectorXd params(num_parameters);
 	for (size_t i = 0; i < n; ++i) {
@@ -626,11 +644,12 @@ void DoFitGaussianByLMDouble(size_t const n, size_t const num_data, double const
 				"FitGaussianByLMDouble: invalid data or parameter for Gaussian fitting.");
 	}
 	for (size_t i = 0; i < n; ++i) {
-		peak_amplitude[i] = params[3*i];
-		peak_position[i] = params[3*i+1];
-		sigma[i] = params[3*i+2];
+		peak_amplitude[i] = params[3 * i];
+		peak_position[i] = params[3 * i + 1];
+		sigma[i] = params[3 * i + 2];
 	}
 }
+*/
 //--End LM part----------------------------------
 
 } /* anonymous namespace */
@@ -643,40 +662,39 @@ void DoFitGaussianByLMDouble(size_t const n, size_t const num_data, double const
 
 //--LM part--------------------------------------
 /*
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
-		size_t const num_data, float const data[], bool const mask[],
-		size_t const num_lines, double amplitude[//num_lines
-		],
-		double position[//num_lines
-		],
-		double sigma[//num_lines
-		]
-		) noexcept {
-	try {
-		double data_x[num_data];
-		double data_y[num_data];
-		size_t num_data_effective = 0;
-		for (size_t i = 0; i < num_data; ++i) {
-			if (mask[i]) {
-				data_x[num_data_effective] = static_cast<double>(i);
-				data_y[num_data_effective] = static_cast<double>(data[i]);
-				++num_data_effective;
-			}
-		}
-		DoFitGaussianByLMDouble(num_lines, num_data_effective, data_x, data_y, amplitude, position, sigma);
-	} catch (const std::runtime_error &e) {
-		LOG4CXX_ERROR(logger, e.what());
-		return LIBSAKURA_SYMBOL(Status_kNG);
-	} catch (...) {
-		assert(false);
-		return LIBSAKURA_SYMBOL(Status_kUnknownError);
-	}
+ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
+ size_t const num_data, float const data[], bool const mask[],
+ size_t const num_lines, double amplitude[//num_lines
+ ],
+ double position[//num_lines
+ ],
+ double sigma[//num_lines
+ ]
+ ) noexcept {
+ try {
+ double data_x[num_data];
+ double data_y[num_data];
+ size_t num_data_effective = 0;
+ for (size_t i = 0; i < num_data; ++i) {
+ if (mask[i]) {
+ data_x[num_data_effective] = static_cast<double>(i);
+ data_y[num_data_effective] = static_cast<double>(data[i]);
+ ++num_data_effective;
+ }
+ }
+ DoFitGaussianByLMDouble(num_lines, num_data_effective, data_x, data_y, amplitude, position, sigma);
+ } catch (const std::runtime_error &e) {
+ LOG4CXX_ERROR(logger, e.what());
+ return LIBSAKURA_SYMBOL(Status_kNG);
+ } catch (...) {
+ assert(false);
+ return LIBSAKURA_SYMBOL(Status_kUnknownError);
+ }
 
-	return LIBSAKURA_SYMBOL(Status_kOK);
-}
-*/
+ return LIBSAKURA_SYMBOL(Status_kOK);
+ }
+ */
 //--End LM part----------------------------------
-
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
@@ -716,7 +734,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(
-		size_t const num_data, float const data[],
+		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_exclude_indices, size_t const exclude_indices[],
 		size_t const num_model_bases, double const basis_data[],
 		size_t const num_lsq_bases, size_t const use_bases_idx[],
@@ -724,6 +742,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble
 	CHECK_ARGS(num_data != 0);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	CHECK_ARGS(exclude_indices != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(exclude_indices));
 	CHECK_ARGS(num_exclude_indices <= num_data);
@@ -744,9 +764,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(lsq_vector));
 
 	try {
-		UpdateLSQCoefficientsEntry<float>(num_data, data, num_exclude_indices,
-				exclude_indices, num_model_bases, basis_data, num_lsq_bases,
-				use_bases_idx, lsq_matrix, lsq_vector);
+		UpdateLSQCoefficientsEntry<float>(num_data, data, mask,
+				num_exclude_indices, exclude_indices, num_model_bases,
+				basis_data, num_lsq_bases, use_bases_idx, lsq_matrix,
+				lsq_vector);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
