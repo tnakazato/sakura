@@ -75,7 +75,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d                   const &a, __m256d                   const &b, __m256d                   const &c) {
+__m256d NegMultiplyAdd(__m256d                     const &a, __m256d                     const &b, __m256d                     const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -107,27 +107,6 @@ void AddMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 	}
 }
 
-inline void AddMulVector(size_t const num_model_bases, size_t const *use_idx,
-		double k, double const *vec, double *out) {
-	size_t i = 0;
-#if defined(__AVX__) && !defined(ARCH_SCALAR)
-	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
-	size_t const end = (num_model_bases / kPackElements) * kPackElements;
-	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < end; i += kPackElements) {
-		auto v = _mm256_set_pd(vec[use_idx[i + 3]], vec[use_idx[i + 2]],
-				vec[use_idx[i + 1]], vec[use_idx[i]]);
-		_mm256_storeu_pd(&out[i],
-				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
-						_mm256_loadu_pd(&out[i])));
-	}
-#endif
-	for (; i < num_model_bases; ++i) {
-		out[i] += k * vec[use_idx[i]];
-	}
-}
-
 template<size_t kNumBases>
 void SubMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 		double *out) {
@@ -148,8 +127,10 @@ void SubMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 	}
 }
 
-inline void SubMulVector(size_t const num_model_bases, size_t const *use_idx,
-		double k, double const *vec, double *out) {
+template<typename Func1, typename Func2>
+inline void OperateAddMulVector(size_t const num_model_bases,
+		size_t const *use_idx, double k, double const *vec, Func1 func1,
+		Func2 func2, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -158,13 +139,38 @@ inline void SubMulVector(size_t const num_model_bases, size_t const *use_idx,
 	for (i = 0; i < end; i += kPackElements) {
 		auto v = _mm256_set_pd(vec[use_idx[i + 3]], vec[use_idx[i + 2]],
 				vec[use_idx[i + 1]], vec[use_idx[i]]);
-		_mm256_storeu_pd(&out[i],
-				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
+		_mm256_storeu_pd(&out[i], func1(coeff, v, i));
 	}
 #endif
 	for (; i < num_model_bases; ++i) {
-		out[i] -= k * vec[use_idx[i]];
+		func2(i);
 	}
+}
+
+inline void AddMulVector(size_t const num_model_bases, size_t const *use_idx,
+		double k, double const *vec, double *out) {
+	OperateAddMulVector(num_model_bases, use_idx, k, vec,
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+			[&](__m256d coeff, __m256d v, size_t i) {
+				return LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+						_mm256_loadu_pd(&out[i]));},
+#else
+			[&]() {},
+#endif
+			[&](size_t i) {out[i] += k * vec[use_idx[i]];}, out);
+}
+
+inline void SubMulVector(size_t const num_model_bases, size_t const *use_idx,
+		double k, double const *vec, double *out) {
+	OperateAddMulVector(num_model_bases, use_idx, k, vec,
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+			[&](__m256d coeff, __m256d v, size_t i) {
+				return NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i]));},
+#else
+			[&]() {},
+#endif
+			[&](size_t i) {out[i] -= k * vec[use_idx[i]];}, out);
 }
 
 template<size_t kNumBases>
@@ -258,7 +264,8 @@ inline void UpdateLSQFittingMatrixTemplate(bool const *mask_arg,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		if (!mask[clipped_indices[i]]) continue;
+		if (!mask[clipped_indices[i]])
+			continue;
 		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		for (size_t j = 0; j < kNumBases; ++j) {
 			auto out_matrix_j = &out[j * kNumBases];
@@ -289,7 +296,8 @@ inline void UpdateLSQFittingMatrix(bool const *mask_arg, size_t num_clipped,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		if (!mask[clipped_indices[i]]) continue;
+		if (!mask[clipped_indices[i]])
+			continue;
 		auto const model_i = &model[clipped_indices[i] * num_model_bases];
 		for (size_t j = 0; j < num_lsq_bases; ++j) {
 			auto out_matrix_j = &out[j * num_lsq_bases];
@@ -379,7 +387,8 @@ template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplat
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		if (!mask[clipped_indices[i]]) continue;
+		if (!mask[clipped_indices[i]])
+			continue;
 		auto const cii = clipped_indices[i];
 		auto const model_i = &model[cii * num_model_bases];
 		auto data_i = data[cii];
@@ -389,9 +398,10 @@ template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplat
 
 template<typename T>
 inline void UpdateLSQFittingVector(T const *data_arg, bool const *mask_arg,
-		size_t num_clipped, size_t const *clipped_indices_arg, size_t num_lsq_bases,
-		double const *in_arg, size_t num_model_bases, double const *model_arg,
-		size_t const *use_bases_idx_arg, double *out_arg) {
+		size_t num_clipped, size_t const *clipped_indices_arg,
+		size_t num_lsq_bases, double const *in_arg, size_t num_model_bases,
+		double const *model_arg, size_t const *use_bases_idx_arg,
+		double *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(clipped_indices_arg));
@@ -411,7 +421,8 @@ inline void UpdateLSQFittingVector(T const *data_arg, bool const *mask_arg,
 		out[i] = in[i];
 	}
 	for (size_t i = 0; i < num_clipped; ++i) {
-		if (!mask[clipped_indices[i]]) continue;
+		if (!mask[clipped_indices[i]])
+			continue;
 		auto const cii = clipped_indices[i];
 		auto const model_i = &model[cii * num_model_bases];
 		auto data_i = data[cii];
@@ -443,12 +454,13 @@ inline void GetLSQCoefficients(size_t num_data, T const *data, bool const *mask,
 
 template<size_t kNumBases, typename T>
 inline void UpdateLSQCoefficientsTemplate(size_t const num_data, T const *data,
-		bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
+bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
 		size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, size_t const *use_bases_idx,
 		double *lsq_matrix, double *lsq_vector) {
-	UpdateLSQFittingMatrixTemplate<kNumBases>(mask, num_clipped, clipped_indices,
-			num_model_bases, lsq_matrix, basis, use_bases_idx, lsq_matrix);
+	UpdateLSQFittingMatrixTemplate<kNumBases>(mask, num_clipped,
+			clipped_indices, num_model_bases, lsq_matrix, basis, use_bases_idx,
+			lsq_matrix);
 	UpdateLSQFittingVectorTemplate<kNumBases, T>(data, mask, num_clipped,
 			clipped_indices, num_model_bases, lsq_vector, basis, use_bases_idx,
 			lsq_vector);
@@ -456,14 +468,15 @@ inline void UpdateLSQCoefficientsTemplate(size_t const num_data, T const *data,
 
 template<typename T>
 inline void UpdateLSQCoefficients(size_t const num_data, T const *data,
-		bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
+bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
 		size_t const num_model_bases, double const *basis,
 		size_t const num_lsq_bases, size_t const *use_bases_idx,
 		double *lsq_matrix, double *lsq_vector) {
 	UpdateLSQFittingMatrix(mask, num_clipped, clipped_indices, num_lsq_bases,
 			lsq_matrix, num_model_bases, basis, use_bases_idx, lsq_matrix);
-	UpdateLSQFittingVector<T>(data, mask, num_clipped, clipped_indices, num_lsq_bases,
-			lsq_vector, num_model_bases, basis, use_bases_idx, lsq_vector);
+	UpdateLSQFittingVector<T>(data, mask, num_clipped, clipped_indices,
+			num_lsq_bases, lsq_vector, num_model_bases, basis, use_bases_idx,
+			lsq_vector);
 }
 
 template<typename T, typename MatrixT, typename VectorT>
@@ -563,95 +576,94 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 				num_model_bases, basis_data, num_lsq_bases, use_bases_idx,
 				lsq_matrix, lsq_vector);
 	} else {
-		UpdateLSQCoefficients<T>(num_data, data, mask, num_clipped, clipped_indices,
-				num_model_bases, basis_data, num_lsq_bases, use_bases_idx,
-				lsq_matrix, lsq_vector);
+		UpdateLSQCoefficients<T>(num_data, data, mask, num_clipped,
+				clipped_indices, num_model_bases, basis_data, num_lsq_bases,
+				use_bases_idx, lsq_matrix, lsq_vector);
 	}
 }
 
 //--LM part--------------------------------------
 /*
-template<typename T, int Nx = Dynamic, int Ny = Dynamic>
-struct Functor {
-	typedef T Scalar;
-	enum {
-		InputsAtCompileTime = Nx, ValuesAtCompileTime = Ny
-	};
-	typedef Matrix<Scalar, Nx, 1> InputType;
-	typedef Matrix<Scalar, Ny, 1> ValueType;
-	typedef Matrix<Scalar, Ny, Nx> JacobianType;
-};
+ template<typename T, int Nx = Dynamic, int Ny = Dynamic>
+ struct Functor {
+ typedef T Scalar;
+ enum {
+ InputsAtCompileTime = Nx, ValuesAtCompileTime = Ny
+ };
+ typedef Matrix<Scalar, Nx, 1> InputType;
+ typedef Matrix<Scalar, Ny, 1> ValueType;
+ typedef Matrix<Scalar, Ny, Nx> JacobianType;
+ };
 
-struct FunctorDouble: Functor<double> {
-	FunctorDouble(int inputs, int values, double *x, double *y) :
-			inputs_(inputs), values_(values), x(x), y(y) {
-	}
-	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
-		return 0;
-	}
-	const int inputs_;
-	const int values_;
-	int inputs() const {
-		return inputs_;
-	}
-	int values() const {
-		return values_;
-	}
-	double *x;
-	double *y;
-};
+ struct FunctorDouble: Functor<double> {
+ FunctorDouble(int inputs, int values, double *x, double *y) :
+ inputs_(inputs), values_(values), x(x), y(y) {
+ }
+ int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
+ return 0;
+ }
+ const int inputs_;
+ const int values_;
+ int inputs() const {
+ return inputs_;
+ }
+ int values() const {
+ return values_;
+ }
+ double *x;
+ double *y;
+ };
 
-struct GaussianFunctorDouble: FunctorDouble {
-	GaussianFunctorDouble(size_t num_components, int inputs, int values,
-			double *x, double *y) :
-			FunctorDouble(inputs, values, x, y), num_components_(num_components) {
-	}
-	;
-	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
-		//params are {peak_amplitude, peak_position, sigma}.
-		for (int i = 0; i < values_; ++i) {
-			values_to_minimize[i] = 0.0;
-			for (size_t iline = 0; iline < num_components_; ++iline) {
-				double v = (x[i] - params[3 * iline + 1])
-						/ params[3 * iline + 2];
-				values_to_minimize[i] += params[3 * iline]
-						* exp(-0.5 / M_PI * v * v);
-			}
-			values_to_minimize[i] -= y[i];
-		}
-		return 0;
-	}
-	size_t num_components_;
-};
+ struct GaussianFunctorDouble: FunctorDouble {
+ GaussianFunctorDouble(size_t num_components, int inputs, int values,
+ double *x, double *y) :
+ FunctorDouble(inputs, values, x, y), num_components_(num_components) {
+ }
+ ;
+ int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
+ //params are {peak_amplitude, peak_position, sigma}.
+ for (int i = 0; i < values_; ++i) {
+ values_to_minimize[i] = 0.0;
+ for (size_t iline = 0; iline < num_components_; ++iline) {
+ double v = (x[i] - params[3 * iline + 1])
+ / params[3 * iline + 2];
+ values_to_minimize[i] += params[3 * iline]
+ * exp(-0.5 / M_PI * v * v);
+ }
+ values_to_minimize[i] -= y[i];
+ }
+ return 0;
+ }
+ size_t num_components_;
+ };
 
-void DoFitGaussianByLMDouble(size_t const n, size_t const num_data,
-		double const x_data[], double const y_data[], double peak_amplitude[],
-		double peak_position[], double sigma[]) {
-	size_t const num_parameters = 3 * n;
-	VectorXd params(num_parameters);
-	for (size_t i = 0; i < n; ++i) {
-		params << peak_amplitude[i], peak_position[i], sigma[i];
-	}
+ void DoFitGaussianByLMDouble(size_t const n, size_t const num_data,
+ double const x_data[], double const y_data[], double peak_amplitude[],
+ double peak_position[], double sigma[]) {
+ size_t const num_parameters = 3 * n;
+ VectorXd params(num_parameters);
+ for (size_t i = 0; i < n; ++i) {
+ params << peak_amplitude[i], peak_position[i], sigma[i];
+ }
 
-	std::vector<double> x(&x_data[0], &x_data[num_data]);
-	std::vector<double> y(&y_data[0], &y_data[num_data]);
-	GaussianFunctorDouble functor(n, num_parameters, x.size(), &x[0], &y[0]);
-	NumericalDiff<GaussianFunctorDouble> num_diff(functor);
-	LevenbergMarquardt < NumericalDiff<GaussianFunctorDouble> > lm(num_diff);
-	int info = lm.minimize(params);
-	if (info == 0) {
-		throw std::runtime_error(
-				"FitGaussianByLMDouble: invalid data or parameter for Gaussian fitting.");
-	}
-	for (size_t i = 0; i < n; ++i) {
-		peak_amplitude[i] = params[3 * i];
-		peak_position[i] = params[3 * i + 1];
-		sigma[i] = params[3 * i + 2];
-	}
-}
-*/
+ std::vector<double> x(&x_data[0], &x_data[num_data]);
+ std::vector<double> y(&y_data[0], &y_data[num_data]);
+ GaussianFunctorDouble functor(n, num_parameters, x.size(), &x[0], &y[0]);
+ NumericalDiff<GaussianFunctorDouble> num_diff(functor);
+ LevenbergMarquardt < NumericalDiff<GaussianFunctorDouble> > lm(num_diff);
+ int info = lm.minimize(params);
+ if (info == 0) {
+ throw std::runtime_error(
+ "FitGaussianByLMDouble: invalid data or parameter for Gaussian fitting.");
+ }
+ for (size_t i = 0; i < n; ++i) {
+ peak_amplitude[i] = params[3 * i];
+ peak_position[i] = params[3 * i + 1];
+ sigma[i] = params[3 * i + 2];
+ }
+ }
+ */
 //--End LM part----------------------------------
-
 } /* anonymous namespace */
 
 #define CHECK_ARGS(x) do { \
