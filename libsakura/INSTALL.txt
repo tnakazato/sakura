@@ -1,63 +1,82 @@
 Sakura Library
-============================
+==============
 
- [1] http://alma.mtk.nao.ac.jp/j/
+[1] http://alma.mtk.nao.ac.jp/j/
 
 
 Overview
 --------
 
- Sakura Library is a high performance library for astronomical data analysis. Sakura library is optimized to use SIMD instructions to maximize utilization of performance of CPU. This is developed at ALMA Computing Team of NAOJ. For more information, please refer to the official Sakura library web page [1]. 
+Sakura is a high performance library for astronomical data analysis, developed by the ALMA Computing Team of the National Astronomical Observatory of Japan (NAOJ).
 
+ALMA - Atacama Large Millimeter/submillimeter Array - is the largest astronomical project in existence: a single telescope of revolutionary design, composed of 66 high precision antennas located on the Chajnantor plateau, 5000 meters altitude in northern Chile.
 
-Requirements for End Users
+Sakura is optimized to use Single Instruction Multiple Data (SIMD) instructions, which boost performances by leveraging data level parallelism features commonly available in modern CPUs.
+
+For more information in Japanese, please refer to the official ALMA web page of NAOJ [1], and search for Sakura.
+
+Installation
+------------
+
+You have to build Sakura from source to install Sakura.
+Please refer to the Installation Procedure section below for details.
+
+Supported Platforms
+-------------------
+
+Sakura should work on any platform fulfilling the prerequisites listed in the Installation Procedure. 
+
+Tested Platforms
+----------------
+
+Sakura has been successfully tested on the following platforms
+- Red Hat Enterprise Linux 5
+- Red Hat Enterprise Linux 6
+- Ubuntu 14.4
+- OS X 10.8
+
+Installation Procedure
+----------------------
+
+Sakura installation procedure is broken into 5 steps:
+1. Prerequisites
+2. Downloading the source
+3. Building
+4. Testing
+5. Final install
+
+1. Prerequisites
 --------------------------
 
- For Linux and Macintosh OSX, there are the following requirements:
+1.1 Prerequisites common to Linux and Apple OS X Operating Systems
+* cmake 2.8 or higher
+* doxygen 1.8 or higher
+* gtest 1.7 or higher
+* third-party external libraries
+* eigen 3.2 or higher
+* fftw 3.3.2 or higher. If you build fftw3 from source, use the configure options, "--enable-float" and "--enable-shared", to build a shared library, libfftw3f.
 
-### Linux requirement ###
+1.2 Linux specific Prerequisites
+* C++ compiler with C++11 support (gcc/g++ 4.8 or higher or clang/clang++ 3.5 or higher)
 
-   * C++ compiler which supports C++11(gcc/g++ 4.8 or higher or clang/clang++ 3.5 or higher)
+1.3 Apple OS X specific Prerequisites
+* xcode(5.1 or higher)
+  - There is a case where command line tools is needed ??? To clarify 
 
+2. Downloading the Source
+-------------------------
 
-### Mac OS X requirement ###
+Sakura library source code releases are distributed in gzip-compressed tarballs.
+Download with:
 
-   * xcode(5.1 or higher)
-      * There is a case where command line tools is needed 
+ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/release/libsakura-src-X.Y.Z.tar.gz
 
- The followings are common requirements for Linux and Mac:
-
-
-### Linux/Mac requirements ###
-
-   * cmake 2.8 or higher
-   * doxygen 1.8 or higher
-   * gtest 1.7 or higher
-   * external library
-      * eigen 3.2 or higher
-      * fftw 3.3.2 or higher
-
- If you build FFTW3 from source, use the configure options, "--enable-float" and "--enable-shared", to build a shared library, libfftw3f.
-
-
-Getting the Source
-------------------
-
- The following is the way of getting Sakura library source code. You can download a release code in tar format.
-
-### Source Package ###
-
-The source codes of Sakura library is available at the following URL. [2]. 
-
-   [2] ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/release/libsakura-src-X.Y.Z.tar.gz
+3. Building
+-----------
 
 Once the package is downloaded, expand it with tar command as bellow. :
 
    $ tar -xvzf libsakura-src-X.Y.Z.tar.gz
-
-
-Setting up the Build and Install
---------------------
 
  Sakura library uses Google Test framework (gtest) to run unit tests. Expand a gtest bundle and create a symbolic link to it in libsakura directory. The following example shows how to do it using gtest-1.7.0.zip.:
 
