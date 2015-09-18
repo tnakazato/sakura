@@ -1408,8 +1408,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @a num_equations .
  * @n must-be-aligned
  * @param[out] out The solution (x in the above equations). Its length
- * must be @a num_equations . The pointer of @a out can be identical with
- * that of @a in_vector .
+ * must be @a num_equations . In-place operation is not allowed, i.e.,
+ * the pointer of @a out can not be identical with that of @a in_vector .
  * @n must-be-aligned
  * @return Status code.
  *

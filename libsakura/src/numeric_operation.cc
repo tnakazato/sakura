@@ -795,6 +795,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(in_matrix));
 	CHECK_ARGS(in_vector != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(in_vector));
+	CHECK_ARGS(in_vector != out);
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
