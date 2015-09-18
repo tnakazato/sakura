@@ -591,35 +591,6 @@ inline void AddMulMatrixCubicSpline<float>(size_t num_boundary,
 
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
-	/*
-	 //std::basic_stringstream<char, std::char_traits<char>, LIBSAKURA_PREFIX::Allocator<char> > ss;
-	 std::stringstream ss;
-	 ss << "SubtractBaseline: available data became too few in the ";
-	 ss << idx_erroneous_fitting;
-	 ss << " ";
-
-	 uint16_t mod100 = idx_erroneous_fitting % 100;
-	 uint16_t ones_digit = mod100 % 10;
-	 uint16_t tens_digit = mod100 / 10;
-	 std::string isuffix;
-	 if (tens_digit == 1) {
-	 isuffix = "th";
-	 } else {
-	 if (ones_digit == 1) {
-	 isuffix = "st";
-	 } else if (ones_digit == 2) {
-	 isuffix = "nd";
-	 } else if (ones_digit == 3) {
-	 isuffix = "rd";
-	 } else {
-	 isuffix = "th";
-	 }
-	 }
-	 ss << isuffix << " fitting.";
-
-	 return ss.str();
-	 */
-
 	size_t const len_idx =
 			(0 < idx_erroneous_fitting) ?
 					(floor(log10(idx_erroneous_fitting)) + 1) : 1;
@@ -876,7 +847,8 @@ inline void DoSubtractBaselineEngine(U const *context, size_t num_data,
 						context->use_bases_idx, context->lsq_matrix,
 						context->lsq_vector);
 				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-					throw std::runtime_error("failed in UpdateLSQCoefficients.");
+					throw std::runtime_error(
+							"failed in UpdateLSQCoefficients.");
 				}
 			}
 			status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
@@ -1661,7 +1633,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		SubtractBaselineUsingCoefficients<float,
-		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
 				num_coeff, coeff, num_nwave, nwave, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
