@@ -591,35 +591,33 @@ inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
 
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
-	size_t const len_idx =
-			(0 < idx_erroneous_fitting) ?
-					(floor(log10(idx_erroneous_fitting)) + 1) : 1;
-	size_t const len_str = len_idx + 67;
-	char str[len_str];
-	char isuffix[2];
+	std::string s;
+	s = "SubtractBaseline: available data became too few in the ";
+	s += idx_erroneous_fitting;
+	s += " ";
 
+	std::string si;
 	uint16_t mod100 = idx_erroneous_fitting % 100;
 	uint16_t ones_digit = mod100 % 10;
 	uint16_t tens_digit = mod100 / 10;
 	if (tens_digit == 1) {
-		snprintf(isuffix, sizeof(isuffix), "th");
+		si = "th";
 	} else {
 		if (ones_digit == 1) {
-			snprintf(isuffix, sizeof(isuffix), "st");
+			si = "st";
 		} else if (ones_digit == 2) {
-			snprintf(isuffix, sizeof(isuffix), "nd");
+			si = "nd";
 		} else if (ones_digit == 3) {
-			snprintf(isuffix, sizeof(isuffix), "rd");
+			si = "rd";
 		} else {
-			snprintf(isuffix, sizeof(isuffix), "th");
+			si = "th";
 		}
 	}
 
-	snprintf(str, sizeof(str),
-			"SubtractBaseline: available data became too few in the %d %2s fitting.",
-			idx_erroneous_fitting, isuffix);
+	s += si;
+	s += " fitting.";
 
-	return str;
+	return s;
 }
 
 template<typename U>
