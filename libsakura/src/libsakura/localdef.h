@@ -186,9 +186,9 @@ private:
  * @param alignment アライメントサイズ
  * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
  */
-template<typename T>
-inline T AssumeAligned(T ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
-	return reinterpret_cast<T>(__builtin_assume_aligned(ptr, alignment));
+template<typename T, size_t ALIGNMENT = LIBSAKURA_ALIGNMENT>
+inline T AssumeAligned(T ptr) {
+	return reinterpret_cast<T>(__builtin_assume_aligned(ptr, ALIGNMENT));
 }
 #else /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */
 
@@ -205,8 +205,8 @@ inline T AssumeAligned(T ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
  * @param alignment アライメントサイズ
  * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
  */
-template<typename T>
-inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr, size_t alignment = LIBSAKURA_ALIGNMENT) {
+template<typename T, size_t ALIGNMENT = LIBSAKURA_ALIGNMENT>
+inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr) {
 	return ptr;
 }
 #endif /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */

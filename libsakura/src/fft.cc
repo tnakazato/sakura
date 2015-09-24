@@ -52,8 +52,8 @@ template<typename T>
 struct LastDimFlip {
 	static void Flip(size_t len, size_t dst_pos, T const *RESTRICT src,
 			T *RESTRICT dst) {
-		auto src_aligned = AssumeAligned(src, sizeof(T));
-		auto dst_aligned = AssumeAligned(dst, sizeof(T));
+		auto src_aligned = AssumeAligned<decltype(src), sizeof(T)>(src);
+		auto dst_aligned = AssumeAligned<decltype(dst), sizeof(T)>(dst);
 		assert(len >= dst_pos);
 		size_t end = len - dst_pos;
 		size_t i;
@@ -71,8 +71,8 @@ template<typename T>
 struct LastDimNoFlip {
 	static void Flip(size_t len, size_t dst_pos, T const *RESTRICT src,
 			T *RESTRICT dst) {
-		auto src_aligned = AssumeAligned(src, sizeof(T));
-		auto dst_aligned = AssumeAligned(dst, sizeof(T));
+		auto src_aligned = AssumeAligned<decltype(src), sizeof(T)>(src);
+		auto dst_aligned = AssumeAligned<decltype(dst), sizeof(T)>(dst);
 		for (size_t i = 0; i < len; ++i) {
 			dst_aligned[i] = src_aligned[i];
 		}
