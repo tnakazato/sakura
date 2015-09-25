@@ -350,7 +350,7 @@ inline void StatsBlock(size_t i, __m256 const *data_arg, double const *mask_arg,
 	count.Add(mask8);
 	mask8 = _mm256_cmpeq_epi32(mask8, zero256i);
 #else
-	auto const mask = AssumeAligned(reinterpret_cast<float const *>(mask_arg), sizeof(decltype(count.IntValue())));
+	auto const mask = AssumeAligned<float const *, sizeof(decltype(count.IntValue()))>(reinterpret_cast<float const *>(mask_arg));
 	auto const zero128i = _mm_setzero_si128();
 	auto mask0 = _mm_castps_si128(_mm_load_ss(&mask[0]));
 	auto mask1 = _mm_castps_si128(_mm_load_ss(&mask[1]));

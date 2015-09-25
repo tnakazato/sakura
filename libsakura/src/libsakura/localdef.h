@@ -206,7 +206,7 @@ inline T AssumeAligned(T ptr) {
  * @return @a ptr (sakuraのアライメント要件を満たしているというコンパイラ依存の属性付き)
  */
 template<typename T, size_t ALIGNMENT = LIBSAKURA_ALIGNMENT>
-inline /*alignas(LIBSAKURA_ALIGNMENT)*/T *AssumeAligned(T *ptr) {
+inline /*alignas(LIBSAKURA_ALIGNMENT)*/T AssumeAligned(T ptr) {
 	return ptr;
 }
 #endif /* defined(__GNUG__) && (!defined(__clang__) || __has_builtin(__builtin_assume_aligned)) */
