@@ -1512,7 +1512,8 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 } while (false)
 
 /**
- *
+ * Create a baseline context object for float data to fit.
+ * It is only for polynomial and Chebyshev polynomial baseline.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
@@ -1543,6 +1544,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Create a baseline context object for float data to fit.
+ * It is only for cubic spline baseline.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
 		uint16_t const npiece, size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
@@ -1572,6 +1577,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicS
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Create a baseline context object for float data to fit.
+ * It is only for sinusoidal baseline.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
 		uint16_t const nwave, size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
@@ -1600,6 +1609,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinuso
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Destroy baseline context object.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContextFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
 	CHECK_ARGS(context != nullptr);
@@ -1614,6 +1626,11 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Computes the number of coefficients for given baseline type and
+ * parameters. It can be used for polynomial, Chebyshev, and cubic
+ * spline baseline.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		size_t *num_coeff) noexcept {
@@ -1638,6 +1655,13 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Fit baseline using polynomial or Chebyshev polynomial then subtract it.
+ *
+ * @param[out] out If @a get_residual is true, it is
+ * baseline-subtracted data. Otherwise, it is the
+ * best-fit baseline data.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		size_t num_data, float const data[/*num_data*/],
@@ -1680,6 +1704,13 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Fit baseline using cubic spline curve then subtract it.
+ *
+ * @param[out] out If @a get_residual is true, it is
+ * baseline-subtracted data. Otherwise, it is the
+ * best-fit baseline data.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		size_t num_data, float const data[/*num_data*/],
@@ -1725,6 +1756,13 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Fit baseline using sinusoids then subtract it.
+ *
+ * @param[out] out If @a get_residual is true, it is
+ * baseline-subtracted data. Otherwise, it is the
+ * best-fit baseline data.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_data,
@@ -1770,6 +1808,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Fit baseline using polynomial or Chebyshev polynomial and
+ * compute the best-fit coefficients.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
@@ -1812,6 +1854,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Fit baseline using cubic spline and
+ * compute the best-fit coefficients.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
@@ -1859,6 +1905,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Fit baseline using sinusoids and
+ * compute the best-fit coefficients.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsSinusoidFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
@@ -1907,6 +1957,13 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for baseline type
+ * of polynomial and Chebyshev polynomial.
+ *
+ * @param[out] out_arg Baseline-subtracted data.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_coeff,
@@ -1939,6 +1996,13 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for baseline type
+ * of cubic spline.
+ *
+ * @param[out] out_arg Baseline-subtracted data.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_pieces,
@@ -1974,6 +2038,13 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for baseline type
+ * of sinusoids.
+ *
+ * @param[out] out_arg Baseline-subtracted data.
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_nwave,

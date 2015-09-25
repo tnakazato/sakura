@@ -85,9 +85,8 @@ __m256d NegMultiplyAdd(__m256d                     const &a, __m256d            
 
 #endif
 
-template<size_t kNumBases>
-void AddMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
-		double *out) {
+template<size_t kNumBases, typename Func1, typename Func2>
+inline void OperateAddMulVectorTemplate(size_t const *use_idx, double k, double const *vec, Func1 func1, Func2 func2, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -96,35 +95,40 @@ void AddMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 	for (i = 0; i < kEnd; i += kPackElements) {
 		auto v = _mm256_set_pd(vec[use_idx[i + 3]], vec[use_idx[i + 2]],
 				vec[use_idx[i + 1]], vec[use_idx[i]]);
-		_mm256_storeu_pd(&out[i],
-				LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
-						_mm256_loadu_pd(&out[i])));
+		_mm256_storeu_pd(&out[i], func1(coeff, v, i));
 	}
 #endif
 	for (; i < kNumBases; ++i) {
-		out[i] += k * vec[use_idx[i]];
+		func2(i);
 	}
+}
+
+template<size_t kNumBases>
+void AddMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
+		double *out) {
+	OperateAddMulVectorTemplate<kNumBases>(use_idx, k, vec,
+#if defined(__AVX__) && !defined(ARCH_SCALAR)
+			[&](__m256d coeff, __m256d v, size_t i) {
+				return LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff, v,
+						_mm256_loadu_pd(&out[i]));},
+#else
+			[&]() {},
+#endif
+			[&](size_t i) {out[i] += k * vec[use_idx[i]];}, out);
 }
 
 template<size_t kNumBases>
 void SubMulVectorTemplate(size_t const *use_idx, double k, double const *vec,
 		double *out) {
-	size_t i = 0;
+	OperateAddMulVectorTemplate<kNumBases>(use_idx, k, vec,
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
-	constexpr size_t kEnd = (kNumBases / kPackElements) * kPackElements;
-	auto coeff = _mm256_set1_pd(k);
-	for (i = 0; i < kEnd; i += kPackElements) {
-		auto v = _mm256_set_pd(vec[use_idx[i + 3]], vec[use_idx[i + 2]],
-				vec[use_idx[i + 1]], vec[use_idx[i]]);
-		_mm256_storeu_pd(&out[i],
-				NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i])));
-	}
+			[&](__m256d coeff, __m256d v, size_t i) {
+				return NegMultiplyAdd(coeff, v, _mm256_loadu_pd(&out[i]));},
+#else
+			[&]() {},
 #endif
-	for (; i < kNumBases; ++i) {
-		out[i] -= k * vec[use_idx[i]];
-	}
+			[&](size_t i) {out[i] -= k * vec[use_idx[i]];}, out);
 }
 
 template<typename Func1, typename Func2>
@@ -173,6 +177,17 @@ inline void SubMulVector(size_t const num_model_bases, size_t const *use_idx,
 			[&](size_t i) {out[i] -= k * vec[use_idx[i]];}, out);
 }
 
+/**
+ * Compute the matrix part of the normal equations to solve
+ * linear least-square fitting.
+ *
+ * @tparam kNumBases Number of bases to use. It must be equal
+ * to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Matrix part of normal equations. Its
+ * length must be (kNumBases * kNumBases).
+ */
 template<size_t kNumBases>
 inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 		size_t num_model_bases, double const *model_arg,
@@ -208,6 +223,17 @@ inline void GetLSQFittingMatrixTemplate(size_t num_mask, bool const *mask_arg,
 	}
 }
 
+/**
+ * Same as GetLSQFittingMatrixTemplate, but the number of
+ * bases to use is given as normal argument num_lsq_bases.
+ *
+ * @param[in] num_lsq_bases Number of bases to use. It must
+ * be equal to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Matrix part of normal equations. Its
+ * length must be (num_lsq_bases * num_lsq_bases).
+ */
 inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 		size_t num_model_bases, double const *model_arg, size_t num_lsq_bases,
 		size_t const *use_bases_idx_arg, double *out_arg) {
@@ -242,6 +268,17 @@ inline void GetLSQFittingMatrix(size_t num_mask, bool const *mask_arg,
 	}
 }
 
+/**
+ * Update the matrix part of the normal equations to solve
+ * linear least-square fitting.
+ *
+ * @tparam kNumBases Number of bases to use. It must be equal
+ * to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Matrix part of normal equations. Its
+ * length must be (kNumBases * kNumBases).
+ */
 template<size_t kNumBases>
 inline void UpdateLSQFittingMatrixTemplate(bool const *mask_arg,
 		size_t num_clipped, size_t const *clipped_indices_arg,
@@ -275,6 +312,17 @@ inline void UpdateLSQFittingMatrixTemplate(bool const *mask_arg,
 	}
 }
 
+/**
+ * Same as UpdateLSQFittingMatrixTemplate, but the number of
+ * bases to use is given as normal argument num_lsq_bases.
+ *
+ * @param[in] num_lsq_bases Number of bases to use. It must
+ * be equal to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Matrix part of normal equations. Its
+ * length must be (num_lsq_bases * num_lsq_bases).
+ */
 inline void UpdateLSQFittingMatrix(bool const *mask_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_lsq_bases,
 		double const *in_arg, size_t num_model_bases, double const *model_arg,
@@ -307,6 +355,17 @@ inline void UpdateLSQFittingMatrix(bool const *mask_arg, size_t num_clipped,
 	}
 }
 
+/**
+ * Compute the vector part of the normal equations to solve
+ * linear least-square fitting.
+ *
+ * @tparam kNumBases Number of bases to use. It must be equal
+ * to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Vector part of normal equations. Its
+ * length must be kNumBases.
+ */
 template<size_t kNumBases, typename T>
 inline void GetLSQFittingVectorTemplate(size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
@@ -335,6 +394,17 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 }
 
+/**
+ * Same as GetLSQFittingVectorTemplate, but the number of
+ * bases to use is given as normal argument num_lsq_bases.
+ *
+ * @param[in] num_lsq_bases Number of bases to use. It must
+ * be equal to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Vector part of normal equations. Its
+ * length must be num_lsq_bases.
+ */
 template<typename T>
 inline void GetLSQFittingVector(size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_model_bases, double const *model_arg,
@@ -363,6 +433,17 @@ bool const *mask_arg, size_t num_model_bases, double const *model_arg,
 	}
 }
 
+/**
+ * Update the vector part of the normal equations to solve
+ * linear least-square fitting.
+ *
+ * @tparam kNumBases Number of bases to use. It must be equal
+ * to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Vector part of normal equations. Its
+ * length must be kNumBases.
+ */
 template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplate(
 		T const *data_arg, bool const *mask_arg, size_t num_clipped,
 		size_t const *clipped_indices_arg, size_t num_model_bases,
@@ -396,6 +477,17 @@ template<size_t kNumBases, typename T> inline void UpdateLSQFittingVectorTemplat
 	}
 }
 
+/**
+ * Same as UpdateLSQFittingVectorTemplate, but the number of
+ * bases to use is given as normal argument num_lsq_bases.
+ *
+ * @param[in] num_lsq_bases Number of bases to use. It must
+ * be equal to or less than num_model_bases.
+ * @param[in] model_arg 1D array storing basis model data.
+ * Its length is (num_mask * num_model_bases).
+ * @param[out] out_arg Vector part of normal equations. Its
+ * length must be num_lsq_bases.
+ */
 template<typename T>
 inline void UpdateLSQFittingVector(T const *data_arg, bool const *mask_arg,
 		size_t num_clipped, size_t const *clipped_indices_arg,
@@ -430,6 +522,12 @@ inline void UpdateLSQFittingVector(T const *data_arg, bool const *mask_arg,
 	}
 }
 
+/**
+ * Compute all coefficients of the normal equations to solve
+ * linear least-square fitting. It is just wrapping
+ * GetLSQFittingMatrixTemplate() and
+ * GetLSQFittingVectorTemplate().
+ */
 template<size_t kNumBases, typename T>
 inline void GetLSQCoefficientsTemplate(size_t num_data, T const *data,
 bool const *mask, size_t const num_model_bases, double const *basis,
@@ -441,6 +539,12 @@ bool const *mask, size_t const num_model_bases, double const *basis,
 			num_model_bases, basis, use_bases_idx, lsq_vector);
 }
 
+/**
+ * Same as GetLSQCoefficientsTemplate, but the number of
+ * bases to use is given as normal argument num_lsq_bases.
+ * It is just wrapping GetLSQFittingMatrix() and
+ * GetLSQFittingVector().
+ */
 template<typename T>
 inline void GetLSQCoefficients(size_t num_data, T const *data, bool const *mask,
 		size_t const num_model_bases, double const *basis,
@@ -452,6 +556,12 @@ inline void GetLSQCoefficients(size_t num_data, T const *data, bool const *mask,
 			num_lsq_bases, use_bases_idx, lsq_vector);
 }
 
+/**
+ * Update all coefficients of the normal equations to solve
+ * linear least-square fitting. It is just wrapping
+ * UpdateLSQFittingMatrixTemplate() and
+ * UpdateLSQFittingVectorTemplate().
+ */
 template<size_t kNumBases, typename T>
 inline void UpdateLSQCoefficientsTemplate(size_t const num_data, T const *data,
 bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
@@ -466,6 +576,12 @@ bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
 			lsq_vector);
 }
 
+/**
+ * Same as UpdateLSQCoefficientsTemplate, but the number of
+ * bases to use is given as normal argument num_lsq_bases.
+ * It is just wrapping UpdateLSQFittingMatrix() and
+ * UpdateLSQFittingVector().
+ */
 template<typename T>
 inline void UpdateLSQCoefficients(size_t const num_data, T const *data,
 bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
@@ -479,6 +595,16 @@ bool const *mask, size_t const num_clipped, size_t const *clipped_indices,
 			lsq_vector);
 }
 
+/**
+ * Solve simultaneous equation Ay = x, where
+ *    A is a given matrix with size (N*N),
+ *    x is a given vector with size N,
+ *    y is a vector to solve with size N,
+ * then obtain the values of the vector y.
+ *
+ * @param[out] out Solution of the normal equations. It
+ * corresponds to y in the above formula.
+ */
 template<typename T, typename MatrixT, typename VectorT>
 inline void SolveSimultaneousEquationsByLU(size_t num_equations,
 		T const *in_matrix_arg, T const *in_vector_arg, T *out) {
