@@ -65,13 +65,20 @@ inline void AllocateMemoryForBasisData(T *context) {
 	context->basis_data_storage = work_basis_data_storage.release();
 }
 
-inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
-	//check if elements in nwave are
-	// (1) stored in ascending order and
-	// (2) not duplicate.
+/**
+ * Check if elements of the input @a array are
+ * (1) not duplicate and
+ * (2) stored in ascending order.
+ *
+ * @param[in] num_array The number of elements in @a array
+ * @param[in] array The input array. Its length must be @a num_array .
+ * @return true if the elements of @a array are not duplicate, and also
+ * if they are stored in ascending order, otherwise false.
+ */
+inline bool IsUniqueAndAscendingOrder(size_t num_array, size_t const *array) {
 	bool res = true;
-	for (size_t i = 1; i < num_nwave; ++i) {
-		if (nwave[i - 1] >= nwave[i]) {
+	for (size_t i = 1; i < num_array; ++i) {
+		if (array[i - 1] >= array[i]) {
 			res = false;
 			break;
 		}
@@ -79,6 +86,24 @@ inline bool IsNWaveUniqueAndAscending(size_t num_nwave, size_t const *nwave) {
 	return res;
 }
 
+/**
+ * Returns the number of steady bases, which are computable
+ * using overall baseline parameter @a order only and don't
+ * depend on other conditions specific to each data, for
+ * example, mask information etc.
+ *
+ * @param[in] baseline_type Type of baseline. It must be one
+ * of the elements in sakura_BaselineType.
+ * @param[in] order Parameter of baseline. It is the maximum
+ * polynomial order if baseline_type is
+ * sakura_BaselineType_kPolynomial or
+ * sakura_BaselineType_kChebyshev, or the maximum wave number
+ * if baseline_type is sakura_BaselineType_kSinusoid.
+ * @return The returned number should be one of the followings:
+ * ( @a order +1) for Polynomial and Chebyshev Polynomial,
+ * ( 4 ) for Cubic Spline and
+ * ( 2 * @a order +1) for Sinusoid.
+ */
 inline size_t GetNumberOfContextBases(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	size_t num_bases = 0;
@@ -100,6 +125,23 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
 	return num_bases;
 }
 
+/**
+ * Returns the number of all bases for the given baseline type.
+ *
+ * @param[in] baseline_type Type of baseline. It must be one
+ * of the elements in sakura_BaselineType.
+ * @param[in] order Parameter of baseline. It is the maximum
+ * polynomial order if baseline_type is
+ * sakura_BaselineType_kPolynomial or
+ * sakura_BaselineType_kChebyshev, or the number of spline
+ * pieces if baseline_type is sakura_BaselineType_kCubicSpline,
+ * or the maximum wave number if baseline_type is
+ * sakura_BaselineType_kSinusoid.
+ * @return The returned number should be one of the followings:
+ * ( @a order +1) for Polynomial and Chebyshev Polynomial,
+ * ( @a order +3 ) for Cubic Spline and
+ * ( 2 * @a order +1) for Sinusoid.
+ */
 inline size_t GetNumberOfLsqBases(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order) {
 	size_t num_bases = 0;
@@ -119,6 +161,25 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order) {
 	return num_bases;
 }
 
+/**
+ * Returns the number of baseline coefficients.
+ *
+ * @param[in] baseline_type Type of baseline. It must be one
+ * of the elements in sakura_BaselineType.
+ * @param[in] order It is used as the maximum polynomial order
+ * if baseline_type is sakura_BaselineType_kPolynomial or
+ * sakura_BaselineType_kChebyshev, or it is used as the number
+ * of spline pieces if baseline_type is
+ * sakura_BaselineType_kCubicSpline.
+ * @param[in] num_nwave The length of @a nwave .
+ * @param[in] nwave The maximum wave number. It is used only
+ * if baseline_type is sakura_BaselineType_kSinusoid.
+ * @return The returned number should be one of the followings:
+ * ( @a order +1) for Polynomial and Chebyshev Polynomial,
+ * ( @a order *4 ) for Cubic Spline,
+ * ( 2 * @a num_nwave -1) for Sinusoid with @a nwave containing '0', or
+ * ( 2 * @a num_nwave ) for Sinusoid with @a nwave not containing '0'.
+ */
 inline size_t DoGetNumberOfCoefficients(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_nwave, size_t const *nwave) {
@@ -136,7 +197,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		num_bases = kNumBasesCubicSpline * order;
 		break;
 	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
-		if (!IsNWaveUniqueAndAscending(num_nwave, nwave)) {
+		if (!IsUniqueAndAscendingOrder(num_nwave, nwave)) {
 			throw std::invalid_argument(
 					"nwave elements must be in ascending order and not duplicate.");
 		}
@@ -149,8 +210,28 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	return num_bases;
 }
 
+/**
+ * The function to compute polynomial basis data from order of zero
+ * up to the maximum one (@num_bases -1) at a given x-position @a i_d ,
+ * then set them in the specific range (from index @idx to ( @idx +
+ * @num_bases -1)) in an array @out_arg , i.e., @a 1.0 is set in
+ * @a out_arg[idx] , @a i_d in @a out_arg[idx+1] , @a (i_d*i_d) in
+ * @a out_arg[idx_2], ..., and @a (i_d^(num_bases-1)) in
+ * @a out_arg[idx+num_bases-1] .
+ *
+ * @tparam U Type of array elements.
+ * @param[in] num_bases The number of polynomial bases. Thus the maximum
+ * order of polynomial should be ( @a num_bases -1).
+ * @param[in] i_d The x-position for which polynomial basis values
+ * are to be computed.
+ * @param[in,out] idx The starting index of @a out_arg where the first
+ * basis value is set. @a idx gains @a num_bases when this function ends.
+ * @param[out] out_arg The 1-dimensional array in which polynomial basis
+ * values at @i_d are set.
+ */
 template<typename U>
-inline void DoSetBasisDataPolynomial(size_t num_bases, U const i_d, size_t *idx, U *out_arg) {
+inline void DoSetBasisDataPolynomial(size_t num_bases, U const i_d, size_t *idx,
+		U *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto out = AssumeAligned(out_arg);
 
@@ -163,6 +244,14 @@ inline void DoSetBasisDataPolynomial(size_t num_bases, U const i_d, size_t *idx,
 	*idx = i;
 }
 
+/**
+ * The function to compute polynomial basis data and set them
+ * in the given baseline context. The maximum polynomial order
+ * is taken from the given baseline context.
+ *
+ * @tparam T Type of baseline context.
+ * @tparam U Type of basis data.
+ */
 template<typename T, typename U>
 inline void SetBasisDataPolynomial(T *context) {
 	assert(0 < context->num_basis_data);
@@ -177,6 +266,14 @@ inline void SetBasisDataPolynomial(T *context) {
 	}
 }
 
+/**
+ * The function to compute Chebyshev polynomial basis data
+ * and set them in the given baseline context. The maximum
+ * order is taken from the given baseline context.
+ *
+ * @tparam T Type of baseline context.
+ * @tparam U Type of basis data.
+ */
 template<typename T, typename U>
 inline void SetBasisDataChebyshev(T *context) {
 	assert(0 < context->num_basis_data);
@@ -207,6 +304,20 @@ inline void SetBasisDataChebyshev(T *context) {
 	}
 }
 
+/**
+ * The function to compute sinusoidal basis data and set them
+ * in the given baseline context. The maximum wave number is
+ * taken from the given baseline context. The value of the
+ * @a j -th basis at the @a i -th position is stored at
+ * @a context->basis_data[ @a i * ( @a context->num_basis_data
+ * ) + @a j ]. As for the order of basis functions, constant
+ * (corresponding to zero wave number) comes first, then
+ * followed by sine and cosine for wave number of 1, sine and
+ * cosine for wave number of 2, and so on.
+ *
+ * @tparam T Type of baseline context.
+ * @tparam U Type of basis data.
+ */
 template<typename T, typename U>
 inline void SetBasisDataSinusoid(T *context) {
 	assert(0 < context->num_basis_data);
@@ -232,6 +343,12 @@ inline void SetBasisDataSinusoid(T *context) {
 	}
 }
 
+/**
+ * It allocates memory space to be used as temporary working
+ * area for baseline-related calculation and set them the
+ * members of the given baseline context.
+ * @param[in,out] context The baseline context.
+ */
 template<typename T>
 inline void AllocateWorkSpaces(T *context) {
 	auto const type = context->baseline_type;
@@ -329,6 +446,13 @@ inline void AllocateWorkSpaces(T *context) {
 	}
 }
 
+/**
+ * Set basis data in the given baseline context.
+ * @param[in] order The maximum polynomial order for polynomial
+ * or Chebyshev polynomial, or the number of spline pieces
+ * for cubic spline, or the maximum wave number for sinusoid.
+ * @param[in,out] context Pointer to the baseline context.
+ */
 template<typename T>
 inline void SetBasisData(size_t const order, T *context) {
 	auto const type = context->baseline_type;
@@ -357,9 +481,12 @@ inline void SetBasisData(size_t const order, T *context) {
 		assert(false);
 		break;
 	}
-	AllocateWorkSpaces<T>(context);
 }
 
+/**
+ * Destroy baseline context object.
+ * @param[in] context Pointer to baseline context.
+ */
 template<typename T>
 inline void DestroyBaselineContext(T *context) {
 	if (context != nullptr) {
@@ -397,6 +524,22 @@ inline void DestroyBaselineContext(T *context) {
 	}
 }
 
+/**
+ * The main function to create baseline context object.
+ *
+ * @tparam T Type of baseline context.
+ * @param[in] baseline_type Type of baseline function. It must be
+ * one of those defined in sakura_BaselineType .
+ * @param[in] order It is used only if @a baseline_type is
+ * sakura_BaselineType_kPolynomial or sakura_BaselineType_kChebyshev .
+ * @param[in] npiece It is used only if @a baseline_type is
+ * sakura_BaselineType_kCubicSpline .
+ * @param[in] nwave It is used only if @a baseline_type is
+ * sakura_BaselineType_kSinusoid .
+ * @param[in] num_basis_data Length of the arrays for basis data,
+ * input data, etc.
+ * @parama[out] Address of pointer to baseline context object.
+ */
 template<typename T>
 inline void CreateBaselineContext(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
@@ -429,6 +572,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		}
 
 		SetBasisData<T>(work_context->baseline_param, work_context.get());
+		AllocateWorkSpaces<T>(work_context.get());
 		*context = work_context.release();
 	} catch (...) {
 		DestroyBaselineContext<T>(*context);
@@ -436,6 +580,12 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	}
 }
 
+/**
+ * Compute difference between two input arrays ( @a in1_arg - @a in2_arg)
+ * and set the result in @a out_arg .
+ * @tparam T Type of the elements of input/output arrays.
+ * @param num_in Length of the input and output arrays.
+ */
 template<typename T>
 inline void OperateSubtraction(size_t num_in, T const *in1_arg,
 		T const *in2_arg, T *out_arg) {
@@ -451,6 +601,16 @@ inline void OperateSubtraction(size_t num_in, T const *in1_arg,
 	}
 }
 
+/**
+ *
+ * @param num_coeff
+ * @param coeff
+ * @param use_idx
+ * @param num_out
+ * @param num_bases
+ * @param basis
+ * @param out
+ */
 template<typename T, typename U>
 inline void AddMulMatrix(size_t num_coeff, U const *coeff,
 		size_t const *use_idx, size_t num_out, size_t num_bases, U const *basis,
@@ -620,6 +780,23 @@ inline std::string GetNotEnoughDataMessage(
 	return s;
 }
 
+/**
+ * Count the number of data where @a mask_org is true (not masked),
+ * then compute the boundary positions @a boundary_arg that divide
+ * the unmasked data as evenly as possible into @a num_boundary
+ * groups.
+ *
+ * @tparam U Type of the elements of @a boundary_arg
+ * @param[in] num_mask Length of @a mask_arg
+ * @param[in] mask_arg Array of mask. If true, the corresponding data
+ * with the same index are used for baseline fitting.
+ * @param[in] num_boundary Length of @a boundary_arg . It must be
+ * the (number of spline pieces + 1).
+ * @param[out] boundary_arg Positions of spline piece boundaries. The
+ * first element must always point 0, the first x-position of data,
+ * and the last element must always point @a num_mask , next of the
+ * final x-position of data.
+ */
 template<typename U>
 inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 		size_t num_boundary, U *boundary_arg) {
@@ -639,7 +816,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	size_t count_unmasked_data = 0;
 	size_t boundary_last_idx = num_boundary - 1;
 	for (size_t i = 0; i < num_mask; ++i) {
-		if (idx >= boundary_last_idx) {
+		if (boundary_last_idx <= idx) {
 			break;
 		}
 		if (mask[i]) {
@@ -654,6 +831,23 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	boundary[boundary_last_idx] = static_cast<U>(num_mask);
 }
 
+/**
+ * Compute the complete set of coefficients of cubic spline
+ * curves for all spline pieces.
+ *
+ * @tparam U Type of coefficient values.
+ * @param[in] num_pieces Number of spline pieces
+ * @param[in] boundary_arg Boundary positions
+ * @param[in] coeff_raw_arg The result of Least-Square fitting.
+ * Its length is ( @a num_pieces +3). The first 4 elements
+ * are the true coefficients for the left-most piece, and
+ * the coefficients for the other pieces can be computed
+ * using @a coeff_raw_arg and @a boundary_arg .
+ * @param[out] coeff_arg A 2-dimensional array to store
+ * the whole cubic spline coefficients. The @a i -th order
+ * coefficient for the @a j -th piece from the left side
+ * is stored at @a coeff_arg[ @a i ][ @a j ].
+ */
 template<typename U>
 inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		U const *boundary_arg, U const *coeff_raw_arg,
@@ -681,10 +875,25 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 	}
 }
 
+/**
+ * Compute cubic spline basis data which depend on mask
+ * information at a given x-position @a i_d .
+ * @tparam U Type of array elements.
+ * @param[in] num_boundary Length of @a boundary_arg
+ * @param[in] boundary_arg x-positions of boundaries of
+ * spline pieces.
+ * @param[in] i_d The x-position for which basis values
+ * are to be computed.
+ * @param[in,out] idx The starting index of @a out_arg
+ * where the first basis value is set. @a idx gains
+ * ( @a num_boundary -2) or ( @a num_pieces -1) when this
+ * function ends.
+ * @param[out] out_arg The 1-dimensional array in which
+ * basis values at @i_d are set.
+ */
 template<typename U>
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
-		U const *boundary_arg, U const i_d, size_t *idx,
-		U *out_arg) {
+		U const *boundary_arg, U const i_d, size_t *idx, U *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
 	assert(i_d <= boundary_arg[num_boundary-1]);
@@ -707,8 +916,18 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 		++i;
 	}
 	*idx = i;
-}//double
+}
 
+/**
+ * Compute the whole basis data for cubic spline fitting.
+ *
+ * @tparam U Type of boundary data.
+ * @param[in] num_data Length of a basis data.
+ * @param[in] num_boundary Length of @a boundary_arg .
+ * @param[in] boundary_arg Boundary positions.
+ * @param[out] out_arg A 1D array to store basis data. Its
+ * length should be ( @a num_data * ( @a num_boundary + 2)).
+ */
 template<typename U>
 inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 		U const *boundary_arg, U *out_arg) {
@@ -732,6 +951,23 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	}
 }
 
+/**
+ * Compute the best-fit baseline model using basis data and
+ * coefficients, then subtract it from input data.
+ *
+ * @tparam T Type of input data, best-fit baseline and
+ * residual data.
+ * @tparam U Type of coefficients.
+ * @tparam V Type of baseline context.
+ * @param[in] num_data Length of @a data , @a best_fit_model
+ * and @a residual_data .
+ * @param[in] data Input data.
+ * @param[in] context Baseline context.
+ * @param[in] num_coeff Length of @a coeff .
+ * @param[in] coeff Coefficients.
+ * @param[out] best_fit_model The best-fit baseline data.
+ * @param[out] residual_data Residual data.
+ */
 template<typename T, typename U, typename V>
 inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
 		V const *context, size_t num_coeff, U const *coeff, T *best_fit_model,
@@ -741,6 +977,27 @@ inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
 	OperateSubtraction<T>(num_data, data, best_fit_model, residual_data);
 }
 
+/**
+ * Compute the best-fit cubic spline baseline using basis
+ * data, coefficients and boundary positions, then subtract
+ * it from input data.
+ *
+ * @tparam T Type of input data, best-fit baseline and
+ * residual data.
+ * @tparam U Type of coefficients.
+ * @tparam V Type of baseline context.
+ * @param[in] num_data Length of @a data , @a best_fit_model
+ * and @a residual_data .
+ * @param[in] data Input data.
+ * @param[in] context Baseline context.
+ * @param[in] num_pieces Number of Spline pieces.
+ * @param[in] boundary Positions of Spline boundaries.
+ * @param[in] coeff_full Coefficients. It is a 2D array
+ * and the coefficients for @a i -th piece must be stored at
+ * @a coeff_full[i][] .
+ * @param best_fit_model[out] The best-fit baseline data.
+ * @param residual_data[out] Residual data.
+ */
 template<typename T, typename U, typename V>
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		T const *data, V const *context, size_t num_pieces,
@@ -755,6 +1012,28 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 	OperateSubtraction<T>(num_data, data, best_fit_model, residual_data);
 }
 
+/**
+ * Mask data where the value of @a data_arg is outside the range between
+ * @a lower_bound and @a upper_bound .
+ *
+ * @tparam T Type of data and lower/upper limits.
+ * @tparam U Type of boundary data.
+ * @param[in] num_piece Number of Spline Pieces for Cubic Spline. It must
+ * be 1 for other baseline types.
+ * @param[in] boundary_arg Boundary positions. Its length must be
+ * ( @a num_piece +1).
+ * @param[in] data_arg Input data.
+ * @param[in] in_mask_arg Input mask.
+ * @param[in] lower_bound Lower limit of allowed area of @a data_arg values.
+ * @param[in] upper_bound Upper limit of allowed area of @a data_arg values.
+ * @param[out] out_mask_arg Output mask with positions where @a data_arg is
+ * outside the allowed range set false (masked).
+ * @param[out] clipped_indices_arg An array to store positions where
+ * @a data_arg is outside the allowed range. For safety, its length should
+ * not be less than @a boundary_arg[num_piece] .
+ * @param[out] num_clipped Number of positions where @a data_arg is outside
+ * the allowed range.
+ */
 template<typename T, typename U>
 inline void ClipData(size_t num_piece, U *boundary_arg, T const *data_arg,
 bool const *in_mask_arg, T const lower_bound, T const upper_bound,
@@ -791,13 +1070,29 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 	*num_clipped = num_clipped_tmp;
 }
 
+/**
+ * This function has actual algorithm of baseline fitting and is
+ * called from its wrapper functions SubtractBaseline(),
+ * SubtractBaselineCubicSpline(), GetBestFitBaselineCoefficients()
+ * or GetBestFitBaselineCoefficientsCubicSpline().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline model, best-fit
+ * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam V Type of baseline context.
+ * @param[out] out_arg If @a get_residual is true, it is residual
+ * (baseline-subtracted) data, otherwise it is the best-fit
+ * baseline.
+ */
 template<typename T, typename U, typename V, typename Func>
-inline void DoSubtractBaselineEngine(V const *context, size_t num_data,
-		T const *data_arg, bool const *mask_arg, size_t num_context_bases,
-		size_t num_coeff, U const *basis_arg, size_t num_pieces,
-		U *boundary_arg, uint16_t num_fitting_max, T clip_threshold_sigma,
-		bool get_residual, U *coeff_arg, T *out_arg, bool *final_mask_arg,
-		T *rms, T *residual_data_arg, T *best_fit_model_arg, Func func,
+inline void DoFitBaseline(V const *context, size_t num_data, T const *data_arg,
+bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
+		U const *basis_arg, size_t num_pieces, U *boundary_arg,
+		uint16_t num_fitting_max, T clip_threshold_sigma, bool get_residual,
+		U *coeff_arg, T *out_arg, bool *final_mask_arg, T *rms,
+		T *residual_data_arg, T *best_fit_model_arg, Func func,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -902,81 +1197,27 @@ inline void DoSubtractBaselineEngine(V const *context, size_t num_data,
 		}
 		throw;
 	}
-} //double
-
-template<typename T, typename U, typename V>
-inline void DoSubtractBaseline(size_t num_data, T const *data_arg,
-bool const *mask_arg, V const *context, T clip_threshold_sigma,
-		uint16_t num_fitting_max, size_t num_coeff, U *coeff_arg, T *out_arg,
-		bool *final_mask_arg, T *rms, bool get_residual,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	auto const data = AssumeAligned(data_arg);
-	auto const mask = AssumeAligned(mask_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto out = AssumeAligned(out_arg);
-	auto final_mask = AssumeAligned(final_mask_arg);
-
-	SIMD_ALIGN
-	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
-
-	DoSubtractBaselineEngine<T, U, V>(context, num_data, data, mask,
-			context->num_bases, num_coeff, context->basis_data, 1, boundary,
-			num_fitting_max, clip_threshold_sigma, get_residual, coeff, out,
-			final_mask, rms, context->residual_data, context->best_fit_model,
-			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
-						num_coeff, coeff, context->best_fit_model,
-						context->residual_data);}, baseline_status);
 }
 
-template<typename T, typename U, typename V>
-inline void DoSubtractBaselineCubicSpline(size_t num_data, T const *data_arg,
-bool const *mask_arg, size_t num_pieces, V const *context,
-		T clip_threshold_sigma, uint16_t num_fitting_max,
-		U (*coeff_full_arg)[kNumBasesCubicSpline], U *boundary_arg, T *out_arg,
-		bool *final_mask_arg, T *rms, bool get_residual,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_full_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	auto const *data = AssumeAligned(data_arg);
-	auto const *mask = AssumeAligned(mask_arg);
-	auto *coeff_full = AssumeAligned(coeff_full_arg);
-	auto *boundary = AssumeAligned(boundary_arg);
-	auto *out = AssumeAligned(out_arg);
-	auto *final_mask = AssumeAligned(final_mask_arg);
-
-	size_t const num_boundary = num_pieces + 1;
-	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
-	SetFullCubicSplineBasisData < U
-			> (num_data, num_boundary, boundary, context->cspline_basis);
-	size_t num_coeff = GetNumberOfLsqBases(
-			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
-	DoSubtractBaselineEngine<T, U, V>(context, num_data, data, mask, num_coeff,
-			num_coeff, context->cspline_basis, num_pieces, boundary,
-			num_fitting_max, clip_threshold_sigma, get_residual,
-			context->cspline_lsq_coeff, out, final_mask, rms,
-			context->residual_data, context->best_fit_model,
-			[&]() {
-				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff_full);
-				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-						num_pieces, boundary, coeff_full, context->best_fit_model, context->residual_data);
-			}, baseline_status);
-}
-
+/**
+ * Convert user-given wave number set used for sinusoidal
+ * fitting to the array of indices to access basis data
+ * stored in baseline context, then set the array into
+ * the baseline context itself.
+ *
+ * @tparam T Type of baseline context.
+ * @param[in] num_nwave Length of nwave.
+ * @param[in] nwave User-given set of wave numbers that
+ * are used for least-square fitting actually.
+ * @param[out] context Baseline context in which the
+ * array of indices to access basis data are stored.
+ */
+template<typename T>
 inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
-		size_t const *nwave, size_t *use_bases_idx) {
+		size_t const *nwave, T *context) {
+	assert(LIBSAKURA(IsAligned)(context->use_bases_idx));
+	auto use_bases_idx = AssumeAligned(context->use_bases_idx);
+
 	size_t iuse = 0;
 	size_t i = 0;
 	if (nwave[0] == 0) {
@@ -988,6 +1229,21 @@ inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
 	}
 }
 
+/**
+ * A wrapper function of DoSubtractBaseline() to fit/subtract
+ * baseline for polynomial, Chebyshev polynomial and sinusoids.
+ * It is called from its C interface sakura_SubtractBaselineFloat().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline model, best-fit
+ * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam V Type of baseline context.
+ * @param[out] out_arg If @a get_residual is true, it is residual
+ * (baseline-subtracted) data, otherwise it is the best-fit
+ * baseline.
+ */
 template<typename T, typename U, typename V>
 inline void SubtractBaseline(V const *context, uint16_t order,
 		size_t const num_nwave, size_t const *nwave, size_t num_data,
@@ -1009,15 +1265,37 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 	auto final_mask = AssumeAligned(final_mask_arg);
 
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
-		SetSinusoidUseBasesIndex(num_nwave, nwave, context->use_bases_idx);
+		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
-	DoSubtractBaseline<T, U, V>(num_data, data, mask, context,
-			clip_threshold_sigma, num_fitting_max,
-			DoGetNumberOfCoefficients(type, order, num_nwave, nwave),
-			context->coeff_full, out, final_mask, rms, get_residual,
-			baseline_status);
+	size_t const num_coeff = DoGetNumberOfCoefficients(type, order, num_nwave,
+			nwave);
+	SIMD_ALIGN
+	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
+
+	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
+			num_coeff, context->basis_data, 1, boundary, num_fitting_max,
+			clip_threshold_sigma, get_residual, context->coeff_full, out,
+			final_mask, rms, context->residual_data, context->best_fit_model,
+			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
+						num_coeff, context->coeff_full, context->best_fit_model,
+						context->residual_data);}, baseline_status);
 }
 
+/**
+ * A wrapper function of DoSubtractBaseline() to fit/subtract
+ * baseline for cubic spline.
+ * It is called from its C interface sakura_SubtractBaselineCubicSplineFloat().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline model, best-fit
+ * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam V Type of baseline context.
+ * @param[out] out_arg If @a get_residual is true, it is residual
+ * (baseline-subtracted) data, otherwise it is the best-fit
+ * baseline.
+ */
 template<typename T, typename U, typename V>
 inline void SubtractBaselineCubicSpline(V const *context, size_t num_pieces,
 		size_t num_data, T const *data_arg,
@@ -1040,12 +1318,39 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_pieces,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	DoSubtractBaselineCubicSpline<T, U, V>(num_data, data, mask, num_pieces,
-			context, clip_threshold_sigma, num_fitting_max,
-			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full),
-			boundary, out, final_mask, rms, get_residual, baseline_status);
+	size_t const num_boundary = num_pieces + 1;
+	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
+	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
+			context->cspline_basis);
+	size_t num_coeff = GetNumberOfLsqBases(
+			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
+	auto coeff_full =
+			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
+
+	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
+			context->cspline_basis, num_pieces, boundary, num_fitting_max,
+			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff, out,
+			final_mask, rms, context->residual_data, context->best_fit_model,
+			[&]() {
+				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff_full);
+				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
+						num_pieces, boundary, coeff_full, context->best_fit_model, context->residual_data);
+			}, baseline_status);
 }
 
+/**
+ * A wrapper function of DoSubtractBaseline() to obtain best-fit
+ * baseline coefficients for polynomial, Chebyshev polynomial
+ * and sinusoids.
+ * It is called from its C interface sakura_GetBestFitBaselineCoefficientsFloat().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline model, best-fit
+ * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam V Type of baseline context.
+ */
 template<typename T, typename U, typename V>
 inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 		T const *data_arg, bool const *mask_arg, T clip_threshold_sigma,
@@ -1067,13 +1372,33 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 	auto final_mask = AssumeAligned(final_mask_arg);
 
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
-		SetSinusoidUseBasesIndex(num_nwave, nwave, context->use_bases_idx);
+		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
-	DoSubtractBaseline<T, U, V>(num_data, data, mask, context,
-			clip_threshold_sigma, num_fitting_max, num_coeff, coeff, nullptr,
-			final_mask, rms, true, baseline_status);
+	SIMD_ALIGN
+	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
+
+	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
+			num_coeff, context->basis_data, 1, boundary, num_fitting_max,
+			clip_threshold_sigma, true, coeff, nullptr, final_mask, rms,
+			context->residual_data, context->best_fit_model,
+			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
+						num_coeff, coeff, context->best_fit_model,
+						context->residual_data);}, baseline_status);
 }
 
+/**
+ * A wrapper function of DoSubtractBaseline() to obtain best-fit
+ * baseline coefficients for cubic spline.
+ * It is called from its C interface
+ * sakura_GetBestFitBaselineCoefficientsCubicSplineFloat().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline model, best-fit
+ * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam V Type of baseline context.
+ */
 template<typename T, typename U, typename V>
 inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 		size_t num_data, T const *data_arg, bool const *mask_arg,
@@ -1096,11 +1421,36 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	DoSubtractBaselineCubicSpline<T, U, V>(num_data, data, mask, num_pieces,
-			context, clip_threshold_sigma, num_fitting_max, coeff, boundary,
-			nullptr, final_mask, rms, true, baseline_status);
+	size_t const num_boundary = num_pieces + 1;
+	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
+	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
+			context->cspline_basis);
+	size_t num_coeff = GetNumberOfLsqBases(
+			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
+
+	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
+			context->cspline_basis, num_pieces, boundary, num_fitting_max,
+			clip_threshold_sigma, true, context->cspline_lsq_coeff, nullptr,
+			final_mask, rms, context->residual_data, context->best_fit_model,
+			[&]() {
+				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff);
+				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
+						num_pieces, boundary, coeff, context->best_fit_model, context->residual_data);
+			}, baseline_status);
 }
 
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for polynomial,
+ * Chebyshev polynomial and sinusoid.
+ * It is called from C interface
+ * sakura_SubtractBaselineUsingCoefficientsFloat().
+ *
+ * @tparam T Type of input/output data.
+ * @tparam U Type of coefficients.
+ * @tparam V Type of baseline context.
+ * @param[out] out_arg Baseline-subtracted data.
+ */
 template<typename T, typename U, typename V>
 inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
 		T const *data_arg, size_t num_coeff, U const *coeff_arg,
@@ -1116,12 +1466,23 @@ inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
 	auto out = AssumeAligned(out_arg);
 
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
-		SetSinusoidUseBasesIndex(num_nwave, nwave, context->use_bases_idx);
+		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
-	GetBestFitModelAndResidual<T, U, V>(num_data, data, context, num_coeff, coeff,
-			context->best_fit_model, out);
+	GetBestFitModelAndResidual<T, U, V>(num_data, data, context, num_coeff,
+			coeff, context->best_fit_model, out);
 }
 
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for cubic spline.
+ * It is called from C interface
+ * sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat().
+ *
+ * @tparam T Type of input/output data.
+ * @tparam U Type of coefficients.
+ * @tparam V Type of baseline context.
+ * @param[out] out_arg Baseline-subtracted data.
+ */
 template<typename T, typename U, typename V>
 inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 		size_t num_data, T const *data_arg, size_t num_pieces,
@@ -1150,6 +1511,9 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 	} \
 } while (false)
 
+/**
+ *
+ */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		size_t const num_data,
@@ -1345,9 +1709,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 
 	try {
 		SubtractBaselineCubicSpline<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_pieces,
-				num_data, data, mask, clip_threshold_sigma, num_fitting_max,
-				get_residual, out, final_mask, rms, boundary, baseline_status);
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_pieces, num_data,
+				data, mask, clip_threshold_sigma, num_fitting_max, get_residual,
+				out, final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1374,7 +1738,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
-	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
+	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
@@ -1432,9 +1796,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		GetBestFitBaselineCoefficients<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				mask, clip_threshold_sigma, num_fitting_max, 0, nullptr,
-				num_coeff, coeff, final_mask, rms, baseline_status);
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
+				clip_threshold_sigma, num_fitting_max, 0, nullptr, num_coeff,
+				coeff, final_mask, rms, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1479,8 +1843,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		GetBestFitBaselineCoefficientsCubicSpline<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				mask, clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
+				clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
 				final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -1513,7 +1877,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
-	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
+	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
 	size_t num_lsq_bases = DoGetNumberOfCoefficients(context->baseline_type, 0,
 			num_nwave, nwave);
@@ -1527,8 +1891,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		GetBestFitBaselineCoefficients<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				mask, clip_threshold_sigma, num_fitting_max, num_nwave, nwave,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
+				clip_threshold_sigma, num_fitting_max, num_nwave, nwave,
 				num_coeff, coeff, final_mask, rms, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -1563,7 +1927,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		SubtractBaselineUsingCoefficients<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
 				num_coeff, coeff, 0, nullptr, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -1598,7 +1962,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		SubtractBaselineCubicSplineUsingCoefficients<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
 				num_pieces, coeff, boundary, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -1623,7 +1987,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
-	CHECK_ARGS(IsNWaveUniqueAndAscending(num_nwave, nwave));
+	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
 	size_t num_lsq_bases = DoGetNumberOfCoefficients(context->baseline_type, 0,
 			num_nwave, nwave);
@@ -1636,7 +2000,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 
 	try {
 		SubtractBaselineUsingCoefficients<float, double,
-				LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
 				num_coeff, coeff, num_nwave, nwave, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
