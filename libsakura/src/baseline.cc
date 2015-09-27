@@ -1215,7 +1215,7 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 template<typename T>
 inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
 		size_t const *nwave, T *context) {
-	assert(LIBSAKURA(IsAligned)(context->use_bases_idx));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->use_bases_idx));
 	auto use_bases_idx = AssumeAligned(context->use_bases_idx);
 
 	size_t iuse = 0;
