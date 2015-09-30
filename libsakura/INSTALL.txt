@@ -65,91 +65,122 @@ Sakura installation procedure is broken into 5 steps:
 
 1.3 Apple OS X specific Prerequisites
 * xcode 5.1 or higher
-  - There is a case where command line tools is needed ??? To clarify 
 
 2. Downloading the Source
 -------------------------
 
-Sakura library source code releases are distributed in gzip-compressed tarballs.
-Download with:
+Sakura library source code releases are distributed in gzip-compressed tarballs named libsakura-X.Y.Z.tar.gz.
+Latest release can be downloaded from:
 
-ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/release/libsakura-src-X.Y.Z.tar.gz
+ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/releases/latest_src
 
 3. Building
 -----------
 
-Once the package is downloaded, expand it with tar command as bellow. :
+3.1 Expand Sakura library tarball file:
 
-   $ tar -xvzf libsakura-src-X.Y.Z.tar.gz
+[work]$ tar -xvzf libsakura-src-X.Y.Z.tar.gz
 
- Sakura library uses Google Test framework (gtest) to run unit tests. Expand a gtest bundle and create a symbolic link to it in libsakura directory. The following example shows how to do it using gtest-1.7.0.zip.:
+Above command creates a libsakura directory in your working directory. 
 
-   $ unzip gtest-1.7.0.zip -d libsakura
-   $ cd libsakura
-   $ ln -s gtest-1.7.0 gtest
+3.2 Setup a Google Test framework for Sakura
 
+Sakura library uses Google Test framework (gtest) to run unit tests.
 
- When the preparation of gtest was successful, you can set up a build of Sakura library. To build Sakura library you need to tell your build system where depended external libraries are placed and their version numbers. Cmake allows you to do it quickly and set up build easily.
+3.2.1 Expand a gtest bundle (e.g. gtest-1.7.0.zip) into the libsakura directory:
 
+[work]$ unzip gtest-1.7.0.zip -d libsakura
 
-### Setting up Using Cmake ###
+3.2.2 Create in the libsakura directory a symbolic link named gtest, pointing to the expanded gtest bundle:  
+   
+[work]$ cd libsakura
+[libsakura]$ ln -s gtest-1.7.0 gtest
 
- You will be able to set up with attached CMakeLists.txt which has necessary configuration to run Cmake correctly. Cmake will create MakeFile which corresponds to your build environment. In case you put libsakura directory in the current directory, the procedure of Cmake is as below:
+3.3 Generate Sakura build system
+
+In this step, you run cmake to generate Sakura build system.
+
+You might typically have to customize the cmake command line to specify:
+- where you want Sakura to be installed
+- and where the fftw3 and Eigen libraries are installed in your system
+
+In the simplest case where compliant versions of fftw3 and Eigen are automatically found by cmake, you simply have to run:
 
 gcc:
-   $ cd libsakura/build
-   $ cmake -D CMAKE_MODULE_PATH=../cmake-modules -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX:PATH=/usr/local/lib/libsakura -D BUILD_DOC=BOOL:ON ..
+[libsakura]$ cd build
+[build]$ cmake ..
 
 clang: (especially for Mac users)
-   $ cd libsakura/build
-   $ env CC=clang CXX=clang++ cmake -D CMAKE_MODULE_PATH=../cmake-modules -D CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local/lib/libsakura -D BUILD_DOC:BOOL=ON ..
+[libsakura]$ cd build
+[build]$ env CC=clang CXX=clang++ cmake ..
 
-
- For external libraries, fftw3 and eigen, you may need to set FFTW3_ROOT_DIR and/or EIGEN3_INCLUDE_DIR to tell cmake where you installed these libraries in case your install path is not a standard place.
-
-cmake option:
-* CMAKE_MODULE_PATH
-   Specify the place where supplemental module (e.g. FindFFTW3.cmake etc.) is placed.
-* CMAKE_BUILD_TYPE
-   Specify a build type. This allows you to select a compiler flag as the following 3 types:
-   * Debug          Debug mode. Compiler flag is -g
-   * Release        Release mode. Compiler flag is -O3 -DNDEBUG
-   * RelWithDebInfo Debug+Release mode. Compiler flag is -g -O3 -DNDEBUG
-* SIMD_ARCH
-   Specify an optimization option. 
-   * SSE4   Most conservative optimization
-   * AVX    Use AVX instruction set 
-   * AVX2   Use AVX2 instruction set 
-   * NATIVE Use appropriate instruction set on your machine
-* CMAKE_INSTALL_PREFIX:
-   Specify the directory path which you intend to install..
-* FFTW3_ROOT_DIR:
-   If the fftw3 installed directory was not found by cmake with the default option, you should specify the path of it explicitly as below:
-   e.g)  -DFFTW3_ROOT_DIR=/opt/fftw3
-* EIGEN3_INCLUDE_DIR:
-   If the Eigen-3.2.2 installed directory was not found by cmake with the default option, you should specify the path of it explicitly as below:
-   e.g.)  -DEIGEN3_INCLUDE_DIR=/opt/Eigen-3.2.2
-
-
-### Create API Document ###
-
- Create API document using Doxygen. Doxygen will create the bin/api directory in the libsakura/build directory which has the document of Sakura library in html. Move to libsakura/build directory and do as below:
+A typical customized cmake command would look like:
+[build]$ cmake -D CMAKE_INSTALL_PREFIX=/path/to/sakura/installation_dir -D FFTW3_ROOT_DIR=/path/to/my_system/fftw3 -D EIGEN3_INCLUDE_DIR=/path/to/my_system/eigen ..
  
-   $ make apidoc
+cmake options you may want to customize:
+CMAKE_INSTALL_PREFIX
+  Specifies the directory where to install Sakura. 
+  Add to cmake command line e.g: -D CMAKE_INSTALL_PREFIX=/usr/local/lib/sakura
+
+FFTW3_ROOT_DIR
+  Specifies the directory where the fftw3 library is installed on your system.
+  Add to cmake command line e.g: -D FFTW3_ROOT_DIR=/opt/fftw3
+
+EIGEN3_INCLUDE_DIR
+  Specifies the directory where the Eigen library is installed on your system.
+  Add to cmake command line e.g: -D -D EIGEN3_INCLUDE_DIR=/opt/eigen/eigen_3.2.0
+
+CMAKE_BUILD_TYPE
+  Specifies a build type. Allowed values:
+  * Debug          Debug mode. Compiler flag is -g
+  * Release        Release mode. Compiler flag is -O3 -DNDEBUG
+  * RelWithDebInfo Debug+Release mode. Compiler flag is -g -O3 -DNDEBUG
+  Add to cmake command line e.g: -D CMAKE_BUILD_TYPE=Debug
+
+SIMD_ARCH
+  Specify an optimization option. 
+  * SSE4   Most conservative optimization
+  * AVX    Use AVX instruction set 
+  * AVX2   Use AVX2 instruction set 
+  * NATIVE Use appropriate instruction set on your machine
+  Add to cmake command line e.g: -D CMAKE_BUILD_TYPE=Debug
+
+BUILD_DOC
+  Enable/disable Doxygen generation of Sakura API HTML documentation
+  To disable documentation generation, add to cmake command line: -D BUILD_DOC:BOOL=OFF
+
+3.4 Build Sakura
+
+[libsakura]$ cd build
+[build]$ make
+
+3.5 Generate Sakura API HTML documentation
+
+You can skip this step if you specified -D BUILD_DOC:BOOL=OFF on cmake command line.
+ 
+[libsakura]$ cd build
+[build]$ make apidoc
+
+4. Testing
+----------
+
+This step allows you to verify that your installation of Sakura is working correctly.
+
+[libsakura]$ cd build
+[build]$ make test
+
+5. Final install
+----------------
+
+[libsakura]$ cd build
+[build]$ make install
+
+If you need to install Sakura library in a directory such as /usr/local which requires root privileges, you must run the command as root:
+[build]$ su
+[build]# make install
 
 
-### Install ###
 
- If you need to install Sakura library in the directory such as /usr/local which requires root privileges, you must be a root user. Move to the libsakura/build directory and then do as below:
-
-   # make install
-
-
-### Unittest ###
-
- You can run the unittest of Sakura library. This allows you to verify your installation of Sakura library and make sure that Sakura library is working correctly. The unittest doesn't require a root privileges. To run the unittest, you should move in the libsakura/build directory and then run as below as normal user, not as root user:
-
-   $ make test
 
 
  
