@@ -1666,9 +1666,13 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * procedure. Its length must be @a num_data .
  * @n must-be-aligned
  * @param[out] rms Root-mean-square of the output data.
- * @param[out] boundary Starting positions of the cubic spline pieces.
- * Its length must be ( @a num_pieces+1 ). Note that the last element
- * will be @a num_data , the next of the last data index.
+ * @param[out] boundary A 1D array containing the boundary positions of
+ * spline pieces. Its length must be ( @a num_pieces +1). The element
+ * values are indices of @a data and will be stored in ascending order.
+ * The first element will always be zero, the left edge of the first
+ * (left-most) spline piece, while the last element will be @a num_data ,
+ * which is the next of the right edge of the last (right-most) spline
+ * piece.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
  * @return Status code.
@@ -1859,9 +1863,13 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * procedure. Its length must be @a num_data .
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
- * @param[out] boundary Starting positions of the cubic spline pieces.
- * Its length must be ( @a num_pieces+1 ). Note that the last element
- * will be @a num_data , the next of the last data index.
+ * @param[out] boundary A 1D array containing the boundary positions of
+ * spline pieces. Its length must be ( @a num_pieces +1). The element
+ * values are indices of @a data and will be stored in ascending order.
+ * The first element will always be zero, the left edge of the first
+ * (left-most) spline piece, while the last element will be @a num_data ,
+ * which is the next of the right edge of the last (right-most) spline
+ * piece.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
  * @return Status code.
@@ -1993,11 +2001,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * by the ones of first, second, and third orders.
  * @n must-be-aligned
  * @param[in] boundary A 1D array containing the boundary positions of
- * spline pieces. The element values should be stored in ascending
- * order. The first element is the left edge of the first (left-most)
- * spline piece and it must be always zero, and the last element is
- * the next of the right edge of the last (right-most) spline piece,
- * thus it must be @a num_data . Its length must be ( @a num_pieces +1).
+ * spline pieces. Its length must be ( @a num_pieces +1). The element
+ * values are indices of @a data and should be stored in ascending
+ * order. The first element must always be zero, the left edge of the
+ * first (left-most) spline piece, while the last element must be
+ * @a num_data , which is the next of the right edge of the last
+ * (right-most) spline piece.
  * @n must-be-aligned
  * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
