@@ -382,9 +382,9 @@ TEST_MASK(FractionLargerThanOne) {
 }
 
 TEST_MASK(FractionIsNaN) {
-	constexpr float nanf = std::nan("");
-	ASSERT_TRUE(std::isnan(nanf));
-	RunTest<BasicInvalidArgumentInitializer>(10, nanf, 0.5);
+	constexpr float kNaNFloat = std::nan("");
+	static_assert(std::isnan(kNaNFloat), "kNaNFloat");
+	RunTest<BasicInvalidArgumentInitializer>(10, kNaNFloat, 0.5);
 }
 
 TEST_MASK(FractionIsInf) {
@@ -407,6 +407,24 @@ TEST_MASK(NegativePixelScale) {
 TEST_MASK(ZeroPixelScale) {
 	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f,
 			0.0);
+}
+
+TEST_MASK(PixelScaleIsNaN) {
+	constexpr double kNaNDouble = std::nan("");
+	static_assert(std::isnan(kNaNDouble), "kNaNDouble");
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, kNaNDouble);
+}
+
+TEST_MASK(PixelScaleIsInf) {
+	const float infd = 1.0 / 0.0;
+	ASSERT_TRUE(std::isinf(infd));
+	ASSERT_TRUE(infd > 0.0f);
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, infd);
+
+	const float ninfd = -1.0 / 0.0;
+	ASSERT_TRUE(std::isinf(ninfd));
+	ASSERT_TRUE(ninfd < 0.0f);
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, ninfd);
 }
 
 TEST_MASK(ArrayNotAligned) {

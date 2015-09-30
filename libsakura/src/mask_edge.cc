@@ -543,7 +543,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 		double const *trc_x, double const *trc_y,
 		bool mask[]) {
 	// Argument check
+	CHECK_ARGS(!std::isnan(fraction));
+	CHECK_ARGS(!std::isinf(fraction));
 	CHECK_ARGS(0.0 <= fraction && fraction <= 1.0);
+	CHECK_ARGS(!std::isnan(pixel_scale));
+	CHECK_ARGS(!std::isinf(pixel_scale));
 	CHECK_ARGS(0.0 < pixel_scale);
 	CHECK_ARGS(x != nullptr);
 	CHECK_ARGS(y != nullptr);
