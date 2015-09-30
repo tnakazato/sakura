@@ -95,6 +95,14 @@ struct BaseInitializer {
 			(*mask_out)[i] = false;
 			mask_expected[i] = false;
 		}
+		*x_out = const_cast<double *>(x_in);
+		for (size_t i = 0; i < num_data; ++i) {
+			(*x_out)[i] = 0.0;
+		}
+		*y_out = const_cast<double *>(y_in);
+		for (size_t i = 0; i < num_data; ++i) {
+			(*y_out)[i] = 0.0;
+		}
 		*status_expected = sakura_Status_kOK;
 	}
 };
@@ -205,6 +213,70 @@ struct FailedSquareShapeInitializer {
 		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
 				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
 				status_expected);
+		*status_expected = sakura_Status_kInvalidArgument;
+	}
+};
+
+template<typename T>
+struct WrongValueNaN {
+	static T Get() {
+		constexpr T kNaN = std::nan("");
+		static_assert(std::isnan(kNaN), "kNaN");
+		return kNaN;
+	}
+};
+
+template<typename T>
+struct WrongValuePositiveInf {
+	static T Get() {
+		T inf_value = 0.0;
+		DoGet(&inf_value);
+		return inf_value;
+	}
+private:
+	static void DoGet(T *value) {
+		constexpr T kOne = static_cast<T>(1);
+		constexpr T kZero = static_cast<T>(0);
+		*value = kOne / kZero;
+		ASSERT_TRUE(std::isinf(*value));
+		ASSERT_TRUE(*value > kZero);
+	}
+};
+
+template<typename T>
+struct WrongValueNegativeInf {
+	static T Get() {
+		T inf_value = 0.0;
+		DoGet(&inf_value);
+		return inf_value;
+	}
+private:
+	static void DoGet(T *value) {
+		constexpr T kOne = static_cast<T>(1);
+		constexpr T kZero = static_cast<T>(0);
+		*value = -kOne / kZero;
+		ASSERT_TRUE(std::isinf(*value));
+		ASSERT_TRUE(*value < kZero);
+	}
+};
+
+template<typename ParamSet, typename WrongValueProvider, bool X=true>
+struct FailedSquareShapeInitializerWithWrongValue {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
+				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
+				status_expected);
+		const double wrong_value = WrongValueProvider::Get();
+		if (X) {
+			(*x_out)[num_data-1] = wrong_value;
+		}
+		else {
+			(*y_out)[num_data-1] = wrong_value;
+		}
 		*status_expected = sakura_Status_kInvalidArgument;
 	}
 };
@@ -382,21 +454,16 @@ TEST_MASK(FractionLargerThanOne) {
 }
 
 TEST_MASK(FractionIsNaN) {
-	constexpr float kNaNFloat = std::nan("");
-	static_assert(std::isnan(kNaNFloat), "kNaNFloat");
-	RunTest<BasicInvalidArgumentInitializer>(10, kNaNFloat, 0.5);
+	float const nan_float = WrongValueNaN<float>::Get();
+	RunTest<BasicInvalidArgumentInitializer>(10, nan_float, 0.5);
 }
 
 TEST_MASK(FractionIsInf) {
-	const float inff = 1.0f / 0.0f;
-	ASSERT_TRUE(std::isinf(inff));
-	ASSERT_TRUE(inff > 0.0f);
-	RunTest<BasicInvalidArgumentInitializer>(10, inff, 0.5);
+	float const inf_float = WrongValuePositiveInf<float>::Get();
+	RunTest<BasicInvalidArgumentInitializer>(10, inf_float, 0.5);
 
-	const float ninff = -1.0f / 0.0f;
-	ASSERT_TRUE(std::isinf(ninff));
-	ASSERT_TRUE(ninff < 0.0f);
-	RunTest<BasicInvalidArgumentInitializer>(10, ninff, 0.5);
+	float const ninf_float = WrongValueNegativeInf<float>::Get();
+	RunTest<BasicInvalidArgumentInitializer>(10, ninf_float, 0.5);
 }
 
 TEST_MASK(NegativePixelScale) {
@@ -410,21 +477,16 @@ TEST_MASK(ZeroPixelScale) {
 }
 
 TEST_MASK(PixelScaleIsNaN) {
-	constexpr double kNaNDouble = std::nan("");
-	static_assert(std::isnan(kNaNDouble), "kNaNDouble");
-	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, kNaNDouble);
+	double const nan_double = WrongValueNaN<double>::Get();
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, nan_double);
 }
 
 TEST_MASK(PixelScaleIsInf) {
-	const float infd = 1.0 / 0.0;
-	ASSERT_TRUE(std::isinf(infd));
-	ASSERT_TRUE(infd > 0.0f);
-	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, infd);
+	double const inf_double = WrongValuePositiveInf<double>::Get();
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, inf_double);
 
-	const float ninfd = -1.0 / 0.0;
-	ASSERT_TRUE(std::isinf(ninfd));
-	ASSERT_TRUE(ninfd < 0.0f);
-	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, ninfd);
+	double const ninf_double = WrongValueNegativeInf<double>::Get();
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, ninf_double);
 }
 
 TEST_MASK(ArrayNotAligned) {
@@ -449,6 +511,28 @@ TEST_MASK(ArrayIsNull) {
 	RunTest<NullMaskInitializer>(10, 0.1f, 0.5);
 }
 
+TEST_MASK(ArrayHasNaN) {
+	// x has NaN
+	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNaN<double>, true> >(100, 0.1f, 0.5);
+
+	// y has NaN
+	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNaN<double>, false> >(100, 0.1f, 0.5);
+}
+
+TEST_MASK(ArrayHasPositiveInf) {
+	// x has +Inf
+	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValuePositiveInf<double>, true> >(100, 0.1f, 0.5);
+
+	// y has +Inf
+	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValuePositiveInf<double>, false> >(100, 0.1f, 0.5);
+
+	// x has -Inf
+	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNegativeInf<double>, true> >(100, 0.1f, 0.5);
+
+	// y has -Inf
+	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNegativeInf<double>, false> >(100, 0.1f, 0.5);
+}
+
 TEST_MASK(InvalidUserDefinedRange) {
 	// all data are located at left side of user defined bottom left corner
 	double blc_x = 11.0;
@@ -469,6 +553,49 @@ TEST_MASK(InvalidUserDefinedRange) {
 	double trc_y = -11.0;
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &trc_y);
+
+        // any user defined range is +Inf
+	double positive_inf_value = WrongValuePositiveInf<double>::Get();
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, &positive_inf_value,
+	NULL, NULL, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	NULL, &positive_inf_value, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+			&positive_inf_value, NULL, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	NULL, NULL, &positive_inf_value);
+
+        // any user defined range is -Inf
+	double negative_inf_value = WrongValueNegativeInf<double>::Get();
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, &negative_inf_value,
+	NULL, NULL, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	NULL, &negative_inf_value, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+			&negative_inf_value, NULL, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	NULL, NULL, &negative_inf_value);
+
+
+	// any user defined range is NaN
+	double nan_value = WrongValueNaN<double>::Get();
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, &nan_value,
+	NULL, NULL, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	NULL, &nan_value, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+			&nan_value, NULL, NULL);
+
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	NULL, NULL, &nan_value);
 }
 
 // SUCCESSFUL CASES

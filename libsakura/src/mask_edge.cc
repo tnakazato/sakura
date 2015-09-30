@@ -555,6 +555,16 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(x));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(y));
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	for (size_t i = 0; i < num_data; ++i) {
+		CHECK_ARGS(std::isfinite(x[i]));
+	}
+	for (size_t i = 0; i < num_data; ++i) {
+		CHECK_ARGS(std::isfinite(y[i]));
+	}
+	CHECK_ARGS((blc_x == nullptr || std::isfinite(*blc_x)));
+	CHECK_ARGS((trc_x == nullptr || std::isfinite(*trc_x)));
+	CHECK_ARGS((blc_y == nullptr || std::isfinite(*blc_y)));
+	CHECK_ARGS((trc_y == nullptr || std::isfinite(*trc_y)));
 
 	try {
 		return CreateMaskNearEdge(fraction, pixel_scale, num_data, x, y, blc_x,
