@@ -220,16 +220,21 @@ struct FailedSquareShapeInitializer {
 template<typename T>
 struct WrongValueNaN {
 	static T Get() {
-		constexpr T kNaN = std::nan("");
-		static_assert(std::isnan(kNaN), "kNaN");
-		return kNaN;
+		T nan_value = static_cast<T>(0);
+		DoGet(&nan_value);
+		return nan_value;
+	}
+private:
+	static void DoGet(T *value) {
+		*value = std::nan("");
+		ASSERT_TRUE(std::isnan(*value));
 	}
 };
 
 template<typename T>
 struct WrongValuePositiveInf {
 	static T Get() {
-		T inf_value = 0.0;
+		T inf_value = static_cast<T>(0);
 		DoGet(&inf_value);
 		return inf_value;
 	}
@@ -246,7 +251,7 @@ private:
 template<typename T>
 struct WrongValueNegativeInf {
 	static T Get() {
-		T inf_value = 0.0;
+		T inf_value = static_cast<T>(0);
 		DoGet(&inf_value);
 		return inf_value;
 	}
