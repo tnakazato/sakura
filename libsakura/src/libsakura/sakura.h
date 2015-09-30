@@ -1639,8 +1639,9 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * and also must not exceed the number of spline pieces specified in
  * creation of @a context .
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out. It must be equal to or greater than
- * ( @a num_pieces+3 ), the number of basis functions of cubic spline.
+ * @a mask, @a final_mask, and @a out. It must be equal to @a num_data
+ * which was given to sakura_CreateBaselineContextFloat() to create
+ * @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data . The
@@ -1707,7 +1708,9 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * cases @a num_nwave contains zero or not, respectively, must not
  * exceed @a num_data.
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, @a final_mask, and @a out.
+ * @a mask, @a final_mask, and @a out. It must be equal to @a num_data
+ * which was given to sakura_CreateBaselineContextFloat() to create
+ * @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
@@ -1763,7 +1766,9 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, and @a final_mask.
+ * @a mask, and @a final_mask. It must be equal to @a num_data
+ * which was given to sakura_CreateBaselineContextFloat() to create
+ * @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
@@ -1822,8 +1827,9 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, and @a final_mask. It must be equal to or greater than
- * ( @a num_pieces+3 ), the number of basis functions of cubic spline.
+ * @a mask, and @a final_mask. It must be equal to @a num_data
+ * which was given to sakura_CreateBaselineContextFloat() to create
+ * @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
@@ -1888,7 +1894,9 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @a final_mask .
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_data The number of elements in the arrays @a data,
- * @a mask, and @a final_mask.
+ * @a mask, and @a final_mask. It must be equal to @a num_data
+ * which was given to sakura_CreateBaselineContextFloat() to create
+ * @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
@@ -1945,6 +1953,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @details
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
+ * It must be equal to @a num_data which was given to
+ * sakura_CreateBaselineContextFloat() to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_coeff The number of elements in @a coeff .
@@ -1970,6 +1980,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @details
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_data The number of elements in @a data and @a out .
+ * It must be equal to @a num_data which was given to
+ * sakura_CreateBaselineContextFloat() to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_pieces The number of spline pieces. If zero is
@@ -2002,6 +2014,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @details
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
+ * It must be equal to @a num_data which was given to
+ * sakura_CreateBaselineContextFloat() to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_nwave The number of elements in the array @a nwave .
