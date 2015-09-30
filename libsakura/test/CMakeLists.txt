@@ -31,6 +31,16 @@ include(SetArchFlags)
 
 message("GTEST_INCLUDE_DIRS was set to ${GTEST_INCLUDE_DIRS}")
 message("GTEST_LIBRARIES was set to ${GTEST_LIBRARIES}")
+
+# Embed into test executables directory paths implicitely searched by the C++ compiler 
+foreach(dir ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+  set(CMAKE_C_LINK_FLAGS   "${CMAKE_C_LINK_FLAGS} ${CMAKE_EXECUTABLE_RUNTIME_C_FLAG}${dir}")
+  set(CMAKE_CXX_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} ${CMAKE_EXECUTABLE_RUNTIME_CXX_FLAG}${dir}")
+endforeach(dir ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+
+message("CMAKE_C_LINK_FLAGS  : ${CMAKE_C_LINK_FLAGS}")
+message("CMAKE_CXX_LINK_FLAGS: ${CMAKE_CXX_LINK_FLAGS}")
+
 if(OPENMP_FOUND)
 	set(CMAKE_C_FLAGS          "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 	set(CMAKE_CXX_FLAGS        "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -104,9 +114,9 @@ target_link_libraries (testInterpolationY        gtest_main gtest sakura -L${PRO
 target_link_libraries (testNormalization         gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testNumericOperation      gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testStatistics            gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testFFT 						gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testCInterface sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testCreateMaskNearEdge      gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testFFT 				     gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testCInterface                             sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
+target_link_libraries (testCreateMaskNearEdge    gtest_main gtest sakura -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 
 add_dependencies(testInit logConfig)
 
@@ -124,18 +134,18 @@ add_custom_target(testInterpolationYRun        COMMAND ./testInterpolationY     
 add_custom_target(testNormalizationRun         COMMAND ./testNormalization         DEPENDS testNormalization)
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
-add_custom_target(testFFTRun            COMMAND ./testFFT            DEPENDS testFFT)
+add_custom_target(testFFTRun                   COMMAND ./testFFT                   DEPENDS testFFT)
 add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
-add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX --gtest_filter="-*Performance*"   DEPENDS testInterpolationX)
-add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY --gtest_filter="-*Performance*"   DEPENDS testInterpolationY)
+add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX   --gtest_filter="-*Performance*" DEPENDS testInterpolationX)
+add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY   --gtest_filter="-*Performance*" DEPENDS testInterpolationY)
 add_custom_target(testCInterfaceRun            COMMAND ./testCInterface            DEPENDS testCInterface)
-add_custom_target(testCreateMaskNearEdgeRun      COMMAND ./testCreateMaskNearEdge      DEPENDS testCreateMaskNearEdge)
+add_custom_target(testCreateMaskNearEdgeRun    COMMAND ./testCreateMaskNearEdge    DEPENDS testCreateMaskNearEdge)
 
-# テストの順序
-# 1 より低レベルのもの(他のテストの前提となる、初期化とかログとかメモリー管理とか)
-# 2 ステーブル(デバッグ済み)なもの(テストに失敗しないこと)
-# 3 短時間で済むもの
-# 4 先にステーブルな状態になったもの(早い者勝ち)
+# Tests order
+# 1 Low-level tests (prerequisistes to other tests, initialization, log, memory management)
+# 2 Stable tests (debugging done, no fail)
+# 3 Short tests
+# 4 New stable tests 
 add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testStatistics
