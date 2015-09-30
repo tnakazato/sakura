@@ -1594,12 +1594,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * If 1 is given, baseline fitting is done just once and no clipping
- * will be applied. If 0 is given, baseline fitting is not executed and
- * the values of @a out should be identical with those of @a data .
+ * baseline fitting is performed recursively. Before executing the
+ * second or later baseline fitting, outlier in @a data is masked
+ * via clipping to be not used. If 1 is given, baseline fitting is
+ * done just once and no clipping will be applied. If 0 is given,
+ * baseline fitting is not executed and the values of @a out should
+ * be identical with those of @a data .
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out The output data. Its length must be @a num_data .
@@ -1652,12 +1652,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * If 1 is given, baseline fitting is done just once and no clipping
- * will be applied. If 0 is given, baseline fitting is not executed and
- * the values of @a out should be identical with those of @a data .
+ * baseline fitting is performed recursively. Before executing the
+ * second or later baseline fitting, outlier in @a data is masked
+ * via clipping to be not used. If 1 is given, baseline fitting is
+ * done just once and no clipping will be applied. If 0 is given,
+ * baseline fitting is not executed and the values of @a out should
+ * be identical with those of @a data .
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out The output data. Its length must be @a num_data .
@@ -1721,12 +1721,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] clip_threshold_sigma The threshold of clipping in unit of
  * sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * If 1 is given, baseline fitting is done just once and no clipping
- * will be applied. If 0 is given, baseline fitting is not executed and
- * the values of @a out should be identical with those of @a data .
+ * baseline fitting is performed recursively. Before executing the
+ * second or later baseline fitting, outlier in @a data is masked
+ * via clipping to be not used. If 1 is given, baseline fitting is
+ * done just once and no clipping will be applied. If 0 is given,
+ * baseline fitting is not executed and the values of @a out should
+ * be identical with those of @a data .
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out The output data. Its length must be @a num_data .
@@ -1779,12 +1779,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * If 1 is given, baseline fitting is done just once and no clipping
- * will be applied. If 0 is given, baseline fitting is not executed and
- * the values of @a coeff should remain as they were.
+ * baseline fitting is performed recursively. Before executing the
+ * second or later baseline fitting, outlier in @a data is masked
+ * via clipping to be not used. If 1 is given, baseline fitting is
+ * done just once and no clipping will be applied. If 0 is given,
+ * baseline fitting is not executed and the values of @a coeff should
+ * remain as they were.
  * @param[in] num_coeff The number of elements in the array @a coeff.
  * It must be in range (0 < @a num_coeff <= order+1), where order is the
  * polynomial or Chebyshev polynomial order specified in creation of
@@ -1840,12 +1840,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * If 1 is given, baseline fitting is done just once and no clipping
- * will be applied. If 0 is given, baseline fitting is not executed and
- * the values of @a coeff should remain as they were.
+ * baseline fitting is performed recursively. Before executing the
+ * second or later baseline fitting, outlier in @a data is masked
+ * via clipping to be not used. If 1 is given, baseline fitting is
+ * done just once and no clipping will be applied. If 0 is given,
+ * baseline fitting is not executed and the values of @a coeff should
+ * remain as they were.
  * @param[in] num_pieces The number of spline pieces. It must be a
  * positive number and must not exceed the number of spline pieces
  * specified in creation of @a context .
@@ -1907,12 +1907,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] clip_threshold_sigma The threshold of clipping in unit
  * of sigma. It must be a positive value.
  * @param[in] num_fitting_max The maximum of total number of times
- * baseline fitting is performed recursively. In case n is given, after
- * the first baseline fitting, subsequent clipping and baseline fitting
- * based on the updated mask are executed (n-1) times at maximum.
- * If 1 is given, baseline fitting is done just once and no clipping
- * will be applied. If 0 is given, baseline fitting is not executed and
- * the values of @a coeff should remain as they were.
+ * baseline fitting is performed recursively. Before executing the
+ * second or later baseline fitting, outlier in @a data is masked
+ * via clipping to be not used. If 1 is given, baseline fitting is
+ * done just once and no clipping will be applied. If 0 is given,
+ * baseline fitting is not executed and the values of @a coeff should
+ * remain as they were.
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers within the index range of @a data
  * to be used for sinusoidal fitting. The values must be positive or
