@@ -681,11 +681,9 @@ inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
 		double const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
 		double const *basis, float *out) {
-	for (size_t i = 0; i < num_boundary; ++i) {
+	for (size_t i = 0; i < num_boundary - 1; ++i) {
 		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
-		size_t end_idx =
-				(i + 1 < num_boundary) ?
-						static_cast<size_t>(ceil(boundary[i + 1])) : num_out;
+		size_t end_idx = static_cast<size_t>(ceil(boundary[i + 1]));
 		size_t j = start_idx;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 		constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -811,10 +809,12 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 		if (mask[i])
 			++num_unmasked_data;
 	}
-	boundary[0] = static_cast<U>(0.0); // the first value of boundary[] must always point the first element.
+	size_t boundary_last_idx = num_boundary - 1;
+	assert(boundary_last_idx <= num_unmasked_data);
+	// the first element of boundary[] must point zero, the first index of mask/data.
+	boundary[0] = static_cast<U>(0.0);
 	size_t idx = 1;
 	size_t count_unmasked_data = 0;
-	size_t boundary_last_idx = num_boundary - 1;
 	for (size_t i = 0; i < num_mask; ++i) {
 		if (boundary_last_idx <= idx) {
 			break;
@@ -828,6 +828,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 			++count_unmasked_data;
 		}
 	}
+	// the last element of boundary[] must point the next of the last index of mask/data.
 	boundary[boundary_last_idx] = static_cast<U>(num_mask);
 }
 
@@ -836,20 +837,25 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
  * curves for all spline pieces.
  *
  * @tparam U Type of coefficient values.
- * @param[in] num_pieces Number of spline pieces
- * @param[in] boundary_arg Boundary positions
+ * @param[in] num_boundary Number of elements of @a boundary_arg.
+ * It is (number of spline pieces + 1).
+ * @param[in] boundary_arg Boundary positions of spline pieces.
+ * The first element is the left end of the first (the left-most)
+ * piece, and the last element is the right end of the last (the
+ * right-most) piece.
  * @param[in] coeff_raw_arg The result of Least-Square fitting.
- * Its length is ( @a num_pieces +3). The first 4 elements
- * are the true coefficients for the left-most piece, and
- * the coefficients for the other pieces can be computed
- * using @a coeff_raw_arg and @a boundary_arg .
+ * Its length is (number of spline pieces +3). The first 4
+ * elements are the true coefficients of zeroth, first, second and
+ * third orders for the left-most piece, and the coefficients for
+ * the other pieces can be computed using @a coeff_raw_arg and
+ * @a boundary_arg .
  * @param[out] coeff_arg A 2-dimensional array to store
  * the whole cubic spline coefficients. The @a i -th order
  * coefficient for the @a j -th piece from the left side
  * is stored at @a coeff_arg[ @a i ][ @a j ].
  */
 template<typename U>
-inline void GetFullCubicSplineCoefficients(size_t num_pieces,
+inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 		U const *boundary_arg, U const *coeff_raw_arg,
 		U (*coeff_arg)[kNumBasesCubicSpline]) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -863,7 +869,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
 		coeff[0][i] = coeff_raw[i];
 	}
 	U const three = static_cast<U>(3.0);
-	for (size_t i = 1; i < num_pieces; ++i) {
+	for (size_t i = 1; i < num_boundary - 1; ++i) {
 		size_t j = GetNumberOfLsqBases(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
@@ -886,8 +892,8 @@ inline void GetFullCubicSplineCoefficients(size_t num_pieces,
  * are to be computed.
  * @param[in,out] idx The starting index of @a out_arg
  * where the first basis value is set. @a idx gains
- * ( @a num_boundary -2) or ( @a num_pieces -1) when this
- * function ends.
+ * ( @a num_boundary -2) or (number of spline pieces -1)
+ * when this function ends.
  * @param[out] out_arg The 1-dimensional array in which
  * basis values at @i_d are set.
  */
@@ -990,7 +996,7 @@ inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
  * and @a residual_data .
  * @param[in] data Input data.
  * @param[in] context Baseline context.
- * @param[in] num_pieces Number of Spline pieces.
+ * @param[in] num_boundary Number of elements of @a boundary .
  * @param[in] boundary Positions of Spline boundaries.
  * @param[in] coeff_full Coefficients. It is a 2D array
  * and the coefficients for @a i -th piece must be stored at
@@ -1000,14 +1006,14 @@ inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
  */
 template<typename T, typename U, typename V>
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
-		T const *data, V const *context, size_t num_pieces,
+		T const *data, V const *context, size_t num_boundary,
 		double const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], T *best_fit_model,
 		T *residual_data) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
 	assert(context->num_bases == kNumBasesCubicSpline);
-	AddMulMatrixCubicSpline<T, U>(num_pieces, boundary, coeff_full, num_data,
+	AddMulMatrixCubicSpline<T, U>(num_boundary, boundary, coeff_full, num_data,
 			context->basis_data, best_fit_model);
 	OperateSubtraction<T>(num_data, data, best_fit_model, residual_data);
 }
@@ -1018,10 +1024,10 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
  *
  * @tparam T Type of data and lower/upper limits.
  * @tparam U Type of boundary data.
- * @param[in] num_piece Number of Spline Pieces for Cubic Spline. It must
- * be 1 for other baseline types.
+ * @param[in] num_boundary Number of elements of @a boundary_arg .
+ * It must be 2 for baseline types other than Cubic Spline.
  * @param[in] boundary_arg Boundary positions. Its length must be
- * ( @a num_piece +1).
+ * (number of spline pieces +1).
  * @param[in] data_arg Input data.
  * @param[in] in_mask_arg Input mask.
  * @param[in] lower_bound Lower limit of allowed area of @a data_arg values.
@@ -1030,12 +1036,12 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
  * outside the allowed range set false (masked).
  * @param[out] clipped_indices_arg An array to store positions where
  * @a data_arg is outside the allowed range. For safety, its length should
- * not be less than @a boundary_arg[num_piece] .
+ * not be less than @a boundary_arg[num_boundary-1] .
  * @param[out] num_clipped Number of positions where @a data_arg is outside
  * the allowed range.
  */
 template<typename T, typename U>
-inline void ClipData(size_t num_piece, U *boundary_arg, T const *data_arg,
+inline void ClipData(size_t num_boundary, U *boundary_arg, T const *data_arg,
 bool const *in_mask_arg, T const lower_bound, T const upper_bound,
 bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -1051,8 +1057,8 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 
 	size_t num_clipped_tmp = 0;
 	size_t piece_start = 0;
-	for (size_t ipiece = 0; ipiece < num_piece; ++ipiece) {
-		size_t piece_end = static_cast<size_t>(ceil(boundary[ipiece + 1])) - 1;
+	for (size_t ibound = 1; ibound < num_boundary; ++ibound) {
+		size_t piece_end = static_cast<size_t>(ceil(boundary[ibound])) - 1;
 		for (size_t i = piece_start; i < piece_end; ++i) {
 			bool in_mask_i = in_mask[i];
 			bool out_mask_i = in_mask_i;
@@ -1071,8 +1077,8 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 }
 
 /**
- * This function has actual algorithm of baseline fitting and is
- * called from its wrapper functions SubtractBaseline(),
+ * This function contains the algorithm of baseline fitting itself,
+ * and is called from its wrapper functions SubtractBaseline(),
  * SubtractBaselineCubicSpline(), GetBestFitBaselineCoefficients()
  * or GetBestFitBaselineCoefficientsCubicSpline().
  *
@@ -1089,7 +1095,7 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 template<typename T, typename U, typename V, typename Func>
 inline void DoFitBaseline(V const *context, size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
-		U const *basis_arg, size_t num_pieces, U *boundary_arg,
+		U const *basis_arg, size_t num_boundary, U *boundary_arg,
 		uint16_t num_fitting_max, T clip_threshold_sigma, bool get_residual,
 		U *coeff_arg, T *out_arg, bool *final_mask_arg, T *rms,
 		T *residual_data_arg, T *best_fit_model_arg, Func func,
@@ -1174,7 +1180,7 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 				float clip_threshold_abs = clip_threshold_sigma * rms_d;
 				float clip_threshold_lower = mean - clip_threshold_abs;
 				float clip_threshold_upper = mean + clip_threshold_abs;
-				ClipData<T>(num_pieces, boundary, residual_data, final_mask,
+				ClipData<T>(num_boundary, boundary, residual_data, final_mask,
 						clip_threshold_lower, clip_threshold_upper, final_mask,
 						context->clipped_indices, &num_clipped);
 				if (num_clipped == 0) {
@@ -1273,7 +1279,7 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 1, boundary, num_fitting_max,
+			num_coeff, context->basis_data, 2, boundary, num_fitting_max,
 			clip_threshold_sigma, get_residual, context->coeff_full, out,
 			final_mask, rms, context->residual_data, context->best_fit_model,
 			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
@@ -1297,7 +1303,7 @@ inline void SubtractBaseline(V const *context, uint16_t order,
  * baseline.
  */
 template<typename T, typename U, typename V>
-inline void SubtractBaselineCubicSpline(V const *context, size_t num_pieces,
+inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 		size_t num_data, T const *data_arg,
 		bool const *mask_arg, T clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, T *out_arg, bool *final_mask_arg, float *rms,
@@ -1318,23 +1324,22 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_pieces,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	size_t const num_boundary = num_pieces + 1;
 	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
-			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
+			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_boundary - 1);
 	auto coeff_full =
 			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
-			context->cspline_basis, num_pieces, boundary, num_fitting_max,
+			context->cspline_basis, num_boundary, boundary, num_fitting_max,
 			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff, out,
 			final_mask, rms, context->residual_data, context->best_fit_model,
 			[&]() {
-				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff_full);
+				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff_full);
 				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-						num_pieces, boundary, coeff_full, context->best_fit_model, context->residual_data);
+						num_boundary, boundary, coeff_full, context->best_fit_model, context->residual_data);
 			}, baseline_status);
 }
 
@@ -1378,7 +1383,7 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 1, boundary, num_fitting_max,
+			num_coeff, context->basis_data, 2, boundary, num_fitting_max,
 			clip_threshold_sigma, true, coeff, nullptr, final_mask, rms,
 			context->residual_data, context->best_fit_model,
 			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
@@ -1402,7 +1407,7 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 template<typename T, typename U, typename V>
 inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 		size_t num_data, T const *data_arg, bool const *mask_arg,
-		T clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
+		T clip_threshold_sigma, uint16_t num_fitting_max, size_t num_boundary,
 		U (*coeff_arg)[kNumBasesCubicSpline], bool *final_mask_arg, T *rms,
 		U *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
@@ -1421,21 +1426,20 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	size_t const num_boundary = num_pieces + 1;
 	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
-			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces);
+			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_boundary - 1);
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
-			context->cspline_basis, num_pieces, boundary, num_fitting_max,
+			context->cspline_basis, num_boundary, boundary, num_fitting_max,
 			clip_threshold_sigma, true, context->cspline_lsq_coeff, nullptr,
 			final_mask, rms, context->residual_data, context->best_fit_model,
 			[&]() {
-				GetFullCubicSplineCoefficients(num_pieces, boundary, context->cspline_lsq_coeff, coeff);
+				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff);
 				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-						num_pieces, boundary, coeff, context->best_fit_model, context->residual_data);
+						num_boundary, boundary, coeff, context->best_fit_model, context->residual_data);
 			}, baseline_status);
 }
 
@@ -1485,7 +1489,7 @@ inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
  */
 template<typename T, typename U, typename V>
 inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
-		size_t num_data, T const *data_arg, size_t num_pieces,
+		size_t num_data, T const *data_arg, size_t num_boundary,
 		U const (*coeff_arg)[kNumBasesCubicSpline], U const *boundary_arg,
 		T *out_arg) {
 	assert(
@@ -1500,7 +1504,7 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 	auto out = AssumeAligned(out_arg);
 
 	GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-			num_pieces, boundary, coeff, context->best_fit_model, out);
+			num_boundary, boundary, coeff, context->best_fit_model, out);
 }
 
 } /* anonymous namespace */
@@ -1740,9 +1744,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 
 	try {
 		SubtractBaselineCubicSpline<float, double,
-		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_pieces, num_data,
-				data, mask, clip_threshold_sigma, num_fitting_max, get_residual,
-				out, final_mask, rms, boundary, baseline_status);
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_pieces + 1,
+				num_data, data, mask, clip_threshold_sigma, num_fitting_max,
+				get_residual, out, final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1890,7 +1894,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	try {
 		GetBestFitBaselineCoefficientsCubicSpline<float, double,
 		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data, mask,
-				clip_threshold_sigma, num_fitting_max, num_pieces, coeff,
+				clip_threshold_sigma, num_fitting_max, num_pieces + 1, coeff,
 				final_mask, rms, boundary, baseline_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
@@ -2007,7 +2011,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSpline
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*num_pieces*/][kNumBasesCubicSpline],
-		double const boundary[/*num_pieces*/], float out[/*num_data*/])
+		double const boundary[/*num_pieces+1*/], float out[/*num_data*/])
 				noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -2027,7 +2031,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	try {
 		SubtractBaselineCubicSplineUsingCoefficients<float, double,
 		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				num_pieces, coeff, boundary, out);
+				num_pieces + 1, coeff, boundary, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);

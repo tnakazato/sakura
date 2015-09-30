@@ -1980,10 +1980,12 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * element in each @a coeff[i] must be of constant term, followed
  * by the ones of first, second, and third orders.
  * @n must-be-aligned
- * @param[in] boundary A 1D array containing the left edge positions of
- * spline pieces. The values should be stored in left-to-right order.
- * Also the values must be in range 0 <= @a boundary[i] <= ( @a num_data-1 )
- * as they are index of @a data . Its length must be @a num_pieces .
+ * @param[in] boundary A 1D array containing the boundary positions of
+ * spline pieces. The element values should be stored in ascending
+ * order. The first element is the left edge of the first (left-most)
+ * spline piece and it must be always zero, and the last element is
+ * the next of the right edge of the last (right-most) spline piece,
+ * thus it must be @a num_data . Its length must be ( @a num_pieces +1).
  * @n must-be-aligned
  * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
@@ -1992,7 +1994,7 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*num_pieces*/][4],
-		double const boundary[/*num_pieces*/], float out[/*num_data*/])
+		double const boundary[/*num_pieces+1*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**

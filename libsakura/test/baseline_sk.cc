@@ -212,7 +212,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 	SIMD_ALIGN
 	double coeff[2][4] = { { 2.0, 1.0, -1.0, 0.2 }, { 2.0, 1.0, -1.0, 0.2 } };
 	SIMD_ALIGN
-	double boundary[num_pieces] = { 0.0f, 4.0f };
+	double boundary[num_pieces+1] = { 0.0f, 4.0f, 8.0f };
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
 			num_data, in_data, num_pieces, coeff, boundary, out);
@@ -738,11 +738,12 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 		//PrintArray("coeff", num_data, coeff);
 	}
 	SIMD_ALIGN
-	double boundary[num_pieces];
+	double boundary[num_pieces+1];
 	for (size_t i = 0; i < num_pieces; ++i) {
 		double x = (double) i;
 		boundary[i] = x * 4.0f;
 	}
+	boundary[num_pieces] = (float)num_data;
 	if (verbose) {
 		PrintArray("boundary", num_pieces, boundary);
 	}
