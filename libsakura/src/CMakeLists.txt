@@ -22,17 +22,20 @@
 # @SAKURA_LICENSE_HEADER_END@
 #
 cmake_minimum_required(VERSION 2.6)
-find_package(Threads)
-find_package(Eigen3 REQUIRED)
-find_package(Log4Cxx)
-find_package(FFTW3 REQUIRED)
-include(SetArchFlags)
 
 project(libsakura)
-#set(libsakura_VERSION_MAJOR 1)
-#set(libsakura_VERSION_MINOR 1)
-set(libsakura_PREFIX sakura)
+
+set(CMAKE_MODULE_PATH ../cmake-modules CACHE STRING "List of directories to search for CMake modules")
+
+find_package(Threads)
+find_package(Eigen3 3.2.0 REQUIRED)
+find_package(Log4Cxx)
+find_package(FFTW3 3.3.2 REQUIRED)
+include(SetArchFlags)
+
 set(CMAKE_INSTALL_PREFIX /usr/local)
+
+set(libsakura_PREFIX sakura)
 
 set(CMAKE_CXX_FLAGS "-I${PROJECT_BINARY_DIR} -I${PROJECT_SOURCE_DIR} ${CMAKE_CXX_FLAGS}")
 if(EIGEN3_FOUND)
@@ -48,10 +51,12 @@ if(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 option(SCALAR "Disable auto-vectorization by compiler" OFF)
-option(BUILD_DOC "Use Doxygen to create the HTML based API documentation" OFF)
+option(BUILD_DOC "Enable/disable Doxygen generation of Sakura API HTML documentation" ON)
+
 set(SIMD_ARCH "NATIVE" CACHE STRING "SIMD architecture: one of NATIVE SSE4 AVX AVX2" )
+
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
-#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
@@ -117,7 +122,6 @@ else(HAS_LOG4CXX)
     include_directories(${EIGEN3_INCLUDE_DIR} ${FFTW3_INCLUDE_DIR} "${PROJECT_BINARY_DIR}" ${PROJECT_SOURCE_DIR})
 endif(HAS_LOG4CXX)
 
-#find_library(pthread pthread)
 add_library(sakura SHARED ${SOURCES})
 set(public_headers
 	libsakura/sakura.h
