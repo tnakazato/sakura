@@ -1039,9 +1039,10 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
  * the allowed range.
  */
 template<typename T>
-inline void ClipData(size_t num_boundary, size_t *boundary_arg, T const *data_arg,
-bool const *in_mask_arg, T const lower_bound, T const upper_bound,
-bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
+inline void ClipData(size_t num_boundary, size_t *boundary_arg,
+		T const *data_arg, bool const *in_mask_arg, T const lower_bound,
+		T const upper_bound, bool *out_mask_arg, size_t *clipped_indices_arg,
+		size_t *num_clipped) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(in_mask_arg));
@@ -1273,13 +1274,15 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 	}
 	size_t const num_coeff = DoGetNumberOfCoefficients(type, order, num_nwave,
 			nwave);
+	size_t const num_boundary = 2;
 	SIMD_ALIGN
-	size_t boundary[2] = { 0, num_data };
+	size_t boundary[num_boundary] = { 0, num_data };
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 2, boundary, num_fitting_max,
-			clip_threshold_sigma, get_residual, context->coeff_full, out,
-			final_mask, rms, context->residual_data, context->best_fit_model,
+			num_coeff, context->basis_data, num_boundary, boundary,
+			num_fitting_max, clip_threshold_sigma, get_residual,
+			context->coeff_full, out, final_mask, rms, context->residual_data,
+			context->best_fit_model,
 			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
 						num_coeff, context->coeff_full, context->best_fit_model,
 						context->residual_data);}, baseline_status);
@@ -1302,10 +1305,9 @@ inline void SubtractBaseline(V const *context, uint16_t order,
  */
 template<typename T, typename U, typename V>
 inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
-		size_t num_data, T const *data_arg,
-		bool const *mask_arg, T clip_threshold_sigma, uint16_t num_fitting_max,
-		bool get_residual, T *out_arg, bool *final_mask_arg, float *rms,
-		size_t *boundary_arg,
+		size_t num_data, T const *data_arg, bool const *mask_arg,
+		T clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
+		T *out_arg, bool *final_mask_arg, float *rms, size_t *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1322,7 +1324,6 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	//GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
 	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
@@ -1378,13 +1379,14 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
+	size_t const num_boundary = 2;
 	SIMD_ALIGN
-	size_t boundary[2] = { 0, num_data };
+	size_t boundary[num_boundary] = { 0, num_data };
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, 2, boundary, num_fitting_max,
-			clip_threshold_sigma, true, coeff, nullptr, final_mask, rms,
-			context->residual_data, context->best_fit_model,
+			num_coeff, context->basis_data, num_boundary, boundary,
+			num_fitting_max, clip_threshold_sigma, true, coeff, nullptr,
+			final_mask, rms, context->residual_data, context->best_fit_model,
 			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
 						num_coeff, coeff, context->best_fit_model,
 						context->residual_data);}, baseline_status);
@@ -1425,7 +1427,6 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	//GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
 	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
