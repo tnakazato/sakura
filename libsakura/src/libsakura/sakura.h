@@ -1684,7 +1684,7 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual, float out[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
-		double boundary[/*num_pieces+1*/],
+		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1881,7 +1881,7 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*/][4], bool final_mask[/*num_data*/],
-		float *rms, double boundary[/*num_pieces+1*/],
+		float *rms, size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2015,7 +2015,7 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*num_pieces*/][4],
-		double const boundary[/*num_pieces+1*/], float out[/*num_data*/])
+		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**

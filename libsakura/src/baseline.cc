@@ -670,7 +670,7 @@ inline void AddMulMatrix<float, double>(size_t num_coeff, double const *coeff,
 }
 
 template<typename T, typename U>
-inline void AddMulMatrixCubicSpline(size_t num_boundary, U const *boundary,
+inline void AddMulMatrixCubicSpline(size_t num_boundary, size_t const *boundary,
 		U const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
 		U const *basis, T *out) {
 	assert(((void)"Not yet implemented", false));
@@ -678,12 +678,12 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, U const *boundary,
 
 template<>
 inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
-		double const *boundary,
+		size_t const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
 		double const *basis, float *out) {
 	for (size_t i = 0; i < num_boundary - 1; ++i) {
-		size_t start_idx = static_cast<size_t>(ceil(boundary[i]));
-		size_t end_idx = static_cast<size_t>(ceil(boundary[i + 1]));
+		size_t start_idx = boundary[i];
+		size_t end_idx = boundary[i + 1];
 		size_t j = start_idx;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 		constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -795,9 +795,8 @@ inline std::string GetNotEnoughDataMessage(
  * and the last element must always point @a num_mask , next of the
  * final x-position of data.
  */
-template<typename U>
 inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
-		size_t num_boundary, U *boundary_arg) {
+		size_t num_boundary, size_t *boundary_arg) {
 	assert(2 <= num_boundary);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -812,7 +811,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 	size_t boundary_last_idx = num_boundary - 1;
 	assert(boundary_last_idx <= num_unmasked_data);
 	// the first element of boundary[] must point zero, the first index of mask/data.
-	boundary[0] = static_cast<U>(0.0);
+	boundary[0] = 0;
 	size_t idx = 1;
 	size_t count_unmasked_data = 0;
 	for (size_t i = 0; i < num_mask; ++i) {
@@ -822,14 +821,14 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 		if (mask[i]) {
 			if (num_unmasked_data * idx
 					<= count_unmasked_data * boundary_last_idx) {
-				boundary[idx] = static_cast<U>(i);
+				boundary[idx] = i;
 				++idx;
 			}
 			++count_unmasked_data;
 		}
 	}
 	// the last element of boundary[] must point the next of the last index of mask/data.
-	boundary[boundary_last_idx] = static_cast<U>(num_mask);
+	boundary[boundary_last_idx] = num_mask;
 }
 
 /**
@@ -856,7 +855,7 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
  */
 template<typename U>
 inline void GetFullCubicSplineCoefficients(size_t num_boundary,
-		U const *boundary_arg, U const *coeff_raw_arg,
+		size_t const *boundary_arg, U const *coeff_raw_arg,
 		U (*coeff_arg)[kNumBasesCubicSpline]) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_raw_arg));
@@ -873,7 +872,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 		size_t j = GetNumberOfLsqBases(
 				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
-		auto const b = boundary[i];
+		auto const b = static_cast<U>(boundary[i]);
 		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
 		coeff[i][1] = coeff[i - 1][1] + three * b * b * c;
 		coeff[i][2] = coeff[i - 1][2] - three * b * c;
@@ -899,7 +898,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
  */
 template<typename U>
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
-		U const *boundary_arg, U const i_d, size_t *idx, U *out_arg) {
+		size_t const *boundary_arg, U const i_d, size_t *idx, U *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
 	assert(i_d <= boundary_arg[num_boundary-1]);
@@ -911,11 +910,11 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	auto cube = [](U v) {return static_cast<U>(v * v * v);};
 	auto force_non_negative = [](U v) {return static_cast<U>(std::max(0.0, v));};
 
-	auto cube_prev = cube(i_d - boundary[1]);
+	auto cube_prev = cube(i_d - static_cast<U>(boundary[1]));
 	out[i - 1] -= force_non_negative(cube_prev);
 
 	for (size_t j = 2; j < num_boundary; ++j) {
-		auto cube_current = cube(i_d - boundary[j]);
+		auto cube_current = cube(i_d - static_cast<U>(boundary[j]));
 		out[i] = force_non_negative(
 				cube_prev - force_non_negative(cube_current));
 		cube_prev = cube_current;
@@ -936,7 +935,7 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
  */
 template<typename U>
 inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
-		U const *boundary_arg, U *out_arg) {
+		size_t const *boundary_arg, U *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
 	auto const boundary = AssumeAligned(boundary_arg);
@@ -1007,7 +1006,7 @@ inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
 template<typename T, typename U, typename V>
 inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		T const *data, V const *context, size_t num_boundary,
-		double const *boundary,
+		size_t const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], T *best_fit_model,
 		T *residual_data) {
 	assert(
@@ -1023,7 +1022,6 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
  * @a lower_bound and @a upper_bound .
  *
  * @tparam T Type of data and lower/upper limits.
- * @tparam U Type of boundary data.
  * @param[in] num_boundary Number of elements of @a boundary_arg .
  * It must be 2 for baseline types other than Cubic Spline.
  * @param[in] boundary_arg Boundary positions. Its length must be
@@ -1040,8 +1038,8 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
  * @param[out] num_clipped Number of positions where @a data_arg is outside
  * the allowed range.
  */
-template<typename T, typename U>
-inline void ClipData(size_t num_boundary, U *boundary_arg, T const *data_arg,
+template<typename T>
+inline void ClipData(size_t num_boundary, size_t *boundary_arg, T const *data_arg,
 bool const *in_mask_arg, T const lower_bound, T const upper_bound,
 bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -1058,7 +1056,7 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 	size_t num_clipped_tmp = 0;
 	size_t piece_start = 0;
 	for (size_t ibound = 1; ibound < num_boundary; ++ibound) {
-		size_t piece_end = static_cast<size_t>(ceil(boundary[ibound])) - 1;
+		size_t piece_end = boundary[ibound] - 1;
 		for (size_t i = piece_start; i < piece_end; ++i) {
 			bool in_mask_i = in_mask[i];
 			bool out_mask_i = in_mask_i;
@@ -1095,7 +1093,7 @@ bool *out_mask_arg, size_t *clipped_indices_arg, size_t *num_clipped) {
 template<typename T, typename U, typename V, typename Func>
 inline void DoFitBaseline(V const *context, size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
-		U const *basis_arg, size_t num_boundary, U *boundary_arg,
+		U const *basis_arg, size_t num_boundary, size_t *boundary_arg,
 		uint16_t num_fitting_max, T clip_threshold_sigma, bool get_residual,
 		U *coeff_arg, T *out_arg, bool *final_mask_arg, T *rms,
 		T *residual_data_arg, T *best_fit_model_arg, Func func,
@@ -1276,7 +1274,7 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 	size_t const num_coeff = DoGetNumberOfCoefficients(type, order, num_nwave,
 			nwave);
 	SIMD_ALIGN
-	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
+	size_t boundary[2] = { 0, num_data };
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
 			num_coeff, context->basis_data, 2, boundary, num_fitting_max,
@@ -1307,7 +1305,7 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 		size_t num_data, T const *data_arg,
 		bool const *mask_arg, T clip_threshold_sigma, uint16_t num_fitting_max,
 		bool get_residual, T *out_arg, bool *final_mask_arg, float *rms,
-		U *boundary_arg,
+		size_t *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1324,7 +1322,8 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
+	//GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
+	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
@@ -1380,7 +1379,7 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
 	SIMD_ALIGN
-	U boundary[2] = { static_cast<U>(0.0), static_cast<U>(num_data) };
+	size_t boundary[2] = { 0, num_data };
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
 			num_coeff, context->basis_data, 2, boundary, num_fitting_max,
@@ -1409,7 +1408,7 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 		size_t num_data, T const *data_arg, bool const *mask_arg,
 		T clip_threshold_sigma, uint16_t num_fitting_max, size_t num_boundary,
 		U (*coeff_arg)[kNumBasesCubicSpline], bool *final_mask_arg, T *rms,
-		U *boundary_arg,
+		size_t *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1426,7 +1425,8 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 	auto final_mask = AssumeAligned(final_mask_arg);
 	auto boundary = AssumeAligned(boundary_arg);
 
-	GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
+	//GetBoundariesOfPiecewiseData<U>(num_data, mask, num_boundary, boundary);
+	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
@@ -1490,7 +1490,7 @@ inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
 template<typename T, typename U, typename V>
 inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 		size_t num_data, T const *data_arg, size_t num_boundary,
-		U const (*coeff_arg)[kNumBasesCubicSpline], U const *boundary_arg,
+		U const (*coeff_arg)[kNumBasesCubicSpline], size_t const *boundary_arg,
 		T *out_arg) {
 	assert(
 			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
@@ -1721,7 +1721,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual, float out[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
-		double boundary[/*num_pieces+1*/],
+		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -1868,7 +1868,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_pieces,
 		double coeff[/*num_pieces*/][kNumBasesCubicSpline],
 		bool final_mask[/*num_data*/], float *rms,
-		double boundary[/*num_pieces+1*/],
+		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(
@@ -2011,7 +2011,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSpline
 LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*num_pieces*/][kNumBasesCubicSpline],
-		double const boundary[/*num_pieces+1*/], float out[/*num_data*/])
+		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
 				noexcept {
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(

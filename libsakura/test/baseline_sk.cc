@@ -113,6 +113,19 @@ protected:
 		ASSERT_LE(deviation, val);
 	}
 
+	//1D size_t array
+	void PrintArray(char const *name, size_t print_length, size_t const *data,
+			size_t start_idx = 0, bool print_name = true, bool newline = true) {
+		if (print_name)
+			cout << name << " = ";
+		cout << "[";
+		for (size_t i = start_idx; i < start_idx + print_length - 1; ++i)
+			cout << data[i] << ", ";
+		cout << data[start_idx + print_length - 1];
+		cout << " ]";
+		if (newline)
+			cout << endl;
+	}
 	//1D float array
 	void PrintArray(char const *name, size_t print_length, float const *data,
 			size_t start_idx = 0, bool print_name = true, bool newline = true) {
@@ -212,7 +225,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 	SIMD_ALIGN
 	double coeff[2][4] = { { 2.0, 1.0, -1.0, 0.2 }, { 2.0, 1.0, -1.0, 0.2 } };
 	SIMD_ALIGN
-	double boundary[num_pieces+1] = { 0.0f, 4.0f, 8.0f };
+	size_t boundary[num_pieces+1] = { 0, 4, num_data };
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
 			num_data, in_data, num_pieces, coeff, boundary, out);
@@ -258,7 +271,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 			PrintArray("in_data", num_data, in_data);
 		}
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -269,7 +282,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
 				0.5f } };
 		SIMD_ALIGN
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data_unaligned, num_pieces, coeff,
@@ -298,7 +311,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 			PrintArray("in_data", num_data, in_data);
 		}
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -311,7 +324,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 				reinterpret_cast<double (*)[4]>(coeff + 1);
 		assert(!LIBSAKURA_SYMBOL(IsAligned)(coeff_unaligned));
 		SIMD_ALIGN
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff_unaligned,
@@ -340,7 +353,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 			PrintArray("in_data", num_data, in_data);
 		}
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -351,8 +364,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
 				0.5f } };
 		SIMD_ALIGN
-		double boundary[num_pieces + 1];
-		double *boundary_unaligned = boundary + 1;
+		size_t boundary[num_pieces + 1];
+		size_t *boundary_unaligned = boundary + 1;
 		assert(!LIBSAKURA_SYMBOL(IsAligned)(boundary_unaligned));
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -384,7 +397,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 			PrintArray("in_data", num_data, in_data);
 		}
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -395,7 +408,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
 				0.5f } };
 		SIMD_ALIGN
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary,
@@ -429,7 +442,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 			PrintArray("in_data", num_data, in_data);
 		}
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -439,7 +452,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		SIMD_ALIGN
 		double coeff[][4] = { { 1.0f, 1.0f, -1.0f, 0.5f }, { 1.0f, 1.0f, -1.0f,
 				0.5f } };
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
@@ -465,7 +478,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 			PrintArray("in_data", num_data, in_data);
 		}
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -474,7 +487,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 
 		SIMD_ALIGN
 		double (*coeff)[4] = nullptr;
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
@@ -508,7 +521,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		for (size_t i = 0; i < num_pieces; ++i) {
 			SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[i]));
 		}
-		double *boundary = nullptr;
+		size_t *boundary = nullptr;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
@@ -530,7 +543,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		float answer[ELEMENTSOF(in_data)];
 		SetFloatConstant(0.0f, ELEMENTSOF(in_data), answer);
 
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateBaselineContextCubicSplineFloat(num_pieces,
@@ -542,7 +555,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		for (size_t i = 0; i < num_pieces; ++i) {
 			SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[i]));
 		}
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
@@ -567,12 +580,12 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 
 		SIMD_ALIGN
-		size_t num_pieces = 2;
+		size_t const num_pieces = 2;
 		double coeff[num_pieces][4];
 		for (size_t i = 0; i < num_pieces; ++i) {
 			SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[i]));
 		}
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[num_pieces+1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
@@ -615,7 +628,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SIMD_ALIGN
 		double coeff[1][4];
 		SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[0]));
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[3] = { 0, 4, num_data };
 		size_t const bad_num_data(num_data + 1);
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -649,7 +662,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 
 		SIMD_ALIGN
 		double coeff[1][4];
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[3] = { 0, 4, num_data };
 		size_t bad_num_data = context->num_bases - 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
@@ -684,7 +697,7 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SIMD_ALIGN
 		double coeff[1][4];
 		SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[0]));
-		double boundary[2] = { 0.0f, 4.0f };
+		size_t boundary[3] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
@@ -738,12 +751,11 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 		//PrintArray("coeff", num_data, coeff);
 	}
 	SIMD_ALIGN
-	double boundary[num_pieces+1];
+	size_t boundary[num_pieces+1];
 	for (size_t i = 0; i < num_pieces; ++i) {
-		double x = (double) i;
-		boundary[i] = x * 4.0f;
+		boundary[i] = i * 4;
 	}
-	boundary[num_pieces] = (float)num_data;
+	boundary[num_pieces] = num_data;
 	if (verbose) {
 		PrintArray("boundary", num_pieces, boundary);
 	}
