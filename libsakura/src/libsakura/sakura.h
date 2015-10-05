@@ -1666,13 +1666,13 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * procedure. Its length must be @a num_data .
  * @n must-be-aligned
  * @param[out] rms Root-mean-square of the output data.
- * @param[out] boundary A 1D array containing the boundary positions of
- * spline pieces. Its length must be ( @a num_pieces +1). The element
- * values are indices of @a data and will be stored in ascending order.
- * The first element will always be zero, the left edge of the first
- * (left-most) spline piece, while the last element will be @a num_data ,
- * which is the next of the right edge of the last (right-most) spline
- * piece.
+ * @param[out] boundary A 1D array containing the boundary positions,
+ * which are indices of parameters @a data and @a out , of spline pieces.
+ * Its length must be ( @a num_pieces +1). The element values will be
+ * stored in ascending order. The first element will always be zero,
+ * the left edge of the first (left-most) spline piece, while the last
+ * element will be @a num_data , which is the next of the right edge
+ * of the last (right-most) spline piece.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
  * @return Status code.
@@ -1863,13 +1863,13 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * procedure. Its length must be @a num_data .
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
- * @param[out] boundary A 1D array containing the boundary positions of
- * spline pieces. Its length must be ( @a num_pieces +1). The element
- * values are indices of @a data and will be stored in ascending order.
- * The first element will always be zero, the left edge of the first
- * (left-most) spline piece, while the last element will be @a num_data ,
- * which is the next of the right edge of the last (right-most) spline
- * piece.
+ * @param[out] boundary A 1D array containing the boundary positions,
+ * which are indices of parameters @a data and @a out , of spline
+ * pieces. Its length must be ( @a num_pieces +1). The element values
+ * will be stored in ascending order. The first element will always
+ * be zero, the left edge of the first (left-most) spline piece,
+ * while the last element will be @a num_data , which is the next of
+ * the right edge of the last (right-most) spline piece.
  * @n must-be-aligned
  * @param[out] baseline_status Baseline-specific error code.
  * @return Status code.
@@ -2000,13 +2000,13 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * element in each @a coeff[i] must be of constant term, followed
  * by the ones of first, second, and third orders.
  * @n must-be-aligned
- * @param[in] boundary A 1D array containing the boundary positions of
- * spline pieces. Its length must be ( @a num_pieces +1). The element
- * values are indices of @a data and should be stored in ascending
- * order. The first element must always be zero, the left edge of the
- * first (left-most) spline piece, while the last element must be
- * @a num_data , which is the next of the right edge of the last
- * (right-most) spline piece.
+ * @param[in] boundary A 1D array containing the boundary positions,
+ * which are indices of parameters @a data and @a out , of spline
+ * pieces. Its length must be ( @a num_pieces +1). The element
+ * values should be stored in ascending order. The first element
+ * must always be zero, the left edge of the first (left-most) spline
+ * piece, while the last element must be @a num_data , which is the
+ * next of the right edge of the last (right-most) spline piece.
  * @n must-be-aligned
  * @param[out] out The output data. Its length must be @a num_data .
  * @n must-be-aligned
