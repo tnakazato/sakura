@@ -2026,6 +2026,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(boundary != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
+	CHECK_ARGS(boundary[0] == 0);
+	CHECK_ARGS(boundary[num_pieces] == num_data);
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
