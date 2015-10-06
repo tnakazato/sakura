@@ -2200,22 +2200,34 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * CreateMaskNearEdgeDouble creates mask for each data point. The algorithm
  * is as follows:
  *
- * -# Conversion stage
+ * -# Conversion stage\n
  * Position distribution given by @a x and @a y are converted to pixel coordinate.
  * Pixel size is calculated based on median separation between neighboring two positions
  * with scaling factor provided by user, @a pixel_scale.
  *
- * -# Count stage
+ * -# Count stage\n
  * Prepare pixel data that covers all positions. Count up data points in each pixel.
+ * Pixel is a square with size of @a pixel_scale * median(distance) where distance is an array
+ * given by
+ * \code
+ * for (size_t i = 1; i < num_data; ++i) {
+ *     distance[i] = pow(x[i]-x[i-1], 2) + pow(y[i]-y[i-1], 2);
+ * }
+ * \endcode
+ * Number of pixels along horizontal and vertical axes is determined by
+ *    (ceil(wx / pixel size), ceil(wy / pixel size))
+ * where wx and wy are evaluated by ((@a *trc_x - @a *blc_x) * 1.1, (@a *trc_y - @a *blc_y) * 1.1)
+ * and if any of @a blc_x, @a blc_y, @a trc_x, and @a trc_y are NULL, they are replaced with
+ * min(@a x), min(@a y), max(@a x), and max(@a y), respectively.
  *
- * -# Binalization stage
+ * -# Binalization stage\n
  * Binarize pixel data. Pixel value is set to one if it has non-zero value. Zero remains zero.
  *
- * -# Fill stage
+ * -# Fill stage\n
  * Fill zero pixels bracketed by one with one. It is repeated until there is no update on
  * pixel values.
  *
- * -# Detection stage
+ * -# Detection stage\n
  * Find the area that has non-zero value, detect edge of the area, and mask data points
  * that belong to edges, i.e., mask for data in the edge are set to true. The process is
  * repeated until number of masked position exceeds the threshold given by
@@ -2223,20 +2235,29 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  * @param[in] fraction Fraction of the data to be masked. Threshold for mask operation
  * is evaluated by @a fraction times @a num_data. 0 <= @a fraction <= 1.
- * @param[in] pixel_scale Size of the pixel as a fraction of median separation between
- * neighboring two positions that are provided by @a x and @a y. @a pixel_size must be
- * greater than 0. Setting 0.5 works most of the case.
+ * @param[in] pixel_scale Size of the pixel as a fraction of a median of the distance
+ * between neighboring two positions that are provided by @a x and @a y. @a pixel_size must be
+ * greater than 0. Setting 0.5 works most of the cases.
  * @param[in] num_data Number of data.
- * @param[in] x List of horizontal positions. The length must be @a num_data.
+ * @param[in] x List of horizontal positions. The length must be @a num_data.\n
  * must-be-aligned
- * @param[in] y List of vertical positions. The length must be @a num_data.
+ * @param[in] y List of vertical positions. The length must be @a num_data.\n
  * must-be-aligned
- * @param[in] blc_x
- * @param[in] blc_y
- * @param[in] trc_x
- * @param[in] trc_y
- * @param[out] mask Output mask. The points near edge will be masked, i.e., mask value
- * will be set to true for those points.
+ * @param[in] blc_x Horizontal limit for bottom-left corner of user-defined range.
+ * If non-NULL value is provided, the data having @a x value less than @a *blc_x will be ignored.
+ * NULL corresponds to no limit.
+ * @param[in] blc_y Vertical limit for bottom-left corner of user-defined range.
+ * If non-NULL value is provided, the data having @a y value less than @a *blc_y will be ignored.
+ * NULL corresponds to no limit.
+ * @param[in] trc_x Horizontal limit for top-right corner of user-defined range.
+ * If non-NULL value is provided, the data having @a x value greater than @a *trc_x will be ignored.
+ * NULL corresponds to no limit.
+ * @param[in] trc_y Vertical limit for top-right corner of user-defined range.
+ * If non-NULL value is provided, the data having @a y value greater than @a *trc_y will be ignored.
+ * NULL corresponds to no limit.
+ * @param[out] mask Output mask. The length must be @a num_data since @a mask is associating
+ * with each data points provided by @a x and @a y. The points near edge will be masked,
+ * i.e., mask value will be set to true for those points.\n
  * must-be-aligned
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
