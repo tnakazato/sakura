@@ -1193,7 +1193,11 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * array is created. Finally inverse FFT is applied against it
  * and then real output data will be created.
  * If not using FFT, it is performed against real input data by real kernel
- * @param[out] context context. It has to be destroyed by sakura_DestroyConvolve1DContext after use by Convolution1D.
+ * @param[out] context context for convolution. The context is thread-safe, i.e., you can use one context from
+ * multiple threads simultaneously. But please note that, in reality, the thread-safety of the context depends on
+ * that of fftw3 library, which Sakura depends on.
+ * See http://www.fftw.org/doc/Thread-safety.html#Thread-safety for detail.
+ * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by Convolution1D.
  * @return status code.
  *
  * MT-unsafe
@@ -1218,6 +1222,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @return status code.
  *
  * MT-safe
+ *
+ * (But see @ref sakura_CreateConvolve1DContextFloat for detail about the thread-safety)
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
