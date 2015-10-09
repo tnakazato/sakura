@@ -18,7 +18,7 @@ src_basename=`basename $normalized_src_dir`
 src_parent=`dirname $normalized_src_dir`
 
 # Tarball file contents selection 
-sed_script=`mktemp` { echo "Error: unable to create temporary file" ; exit 1 ; }
+sed_script=`mktemp` || { echo "Error: unable to create temporary file" ; exit 1 ; }
 cat > $sed_script <<\EOF
 # Remove first . directory returned by find
 1 d
