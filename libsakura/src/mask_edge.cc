@@ -79,8 +79,7 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 	}
 
 	// pixel width
-	//*pixel_width = std::sqrt(median_separation) * pixel_scale;
-	*pixel_width = median_separation * pixel_scale;
+	*pixel_width = std::sqrt(median_separation) * pixel_scale;
 
 	// minimul and maximum position
 	DataType blc_x = x[0];
