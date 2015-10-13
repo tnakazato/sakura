@@ -308,8 +308,46 @@ struct UserDefinedRangeSquareShapeInitializer {
 struct StandardCircularParamSet {
 	static constexpr double kOutermostRadius = 6.4;
 	static constexpr double kSecondOutermostRadius = 6.0;
+	static constexpr double kInnermostRadius = 0.0;
+	static constexpr double kIncrement = 0.2;
+	static constexpr double kStartAngle = 0.0;
+	static constexpr double kEndAngle = 360.0;
+};
+
+struct DonutShapeParamSet {
+	static constexpr double kOutermostRadius = 6.4;
+	static constexpr double kSecondOutermostRadius = 6.0;
 	static constexpr double kInnermostRadius = 3.2;
 	static constexpr double kIncrement = 0.2;
+	static constexpr double kStartAngle = 0.0;
+	static constexpr double kEndAngle = 360.0;
+};
+
+struct UpperCShapeParamSet {
+	static constexpr double kOutermostRadius = 6.4;
+	static constexpr double kSecondOutermostRadius = 6.0;
+	static constexpr double kInnermostRadius = 3.2;
+	static constexpr double kIncrement = 0.2;
+	static constexpr double kStartAngle = 110.0;
+	static constexpr double kEndAngle = 430.0;
+};
+
+struct HorizontalCShapeParamSet {
+	static constexpr double kOutermostRadius = 6.4;
+	static constexpr double kSecondOutermostRadius = 6.0;
+	static constexpr double kInnermostRadius = 3.2;
+	static constexpr double kIncrement = 0.2;
+	static constexpr double kStartAngle = 20.0;
+	static constexpr double kEndAngle = 340.0;
+};
+
+struct InclinedCShapeParamSet {
+	static constexpr double kOutermostRadius = 6.4;
+	static constexpr double kSecondOutermostRadius = 6.0;
+	static constexpr double kInnermostRadius = 3.2;
+	static constexpr double kIncrement = 0.2;
+	static constexpr double kStartAngle = 65.0;
+	static constexpr double kEndAngle = 385.0;
 };
 
 template<typename ParamSet>
@@ -329,15 +367,21 @@ struct CircularShapeInitializer {
 		double const const_pi = std::atan(1.0) * 4.0;
 
 		constexpr size_t kNumAngle = 100;
+		double const deg2rad = 2.0 * const_pi / 360.0;
 		ASSERT_GT(num_data, kNumAngle);
 		ASSERT_EQ(0, num_data % kNumAngle);
 		size_t const num_radius = num_data / kNumAngle;
 		SIMD_ALIGN
 		double angle[kNumAngle];
-		double const angle_increment = 2.0 * const_pi
+		static_assert(0.0 <= ParamSet::kStartAngle && ParamSet::kStartAngle <= 720.0, "Internal Error");
+		static_assert(0.0 <= ParamSet::kEndAngle && ParamSet::kEndAngle <= 720.0, "Internal Error");
+		static_assert(ParamSet::kStartAngle < ParamSet::kEndAngle, "Internal Error");
+		double const angle_increment = (ParamSet::kEndAngle
+				- ParamSet::kStartAngle) / 360.0 * 2.0 * const_pi
 				/ static_cast<double>(kNumAngle);
 		for (size_t i = 0; i < kNumAngle; ++i) {
-			angle[i] = static_cast<double>(i) * angle_increment;
+			angle[i] = ParamSet::kStartAngle * deg2rad
+					+ static_cast<double>(i) * angle_increment;
 		}
 		SIMD_ALIGN
 		double radius[num_radius];
@@ -353,8 +397,8 @@ struct CircularShapeInitializer {
 			double c = std::cos(angle[i]);
 			for (size_t j = 0; j < num_radius; ++j) {
 				double r = radius[j];
-				(*x_out)[k] = r * s;
-				(*y_out)[k] = r * c;
+				(*x_out)[k] = r * c;
+				(*y_out)[k] = r * s;
 				++k;
 			}
 		}
@@ -379,13 +423,53 @@ struct IdenticalValueInitializer {
 			bool const mask_in[], double **x_out, double **y_out,
 			bool **mask_out,
 			bool mask_expected[], sakura_Status *status_expected) {
+		// all elements in x and y will be initialized to 0
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
-		*x_out = const_cast<double *>(x_in);
-		*y_out = const_cast<double *>(y_in);
-		*mask_out = const_cast<bool *>(mask_in);
 		*status_expected = sakura_Status_kNG;
 	}
+};
+
+struct NumDataTwoInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		ASSERT_EQ(num_data, 2);
+		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
+				x_out, y_out, mask_out, mask_expected, status_expected);
+		(*x_out)[0] = -5.0;
+		(*x_out)[1] = 3.0;
+		(*y_out)[0] = -4.7;
+		(*y_out)[1] = 4.3;
+		mask_expected[0] = true;
+		mask_expected[1] = true;
+		*status_expected = sakura_Status_kOK;
+	}
+};
+
+struct NumDataThreeInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		ASSERT_EQ(num_data, 3);
+		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
+				x_out, y_out, mask_out, mask_expected, status_expected);
+		(*x_out)[0] = -5.0;
+		(*x_out)[1] = 3.0;
+		(*x_out)[2] = 109.9;
+		(*y_out)[0] = -4.7;
+		(*y_out)[1] = 4.3;
+		(*y_out)[2] = -328.1;
+		mask_expected[0] = false;
+		mask_expected[1] = false;
+		mask_expected[2] = true;
+		*status_expected = sakura_Status_kOK;
+	}
+
 };
 
 typedef SquareShapeInitializer<StandardSquareParamSet> StandardSquare;
@@ -393,6 +477,10 @@ typedef SquareShapeInitializer<WiderSquareParamSet> WiderSquare;
 typedef FailedSquareShapeInitializer<StandardSquareParamSet> FailedSquare;
 typedef UserDefinedRangeSquareShapeInitializer<WiderSquareParamSet> UserDefinedRangeSquare;
 typedef CircularShapeInitializer<StandardCircularParamSet> StandardCircle;
+typedef CircularShapeInitializer<DonutShapeParamSet> StandardDonutShape;
+typedef CircularShapeInitializer<UpperCShapeParamSet> StandardUpperCShape;
+typedef CircularShapeInitializer<HorizontalCShapeParamSet> StandardHorizontalCShape;
+typedef CircularShapeInitializer<InclinedCShapeParamSet> StandardInclinedCShape;
 
 struct NullChecker {
 	static void Check(size_t num_data, bool const mask[],
@@ -611,7 +699,7 @@ TEST_MASK(InvalidUserDefinedRange) {
 	NULL, &positive_inf_value, NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &positive_inf_value, NULL,
-			NULL);
+	NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &positive_inf_value);
@@ -625,7 +713,7 @@ TEST_MASK(InvalidUserDefinedRange) {
 	NULL, &negative_inf_value, NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &negative_inf_value, NULL,
-			NULL);
+	NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &negative_inf_value);
@@ -662,20 +750,112 @@ TEST_MASK(FractionEqualToOne) {
 	RunTest<StandardSquare, StandardChecker>(1000, 1.0f, 0.5);
 }
 
+TEST_MASK(NumDataEqualToTwo) {
+	RunTest<NumDataTwoInitializer>(2, 0.1f, 0.5);
+}
+
+TEST_MASK(NumDataEqualToThree) {
+	RunTest<NumDataThreeInitializer>(3, 0.1f, 0.5);
+}
+
 TEST_MASK(FractionTenPercent) {
+	float const fraction = 0.1f;
+	double const pixel_scale = 0.5;
+
 	// square spiral pattern
-	RunTest<StandardSquare, StandardChecker>(1000, 0.1f, 0.5);
+	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_scale);
 
 	// circular zigzag pattern
-	RunTest<StandardCircle, StandardChecker>(1000, 0.1f, 0.5);
+	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_scale);
+
+	// donut shape
+	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_scale);
+
+	// upper C-shape
+	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_scale);
+
+	// horizontal C-shape
+	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction, pixel_scale);
+
+	// inclined C-shape
+	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction, pixel_scale);
+
+//	// test
+//	size_t num_data = 1000;
+//	float fraction = 0.1f;
+//	SIMD_ALIGN
+//	double x_in[num_data+1];
+//	SIMD_ALIGN
+//	double y_in[num_data+1];
+//	SIMD_ALIGN
+//	bool mask_in[num_data+1];
+//	//bool mask_expected[num_data];
+//	double *x = x;
+//	double *y = y;
+//	bool *mask = mask_in;
+//	sakura_Status status;
+//	std::ofstream ofs;
+//	StandardCircle::Initialize(num_data, fraction, x_in, y_in, mask_in, &x, &y, &mask, mask, &status);
+//	ofs.open("circule.dat", std::ofstream::out);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ofs << x[i] << " " << y[i] << std::endl;
+//	}
+//	ofs.close();
+//
+//	StandardDonutShape::Initialize(num_data, fraction, x_in, y_in, mask_in, &x, &y,
+//			&mask, mask, &status);
+//	ofs.open("donut.dat", std::ofstream::out);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ofs << x[i] << " " << y[i] << std::endl;
+//	}
+//	ofs.close();
+//
+//	StandardUpperCShape::Initialize(num_data, fraction, x_in, y_in, mask_in, &x, &y,
+//			&mask, mask, &status);
+//	ofs.open("cupper.dat", std::ofstream::out);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ofs << x[i] << " " << y[i] << std::endl;
+//	}
+//	ofs.close();
+//
+//	StandardHorizontalCShape::Initialize(num_data, fraction, x_in, y_in, mask_in, &x, &y,
+//			&mask, mask, &status);
+//	ofs.open("chorizontal.dat", std::ofstream::out);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ofs << x[i] << " " << y[i] << std::endl;
+//	}
+//	ofs.close();
+//
+//	StandardInclinedCShape::Initialize(num_data, fraction, x_in, y_in, mask_in, &x, &y,
+//			&mask, mask, &status);
+//	ofs.open("cinclined.dat", std::ofstream::out);
+//	for (size_t i = 0; i < num_data; ++i) {
+//		ofs << x[i] << " " << y[i] << std::endl;
+//	}
+//	ofs.close();
 }
 
 TEST_MASK(FractionTwentyPercent) {
+	float const fraction = 0.2f;
+	double const pixel_scale = 0.5;
+
 	// square spiral pattern
-	RunTest<StandardSquare, StandardChecker>(1000, 0.2f, 0.5);
+	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_scale);
 
 	// circular zigzag pattern
-	RunTest<StandardCircle, StandardChecker>(1000, 0.2f, 0.5);
+	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_scale);
+
+	// donut shape
+	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_scale);
+
+	// upper C-shape
+	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_scale);
+
+	// horizontal C-shape
+	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction, pixel_scale);
+
+	// inclined C-shape
+	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction, pixel_scale);
 }
 
 TEST_MASK(ValidUserDefinedRange) {
