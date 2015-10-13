@@ -32,7 +32,6 @@
 #include <fstream>
 #include <string>
 
-
 #define TEST_MASK(Name) TEST(CreateMaskNearEdgeTest, Name)
 
 template<typename XInitializer, typename YInitializer, typename MaskInitializer>
@@ -265,7 +264,7 @@ private:
 	}
 };
 
-template<typename ParamSet, typename WrongValueProvider, bool X=true>
+template<typename ParamSet, typename WrongValueProvider, bool X = true>
 struct FailedSquareShapeInitializerWithWrongValue {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
 			double const y_in[],
@@ -277,10 +276,9 @@ struct FailedSquareShapeInitializerWithWrongValue {
 				status_expected);
 		const double wrong_value = WrongValueProvider::Get();
 		if (X) {
-			(*x_out)[num_data-1] = wrong_value;
-		}
-		else {
-			(*y_out)[num_data-1] = wrong_value;
+			(*x_out)[num_data - 1] = wrong_value;
+		} else {
+			(*y_out)[num_data - 1] = wrong_value;
 		}
 		*status_expected = sakura_Status_kInvalidArgument;
 	}
@@ -375,6 +373,21 @@ struct CircularShapeInitializer {
 	}
 };
 
+struct IdenticalValueInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[],
+			bool const mask_in[], double **x_out, double **y_out,
+			bool **mask_out,
+			bool mask_expected[], sakura_Status *status_expected) {
+		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
+				x_out, y_out, mask_out, mask_expected, status_expected);
+		*x_out = const_cast<double *>(x_in);
+		*y_out = const_cast<double *>(y_in);
+		*mask_out = const_cast<bool *>(mask_in);
+		*status_expected = sakura_Status_kNG;
+	}
+};
+
 typedef SquareShapeInitializer<StandardSquareParamSet> StandardSquare;
 typedef SquareShapeInitializer<WiderSquareParamSet> WiderSquare;
 typedef FailedSquareShapeInitializer<StandardSquareParamSet> FailedSquare;
@@ -408,9 +421,9 @@ struct NullOutput {
 	}
 };
 
-
 // RunTest
-template<typename Initializer, typename Checker=NullChecker, typename Printer=NullOutput>
+template<typename Initializer, typename Checker = NullChecker,
+		typename Printer = NullOutput>
 void RunTest(size_t num_data, float fraction, double pixel_scale,
 		double const *blc_x = NULL, double const *blc_y = NULL,
 		double const *trc_x = NULL, double const *trc_y = NULL,
@@ -446,16 +459,13 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 	sakura_CleanUp();
 }
 
-
 // FAILURE CASES
 TEST_MASK(NagativeFraction) {
-	RunTest<BasicInvalidArgumentInitializer>(10, -0.1f,
-			0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, -0.1f, 0.5);
 }
 
 TEST_MASK(FractionLargerThanOne) {
-	RunTest<BasicInvalidArgumentInitializer>(10, 1.5f,
-			0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, 1.5f, 0.5);
 }
 
 TEST_MASK(FractionIsNaN) {
@@ -472,13 +482,11 @@ TEST_MASK(FractionIsInf) {
 }
 
 TEST_MASK(NegativePixelScale) {
-	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f,
-			-0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, -0.5);
 }
 
 TEST_MASK(ZeroPixelScale) {
-	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f,
-			0.0);
+	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, 0.0);
 }
 
 TEST_MASK(PixelScaleIsNaN) {
@@ -518,48 +526,83 @@ TEST_MASK(ArrayIsNull) {
 
 TEST_MASK(ArrayHasNaN) {
 	// x has NaN
-	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNaN<double>, true> >(100, 0.1f, 0.5);
+	RunTest<
+			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
+					WrongValueNaN<double>, true> >(100, 0.1f, 0.5);
 
 	// y has NaN
-	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNaN<double>, false> >(100, 0.1f, 0.5);
+	RunTest<
+			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
+					WrongValueNaN<double>, false> >(100, 0.1f, 0.5);
 }
 
 TEST_MASK(ArrayHasPositiveInf) {
 	// x has +Inf
-	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValuePositiveInf<double>, true> >(100, 0.1f, 0.5);
+	RunTest<
+			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
+					WrongValuePositiveInf<double>, true> >(100, 0.1f, 0.5);
 
 	// y has +Inf
-	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValuePositiveInf<double>, false> >(100, 0.1f, 0.5);
+	RunTest<
+			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
+					WrongValuePositiveInf<double>, false> >(100, 0.1f, 0.5);
 
 	// x has -Inf
-	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNegativeInf<double>, true> >(100, 0.1f, 0.5);
+	RunTest<
+			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
+					WrongValueNegativeInf<double>, true> >(100, 0.1f, 0.5);
 
 	// y has -Inf
-	RunTest<FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet, WrongValueNegativeInf<double>, false> >(100, 0.1f, 0.5);
+	RunTest<
+			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
+					WrongValueNegativeInf<double>, false> >(100, 0.1f, 0.5);
+}
+
+TEST_MASK(NumDataIsOne) {
+	RunTest<BasicInvalidArgumentInitializer>(1, 0.1f, 0.5);
 }
 
 TEST_MASK(InvalidUserDefinedRange) {
+	// blc_x == trc_x
+	double blc_x = 2.0;
+	double trc_x = 2.0;
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, &blc_x, NULL, &trc_x, NULL);
+
+	// blc_x > trc_x
+	blc_x = 2.0;
+	trc_x = -2.0;
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, &blc_x, NULL, &trc_x, NULL);
+
+	// blc_y == trc_y
+	double blc_y = 2.0;
+	double trc_y = 2.0;
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &blc_y, NULL, &trc_y);
+
+	// blc_y > trc_y
+	blc_y = 2.0;
+	trc_y = -2.0;
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &blc_y, NULL, &trc_y);
+
 	// all data are located at left side of user defined bottom left corner
-	double blc_x = 11.0;
+	blc_x = 11.0;
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, &blc_x,
 	NULL, NULL, NULL);
 
 	// all data are located at right side of user defined top right corner
-	double trc_x = -11.0;
+	trc_x = -11.0;
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, &trc_x, NULL);
 
 	// all data are located at lower side of user defined bottom left corner
-	double blc_y = 11.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
-			&blc_y, NULL, NULL);
+	blc_y = 11.0;
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &blc_y, NULL, NULL);
 
 	// all data are located at lower side of user defined top right corner
-	double trc_y = -11.0;
+	trc_y = -11.0;
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &trc_y);
 
-        // any user defined range is +Inf
+	// any user defined range is +Inf
 	double positive_inf_value = WrongValuePositiveInf<double>::Get();
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, &positive_inf_value,
 	NULL, NULL, NULL);
@@ -567,13 +610,13 @@ TEST_MASK(InvalidUserDefinedRange) {
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, &positive_inf_value, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
-			&positive_inf_value, NULL, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &positive_inf_value, NULL,
+			NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &positive_inf_value);
 
-        // any user defined range is -Inf
+	// any user defined range is -Inf
 	double negative_inf_value = WrongValueNegativeInf<double>::Get();
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, &negative_inf_value,
 	NULL, NULL, NULL);
@@ -581,12 +624,11 @@ TEST_MASK(InvalidUserDefinedRange) {
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, &negative_inf_value, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
-			&negative_inf_value, NULL, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &negative_inf_value, NULL,
+			NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &negative_inf_value);
-
 
 	// any user defined range is NaN
 	double nan_value = WrongValueNaN<double>::Get();
@@ -596,11 +638,15 @@ TEST_MASK(InvalidUserDefinedRange) {
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, &nan_value, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
-			&nan_value, NULL, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &nan_value, NULL, NULL);
 
 	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
 	NULL, NULL, &nan_value);
+}
+
+TEST_MASK(IdenticalValue) {
+	// x and y are filled with identical value (0.0)
+	RunTest<IdenticalValueInitializer>(1000, 0.1f, 0.5);
 }
 
 // SUCCESSFUL CASES
