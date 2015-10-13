@@ -2209,7 +2209,12 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * -# Conversion stage\n
  * Position distribution given by @a x and @a y are converted to pixel coordinate.
  * Pixel size is calculated based on median separation between neighboring two positions
- * with scaling factor provided by user, @a pixel_scale.
+ * with scaling factor provided by user, @a pixel_scale. If @a num_data is odd, there are
+ * several choices for median separation since there are number of separation between two positions
+ * are even. In such case, the median separation is evaluated as
+ * \code
+ * median_separation = sorted_separation[(num_data - 1) / 2];
+ * \endcode
  *
  * -# Count stage\n
  * Prepare pixel data that covers all positions. Count up data points in each pixel.
