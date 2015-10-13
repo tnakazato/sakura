@@ -74,7 +74,12 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 			});
 	DataType median_separation = std::sqrt(pixel_x[(num_data - 1) / 2]);
 
+	if (median_separation == 0.0) {
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	}
+
 	// pixel width
+	//*pixel_width = std::sqrt(median_separation) * pixel_scale;
 	*pixel_width = median_separation * pixel_scale;
 
 	// minimul and maximum position
@@ -549,6 +554,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	CHECK_ARGS(!std::isnan(pixel_scale));
 	CHECK_ARGS(!std::isinf(pixel_scale));
 	CHECK_ARGS(0.0 < pixel_scale);
+	CHECK_ARGS(num_data != 1);
 	CHECK_ARGS(x != nullptr);
 	CHECK_ARGS(y != nullptr);
 	CHECK_ARGS(mask != nullptr);
