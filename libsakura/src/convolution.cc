@@ -205,7 +205,6 @@ inline void CreateConvolve1DContextFloat(size_t num_data, size_t num_kernel,
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(float) * num_data, &real_kernel_array));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
-		size_t elements[1] = { num_data };
 		FlipData1D(num_data, kernel, real_kernel_array);
 		float *real_array = nullptr;
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_array_work(
