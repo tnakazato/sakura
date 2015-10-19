@@ -1179,13 +1179,44 @@ typedef enum {
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 
 /**
+ * @brief create Gaussian kernel
+ *
+ * @details
+ * Create 1 dimensional Gaussian kernel according to FWHM given by @a kernel_width.
+ * Peak location of the Gaussian is evaluated by @a num_kernel / 2. It indicates that
+ * resulting kernel will be slightly asymmetric when @a num_kernel is even. For example,
+ * peak location is 1 and 2 if @a num_kernel is 3 and 4, respectively. If @a num_kernel
+ * is 3 (odd), resulting kernel is symmetric, i.e. @a kernel[1] is a peak and
+ * @a kernel[0] == @a kernel[2]. On the other hand, the kernel is asymmetric if @a num_kernel
+ * is 4 (even). In this case, peak is @a kernel[2] and @a kernel[1] == @a kernel[3] but
+ * there is no counterpart for @a kernel[0].
+ *
+ * Resulting @a kernel has the value that it is normalized if assumed Gaussian is contiguous.
+ * Actual formula for @a kernel is as follows:
+ *
+ *     peak_location = @a num_kernel / 2
+ *
+ *     peak_value = sqrt(log(16)) / @a kernel_width
+ *
+ *     sigma = sqrt(8 * log(2) / 2 * pi) / @a kernel_width
+ *
+ *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / sigma**2 )
+ *
+ * @param[in] kernel_width FWHM of Gaussian
+ * @param[in] num_kernel The number of elements in the @a kernel
+ * @param[out] kernel Output kernel array
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
+		size_t kernel_width, size_t num_kernel, float kernel[])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
  * @brief create context for convolution
  * @details
  * @param[in] num_data The number of data. @a num_data must
  * be positive.  0 < num_data < INT32_MAX
- * @param[in] kernel_type type of kernel(Gaussian,BoxCar,Hanning,Hamming).Each kernel can yield different convolution results.
- * @a kernel_type is defined as enum.
- * @param[in] kernel_width kernel width. In case of Gaussian kernel, kernel_width will be interpreted as FWHM. 0 < kernel_width
+ * @param[in] num_kernel The number of elements in the @a kernel.
+ * @param[in] kernel Convolution kernel
  * @param[in] use_fft true means using FFT, false means not using FFT when convolution is performed. And Independent of the type of kernel.
  * If using FFT, FFT applied kernel which is already included context
  * by CreateConvolve1DContext is multiplied with input data
@@ -1202,9 +1233,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  *
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
-		size_t num_data, LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-		size_t kernel_width, bool use_fft,
-		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
+		size_t num_data, size_t num_kernel, float const kernel[],
+		bool use_fft, struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -1382,8 +1412,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(
 		size_t const num_data, float const data[/*num_data*/],
-		bool const mask[/*num_data*/],
-		size_t const num_exclude_indices,
+		bool const mask[/*num_data*/], size_t const num_exclude_indices,
 		size_t const exclude_indices[/*num_data*/],
 		size_t const num_model_bases,
 		double const basis_data[/*num_model_bases*num_data*/],
@@ -1508,8 +1537,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
-		LIBSAKURA_SYMBOL(BaselineType) const baseline_type,
-		uint16_t const order, size_t const num_data,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+		size_t const num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2202,6 +2231,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 /**
  * @brief Create mask
  *
+ * @details
  * Based on two dimensional position distribution given by @a x and @a y,
  * CreateMaskNearEdgeDouble creates mask for each data point. The algorithm
  * is as follows:

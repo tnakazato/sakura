@@ -115,7 +115,7 @@ protected:
 	void RunBaseTest(size_t input_data_size, SpikeType input_spike_type,
 			size_t num_data, bool use_dummy_num_data,
 			LIBSAKURA_SYMBOL(Convolve1DKernelType) kernel_type,
-			size_t kernel_width,
+			size_t kernel_width, size_t num_kernel,
 			bool use_fft, float output_data[],
 			LIBSAKURA_SYMBOL(Status) expected_status,
 			bool align_check,
@@ -147,9 +147,23 @@ protected:
 			break;
 		}
 		double start = sakura_GetCurrentTime();
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kernel_type,
-				kernel_width, use_fft, &context);
+		SIMD_ALIGN float kernel[num_kernel];
+		LIBSAKURA_SYMBOL(Status) status = expected_status;
+		switch (kernel_type) {
+		case LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian):
+			status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(kernel_width,
+					num_kernel, kernel);
+			ASSERT_EQ(status, LIBSAKURA_SYMBOL(Status_kOK));
+			break;
+		default:
+			status = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+			ASSERT_EQ(status, expected_status);
+			return;
+			break;
+		}
+		status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, num_kernel,
+				kernel, use_fft, &context);
 		ASSERT_EQ(expected_status, status);
 		double end = sakura_GetCurrentTime();
 		if (align_check) {
@@ -212,7 +226,7 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 }
@@ -225,6 +239,7 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
  */
 TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // num_data > INT_MAX
+		std::cout << "num_data > INT_MAX" << std::endl;
 		size_t input_data_size(NUM_IN);
 		size_t const num_data(size_t(INT_MAX) + 1);
 		bool const use_dummy_num_data = false;
@@ -236,12 +251,14 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
+		size_t num_kernel = NUM_IN;
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data,
+				kernel_width, num_kernel, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
 	{ // num_data == 0
+		std::cout << "num_data == 0" << std::endl;
 		size_t const num_data(0);
 		bool const use_dummy_num_data = false;
 		size_t input_data_size(NUM_IN);
@@ -251,127 +268,24 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		bool const verbose = false;
 		size_t loop_max(1);
 		SIMD_ALIGN
+		size_t num_kernel = NUM_IN;
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data,
-				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
-	}
-	{ // kernel_width == 0
-		size_t const kernel_width(0);
-		size_t input_data_size(NUM_IN);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = false;
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data,
-				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
-	}
-	{ // KernelType < 0
-		auto invalid_kernel_type =
-				static_cast<LIBSAKURA_SYMBOL(Convolve1DKernelType)>(-1);
-		size_t const kernel_width(NUM_WIDTH);
-		size_t const input_data_size(NUM_IN_LARGE);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = false;
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
-				output_data, sakura_Status_kInvalidArgument, align_check,
-				verbose, loop_max);
-	}
-	{//KernelType = LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar)
-	 //Remove this test when Convolve1DKernelType_kBoxcar is implemented.
-		auto invalid_kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar);
-				size_t const kernel_width(NUM_WIDTH);
-				size_t const input_data_size(NUM_IN_LARGE);
-				size_t const num_data(input_data_size);
-				bool const use_dummy_num_data = false;
-				bool const align_check = false;
-				bool const use_fft = true;
-				bool const verbose = false;
-				size_t loop_max(1);
-				SIMD_ALIGN
-				float output_data[input_data_size];
-				RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-						use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
-						output_data, sakura_Status_kInvalidArgument, align_check,
-						verbose, loop_max);
-	}
-	{//KernelType = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning)
-	 //Remove this test when Convolve1DKernelType_kHanning is implemented.
-		auto invalid_kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning);
-				size_t const kernel_width(NUM_WIDTH);
-				size_t const input_data_size(NUM_IN_LARGE);
-				size_t const num_data(input_data_size);
-				bool const use_dummy_num_data = false;
-				bool const align_check = false;
-				bool const use_fft = true;
-				bool const verbose = false;
-				size_t loop_max(1);
-				SIMD_ALIGN
-				float output_data[input_data_size];
-				RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-						use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
-						output_data, sakura_Status_kInvalidArgument, align_check,
-						verbose, loop_max);
-	}
-	{//KernelType = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming)
-	 //Remove this test when Convolve1DKernelType_kHamming is implemented.
-		auto invalid_kernel_type = LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming);
-				size_t const kernel_width(NUM_WIDTH);
-				size_t const input_data_size(NUM_IN_LARGE);
-				size_t const num_data(input_data_size);
-				bool const use_dummy_num_data = false;
-				bool const align_check = false;
-				bool const use_fft = true;
-				bool const verbose = false;
-				size_t loop_max(1);
-				SIMD_ALIGN
-				float output_data[input_data_size];
-				RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-						use_dummy_num_data, invalid_kernel_type, kernel_width, use_fft,
-						output_data, sakura_Status_kInvalidArgument, align_check,
-						verbose, loop_max);
-	}
-
-	{ // KernelType == Convolve1DKernelType_kNumType
-		size_t const kernel_width(NUM_WIDTH);
-		size_t const input_data_size(NUM_IN_LARGE);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = false;
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data,
-				LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements),
-				kernel_width, use_fft, output_data,
+				kernel_width, num_kernel, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
 	{ // context == nullptr
+		std::cout << "context == nullptr" << std::endl;
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		size_t const num_data(NUM_IN);
-		size_t const kernel_width(NUM_WIDTH);
+		//size_t const kernel_width(NUM_WIDTH);
 		bool use_fft = true;
+		constexpr size_t kNumKernel = NUM_IN;
+		SIMD_ALIGN float kernel[kNumKernel];
 		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data,
-				sakura_Convolve1DKernelType_kGaussian, kernel_width, use_fft,
-				nullptr);
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kNumKernel,
+				kernel, use_fft, nullptr);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
@@ -400,7 +314,7 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 }
@@ -424,7 +338,7 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 }
@@ -446,12 +360,13 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
 		}
-		size_t const kernel_width(NUM_WIDTH);
+		//size_t const kernel_width(NUM_WIDTH);
 		bool use_fft = true; // with FFT
+		constexpr size_t kNumKernel = NUM_IN;
+		SIMD_ALIGN float kernel[kNumKernel];
 		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data,
-				sakura_Convolve1DKernelType_kGaussian, kernel_width, use_fft,
-				&context);
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kNumKernel,
+				kernel, use_fft, &context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
 		SIMD_ALIGN
 		float output_data[num_data];
@@ -489,7 +404,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
@@ -514,7 +429,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
@@ -541,7 +456,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
@@ -566,7 +481,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
@@ -597,7 +512,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		float gaussian_kernel[11] = { 0.03363279626, 0.03500276431,
 				0.03610675409, 0.03691657633, 0.03741116077, 0.03757749498,
@@ -623,7 +538,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		float gaussian_kernel[11] = { 0.03363279626, 0.03500276059,
 				0.03610675409, 0.03691657633, 0.03741116077, 0.03757749125,
@@ -649,7 +564,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		float gaussian_kernel[11] = { 0.03363279626, 0.03500276431,
 				0.03610675409, 0.03691657633, 0.03741116077, 0.036132198,
@@ -675,7 +590,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		float gaussian_kernel[11] =
 				{ 0.03363279626, 0.03500276059, 0.03610675409, 0.03691657633,
@@ -702,7 +617,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 	{ // [even],FFT, Gaussian Kernel Shape, 2 spikes
@@ -718,7 +633,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kleftright, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 	{ // [even],without FFT, Gaussian Kernel Shape, 2 spikes
@@ -734,7 +649,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kleftright, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 	{ // [odd],FFT, Gaussian Kernel Shape, 2 spikes
@@ -750,7 +665,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kleftright, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 	{ // [odd],without FFT, Gaussian Kernel Shape, 2 spike
@@ -766,7 +681,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kleftright, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 }
@@ -778,6 +693,11 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
  * each result will be equal between convolution with/without fft
  */
 TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
+	auto get_num_kernel = [](size_t kernel_width) {
+		double const six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+		size_t const threshold = static_cast<size_t>(kernel_width * six_sigma);
+		return 2 * threshold + 1;
+	};
 	{ // simple compare shape at near the center
 		size_t input_data_size(NUM_IN);
 		size_t const kernel_width(NUM_WIDTH);
@@ -787,18 +707,19 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		bool use_fft = false;
 		bool verbose = false;
 		size_t loop_max(1);
+		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_kernel, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		SIMD_ALIGN
 		float output_data_fft[input_data_size];
 		use_fft = true;
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data_fft, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data_fft, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		for (size_t i = 0; i < input_data_size; ++i) {
 			if ((i > num_data / 2 - kernel_width / 2)
@@ -816,18 +737,19 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		bool use_fft = false;
 		bool verbose = false;
 		size_t loop_max(1);
+		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kleftright, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_kernel, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		SIMD_ALIGN
 		float output_data_fft[input_data_size];
 		use_fft = true;
 		RunBaseTest(input_data_size, SpikeType_kleftright, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data_fft, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data_fft, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		bool gthan = false;
 		if (output_data_fft[0] > output_data[0]
@@ -848,18 +770,19 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		bool use_fft = false;
 		bool verbose = false;
 		size_t loop_max(1);
+		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kall, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_kernel, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		SIMD_ALIGN
 		float output_data_fft[input_data_size];
 		use_fft = true;
 		RunBaseTest(input_data_size, SpikeType_kall, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data_fft, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data_fft, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 		bool gthan = false;
 		if (output_data_fft[0] > output_data[0]
@@ -882,6 +805,11 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
  */
 TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 	{ // [even],without FFT, Gaussian Kernel Shape,input delta
+		auto get_num_kernel = [](size_t kernel_width) {
+			double const six_sigma = 6.0 / sqrt(8.0 * log(2.0));
+			size_t const threshold = static_cast<size_t>(kernel_width * six_sigma);
+			return 2 * threshold + 1;
+		};
 		size_t const kernel_width(NUM_WIDTH);
 		size_t const input_data_size(NUM_IN_MAX);
 		size_t const num_data(input_data_size);
@@ -890,11 +818,12 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		bool const use_fft = false;
 		bool const verbose = false;
 		size_t loop_max(10000);
+		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_kernel, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 }
@@ -917,7 +846,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 	{ // [odd], FFT, Gaussian Kernel Shape,input delta
@@ -933,7 +862,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		float output_data[input_data_size];
 		RunBaseTest(input_data_size, SpikeType_kcenter, num_data,
 				use_dummy_num_data, sakura_Convolve1DKernelType_kGaussian,
-				kernel_width, use_fft, output_data, sakura_Status_kOK,
+				kernel_width, num_data, use_fft, output_data, sakura_Status_kOK,
 				align_check, verbose, loop_max);
 	}
 }
