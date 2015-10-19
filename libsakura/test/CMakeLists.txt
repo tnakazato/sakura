@@ -138,6 +138,7 @@ add_custom_target(testFFTRun                   COMMAND ./testFFT                
 add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
 add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX   --gtest_filter="-*Performance*" DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY   --gtest_filter="-*Performance*" DEPENDS testInterpolationY)
+add_custom_target(testConvolutionRunShort      COMMAND ./testConvolution --gtest_filter="-*Performance*" DEPENDS testConvolution)
 add_custom_target(testCInterfaceRun            COMMAND ./testCInterface            DEPENDS testCInterface)
 add_custom_target(testCreateMaskNearEdgeRun    COMMAND ./testCreateMaskNearEdge    DEPENDS testCreateMaskNearEdge)
 
