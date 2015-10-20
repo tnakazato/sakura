@@ -106,7 +106,7 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
  * @param kernel_width FWHM of the kernel
  * @param kernel output kernel
  */
-inline void Create1DGaussianKernelFloat(size_t num_kernel, bool use_fft,
+inline void Create1DGaussianKernelFloat(size_t num_kernel,
 		size_t kernel_width, float* kernel) {
 	assert((2 * num_kernel - 1) >= 0);
 	assert(kernel_width != 0);
@@ -378,7 +378,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 	CHECK_ARGS(kernel != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned(kernel)));
 	try {
-		Create1DGaussianKernelFloat(num_kernel, true, kernel_width, kernel);
+		Create1DGaussianKernelFloat(num_kernel, kernel_width, kernel);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
