@@ -29,7 +29,9 @@
 #include <iostream>
 #include <fftw3.h>
 #include <climits>
+#include <cfloat>
 #include <memory>
+#include <stdlib.h>
 
 #include <libsakura/localdef.h>
 #include <libsakura/sakura.h>
@@ -45,6 +47,8 @@
 #define NUM_IN_LARGE 64
 #define NUM_IN_MAX 8192
 #define LOOP_MAX 1000
+
+#define TEST_GAUSS(Name) TEST(CreateGaussianKernelTest, Name)
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
@@ -74,14 +78,184 @@ void *DummyAlloc(size_t size) {
 }
 
 struct GaussianKernel {
-	static LIBSAKURA_SYMBOL(Status) Generate(size_t num_kernel, float kernel[]) {
-		return LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(FWHM,
-				num_kernel, kernel);
+	static LIBSAKURA_SYMBOL(Status) Generate(size_t num_kernel,
+			float kernel[]) {
+		return LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(FWHM, num_kernel,
+				kernel);
 	}
 
 	static float FWHM;
 };
 float GaussianKernel::FWHM = 0.0;
+
+void Deallocate(void *ptr) {
+	free(ptr);
+}
+
+struct StandardInitializer {
+	static void Initialize(size_t num_kernel, void *storage_ptr,
+			float **kernel) {
+		*kernel = reinterpret_cast<float *>(storage_ptr);
+	}
+};
+
+struct NotAlignedInitializer {
+	static void Initialize(size_t num_kernel, void *storage_ptr,
+			float **kernel) {
+		float *aligned_kernel = reinterpret_cast<float *>(storage_ptr);
+		*kernel = aligned_kernel + 1;
+	}
+};
+
+struct NullPointerInitializer {
+	static void Initialize(size_t num_kernel, void *storage_ptr,
+			float **kernel) {
+		*kernel = nullptr;
+	}
+};
+
+struct InvalidArgumentValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// only validate returned status
+		EXPECT_EQ(sakura_Status_kInvalidArgument, status);
+	}
+};
+
+struct NotGoodValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// only validate returned status
+		EXPECT_EQ(sakura_Status_kNG, status);
+	}
+};
+
+struct NumKernelOneValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// num_kernel must be 1
+		ASSERT_EQ(1, num_kernel);
+
+		// execution must be successful
+		EXPECT_EQ(sakura_Status_kOK, status);
+
+		EXPECT_EQ(1.0f, kernel[0]);
+	}
+};
+
+struct StandardValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// execution must be successful
+		EXPECT_EQ(sakura_Status_kOK, status);
+
+		// validate created kernel
+		double sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
+		double peak_value = 1.0 / (sqrt(2.0 * M_PI) * sigma);
+		size_t peak_location = num_kernel / 2;
+		for (size_t i = 0; i < num_kernel; ++i) {
+			auto separation = static_cast<double>(peak_location)
+					- static_cast<double>(i);
+			auto normalized_separation = separation / sigma;
+			float expected = peak_value
+					* exp(-normalized_separation * normalized_separation / 2.0);
+			EXPECT_TRUE(std::isfinite(kernel[i]));
+			EXPECT_FLOAT_EQ(expected, kernel[i]);
+		}
+
+		// validate symmetry
+		if (num_kernel > 1) {
+			size_t num_tail = peak_location - ((num_kernel % 2 == 0) ? 1 : 0);
+			for (size_t i = 0; i < num_tail; ++i) {
+				// must match exactly so use EXPECT_EQ instead of EXPECT_FLOAT_EQ
+				EXPECT_EQ(kernel[peak_location - i], kernel[peak_location + i]);
+			}
+		}
+	}
+};
+
+struct HalfWidthValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// kernel_width must be equal to num_kernel
+		ASSERT_EQ(kernel_width, static_cast<float>(num_kernel));
+
+		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
+
+		// additional check: edge values should be half maximum
+		size_t peak_location = num_kernel / 2;
+		auto peak_value = kernel[peak_location];
+		// correction factor for odd case:
+		// in this case, FWHM is slightly shifted with respect to edge
+		// so that correction must be needed for verification
+		double half_width = kernel_width / 2.0f;
+		double actual_width = static_cast<double>(peak_location);
+		double sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
+		double correction_factor = 1.0;
+		if (num_kernel % 2 > 0) {
+			correction_factor = exp(
+					-(actual_width * actual_width - half_width * half_width)
+							/ (2.0 * sigma * sigma));
+		}
+		auto half_maximum = static_cast<double>(peak_value) / 2.0f
+				* correction_factor;
+		std::cout << "half_maximum=" << half_maximum << " (num_kernel "
+				<< num_kernel << ", correction factor " << correction_factor
+				<< ")" << std::endl;
+		EXPECT_FLOAT_EQ(half_maximum, kernel[0]);
+		// validate only when num_kernel is odd since even kernel is
+		// not symmetric
+		if (num_kernel % 2 != 0) {
+			EXPECT_FLOAT_EQ(half_maximum, kernel[num_kernel - 1]);
+		}
+	}
+};
+
+struct NullLogger {
+	static void PrintAllocatedSize(size_t storage_size) {
+	}
+	static void PrintElapsedTime(std::string const test_name, double elapsed_time) {
+	}
+};
+
+struct PerformanceTestLogger {
+	static void PrintAllocatedSize(size_t storage_size) {
+		std::cout << "size to be allocated: "
+				<< static_cast<double>(storage_size) * 1.0e-6 << " MB" << std::endl;
+	}
+	static void PrintElapsedTime(std::string const test_name, double elapsed_time) {
+		std::cout << "#x# benchmark " << test_name << " " << elapsed_time
+				<< std::endl;
+	}
+};
+
+template<typename Initializer, typename Validator, typename Logger=NullLogger>
+inline void RunGaussianTest(float const kernel_width, size_t const num_kernel, std::string const test_name="") {
+	// prepare storage
+	void *storage_ptr = nullptr;
+	size_t const alignment = sakura_GetAlignment();
+	size_t const storage_size = (num_kernel + 1) * sizeof(float); // margin for not-aligned test case
+	Logger::PrintAllocatedSize(storage_size);
+	int allocation_status = posix_memalign(&storage_ptr, alignment,
+			storage_size);
+	ASSERT_EQ(0, allocation_status);
+	std::unique_ptr<void, decltype(&Deallocate)> storage(storage_ptr,
+			Deallocate);
+
+	// initialize kernel
+	float *kernel = nullptr;
+	Initializer::Initialize(num_kernel, storage_ptr, &kernel);
+
+	// run
+	double start_time = sakura_GetCurrentTime();
+	sakura_Status status = sakura_CreateGaussianKernelFloat(kernel_width,
+			num_kernel, kernel);
+	double end_time = sakura_GetCurrentTime();
+	Logger::PrintElapsedTime(test_name, end_time - start_time);
+
+	// verification
+	Validator::Validate(kernel_width, num_kernel, kernel, status);
+}
 
 } /* namespace */
 
@@ -125,11 +299,9 @@ protected:
 	}
 	template<typename Kernel>
 	void RunBaseTest(size_t input_data_size, SpikeType input_spike_type,
-			size_t num_data, bool use_dummy_num_data,
-			size_t num_kernel,
+			size_t num_data, bool use_dummy_num_data, size_t num_kernel,
 			bool use_fft, float output_data[],
-			LIBSAKURA_SYMBOL(Status) expected_status,
-			bool align_check,
+			LIBSAKURA_SYMBOL(Status) expected_status, bool align_check,
 			bool verbose, size_t loop_max) {
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
@@ -227,9 +399,9 @@ TEST_F(Convolve1DOperation , AlignmentCheck) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 }
 
@@ -253,10 +425,9 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		size_t num_kernel = NUM_IN;
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_kernel, use_fft,
-				output_data, sakura_Status_kInvalidArgument, align_check,
-				verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
+				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
 	{ // num_data == 0
 		std::cout << "num_data == 0" << std::endl;
@@ -271,10 +442,9 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		SIMD_ALIGN
 		size_t num_kernel = NUM_IN;
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_kernel, use_fft,
-				output_data, sakura_Status_kInvalidArgument, align_check,
-				verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
+				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
 	{ // context == nullptr
 		std::cout << "context == nullptr" << std::endl;
@@ -313,9 +483,9 @@ TEST_F(Convolve1DOperation , DifferentNumdata) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 }
 
@@ -336,9 +506,9 @@ TEST_F(Convolve1DOperation , OddNumdata) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 }
 
@@ -401,9 +571,9 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
@@ -426,9 +596,9 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width - 1; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
@@ -453,9 +623,9 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
@@ -478,9 +648,9 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
@@ -508,9 +678,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		float gaussian_kernel[11] = { 0.03363279626, 0.03500276431,
 				0.03610675409, 0.03691657633, 0.03741116077, 0.03757749498,
 				0.03741116077, 0.03691657633, 0.03610675409, 0.03500276431,
@@ -533,9 +703,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		float gaussian_kernel[11] = { 0.03363279626, 0.03500276059,
 				0.03610675409, 0.03691657633, 0.03741116077, 0.03757749125,
 				0.03741116077, 0.03691657633, 0.03610675409, 0.03500276059,
@@ -558,9 +728,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		float gaussian_kernel[11] = { 0.03363279626, 0.03500276431,
 				0.03610675409, 0.03691657633, 0.03741116077, 0.036132198,
 				0.035984308, 0.035544254, 0.034822766, 0.033837207,
@@ -583,9 +753,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		float gaussian_kernel[11] =
 				{ 0.03363279626, 0.03500276059, 0.03610675409, 0.03691657633,
 						0.03741116077, 0.036132202, 0.035984311, 0.035544258,
@@ -609,9 +779,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [even],FFT, Gaussian Kernel Shape, 2 spikes
 		size_t input_data_size(NUM_IN);
@@ -624,9 +794,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		bool const verbose = false;
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [even],without FFT, Gaussian Kernel Shape, 2 spikes
 		size_t input_data_size(NUM_IN);
@@ -639,9 +809,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [odd],FFT, Gaussian Kernel Shape, 2 spikes
 		size_t input_data_size(NUM_IN_ODD);
@@ -654,9 +824,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [odd],without FFT, Gaussian Kernel Shape, 2 spike
 		size_t input_data_size(NUM_IN_ODD);
@@ -669,9 +839,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 }
 
@@ -700,14 +870,14 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_kernel, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		SIMD_ALIGN
 		float output_data_fft[input_data_size];
 		use_fft = true;
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft,
 				output_data_fft, sakura_Status_kOK, align_check, verbose,
 				loop_max);
 		for (size_t i = 0; i < input_data_size; ++i) {
@@ -730,14 +900,14 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright, num_data,
-				use_dummy_num_data, num_kernel, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright,
+				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		SIMD_ALIGN
 		float output_data_fft[input_data_size];
 		use_fft = true;
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright, num_data,
-				use_dummy_num_data, num_data, use_fft,
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kleftright,
+				num_data, use_dummy_num_data, num_data, use_fft,
 				output_data_fft, sakura_Status_kOK, align_check, verbose,
 				loop_max);
 		bool gthan = false;
@@ -764,15 +934,14 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		SIMD_ALIGN
 		float output_data[input_data_size];
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kall, num_data,
-				use_dummy_num_data, num_kernel, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+				use_dummy_num_data, num_kernel, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		SIMD_ALIGN
 		float output_data_fft[input_data_size];
 		use_fft = true;
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kall, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data_fft, sakura_Status_kOK, align_check, verbose,
-				loop_max);
+				use_dummy_num_data, num_data, use_fft, output_data_fft,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 		bool gthan = false;
 		if (output_data_fft[0] > output_data[0]
 				&& output_data_fft[input_data_size - 1]
@@ -812,9 +981,9 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_kernel, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 }
 
@@ -834,9 +1003,9 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		size_t loop_max(10000);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [odd], FFT, Gaussian Kernel Shape,input delta
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
@@ -849,8 +1018,127 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		size_t loop_max(10000);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter, num_data,
-				use_dummy_num_data, num_data, use_fft,
-				output_data, sakura_Status_kOK, align_check, verbose, loop_max);
+		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
+				num_data, use_dummy_num_data, num_data, use_fft, output_data,
+				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
+}
+
+/**
+ * Test for sakura_CreateGaussianKernel
+ */
+TEST_GAUSS(NegativeKernelWidth) {
+	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(-1.0f, 10);
+}
+
+TEST_GAUSS(ZeroKernelWidth) {
+	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(0.0f, 10);
+}
+
+TEST_GAUSS(PositiveInfiniteKernelWidth) {
+	constexpr float kOne = 1.0f;
+	constexpr float kZero = 0.0f;
+	float positive_inf = kOne / kZero;
+	ASSERT_TRUE(std::isinf(positive_inf));
+	ASSERT_GT(positive_inf, FLT_MAX);
+	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(positive_inf,
+			10);
+}
+
+TEST_GAUSS(NegativeInfiniteKernelWidth) {
+	constexpr float kOne = 1.0f;
+	constexpr float kZero = 0.0f;
+	float negative_inf = -kOne / kZero;
+	ASSERT_TRUE(std::isinf(negative_inf));
+	ASSERT_LT(negative_inf, FLT_MIN);
+	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(negative_inf,
+			10);
+}
+
+TEST_GAUSS(NotANumberKernelWidth) {
+	float nan_value = std::nan("");
+	ASSERT_TRUE(std::isnan(nan_value));
+	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(nan_value,
+			10);
+}
+
+TEST_GAUSS(KernelIsNull) {
+	RunGaussianTest<NullPointerInitializer, InvalidArgumentValidator>(2.0f, 10);
+}
+
+TEST_GAUSS(KernelIsNotAligned) {
+	RunGaussianTest<NotAlignedInitializer, InvalidArgumentValidator>(2.0f, 10);
+}
+
+TEST_GAUSS(NumKernelIsZero) {
+	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(2.0f, 0);
+}
+
+TEST_GAUSS(NumKernelIsOne) {
+	// result should be independent of kernel_width if num_kernel is 1
+	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(2.0f, 1);
+
+	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(256.0f, 1);
+}
+
+TEST_GAUSS(NumKernelIsTwo) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 2);
+}
+
+TEST_GAUSS(NumKernelIsThree) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 3);
+}
+
+TEST_GAUSS(NumKernelIsFour) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 4);
+}
+
+TEST_GAUSS(EvenNumkernel) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(24.0f, 64);
+}
+
+TEST_GAUSS(OddNumkernel) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(24.0f, 65);
+}
+
+TEST_GAUSS(NumkernelLessThanKernelWidth) {
+	// even
+	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 64);
+
+	// odd
+	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 65);
+}
+
+TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
+	// even
+	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 128);
+
+	// odd
+	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 129);
+}
+
+TEST_GAUSS(HalfWidth) {
+	// even
+	RunGaussianTest<StandardInitializer, HalfWidthValidator>(128.0f, 128);
+
+	// odd
+	RunGaussianTest<StandardInitializer, HalfWidthValidator>(129.0f, 129);
+}
+
+TEST_GAUSS(TinyKernelWidth) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(1.0e-5f, 128);
+}
+
+TEST_GAUSS(LargeKernelWidth) {
+	RunGaussianTest<StandardInitializer, StandardValidator>(FLT_MAX, 128);
+}
+
+TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
+	constexpr size_t kNumKernel = 268435456; // 2^28
+	RunGaussianTest<StandardInitializer, StandardValidator, PerformanceTestLogger>(128.0f, kNumKernel, "CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
+}
+
+TEST_GAUSS(OddNumKernelPerformance) {
+	constexpr size_t kNumKernel = 268435456 + 1; // 2^28 + 1
+	RunGaussianTest<StandardInitializer, StandardValidator, PerformanceTestLogger>(128.0f, kNumKernel, "CreateGaussian_OddNumKernelPerformanceTest");
 }
