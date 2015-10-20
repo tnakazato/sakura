@@ -135,7 +135,7 @@ add_custom_target(testNormalizationRun         COMMAND ./testNormalization      
 add_custom_target(testNumericOperationRun      COMMAND ./testNumericOperation      DEPENDS testNumericOperation)
 add_custom_target(testStatisticsRun            COMMAND ./testStatistics            DEPENDS testStatistics)
 add_custom_target(testFFTRun                   COMMAND ./testFFT                   DEPENDS testFFT)
-add_custom_target(testApplyCalibrationRunShort COMMAND ./testApplyCalibration --gtest_filter="-*Performance*" DEPENDS testApplyCalibration)
+add_custom_target(testNormalizationRunShort    COMMAND ./testNormalization --gtest_filter="-*Performance*" DEPENDS testNormalization)
 add_custom_target(testInterpolationXRunShort   COMMAND ./testInterpolationX   --gtest_filter="-*Performance*" DEPENDS testInterpolationX)
 add_custom_target(testInterpolationYRunShort   COMMAND ./testInterpolationY   --gtest_filter="-*Performance*" DEPENDS testInterpolationY)
 add_custom_target(testConvolutionRunShort      COMMAND ./testConvolution --gtest_filter="-*Performance*" DEPENDS testConvolution)
