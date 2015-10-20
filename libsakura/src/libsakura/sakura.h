@@ -1149,31 +1149,6 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
 		float result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Enumerations to define kernel types for convolution.
- */
-typedef enum {
-	/**
-	 * @brief Gaussian
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian),
-
-	/**
-	 * @brief Boxcar
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kBoxcar),
-
-	/**
-	 * @brief Hanning
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHanning),
-
-	/**
-	 * @brief Hamming
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kHamming),
-
-	/**
-	 * @brief Number of kernel type
-	 */LIBSAKURA_SYMBOL(Convolve1DKernelType_kNumElements)
-}LIBSAKURA_SYMBOL(Convolve1DKernelType);
-
-/**
  * @brief Context struct for convolution
  */
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
