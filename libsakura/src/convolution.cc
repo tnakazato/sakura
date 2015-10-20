@@ -89,6 +89,12 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
  */
 inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
 		float* kernel) {
+	// special treatment of the case that num_kernel is 1
+	if (num_kernel == 1) {
+		kernel[0] = 1.0;
+		return;
+	}
+
 	assert((2 * num_kernel - 1) >= 0);
 	assert(kernel_width != 0);
 	double const reciprocal_of_denominator = 1.66510922231539551270632928979040
@@ -355,8 +361,9 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 		float kernel_width, size_t num_kernel, float kernel[]) noexcept {
-	CHECK_ARGS(1 < num_kernel && num_kernel <= INT_MAX);
-	CHECK_ARGS(kernel_width > 0);
+	CHECK_ARGS(0 < num_kernel && num_kernel <= INT_MAX);
+	CHECK_ARGS(kernel_width > 0.0f);
+	CHECK_ARGS(std::isfinite(kernel_width));
 	CHECK_ARGS(kernel != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned(kernel)));
 	try {
