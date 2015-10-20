@@ -35,6 +35,8 @@
 #include <fftw3.h>
 #include <memory>
 #include <climits>
+#include <fstream>
+#include <sstream>
 
 #include <libsakura/sakura.h>
 #include <libsakura/localdef.h>
@@ -80,34 +82,13 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
 /**
  * @brief Create 1 dimensional Gaussian kernel
  *
- * @details
- * Create 1 dimensional Gaussian kernel according to FWHM given by @a kernel_width.
- * Peak location of the Gaussian is evaluated by @a num_kernel / 2. It indicates that
- * resulting kernel will be slightly asymmetric when @a num_kernel is even. For example,
- * peak location is 1 and 2 if @a num_kernel is 3 and 4, respectively. If @a num_kernel
- * is 3 (odd), resulting kernel is symmetric, i.e. @a kernel[1] is a peak and
- * @a kernel[0] == @a kernel[2]. On the other hand, the kernel is asymmetric if @a num_kernel
- * is 4 (even). In this case, peak is @a kernel[2] and @a kernel[1] == @a kernel[3] but
- * there is no counterpart for @a kernel[0].
- *
- * Resulting @a kernel has the value that it is normalized if assumed Gaussian is contiguous.
- * Actual formula for @a kernel is as follows:
- *
- *     peak_location = @a num_kernel / 2
- *
- *     peak_value = sqrt(log(16)) / @a kernel_width
- *
- *     sigma = sqrt(8 * log(2) / 2 * pi) / @a kernel_width
- *
- *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / sigma**2 )
- *
  * @param num_kernel number of elements in kernel
  * @param use_fft
  * @param kernel_width FWHM of the kernel
  * @param kernel output kernel
  */
-inline void Create1DGaussianKernelFloat(size_t num_kernel,
-		size_t kernel_width, float* kernel) {
+inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
+		float* kernel) {
 	assert((2 * num_kernel - 1) >= 0);
 	assert(kernel_width != 0);
 	double const reciprocal_of_denominator = 1.66510922231539551270632928979040
@@ -117,7 +98,8 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel,
 	size_t peak_location = (num_kernel) / 2;
 
 	for (size_t i = 0; i < num_kernel; ++i) {
-		double value = (static_cast<double>(i) - static_cast<double>(peak_location))
+		double value = (static_cast<double>(i)
+				- static_cast<double>(peak_location))
 				* reciprocal_of_denominator;
 		kernel[i] = peak_value * exp(-(value * value));
 	}
@@ -372,7 +354,7 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat)* context) {
 } while (false)
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
-		size_t kernel_width, size_t num_kernel, float kernel[]) noexcept {
+		float kernel_width, size_t num_kernel, float kernel[]) noexcept {
 	CHECK_ARGS(1 < num_kernel && num_kernel <= INT_MAX);
 	CHECK_ARGS(kernel_width > 0);
 	CHECK_ARGS(kernel != nullptr);

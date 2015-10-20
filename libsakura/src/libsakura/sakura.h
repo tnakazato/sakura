@@ -1196,18 +1196,20 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  *
  *     peak_location = @a num_kernel / 2
  *
- *     peak_value = sqrt(log(16)) / @a kernel_width
+ *     sigma = @a kernel_width / sqrt(log(16))
  *
- *     sigma = sqrt(8 * log(2) / 2 * pi) / @a kernel_width
+ *     peak_value = sqrt(8 * log(2) / 2 * pi) / @a kernel_width
  *
- *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / sigma**2 )
+ *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) )
  *
- * @param[in] kernel_width FWHM of Gaussian
+ * @param[in] kernel_width FWHM (Full Width of Half Maximum) of Gaussian.
+ * @a kernel_width must be greater than 0.
  * @param[in] num_kernel The number of elements in the @a kernel
  * @param[out] kernel Output kernel array
+ * @n must-be-aligned
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
-		size_t kernel_width, size_t num_kernel, float kernel[])
+		float kernel_width, size_t num_kernel, float kernel[])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
