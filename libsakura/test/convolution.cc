@@ -211,6 +211,51 @@ struct HalfWidthValidator {
 	}
 };
 
+struct NarrowKernelValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// kernel_width must be equal to num_kernel
+		ASSERT_EQ(FLT_MIN, kernel_width);
+
+		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
+
+		size_t peak_location = num_kernel / 2;
+		std::cout << "peak: kernel[" << peak_location << "]=" << kernel[peak_location] << std::endl;
+		std::cout << "off-peak: kernel[" << peak_location - 1 << "]=" << kernel[peak_location-1] << std::endl;
+		std::cout << "off-peak: kernel[" << peak_location + 1 << "]=" << kernel[peak_location+1] << std::endl;
+
+		// kernel is so narrow that value of the kernel except peak_location
+		// is zero
+		for (size_t i = 0; i < peak_location; ++i) {
+			EXPECT_FLOAT_EQ(0.0f, kernel[i]);
+		}
+		for (size_t i = peak_location+1; i < num_kernel; ++i) {
+			EXPECT_FLOAT_EQ(0.0f, kernel[i]);
+		}
+
+	}
+};
+
+struct WideKernelValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// kernel_width must be equal to num_kernel
+		ASSERT_EQ(FLT_MAX, kernel_width);
+
+		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
+
+		size_t peak_location = num_kernel / 2;
+		std::cout << "peak: kernel[" << peak_location << "]=" << kernel[peak_location] << std::endl;
+		std::cout << "edge: kernel[" << 0 << "]=" << kernel[0] << std::endl;
+		std::cout << "edge: kernel[" << num_kernel-1 << "]=" << kernel[num_kernel-1] << std::endl;
+
+		// kernel is so wide that all the kernel value are the same
+		for (size_t i = 0; i < num_kernel; ++i) {
+			EXPECT_FLOAT_EQ(kernel[peak_location], kernel[i]);
+		}
+	}
+};
+
 struct NullLogger {
 	static void PrintAllocatedSize(size_t storage_size) {
 	}
@@ -1125,12 +1170,12 @@ TEST_GAUSS(HalfWidth) {
 	RunGaussianTest<StandardInitializer, HalfWidthValidator>(129.0f, 129);
 }
 
-TEST_GAUSS(TinyKernelWidth) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(1.0e-5f, 128);
+TEST_GAUSS(NarrowKernelWidth) {
+	RunGaussianTest<StandardInitializer, NarrowKernelValidator>(FLT_MIN, 128);
 }
 
-TEST_GAUSS(LargeKernelWidth) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(FLT_MAX, 128);
+TEST_GAUSS(WideKernelWidth) {
+	RunGaussianTest<StandardInitializer, WideKernelValidator>(FLT_MAX, 128);
 }
 
 TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
