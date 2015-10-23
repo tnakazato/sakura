@@ -57,11 +57,14 @@ Sakura installation procedure is broken into 5 steps:
 * gtest 1.7 or higher
 
 1.1.2 Prerequisites coming from dependencies of Sakura on third-party external libraries
+Mandatory prerequisites:
 * eigen 3.2 or higher
-* fftw 3.3.2 or higher. If you build fftw3 from source, use the configure options "--enable-float" and "--enable-shared" to build libfftw3 as a shared library.
+* fftw 3.3.2 or higher. If you build fftw from source, use the configure options "--enable-float" and "--enable-shared" to build libfftw as a shared library.
+Optional prerequisites:
+* lib4cxx. This library adds a logging feature to Sakura, allowing messages from Sakura to be logged at run-time. 
 
 1.2 Linux specific Prerequisites
-* C++ compiler with C++11 support (gcc/g++ 4.8 or higher or clang/clang++ 3.5 or higher). Note: default gcc/g++ on RHEL5 and RHEL6 is not compliant with this requirement, so you must install a compliant compiler to build Sakura on these operating systems.
+* C++ compiler with C++11 support (gcc/g++ 4.8 or higher or clang/clang++ 3.5 or higher). Note: default gcc/g++ on RHEL5 and some versions of RHEL6 is not compliant with this requirement, so you must install a compliant compiler to build Sakura on these operating systems.
 
 1.3 Apple OS X specific Prerequisites
 * xcode 5.1 or higher
@@ -123,12 +126,12 @@ CMAKE_INSTALL_PREFIX
   Add to cmake command line e.g: -D CMAKE_INSTALL_PREFIX=/usr/local/lib/sakura
 
 FFTW3_ROOT_DIR
-  Specifies the directory where the fftw3 library is installed on your system.
-  Add to cmake command line e.g: -D FFTW3_ROOT_DIR=/opt/fftw3
+  Specifies the directory where the fftw library is installed on your system.
+  Add to cmake command line e.g: -D FFTW3_ROOT_DIR=/opt/fftw/fftw-3.3.2
 
 EIGEN3_INCLUDE_DIR
   Specifies the directory where the Eigen library is installed on your system.
-  Add to cmake command line e.g: -D -D EIGEN3_INCLUDE_DIR=/opt/eigen/eigen_3.2.0
+  Add to cmake command line e.g: -D -D EIGEN3_INCLUDE_DIR=/opt/eigen/eigen-3.2.0
 
 CMAKE_BUILD_TYPE
   Specifies a build type. Allowed values:
@@ -138,12 +141,12 @@ CMAKE_BUILD_TYPE
   Add to cmake command line e.g: -D CMAKE_BUILD_TYPE=Debug
 
 SIMD_ARCH
-  Specify an optimization option. 
+  Specify an optimization option. Allowed values:
   * SSE4   Most conservative optimization
   * AVX    Use AVX instruction set 
   * AVX2   Use AVX2 instruction set 
   * NATIVE Use appropriate instruction set on your machine
-  Add to cmake command line e.g: -D CMAKE_BUILD_TYPE=Debug
+  Add to cmake command line e.g: -D SIMD_ARCH=SSE4
 
 BUILD_DOC
   Enable/disable Doxygen generation of Sakura API HTML documentation
@@ -151,14 +154,12 @@ BUILD_DOC
 
 3.4 Build Sakura
 
-[libsakura]$ cd build
 [build]$ make
 
 3.5 Generate Sakura API HTML documentation
 
 You can skip this step if you specified -D BUILD_DOC:BOOL=OFF on cmake command line.
  
-[libsakura]$ cd build
 [build]$ make apidoc
 
 4. Testing
@@ -166,13 +167,11 @@ You can skip this step if you specified -D BUILD_DOC:BOOL=OFF on cmake command l
 
 This step allows you to verify that your installation of Sakura is working correctly.
 
-[libsakura]$ cd build
 [build]$ make test
 
 5. Final install
 ----------------
 
-[libsakura]$ cd build
 [build]$ make install
 
 If you need to install Sakura library in a directory such as /usr/local which requires root privileges, you must run the command as root:
