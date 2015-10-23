@@ -1166,7 +1166,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * is 4 (even). In this case, peak is @a kernel[2] and @a kernel[1] == @a kernel[3] but
  * there is no counterpart for @a kernel[0].
  *
- * Resulting @a kernel has the value that it is normalized if assumed Gaussian is contiguous.
+ * Resulting @a kernel has the value that it is normalized, i.e. sum(@a kernel) = 1.0.
  * Actual formula for @a kernel is as follows:
  *
  *     peak_location = @a num_kernel / 2
@@ -1175,7 +1175,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  *
  *     peak_value = sqrt(8 * log(2) / 2 * pi) / @a kernel_width
  *
- *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) )
+ *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) ) / sum_of_kernel
  *
  * @param[in] kernel_width FWHM (Full Width of Half Maximum) of Gaussian.
  * @a kernel_width must be greater than 0.

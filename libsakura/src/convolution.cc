@@ -103,11 +103,20 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
 			/ static_cast<double>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
 	size_t peak_location = (num_kernel) / 2;
 
+	auto kernel_aligned = AssumeAligned(kernel);
+
+	double kernel_sum = 0.0;
 	for (size_t i = 0; i < num_kernel; ++i) {
 		double value = (static_cast<double>(i)
 				- static_cast<double>(peak_location))
 				* reciprocal_of_denominator;
-		kernel[i] = peak_value * exp(-(value * value));
+		kernel_aligned[i] = peak_value * exp(-(value * value));
+		kernel_sum += kernel_aligned[i];
+	}
+
+	// Normalization
+	for (size_t i = 0; i < num_kernel; ++i) {
+		kernel_aligned[i] /= kernel_sum;
 	}
 }
 

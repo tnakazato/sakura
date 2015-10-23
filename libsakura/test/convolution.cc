@@ -149,16 +149,24 @@ struct StandardValidator {
 		// execution must be successful
 		EXPECT_EQ(sakura_Status_kOK, status);
 
-		// validate created kernel
+		// validate each kernel elements
+		std::unique_ptr<void, decltype(&Deallocate)> storage(
+				malloc(num_kernel * sizeof(float)), Deallocate);
+		float *expected_kernel = reinterpret_cast<float *>(storage.get());
 		double sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
 		double peak_value = 1.0 / (sqrt(2.0 * M_PI) * sigma);
 		size_t peak_location = num_kernel / 2;
+		double expected_sum = 0.0;
 		for (size_t i = 0; i < num_kernel; ++i) {
 			auto separation = static_cast<double>(peak_location)
 					- static_cast<double>(i);
 			auto normalized_separation = separation / sigma;
-			float expected = peak_value
+			expected_kernel[i] = peak_value
 					* exp(-normalized_separation * normalized_separation / 2.0);
+			expected_sum += expected_kernel[i];
+		}
+		for (size_t i = 0; i < num_kernel; ++i) {
+			float expected = expected_kernel[i] / expected_sum;
 			EXPECT_TRUE(std::isfinite(kernel[i]));
 			EXPECT_FLOAT_EQ(expected, kernel[i]);
 		}
@@ -171,6 +179,14 @@ struct StandardValidator {
 				EXPECT_EQ(kernel[peak_location - i], kernel[peak_location + i]);
 			}
 		}
+
+		// validate sum
+		expected_sum = 1.0;
+		double actual_sum = 0.0;
+		for (size_t i = 0; i < num_kernel; ++i) {
+			actual_sum += kernel[i];
+		}
+		EXPECT_FLOAT_EQ(expected_sum, actual_sum);
 	}
 };
 
@@ -220,16 +236,19 @@ struct NarrowKernelValidator {
 		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
 
 		size_t peak_location = num_kernel / 2;
-		std::cout << "peak: kernel[" << peak_location << "]=" << kernel[peak_location] << std::endl;
-		std::cout << "off-peak: kernel[" << peak_location - 1 << "]=" << kernel[peak_location-1] << std::endl;
-		std::cout << "off-peak: kernel[" << peak_location + 1 << "]=" << kernel[peak_location+1] << std::endl;
+		std::cout << "peak: kernel[" << peak_location << "]="
+				<< kernel[peak_location] << std::endl;
+		std::cout << "off-peak: kernel[" << peak_location - 1 << "]="
+				<< kernel[peak_location - 1] << std::endl;
+		std::cout << "off-peak: kernel[" << peak_location + 1 << "]="
+				<< kernel[peak_location + 1] << std::endl;
 
 		// kernel is so narrow that value of the kernel except peak_location
 		// is zero
 		for (size_t i = 0; i < peak_location; ++i) {
 			EXPECT_FLOAT_EQ(0.0f, kernel[i]);
 		}
-		for (size_t i = peak_location+1; i < num_kernel; ++i) {
+		for (size_t i = peak_location + 1; i < num_kernel; ++i) {
 			EXPECT_FLOAT_EQ(0.0f, kernel[i]);
 		}
 
@@ -245,9 +264,11 @@ struct WideKernelValidator {
 		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
 
 		size_t peak_location = num_kernel / 2;
-		std::cout << "peak: kernel[" << peak_location << "]=" << kernel[peak_location] << std::endl;
+		std::cout << "peak: kernel[" << peak_location << "]="
+				<< kernel[peak_location] << std::endl;
 		std::cout << "edge: kernel[" << 0 << "]=" << kernel[0] << std::endl;
-		std::cout << "edge: kernel[" << num_kernel-1 << "]=" << kernel[num_kernel-1] << std::endl;
+		std::cout << "edge: kernel[" << num_kernel - 1 << "]="
+				<< kernel[num_kernel - 1] << std::endl;
 
 		// kernel is so wide that all the kernel value are the same
 		for (size_t i = 0; i < num_kernel; ++i) {
@@ -259,23 +280,27 @@ struct WideKernelValidator {
 struct NullLogger {
 	static void PrintAllocatedSize(size_t storage_size) {
 	}
-	static void PrintElapsedTime(std::string const test_name, double elapsed_time) {
+	static void PrintElapsedTime(std::string const test_name,
+			double elapsed_time) {
 	}
 };
 
 struct PerformanceTestLogger {
 	static void PrintAllocatedSize(size_t storage_size) {
 		std::cout << "size to be allocated: "
-				<< static_cast<double>(storage_size) * 1.0e-6 << " MB" << std::endl;
+				<< static_cast<double>(storage_size) * 1.0e-6 << " MB"
+				<< std::endl;
 	}
-	static void PrintElapsedTime(std::string const test_name, double elapsed_time) {
+	static void PrintElapsedTime(std::string const test_name,
+			double elapsed_time) {
 		std::cout << "#x# benchmark " << test_name << " " << elapsed_time
 				<< std::endl;
 	}
 };
 
-template<typename Initializer, typename Validator, typename Logger=NullLogger>
-inline void RunGaussianTest(float const kernel_width, size_t const num_kernel, std::string const test_name="") {
+template<typename Initializer, typename Validator, typename Logger = NullLogger>
+inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
+		std::string const test_name = "") {
 	// prepare storage
 	void *storage_ptr = nullptr;
 	size_t const alignment = sakura_GetAlignment();
@@ -726,10 +751,10 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] = { 0.03363279626, 0.03500276431,
-				0.03610675409, 0.03691657633, 0.03741116077, 0.03757749498,
-				0.03741116077, 0.03691657633, 0.03610675409, 0.03500276431,
-				0.03363279626 };
+		float gaussian_kernel[11] = { 0.0453697890043, 0.0472178347409,
+				0.0487070940435, 0.0497995242476, 0.0504667051136,
+				0.0506910830736, 0.0504667051136, 0.0497995242476,
+				0.0487070940435, 0.0472178347409, 0.0453697890043 };
 		for (size_t i = 0; i < 5; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
@@ -751,15 +776,14 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] = { 0.03363279626, 0.03500276059,
-				0.03610675409, 0.03691657633, 0.03741116077, 0.03757749125,
-				0.03741116077, 0.03691657633, 0.03610675409, 0.03500276059,
-				0.03363279626 };
+		float gaussian_kernel[11] = { 0.0453697890043, 0.0472178347409,
+				0.0487070940435, 0.0497995242476, 0.0504667051136,
+				0.0506910830736, 0.0504667051136, 0.0497995242476,
+				0.0487070940435, 0.0472178347409, 0.0453697890043 };
 		for (size_t i = 0; i < 5; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-					output_data[(num_data / 2) + (i + 1)]);
-			EXPECT_FLOAT_EQ(gaussian_kernel[5 + i],
-					output_data[(num_data / 2) + i]);
+					output_data[(num_data / 2) + (i + 1)]);EXPECT_FLOAT_EQ(
+					gaussian_kernel[5 + i], output_data[(num_data / 2) + i]);
 		}
 	}
 	{ // [odd](FFT) kernel_width > num_data
@@ -776,15 +800,14 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] = { 0.03363279626, 0.03500276431,
-				0.03610675409, 0.03691657633, 0.03741116077, 0.036132198,
-				0.035984308, 0.035544254, 0.034822766, 0.033837207,
-				0.03363279626 };
+		float gaussian_kernel[11] = { 0.043915681541, 0.0455670394003,
+				0.0468942411244, 0.047865845263, 0.0484584420919,
+				0.0486575998366, 0.0484584420919, 0.047865845263,
+				0.0468942411244, 0.0455670394003, 0.043915681541 };
 		for (size_t i = 0; i < 5; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-					output_data[(num_data / 2) + (i + 1)]);
-			EXPECT_FLOAT_EQ(gaussian_kernel[5 + i],
-					output_data[(num_data / 2) + i]);
+					output_data[(num_data / 2) + (i + 1)]);EXPECT_FLOAT_EQ(
+					gaussian_kernel[5 + i], output_data[(num_data / 2) + i]);
 		}
 	}
 	{ // [odd](Without FFT) kernel_width > num_data
@@ -801,16 +824,15 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] =
-				{ 0.03363279626, 0.03500276059, 0.03610675409, 0.03691657633,
-						0.03741116077, 0.036132202, 0.035984311, 0.035544258,
-						0.034822766, 0.03383721, 0.03363279626 };
+		float gaussian_kernel[11] = { 0.043915681541, 0.0455670394003,
+				0.0468942411244, 0.047865845263, 0.0484584420919,
+				0.0486575998366, 0.0484584420919, 0.047865845263,
+				0.0468942411244, 0.0455670394003, 0.043915681541 };
 
 		for (size_t i = 0; i < 5; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-					output_data[(num_data / 2) + (i + 1)]);
-			EXPECT_FLOAT_EQ(gaussian_kernel[5 + i],
-					output_data[(num_data / 2) + i]);
+					output_data[(num_data / 2) + (i + 1)]);EXPECT_FLOAT_EQ(
+					gaussian_kernel[5 + i], output_data[(num_data / 2) + i]);
 		}
 	}
 	{ // (Without FFT) kernel_width > num_data , kernel array size == num_data
@@ -1180,10 +1202,14 @@ TEST_GAUSS(WideKernelWidth) {
 
 TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456; // 2^28
-	RunGaussianTest<StandardInitializer, StandardValidator, PerformanceTestLogger>(128.0f, kNumKernel, "CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
+	RunGaussianTest<StandardInitializer, StandardValidator,
+			PerformanceTestLogger>(128.0f, kNumKernel,
+			"CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
 }
 
 TEST_GAUSS(OddNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456 + 1; // 2^28 + 1
-	RunGaussianTest<StandardInitializer, StandardValidator, PerformanceTestLogger>(128.0f, kNumKernel, "CreateGaussian_OddNumKernelPerformanceTest");
+	RunGaussianTest<StandardInitializer, StandardValidator,
+			PerformanceTestLogger>(128.0f, kNumKernel,
+			"CreateGaussian_OddNumKernelPerformanceTest");
 }
