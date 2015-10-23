@@ -1,43 +1,75 @@
 #!/bin/bash 
 
 usage() {
-	echo "Usage: $0 root_of_source_tree tarball_file"
+	echo "Usage: $0 [options...]"
 	exit 1
 }
 
-[ $# = 2 ] || usage
-src_dir=$1
-tarball_file=$2
 
+# TODO: Command line parsing
+#[ $# = 2 ] || usage
+#src_dir=$1
+#tarball_file=$2
+
+# Get the sources
+src_url='https://alma-dms.mtk.nao.ac.jp/svn/sakura/trunk/libsakura'
+project_name=`basename "$src_url"`
+
+tmp_dir=`mktemp -d -p /tmp sakura.XXXX`
+src_dir="$tmp_dir/$project_name"
+
+mkdir "$src_dir"
+svn co "$src_url" "$src_dir" 1>/dev/null
+
+# Script working directory
 work_dir=`pwd`
 
-# Normalized path of source root directory
-cd "$src_dir" || { echo "Error: cannot access root of source tree" ; exit 1 ; }
-normalized_src_dir=`pwd`
-src_basename=`basename $normalized_src_dir`
-src_parent=`dirname $normalized_src_dir`
+cd "$src_dir" || { echo "Error: cannot access source directory:" ; echo "$1"  ; exit 1 ; }
+src_dir_abs=`pwd`
+src_parent_abs=`dirname $src_dir_abs`
+
+# Tarball file
+version_major=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head --lines=1 | egrep --only-matching '[0-9]+'`
+version_minor=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head --lines=1 | egrep --only-matching '[0-9]+'`
+svn_revision=`svn info | grep 'Revision:' | egrep --only-matching '[0-9]+'`
+release_version="${version_major}.${version_minor}.${svn_revision}"
+
+tarball_dir="$work_dir"
+tarball_name="libsakura-${release_version}.tar.gz"
+tarball_file="${work_dir}/${tarball_name}"
 
 # Tarball file contents selection 
-sed_script=`mktemp` || { echo "Error: unable to create temporary file" ; exit 1 ; }
+sed_script="${src_parent_abs}/select_files.sed"
 cat > $sed_script <<\EOF
 # Remove first . directory returned by find
 1 d
 # Exclude anything under ./build directory, but keep build directory
 \:^\./build/: d
+# Exclude whole bin directory
+\:^\./bin: d
 # Exclude any path containing a hidden file or directory: .svn or .project or ...
 \:/\.: d
 # Exclude any path starting with ./gtest
 \:^\./gtest: d
 # Replace leading . with basename of source root directory
 EOF
-echo 's/^\./'$src_basename'/g' >> $sed_script
+echo 's/^\./'$project_name'/g' >> $sed_script
 
-tarball_contents=`mktemp` || { echo "Error: unable to create temporary file" ; exit 1 ; }
-find | sed -f "$sed_script" > "$tarball_contents"
+release_contents="${src_parent_abs}/release_contents.txt"
+find | sed -f "$sed_script" > "$release_contents"
 
 # Tarball file creation
 cd "$work_dir"
-tar --no-recursion --directory="$src_parent" --files-from="$tarball_contents" --create --verbose --gzip --file "$tarball_file" 
+rm -f "$tarball_file"
+tar --no-recursion --directory="$src_parent_abs" --files-from="$release_contents" --create --verbose --gzip --file "$tarball_file" 1>/dev/null
+
+echo 'Created tarball file:'
+echo "$tarball_file"
+
+# Tarball check
+n_mismatches=`tar tfz "$tarball_file" | sed 's:/$::g' | diff - ${release_contents} | wc -l`
+
+# TODO: Rpm file creation
     
 
 
