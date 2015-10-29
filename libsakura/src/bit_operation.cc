@@ -49,8 +49,8 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
 }
 
 /* A function to invoke various types of bit operation
- * @param[in] operation function definition to define the result of bit
- * operation for an element of array.
+ * @param[in] operation the function to define the bit operation for
+ * an element of array.
  * @param[in] num_data The number of elements in the arrays, @a data,
  * @a edit_mask, and @a result.
  * @param[in] data An input array of size, @a num_data. must-be-aligned
@@ -79,8 +79,6 @@ LIBSAKURA_SYMBOL(Status) DoBitOperation(Operation operation, size_t num_data,
 			aresult[i] = operation(adata[i], amask[i]);
 		}
 	} catch (...) {
-		// an exception is thrown during operation
-		// abort if assertion is enabled. if not, return kUnknownError status.
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
