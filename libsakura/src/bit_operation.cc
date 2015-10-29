@@ -48,16 +48,15 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
 	return true;
 }
 
-/* A function to invoke various types of bit operation
- * @param[in] operation the function to define the bit operation for
- * an element of array.
- * @param[in] num_data The number of elements in the arrays, @a data,
- * @a edit_mask, and @a result.
- * @param[in] data An input array of size, @a num_data. must-be-aligned
- * @param[in] edit_mask A boolean mask array of size, @a num_data. must-be-aligned
- * @param[out] result result The output array of size, @a num_data. must-be-aligned
- * In case an exception is thrown during operation, the function aborts
- * if assertion is enabled. If not, it returns kUnknownError status.
+/* @brief A function to invoke various types of bit operation
+ *
+ *  This function loops over elements of an array, @a data, and call a function,
+ *  @a func , with each @a data element.
+ *  In case an exception is thrown during operation, the function aborts
+ *  if assertion is enabled. if not, it returns kUnknownError status.
+ *
+ *  @param[in] operation A function to define bit operation.
+ *  It should take a @a data and a @a edit_mask elements and return a boolean.
  */
 template<typename Operation, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoBitOperation(Operation operation, size_t num_data,
