@@ -36,6 +36,7 @@ Sakura has been successfully tested on the following platforms
 - Red Hat Enterprise Linux 6 (RHEL6)
 - Canonical Ubuntu 14.4
 - Apple OS X 10.8
+- Apple OS X 10.10
 
 Installation Procedure
 ----------------------
