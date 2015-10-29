@@ -57,7 +57,7 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
  * @param[in] edit_mask A boolean mask array of size, @a num_data. must-be-aligned
  * @param[out] result result The output array of size, @a num_data. must-be-aligned
  * In case an exception is thrown during operation, the function aborts
- * if assertion is enabled. if not, returns kUnknownError status.
+ * if assertion is enabled. If not, it returns kUnknownError status.
  */
 template<typename Operation, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoBitOperation(Operation operation, size_t num_data,
