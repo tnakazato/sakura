@@ -51,7 +51,7 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
 /* @brief A function to invoke various types of bit operation
  *
  *  This function loops over elements of an array, @a data, and call a function,
- *  @a func , with each @a data element.
+ *  @a operation , with each @a data element.
  *  In case an exception is thrown during operation, the function aborts
  *  if assertion is enabled. if not, it returns kUnknownError status.
  *
