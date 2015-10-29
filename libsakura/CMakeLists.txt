@@ -21,7 +21,7 @@
 # @SAKURA_LICENSE_HEADER_END@
 #
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 set(libsakura_VERSION_MAJOR 1)
 set(libsakura_VERSION_MINOR 1)
