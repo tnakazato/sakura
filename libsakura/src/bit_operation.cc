@@ -55,7 +55,7 @@ bool IsValidArguments(DataType const *data, bool const *edit_mask,
  *  In case an exception is thrown during operation, the function aborts
  *  if assertion is enabled. if not, it returns kUnknownError status.
  *
- *  @param[in] operation A function to define bit operation.
+ *  @param[in] operation A function which defines bit operation.
  *  It should take a @a data and a @a edit_mask elements and return a boolean.
  */
 template<typename Operation, typename DataType>
