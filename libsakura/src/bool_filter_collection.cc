@@ -30,6 +30,12 @@
 // Vectorization by Compiler
 namespace {
 
+#define CHECK_ARGS(x) do { \
+	if (!(x)) { \
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument); \
+	} \
+} while (false)
+
 template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
@@ -313,10 +319,8 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
 
-	if (!IsValidDataAndResult(data, result)
-			|| !IsValidBounds(num_condition, lower_bounds, upper_bounds)) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
+	CHECK_ARGS(IsValidDataAndResult(data, result) &&
+			IsValidBounds(num_condition, lower_bounds, upper_bounds));
 
 	try {
 		func(/*num_data, data, num_condition, lower_bounds, upper_bounds, result*/);
@@ -342,9 +346,7 @@ template<typename Func, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoElementFuncBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool result[/*num_data*/]) {
 
-	if (!IsValidDataAndResult(data, result)) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
+	CHECK_ARGS(IsValidDataAndResult(data, result));
 
 	try {
 		auto adata = AssumeAligned(data);
@@ -374,9 +376,7 @@ template<typename Func, typename DataType>
 LIBSAKURA_SYMBOL(Status) DoArrayFuncBoolFilter(Func func, size_t num_data,
 		DataType const data[/*num_data*/], bool const result[/*num_data*/]) {
 
-	if (!IsValidDataAndResult(data, result)) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
+	CHECK_ARGS(IsValidDataAndResult(data, result));
 
 	try {
 		func(/*num_data, data, result*/);
