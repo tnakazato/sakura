@@ -1287,9 +1287,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @a num_model_bases .
  * @a param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for baseline types other than
- * sakura_BaselineType_kSinusoid, it should be always [0, 1, 2, ...,
- * (num_lsq_bases-1)]. Element values must not be duplicate, and must
- * be in ascending order.
+ * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
+ * Element values must not be duplicate, and must be in ascending order.
  * @n must-be-aligned
  * @param[out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
@@ -1362,8 +1361,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @a num_model_bases.
  * @a param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for baseline types other than
- * sakura_BaselineType_kSinusoid, it should be always [0, 1, 2, ...,
- * (num_lsq_bases-1)]. Element values must be in ascending order.
+ * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
+ * Element values must be in ascending order.
  * @n must-be-aligned
  * @param[in,out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
@@ -1473,14 +1472,6 @@ typedef enum {
 	/**
 	 * @brief Chebyshev Polynomial
 	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
-
-	/**
-	 * @brief Natural Cubic Spline
-	 */LIBSAKURA_SYMBOL(BaselineType_kCubicSpline),
-
-	/**
-	 * @brief Sinusoids
-	 */LIBSAKURA_SYMBOL(BaselineType_kSinusoid),
 
 	/**
 	 * @brief Number of baseline functions implemented
@@ -2073,13 +2064,11 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * @details
  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
  * @param[in] order Parameter for the specified function.
- * It is the order (for sakura_BaselineType_kPolynomial and
- * sakura_BaselineType_kChebyshev), or the number of pieces (for
- * sakura_BaselineType_kCubicSpline), or the maximum wave number
- * (for sakura_BaselineType_kSinusoid). It must be positive for
- * sakura_BaselineType_kCubicSpline, while other models accept
- * zero value. The value should not exceed the @a order specified
- * in creation of @a context .
+ * It is the order (for polynomial and Chebyshev polynomial), or
+ * the number of pieces (for cubic spline), or the maximum wave
+ * number (for sinusoidal). It must be positive for cubic spline,
+ * while other models accept zero value. The value should not
+ * exceed the @a order specified in creation of @a context .
  * @param[out] num_coeff Number of basis functions to be used for
  * baseline fitting. This value should be the actual number of
  * simultaneous equations of least-square fitting.

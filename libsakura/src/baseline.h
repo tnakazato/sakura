@@ -32,6 +32,28 @@
 
 #include <libsakura/sakura.h>
 
+typedef enum {
+	/**
+	 * @brief Polynomial
+	 */BaselineTypeInternal_kPolynomial,
+
+	/**
+	 * @brief Chebyshev Polynomial
+	 */BaselineTypeInternal_kChebyshev,
+
+	/**
+	 * @brief Natural Cubic Spline
+	 */BaselineTypeInternal_kCubicSpline,
+
+	/**
+	 * @brief Sinusoids
+	 */BaselineTypeInternal_kSinusoid,
+
+	/**
+	 * @brief Number of baseline functions implemented
+	 */BaselineTypeInternal_kNumElements
+} BaselineTypeInternal;
+
 extern "C" {
 struct LIBSAKURA_SYMBOL(BaselineContextFloat) {
 	size_t num_bases; /**< ベースラインモデルを構成する基底関数の数 */
@@ -57,7 +79,7 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat) {
 	double *cspline_basis; /** A pointer to aligned 1D array for basis functions used in cubic spline fitting. Its size is @a num_basis_data * num_lsq_bases_max @a . */
 	void *cspline_lsq_coeff_storage; /** An address returned when allocating @a cspline_lsq_coeff @a . This one itself is not aligned, and is hold just for deallocating. */
 	double *cspline_lsq_coeff; /** A pointer to aligned 1D array for least-square fitting results. Its size is @a num_lsq_bases_max @a . */
-	LIBSAKURA_SYMBOL(BaselineType) baseline_type; /**< ベースラインの関数形 */
+	BaselineTypeInternal baseline_type; /**< ベースラインの関数形 */
 	uint16_t baseline_param; /** order for Polynomial or Chebyshev, npiece for CubicSpline, or maximum wave number for Sinusoid.*/
 };
 }

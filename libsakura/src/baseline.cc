@@ -96,26 +96,26 @@ inline bool IsUniqueAndAscendingOrder(size_t num_array, size_t const *array) {
  * of the elements in sakura_BaselineType.
  * @param[in] order Parameter of baseline. It is the maximum
  * polynomial order if baseline_type is
- * sakura_BaselineType_kPolynomial or
- * sakura_BaselineType_kChebyshev, or the maximum wave number
- * if baseline_type is sakura_BaselineType_kSinusoid.
+ * BaselineTypeInternal_kPolynomial or
+ * BaselineTypeInternal_kChebyshev, or the maximum wave number
+ * if baseline_type is BaselineTypeInternal_kSinusoid.
  * @return The returned number should be one of the followings:
  * ( @a order +1) for Polynomial and Chebyshev Polynomial,
  * ( 4 ) for Cubic Spline and
  * ( 2 * @a order +1) for Sinusoid.
  */
 inline size_t GetNumberOfContextBases(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
+BaselineTypeInternal const baseline_type, uint16_t const order) {
 	size_t num_bases = 0;
 	switch (baseline_type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	case BaselineTypeInternal_kPolynomial:
+	case BaselineTypeInternal_kChebyshev:
 		num_bases = order + 1;
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	case BaselineTypeInternal_kCubicSpline:
 		num_bases = kNumBasesCubicSpline;
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+	case BaselineTypeInternal_kSinusoid:
 		num_bases = 2 * order + 1;
 		break;
 	default:
@@ -132,26 +132,26 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order) {
  * of the elements in sakura_BaselineType.
  * @param[in] order Parameter of baseline. It is the maximum
  * polynomial order if baseline_type is
- * sakura_BaselineType_kPolynomial or
- * sakura_BaselineType_kChebyshev, or the number of spline
- * pieces if baseline_type is sakura_BaselineType_kCubicSpline,
+ * BaselineTypeInternal_kPolynomial or
+ * BaselineTypeInternal_kChebyshev, or the number of spline
+ * pieces if baseline_type is BaselineTypeInternal_kCubicSpline,
  * or the maximum wave number if baseline_type is
- * sakura_BaselineType_kSinusoid.
+ * BaselineTypeInternal_kSinusoid.
  * @return The returned number should be one of the followings:
  * ( @a order +1) for Polynomial and Chebyshev Polynomial,
  * ( @a order +3 ) for Cubic Spline and
  * ( 2 * @a order +1) for Sinusoid.
  */
 inline size_t GetNumberOfLsqBases(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order) {
+BaselineTypeInternal const baseline_type, size_t const order) {
 	size_t num_bases = 0;
 	switch (baseline_type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+	case BaselineTypeInternal_kPolynomial:
+	case BaselineTypeInternal_kChebyshev:
+	case BaselineTypeInternal_kSinusoid:
 		num_bases = GetNumberOfContextBases(baseline_type, order);
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	case BaselineTypeInternal_kCubicSpline:
 		num_bases = kNumBasesCubicSpline - 1 + order;
 		break;
 	default:
@@ -167,13 +167,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order) {
  * @param[in] baseline_type Type of baseline. It must be one
  * of the elements in sakura_BaselineType.
  * @param[in] order It is used as the maximum polynomial order
- * if baseline_type is sakura_BaselineType_kPolynomial or
- * sakura_BaselineType_kChebyshev, or it is used as the number
+ * if baseline_type is BaselineTypeInternal_kPolynomial or
+ * BaselineTypeInternal_kChebyshev, or it is used as the number
  * of spline pieces if baseline_type is
- * sakura_BaselineType_kCubicSpline.
+ * BaselineTypeInternal_kCubicSpline.
  * @param[in] num_nwave The length of @a nwave .
  * @param[in] nwave The maximum wave number. It is used only
- * if baseline_type is sakura_BaselineType_kSinusoid.
+ * if baseline_type is BaselineTypeInternal_kSinusoid.
  * @return The returned number should be one of the followings:
  * ( @a order +1) for Polynomial and Chebyshev Polynomial,
  * ( @a order *4 ) for Cubic Spline,
@@ -181,22 +181,22 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, size_t const order) {
  * ( 2 * @a num_nwave ) for Sinusoid with @a nwave not containing '0'.
  */
 inline size_t DoGetNumberOfCoefficients(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+BaselineTypeInternal const baseline_type, uint16_t const order,
 		size_t const num_nwave, size_t const *nwave) {
 	size_t num_bases = 0;
 	switch (baseline_type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	case BaselineTypeInternal_kPolynomial:
+	case BaselineTypeInternal_kChebyshev:
 		num_bases = order + 1;
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	case BaselineTypeInternal_kCubicSpline:
 		if (order < 1) {
 			throw std::invalid_argument(
 					"order (number of pieces) must be a positive value!");
 		}
 		num_bases = kNumBasesCubicSpline * order;
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+	case BaselineTypeInternal_kSinusoid:
 		if (!IsUniqueAndAscendingOrder(num_nwave, nwave)) {
 			throw std::invalid_argument(
 					"nwave elements must be in ascending order and not duplicate.");
@@ -401,7 +401,7 @@ inline void AllocateWorkSpaces(T *context) {
 							* context->num_lsq_bases_max,
 					&context->use_bases_idx));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->use_bases_idx));
-	if (type != LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+	if (type != BaselineTypeInternal_kSinusoid) {
 		for (size_t i = 0; i < context->num_lsq_bases_max; ++i) {
 			context->use_bases_idx[i] = i;
 		}
@@ -409,7 +409,7 @@ inline void AllocateWorkSpaces(T *context) {
 	context->use_bases_idx_storage = storage_for_use_bases_idx.release();
 
 	size_t num_coeff_full_max = context->num_lsq_bases_max;
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	if (type == BaselineTypeInternal_kCubicSpline) {
 		num_coeff_full_max = DoGetNumberOfCoefficients(type,
 				context->baseline_param, 0, nullptr);
 	}
@@ -426,7 +426,7 @@ inline void AllocateWorkSpaces(T *context) {
 	context->cspline_basis_storage = nullptr;
 	context->cspline_lsq_coeff = nullptr;
 	context->cspline_lsq_coeff_storage = nullptr;
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+	if (type == BaselineTypeInternal_kCubicSpline) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_basis(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(*context->cspline_basis)
@@ -464,17 +464,17 @@ inline void SetBasisData(size_t const order, T *context) {
 	}
 	AllocateMemoryForBasisData<T>(context);
 	switch (type) {
-	case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
+	case BaselineTypeInternal_kPolynomial:
 		SetBasisDataPolynomial<T, double>(context);
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+	case BaselineTypeInternal_kChebyshev:
 		SetBasisDataChebyshev<T, double>(context);
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+	case BaselineTypeInternal_kCubicSpline:
 		assert(context->num_bases == kNumBasesCubicSpline);
 		SetBasisDataPolynomial<T, double>(context);
 		break;
-	case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+	case BaselineTypeInternal_kSinusoid:
 		SetBasisDataSinusoid<T, double>(context);
 		break;
 	default:
@@ -531,18 +531,18 @@ inline void DestroyBaselineContext(T *context) {
  * @param[in] baseline_type Type of baseline function. It must be
  * one of those defined in sakura_BaselineType .
  * @param[in] order It is used only if @a baseline_type is
- * sakura_BaselineType_kPolynomial or sakura_BaselineType_kChebyshev .
+ * BaselineTypeInternal_kPolynomial or BaselineTypeInternal_kChebyshev .
  * @param[in] npiece It is used only if @a baseline_type is
- * sakura_BaselineType_kCubicSpline .
+ * BaselineTypeInternal_kCubicSpline .
  * @param[in] nwave It is used only if @a baseline_type is
- * sakura_BaselineType_kSinusoid .
+ * BaselineTypeInternal_kSinusoid .
  * @param[in] num_basis_data Length of the arrays for basis data,
  * input data, etc.
  * @parama[out] Address of pointer to baseline context object.
  */
 template<typename T>
 inline void CreateBaselineContext(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
+BaselineTypeInternal const baseline_type, uint16_t const order,
 		uint16_t const npiece, uint16_t const nwave,
 		size_t const num_basis_data, T **context) {
 	try {
@@ -556,14 +556,14 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 		work_context->baseline_type = baseline_type;
 		work_context->num_basis_data = num_basis_data;
 		switch (baseline_type) {
-		case LIBSAKURA_SYMBOL(BaselineType_kPolynomial):
-		case LIBSAKURA_SYMBOL(BaselineType_kChebyshev):
+		case BaselineTypeInternal_kPolynomial:
+		case BaselineTypeInternal_kChebyshev:
 			work_context->baseline_param = order;
 			break;
-		case LIBSAKURA_SYMBOL(BaselineType_kCubicSpline):
+		case BaselineTypeInternal_kCubicSpline:
 			work_context->baseline_param = npiece;
 			break;
-		case LIBSAKURA_SYMBOL(BaselineType_kSinusoid):
+		case BaselineTypeInternal_kSinusoid:
 			work_context->baseline_param = nwave;
 			break;
 		default:
@@ -870,7 +870,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 	U const three = static_cast<U>(3.0);
 	for (size_t i = 1; i < num_boundary - 1; ++i) {
 		size_t j = GetNumberOfLsqBases(
-				LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), i);
+				BaselineTypeInternal_kCubicSpline, i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
 		auto const b = static_cast<U>(boundary[i]);
 		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
@@ -1009,8 +1009,7 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		size_t const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], T *best_fit_model,
 		T *residual_data) {
-	assert(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	assert(context->num_bases == kNumBasesCubicSpline);
 	AddMulMatrixCubicSpline<T, U>(num_boundary, boundary, coeff_full, num_data,
 			context->basis_data, best_fit_model);
@@ -1258,7 +1257,7 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	auto const type = context->baseline_type;
 	assert(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial))||(type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev))||(type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)));
+			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -1269,7 +1268,7 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 	auto out = AssumeAligned(out_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+	if (type == BaselineTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
 	size_t const num_coeff = DoGetNumberOfCoefficients(type, order, num_nwave,
@@ -1309,8 +1308,7 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 		T clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
 		T *out_arg, bool *final_mask_arg, float *rms, size_t *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	assert(context->num_bases == kNumBasesCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -1328,7 +1326,7 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
-			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_boundary - 1);
+			BaselineTypeInternal_kCubicSpline, num_boundary - 1);
 	auto coeff_full =
 			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
 
@@ -1364,8 +1362,7 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 		bool *final_mask_arg, T *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
 	auto const type = context->baseline_type;
-	assert(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial))||(type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev))||(type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)));
+	assert((type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -1376,7 +1373,7 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 	auto coeff = AssumeAligned(coeff_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+	if (type == BaselineTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
 	size_t const num_boundary = 2;
@@ -1412,8 +1409,7 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 		U (*coeff_arg)[kNumBasesCubicSpline], bool *final_mask_arg, T *rms,
 		size_t *boundary_arg,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	assert(context->num_bases == kNumBasesCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -1431,7 +1427,7 @@ inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t num_coeff = GetNumberOfLsqBases(
-			LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_boundary - 1);
+			BaselineTypeInternal_kCubicSpline, num_boundary - 1);
 
 	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
 			context->cspline_basis, num_boundary, boundary, num_fitting_max,
@@ -1462,7 +1458,7 @@ inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
 		size_t num_nwave, size_t const *nwave, T *out_arg) {
 	auto const type = context->baseline_type;
 	assert(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial))||(type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev))||(type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)));
+			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -1470,7 +1466,7 @@ inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
 	auto const coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
 
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+	if (type == BaselineTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
 	GetBestFitModelAndResidual<T, U, V>(num_data, data, context, num_coeff,
@@ -1493,8 +1489,7 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 		size_t num_data, T const *data_arg, size_t num_boundary,
 		U const (*coeff_arg)[kNumBasesCubicSpline], size_t const *boundary_arg,
 		T *out_arg) {
-	assert(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -1527,12 +1522,16 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 	CHECK_ARGS(
 			(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) ||(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
 	CHECK_ARGS(context != nullptr);
-	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, order);
+	BaselineTypeInternal baseline_type_internal = BaselineTypeInternal_kPolynomial;
+	if (baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) {
+		baseline_type_internal = BaselineTypeInternal_kChebyshev;
+	}
+	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type_internal, order);
 	CHECK_ARGS(num_lsq_bases <= num_data);
 
 	try {
 		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
-				baseline_type, order, 1, 0, num_data, context);
+				baseline_type_internal, order, 1, 0, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1556,8 +1555,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
 		uint16_t const npiece, size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
-	LIBSAKURA_SYMBOL(BaselineType) const baseline_type = LIBSAKURA_SYMBOL(
-			BaselineType_kCubicSpline);
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(0 < npiece);
 	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, npiece);
@@ -1589,8 +1587,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicS
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
 		uint16_t const nwave, size_t const num_data,
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
-	LIBSAKURA_SYMBOL(BaselineType) const baseline_type = LIBSAKURA_SYMBOL(
-			BaselineType_kSinusoid);
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
 	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, nwave);
 	CHECK_ARGS(num_lsq_bases <= num_data);
@@ -1642,8 +1639,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) || (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)));
-	if (type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+			(type == BaselineTypeInternal_kPolynomial) || (type == BaselineTypeInternal_kChebyshev) || (type == BaselineTypeInternal_kCubicSpline));
+	if (type == BaselineTypeInternal_kCubicSpline) {
 		CHECK_ARGS(0 < order);
 	}
 	CHECK_ARGS(order <= context->baseline_param);
@@ -1676,8 +1673,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
-	CHECK_ARGS(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
+	CHECK_ARGS((type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev));
 	CHECK_ARGS(order <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
@@ -1725,8 +1721,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
 	CHECK_ARGS(num_pieces <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
@@ -1777,8 +1772,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 		bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
+	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kSinusoid);
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
@@ -1825,8 +1819,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
-	CHECK_ARGS(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
+	CHECK_ARGS((type == BaselineTypeInternal_kPolynomial) || (type == BaselineTypeInternal_kChebyshev));
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1871,13 +1864,12 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		bool final_mask[/*num_data*/], float *rms,
 		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	CHECK_ARGS(context->baseline_type == baseline_type);
 	CHECK_ARGS(0 < num_pieces);
 	CHECK_ARGS(num_pieces <= context->baseline_param);
-	CHECK_ARGS(
-			GetNumberOfLsqBases(LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), num_pieces) <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, num_pieces) <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1921,9 +1913,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
+	CHECK_ARGS(context->baseline_type == baseline_type);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1934,8 +1926,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
-	size_t num_lsq_bases = DoGetNumberOfCoefficients(context->baseline_type, 0,
-			num_nwave, nwave);
+	size_t num_lsq_bases = DoGetNumberOfCoefficients(baseline_type, 0, num_nwave, nwave);
 	CHECK_ARGS(num_lsq_bases <= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
@@ -1975,8 +1966,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
-	CHECK_ARGS(
-			(type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) || (type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
+	CHECK_ARGS((type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev));
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -2015,8 +2005,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
 				noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline));
+	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
 	CHECK_ARGS(num_pieces <= context->baseline_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
@@ -2058,8 +2047,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(
-			context->baseline_type == LIBSAKURA_SYMBOL(BaselineType_kSinusoid));
+	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kSinusoid);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));

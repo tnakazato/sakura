@@ -244,7 +244,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCase) {
 				<< " cases: num_data = ";
 		size_t num_extra_max = 3;
 		SIMD_ALIGN
-		size_t boundary[num_pieces+1];
+		size_t boundary[num_pieces + 1];
 		SIMD_ALIGN
 		double answer[4 * num_pieces];
 		SetDoubleConstant(1.0, ELEMENTSOF(answer), answer);
@@ -303,7 +303,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseWithMa
 
 	size_t num_pieces = 3;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 	SIMD_ALIGN
 	double answer[4 * num_pieces];
 	SetDoubleConstant(1.0, ELEMENTSOF(answer), answer);
@@ -430,7 +430,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineZeroNumClippingMax) 
 	}
 	float rms;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) coeff_status =
 	LIBSAKURA_SYMBOL(GetBestFitBaselineCoefficientsCubicSplineFloat)(context,
@@ -483,7 +483,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	double out[num_pieces][4];
 	float rms;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
@@ -546,7 +546,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesNullPo
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	float rms;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 
 	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
@@ -717,7 +717,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineErroneousCasesBadPar
 	size_t const num_basis_data = 10;
 	size_t const num_pieces_orig = 1;
 	SIMD_ALIGN
-	size_t boundary[num_pieces_orig+1];
+	size_t boundary[num_pieces_orig + 1];
 	double coeff[4 * num_pieces_orig];
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff), coeff);
 	SIMD_ALIGN
@@ -798,7 +798,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineSuccessfulCase) {
 				<< " cases: num_data = ";
 		size_t num_extra_max = 3;
 		SIMD_ALIGN
-		size_t boundary[num_pieces+1];
+		size_t boundary[num_pieces + 1];
 
 		for (size_t num_extra = 0; num_extra <= num_extra_max; ++num_extra) {
 			size_t const num_data = 4 * num_pieces + num_extra;
@@ -878,7 +878,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineWithZeroNumClippingMax) {
 	SetDoubleConstant(0.0, ELEMENTSOF(data), answer);
 	float rms;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 	LIBSAKURA_SYMBOL(Status) sub_status =
 	LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineFloat)(context, num_pieces,
 			num_data, data, mask, 5.0f, 0, true, out, mask, &rms, boundary,
@@ -931,7 +931,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	SetDoubleConstant(0.0, ELEMENTSOF(data), answer);
 	float rms;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		LIBSAKURA_SYMBOL(Status) sub_status =
@@ -999,7 +999,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
 	float rms;
 	SIMD_ALIGN
-	size_t boundary[num_pieces+1];
+	size_t boundary[num_pieces + 1];
 
 	for (NPItems item = static_cast<NPItems>(0); item < NP_kNumElems; item =
 			static_cast<NPItems>(item + 1)) {
@@ -1172,7 +1172,7 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplineErroneousCasesBadParameterValue) {
 	float rms;
 	size_t const num_pieces_context = 1;
 	SIMD_ALIGN
-	size_t boundary[num_pieces_context+1];
+	size_t boundary[num_pieces_context + 1];
 	LIBSAKURA_SYMBOL(BaselineContextFloat) *context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateBaselineContextCubicSplineFloat(num_pieces_context,
@@ -2864,28 +2864,22 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsErroneousCasesBadPar
 }
 
 TEST_F(BaselineWK, CreateBaselineContextFloat) {
-	LIBSAKURA_SYMBOL(BaselineType) bltypes[] =
-			{ LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
-					BaselineType_kChebyshev), LIBSAKURA_SYMBOL(
-					BaselineType_kCubicSpline), LIBSAKURA_SYMBOL(
-					BaselineType_kSinusoid) };
+	BaselineTypeInternal bltypes[] = { BaselineTypeInternal_kPolynomial,
+			BaselineTypeInternal_kChebyshev, BaselineTypeInternal_kCubicSpline,
+			BaselineTypeInternal_kSinusoid };
 	uint16_t order_valid_min = 0;
 	size_t num_data_valid_min = 0;
 	for (size_t itype = 0; itype < ELEMENTSOF(bltypes); ++itype) {
 		order_valid_min =
-				(bltypes[itype] == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) ?
-						1 : 0;
+				(bltypes[itype] == BaselineTypeInternal_kCubicSpline) ? 1 : 0;
 		for (uint16_t order = 0; order < order_valid_min + 3; ++order) {
-			if (bltypes[itype] == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) {
+			if (bltypes[itype] == BaselineTypeInternal_kPolynomial) {
 				num_data_valid_min = order + 1;
-			} else if (bltypes[itype]
-					== LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) {
+			} else if (bltypes[itype] == BaselineTypeInternal_kChebyshev) {
 				num_data_valid_min = order + 1;
-			} else if (bltypes[itype]
-					== LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+			} else if (bltypes[itype] == BaselineTypeInternal_kCubicSpline) {
 				num_data_valid_min = order + 3;
-			} else if (bltypes[itype]
-					== LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+			} else if (bltypes[itype] == BaselineTypeInternal_kSinusoid) {
 				num_data_valid_min = 2 * order + 1;
 			}
 			for (size_t num_data = 0; num_data < num_data_valid_min + 3;
@@ -2896,16 +2890,21 @@ TEST_F(BaselineWK, CreateBaselineContextFloat) {
 				}
 				LIBSAKURA_SYMBOL(BaselineContextFloat) *context = nullptr;
 				LIBSAKURA_SYMBOL (Status) status;
-				if (bltypes[itype] == LIBSAKURA_SYMBOL(BaselineType_kSinusoid)) {
+				if (bltypes[itype] == BaselineTypeInternal_kSinusoid) {
 					status = sakura_CreateBaselineContextSinusoidFloat(order,
 							num_data, &context);
 				} else if (bltypes[itype]
-						== LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+						== BaselineTypeInternal_kCubicSpline) {
 					status = sakura_CreateBaselineContextCubicSplineFloat(order,
 							num_data, &context);
 				} else {
-					status = sakura_CreateBaselineContextFloat(bltypes[itype],
-							order, num_data, &context);
+					LIBSAKURA_SYMBOL(BaselineType) type_ext = LIBSAKURA_SYMBOL(
+							BaselineType_kPolynomial);
+					if (bltypes[itype] == BaselineTypeInternal_kChebyshev) {
+						type_ext = LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
+					}
+					status = sakura_CreateBaselineContextFloat(type_ext, order,
+							num_data, &context);
 				}
 				if ((num_data < num_data_valid_min)
 						|| (order < order_valid_min)) {

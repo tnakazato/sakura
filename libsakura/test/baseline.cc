@@ -327,31 +327,31 @@ TEST_F(Baseline, CreateBaselineContextFloatWithTooSmallNumData) {
 	LIBSAKURA_SYMBOL (Status) create_status;
 
 	size_t const num_func_types = 3;
-	LIBSAKURA_SYMBOL(BaselineType) func_types[num_func_types] = {
-			LIBSAKURA_SYMBOL(BaselineType_kPolynomial), LIBSAKURA_SYMBOL(
-					BaselineType_kChebyshev), LIBSAKURA_SYMBOL(
-					BaselineType_kCubicSpline) };
-	string func_names[num_func_types] = { "Polynomial", "Chebyshev",
-			"CubicSpline" };
+	BaselineTypeInternal func_types[num_func_types] = { BaselineTypeInternal_kPolynomial, BaselineTypeInternal_kChebyshev, BaselineTypeInternal_kCubicSpline };
+	string func_names[num_func_types] = { "Polynomial", "Chebyshev", "CubicSpline" };
 	for (size_t i = 0; i < num_func_types; ++i) {
 		std::cout << "testing for " << func_names[i] << "..." << std::flush;
 		size_t num_data_min = 0;
 		switch (func_types[i]) {
-		case (LIBSAKURA_SYMBOL(BaselineType_kPolynomial)):
-		case (LIBSAKURA_SYMBOL(BaselineType_kChebyshev)):
+		case (BaselineTypeInternal_kPolynomial):
+		case (BaselineTypeInternal_kChebyshev):
 			num_data_min = order + 1;
 			break;
-		case (LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)):
+		case (BaselineTypeInternal_kCubicSpline):
 			num_data_min = 4;
 			break;
 		default:
 			assert(false);
 		};
 		size_t num_data = num_data_min - 1;
-		if (func_types[i] == LIBSAKURA_SYMBOL(BaselineType_kCubicSpline)) {
+		if (func_types[i] == BaselineTypeInternal_kCubicSpline) {
 			create_status = sakura_CreateBaselineContextCubicSplineFloat(npiece, num_data, &context);
 		} else {
-			create_status = sakura_CreateBaselineContextFloat(func_types[i], order, num_data, &context);
+			LIBSAKURA_SYMBOL(BaselineType) type_ext = LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
+			if (func_types[i] == BaselineTypeInternal_kChebyshev) {
+				type_ext = LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
+			}
+			create_status = sakura_CreateBaselineContextFloat(type_ext, order, num_data, &context);
 		}
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
@@ -394,8 +394,8 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	for (size_t i = 0; i < ELEMENTSOF(out); ++i) {
 		CheckAlmostEqual(answer[i], context->basis_data[i], 1e-10);
 	}
-	LIBSAKURA_SYMBOL (BaselineType) type = context->baseline_type;
-	EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), type);
+	BaselineTypeInternal type = context->baseline_type;
+	EXPECT_EQ(BaselineTypeInternal_kPolynomial, type);
 	size_t num_bases = context->num_bases;
 	ASSERT_EQ(num_model, num_bases);
 	size_t num_basis_data = context->num_basis_data;
