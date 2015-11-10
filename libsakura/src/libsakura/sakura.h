@@ -1201,15 +1201,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * array is created. Finally inverse FFT is applied against it
  * and then real output data will be created.
  * If not using FFT, it is performed against real input data by real kernel
- * @param[out] context context for convolution. The context is thread-safe, i.e., you can use one context from
- * multiple threads simultaneously. But please note that, in reality, the thread-safety of the context depends on
- * that of fftw3 library, which Sakura depends on.
- * See http://www.fftw.org/doc/Thread-safety.html#Thread-safety for detail.
+ * @param[out] context context for convolution. The context can be shared between threads.
  * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by Convolution1D.
  * @return status code.
  *
  * MT-unsafe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
 		size_t num_data, size_t num_kernel, float const kernel[],
 		bool use_fft, struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
