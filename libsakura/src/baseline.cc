@@ -1676,7 +1676,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
@@ -1728,7 +1728,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
@@ -1780,7 +1780,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 		bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kSinusoid);
 	CHECK_ARGS(0 < num_nwave);
@@ -1827,7 +1827,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
@@ -1877,7 +1877,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
 	CHECK_ARGS(context->baseline_type == baseline_type);
@@ -1927,7 +1927,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
 	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context->baseline_type == baseline_type);
