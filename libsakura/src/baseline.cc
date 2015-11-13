@@ -1675,6 +1675,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		uint16_t num_fitting_max, bool get_residual, float out[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
@@ -1691,7 +1693,6 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
-	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
 		SubtractBaseline<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1726,6 +1727,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		bool final_mask[/*num_data*/], float *rms,
 		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
@@ -1742,7 +1745,6 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
-	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
 		SubtractBaselineCubicSpline<float, double,
@@ -1777,6 +1779,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 		uint16_t num_fitting_max, bool get_residual, float out[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kSinusoid);
 	CHECK_ARGS(0 < num_nwave);
@@ -1793,7 +1797,6 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
-	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
 		SubtractBaseline<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1823,6 +1826,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
@@ -1840,7 +1845,6 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
-	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
 		GetBestFitBaselineCoefficients<float, double,
@@ -1872,8 +1876,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		bool final_mask[/*num_data*/], float *rms,
 		size_t boundary[/*num_pieces+1*/],
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
-	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	CHECK_ARGS(context != nullptr);
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
 	CHECK_ARGS(context->baseline_type == baseline_type);
 	CHECK_ARGS(0 < num_pieces);
 	CHECK_ARGS(num_pieces <= context->baseline_param);
@@ -1890,7 +1896,6 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(boundary != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
-	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
 		GetBestFitBaselineCoefficientsCubicSpline<float, double,
@@ -1921,8 +1926,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double coeff[/*num_coeff*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
-	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	CHECK_ARGS(context != nullptr);
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context->baseline_type == baseline_type);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
@@ -1942,7 +1949,6 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
-	CHECK_ARGS(baseline_status != nullptr);
 
 	try {
 		GetBestFitBaselineCoefficients<float, double,
