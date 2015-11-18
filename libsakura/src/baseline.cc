@@ -1123,7 +1123,6 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 		final_mask[i] = mask[i];
 	}
 	LIBSAKURA_SYMBOL(Status) status;
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 
 	try {
 		U rms_d = 0.0;
@@ -1195,6 +1194,7 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 			std::copy(src, src + num_data, out);
 		}
 		*rms = rms_d;
+		*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	} catch (...) {
 		if (*baseline_status == LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
 			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
