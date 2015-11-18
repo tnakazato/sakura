@@ -164,23 +164,23 @@ void SetTrueIfInRangesInclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesInclusiveFunc const funcs[] = {
-			SetTrueIfInRangesInclusiveScalar<DataType, 0>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 1>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 2>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 3>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 4>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 5>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 6>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 7>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 8>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 9>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 10>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 11>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 12>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 13>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 14>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 15>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 16> };
+			SetTrueIfInRangesInclusiveVector<DataType, 0>,
+			SetTrueIfInRangesInclusiveVector<DataType, 1>,
+			SetTrueIfInRangesInclusiveVector<DataType, 2>,
+			SetTrueIfInRangesInclusiveVector<DataType, 3>,
+			SetTrueIfInRangesInclusiveVector<DataType, 4>,
+			SetTrueIfInRangesInclusiveVector<DataType, 5>,
+			SetTrueIfInRangesInclusiveVector<DataType, 6>,
+			SetTrueIfInRangesInclusiveVector<DataType, 7>,
+			SetTrueIfInRangesInclusiveVector<DataType, 8>,
+			SetTrueIfInRangesInclusiveVector<DataType, 9>,
+			SetTrueIfInRangesInclusiveVector<DataType, 10>,
+			SetTrueIfInRangesInclusiveVector<DataType, 11>,
+			SetTrueIfInRangesInclusiveVector<DataType, 12>,
+			SetTrueIfInRangesInclusiveVector<DataType, 13>,
+			SetTrueIfInRangesInclusiveVector<DataType, 14>,
+			SetTrueIfInRangesInclusiveVector<DataType, 15>,
+			SetTrueIfInRangesInclusiveVector<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
@@ -506,7 +506,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
 	auto operation_for_element = [](decltype(data[0]) data_value) {
-		return std::isfinite(data_value);
+		union {float fvalue; int ivalue; } value;
+		value.fvalue = data_value;
+		return (((value.ivalue >> 23) & 0xFF) < 0xFF);
 	};
 	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
 }
