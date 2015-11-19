@@ -26,6 +26,7 @@
 
 #include "libsakura/localdef.h"
 #include "libsakura/sakura.h"
+#include "libsakura/packed_operation.h"
 
 // Vectorization by Compiler
 namespace {
@@ -502,6 +503,75 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsIn
 	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
 }
 
+#if defined(__AVX2__)
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
+		size_t num_data, float const data[/*num_data*/],
+		bool result[/*num_data*/]) noexcept {
+	CHECK_ARGS(IsValidDataAndResult(data, result));
+
+	constexpr uint32_t kExponetMask = 0x7F800000;
+	STATIC_ASSERT(sizeof(kExponetMask) == sizeof(data[0]));
+
+	constexpr int32_t kZero = 0x80808080;
+	constexpr int32_t kLSBytes = 0x0c080400;
+	const auto idx0 = _mm256_set_epi32(kZero, kZero, kZero, kLSBytes,
+			kZero, kZero, kZero, kLSBytes);
+	const auto idx1 = _mm256_set_epi32(kZero, kZero, kLSBytes, kZero,
+			kZero, kZero, kLSBytes, kZero);
+	const auto idx2 = _mm256_set_epi32(kZero, kLSBytes, kZero, kZero,
+			kZero, kLSBytes, kZero, kZero);
+	const auto idx3 = _mm256_set_epi32(kLSBytes, kZero, kZero, kZero,
+			kLSBytes, kZero, kZero, kZero);
+	const auto shuffle = _mm256_set_epi32(7, 3, 6, 2, 5, 1, 4, 0);
+
+	constexpr auto kElementsPerLoop = sizeof(LIBSAKURA_SYMBOL(SimdPacketAVX)) / LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
+	const auto data_ptr = AssumeAligned(reinterpret_cast<__m256i const (*)[kElementsPerLoop]>(data));
+	const auto result_ptr = AssumeAligned<__m256i *>(reinterpret_cast<__m256i *>(result));
+	const auto nan_inf_mask = _mm256_set1_epi32(kExponetMask);
+	const auto one = _mm256_set1_epi32(true);
+	const auto n = num_data / LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat / kElementsPerLoop;
+	for (size_t i = 0; i < n; ++i) {
+		auto is_valid = _mm256_shuffle_epi8(
+				_mm256_andnot_si256(
+						_mm256_cmpeq_epi32(nan_inf_mask,
+								_mm256_and_si256(data_ptr[i][0], nan_inf_mask)),
+						one), idx0);
+		is_valid = _mm256_or_si256(
+				_mm256_shuffle_epi8(
+						_mm256_andnot_si256(
+								_mm256_cmpeq_epi32(nan_inf_mask,
+										_mm256_and_si256(data_ptr[i][1],
+												nan_inf_mask)), one), idx1),
+				is_valid);
+		is_valid = _mm256_or_si256(
+				_mm256_shuffle_epi8(
+						_mm256_andnot_si256(
+								_mm256_cmpeq_epi32(nan_inf_mask,
+										_mm256_and_si256(data_ptr[i][2],
+												nan_inf_mask)), one), idx2),
+				is_valid);
+		is_valid = _mm256_or_si256(
+				_mm256_shuffle_epi8(
+						_mm256_andnot_si256(
+								_mm256_cmpeq_epi32(nan_inf_mask,
+										_mm256_and_si256(data_ptr[i][3],
+												nan_inf_mask)), one), idx3),
+				is_valid);
+		result_ptr[i] = _mm256_permutevar8x32_epi32(is_valid, shuffle);
+	}
+
+	const auto end = n * LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat * kElementsPerLoop;
+	data = &data[end];
+	result = &result[end];
+	num_data -= end;
+	auto operation_for_element = [](decltype(data[0]) data_value) -> bool {
+		union {float fvalue; int ivalue; } value;
+		value.fvalue = data_value;
+		return ((value.ivalue & kExponetMask) != kExponetMask);
+	};
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+}
+#else
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		size_t num_data, float const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
@@ -521,7 +591,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 //	};
 //	return DoElementFuncBoolFilter(operation_for_element, num_data, data_int, result);
 }
-
+#endif
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
