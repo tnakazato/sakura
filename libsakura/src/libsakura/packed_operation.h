@@ -50,6 +50,13 @@ public:
 		return result;
 	}
 
+	static inline typename Arch::PriorArch::PacketType Int32ToLSByte(
+			typename Arch::PacketType ints) {
+		assert(false);
+		typename Arch::PriorArch::PacketType result = { 0 };
+		return result;
+	}
+
 	static inline typename Arch::PacketType ByteToFloat(
 			typename Arch::PriorArch::PacketType bytes) {
 		assert(false);
@@ -1007,6 +1014,26 @@ public:
 		result.v_prior.v[0].raw_int32 = _mm_cvtepi8_epi32(bytes.raw_int32);
 		result.v_prior.v[1].raw_int32 = _mm_cvtepi8_epi32(
 		_mm_shuffle_epi32(bytes.raw_int32, _MM_SHUFFLE(0,0,0,1)));
+#endif
+		return result;
+	}
+
+	static inline typename LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType Int32ToLSByte(
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PacketType ints) {
+		LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result;
+		constexpr int32_t kZero = 0x80808080;
+		constexpr int32_t kLSBytes = 0x0c080400;
+#if defined(__AVX2__)
+		const auto idx = _mm256_set_epi32(kZero, kZero, kLSBytes, kZero,
+				kZero, kZero, kZero, kLSBytes);
+		auto lsbytes = _mm256_shuffle_epi8(ints.raw_int32, idx);
+		result.raw_int32 = _mm_or_si128(_mm256_castsi256_si128(lsbytes), _mm256_extracti128_si256(lsbytes, 1));
+#else
+		result.raw_int32 = _mm_or_si128(
+				_mm_shuffle_epi8(ints.v_prior.v[0].raw_int32,
+						_mm128_set_epi32(kZero, kZero, kZero, kLSBytes)),
+				_mm_shuffle_epi8(ints.v_prior.v[1].raw_int32,
+						_mm128_set_epi32(kZero, kZero, kLSBytes, kZero)));
 #endif
 		return result;
 	}

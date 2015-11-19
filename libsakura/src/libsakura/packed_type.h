@@ -219,7 +219,7 @@ union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 	typedef __m128d RawDouble;
 	typedef __m128i RawInt32;
 	typedef __m128i RawInt64;
-	RawInt32 raw_int64;
+	RawInt64 raw_int64;
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
@@ -317,7 +317,7 @@ union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 	typedef __m256d RawDouble;
 	typedef __m256i RawInt32;
 	typedef __m256i RawInt64;
-	RawInt32 raw_int64;
+	RawInt64 raw_int64;
 	RawFloat raw_float;
 	RawDouble raw_double;
 	RawInt32 raw_int32;
