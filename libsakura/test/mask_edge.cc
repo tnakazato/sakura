@@ -37,10 +37,9 @@
 template<typename XInitializer, typename YInitializer, typename MaskInitializer>
 struct InvalidArgumentInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		*status_expected = sakura_Status_kInvalidArgument;
 		XInitializer::Initialize(x_in, x_out);
 		YInitializer::Initialize(y_in, y_out);
@@ -85,10 +84,9 @@ typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
 
 struct BaseInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		*mask_out = const_cast<bool *>(mask_in);
 		for (size_t i = 0; i < num_data; ++i) {
 			(*mask_out)[i] = false;
@@ -121,10 +119,9 @@ struct WiderSquareParamSet {
 template<typename ParamSet>
 struct SquareShapeInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
 
@@ -205,10 +202,9 @@ private:
 template<typename ParamSet>
 struct FailedSquareShapeInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
 				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
 				status_expected);
@@ -267,10 +263,9 @@ private:
 template<typename ParamSet, typename WrongValueProvider, bool X = true>
 struct FailedSquareShapeInitializerWithWrongValue {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
 				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
 				status_expected);
@@ -287,10 +282,9 @@ struct FailedSquareShapeInitializerWithWrongValue {
 template<typename ParamSet>
 struct UserDefinedRangeSquareShapeInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		SquareShapeInitializer<ParamSet>::Initialize(num_data, fraction, x_in,
 				y_in, mask_in, x_out, y_out, mask_out, mask_expected,
 				status_expected);
@@ -353,10 +347,9 @@ struct InclinedCShapeParamSet {
 template<typename ParamSet>
 struct CircularShapeInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
 
@@ -419,10 +412,9 @@ struct CircularShapeInitializer {
 
 struct IdenticalValueInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		// all elements in x and y will be initialized to 0
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
@@ -432,10 +424,9 @@ struct IdenticalValueInitializer {
 
 struct NumDataTwoInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		ASSERT_EQ(num_data, 2);
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
@@ -451,10 +442,9 @@ struct NumDataTwoInitializer {
 
 struct NumDataThreeInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
-			double const y_in[],
-			bool const mask_in[], double **x_out, double **y_out,
-			bool **mask_out,
-			bool mask_expected[], sakura_Status *status_expected) {
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
 		ASSERT_EQ(num_data, 3);
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
@@ -484,13 +474,13 @@ typedef CircularShapeInitializer<InclinedCShapeParamSet> StandardInclinedCShape;
 
 struct NullChecker {
 	static void Check(size_t num_data, bool const mask[],
-	bool const mask_expected[]) {
+			bool const mask_expected[]) {
 	}
 };
 
 struct StandardChecker {
 	static void Check(size_t num_data, bool const mask[],
-	bool const mask_expected[]) {
+			bool const mask_expected[]) {
 		for (size_t i = 0; i < num_data; ++i) {
 			EXPECT_EQ(mask_expected[i], mask[i]) << i;
 		}
@@ -499,9 +489,18 @@ struct StandardChecker {
 
 struct AllMaskedChecker {
 	static void Check(size_t num_data, bool const mask[],
-	bool const mask_expected[]) {
+			bool const mask_expected[]) {
 		for (size_t i = 0; i < num_data; ++i) {
 			EXPECT_EQ(true, mask[i]) << i;
+		}
+	}
+};
+
+struct AllUnmaskedChecker {
+	static void Check(size_t num_data, bool const mask[],
+			bool const mask_expected[]) {
+		for (size_t i = 0; i < num_data; ++i) {
+			EXPECT_EQ(false, mask[i]) << i;
 		}
 	}
 };
@@ -655,8 +654,37 @@ TEST_MASK(ArrayHasPositiveInf) {
 					WrongValueNegativeInf<double>, false> >(100, 0.1f, 0.0);
 }
 
+TEST_MASK(TooFewEffectiveNumberOfMaskedData) {
+	RunTest<BaseInitializer, AllUnmaskedChecker>(5, 0.1f, 0.0);
+}
+
 TEST_MASK(NumDataIsOne) {
+	// If pixel size is not manually set, it should fail
 	RunTest<BasicInvalidArgumentInitializer>(1, 0.1f, 0.0);
+
+	// If blc and trc are not manually set, it should fail in general
+	// However, it passes since expected number of masked data
+	// (num_data * fraction) is less than 1.
+	RunTest<BaseInitializer, AllUnmaskedChecker>(1, 0.1f, 1.0);
+
+	// The following case should fail since num_data * fraction is 1
+	RunTest<BasicInvalidArgumentInitializer>(1, 1.0f, 1.0);
+
+	// If both pixel size and (blc, trc) are given, it should work
+	// resulting mask will be all false since effective
+	// mask ratio 1 * 0.1 = 0.1 is less than 1
+	double blc_x = -1.0;
+	double blc_y = -1.0;
+	double trc_x = 1.0;
+	double trc_y = 1.0;
+	RunTest<BaseInitializer, AllUnmaskedChecker>(1, 0.1f, 1.0, &blc_x, &blc_y,
+			&trc_x, &trc_y);
+
+	// resulting mask will be all true since effective
+	// mask ratio 1 * 0.1 = 0.1 is less than 1
+	RunTest<BaseInitializer, AllMaskedChecker>(1, 1.0f, 1.0, &blc_x, &blc_y,
+			&trc_x, &trc_y);
+
 }
 
 TEST_MASK(InvalidUserDefinedRange) {
