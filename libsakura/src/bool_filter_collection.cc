@@ -507,16 +507,16 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint32_t kExponetMask = 0x7F800000;
 	STATIC_ASSERT(sizeof(kExponetMask) == sizeof(data[0]));
-	// code 1
-	auto operation_for_element = [](decltype(data[0]) data_value) {
+	// code 1'
+	auto operation_for_element = [](decltype(data[0]) data_value) -> bool {
 		union {float fvalue; int ivalue; } value;
 		value.fvalue = data_value;
 		return ((value.ivalue & kExponetMask) != kExponetMask);
 	};
 	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
-	// code 2
+	// code 2'
 //	uint32_t const *data_int = reinterpret_cast<uint32_t const *>(data);
-//	auto operation_for_element = [](decltype(data_int[0]) data_value) {
+//	auto operation_for_element = [](decltype(data_int[0]) data_value) -> bool {
 //		return ((data_value & kExponetMask) != kExponetMask);
 //	};
 //	return DoElementFuncBoolFilter(operation_for_element, num_data, data_int, result);
