@@ -566,7 +566,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	CHECK_ARGS(!std::isnan(pixel_size));
 	CHECK_ARGS(!std::isinf(pixel_size));
 	CHECK_ARGS(0.0 <= pixel_size);
-	CHECK_ARGS(num_data != 1);
+	CHECK_ARGS(num_data != 1 || (num_data == 1 && pixel_size > 0.0));
 	CHECK_ARGS(x != nullptr);
 	CHECK_ARGS(y != nullptr);
 	CHECK_ARGS(mask != nullptr);
