@@ -497,6 +497,15 @@ struct StandardChecker {
 	}
 };
 
+struct AllMaskedChecker {
+	static void Check(size_t num_data, bool const mask[],
+	bool const mask_expected[]) {
+		for (size_t i = 0; i < num_data; ++i) {
+			EXPECT_EQ(true, mask[i]) << i;
+		}
+	}
+};
+
 struct PerformanceTestOutput {
 	static void Print(std::string const test_name, double elapsed_time) {
 		std::cout << "#x# benchmark " << test_name << " " << elapsed_time
@@ -747,7 +756,8 @@ TEST_MASK(ZeroDataSize) {
 }
 
 TEST_MASK(FractionEqualToOne) {
-	RunTest<StandardSquare, StandardChecker>(1000, 1.0f, 0.0);
+//	RunTest<StandardSquare, StandardChecker>(1000, 1.0f, 0.0);
+	RunTest<StandardSquare, AllMaskedChecker>(1000, 1.0f, 0.0);
 }
 
 TEST_MASK(NumDataEqualToTwo) {
@@ -887,6 +897,10 @@ TEST_MASK(ManualPixelSize) {
 	// inclined C-shape
 	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction,
 			pixel_size);
+
+	// large pixel size causes to mask all data regardless of fraction
+	pixel_size = 1.0e10;
+	RunTest<StandardCircle, AllMaskedChecker>(1000, fraction, pixel_size);
 }
 
 TEST_MASK(ValidUserDefinedRange) {
