@@ -1124,83 +1124,71 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 	}
 	LIBSAKURA_SYMBOL(Status) status;
 
-	try {
-		U rms_d = 0.0;
-		assert(0.0 < clip_threshold_sigma);
-		for (uint16_t i = 1; i <= num_fitting_max; ++i) {
-			if (num_unmasked_data < num_coeff) {
-				*baseline_status = LIBSAKURA_SYMBOL(
-						BaselineStatus_kNotEnoughData);
-				throw std::runtime_error(GetNotEnoughDataMessage(i));
-			}
-			if (num_unmasked_data <= num_clipped) {
-				status = LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data,
-						data, final_mask, num_context_bases, basis, num_coeff,
-						context->use_bases_idx, context->lsq_matrix,
-						context->lsq_vector);
-				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-					throw std::runtime_error("failed in GetLSQCoefficients.");
-				}
-			} else {
-				status = LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(num_data,
-						data, mask, num_clipped, context->clipped_indices,
-						num_context_bases, basis, num_coeff,
-						context->use_bases_idx, context->lsq_matrix,
-						context->lsq_vector);
-				if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-					throw std::runtime_error(
-							"failed in UpdateLSQCoefficients.");
-				}
-			}
-			status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
-					num_coeff, context->lsq_matrix, context->lsq_vector, coeff);
+	U rms_d = 0.0;
+	assert(0.0 < clip_threshold_sigma);
+	for (uint16_t i = 1; i <= num_fitting_max; ++i) {
+		if (num_unmasked_data < num_coeff) {
+			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
+			throw std::runtime_error(GetNotEnoughDataMessage(i));
+		}
+		if (num_unmasked_data <= num_clipped) {
+			status = LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(num_data, data,
+					final_mask, num_context_bases, basis, num_coeff,
+					context->use_bases_idx, context->lsq_matrix,
+					context->lsq_vector);
 			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error(
-						"failed in SolveSimultaneousEquationsByLU.");
+				throw std::runtime_error("failed in GetLSQCoefficients.");
 			}
-
-			func();
-
-			LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
-			status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
-					residual_data, final_mask, &result);
+		} else {
+			status = LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(num_data,
+					data, mask, num_clipped, context->clipped_indices,
+					num_context_bases, basis, num_coeff, context->use_bases_idx,
+					context->lsq_matrix, context->lsq_vector);
 			if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-				throw std::runtime_error(
-						"failed in ComputeAccurateStatisticsFloat.");
+				throw std::runtime_error("failed in UpdateLSQCoefficients.");
 			}
-			assert(0 < result.count);
-			U mean = result.sum / result.count;
-			rms_d = std::sqrt(
-					std::abs(result.square_sum / result.count - mean * mean));
+		}
+		status = LIBSAKURA_SYMBOL(SolveSimultaneousEquationsByLUDouble)(
+				num_coeff, context->lsq_matrix, context->lsq_vector, coeff);
+		if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			throw std::runtime_error(
+					"failed in SolveSimultaneousEquationsByLU.");
+		}
 
-			if (i < num_fitting_max) {
-				float clip_threshold_abs = clip_threshold_sigma * rms_d;
-				float clip_threshold_lower = mean - clip_threshold_abs;
-				float clip_threshold_upper = mean + clip_threshold_abs;
-				ClipData<T>(num_boundary, boundary, residual_data, final_mask,
-						clip_threshold_lower, clip_threshold_upper, final_mask,
-						context->clipped_indices, &num_clipped);
-				if (num_clipped == 0) {
-					break;
-				}
-				num_unmasked_data = result.count - num_clipped;
+		func();
+
+		LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
+		status = LIBSAKURA_SYMBOL(ComputeAccurateStatisticsFloat)(num_data,
+				residual_data, final_mask, &result);
+		if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+			throw std::runtime_error(
+					"failed in ComputeAccurateStatisticsFloat.");
+		}
+		assert(0 < result.count);
+		U mean = result.sum / result.count;
+		rms_d = std::sqrt(
+				std::abs(result.square_sum / result.count - mean * mean));
+
+		if (i < num_fitting_max) {
+			float clip_threshold_abs = clip_threshold_sigma * rms_d;
+			float clip_threshold_lower = mean - clip_threshold_abs;
+			float clip_threshold_upper = mean + clip_threshold_abs;
+			ClipData<T>(num_boundary, boundary, residual_data, final_mask,
+					clip_threshold_lower, clip_threshold_upper, final_mask,
+					context->clipped_indices, &num_clipped);
+			if (num_clipped == 0) {
+				break;
 			}
+			num_unmasked_data = result.count - num_clipped;
 		}
-		if (out != nullptr) {
-			auto src = AssumeAligned(
-					(num_fitting_max == 0) ?
-							data :
-							(get_residual ? residual_data : best_fit_model));
-			std::copy(src, src + num_data, out);
-		}
-		*rms = rms_d;
-		*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
-	} catch (...) {
-		if (*baseline_status == LIBSAKURA_SYMBOL(BaselineStatus_kOK)) {
-			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
-		}
-		throw;
 	}
+	if (out != nullptr) {
+		auto src = AssumeAligned(
+				(num_fitting_max == 0) ?
+						data : (get_residual ? residual_data : best_fit_model));
+		std::copy(src, src + num_data, out);
+	}
+	*rms = rms_d;
 }
 
 /**
@@ -1709,6 +1697,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1761,6 +1750,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1813,6 +1803,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1861,6 +1852,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1912,6 +1904,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1965,6 +1958,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
