@@ -2202,17 +2202,20 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  * -# Conversion stage\n
  * Position distribution given by @a x and @a y are converted to pixel coordinate.
- * Pixel size is calculated based on median separation between neighboring two positions
- * with scaling factor provided by user, @a pixel_scale. If @a num_data is odd, there are
- * several choices for median separation since there are number of separation between two positions
- * are even. In such case, the median separation is evaluated as
+ * Users is able to specify pixel size via @a pixel_size. If @a pixel_size is zero,
+ * it is set to a half of median separation between neighboring two positions.
+ * If @a num_data is odd, there are several choices for median separation since
+ * there are number of separation between two positions are even. In such case,
+ * the median separation is evaluated as
  * \code
  * median_separation = sorted_separation[(num_data - 1) / 2];
  * \endcode
+ * It is recommended to set @a pixel_size to zero. Please consider to set nonzero value only if
+ * zero @a pixel_size doesn't work on your data.
  *
  * -# Count stage\n
  * Prepare pixel data that covers all positions. Count up data points in each pixel.
- * Pixel is a square with size of @a pixel_scale * median(distance) where distance is an array
+ * Pixel is a square with size of @a pixel_size * median(distance) where distance is an array
  * given by
  * \code
  * for (size_t i = 1; i < num_data; ++i) {
@@ -2240,9 +2243,9 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  * @param[in] fraction Fraction of the data to be masked. Threshold for mask operation
  * is evaluated by @a fraction times @a num_data. 0 <= @a fraction <= 1.
- * @param[in] pixel_scale Size of the pixel as a fraction of a median of the distance
- * between neighboring two positions that are provided by @a x and @a y. @a pixel_size must be
- * greater than 0. Setting 0.5 works most of the cases.
+ * @param[in] pixel_size Size of the pixel. If it is zero, pixel size is set to a half of
+ * median of the distance between neighboring two positions that are provided by @a x and @a y.
+ * @a pixel_size must be greater than 0. Setting 0 works most of the cases.
  * @param[in] num_data Number of data.
  * @param[in] x List of horizontal positions. The length must be @a num_data.\n
  * must-be-aligned
@@ -2266,7 +2269,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * must-be-aligned
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
-		float fraction, double pixel_scale, size_t num_data, double const x[],
+		float fraction, double pixel_size, size_t num_data, double const x[],
 		double const y[], double const *blc_x, double const *blc_y,
 		double const *trc_x, double const *trc_y, bool mask[]);
 

@@ -21,8 +21,8 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("mask_edge");
 /**
  * @brief Convert location of data points to the one in pixel coordinate.
  *
- * @param[in] pixel_scale scaling factor for pixel size as a fraction of median
- * separation between two neighboring data points. 0.5 is recommended.
+ * @param[in] pixel_size pixel size. If it is zero, pixel size is evaluated as
+ * a half of median separation between two neighboring data points.
  * @param[in] num_data number of data points
  * @param[in] x x-axis coordinate value of data points. Its length must be @a num_data.
  * must-be-aligned
@@ -41,7 +41,7 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("mask_edge");
  * @param[out] pixel_width resulting width of the pixel. Pixels are always square.
  */
 template<typename DataType>
-inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
+inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_size,
 		size_t num_data, DataType const x[], DataType const y[],
 		DataType pixel_x[], DataType pixel_y[], DataType const *blc_x_in,
 		DataType const *blc_y_in, DataType const *trc_x_in,
@@ -57,29 +57,42 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_scale,
 		pixel_x[i] = separation_x * separation_x + separation_y * separation_y;
 		mask[i] = true;
 	}
-	// sort data to evaluate median
-	std::qsort(pixel_x, num_data - 1, sizeof(DataType),
-			[](const void *a, const void *b) {
-				DataType aa = *static_cast<DataType const *>(a);
-				DataType bb = *static_cast<DataType const *>(b);
-				if (aa < bb) {
-					return -1;
-				}
-				else if (aa > bb) {
-					return 1;
-				}
-				else {
-					return 0;
-				}
-			});
-	DataType median_separation = std::sqrt(pixel_x[(num_data - 1) / 2]);
 
-	if (median_separation == 0.0) {
-		return LIBSAKURA_SYMBOL(Status_kNG);
+	// 2015/11/19 TN
+	// API change: pixel_width is set to pixel_size if pixel_size is nonzero.
+	//             If pixel_size is zero, pixel_width is set based on median separation.
+	if (pixel_size == 0.0) {
+		// sort data to evaluate median
+		std::qsort(pixel_x, num_data - 1, sizeof(DataType),
+				[](const void *a, const void *b) {
+					DataType aa = *static_cast<DataType const *>(a);
+					DataType bb = *static_cast<DataType const *>(b);
+					if (aa < bb) {
+						return -1;
+					}
+					else if (aa > bb) {
+						return 1;
+					}
+					else {
+						return 0;
+					}
+				});
+		DataType median_separation = std::sqrt(pixel_x[(num_data - 1) / 2]);
+
+		if (median_separation == 0.0) {
+			return LIBSAKURA_SYMBOL(Status_kNG);
+		}
+
+		// pixel width is half of median_separation
+		*pixel_width = median_separation * 0.5;
+	} else {
+		*pixel_width = pixel_size;
 	}
 
-	// pixel width
-	*pixel_width = median_separation * pixel_scale;
+	if (*pixel_width <= 0.0) {
+		// Invalid pixel_width is set due to unknown reason
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	}
 
 	// minimul and maximum position
 	DataType blc_x = x[0];
@@ -453,7 +466,7 @@ bool mask[]) {
  */
 template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
-		DataType pixel_scale, size_t num_data, DataType const x[],
+		DataType pixel_size, size_t num_data, DataType const x[],
 		DataType const y[], DataType const *blc_x, DataType const *blc_y,
 		DataType const *trc_x, DataType const *trc_y, bool mask[]) {
 	// do nothing if effective fraction is zero
@@ -482,9 +495,9 @@ inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 	size_t num_horizontal = 0;
 	size_t num_vertical = 0;
 
-	LIBSAKURA_SYMBOL(Status) status = ConvertToPixel(pixel_scale, num_data, x,
-			y, pixel_x, pixel_y, blc_x, blc_y, trc_x, trc_y, &center_x,
-			&center_y, &num_horizontal, &num_vertical, &pixel_width);
+	LIBSAKURA_SYMBOL(Status) status = ConvertToPixel(pixel_size, num_data, x, y,
+			pixel_x, pixel_y, blc_x, blc_y, trc_x, trc_y, &center_x, &center_y,
+			&num_horizontal, &num_vertical, &pixel_width);
 
 	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 		return status;
@@ -542,7 +555,7 @@ inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 } while (false)
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
-		float fraction, double pixel_scale, size_t num_data, double const x[],
+		float fraction, double pixel_size, size_t num_data, double const x[],
 		double const y[], double const *blc_x, double const *blc_y,
 		double const *trc_x, double const *trc_y,
 		bool mask[]) {
@@ -550,9 +563,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	CHECK_ARGS(!std::isnan(fraction));
 	CHECK_ARGS(!std::isinf(fraction));
 	CHECK_ARGS(0.0 <= fraction && fraction <= 1.0);
-	CHECK_ARGS(!std::isnan(pixel_scale));
-	CHECK_ARGS(!std::isinf(pixel_scale));
-	CHECK_ARGS(0.0 < pixel_scale);
+	CHECK_ARGS(!std::isnan(pixel_size));
+	CHECK_ARGS(!std::isinf(pixel_size));
+	CHECK_ARGS(0.0 <= pixel_size);
 	CHECK_ARGS(num_data != 1);
 	CHECK_ARGS(x != nullptr);
 	CHECK_ARGS(y != nullptr);
@@ -572,7 +585,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 	CHECK_ARGS((trc_y == nullptr || std::isfinite(*trc_y)));
 
 	try {
-		return CreateMaskNearEdge(fraction, pixel_scale, num_data, x, y, blc_x,
+		return CreateMaskNearEdge(fraction, pixel_size, num_data, x, y, blc_x,
 				blc_y, trc_x, trc_y, mask);
 	} catch (const std::bad_alloc &e) {
 		// failed to allocate memory

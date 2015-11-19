@@ -512,7 +512,7 @@ struct NullOutput {
 // RunTest
 template<typename Initializer, typename Checker = NullChecker,
 		typename Printer = NullOutput>
-void RunTest(size_t num_data, float fraction, double pixel_scale,
+void RunTest(size_t num_data, float fraction, double pixel_size,
 		double const *blc_x = NULL, double const *blc_y = NULL,
 		double const *trc_x = NULL, double const *trc_y = NULL,
 		std::string const test_name = "") {
@@ -536,8 +536,8 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 			mask_storage, &x, &y, &mask, mask_expected, &status_expected);
 
 	double start_time = sakura_GetCurrentTime();
-	sakura_Status status = sakura_CreateMaskNearEdgeDouble(fraction,
-			pixel_scale, num_data, x, y, blc_x, blc_y, trc_x, trc_y, mask);
+	sakura_Status status = sakura_CreateMaskNearEdgeDouble(fraction, pixel_size,
+			num_data, x, y, blc_x, blc_y, trc_x, trc_y, mask);
 	double end_time = sakura_GetCurrentTime();
 	Printer::Print(test_name, end_time - start_time);
 
@@ -549,33 +549,33 @@ void RunTest(size_t num_data, float fraction, double pixel_scale,
 
 // FAILURE CASES
 TEST_MASK(NagativeFraction) {
-	RunTest<BasicInvalidArgumentInitializer>(10, -0.1f, 0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, -0.1f, 0.0);
 }
 
 TEST_MASK(FractionLargerThanOne) {
-	RunTest<BasicInvalidArgumentInitializer>(10, 1.5f, 0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, 1.5f, 0.0);
 }
 
 TEST_MASK(FractionIsNaN) {
 	float const nan_float = WrongValueNaN<float>::Get();
-	RunTest<BasicInvalidArgumentInitializer>(10, nan_float, 0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, nan_float, 0.0);
 }
 
 TEST_MASK(FractionIsInf) {
 	float const inf_float = WrongValuePositiveInf<float>::Get();
-	RunTest<BasicInvalidArgumentInitializer>(10, inf_float, 0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, inf_float, 0.0);
 
 	float const ninf_float = WrongValueNegativeInf<float>::Get();
-	RunTest<BasicInvalidArgumentInitializer>(10, ninf_float, 0.5);
+	RunTest<BasicInvalidArgumentInitializer>(10, ninf_float, 0.0);
 }
 
 TEST_MASK(NegativePixelScale) {
 	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, -0.5);
 }
 
-TEST_MASK(ZeroPixelScale) {
-	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, 0.0);
-}
+//TEST_MASK(ZeroPixelScale) {
+//	RunTest<BasicInvalidArgumentInitializer>(10, 0.1f, 0.0);
+//}
 
 TEST_MASK(PixelScaleIsNaN) {
 	double const nan_double = WrongValueNaN<double>::Get();
@@ -592,193 +592,195 @@ TEST_MASK(PixelScaleIsInf) {
 
 TEST_MASK(ArrayNotAligned) {
 	// x is not aligned
-	RunTest<NotAlignedXInitializer>(10, 0.1f, 0.5);
+	RunTest<NotAlignedXInitializer>(10, 0.1f, 0.0);
 
 	// y is not aligned
-	RunTest<NotAlignedYInitializer>(10, 0.1f, 0.5);
+	RunTest<NotAlignedYInitializer>(10, 0.1f, 0.0);
 
 	// mask is not aligned
-	RunTest<NotAlignedMaskInitializer>(10, 0.1f, 0.5);
+	RunTest<NotAlignedMaskInitializer>(10, 0.1f, 0.0);
 }
 
 TEST_MASK(ArrayIsNull) {
 	// x is nullptr
-	RunTest<NullXInitializer>(10, 0.1f, 0.5);
+	RunTest<NullXInitializer>(10, 0.1f, 0.0);
 
 	// y is nullptr
-	RunTest<NullYInitializer>(10, 0.1f, 0.5);
+	RunTest<NullYInitializer>(10, 0.1f, 0.0);
 
 	// mask is nullptr
-	RunTest<NullMaskInitializer>(10, 0.1f, 0.5);
+	RunTest<NullMaskInitializer>(10, 0.1f, 0.0);
 }
 
 TEST_MASK(ArrayHasNaN) {
 	// x has NaN
 	RunTest<
 			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
-					WrongValueNaN<double>, true> >(100, 0.1f, 0.5);
+					WrongValueNaN<double>, true> >(100, 0.1f, 0.0);
 
 	// y has NaN
 	RunTest<
 			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
-					WrongValueNaN<double>, false> >(100, 0.1f, 0.5);
+					WrongValueNaN<double>, false> >(100, 0.1f, 0.0);
 }
 
 TEST_MASK(ArrayHasPositiveInf) {
 	// x has +Inf
 	RunTest<
 			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
-					WrongValuePositiveInf<double>, true> >(100, 0.1f, 0.5);
+					WrongValuePositiveInf<double>, true> >(100, 0.1f, 0.0);
 
 	// y has +Inf
 	RunTest<
 			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
-					WrongValuePositiveInf<double>, false> >(100, 0.1f, 0.5);
+					WrongValuePositiveInf<double>, false> >(100, 0.1f, 0.0);
 
 	// x has -Inf
 	RunTest<
 			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
-					WrongValueNegativeInf<double>, true> >(100, 0.1f, 0.5);
+					WrongValueNegativeInf<double>, true> >(100, 0.1f, 0.0);
 
 	// y has -Inf
 	RunTest<
 			FailedSquareShapeInitializerWithWrongValue<StandardSquareParamSet,
-					WrongValueNegativeInf<double>, false> >(100, 0.1f, 0.5);
+					WrongValueNegativeInf<double>, false> >(100, 0.1f, 0.0);
 }
 
 TEST_MASK(NumDataIsOne) {
-	RunTest<BasicInvalidArgumentInitializer>(1, 0.1f, 0.5);
+	RunTest<BasicInvalidArgumentInitializer>(1, 0.1f, 0.0);
 }
 
 TEST_MASK(InvalidUserDefinedRange) {
 	// blc_x == trc_x
 	double blc_x = 2.0;
 	double trc_x = 2.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, &blc_x, NULL, &trc_x, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, &blc_x, NULL, &trc_x, NULL);
 
 	// blc_x > trc_x
 	blc_x = 2.0;
 	trc_x = -2.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, &blc_x, NULL, &trc_x, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, &blc_x, NULL, &trc_x, NULL);
 
 	// blc_y == trc_y
 	double blc_y = 2.0;
 	double trc_y = 2.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &blc_y, NULL, &trc_y);
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL, &blc_y, NULL, &trc_y);
 
 	// blc_y > trc_y
 	blc_y = 2.0;
 	trc_y = -2.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &blc_y, NULL, &trc_y);
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL, &blc_y, NULL, &trc_y);
 
 	// all data are located at left side of user defined bottom left corner
 	blc_x = 11.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, &blc_x,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, &blc_x,
 	NULL, NULL, NULL);
 
 	// all data are located at right side of user defined top right corner
 	trc_x = -11.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, &trc_x, NULL);
 
 	// all data are located at lower side of user defined bottom left corner
 	blc_y = 11.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &blc_y, NULL, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL, &blc_y, NULL, NULL);
 
 	// all data are located at lower side of user defined top right corner
 	trc_y = -11.0;
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, NULL, &trc_y);
 
 	// any user defined range is +Inf
 	double positive_inf_value = WrongValuePositiveInf<double>::Get();
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, &positive_inf_value,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, &positive_inf_value,
 	NULL, NULL, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, &positive_inf_value, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &positive_inf_value, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL, &positive_inf_value, NULL,
 	NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, NULL, &positive_inf_value);
 
 	// any user defined range is -Inf
 	double negative_inf_value = WrongValueNegativeInf<double>::Get();
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, &negative_inf_value,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, &negative_inf_value,
 	NULL, NULL, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, &negative_inf_value, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &negative_inf_value, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL, &negative_inf_value, NULL,
 	NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, NULL, &negative_inf_value);
 
 	// any user defined range is NaN
 	double nan_value = WrongValueNaN<double>::Get();
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, &nan_value,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, &nan_value,
 	NULL, NULL, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, &nan_value, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL, &nan_value, NULL, NULL);
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL, &nan_value, NULL, NULL);
 
-	RunTest<FailedSquare>(1000, 0.1f, 0.5, NULL,
+	RunTest<FailedSquare>(1000, 0.1f, 0.0, NULL,
 	NULL, NULL, &nan_value);
 }
 
 TEST_MASK(IdenticalValue) {
 	// x and y are filled with identical value (0.0)
-	RunTest<IdenticalValueInitializer>(1000, 0.1f, 0.5);
+	RunTest<IdenticalValueInitializer>(1000, 0.1f, 0.0);
 }
 
 // SUCCESSFUL CASES
 TEST_MASK(ZeroFraction) {
-	RunTest<BaseInitializer, StandardChecker>(10, 0.0f, 0.5);
+	RunTest<BaseInitializer, StandardChecker>(10, 0.0f, 0.0);
 }
 
 TEST_MASK(ZeroDataSize) {
-	RunTest<BaseInitializer, StandardChecker>(0, 0.1f, 0.5);
+	RunTest<BaseInitializer, StandardChecker>(0, 0.1f, 0.0);
 }
 
 TEST_MASK(FractionEqualToOne) {
-	RunTest<StandardSquare, StandardChecker>(1000, 1.0f, 0.5);
+	RunTest<StandardSquare, StandardChecker>(1000, 1.0f, 0.0);
 }
 
 TEST_MASK(NumDataEqualToTwo) {
-	RunTest<NumDataTwoInitializer>(2, 0.1f, 0.5);
+	RunTest<NumDataTwoInitializer>(2, 0.1f, 0.0);
 }
 
 TEST_MASK(NumDataEqualToThree) {
-	RunTest<NumDataThreeInitializer>(3, 0.1f, 0.5);
+	RunTest<NumDataThreeInitializer>(3, 0.1f, 0.0);
 }
 
 TEST_MASK(FractionTenPercent) {
 	float const fraction = 0.1f;
-	double const pixel_scale = 0.5;
+	double const pixel_size = 0.0;
 
 	// square spiral pattern
-	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_size);
 
 	// circular zigzag pattern
-	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_size);
 
 	// donut shape
-	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_size);
 
 	// upper C-shape
-	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_size);
 
 	// horizontal C-shape
-	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction,
+			pixel_size);
 
 	// inclined C-shape
-	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction,
+			pixel_size);
 
 //	// test
 //	size_t num_data = 1000;
@@ -837,25 +839,54 @@ TEST_MASK(FractionTenPercent) {
 
 TEST_MASK(FractionTwentyPercent) {
 	float const fraction = 0.2f;
-	double const pixel_scale = 0.5;
+	double const pixel_size = 0.0;
 
 	// square spiral pattern
-	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_size);
 
 	// circular zigzag pattern
-	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_size);
 
 	// donut shape
-	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_size);
 
 	// upper C-shape
-	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_size);
 
 	// horizontal C-shape
-	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction,
+			pixel_size);
 
 	// inclined C-shape
-	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction, pixel_scale);
+	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction,
+			pixel_size);
+}
+
+TEST_MASK(ManualPixelSize) {
+	float const fraction = 0.1f;
+	double pixel_size = 0.08;
+
+	// square spiral pattern
+	RunTest<StandardSquare, StandardChecker>(1000, fraction, pixel_size);
+
+	pixel_size = 0.1;
+
+	// circular zigzag pattern
+	RunTest<StandardCircle, StandardChecker>(1000, fraction, pixel_size);
+
+	// donut shape
+	RunTest<StandardDonutShape, StandardChecker>(1000, fraction, pixel_size);
+
+	// upper C-shape
+	RunTest<StandardUpperCShape, StandardChecker>(1000, fraction, pixel_size);
+
+	// horizontal C-shape
+	RunTest<StandardHorizontalCShape, StandardChecker>(1000, fraction,
+			pixel_size);
+
+	// inclined C-shape
+	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction,
+			pixel_size);
 }
 
 TEST_MASK(ValidUserDefinedRange) {
@@ -864,19 +895,19 @@ TEST_MASK(ValidUserDefinedRange) {
 	double trc_x = 5.0;
 	double trc_y = 5.0;
 	RunTest<UserDefinedRangeSquare, StandardChecker, NullOutput>(1000, 0.1f,
-			0.5, &blc_x, &blc_y, &trc_x, &trc_y);
+			0.0, &blc_x, &blc_y, &trc_x, &trc_y);
 }
 
 // PERFORMANCE TEST
 TEST_MASK(LargeNumDataPerformance) {
 	RunTest<StandardSquare, StandardChecker, PerformanceTestOutput>(40000, 0.1f,
-			0.5, NULL, NULL, NULL, NULL,
+			0.0, NULL, NULL, NULL, NULL,
 			"MaskDataNearEdge_LargeNumDataPerformance");
 }
 
 TEST_MASK(LargeAreaPerformance) {
 	RunTest<WiderSquare, StandardChecker, PerformanceTestOutput>(1000, 0.1f,
-			0.5, NULL, NULL, NULL, NULL,
+			0.0, NULL, NULL, NULL, NULL,
 			"MaskDataNearEdge_LargeAreaPerformance");
 }
 
