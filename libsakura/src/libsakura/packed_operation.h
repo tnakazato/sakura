@@ -1031,9 +1031,9 @@ public:
 #else
 		result.raw_int32 = _mm_or_si128(
 				_mm_shuffle_epi8(ints.v_prior.v[0].raw_int32,
-						_mm128_set_epi32(kZero, kZero, kZero, kLSBytes)),
+						_mm_set_epi32(kZero, kZero, kZero, kLSBytes)),
 				_mm_shuffle_epi8(ints.v_prior.v[1].raw_int32,
-						_mm128_set_epi32(kZero, kZero, kLSBytes, kZero)));
+						_mm_set_epi32(kZero, kZero, kLSBytes, kZero)));
 #endif
 		return result;
 	}
