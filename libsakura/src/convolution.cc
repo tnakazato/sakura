@@ -129,11 +129,14 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
  * @param output_data_arg
  */
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
-		size_t num_kernel, float const *kernel_arg, float *output_data_arg) {
+		bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
+		float *output_data_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
 	auto input_data = AssumeAligned(input_data_arg);
+	auto input_mask = AssumeAligned(input_mask_arg);
 	auto kernel = AssumeAligned(kernel_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 
@@ -293,12 +296,18 @@ inline void CreateConvolve1DContextFloat(size_t num_data, size_t num_kernel,
 inline void Convolve1DFloat(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
-		float output_data_arg[/*num_data*/]) {
+		bool const input_mask_arg[/*num_data*/],
+		float output_data_arg[/*num_data*/],
+		bool output_mask_arg[/*num_data*/]) {
 	assert(context->num_data == num_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(output_mask_arg));
 	auto input_data = AssumeAligned(input_data_arg);
+	auto input_mask = AssumeAligned(input_mask_arg);
 	auto output_data = AssumeAligned(output_data_arg);
+	auto output_mask = AssumeAligned(output_mask_arg);
 	if (context->use_fft) {
 		size_t num_fft_data = num_data / 2 + 1;
 		std::unique_ptr<fftwf_complex[], decltype(&FreeFFTArray)> fft_applied_complex_input_data(
@@ -332,8 +341,8 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		fftwf_execute_dft_c2r(context->plan_complex_to_real_float,
 				multiplied_complex_data.get(), output_data);
 	} else {
-		ConvolutionWithoutFFT(num_data, input_data, context->kernel_width,
-				context->real_kernel_array, output_data);
+		ConvolutionWithoutFFT(num_data, input_data, input_mask,
+				context->kernel_width, context->real_kernel_array, output_data);
 	}
 }
 
@@ -423,8 +432,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
-		float const input_data[/*num_data*/], float output_data[/*num_data*/])
-				noexcept {
+		float const input_data[/*num_data*/],
+		bool const input_mask[/*num_data*/], float output_data[/*num_data*/],
+		bool output_mask[/*num_data*/]) noexcept {
 	//TODO
 	//CHECK_ARGS(context == nullptr);
 	if (context == nullptr) {
@@ -437,13 +447,20 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 	if (LIBSAKURA_SYMBOL(IsAligned)(input_data) == false) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
+	if (LIBSAKURA_SYMBOL(IsAligned)(input_mask) == false) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
 	if (LIBSAKURA_SYMBOL(IsAligned)(output_data) == false) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	if (LIBSAKURA_SYMBOL(IsAligned)(output_mask) == false) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	//assert(fftw_alignment_of((double *)input_data) == 0);
 	//assert(fftw_alignment_of((double *)output_data) == 0);
 	try {
-		Convolve1DFloat(context, num_data, input_data, output_data);
+		Convolve1DFloat(context, num_data, input_data, input_mask, output_data,
+				output_mask);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);

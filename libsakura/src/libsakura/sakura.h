@@ -1216,13 +1216,21 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
  * @brief Convolution is performed.
  * @details Convolution operations are performed by shifting a kernel over the input data.
  * The kernel is stored in the context with the internal format.
+ * The operation is carried out only for elements of data whose mask value is true.
  * @param[in] context
  * The context is created with sakura_CreateConvolve1DContext.
  * @param[in] num_data
- * The number of elements in @a input_data and @a output_data. (0 < @a num_data <= INT_MAX)
+ * The number of elements in @a input_data, @a input_mask, @a output_data,
+ * and @a output_mask. (0 < @a num_data <= INT_MAX)
  * @param[in] input_data Input data.
  * @n must-be-aligned
+ * @param[in] input_mask Mask of input data. @a input_data is used in operation
+ * if corresponding element of @a input_mask is true. If not, the corresponding
+ * elements in @a input_data is ignored.
+ * @n must-be-aligned
  * @param[out] output_data Output data.
+ * @n must-be-aligned
+ * @param[out] output_mask Output mask after the convolution operation.
  * @n must-be-aligned
  * @return status code.
  *
@@ -1232,7 +1240,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
 		size_t num_data, float const input_data[/*num_data*/],
-		float output_data[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const input_mask[/*num_data*/], float output_data[/*num_data*/],
+		bool output_mask[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @brief Destroy context
  * @details

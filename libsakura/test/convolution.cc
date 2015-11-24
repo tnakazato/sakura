@@ -376,8 +376,13 @@ protected:
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[input_data_size];
+		SIMD_ALIGN
+		bool input_mask[ELEMENTSOF(input_data)];
+		SIMD_ALIGN
+		bool output_mask[ELEMENTSOF(input_data)];
 		for (size_t i = 0; i < input_data_size; ++i) {
 			input_data[i] = 0.0;
+			input_mask[i] = true;
 		}
 		switch (input_spike_type) {
 		case SpikeType_kleft:
@@ -426,7 +431,7 @@ protected:
 		for (size_t i = 0; i < loop_max && expected_status == sakura_Status_kOK;
 				++i) {
 			status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFloat)(context,
-					num_data, input_data, output_data);
+					num_data, input_data, input_mask, output_data, output_mask);
 			ASSERT_EQ(expected_status, status_Convolve);
 		}
 		double end_time = sakura_GetCurrentTime();
@@ -595,9 +600,12 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[NUM_IN];
+		SIMD_ALIGN
+		bool input_mask[ELEMENTSOF(input_data)];
 		size_t const num_data(ELEMENTSOF(input_data));
 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
 			input_data[i] = 0.0;
+			input_mask[i] = true;
 		}
 		bool use_fft = true; // with FFT
 		constexpr size_t kNumKernel = NUM_IN;
@@ -608,9 +616,11 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
 		SIMD_ALIGN
 		float output_data[num_data];
+		SIMD_ALIGN
+		bool output_mask[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data, input_data,
-				output_data);
+		LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data, input_data, input_mask,
+				output_data, output_mask);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
