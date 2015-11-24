@@ -41,45 +41,58 @@ struct InvalidArgumentInitializer {
 			double **y_out, bool **mask_out, bool mask_expected[],
 			sakura_Status *status_expected) {
 		*status_expected = sakura_Status_kInvalidArgument;
-		XInitializer::Initialize(x_in, x_out);
-		YInitializer::Initialize(y_in, y_out);
-		MaskInitializer::Initialize(mask_in, mask_out);
-	}
-};
-
-struct NullInitializer {
-	template<typename T>
-	static void Initialize(T const in[], T **out) {
+		XInitializer::Initialize(num_data, x_in, x_out);
+		YInitializer::Initialize(num_data, y_in, y_out);
+		MaskInitializer::Initialize(num_data, mask_in, mask_out);
 	}
 };
 
 struct NotAlignedInitializer {
 	template<typename T>
-	static void Initialize(T const in[], T **out) {
+	static void Initialize(size_t num_data, T const in[], T **out) {
 		*out = const_cast<T *>(in + 1);
 	}
 };
 
 struct NullPointerInitializer {
 	template<typename T>
-	static void Initialize(T const in[], T **out) {
+	static void Initialize(size_t num_data, T const in[], T **out) {
 		*out = nullptr;
 	}
 };
 
-typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
-		NullInitializer> BasicInvalidArgumentInitializer;
-typedef InvalidArgumentInitializer<NotAlignedInitializer, NullInitializer,
-		NullInitializer> NotAlignedXInitializer;
-typedef InvalidArgumentInitializer<NullInitializer, NotAlignedInitializer,
-		NullInitializer> NotAlignedYInitializer;
-typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
+struct DefaultDataInitializer {
+	template<typename T>
+	static void Initialize(size_t num_data, T const in[], T **out) {
+		*out = const_cast<T *>(in);
+		for (size_t i = 0; i < num_data; ++i) {
+			(*out)[i] = static_cast<T>(i);
+		}
+	}
+};
+
+struct DefaultMaskInitializer {
+	static void Initialize(size_t num_data, bool const in[], bool **out) {
+		*out = const_cast<bool *>(in);
+		for (size_t i = 0; i < num_data; ++i) {
+			(*out)[i] = true;
+		}
+	}
+};
+
+typedef InvalidArgumentInitializer<DefaultDataInitializer, DefaultDataInitializer,
+		DefaultMaskInitializer> BasicInvalidArgumentInitializer;
+typedef InvalidArgumentInitializer<NotAlignedInitializer, DefaultDataInitializer,
+		DefaultDataInitializer> NotAlignedXInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer, NotAlignedInitializer,
+		DefaultMaskInitializer> NotAlignedYInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer, DefaultDataInitializer,
 		NotAlignedInitializer> NotAlignedMaskInitializer;
-typedef InvalidArgumentInitializer<NullPointerInitializer, NullInitializer,
-		NullInitializer> NullXInitializer;
-typedef InvalidArgumentInitializer<NullInitializer, NullPointerInitializer,
-		NullInitializer> NullYInitializer;
-typedef InvalidArgumentInitializer<NullInitializer, NullInitializer,
+typedef InvalidArgumentInitializer<NullPointerInitializer, DefaultDataInitializer,
+		DefaultMaskInitializer> NullXInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer, NullPointerInitializer,
+		DefaultMaskInitializer> NullYInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer, DefaultDataInitializer,
 		NullPointerInitializer> NullMaskInitializer;
 
 struct BaseInitializer {
@@ -500,7 +513,7 @@ struct AllUnmaskedChecker {
 	static void Check(size_t num_data, bool const mask[],
 			bool const mask_expected[]) {
 		for (size_t i = 0; i < num_data; ++i) {
-			EXPECT_EQ(false, mask[i]) << i;
+			EXPECT_FALSE(mask[i]) << i;
 		}
 	}
 };
