@@ -618,9 +618,14 @@ inline void AddMulMatrix(size_t num_coeff, U const *coeff,
 }
 
 template<>
-inline void AddMulMatrix<float, double>(size_t num_coeff, double const *coeff,
-		size_t const *use_idx, size_t num_out, size_t num_bases,
-		double const *basis, float *out) {
+inline void AddMulMatrix<float, double>(size_t num_coeff,
+		double const *coeff_arg, size_t const *use_idx_arg, size_t num_out,
+		size_t num_bases, double const *basis_arg, float *out_arg) {
+	auto coeff = AssumeAligned(coeff_arg);
+	auto use_idx = AssumeAligned(use_idx_arg);
+	auto basis = AssumeAligned(basis_arg);
+	auto out = AssumeAligned(out_arg);
+
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -677,9 +682,14 @@ inline void AddMulMatrixCubicSpline(size_t num_boundary, size_t const *boundary,
 
 template<>
 inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
-		size_t const *boundary,
-		double const (*coeff_full)[kNumBasesCubicSpline], size_t num_out,
-		double const *basis, float *out) {
+		size_t const *boundary_arg,
+		double const (*coeff_full_arg)[kNumBasesCubicSpline], size_t num_out,
+		double const *basis_arg, float *out_arg) {
+	auto boundary = AssumeAligned(boundary_arg);
+	auto coeff_full = AssumeAligned(coeff_full_arg);
+	auto basis = AssumeAligned(basis_arg);
+	auto out = AssumeAligned(out_arg);
+
 	for (size_t i = 0; i < num_boundary - 1; ++i) {
 		size_t start_idx = boundary[i];
 		size_t end_idx = boundary[i + 1];
