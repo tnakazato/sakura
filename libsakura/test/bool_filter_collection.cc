@@ -769,8 +769,8 @@ protected:
 		// Loop over minimum set of operation types  (Standard tests)
 		cout << "[In-place bit operations]" << endl;
 		RunSimpleFilterTest<InPlaceAction>(num_data, data, data,
-							ELEMENTSOF(test_components), test_components,
-							LIBSAKURA_SYMBOL(Status_kOK));
+				ELEMENTSOF(test_components), test_components,
+				LIBSAKURA_SYMBOL(Status_kOK));
 	}
 
 	/*
@@ -846,7 +846,8 @@ protected:
 			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Need to refresh data for in-place operation
-				InitializeAction::reinitialize(ELEMENTSOF(test_kit.data), test_kit.data, num_data, in_data);
+				InitializeAction::reinitialize(ELEMENTSOF(test_kit.data),
+						test_kit.data, num_data, in_data);
 				// Actual execution of bit operation function
 				status = (test_kit.function)(num_data, in_data, result);
 			} // end of num_repeat loop
@@ -878,13 +879,15 @@ protected:
 	}
 	// Re-initialization of input data and mask for the case of in-place operation.
 	struct InPlaceAction {
-		static void reinitialize(size_t num_base, DataType *base_data, size_t num_data, DataType *data) {
+		static void reinitialize(size_t num_base, DataType *base_data,
+				size_t num_data, DataType *data) {
 			GetDataInLength(num_base, base_data, num_data, data);
 		}
 	};
 	// Dummy function (does nothing) for re-initialization for the case of out-of-place operation.
 	struct OutOfPlaceAction {
-		static void reinitialize(size_t num_base, DataType *base_data, size_t num_data, DataType *data) {
+		static void reinitialize(size_t num_base, DataType *base_data,
+				size_t num_data, DataType *data) {
 			// no need to initialize
 		}
 	};
@@ -917,8 +920,8 @@ class BoolFilterSimpleUint8: public BoolFilterSimple<uint8_t> {
 };
 template<>
 SimpleTestComponent<uint8_t> BoolFilterSimple<uint8_t>::test_components[] = { {
-		"Uint8ToBool", LIBSAKURA_SYMBOL(Uint8ToBool), { 0, 1, 2, 4, 8,	16, 32, 64 },
-		{ false, true, true, true, true, true, true, true } } };
+		"Uint8ToBool", LIBSAKURA_SYMBOL(Uint8ToBool), { 0, 1, 2, 4, 8, 16, 32,
+				64 }, { false, true, true, true, true, true, true, true } } };
 
 /*
  * Test cases of an uint32_t array
@@ -930,9 +933,10 @@ class BoolFilterSimpleUint32: public BoolFilterSimple<uint32_t> {
 };
 template<>
 SimpleTestComponent<uint32_t> BoolFilterSimple<uint32_t>::test_components[] = {
-		{ "Uint32ToBool", LIBSAKURA_SYMBOL(Uint32ToBool),
-				{ 0, 1, (1 << 1), (1 << 3), (1 << 11), (1 << 16), (1 << 24), (1 << 30) }, { false, true, true, true, true, true, true,
-						true } } };
+		{ "Uint32ToBool", LIBSAKURA_SYMBOL(Uint32ToBool), { 0, 1, (1 << 1), (1
+				<< 3), (1 << 11), (1 << 16), (1 << 24), (1 << 30) }, { false,
+				true, true, true, true, true, true,
+				true } } };
 
 /*
  * Test cases of a bool array
