@@ -694,102 +694,27 @@ inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
 		size_t start_idx = boundary[i];
 		size_t end_idx = boundary[i + 1];
 		size_t j = start_idx;
+		for (j = start_idx; j < end_idx; ++j) {
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
-		constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
-		size_t const start =
-				(start_idx % kPackElements == 0) ?
-						start_idx :
-						(kPackElements
-								+ (start_idx / kPackElements) * kPackElements);
-		auto const zero = _mm256_set1_pd(0.);
-		for (j = start_idx; j < start; ++j) {
-			/* old code ---#777
-			 double out_double = 0.0;
-			 for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-			 size_t l = kNumBasesCubicSpline * j + k;
-			 assert(l < kNumBasesCubicSpline * num_out);
-			 out_double += coeff_full[i][k] * basis[l];
-			 }
-			 out[j] = out_double;
-			 */
-			// new code ---#777
-			auto out_double_packed = zero;
 			auto idx = kNumBasesCubicSpline * j;
-			auto coeff_packed = _mm256_set_pd(coeff_full[i][3],
-					coeff_full[i][2], coeff_full[i][1], coeff_full[i][0]);
-			auto basis_packed = _mm256_set_pd(basis[idx + 3], basis[idx + 2],
-					basis[idx + 1], basis[idx]);
-			out_double_packed = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff_packed, basis_packed,
-					out_double_packed);
+			auto coeff_packed = _mm256_load_pd(coeff_full[i]);
+			auto basis_packed = _mm256_load_pd(&basis[idx]);
+			auto out_double_packed = coeff_packed * basis_packed;
 			double *out_double = reinterpret_cast<double *>(&out_double_packed);
 			out[j] = out_double[0] + out_double[1] + out_double[2]
 					+ out_double[3];
-			// end new code ---#777
-		}
-		size_t const end = start
-				+ ((end_idx - start) / kPackElements) * kPackElements;
-		//
-		size_t const offset1 = kNumBasesCubicSpline * 1;
-		size_t const offset2 = kNumBasesCubicSpline * 2;
-		size_t const offset3 = kNumBasesCubicSpline * 3;
-#if defined(__AVX2__) && 0 // <--- will make this part effective
-		// by removing '&& 0' at the end of the above line
-		// once _mm256_i64gather_pd gets faster in future version.
-		// cf. #744 (2015/7/9 WK)
-		auto vindex = _mm256_set_epi64x(offset3, offset2, offset1, 0);
-#endif
-		for (j = start; j < end; j += kPackElements) {
-			auto total = zero;
-			auto bases_row = &basis[kNumBasesCubicSpline * j];
-			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				auto ce = _mm256_set1_pd(coeff_full[i][k]);
-#if defined(__AVX2__) && 0 // <--- will make this part effective
-				// by removing '&& 0' at the end of the above line
-				// once _mm256_i64gather_pd gets faster in future
-				// version. cf. #744 (2015/7/9 WK)
-				auto bs = _mm256_i64gather_pd(bases_row, vindex, sizeof(double));
 #else
-				assert(
-						kNumBasesCubicSpline * j + k + offset3 < kNumBasesCubicSpline * num_out);
-				auto bs = _mm256_set_pd(bases_row[k + offset3],
-						bases_row[k + offset2], bases_row[k + offset1],
-						bases_row[k]);
-#endif
-				total = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-				LIBSAKURA_SYMBOL(SimdPacketAVX), double>(ce, bs, total);
+			double out_double = 0.0;
+			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
+				size_t l = kNumBasesCubicSpline * j + k;
+				assert(l < kNumBasesCubicSpline * num_out);
+				out_double += coeff_full[i][k] * basis[l];
 			}
-			//_mm256_store_pd(&out[j], total);
-			_mm_store_ps(&out[j], _mm256_cvtpd_ps(total));
-		}
+			out[j] = out_double;
 #endif
-		for (; j < end_idx; ++j) {
-			/* old code ---#777
-			 double out_double = 0.0;
-			 for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-			 size_t l = kNumBasesCubicSpline * j + k;
-			 assert(l < kNumBasesCubicSpline * num_out);
-			 out_double += coeff_full[i][k] * basis[l];
-			 }
-			 out[j] = out_double;
-			 */
-			// new code ---#777
-			auto out_double_packed = zero;
-			auto idx = kNumBasesCubicSpline * j;
-			auto coeff_packed = _mm256_set_pd(coeff_full[i][3],
-					coeff_full[i][2], coeff_full[i][1], coeff_full[i][0]);
-			auto basis_packed = _mm256_set_pd(basis[idx + 3], basis[idx + 2],
-					basis[idx + 1], basis[idx]);
-			out_double_packed = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
-					LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff_packed,
-					basis_packed, out_double_packed);
-			double *out_double = reinterpret_cast<double *>(&out_double_packed);
-			out[j] = out_double[0] + out_double[1] + out_double[2]
-					+ out_double[3];
-			// end new code ---#777
 		}
 	}
-}				//kNumBasesCubicSpline kNumBasesCubicSplineTmp
+}
 
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
