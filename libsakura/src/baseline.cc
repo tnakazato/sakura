@@ -701,18 +701,35 @@ inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
 						start_idx :
 						(kPackElements
 								+ (start_idx / kPackElements) * kPackElements);
+		auto const zero = _mm256_set1_pd(0.);
 		for (j = start_idx; j < start; ++j) {
-			double out_double = 0.0;
-			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				size_t l = kNumBasesCubicSpline * j + k;
-				assert(l < kNumBasesCubicSpline * num_out);
-				out_double += coeff_full[i][k] * basis[l];
-			}
-			out[j] = out_double;
+			/* old code ---#777
+			 double out_double = 0.0;
+			 for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
+			 size_t l = kNumBasesCubicSpline * j + k;
+			 assert(l < kNumBasesCubicSpline * num_out);
+			 out_double += coeff_full[i][k] * basis[l];
+			 }
+			 out[j] = out_double;
+			 */
+			// new code ---#777
+			auto out_double_packed = zero;
+			auto idx = kNumBasesCubicSpline * j;
+			auto coeff_packed = _mm256_set_pd(coeff_full[i][3],
+					coeff_full[i][2], coeff_full[i][1], coeff_full[i][0]);
+			auto basis_packed = _mm256_set_pd(basis[idx + 3], basis[idx + 2],
+					basis[idx + 1], basis[idx]);
+			out_double_packed = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+			LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff_packed, basis_packed,
+					out_double_packed);
+			double *out_double = reinterpret_cast<double *>(&out_double_packed);
+			out[j] = out_double[0] + out_double[1] + out_double[2]
+					+ out_double[3];
+			// end new code ---#777
 		}
 		size_t const end = start
 				+ ((end_idx - start) / kPackElements) * kPackElements;
-		auto const zero = _mm256_set1_pd(0.);
+		//
 		size_t const offset1 = kNumBasesCubicSpline * 1;
 		size_t const offset2 = kNumBasesCubicSpline * 2;
 		size_t const offset3 = kNumBasesCubicSpline * 3;
@@ -747,13 +764,29 @@ inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
 		}
 #endif
 		for (; j < end_idx; ++j) {
-			double out_double = 0.0;
-			for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
-				size_t l = kNumBasesCubicSpline * j + k;
-				assert(l < kNumBasesCubicSpline * num_out);
-				out_double += coeff_full[i][k] * basis[l];
-			}
-			out[j] = out_double;
+			/* old code ---#777
+			 double out_double = 0.0;
+			 for (size_t k = 0; k < kNumBasesCubicSpline; ++k) {
+			 size_t l = kNumBasesCubicSpline * j + k;
+			 assert(l < kNumBasesCubicSpline * num_out);
+			 out_double += coeff_full[i][k] * basis[l];
+			 }
+			 out[j] = out_double;
+			 */
+			// new code ---#777
+			auto out_double_packed = zero;
+			auto idx = kNumBasesCubicSpline * j;
+			auto coeff_packed = _mm256_set_pd(coeff_full[i][3],
+					coeff_full[i][2], coeff_full[i][1], coeff_full[i][0]);
+			auto basis_packed = _mm256_set_pd(basis[idx + 3], basis[idx + 2],
+					basis[idx + 1], basis[idx]);
+			out_double_packed = LIBSAKURA_SYMBOL(FMA)::MultiplyAdd<
+					LIBSAKURA_SYMBOL(SimdPacketAVX), double>(coeff_packed,
+					basis_packed, out_double_packed);
+			double *out_double = reinterpret_cast<double *>(&out_double_packed);
+			out[j] = out_double[0] + out_double[1] + out_double[2]
+					+ out_double[3];
+			// end new code ---#777
 		}
 	}
 }				//kNumBasesCubicSpline kNumBasesCubicSplineTmp
