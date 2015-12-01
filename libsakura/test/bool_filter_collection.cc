@@ -38,6 +38,9 @@
 #define NUM_RANGE 2 // DO NOT MODIFY THIS!
 #define NUM_IN_LONG (1 << 18) //2**18
 #define UNALIGN_OFFSET 1 // should be != ALIGNMENT
+#define POS_INF (1.0f / 0.0f) // positive infinity in float
+#define NEG_INF (-1.0f / 0.0f) // netative infinity in float
+#define NOT_A_NUM (0.0f / 0.0f) // NaN (not a number) in float
 using namespace std;
 
 /*
@@ -56,13 +59,12 @@ using namespace std;
 // Generalize function type for boundary tests
 template<typename DataType>
 struct RangesFunction {
-	typedef LIBSAKURA_SYMBOL(Status) (*RangesFuncType)(size_t,
-			DataType const*, size_t, DataType const*, DataType const*, bool*);
+	typedef LIBSAKURA_SYMBOL(Status) (*RangesFuncType)(size_t, DataType const*,
+			size_t, DataType const*, DataType const*, bool*);
 	RangesFuncType function;
 };
 struct NumConditionAndAnswer {
-	size_t num_condition;
-	bool answer[NUM_IN];     // answer array
+	size_t num_condition;bool answer[NUM_IN];     // answer array
 };
 // a struct to store test parameters for both uint8 and uint32
 struct RangesTestComponent {
@@ -76,18 +78,15 @@ struct RangesTestComponent {
 	;
 };
 
-RangesTestComponent RangesTestCase[] {
-		{"Inclusive Ranges",
-				{ LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat) },
-				{ LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt) },
-				{ { NUM_RANGE, { false, true, false, true, false, true, false, true } },
-					{ 0, { false, false, false, false, false, false, false, false } } } },
-		{"Exclusive Ranges",
-				{ LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat) },
-						{ LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt) },
-						{ {NUM_RANGE, { false, true, false, true, false, false, false, false }},
-							{0, { false, false, false, false, false, false, false, false } } }},
-};
+RangesTestComponent RangesTestCase[] { { "Inclusive Ranges", { LIBSAKURA_SYMBOL(
+		SetTrueIfInRangesInclusiveFloat) }, { LIBSAKURA_SYMBOL(
+		SetTrueIfInRangesInclusiveInt) }, { { NUM_RANGE, { false, true, false,
+true, false, true, false, true } }, { 0, { false, false, false, false,
+false, false, false, false } } } }, { "Exclusive Ranges", { LIBSAKURA_SYMBOL(
+		SetTrueIfInRangesExclusiveFloat) }, { LIBSAKURA_SYMBOL(
+		SetTrueIfInRangesExclusiveInt) }, { { NUM_RANGE, { false, true, false,
+true, false, false, false, false } }, { 0, { false, false, false, false,
+false, false, false, false } } } }, };
 
 /*
  * Helper functions to select proper ranges_func_ptr_t from
@@ -147,28 +146,23 @@ struct BoundaryFunction {
 struct BoundaryTestComponent {
 	string name;               // name of operation
 	BoundaryFunction<float> funcfloat;
-	BoundaryFunction<int> funcint;
-	bool answer[NUM_IN];     // answer array
+	BoundaryFunction<int> funcint;bool answer[NUM_IN];     // answer array
 };
 
-BoundaryTestComponent BoundaryTestCase[] {
-		{"GreaterThan",
-				{ LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat) },
-				{ LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt) },
-				{ false, false, false, false, false, true, true, true } },
-		{"GreaterThanOrEquals",
-				{ LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat) },
-						{ LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt) },
-				{ true, false, false, false, true, true, true, true } },
-		{"LessThan",
-				{ LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat) },
-				{ LIBSAKURA_SYMBOL(SetTrueIfLessThanInt) },
-				{ false, true, true, true, false, false, false, false } },
-		{"LessThanOrEquals",
-				{ LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat) },
-				{ LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt) },
-				{ true, true, true, true, true, false, false, false } }
-};
+BoundaryTestComponent BoundaryTestCase[] { { "GreaterThan", { LIBSAKURA_SYMBOL(
+		SetTrueIfGreaterThanFloat) }, { LIBSAKURA_SYMBOL(
+		SetTrueIfGreaterThanInt) }, { false, false, false, false, false, true,
+true, true } }, { "GreaterThanOrEquals", { LIBSAKURA_SYMBOL(
+		SetTrueIfGreaterThanOrEqualsFloat) }, { LIBSAKURA_SYMBOL(
+		SetTrueIfGreaterThanOrEqualsInt) }, { true, false, false, false, true,
+true, true, true } }, { "LessThan",
+		{ LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat) }, { LIBSAKURA_SYMBOL(
+				SetTrueIfLessThanInt) }, {
+		false, true, true, true, false, false, false, false } }, {
+		"LessThanOrEquals",
+		{ LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat) }, {
+				LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt) }, { true, true,
+		true, true, true, false, false, false } } };
 
 /*
  * Helper functions to select proper boundary_func_ptr_t from
@@ -205,7 +199,71 @@ BoundaryTestHelper<int>::BoundaryTestKit BoundaryTestHelper<int>::GetItem(
 }
 
 /*
- * A super class to test various bit operation of an value and array
+ * A Utility functions to support testing
+ */
+// Create arbitrary length of input data by repeating values of data_[]
+template<typename DataType>
+void GetDataInLength(size_t num_in, DataType *in_data, size_t num_out,
+		DataType *out_data) {
+	assert(in_data!=nullptr);
+	assert(num_in != 0);
+	// Handling of nullptr array
+	if (out_data == nullptr)
+		return;
+	for (size_t i = 0; i < num_out; ++i) {
+		out_data[i] = in_data[i % num_in];
+	}
+}
+
+// Convert an array to a string formatted for printing.
+template<typename DataType>
+void PrintArray(char const *name, size_t num_data, DataType const *data_array) {
+	constexpr size_t kMaxLength(20);
+	cout << name << " = ";
+	if (data_array == nullptr) { // array is nullptr
+		cout << "NULL" << endl;
+	} else if (num_data > kMaxLength) { // long array (just show the length)
+		cout << num_data << " elements" << endl;
+	} else { // normal array
+		cout << "[ ";
+		if (num_data > 0) {
+			for (size_t i = 0; i < num_data - 1; ++i)
+				cout << data_array[i] << ", ";
+			cout << data_array[num_data - 1];
+		}
+		cout << " ]" << endl;
+	}
+}
+// Convert an array to a string formatted for printing. Convert booleans to T/F strings.
+void PrintArray(char const *name, size_t num_data, bool const *data_array) {
+	constexpr size_t kMaxLength(20);
+	cout << name << " = ";
+	if (data_array == nullptr) { // array is nullptr
+		cout << "NULL" << endl;
+	} else if (num_data > kMaxLength) { // long array (just show the length)
+		cout << num_data << " elements" << endl;
+	} else { // normal array
+		cout << "[ ";
+		if (num_data > 0) {
+			for (size_t i = 0; i < num_data - 1; ++i)
+				cout << (data_array[i] ? "T" : "F") << ", ";
+			cout << (data_array[num_data - 1] ? "T" : "F");
+		}
+		cout << " ]" << endl;
+	}
+}
+
+void string_replace(string &invalue, string const &from, string const &to) {
+	assert(from.length()==to.length());
+	size_t pos = invalue.find(from, 0);
+	while (pos < string::npos) {
+		invalue.replace(pos, to.length(), to);
+		pos = invalue.find(from, pos);
+	}
+}
+
+/*
+ * A super class to test various bool filter functions
  */
 template<typename DataType>
 class BoolFilter: public ::testing::Test {
@@ -258,7 +316,8 @@ protected:
 		}
 	}
 
-	void RunRangesPerformanceTest(size_t const num_long, size_t const num_repeat) {
+	void RunRangesPerformanceTest(size_t const num_long,
+			size_t const num_repeat) {
 		size_t const num_large(num_long);
 		SIMD_ALIGN
 		DataType data[num_large];
@@ -343,7 +402,7 @@ protected:
 #ifndef NDEBUG
 		// lower > upper
 		cout << "[Test lower_bounds > upper_bounds]" << endl;
-		GetDataInLength(num_data, data);
+		GetDataOfLength(num_data, data);
 		RunRangesTest(num_data, data, num_range, upper, lower, result,
 				ELEMENTSOF(RangesTestCase), RangesTestCase,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument), false);
@@ -371,7 +430,8 @@ protected:
 	}
 
 	// Performance test of various bool filter functions using a threshold value with a large array
-	void RunBoundaryPerformanceTest(size_t const num_long, size_t const num_repeat) {
+	void RunBoundaryPerformanceTest(size_t const num_long,
+			size_t const num_repeat) {
 		assert(num_long > 0);
 		assert(num_repeat > 0);
 		size_t const num_large(num_long);
@@ -436,7 +496,7 @@ protected:
 			size_t num_num_condition = 1, size_t num_repeat = 1) {
 		// initialize input data only if asked
 		if (initialize) {
-			GetDataInLength(num_data, in_data);
+			GetDataOfLength(num_data, in_data);
 			GetBounds(lower_bounds, upper_bounds);
 		}
 		if (verbose_) {
@@ -445,8 +505,9 @@ protected:
 			PrintArray("upper_bound", num_condition, upper_bounds);
 		}
 		// get data type name to identify benchmark tests
-		int success = 0 ;
-		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(), nullptr, nullptr, &success);
+		int success = 0;
+		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(),
+				nullptr, nullptr, &success);
 		string_replace(data_type_name, " ", "_");
 
 		if (num_repeat > 1)
@@ -478,9 +539,8 @@ protected:
 				if (num_repeat > 1) {
 					string test_name = std::get<0>(kit);
 					string_replace(test_name, " ", "_");
-					cout << "#x# benchmark BoolFilter_" << test_name
-					<< "_" << data_type_name
-					<< " " << end - start << endl;
+					cout << "#x# benchmark BoolFilter_" << test_name << "_"
+							<< data_type_name << " " << end - start << endl;
 				}
 
 				if (verbose_) {
@@ -507,14 +567,15 @@ protected:
 			size_t num_operation, BoundaryTestComponent const *test_components,
 			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
 
-		GetDataInLength(num_data, in_data);
+		GetDataOfLength(num_data, in_data);
 		if (verbose_) {
 			PrintArray("data", num_data, in_data);
 			cout << "threshold = " << threshold_ << endl;
 		}
 		// get data type name to identify benchmark tests
-		int success = 0 ;
-		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(), nullptr, nullptr, &success);
+		int success = 0;
+		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(),
+				nullptr, nullptr, &success);
 		string_replace(data_type_name, " ", "_");
 
 		if (num_repeat > 1)
@@ -537,9 +598,8 @@ protected:
 			if (num_repeat > 1) {
 				string test_name = std::get<0>(kit);
 				string_replace(test_name, " ", "_");
-				cout << "#x# benchmark BoolFilter_" << test_name
-				<< "_" << data_type_name
-				<< " " << end - start << endl;
+				cout << "#x# benchmark BoolFilter_" << test_name << "_"
+						<< data_type_name << " " << end - start << endl;
 			}
 
 			if (verbose_) {
@@ -564,13 +624,8 @@ protected:
 	}
 
 	// Create arbitrary length of input data by repeating values of data_[]
-	void GetDataInLength(size_t num_out, DataType *out_data) {
-		// Handling of nullptr array
-		if (out_data==nullptr) return;
-		size_t const num_data(ELEMENTSOF(data_));
-		for (size_t i = 0; i < num_out; ++i) {
-			out_data[i] = data_[i % num_data];
-		}
+	void GetDataOfLength(size_t num_out, DataType *out_data) {
+		GetDataInLength(ELEMENTSOF(data_), data_, num_out, out_data);
 	}
 	// Copy values of lower and upper bounds to given arrays from lower_[] and upper_[]
 	void GetBounds(DataType *lower, DataType *upper) {
@@ -583,53 +638,6 @@ protected:
 		for (size_t i = 0; i < NUM_RANGE; ++i) {
 			lower_ptr[i] = lower_[i];
 			upper_ptr[i] = upper_[i];
-		}
-	}
-
-	// Convert an array to a string formatted for printing.
-	void PrintArray(char const *name, size_t num_data,
-			DataType const *data_array) {
-		constexpr size_t kMaxLength(20);
-		cout << name << " = ";
-		if (data_array == nullptr) { // array is nullptr
-			cout << "NULL" << endl;
-		} else if (num_data > kMaxLength) { // long array (just show the length)
-			cout << num_data << " elements" << endl;
-		} else { // normal array
-			cout << "[ ";
-			if (num_data > 0) {
-				for (size_t i = 0; i < num_data - 1; ++i)
-					cout << data_array[i] << ", ";
-				cout << data_array[num_data - 1];
-			}
-			cout << " ]" << endl;
-		}
-	}
-	// Convert an array to a string formatted for printing. Convert booleans to T/F strings.
-	void PrintArray(char const *name, size_t num_data, bool const *data_array) {
-		constexpr size_t kMaxLength(20);
-		cout << name << " = ";
-		if (data_array == nullptr) { // array is nullptr
-			cout << "NULL" << endl;
-		} else if (num_data > kMaxLength) { // long array (just show the length)
-			cout << num_data << " elements" << endl;
-		} else { // normal array
-			cout << "[ ";
-			if (num_data > 0) {
-				for (size_t i = 0; i < num_data - 1; ++i)
-					cout << (data_array[i] ? "T" : "F") << ", ";
-				cout << (data_array[num_data - 1] ? "T" : "F");
-			}
-			cout << " ]" << endl;
-		}
-	}
-
-	void string_replace(string &invalue, string const &from, string const &to) {
-		assert(from.length()==to.length());
-		size_t pos = invalue.find(from, 0);
-		while (pos < string::npos) {
-			invalue.replace(pos, to.length(), to);
-			pos = invalue.find(from, pos);
 		}
 	}
 
@@ -680,12 +688,265 @@ int BoolFilter<int>::lower_[] = { -7, 5 };
 template<>
 int BoolFilter<int>::upper_[] = { -3, 7 };
 
+/////////////////////////////////////////////////////////////////////////////////////////
+
 /*
  * Tests various simple bool filter generation based on input data array
  */
-class BoolFilterSimple: public BoolFilter<float> {
-
+template<typename DataType>
+struct SimpleTestComponent {
+	typedef LIBSAKURA_SYMBOL(Status) (*FuncType)(size_t, DataType const*,
+	bool*);
+	string name;
+	FuncType function;
+	DataType data[NUM_IN];bool answer[NUM_IN];
 };
+
+template<typename DataType>
+class BoolFilterSimple: public ::testing::Test {
+protected:
+	BoolFilterSimple() :
+			verbose_(false) {
+	}
+
+	virtual void SetUp() {
+		// Initialize sakura
+		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
+				nullptr);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+	}
+
+	virtual void TearDown() {
+		// Clean-up sakura
+		LIBSAKURA_SYMBOL(CleanUp)();
+	}
+
+	void RunVariousLengthTest() {
+		size_t const array_length[] = { NUM_IN, 11, 0 };
+		size_t const num_test(ELEMENTSOF(array_length));
+		size_t const num_max(11);
+		//num_max = max(array_length);
+		SIMD_ALIGN
+		DataType data[num_max];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+
+		for (size_t irun = 0; irun < num_test; ++irun) {
+			size_t const num_data(array_length[irun]);
+			// Loop over sakura functions with a threshold
+			cout << "[Tests with array length = " << num_data << "]" << endl;
+			RunSimpleFilterTest<OutOfPlaceAction>(num_data, data, result,
+					ELEMENTSOF(test_components), test_components,
+					LIBSAKURA_SYMBOL(Status_kOK));
+		}
+	}
+
+	// Performance test of various bool filter functions using a threshold value with a large array
+	void RunPerformanceTest(size_t const num_long, size_t const num_repeat) {
+		assert(num_long > 0);
+		assert(num_repeat > 0);
+		size_t const num_large(num_long);
+		SIMD_ALIGN
+		DataType data[num_large];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+
+		// Loop over sakura functions with a threshold
+		cout << "[Performance tests]" << endl;
+		RunSimpleFilterTest<OutOfPlaceAction>(num_large, data, result,
+				ELEMENTSOF(test_components), test_components,
+				LIBSAKURA_SYMBOL(Status_kOK), num_repeat);
+	}
+
+	// Test in-place (&out == &in) using an array of length 10
+	// This is only supported for DataType == bool
+	void RunInPlaceTests() {
+		size_t const num_data(10);
+		SIMD_ALIGN
+		DataType data[num_data];
+		assert(decltype(data[0])==bool);
+
+		// Loop over minimum set of operation types  (Standard tests)
+		cout << "[In-place bit operations]" << endl;
+		RunSimpleFilterTest<InPlaceAction>(num_data, data, data,
+							ELEMENTSOF(test_components), test_components,
+							LIBSAKURA_SYMBOL(Status_kOK));
+	}
+
+	/*
+	 * Failure cases of various simple bool filter functions
+	 * Testing null pointer array and unaligned arrays.
+	 * RESULT:
+	 *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
+	 */
+	void RunFailTest() {
+		size_t offset(UNALIGN_OFFSET);
+		size_t const num_data(NUM_IN);
+		size_t const num_elements(num_data + offset);
+		SIMD_ALIGN
+		DataType data[num_elements];
+		SIMD_ALIGN
+		bool result[ELEMENTSOF(data)];
+		// For null array tests
+		DataType *data_null = nullptr;
+		bool *result_null = nullptr;
+		// Define unaligned array
+		DataType *data_shift = &data[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
+		bool *result_shift = &result[offset];
+		assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
+
+		// Null pointer array
+		cout << "[Test NULL data array]" << endl;
+		RunSimpleFilterTest<OutOfPlaceAction>(num_data, data_null, result,
+				ELEMENTSOF(test_components), test_components,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test NULL result array]" << endl;
+		RunSimpleFilterTest<OutOfPlaceAction>(num_data, data, result_null,
+				ELEMENTSOF(test_components), test_components,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		// Unaligned array
+		cout << "[Test unaligned data array]" << endl;
+		RunSimpleFilterTest<OutOfPlaceAction>(num_data, data_shift, result,
+				ELEMENTSOF(test_components), test_components,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		cout << "[Test unaligned result array]" << endl;
+		RunSimpleFilterTest<OutOfPlaceAction>(num_data, data, result_shift,
+				ELEMENTSOF(test_components), test_components,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+	}
+
+	template<typename InitializeAction>
+	void RunSimpleFilterTest(size_t num_data, DataType *in_data, bool *result,
+			size_t num_operation,
+			SimpleTestComponent<DataType> const *test_components,
+			LIBSAKURA_SYMBOL(Status) return_value, size_t num_repeat = 1) {
+
+		// get data type name to identify benchmark tests
+		int success = 0;
+		string data_type_name = abi::__cxa_demangle(typeid(DataType).name(),
+				nullptr, nullptr, &success);
+		string_replace(data_type_name, " ", "_");
+
+		if (num_repeat > 1)
+			cout << "Iterating " << num_repeat
+					<< " loops for each operation. The length of arrays is "
+					<< num_data << endl;
+
+		SimpleTestComponent<DataType> test_kit;
+		for (size_t iop = 0; iop < num_operation; ++iop) {
+			test_kit = test_components[iop];
+			LIBSAKURA_SYMBOL(Status) status;
+			cout << "Testing: " << test_kit.name << endl;
+			GetDataInLength(ELEMENTSOF(test_kit.data), test_kit.data, num_data,
+					in_data);
+			if (verbose_) {
+				PrintArray("data", num_data, in_data);
+			}
+			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			for (size_t irun = 0; irun < num_repeat; ++irun) {
+				// Need to refresh data for in-place operation
+				InitializeAction::reinitialize(ELEMENTSOF(test_kit.data), test_kit.data, num_data, in_data);
+				// Actual execution of bit operation function
+				status = (test_kit.function)(num_data, in_data, result);
+			} // end of num_repeat loop
+			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			if (num_repeat > 1) {
+				string test_name = test_kit.name;
+				string_replace(test_name, " ", "_");
+				cout << "#x# benchmark BoolFilter_" << test_name << "_"
+						<< data_type_name << " " << end - start << endl;
+			}
+
+			if (verbose_) {
+				if (status == LIBSAKURA_SYMBOL(Status_kOK))
+					PrintArray("result", num_data, result);
+				else
+					cout << "sakura_Status = " << status << endl;
+			}
+			// Verification
+			EXPECT_EQ(return_value, status);
+			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
+				auto *answer = test_kit.answer;
+				size_t const num_answer = ELEMENTSOF(answer);
+				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				for (size_t i = 0; i < num_data; ++i) {
+					ASSERT_EQ(answer[i % num_answer], result[i]);
+				}
+			}
+		} // end of operation loop
+	}
+	// Re-initialization of input data and mask for the case of in-place operation.
+	struct InPlaceAction {
+		static void reinitialize(size_t num_base, DataType *base_data, size_t num_data, DataType *data) {
+			GetDataInLength(num_base, base_data, num_data, data);
+		}
+	};
+	// Dummy function (does nothing) for re-initialization for the case of out-of-place operation.
+	struct OutOfPlaceAction {
+		static void reinitialize(size_t num_base, DataType *base_data, size_t num_data, DataType *data) {
+			// no need to initialize
+		}
+	};
+
+	bool verbose_;
+	static SimpleTestComponent<DataType> test_components[];
+};
+
+/*
+ * Test cases of a float array
+ * NanOrInf
+ * - INPUT: [ 0, inf, -1, -0.5, -inf, nan, 1, 0.5, ... repeated ... ]
+ * - RESULT: [T, F, T, T, F, F, T, T, ... repeated ... ]
+ */
+class BoolFilterSimpleFloat: public BoolFilterSimple<float> {
+};
+template<>
+SimpleTestComponent<float> BoolFilterSimple<float>::test_components[] = { {
+		"NanOrInf", LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat), { 0.0, POS_INF,
+				-1.0, -0.5, NEG_INF, NOT_A_NUM, 1.0, 0.5 }, { true, false, true,
+		true, false, false, true, true } } };
+
+/*
+ * Test cases of an uint8_t array
+ * Uint8ToBool
+ * - INPUT: [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ... repeated ... ]
+ * - RESULT: [F, T, T, T, T, T, T, T, ... repeated ... ]
+ */
+class BoolFilterSimpleUint8: public BoolFilterSimple<uint8_t> {
+};
+template<>
+SimpleTestComponent<uint8_t> BoolFilterSimple<uint8_t>::test_components[] = { {
+		"Uint8ToBool", LIBSAKURA_SYMBOL(Uint8ToBool), { 0, 1, 2, 4, 8,	16, 32, 64 },
+		{ false, true, true, true, true, true, true, true } } };
+
+/*
+ * Test cases of an uint32_t array
+ * Uint32ToBool
+ * - INPUT: [0...000, 0...001, 0...010, 0...01000, (1<<11), (1<<16), (1<<24), (1<<30), ... repeated ... ]
+ * - RESULT: [F, T, T, T, T, T, T, T, ... repeated ... ]
+ */
+class BoolFilterSimpleUint32: public BoolFilterSimple<uint32_t> {
+};
+template<>
+SimpleTestComponent<uint32_t> BoolFilterSimple<uint32_t>::test_components[] = {
+		{ "Uint32ToBool", LIBSAKURA_SYMBOL(Uint32ToBool),
+				{ 0, 1, (1 << 1), (1 << 3), (1 << 11), (1 << 16), (1 << 24), (1 << 30) }, { false, true, true, true, true, true, true,
+						true } } };
+
+/*
+ * Test cases of a bool array
+ * InvertBool
+ * - INPUT: [F, T, F, F, T, T, F, F, ... repeated ... ]
+ * - RESULT: [T, F, T, T, F, F, T, T, ... repeated ... ]
+ */
+class BoolFilterSimpleBool: public BoolFilterSimple<bool> {
+};
+template<>
+SimpleTestComponent<bool> BoolFilterSimple<bool>::test_components[] = { {
+		"InvertBool", LIBSAKURA_SYMBOL(InvertBool), { false, true, false, false,
+		true, true, false, false }, { true, false, true, true, false,
+		false, true, true } } };
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -756,843 +1017,77 @@ TEST_F(BoolFilterInt, BoundaryFail) {
 	RunBoundaryFailTest();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+/* Simple filtering by NanOrInf */
 
-/*
- * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
- * RESULT:
- * result = [T, T, F, F, F, T, T, T]
- */
-TEST_F(BoolFilterFloat, NanOrInf) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-	bool const answer[] = { true, true, false, false, false, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// modify in_data and insert NaN and Infs
-	float posinf(1.0 / 0.0), neginf(-1.0 / 0.0), nanval(0.0 / 0.0);
-	float infnans[] = { posinf, neginf, nanval };
-	size_t j(0);
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		if (!answer[i % ELEMENTSOF(answer)]) {
-			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
-			++j;
-		}
-	}
-
-	if (verbose_) {
-		PrintArray("data", num_data, in_data);
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			in_data, result);
-
-	if (verbose_)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
+/* Input array of length 8, 11 and zero */
+TEST_F(BoolFilterSimpleFloat, NanOrInfVariousLength) {
+	RunVariousLengthTest();
 }
 
-/*
- * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
- * with an array of 11 elements (num_data=11).
- * RESULT:
- * result = [T, T, F, F, F, T, T, T,
- *           T, T, F]
- */
-TEST_F(BoolFilterFloat, NanOrInfEleven) {
-	size_t const num_data(11);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-
-	bool const answer[] = { true, true, false, false, false, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// modify in_data and insert NaN and Infs
-	float posinf(1.0 / 0.0), neginf(-1.0 / 0.0), nanval(0.0 / 0.0);
-	float infnans[] = { posinf, neginf, nanval };
-	size_t j(0);
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		if (!answer[i % ELEMENTSOF(answer)]) {
-			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
-			++j;
-		}
-	}
-
-	if (verbose_) {
-		PrintArray("data", num_data, in_data);
-		cout << "threshold = " << threshold_ << endl;
-	}
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			in_data, result);
-
-	if (verbose_)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
+/* Performance test */
+TEST_F(BoolFilterSimpleFloat, NanOrInfPerformance) {
+	RunPerformanceTest(NUM_IN_LONG, 20000);
 }
 
-/*
- * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
- * with a long array
- * RESULT:
- * result = [T, T, F, F, F, T, T, T, ...]
- */
-TEST_F(BoolFilterFloat, NanOrInfPerformance) {
-	size_t const num_data(NUM_IN_LONG);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-
-	bool const answer[] = { true, true, false, false, false, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == NUM_IN);
-
-	// Create long input data by repeating data_
-	GetDataInLength(num_data, in_data);
-	// modify in_data and insert NaN and Infs
-	float posinf(1.0 / 0.0), neginf(-1.0 / 0.0), nanval(0.0 / 0.0);
-	float infnans[] = { posinf, neginf, nanval };
-	size_t j(0);
-	for (size_t i = 0; i < ELEMENTSOF(in_data); ++i) {
-		if (!answer[i % ELEMENTSOF(answer)]) {
-			in_data[i] = infnans[j % ELEMENTSOF(infnans)];
-			++j;
-		}
-	}
-
-	double start, end;
-	size_t const num_repeat = 20000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_data << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_SetFalseIfNanOrInfFloat(num_data, in_data, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "#x# benchmark BoolFilter_NanOrInf_float"
-			<< " " << end - start << endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i % ELEMENTSOF(answer)], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_SetFalseIfNanOrInfFloat
- * with an array of zero elements (num_data=0).
- * RESULT:
- * result = []
- */
-TEST_F(BoolFilterFloat, NanOrInfZero) {
-	size_t const num_data(0);
-	SIMD_ALIGN
-	float in_data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(in_data)];
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			in_data, result);
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+/* Failure cases */
+TEST_F(BoolFilterSimpleFloat, NanOrInfFail) {
+	RunFailTest();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
+/* Simple filtering by inverting a bool array */
 
-/*
- * Test bool filter generation sakura_InvertBool
- * INPUT:
- * in = [T, F, F, T]
- * RESULT:
- * result = [F, T, T, F]
- */
-TEST_F(BoolFilterSimple, InvertBool) {
-	size_t const num_data(4);
-	SIMD_ALIGN
-	bool const data[] = { true, false, false, true };
-	STATIC_ASSERT(ELEMENTSOF(data) == num_data);
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	bool const answer[] = { false, true, true, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
-
-	if (verbose_)
-		PrintArray("data", num_data, data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, result);
-
-	if (verbose_)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], result[i]);
-	}
+/* Input array of length 8, 11 and zero */
+TEST_F(BoolFilterSimpleBool, InvertBoolVariousLength) {
+	RunVariousLengthTest();
 }
 
-TEST_F(BoolFilterSimple, InvertBoolInPlace) {
-	SIMD_ALIGN
-	bool data[] = { true, false, false, true };
-	SIMD_ALIGN
-	bool const answer[] = { false, true, true, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data));
-	size_t const num_data(ELEMENTSOF(data));
-
-	if (verbose_)
-		PrintArray("data", num_data, data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, data);
-
-	if (verbose_)
-		PrintArray("result", num_data, data);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], data[i]);
-	}
+/* Performance test */
+TEST_F(BoolFilterSimpleBool, InvertBoolPerformance) {
+	RunPerformanceTest(NUM_IN_LONG, 100000);
 }
 
-/*
- * Test bool filter generation sakura_InvertBool
- * with a long array
- * INPUT:
- * in = [T, F, F, T]
- * RESULT:
- * result = [F, T, T, F]
- */
-TEST_F(BoolFilterSimple, InvertBoolPerformance) {
-	size_t const num_base(4);
-	size_t const num_long(NUM_IN_LONG);
-	SIMD_ALIGN
-	bool const data_base[] = { true, false, false, true };
-	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
-	bool const answer[] = { false, true, true, false };
-	STATIC_ASSERT(ELEMENTSOF(answer) == num_base);
-	SIMD_ALIGN
-	bool data_long[num_long];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data_long)];
-
-	for (size_t i = 0; i < num_long; ++i) {
-		data_long[i] = data_base[i % num_base];
-	}
-
-	double start, end;
-	size_t const num_repeat = 100000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_long << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_InvertBool(num_long, data_long, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "#x# benchmark BoolFilter_InvertBool"
-			<< " " << end - start << endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_long; ++i) {
-		ASSERT_EQ(answer[i % num_base], result[i]);
-	}
+/* In place operation */
+TEST_F(BoolFilterSimpleBool, InvertBoolInPlace) {
+	RunInPlaceTests();
 }
 
-/*
- * Test bool filter generation sakura_InvertBool
- * with an array of zero elements (num_data=0).
- * RESULT:
- * result = []
- */
-TEST_F(BoolFilterSimple, InvertBoolLenghZero) {
-	size_t const num_data(0);
-	SIMD_ALIGN
-	bool data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+/* Failure cases */
+TEST_F(BoolFilterSimpleBool, InvertBoolFail) {
+	RunFailTest();
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////
+/* Simple filtering by inverting an uint8_t array */
 
-/*
- * Test bool filter generation sakura_Uint8ToBool
- * INPUT:
- * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000]
- * RESULT:
- * result = [F, T, T, T, T, T, T, T]
- */
-TEST_F(BoolFilterSimple, Uint8ToBool) {
-	size_t const num_data(8);
-	SIMD_ALIGN
-	uint8_t const data[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
-	STATIC_ASSERT(ELEMENTSOF(data) == num_data);
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	bool const answer[] = { false, true, true, true, true, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
-
-//	if (verbose_) PrintArray("data", num_data, in);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data,
-			result);
-
-	if (verbose_)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], result[i]);
-	}
+/* Input array of length 8, 11 and zero */
+TEST_F(BoolFilterSimpleUint8, Uint8ToBoolVariousLength) {
+	RunVariousLengthTest();
 }
 
-/*
- * Test bool filter generation sakura_Uint8ToBool  (Performance Test)
- * INPUT:
- * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ...repeated...]
- * RESULT:
- * result = [F, T, T, T, T, T, T, T, ... repeated...]
- */
-TEST_F(BoolFilterSimple, Uint8ToBoolPerformance) {
-	size_t const num_base(NUM_IN);
-	size_t const num_long(NUM_IN_LONG);
-	uint8_t const data_base[] = { 0, 1, 2, 4, 8, 16, 32, 64 };
-	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
-	bool const answer[] = { false, true, true, true, true, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data_base));
-	SIMD_ALIGN
-	uint8_t data_long[num_long];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data_long)];
-
-	for (size_t i = 0; i < num_long; ++i) {
-		data_long[i] = data_base[i % num_base];
-	}
-
-	double start, end;
-	size_t const num_repeat = 100000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_long << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_Uint8ToBool(num_long, data_long, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "#x# benchmark BoolFilter_Uint8ToBool"
-			<< " " << end - start << endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_long; ++i) {
-		ASSERT_EQ(answer[i % num_base], result[i]);
-	}
+/* Performance test */
+TEST_F(BoolFilterSimpleUint8, Uint8ToBoolPerformance) {
+	RunPerformanceTest(NUM_IN_LONG, 100000);
 }
 
-/*
- * Test bool filter generation sakura_Uint8ToBool
- * with an array of zero elements (num_data=0).
- *
- * INPUT: in = []
- * RESULT: result = []
- */
-TEST_F(BoolFilterSimple, Uint8ToBoolLenghZero) {
-	size_t const num_data(0);
-	SIMD_ALIGN
-	uint8_t data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+/* Failure cases */
+TEST_F(BoolFilterSimpleUint8, Uint8ToBoolBoolFail) {
+	RunFailTest();
 }
-
-/*
- * Test bool filter generation sakura_Uint32ToBool
- * INPUT:
- * in = [0...000, 0...001, 0...010, 0...01000, 0...0100000000]
- * RESULT:
- * result = [F, T, T, T, T]
- */
-TEST_F(BoolFilterSimple, Uint32ToBool) {
-	size_t const num_data(5);
-	SIMD_ALIGN
-	uint32_t const data[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
-	STATIC_ASSERT(ELEMENTSOF(data) == num_data);
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-	bool const answer[] = { false, true, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == num_data);
-
-//	if (verbose_) PrintArray("data", num_data, in);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data,
-			result);
-
-	if (verbose_)
-		PrintArray("result", num_data, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_data; ++i) {
-		ASSERT_EQ(answer[i], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_Uint8ToBool  (Performance Test)
- * INPUT:
- * in = [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ...repeated...]
- * RESULT:
- * result = [F, T, T, T, T, T, T, T, ... repeated...]
- */
-TEST_F(BoolFilterSimple, Uint32ToBoolPerformance) {
-	size_t const num_base(5);
-	size_t const num_long(NUM_IN_LONG);
-	uint32_t const data_base[] = { 0, 1, (1 << 1), (1 << 3), (1 << 8) };
-	STATIC_ASSERT(ELEMENTSOF(data_base) == num_base);
-	bool const answer[] = { false, true, true, true, true };
-	STATIC_ASSERT(ELEMENTSOF(answer) == ELEMENTSOF(data_base));
-	SIMD_ALIGN
-	uint32_t data_long[num_long];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data_long)];
-
-	for (size_t i = 0; i < num_long; ++i) {
-		data_long[i] = data_base[i % num_base];
-	}
-
-	double start, end;
-	size_t const num_repeat = 20000;
-	LIBSAKURA_SYMBOL(Status) status;
-
-	cout << "Iterating " << num_repeat << " loops. The length of arrays is "
-			<< num_long << endl;
-	start = sakura_GetCurrentTime();
-	for (size_t i = 0; i < num_repeat; ++i) {
-		status = sakura_Uint32ToBool(num_long, data_long, result);
-	}
-	end = sakura_GetCurrentTime();
-	cout << "#x# benchmark BoolFilter_Uint32ToBool"
-			<< " " << end - start << endl;
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-	for (size_t i = 0; i < num_long; ++i) {
-		ASSERT_EQ(answer[i % num_base], result[i]);
-	}
-}
-
-/*
- * Test bool filter generation sakura_Uint32ToBool
- * with an array of zero elements (num_data=0).
- *
- * INPUT: in = []
- * RESULT: result = []
- */
-/* Input array is zero length */
-TEST_F(BoolFilterSimple, Uint32ToBoolLenghZero) {
-	size_t const num_data(0);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-	SIMD_ALIGN
-	bool result[ELEMENTSOF(data)];
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
+/* Simple filtering by inverting an uint32_t array */
 
-/*
- * Test failure cases of sakura_SetFalseIfNanOrInfFloat
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterFloat, NanOrInfFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	float *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			data_null, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+/* Input array of length 8, 11 and zero */
+TEST_F(BoolFilterSimpleUint32, Uint32ToBoolVariousLength) {
+	RunVariousLengthTest();
 }
 
-TEST_F(BoolFilterFloat, NanOrInfFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	float in_data[num_data];
-
-	bool *result_null = nullptr;
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(in_data), in_data);
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			in_data, result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+/* Performance test */
+TEST_F(BoolFilterSimpleUint32, Uint32ToBoolPerformance) {
+	RunPerformanceTest(NUM_IN_LONG, 20000);
 }
 
-/* Unaligned arrays */
-TEST_F(BoolFilterFloat, NanOrInfNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	float *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			data_shift, result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+/* Failure cases */
+TEST_F(BoolFilterSimpleUint32, Uint32ToBoolBoolFail) {
+	RunFailTest();
 }
-
-TEST_F(BoolFilterFloat, NanOrInfNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	float data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-
-	// Create long input data by repeating data_
-	GetDataInLength(ELEMENTSOF(data), data);
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_SetFalseIfNanOrInfFloat(num_data,
-			data, result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_InvertBool
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterSimple, InvertBoolFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	bool *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data_null,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterSimple, InvertBoolFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool data[num_data];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = true;
-	}
-
-	bool *result_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data,
-			result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterSimple, InvertBoolNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	bool data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = true;
-	}
-
-	// Define unaligned array
-	bool *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data_shift,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterSimple, InvertBoolNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	bool data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = true;
-	}
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_InvertBool(num_data, data,
-			result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-/*
- * Test failure cases of sakura_Uint8ToBool
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterSimple, Uint8ToBoolFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	uint8_t *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data_null,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterSimple, Uint8ToBoolFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	// Initialize data with whatever valid value
-	uint8_t data[num_data];
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = 1;
-	}
-
-	bool *result_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data,
-			result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterSimple, Uint8ToBoolNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(8);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint8_t data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = 1;
-	}
-
-	// Define unaligned array
-	uint8_t *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data_shift,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterSimple, Uint8ToBoolNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint8_t data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = 1;
-	}
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint8ToBool(num_data, data,
-			result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/*
- * Test failure cases of sakura_Uint32ToBool
- * RESULT:
- *   LIBSAKURA_SYMBOL(Status_kInvalidArgument)
- */
-/* Null pointer arrays */
-TEST_F(BoolFilterSimple, Uint32ToBoolFailNullData) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	bool result[num_data];
-
-	uint32_t *data_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data_null,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterSimple, Uint32ToBoolFailNullResult) {
-	size_t const num_data(NUM_IN);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = 1;
-	}
-
-	bool *result_null = nullptr;
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data,
-			result_null);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-/* Unaligned arrays */
-TEST_F(BoolFilterSimple, Uint32ToBoolNotAlignedData) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint32_t data[num_elements];
-	SIMD_ALIGN
-	bool result[num_data];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = 1;
-	}
-
-	// Define unaligned array
-	uint32_t *data_shift = &data[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(data_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data_shift,
-			result);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-TEST_F(BoolFilterSimple, Uint32ToBoolNotAlignedResult) {
-	size_t offset(UNALIGN_OFFSET);
-	size_t const num_data(NUM_IN);
-	size_t const num_elements(num_data + offset);
-	SIMD_ALIGN
-	uint32_t data[num_data];
-	SIMD_ALIGN
-	bool result[num_elements];
-	// Initialize data with whatever valid value
-	for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-		data[i] = 1;
-	}
-
-	// Define unaligned array
-	bool *result_shift = &result[offset];
-	assert(! LIBSAKURA_SYMBOL(IsAligned)(result_shift));
-
-	LIBSAKURA_SYMBOL(Status) status = sakura_Uint32ToBool(num_data, data,
-			result_shift);
-
-	// Verification
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-}
-
-// TODO: performance measurements that defines which of scalar or vector version is fast in range functions.
-// It is because scalar version can be fast if the data is in the first range (stops loop)
-// It should not necessary be unit test. Running manuall tests will be fine to determine in which case which is faster.
-// 1. Use variety of num_bounds from 1~16 (templated range)
-// 2. Set a data range that will be true to either, idx=0, num_range/2, or num_range-1.
-//    The other ranges should be out of range of data distribution.
-// 3. run scalar and vector version to compare the speed
-//
