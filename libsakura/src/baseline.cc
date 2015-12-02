@@ -1730,7 +1730,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
  * best-fit baseline data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t const num_nwave,
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_data,
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
