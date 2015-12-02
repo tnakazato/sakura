@@ -1512,8 +1512,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data,
+		LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+		size_t num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1536,7 +1536,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
-		uint16_t const npiece, size_t const num_data,
+		uint16_t npiece, size_t num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1559,7 +1559,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
-		uint16_t const nwave, size_t const num_data,
+		uint16_t nwave, size_t num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1755,8 +1755,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		size_t num_nwave, size_t const nwave[/*num_nwave*/],
-		size_t num_data, float const data[/*num_data*/],
+		size_t num_nwave, size_t const nwave[/*num_nwave*/], size_t num_data,
+		float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual, float out[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,

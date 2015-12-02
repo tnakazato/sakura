@@ -1473,9 +1473,9 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
  * It is only for polynomial and Chebyshev polynomial baseline.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
-		size_t const num_data,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+		size_t num_data, LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+				noexcept {
 	CHECK_ARGS(
 			(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) ||(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
 	CHECK_ARGS(context != nullptr);
@@ -1511,7 +1511,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t const order,
  * It is only for cubic spline baseline.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
-		uint16_t const npiece, size_t const num_data,
+		uint16_t npiece, size_t num_data,
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
 	CHECK_ARGS(context != nullptr);
@@ -1542,9 +1542,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicS
  * Create a baseline context object for float data to fit.
  * It is only for sinusoidal baseline.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
-		uint16_t const nwave, size_t const num_data,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(uint16_t nwave, size_t num_data, LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
 	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, nwave);
@@ -1591,9 +1589,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
  * parameters. It can be used for polynomial, Chebyshev, and cubic
  * spline baseline.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
-		size_t *num_coeff) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order, size_t *num_coeff) noexcept {
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
@@ -1625,7 +1621,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
  * best-fit baseline data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t const order,
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, bool get_residual, float out[/*num_data*/],
