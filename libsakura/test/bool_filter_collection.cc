@@ -761,16 +761,7 @@ protected:
 	// Test in-place (&out == &in) using an array of length 10
 	// This is only supported for DataType == bool
 	void RunInPlaceTests() {
-		size_t const num_data(10);
-		SIMD_ALIGN
-		DataType data[num_data];
-		assert(decltype(data[0])==bool);
-
-		// Loop over minimum set of operation types  (Standard tests)
-		cout << "[In-place bit operations]" << endl;
-		RunSimpleFilterTest<InPlaceAction>(num_data, data, data,
-				ELEMENTSOF(test_components), test_components,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		assert(false);
 	}
 
 	/*
@@ -951,6 +942,20 @@ SimpleTestComponent<bool> BoolFilterSimple<bool>::test_components[] = { {
 		"InvertBool", LIBSAKURA_SYMBOL(InvertBool), { false, true, false, false,
 		true, true, false, false }, { true, false, true, true, false,
 		false, true, true } } };
+// Test in-place (&out == &in) using an array of length 10
+// This is only supported for DataType == bool
+template<>
+void BoolFilterSimple<bool>::RunInPlaceTests() {
+	size_t const num_data(10);
+	SIMD_ALIGN
+	bool data[num_data];
+
+	// Loop over minimum set of operation types  (Standard tests)
+	cout << "[In-place bit operations]" << endl;
+	RunSimpleFilterTest<InPlaceAction>(num_data, data, data,
+			ELEMENTSOF(test_components), test_components,
+			LIBSAKURA_SYMBOL(Status_kOK));
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
