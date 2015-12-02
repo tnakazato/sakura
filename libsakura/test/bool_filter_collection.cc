@@ -759,7 +759,8 @@ protected:
 	}
 
 	// Test in-place (&out == &in) using an array of length 10
-	// This is only supported for DataType == bool
+	// This is only supported for DataType == bool, defined as a specialization
+	// of template later in this code. All the other data types should fail.
 	void RunInPlaceTests() {
 		assert(false);
 	}
@@ -943,7 +944,6 @@ SimpleTestComponent<bool> BoolFilterSimple<bool>::test_components[] = { {
 		true, true, false, false }, { true, false, true, true, false,
 		false, true, true } } };
 // Test in-place (&out == &in) using an array of length 10
-// This is only supported for DataType == bool
 template<>
 void BoolFilterSimple<bool>::RunInPlaceTests() {
 	size_t const num_data(10);
