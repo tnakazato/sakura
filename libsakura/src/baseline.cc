@@ -1645,6 +1645,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
+	CHECK_ARGS(rms != nullptr);
 
 	try {
 		SubtractBaseline<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1694,6 +1695,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
 	CHECK_ARGS(boundary != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
 	CHECK_ARGS(out != nullptr);
@@ -1747,10 +1749,11 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
 	CHECK_ARGS(mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	CHECK_ARGS(0.0f < clip_threshold_sigma);
-	CHECK_ARGS(final_mask != nullptr);
-	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
 	CHECK_ARGS(out != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
+	CHECK_ARGS(final_mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
 
 	try {
 		SubtractBaseline<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1800,6 +1803,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
 
 	try {
 		GetBestFitBaselineCoefficients<float, double,
@@ -1850,6 +1854,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
 	CHECK_ARGS(boundary != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
 
@@ -1906,6 +1911,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
 	CHECK_ARGS(final_mask != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
 
 	try {
 		GetBestFitBaselineCoefficients<float, double,
