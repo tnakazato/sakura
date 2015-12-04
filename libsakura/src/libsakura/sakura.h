@@ -1615,9 +1615,11 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out The output data. Its length must be @a num_data .
+ * @a data can be set to @a out if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
- * procedure. its length must be @a num_data .
+ * procedure. Its length must be @a num_data . @a mask can be set
+ * to @a final_mask if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the output data.
  * @param[out] baseline_status Baseline-specific error code.
@@ -1673,9 +1675,11 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out The output data. Its length must be @a num_data .
+ * @a data can be set to @a out if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
- * procedure. Its length must be @a num_data .
+ * procedure. Its length must be @a num_data . @a mask can be set
+ * to @a final_mask if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms Root-mean-square of the output data.
  * @param[out] boundary A 1D array containing the boundary positions,
@@ -1746,9 +1750,11 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @param[in] get_residual Set the output to be (input - best-fit) if true,
  * or the best-fit value if false.
  * @param[out] out The output data. Its length must be @a num_data .
+ * @a data can be set to @a out if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
- * procedure. its length must be @a num_data .
+ * procedure. Its length must be @a num_data . @a mask can be set
+ * to @a final_mask if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the output data.
  * @param[out] baseline_status Baseline-specific error code.
@@ -1810,7 +1816,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * followed by those of first order, second order, and so on.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
- * procedure. Its length must be @a num_data .
+ * procedure. Its length must be @a num_data . @a mask can be set
+ * to @a final_mask if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
  * @param[out] baseline_status Baseline-specific error code.
@@ -1872,7 +1879,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * by those of first, second, and third orders.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
- * procedure. Its length must be @a num_data .
+ * procedure. Its length must be @a num_data . @a mask can be set
+ * to @a final_mask if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
  * @param[out] boundary A 1D array containing the boundary positions,
@@ -1951,7 +1959,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * the second-smallest wave number come next, and so on.
  * @n must-be-aligned
  * @param[out] final_mask The final mask data after recursive clipping
- * procedure. Its length must be @a num_data .
+ * procedure. Its length must be @a num_data . @a mask can be set
+ * to @a final_mask if users want to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of the residual data.
  * @param[out] baseline_status Baseline-specific error code.
