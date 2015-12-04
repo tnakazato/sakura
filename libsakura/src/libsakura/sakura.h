@@ -1193,8 +1193,10 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @param[in] num_data The number of data. @a num_data must
  * be positive.  0 < num_data < INT32_MAX
  * @param[in] num_kernel The number of elements in the @a kernel.
+ * @a num_kernel must be equal to @a num_data if @a use_fft is true.
  * @param[in] kernel Convolution kernel
- * @param[in] use_fft true means using FFT, false means not using FFT when convolution is performed. And Independent of the type of kernel.
+ * @param[in] use_fft true means using FFT, false means not using FFT when
+ * convolution is performed. And independent of the type of kernel.
  * If using FFT, FFT applied kernel which is already included context
  * by CreateConvolve1DContext is multiplied with input data
  * by complex-complex multiplication and then the multiplied complex
