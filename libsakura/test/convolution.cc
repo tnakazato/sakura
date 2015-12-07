@@ -457,28 +457,6 @@ protected:
 	}
 	bool verbose;
 };
-/*
- * Test Alignment Check
- * RESULT:
- * input/output_data and real_array/real_kernel_array should be aligned
- */
-TEST_F(Convolve1DOperation , AlignmentCheck) {
-	{
-		size_t input_data_size(NUM_IN);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = false;
-		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
-		bool const align_check = true;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
-				num_data, use_dummy_num_data, num_data, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
-	}
-}
 
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
@@ -521,23 +499,6 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
-	{ // context == nullptr
-		// TODO KS note: this test duplicates FailedMallocContext
-		std::cout << "context == nullptr" << std::endl;
-		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-		size_t const num_data(NUM_IN);
-		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
-		bool use_fft = true;
-		constexpr size_t kNumKernel = NUM_IN;
-		SIMD_ALIGN float kernel[kNumKernel];
-		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kNumKernel,
-				kernel, use_fft, nullptr);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Create);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
-	}
 }
 
 /*
@@ -546,48 +507,8 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
  * RESULT:
  * kInvalidArgument status will be returned and then
  * message "num_data does't equal to context->num_data" will be shown.
- * TODO KS memo this test is not testing what it is intended.
+ * TODO KS memo: this test did not test what it is intended. Implement proper test here.
  */
-TEST_F(Convolve1DOperation , DifferentNumdata) {
-	{ // num_data != context->num_data
-		size_t const input_data_size(NUM_IN);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = true;
-		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
-				num_data, use_dummy_num_data, num_data, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
-	}
-}
-
-/*
- * Test Odd Number of data
- * RESULT:
- * convolved data will be output without problem by Convolve1D
- */
-TEST_F(Convolve1DOperation , OddNumdata) {
-	{ // num_data is odd
-		size_t const input_data_size(NUM_IN_ODD);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = false;
-		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
-				num_data, use_dummy_num_data, num_data, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
-	}
-}
 
 /*
  * Test Failed malloc of context
@@ -639,13 +560,12 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
  */
 TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 	{ // [even],FFT, Gaussian Kernel Shape,input only 1 spike at center
-		// TODO KS note: this test does not tests even
 		float gaussian_kernel[11] = { 0.011742971, 0.031861119, 0.069249183,
 				0.12056981, 0.16816399, 0.187887, 0.16816399, 0.12056981,
 				0.069249183, 0.031861119, 0.011742971 }; // calculated data beforehand
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
-		size_t const input_data_size(NUM_IN_ODD);
+		size_t const input_data_size(NUM_IN);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
 		bool const align_check = false;
@@ -847,22 +767,6 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 					output_data[(num_data / 2) + (i + 1)]);EXPECT_FLOAT_EQ(
 					gaussian_kernel[5 + i], output_data[(num_data / 2) + i]);
 		}
-	}
-	{ // (Without FFT) kernel_width > num_data , kernel array size == num_data
-		// TODO KS note: this test is redundant with the second tests. the only difference is that FWHM of the kernel is +1 larger in this test.
-		size_t input_data_size(NUM_IN);
-		GaussianKernel::FWHM = static_cast<float>(NUM_IN_ODD + 1);
-		size_t const num_data(input_data_size);
-		bool const use_dummy_num_data = false;
-		bool const align_check = false;
-		bool const use_fft = false;
-		bool const verbose = false;
-		size_t loop_max(1);
-		SIMD_ALIGN
-		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
-				num_data, use_dummy_num_data, num_data, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [even],FFT, Gaussian Kernel Shape, 2 spikes
 		size_t input_data_size(NUM_IN);
