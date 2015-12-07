@@ -522,6 +522,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
 	{ // context == nullptr
+		// TODO KS note: this test duplicates FailedMallocContext
 		std::cout << "context == nullptr" << std::endl;
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		size_t const num_data(NUM_IN);
@@ -545,6 +546,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
  * RESULT:
  * kInvalidArgument status will be returned and then
  * message "num_data does't equal to context->num_data" will be shown.
+ * TODO KS memo this test is not testing what it is intended.
  */
 TEST_F(Convolve1DOperation , DifferentNumdata) {
 	{ // num_data != context->num_data
@@ -637,6 +639,7 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
  */
 TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 	{ // [even],FFT, Gaussian Kernel Shape,input only 1 spike at center
+		// TODO KS note: this test does not tests even
 		float gaussian_kernel[11] = { 0.011742971, 0.031861119, 0.069249183,
 				0.12056981, 0.16816399, 0.187887, 0.16816399, 0.12056981,
 				0.069249183, 0.031861119, 0.011742971 }; // calculated data beforehand
@@ -846,6 +849,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		}
 	}
 	{ // (Without FFT) kernel_width > num_data , kernel array size == num_data
+		// TODO KS note: this test is redundant with the second tests. the only difference is that FWHM of the kernel is +1 larger in this test.
 		size_t input_data_size(NUM_IN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_IN_ODD + 1);
 		size_t const num_data(input_data_size);
