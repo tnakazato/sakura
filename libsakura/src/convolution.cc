@@ -453,29 +453,24 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const input_mask[/*num_data*/], float output_data[/*num_data*/],
 		bool output_mask[/*num_data*/]) noexcept {
-	//TODO
-	//CHECK_ARGS(context == nullptr);
-	if (context == nullptr) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (0 >= num_data || num_data > INT_MAX) {
-		LOG4CXX_ERROR(logger, "num_data must be '0 < num_data <= INT_MAX'");
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (LIBSAKURA_SYMBOL(IsAligned)(input_data) == false) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (LIBSAKURA_SYMBOL(IsAligned)(input_mask) == false) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (LIBSAKURA_SYMBOL(IsAligned)(output_data) == false) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (LIBSAKURA_SYMBOL(IsAligned)(output_mask) == false) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-	if (context->use_fft && context->num_data != num_data) {
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
+	CHECK_ARGS_WITH_MESSAGE(0 < num_data && num_data <= INT_MAX,
+			"num_data must be 0 < num_data <= INT_MAX");
+	CHECK_ARGS_WITH_MESSAGE(
+			input_data != nullptr && LIBSAKURA_SYMBOL(IsAligned)(input_data),
+			"invalid input_data");
+	CHECK_ARGS_WITH_MESSAGE(
+			input_mask != nullptr && LIBSAKURA_SYMBOL(IsAligned)(input_mask),
+			"invalid input_mask");
+	CHECK_ARGS_WITH_MESSAGE(
+			output_data != nullptr && LIBSAKURA_SYMBOL(IsAligned)(output_data),
+			"invalid output_data");
+	CHECK_ARGS_WITH_MESSAGE(
+			output_mask != nullptr && LIBSAKURA_SYMBOL(IsAligned)(output_mask),
+			"invalid output_mask");
+	if (context->use_fft) {
+		CHECK_ARGS_WITH_MESSAGE(context->num_data == num_data,
+				"using FFT for convolution. num_data must be equal to the one in the context");
 	}
 	//assert(fftw_alignment_of((double *)input_data) == 0);
 	//assert(fftw_alignment_of((double *)output_data) == 0);
