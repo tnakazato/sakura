@@ -32,6 +32,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+//#include <iomanip>
 #include <fftw3.h>
 #include <memory>
 #include <climits>
@@ -129,20 +130,26 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
  * @param output_data_arg
  */
 inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
-		bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
+bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
 		float *output_data_arg) {
+	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(input_mask_arg);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
+//	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
 	auto input_data = AssumeAligned(input_data_arg);
-	auto input_mask = AssumeAligned(input_mask_arg);
+	auto input_mask = AssumeAligned(mask8);
 	auto kernel = AssumeAligned(kernel_arg);
 	auto output_data = AssumeAligned(output_data_arg);
+	STATIC_ASSERT(sizeof(input_mask_arg[0]) == sizeof(input_mask[0]));
+	STATIC_ASSERT(true == 1);
+	STATIC_ASSERT(false == 0);
 
 	size_t center_index = num_kernel / 2;
 	size_t left_half = num_kernel / 2;
 	size_t right_half = num_kernel - left_half - 1;
+//	std::cout << "weight = (";
 	for (size_t i = 0; i < num_data; ++i) {
 		size_t lower_index = (i >= center_index) ? i - center_index : 0;
 		size_t kernel_start = (i >= left_half) ? 0 : left_half - i;
@@ -152,12 +159,23 @@ inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
 						num_kernel - (right_half - (num_data - i - 1));
 		assert(kernel_end - kernel_start <= num_kernel);
 		double value = 0.0;
+		double weight = 0.0;
 		size_t num_convolve = kernel_end - kernel_start;
 		for (size_t j = 0; j < num_convolve; ++j) {
-			value += kernel[kernel_start + j] * input_data[lower_index + j];
+			double local_weight = static_cast<double>(kernel[kernel_start + j])
+					* static_cast<double>(input_mask[lower_index + j]);
+//			double local_weight = (
+//					input_mask[lower_index + j] == 0 ?
+//							0.0 : static_cast<double>(kernel[kernel_start + j]));
+//			float local_weight = kernel[kernel_start + j];
+			value += (local_weight
+					* static_cast<double>(input_data[lower_index + j]));
+			weight += local_weight;
 		}
-		output_data[i] = value;
+		output_data[i] = (weight == 0.0 ? 0.0 : value / weight);
+//		std::cout << std::setprecision(12) << weight <<  ", ";
 	}
+//	std::cout << ")" << std::endl;
 }
 
 /**
@@ -454,6 +472,9 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	if (LIBSAKURA_SYMBOL(IsAligned)(output_mask) == false) {
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+	if (context->use_fft && context->num_data != num_data) {
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
 	}
 	//assert(fftw_alignment_of((double *)input_data) == 0);

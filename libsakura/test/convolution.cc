@@ -542,8 +542,8 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		SIMD_ALIGN
 		bool output_mask[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data, input_data, input_mask,
-				output_data, output_mask);
+		LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data, input_data,
+				input_mask, output_data, output_mask);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
@@ -612,9 +612,9 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				output_data[(num_data / 2)]);
 	}
 	{ // [even],without FFT, Gaussian Kernel Shape,input only 1 spike at center
-		float gaussian_kernel[11] = { 0.011742963, 0.0318611, 0.0692492,
-				0.12056981, 0.168164, 0.187887, 0.168164, 0.12056981, 0.0692492,
-				0.0318611, 0.011742963 }; // calculated data beforehand
+		float gaussian_kernel[11] = { 0.011745105, 0.031861971, 0.069249396,
+				0.12056986, 0.16816399, 0.18788746, 0.16816404, 0.1205702,
+				0.069251027, 0.031866921, 0.011754746 }; // analytic value by emulating the code
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
 		size_t const input_data_size(NUM_IN);
@@ -630,16 +630,14 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
 		for (size_t i = 0; i < kernel_width; ++i) {
-			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-					output_data[(num_data / 2) + (i + 1)]);
 			EXPECT_FLOAT_EQ(gaussian_kernel[kernel_width + (i + 1)],
 					output_data[(num_data / 2) + (i + 1)]);
 		}
 	}
 	{ // [odd],without FFT, Gaussian Kernel Shape,input only 1 spike at center
-		float gaussian_kernel[11] = { 0.011742963, 0.0318611, 0.0692492,
-				0.12056981, 0.168164, 0.18788746, 0.168164, 0.12056981,
-				0.0692492, 0.0318611, 0.011742963 }; // calculated data beforehand
+		float gaussian_kernel[11] = { 0.011745105, 0.031861969, 0.069249393,
+				0.12056985, 0.16816399, 0.18788746, 0.16816399, 0.12056985,
+				0.069249393, 0.031861969, 0.011745105 }; // analytic value by emulating the code
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
 		size_t const input_data_size(NUM_IN_ODD);
@@ -709,14 +707,12 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] = { 0.0453697890043, 0.0472178347409,
-				0.0487070940435, 0.0497995242476, 0.0504667051136,
-				0.0506910830736, 0.0504667051136, 0.0497995242476,
-				0.0487070940435, 0.0472178347409, 0.0453697890043 };
+		float gaussian_kernel[11] = { 0.054171419, 0.05392106, 0.053461169,
+				0.052775906, 0.051854382, 0.050691082, 0.052007996, 0.053100503,
+				0.05397234, 0.05463234, 0.055094122 }; // analytic values obtained by emulating code
 		for (size_t i = 0; i < 5; ++i) {
-			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
-					output_data[(num_data / 2) + (i + 1)]);EXPECT_FLOAT_EQ(
-					gaussian_kernel[5 + i], output_data[(num_data / 2) + i]);
+			EXPECT_FLOAT_EQ(gaussian_kernel[5 + i],
+					output_data[(num_data / 2) + i]);
 		}
 	}
 	{ // [odd](FFT) kernel_width > num_data
@@ -757,10 +753,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] = { 0.043915681541, 0.0455670394003,
-				0.0468942411244, 0.047865845263, 0.0484584420919,
-				0.0486575998366, 0.0484584420919, 0.047865845263,
-				0.0468942411244, 0.0455670394003, 0.043915681541 };
+		float gaussian_kernel[11] = { 0.052354915, 0.052003436, 0.051467945,
+				0.050736419, 0.049800864, 0.048657602, 0.049800864, 0.050736419,
+				0.051467945, 0.052003436, 0.052354915 }; // analytic values obtained by a script which emulates code
 
 		for (size_t i = 0; i < 5; ++i) {
 			EXPECT_FLOAT_EQ(output_data[(num_data / 2) - (i + 1)],
@@ -902,8 +897,8 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 			gthan = true;
 		}
 		EXPECT_EQ(true, gthan);
-		EXPECT_FLOAT_EQ(0.18788746, output_data[0]);
-		EXPECT_FLOAT_EQ(0.18788746, output_data[input_data_size - 1]);
+		EXPECT_FLOAT_EQ(0.31633882, output_data[0]);
+		EXPECT_FLOAT_EQ(0.31633882, output_data[input_data_size - 1]);
 	}
 	{ // compare edge value with 3 spikes ( fft > without fft)
 		size_t input_data_size(NUM_IN);
@@ -934,9 +929,9 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 			gthan = true;
 		}
 		EXPECT_EQ(true, gthan);
-		EXPECT_FLOAT_EQ(0.18788747, output_data[0]);
-		EXPECT_FLOAT_EQ(0.18788774, output_data[input_data_size - 1]);
-		EXPECT_FLOAT_EQ(0.187887758, output_data[input_data_size / 2]);
+		EXPECT_FLOAT_EQ(0.316338839, output_data[0]);
+		EXPECT_FLOAT_EQ(0.316339293, output_data[input_data_size - 1]);
+		EXPECT_FLOAT_EQ(0.187887762, output_data[input_data_size / 2]);
 		EXPECT_FLOAT_EQ(output_data_fft[input_data_size / 2],
 				output_data[input_data_size / 2]);
 	}
