@@ -355,17 +355,21 @@ protected:
 	void PrintInputs() {
 		//PrintArray("in2", NUM_IN, in2_);
 	}
-	void PrintArray(char const *name, size_t num_in, float *in) {
+	void PrintArray(string const name, size_t num_in, float *in) {
+		cout << name << " = (";
 		for (size_t i = 0; i < num_in; ++i) {
-			cout << setprecision(10) << in[i] << "\n";
+			cout << setprecision(10) << in[i] << ", ";
 		}
-		cout << "\n";
+		cout << ")" << endl;
 	}
-	void PrintArrayCenter(char const *name, size_t num_in, float *in) {
-		for (size_t i = num_in / 2 - 12; i < num_in / 2 + 12; ++i) {
-			cout << setprecision(10) << in[i] << "\n";
+	void PrintArrayCenter(string const name, size_t num_in, float *in) {
+		size_t istart = num_in / 2 - 12;
+		size_t iend = num_in / 2 + 12;
+		cout << name << "[ " << istart << "~" << iend - 1 << " ] = (";
+		for (size_t i = istart; i < iend; ++i) {
+			cout << setprecision(10) << in[i] << ", ";
 		}
-		cout << "\n";
+		cout << ")" << endl;
 	}
 	template<typename Kernel>
 	void RunBaseTest(size_t input_data_size, SpikeType input_spike_type,
@@ -439,9 +443,9 @@ protected:
 			std::cout << "num_data : " << num_data << std::endl;
 			std::cout << "use_fft : " << use_fft << std::endl;
 			if (num_data <= NUM_IN_LARGE) {
-				PrintArray("\n", num_data, output_data);
+				PrintArray("output_data", num_data, output_data);
 			} else {
-				PrintArrayCenter("\n", num_data, output_data);
+				PrintArrayCenter("output_data", num_data, output_data);
 			}
 		}
 		verbose = false;
@@ -612,9 +616,9 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				output_data[(num_data / 2)]);
 	}
 	{ // [even],without FFT, Gaussian Kernel Shape,input only 1 spike at center
-		float gaussian_kernel[11] = { 0.011745105, 0.031861971, 0.069249396,
-				0.12056986, 0.16816399, 0.18788746, 0.16816404, 0.1205702,
-				0.069251027, 0.031866921, 0.011754746 }; // analytic value by emulating the code
+		float gaussian_kernel[11] = { 0.011745105, 0.03186197, 0.069249394,
+				0.12056985, 0.16816399, 0.18788747, 0.16816404, 0.1205702,
+				0.069251029, 0.031866922, 0.011754746 }; // analytic value by emulating the code
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
 		size_t const input_data_size(NUM_IN);
@@ -707,9 +711,9 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
 				sakura_Status_kOK, align_check, verbose, loop_max);
-		float gaussian_kernel[11] = { 0.054171419, 0.05392106, 0.053461169,
-				0.052775906, 0.051854382, 0.050691082, 0.052007996, 0.053100503,
-				0.05397234, 0.05463234, 0.055094122 }; // analytic values obtained by emulating code
+		float gaussian_kernel[11] = { 0.052494097, 0.052322092, 0.051935662,
+				0.051320437, 0.050466707, 0.052084927, 0.053482965, 0.054660225,
+				0.05562174, 0.056377983, 0.056944642 }; // analytic values obtained by emulating code
 		for (size_t i = 0; i < 5; ++i) {
 			EXPECT_FLOAT_EQ(gaussian_kernel[5 + i],
 					output_data[(num_data / 2) + i]);
@@ -897,8 +901,8 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 			gthan = true;
 		}
 		EXPECT_EQ(true, gthan);
-		EXPECT_FLOAT_EQ(0.31633882, output_data[0]);
-		EXPECT_FLOAT_EQ(0.31633882, output_data[input_data_size - 1]);
+		EXPECT_FLOAT_EQ(0.31633885, output_data[0]);
+		EXPECT_FLOAT_EQ(0.31633885, output_data[input_data_size - 1]);
 	}
 	{ // compare edge value with 3 spikes ( fft > without fft)
 		size_t input_data_size(NUM_IN);
@@ -929,8 +933,8 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 			gthan = true;
 		}
 		EXPECT_EQ(true, gthan);
-		EXPECT_FLOAT_EQ(0.316338839, output_data[0]);
-		EXPECT_FLOAT_EQ(0.316339293, output_data[input_data_size - 1]);
+		EXPECT_FLOAT_EQ(0.316338854, output_data[0]);
+		EXPECT_FLOAT_EQ(0.316339299, output_data[input_data_size - 1]);
 		EXPECT_FLOAT_EQ(0.187887762, output_data[input_data_size / 2]);
 		EXPECT_FLOAT_EQ(output_data_fft[input_data_size / 2],
 				output_data[input_data_size / 2]);

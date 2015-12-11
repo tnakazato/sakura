@@ -32,7 +32,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-//#include <iomanip>
+#include <iomanip>
 #include <fftw3.h>
 #include <memory>
 #include <climits>
@@ -124,6 +124,20 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
 /**
  *
  * @param num_data
+ * @param src
+ * @param dst
+ * @tparam T
+ */
+template<typename T>
+inline void RevertData1D(size_t num_data, T const src[/*num_data*/], T dst[/*num_data*/]) {
+	for (size_t i = 0; i < num_data; ++i) {
+		dst[i] = src[num_data - 1 - i];
+	}
+}
+
+/**
+ *
+ * @param num_data
  * @param input_data_arg
  * @param num_kernel
  * @param kernel_arg
@@ -135,45 +149,52 @@ bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
 	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(input_mask_arg);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-//	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
+	// Need to revert kernel array in direct convolution.
+	SIMD_ALIGN
+	float revert_kernel[num_kernel];
+	assert(LIBSAKURA_SYMBOL(IsAligned)(revert_kernel));
+	RevertData1D(num_kernel, kernel_arg, revert_kernel);
+
 	auto input_data = AssumeAligned(input_data_arg);
 	auto input_mask = AssumeAligned(mask8);
-	auto kernel = AssumeAligned(kernel_arg);
+//	auto kernel = AssumeAligned(kernel_arg);
+	auto kernel = AssumeAligned(revert_kernel);
 	auto output_data = AssumeAligned(output_data_arg);
 	STATIC_ASSERT(sizeof(input_mask_arg[0]) == sizeof(input_mask[0]));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
-
-	size_t center_index = num_kernel / 2;
-	size_t left_half = num_kernel / 2;
+	// the center index in *reverted* kernel
+	size_t center_index = num_kernel - 1 - (num_kernel / 2);
+	// the number of elements in the left half of kernel (excluding center)
+	size_t left_half = center_index;
+	// the number of elements in the right half of kernel (excluding center)
 	size_t right_half = num_kernel - left_half - 1;
 //	std::cout << "weight = (";
 	for (size_t i = 0; i < num_data; ++i) {
-		size_t lower_index = (i >= center_index) ? i - center_index : 0;
-		size_t kernel_start = (i >= left_half) ? 0 : left_half - i;
+		size_t lower_index = (i >= center_index) ? i - left_half : 0;
+		size_t kernel_start = (i >= center_index) ? 0 : center_index - i;
 		size_t kernel_end =
-				(num_data - i - 1 >= right_half) ?
+				(num_data - 1 - i >= right_half) ?
 						num_kernel :
-						num_kernel - (right_half - (num_data - i - 1));
-		assert(kernel_end - kernel_start <= num_kernel);
+						num_kernel - (right_half - (num_data - 1 - i)); // end index +1
+		size_t num_convolve = kernel_end - kernel_start;
+		assert(num_convolve <= num_kernel);
 		double value = 0.0;
 		double weight = 0.0;
-		size_t num_convolve = kernel_end - kernel_start;
 		for (size_t j = 0; j < num_convolve; ++j) {
 			double local_weight = static_cast<double>(kernel[kernel_start + j])
 					* static_cast<double>(input_mask[lower_index + j]);
-//			double local_weight = (
-//					input_mask[lower_index + j] == 0 ?
-//							0.0 : static_cast<double>(kernel[kernel_start + j]));
-//			float local_weight = kernel[kernel_start + j];
+			// need to turn around kernel in direct convolution
+//			double local_weight = static_cast<double>(kernel[(kernel_end -1 - j)])
+//										* static_cast<double>(input_mask[(lower_index + j)]);
 			value += (local_weight
-					* static_cast<double>(input_data[lower_index + j]));
+					* static_cast<double>(input_data[(lower_index + j)]));
 			weight += local_weight;
 		}
-		output_data[i] = (weight == 0.0 ? 0.0 : value / weight);
 //		std::cout << std::setprecision(12) << weight <<  ", ";
+		output_data[i] = (weight == 0.0 ? 0.0 : value / weight);
 	}
 //	std::cout << ")" << std::endl;
 }
