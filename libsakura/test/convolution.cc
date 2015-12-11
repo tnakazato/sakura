@@ -1011,14 +1011,17 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 /**
  * Test for sakura_CreateGaussianKernel
  */
+// T-001
 TEST_GAUSS(NegativeKernelWidth) {
 	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(-1.0f, 10);
 }
 
+// T-002
 TEST_GAUSS(ZeroKernelWidth) {
 	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(0.0f, 10);
 }
 
+// T-003
 TEST_GAUSS(PositiveInfiniteKernelWidth) {
 	constexpr float kOne = 1.0f;
 	constexpr float kZero = 0.0f;
@@ -1029,6 +1032,7 @@ TEST_GAUSS(PositiveInfiniteKernelWidth) {
 			10);
 }
 
+// T-004
 TEST_GAUSS(NegativeInfiniteKernelWidth) {
 	constexpr float kOne = 1.0f;
 	constexpr float kZero = 0.0f;
@@ -1039,6 +1043,7 @@ TEST_GAUSS(NegativeInfiniteKernelWidth) {
 			10);
 }
 
+// T-005
 TEST_GAUSS(NotANumberKernelWidth) {
 	float nan_value = std::nan("");
 	ASSERT_TRUE(std::isnan(nan_value));
@@ -1046,18 +1051,22 @@ TEST_GAUSS(NotANumberKernelWidth) {
 			10);
 }
 
+// T-006
 TEST_GAUSS(KernelIsNull) {
 	RunGaussianTest<NullPointerInitializer, InvalidArgumentValidator>(2.0f, 10);
 }
 
+// T-007
 TEST_GAUSS(KernelIsNotAligned) {
 	RunGaussianTest<NotAlignedInitializer, InvalidArgumentValidator>(2.0f, 10);
 }
 
+// T-008
 TEST_GAUSS(NumKernelIsZero) {
 	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(2.0f, 0);
 }
 
+// T-009
 TEST_GAUSS(NumKernelIsOne) {
 	// result should be independent of kernel_width if num_kernel is 1
 	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(2.0f, 1);
@@ -1065,26 +1074,32 @@ TEST_GAUSS(NumKernelIsOne) {
 	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(256.0f, 1);
 }
 
+// T-010
 TEST_GAUSS(NumKernelIsTwo) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 2);
 }
 
+// T-011
 TEST_GAUSS(NumKernelIsThree) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 3);
 }
 
+// T-012
 TEST_GAUSS(NumKernelIsFour) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 4);
 }
 
+// T-014
 TEST_GAUSS(EvenNumkernel) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(24.0f, 64);
 }
 
+// T-013
 TEST_GAUSS(OddNumkernel) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(24.0f, 65);
 }
 
+// T-016
 TEST_GAUSS(NumkernelLessThanKernelWidth) {
 	// even
 	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 64);
@@ -1093,6 +1108,7 @@ TEST_GAUSS(NumkernelLessThanKernelWidth) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 65);
 }
 
+// T-017
 TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
 	// even
 	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 128);
@@ -1101,6 +1117,7 @@ TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
 	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 129);
 }
 
+// T-018
 TEST_GAUSS(HalfWidth) {
 	// even
 	RunGaussianTest<StandardInitializer, HalfWidthValidator>(128.0f, 128);
@@ -1109,14 +1126,17 @@ TEST_GAUSS(HalfWidth) {
 	RunGaussianTest<StandardInitializer, HalfWidthValidator>(129.0f, 129);
 }
 
+// T-019
 TEST_GAUSS(NarrowKernelWidth) {
 	RunGaussianTest<StandardInitializer, NarrowKernelValidator>(FLT_MIN, 128);
 }
 
+// T-020
 TEST_GAUSS(WideKernelWidth) {
 	RunGaussianTest<StandardInitializer, WideKernelValidator>(FLT_MAX, 128);
 }
 
+// T-021
 TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456; // 2^28
 	RunGaussianTest<StandardInitializer, StandardValidator,
@@ -1124,6 +1144,7 @@ TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
 			"CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
 }
 
+// T-022
 TEST_GAUSS(OddNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456 + 1; // 2^28 + 1
 	RunGaussianTest<StandardInitializer, StandardValidator,
