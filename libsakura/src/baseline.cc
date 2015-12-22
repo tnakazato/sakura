@@ -1294,14 +1294,16 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
 	size_t const num_piece = num_boundary - 1;
-	size_t const num_coeff = GetNumberOfLsqBases(context->baseline_type, num_piece);
+	size_t const num_coeff = GetNumberOfLsqBases(context->baseline_type,
+			num_piece);
 	auto coeff_full =
 			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
 
-	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_lsq_bases_max, num_coeff,
-			context->cspline_basis, num_boundary, boundary, num_fitting_max,
-			clip_threshold_sigma, true, context->cspline_lsq_coeff, nullptr,
-			final_mask, rms, context->residual_data, context->best_fit_model,
+	DoFitBaseline<T, U, V>(context, num_data, data, mask,
+			context->num_lsq_bases_max, num_coeff, context->cspline_basis,
+			num_boundary, boundary, num_fitting_max, clip_threshold_sigma, true,
+			context->cspline_lsq_coeff, nullptr, final_mask, rms,
+			context->residual_data, context->best_fit_model,
 			[&]() {
 				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff_full);
 				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context, num_boundary, boundary, coeff_full, context->best_fit_model, context->residual_data);},
@@ -1309,7 +1311,8 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 
 	if (coeff != nullptr) {
 		for (size_t i = 0; i < num_piece; ++i) {
-			std::copy(coeff_full[i], coeff_full[i] + kNumBasesCubicSpline, coeff[i]);
+			std::copy(coeff_full[i], coeff_full[i] + kNumBasesCubicSpline,
+					coeff[i]);
 		}
 	}
 	if (best_fit != nullptr) {
@@ -1894,6 +1897,83 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 }
 
 /**
+ * Fit sinusoid to input data.
+ *
+ * @param[out] coeff Coefficients of the best-fit
+ * sinusoidal bases. Values are stored in ascending
+ * order of wave numbers defined as number of how
+ * many sinusoidal waves needed to fill the given
+ * data area: the constant term comes first, then
+ * sine and cosine of nwave=1, sine and cosine of
+ * nwave=2, and so on.
+ * @param[out] best_fit The best-fit sinusoidal data,
+ * i.e., the result of least-square fitting itself.
+ * @param[out] residual The data with the best-fit
+ * sinusoid subtracted.
+ * Note: either of the above parameters accept null
+ * pointer in case users do not need it.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
+		size_t const nwave[/*num_nwave*/], size_t num_data,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
+		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
+		double coeff[/*num_coeff*/], float best_fit[/*num_data*/],
+		float residual[/*num_data*/],
+		bool final_mask[/*num_data*/], float *rms,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+	CHECK_ARGS(context != nullptr);
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
+	CHECK_ARGS(context->baseline_type == baseline_type);//BaselineTypeInternal_kSinusoid);
+	CHECK_ARGS(0 < num_nwave);
+	CHECK_ARGS(nwave != nullptr);
+	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
+	CHECK_ARGS(
+			DoGetNumberOfCoefficients(baseline_type, 0, num_nwave, nwave)
+					<= num_coeff);
+	CHECK_ARGS(num_coeff <= context->num_bases);
+	if (coeff != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
+	}
+	if (best_fit != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(best_fit));
+	}
+	if (residual != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(residual));
+	}
+	CHECK_ARGS(final_mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
+
+	try {
+		LSQFit<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(context,
+				0, num_nwave, nwave, num_data, data, mask, clip_threshold_sigma,
+				num_fitting_max, num_coeff, coeff, best_fit, residual,
+				final_mask, rms, baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+/**
  * Fit baseline using polynomial or Chebyshev polynomial then subtract it.
  *
  * @param[out] out If @a get_residual is true, it is
@@ -2183,7 +2263,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
-	CHECK_ARGS(DoGetNumberOfCoefficients(baseline_type, 0, num_nwave, nwave) <= num_coeff);
+	CHECK_ARGS(
+			DoGetNumberOfCoefficients(baseline_type, 0, num_nwave, nwave)
+					<= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -2314,7 +2396,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
-	CHECK_ARGS(DoGetNumberOfCoefficients(context->baseline_type, 0, num_nwave, nwave) <= num_coeff);
+	CHECK_ARGS(
+			DoGetNumberOfCoefficients(context->baseline_type, 0, num_nwave,
+					nwave) <= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));

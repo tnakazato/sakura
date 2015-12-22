@@ -1739,6 +1739,92 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
+ /**
+  * @brief Fit a sinusoidal curve to input data.
+  * @details A sinusoidal curve is fitted to input data based on
+  * Least-Square method. As output, coefficients of bases of the
+  * best-fit curve, the best-fit curve value itself and the residuals
+  * (i.e., input - best-fit curve) are stored in @a coeff , @a best_fit
+  * and @a residual , respectively. If @a num_fitting_max greater than 1
+  * is given, fitting is executed recursively. Once best-fit curve is
+  * subtracted from input data, mean and standard deviation of the
+  * residual is computed to update @a mask so that @a mask has false
+  * value at data points where residual value exceeds threshold defined
+  * by @a clip_threshold_sigma , then Least-Square fitting is again
+  * performed to the input data with updated @a mask to update @a coeff
+  * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
+  * times or until the fitting result converges. Once fitting is done,
+  * the updated mask information is stored in @a final_mask .
+  * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
+  * @param[in] num_nwave The number of elements in the array @a nwave .
+  * @param[in] nwave Wave numbers within the index range of @a data
+  * to be used for sinusoidal fitting. The values must be positive or
+  * zero (for constant term), but not exceed the @a maximum wave number
+  * specified in creation of @a context . The values must be stored in
+  * ascending order and must not be duplicate.
+  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
+  * @a final_mask, and @a out. It must be equal to @a num_data which was
+  * given to sakura_CreateBaselineContextFloat() to create @a context .
+  * @param[in] data Input data with length of @a num_data .
+  * @n must-be-aligned
+  * @param[in] mask Input mask data with length of @a num_data .
+  * The @a i th element of @a data is included in input spectrum if the
+  * @a i th element of @a mask is true, while it is excluded from input
+  * spectrum if the corresponding element of @a mask is false.
+  * @n must-be-aligned
+  * @param[in] clip_threshold_sigma Threshold of clipping in unit of
+  * sigma. It must be a positive value.
+  * @param[in] num_fitting_max Upper limit of how many times fitting is
+  * performed recursively. Before executing the second or later fitting,
+  * outlier in @a data is masked via clipping to be not used. If 1 is
+  * given, fitting is done just once and no clipping will be applied.
+  * If 0 is given, fitting is not executed and the values of @a residual
+  * should be identical with those of @a data .
+  * @param[in] num_coeff The number of elements in the array @a coeff.
+  * If @a coeff is not null pointer, it must be ( @a num_nwave*2-1 )
+  * or ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
+  * respectively, and must not exceed @a num_data, while the value is
+  * not checked when @a coeff is null pointer.
+  * @param[out] coeff Coefficients of the sinusoidal fit. Its length
+  * must be @a num_coeff . If @a nwave contains zero, the first element
+  * is of the constant term. If not, the first and the second elements
+  * are for sine and cosine terms for the smallest wave number in
+  * @a nwave, respectively. Coefficients of sine and cosine terms for
+  * the second-smallest wave number come next, and so on. Null pointer
+  * can be given in case users do not need this value.
+  * @n must-be-aligned
+  * @param[out] best_fit The best-fit curve data, i.e., the result of
+  * least-square fitting itself. Its length must be @a num_data .
+  * @a data can be set to @a best_fit if users want to overwrite it
+  * in-place. Null pointer can be given in case users do not need
+  * this value.
+  * @n must-be-aligned
+  * @param[out] residual Residual (input - best-fit) data. Its length
+  * must be @a num_data . @a data can be set to @a residual if users
+  * want to overwrite it in-place. Null pointer can be given in case
+  * users do not need this value.
+  * @n must-be-aligned
+  * @param[out] final_mask The final status of mask data after
+  * recursive clipping procedure finish. Its length must be
+  * @a num_data . @a mask can be set to @a final_mask if users want
+  * to overwrite it in-place.
+  * @n must-be-aligned
+  * @param[out] rms The root-mean-square of @a residual .
+  * @param[out] baseline_status Baseline-specific error code.
+  * @return Status code.
+  *
+  * MT-safe
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
+ 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+ 		size_t num_nwave, size_t const nwave[/*num_nwave*/],
+ 		size_t num_data, float const data[/*num_data*/],
+ 		bool const mask[/*num_data*/], float clip_threshold_sigma,
+ 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
+ 		float best_fit[/*num_data*/], float residual[/*num_data*/],
+ 		bool final_mask[/*num_data*/], float *rms,
+ 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+ 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
 /**
  * @brief Fit a baseline and subtract it from input spectrum.
  * @details A polynomial or Chebyshev polynomial curve is fitted to the
