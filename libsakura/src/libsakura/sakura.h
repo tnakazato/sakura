@@ -1825,6 +1825,106 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
+  /**
+   * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
+   * @details
+   * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+   * @param[in] num_data The number of elements in @a data and @a out.
+   * It must be equal to @a num_data which was given to
+   * sakura_CreateBaselineContextFloat() to create @a context .
+   * @param[in] data The input data with length of @a num_data .
+   * @n must-be-aligned
+   * @param[in] num_coeff The number of elements in @a coeff .
+   * It must be in range (0 < @a num_coeff <= @a order+1 ), where
+   * @a order is the polynomial or Chebyshev polynomial order
+   * specified in creation of @a context .
+   * @param[in] coeff Coefficients of model data. Its length must
+   * be @a num_coeff. Its first element must be of constant term,
+   * followed by those of first order, second order,
+   * and so on.
+   * @n must-be-aligned
+   * @param[out] out The output data. Its length must be @a num_data .
+   * @n must-be-aligned
+   * @return Status code.
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
+  		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+  		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
+  		double const coeff[/*num_data*/], float out[/*num_data*/])
+  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+  /**
+   * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
+   * @details
+   * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
+   * @param[in] num_data The number of elements in @a data and @a out .
+   * It must be equal to @a num_data which was given to
+   * sakura_CreateBaselineContextCubicSplineFloat() to create @a context .
+   * @param[in] data The input data with length of @a num_data .
+   * @n must-be-aligned
+   * @param[in] num_pieces The number of spline pieces. If zero is
+   * given, no subtraction executed.
+   * @param[in] coeff Coefficients of cubic spline curve. It must be
+   * a 2D array with type of double[ @a num_pieces ][4]. @a coeff[i]
+   * is for the @a i th spline piece from the left side. The first
+   * element in each @a coeff[i] must be of constant term, followed
+   * by the ones of first, second, and third orders.
+   * @n must-be-aligned
+   * @param[in] boundary A 1D array containing the boundary positions,
+   * which are indices of parameters @a data and @a out , of spline
+   * pieces. Its length must be ( @a num_pieces +1). The element
+   * values should be stored in ascending order. The first element
+   * must always be zero, the left edge of the first (left-most) spline
+   * piece, while the last element must be @a num_data , which is the
+   * next of the right edge of the last (right-most) spline piece.
+   * @n must-be-aligned
+   * @param[out] out The output data. Its length must be @a num_data .
+   * @n must-be-aligned
+   * @return Status code.
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
+  		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+  		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
+  		double const coeff[/*num_pieces*/][4],
+  		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
+  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+  /**
+   * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
+   * @details
+   * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
+   * @param[in] num_data The number of elements in @a data and @a out.
+   * It must be equal to @a num_data which was given to
+   * sakura_CreateBaselineContextSinusoidFloat() to create @a context .
+   * @param[in] data The input data with length of @a num_data .
+   * @n must-be-aligned
+   * @param[in] num_nwave The number of elements in the array @a nwave .
+   * @param[in] nwave Wave numbers within the index range of @a data
+   * to be used for sinusoidal fitting. The values must be positive
+   * or zero (for constant term), but not exceed the maximum wave
+   * number specified in creation of @a context . The values must
+   * be stored in ascending order and must not be duplicate.
+   * @param[in] num_coeff The number of elements in @a coeff .
+   * It must be in range (0 < @a num_coeff <= @a num_model_bases ),
+   * where @a num_model_bases is ( @a num_nwave*2-1 ) or
+   * ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
+   * respectively. Also it must not exceed @a num_data .
+   * @param[in] coeff Coefficients of model data. Its length must
+   * be @a num_coeff. If @a nwave contains zero, the first element
+   * must be of the constant term. If not, the first and the second
+   * elements are for sine and cosine terms for the smallest wave
+   * number in @a nwave, respectively. Coefficients of sine and
+   * cosine terms for the second-smallest wave number come next,
+   * and so on.
+   * @n must-be-aligned
+   * @param[out] out The output data. Its length must be @a num_data .
+   * @n must-be-aligned
+   * @return Status code.
+   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
+  		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+  		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
+  		size_t const nwave[/*num_nwave*/], size_t num_coeff,
+  		double const coeff[/*num_data*/], float out[/*num_data*/])
+  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
 /**
  * @brief Fit a baseline and subtract it from input spectrum.
  * @details A polynomial or Chebyshev polynomial curve is fitted to the
@@ -2226,105 +2326,105 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
-/**
- * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
- * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
- * @param[in] num_data The number of elements in @a data and @a out.
- * It must be equal to @a num_data which was given to
- * sakura_CreateBaselineContextFloat() to create @a context .
- * @param[in] data The input data with length of @a num_data .
- * @n must-be-aligned
- * @param[in] num_coeff The number of elements in @a coeff .
- * It must be in range (0 < @a num_coeff <= @a order+1 ), where
- * @a order is the polynomial or Chebyshev polynomial order
- * specified in creation of @a context .
- * @param[in] coeff Coefficients of model data. Its length must
- * be @a num_coeff. Its first element must be of constant term,
- * followed by those of first order, second order,
- * and so on.
- * @n must-be-aligned
- * @param[out] out The output data. Its length must be @a num_data .
- * @n must-be-aligned
- * @return Status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
-		double const coeff[/*num_data*/], float out[/*num_data*/])
-				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+ /**
+  * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
+  * @details
+  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+  * @param[in] num_data The number of elements in @a data and @a out.
+  * It must be equal to @a num_data which was given to
+  * sakura_CreateBaselineContextFloat() to create @a context .
+  * @param[in] data The input data with length of @a num_data .
+  * @n must-be-aligned
+  * @param[in] num_coeff The number of elements in @a coeff .
+  * It must be in range (0 < @a num_coeff <= @a order+1 ), where
+  * @a order is the polynomial or Chebyshev polynomial order
+  * specified in creation of @a context .
+  * @param[in] coeff Coefficients of model data. Its length must
+  * be @a num_coeff. Its first element must be of constant term,
+  * followed by those of first order, second order,
+  * and so on.
+  * @n must-be-aligned
+  * @param[out] out The output data. Its length must be @a num_data .
+  * @n must-be-aligned
+  * @return Status code.
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineUsingCoefficientsFloat)(
+ 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+ 		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
+ 		double const coeff[/*num_data*/], float out[/*num_data*/])
+ 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
-/**
- * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
- * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
- * @param[in] num_data The number of elements in @a data and @a out .
- * It must be equal to @a num_data which was given to
- * sakura_CreateBaselineContextFloat() to create @a context .
- * @param[in] data The input data with length of @a num_data .
- * @n must-be-aligned
- * @param[in] num_pieces The number of spline pieces. If zero is
- * given, no subtraction executed.
- * @param[in] coeff Coefficients of cubic spline curve. It must be
- * a 2D array with type of double[ @a num_pieces ][4]. @a coeff[i]
- * is for the @a i th spline piece from the left side. The first
- * element in each @a coeff[i] must be of constant term, followed
- * by the ones of first, second, and third orders.
- * @n must-be-aligned
- * @param[in] boundary A 1D array containing the boundary positions,
- * which are indices of parameters @a data and @a out , of spline
- * pieces. Its length must be ( @a num_pieces +1). The element
- * values should be stored in ascending order. The first element
- * must always be zero, the left edge of the first (left-most) spline
- * piece, while the last element must be @a num_data , which is the
- * next of the right edge of the last (right-most) spline piece.
- * @n must-be-aligned
- * @param[out] out The output data. Its length must be @a num_data .
- * @n must-be-aligned
- * @return Status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
-		double const coeff[/*num_pieces*/][4],
-		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
-				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+ /**
+  * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
+  * @details
+  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+  * @param[in] num_data The number of elements in @a data and @a out .
+  * It must be equal to @a num_data which was given to
+  * sakura_CreateBaselineContextFloat() to create @a context .
+  * @param[in] data The input data with length of @a num_data .
+  * @n must-be-aligned
+  * @param[in] num_pieces The number of spline pieces. If zero is
+  * given, no subtraction executed.
+  * @param[in] coeff Coefficients of cubic spline curve. It must be
+  * a 2D array with type of double[ @a num_pieces ][4]. @a coeff[i]
+  * is for the @a i th spline piece from the left side. The first
+  * element in each @a coeff[i] must be of constant term, followed
+  * by the ones of first, second, and third orders.
+  * @n must-be-aligned
+  * @param[in] boundary A 1D array containing the boundary positions,
+  * which are indices of parameters @a data and @a out , of spline
+  * pieces. Its length must be ( @a num_pieces +1). The element
+  * values should be stored in ascending order. The first element
+  * must always be zero, the left edge of the first (left-most) spline
+  * piece, while the last element must be @a num_data , which is the
+  * next of the right edge of the last (right-most) spline piece.
+  * @n must-be-aligned
+  * @param[out] out The output data. Its length must be @a num_data .
+  * @n must-be-aligned
+  * @return Status code.
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
+ 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+ 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
+ 		double const coeff[/*num_pieces*/][4],
+ 		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
+ 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
-/**
- * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
- * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
- * @param[in] num_data The number of elements in @a data and @a out.
- * It must be equal to @a num_data which was given to
- * sakura_CreateBaselineContextFloat() to create @a context .
- * @param[in] data The input data with length of @a num_data .
- * @n must-be-aligned
- * @param[in] num_nwave The number of elements in the array @a nwave .
- * @param[in] nwave Wave numbers within the index range of @a data
- * to be used for sinusoidal fitting. The values must be positive
- * or zero (for constant term), but not exceed the maximum wave
- * number specified in creation of @a context . The values must
- * be stored in ascending order and must not be duplicate.
- * @param[in] num_coeff The number of elements in @a coeff .
- * It must be in range (0 < @a num_coeff <= @a num_model_bases ),
- * where @a num_model_bases is ( @a num_nwave*2-1 ) or
- * ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
- * respectively. Also it must not exceed @a num_data .
- * @param[in] coeff Coefficients of model data. Its length must
- * be @a num_coeff. If @a nwave contains zero, the first element
- * must be of the constant term. If not, the first and the second
- * elements are for sine and cosine terms for the smallest wave
- * number in @a nwave, respectively. Coefficients of sine and
- * cosine terms for the second-smallest wave number come next,
- * and so on.
- * @n must-be-aligned
- * @param[out] out The output data. Its length must be @a num_data .
- * @n must-be-aligned
- * @return Status code.
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
-		size_t const nwave[/*num_nwave*/], size_t num_coeff,
-		double const coeff[/*num_data*/], float out[/*num_data*/])
-				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+ /**
+  * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
+  * @details
+  * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+  * @param[in] num_data The number of elements in @a data and @a out.
+  * It must be equal to @a num_data which was given to
+  * sakura_CreateBaselineContextFloat() to create @a context .
+  * @param[in] data The input data with length of @a num_data .
+  * @n must-be-aligned
+  * @param[in] num_nwave The number of elements in the array @a nwave .
+  * @param[in] nwave Wave numbers within the index range of @a data
+  * to be used for sinusoidal fitting. The values must be positive
+  * or zero (for constant term), but not exceed the maximum wave
+  * number specified in creation of @a context . The values must
+  * be stored in ascending order and must not be duplicate.
+  * @param[in] num_coeff The number of elements in @a coeff .
+  * It must be in range (0 < @a num_coeff <= @a num_model_bases ),
+  * where @a num_model_bases is ( @a num_nwave*2-1 ) or
+  * ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
+  * respectively. Also it must not exceed @a num_data .
+  * @param[in] coeff Coefficients of model data. Its length must
+  * be @a num_coeff. If @a nwave contains zero, the first element
+  * must be of the constant term. If not, the first and the second
+  * elements are for sine and cosine terms for the smallest wave
+  * number in @a nwave, respectively. Coefficients of sine and
+  * cosine terms for the second-smallest wave number come next,
+  * and so on.
+  * @n must-be-aligned
+  * @param[out] out The output data. Its length must be @a num_data .
+  * @n must-be-aligned
+  * @return Status code.
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractBaselineSinusoidUsingCoefficientsFloat)(
+ 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+ 		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
+ 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
+ 		double const coeff[/*num_data*/], float out[/*num_data*/])
+ 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Return the number of basis functions used for baseline fitting.

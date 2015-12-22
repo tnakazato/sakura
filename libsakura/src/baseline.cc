@@ -1974,6 +1974,152 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
 }
 
 /**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for baseline type
+ * of polynomial and Chebyshev polynomial.
+ *
+ * @param[out] out_arg Baseline-subtracted data.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
+		float const data[/*num_data*/], size_t num_coeff,
+		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
+	CHECK_ARGS(context != nullptr);
+	auto const type = context->baseline_type;
+	CHECK_ARGS(
+			(type == BaselineTypeInternal_kPolynomial)
+					|| (type == BaselineTypeInternal_kChebyshev));
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(0 < num_coeff);
+	CHECK_ARGS(num_coeff <= context->num_bases);
+	CHECK_ARGS(coeff != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
+	CHECK_ARGS(out != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	try {
+		SubtractBaselineUsingCoefficients<float, double,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+				num_coeff, coeff, 0, nullptr, out);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for baseline type
+ * of cubic spline.
+ *
+ * @param[out] out_arg Baseline-subtracted data.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
+		float const data[/*num_data*/], size_t num_pieces,
+		double const coeff[/*num_pieces*/][kNumBasesCubicSpline],
+		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
+				noexcept {
+	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kCubicSpline);
+	CHECK_ARGS(0 < num_pieces);
+	CHECK_ARGS(num_pieces <= context->baseline_param);
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(coeff != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
+	CHECK_ARGS(boundary != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
+	CHECK_ARGS(boundary[0] == 0);
+	CHECK_ARGS(boundary[num_pieces] == num_data);
+	CHECK_ARGS(out != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	try {
+		SubtractBaselineCubicSplineUsingCoefficients<float, double,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+				num_pieces + 1, coeff, boundary, out);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+/**
+ * Subtract baseline using basis data in baseline context and
+ * user-given coefficients. This function is for baseline type
+ * of sinusoids.
+ *
+ * @param[out] out_arg Baseline-subtracted data.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
+		float const data[/*num_data*/], size_t num_nwave,
+		size_t const nwave[/*num_nwave*/], size_t num_coeff,
+		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
+	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kSinusoid);
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(0 < num_nwave);
+	CHECK_ARGS(nwave != nullptr);
+	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	CHECK_ARGS(
+			DoGetNumberOfCoefficients(context->baseline_type, 0, num_nwave,
+					nwave) <= num_coeff);
+	CHECK_ARGS(num_coeff <= context->num_bases);
+	CHECK_ARGS(coeff != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
+	CHECK_ARGS(out != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
+
+	try {
+		SubtractBaselineUsingCoefficients<float, double,
+		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
+				num_coeff, coeff, num_nwave, nwave, out);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+//-------------------------------------------------------------------------------------------
+// The following 9 functions:
+//   sakura_SubtractBaselineFloat(),
+//   sakura_SubtractBaselineCubicSplineFloat(),
+//   sakura_SubtractBaselineSinusoidFloat(),
+//   sakura_GetBestFitBaselineCoefficientsFloat(),
+//   sakura_GetBestFitBaselineCoefficientsCubicSplineFloat(),
+//   sakura_GetBestFitBaselineCoefficientsSinusoidFloat(),
+//   sakura_SubtractBaselineUsingCoefficientsFloat(),
+//   sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat(), and
+//   sakura_SubtractBaselineSinusoidUsingCoefficientsFloat(),
+// will be deprecated once CASA-side codes use the new
+// integrated/renamed APIs
+//   sakura_LSQFit*Float() and
+//   sakura_Subtract*Float(),
+// where '*' can be replaced by either of 'Polynomial', 'CubicSpline',
+// or 'Sinusoid'.  (2015/12/22 WK)
+//-------------------------------------------------------------------------------------------
+
+/**
  * Fit baseline using polynomial or Chebyshev polynomial then subtract it.
  *
  * @param[out] out If @a get_residual is true, it is
