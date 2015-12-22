@@ -1514,7 +1514,7 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
-		LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 		size_t num_data,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
@@ -1575,6 +1575,169 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContextFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) *context)
 				LIBSAKURA_NOEXCEPT;
+
+/**
+ * @brief Fit a polynomial curve to input data.
+ * @details A polynomial or Chebyshev polynomial is fitted to input data
+ * based on Least-Square method. As output, coefficients of bases of the
+ * best-fit curve, the best-fit curve value itself and the residuals
+ * (i.e., input - best-fit curve) are stored in @a coeff , @a best_fit
+ * and @a residual , respectively. If @a num_fitting_max greater than 1
+ * is given, fitting is executed recursively. Once best-fit curve is
+ * subtracted from input data, mean and standard deviation of the
+ * residual is computed to update @a mask so that @a mask has false
+ * value at data points where residual value exceeds threshold defined
+ * by @a clip_threshold_sigma , then Least-Square fitting is again
+ * performed to the input data with updated @a mask to update @a coeff
+ * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
+ * times or until the fitting result converges. Once fitting is done,
+ * the updated mask information is stored in @a final_mask .
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextPolynomialFloat .
+ * @param[in] order Polynomial order. It should not exceed the @a order
+ * specified in creation of @a context .
+ * @param[in] num_data Number of elements in the arrays @a data, @a mask,
+ * @a final_mask, and @a out. It must be equal to @a num_data which was
+ * given to sakura_CreateBaselineContextFloat() to create @a context .
+ * @param[in] data Input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask Input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma Threshold of clipping in unit of
+ * sigma. It must be a positive value.
+ * @param[in] num_fitting_max Upper limit of how many times fitting is
+ * performed recursively. Before executing the second or later fitting,
+ * outlier in @a data is masked via clipping to be not used. If 1 is
+ * given, fitting is done just once and no clipping will be applied.
+ * If 0 is given, fitting is not executed and the values of @a residual
+ * should be identical with those of @a data .
+ * @param[in] num_coeff Number of elements in the array @a coeff .
+ * In case @a coeff is not null pointer, it must be equal to ( @a order
+ * +1), while the value is not checked when @a coeff is null pointer.
+ * @param[out] coeff Coefficients of the polynomial bases. Its length
+ * must be @a num_coeff . Coefficient values are stored in ascending
+ * order of polynomial order: coefficient of constant term comes first,
+ * followed by those of first order, second order, and so on. Null
+ * pointer can be given in case users do not need this value.
+ * @n must-be-aligned
+ * @param[out] best_fit The best-fit curve data, i.e., the result of
+ * least-square fitting itself. Its length must be @a num_data .
+ * @a data can be set to @a best_fit if users want to overwrite it
+ * in-place. Null pointer can be given in case users do not need
+ * this value.
+ * @n must-be-aligned
+ * @param[out] residual Residual (input - best-fit) data. Its length
+ * must be @a num_data . @a data can be set to @a residual if users
+ * want to overwrite it in-place. Null pointer can be given in case
+ * users do not need this value.
+ * @n must-be-aligned
+ * @param[out] final_mask The final status of mask data after
+ * recursive clipping procedure finish. Its length must be
+ * @a num_data . @a mask can be set to @a final_mask if users want
+ * to overwrite it in-place.
+ * @n must-be-aligned
+ * @param[out] rms The root-mean-square of @a residual .
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		uint16_t order, size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
+		float best_fit[/*num_data*/], float residual[/*num_data*/],
+		bool final_mask[/*num_data*/], float *rms,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
+/**
+ * @brief Fit a cubic spline curve to input data.
+ * @details A cubic spline curve is fitted to input data based on
+ * Least-Square method. As output, coefficients of bases of the
+ * best-fit curve, the best-fit curve value itself and the residuals
+ * (i.e., input - best-fit curve) are stored in @a coeff ,
+ * @a best_fit and @a residual , respectively.
+ * If @a num_fitting_max greater than 1 is given, fitting is executed
+ * recursively. Once best-fit curve is subtracted from input data, mean
+ * and standard deviation of the residual is computed to update @a mask
+ * so that @a mask has false value at data points where residual value
+ * exceeds threshold defined by @a clip_threshold_sigma , then
+ * Least-Square fitting is again performed to the input data with updated
+ * @a mask to update @a coeff values. This procedure is repeatedly done
+ * for ( @a num_fitting_max-1 ) times or until the fitting result converges.
+ * Once fitting is done, the updated mask information is stored in
+ * @a final_mask .
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
+ * @param[in] num_pieces Number of spline pieces. It must be positive
+ * and also must not exceed the number of spline pieces specified in
+ * creation of @a context .
+ * @param[in] num_data Number of elements in the arrays @a data, @a mask,
+ * @a final_mask, and @a out. It must be equal to @a num_data which was
+ * given to sakura_CreateBaselineContextFloat() to create @a context .
+ * @param[in] data Input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask Input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma Threshold of clipping in unit of
+ * sigma. It must be a positive value.
+ * @param[in] num_fitting_max Upper limit of how many times fitting is
+ * performed recursively. Before executing the second or later fitting,
+ * outlier in @a data is masked via clipping to be not used. If 1 is
+ * given, fitting is done just once and no clipping will be applied.
+ * If 0 is given, fitting is not executed and the values of @a residual
+ * should be identical with those of @a data .
+ * @param[out] coeff The coefficients of the best-fit cubic spline curve.
+ * It must be a 2D array with type of double[ @a num_pieces ][4].
+ * @a coeff[i] is for the @a i th spline piece from the left side.
+ * The first element in each @a coeff[i] is of constant term, followed
+ * by those of first, second, and third orders. Null pointer can be
+ * given in case users do not need this value.
+ * @n must-be-aligned
+ * @param[out] best_fit The best-fit curve data, i.e., the result of
+ * least-square fitting itself. Its length must be @a num_data .
+ * @a data can be set to @a best_fit if users want to overwrite it
+ * in-place. Null pointer can be given in case users do not need
+ * this value.
+ * @n must-be-aligned
+ * @param[out] residual Residual (input - best-fit) data. Its length
+ * must be @a num_data . @a data can be set to @a residual if users
+ * want to overwrite it in-place. Null pointer can be given in case
+ * users do not need this value.
+ * @n must-be-aligned
+ * @param[out] final_mask The final status of mask data after
+ * recursive clipping procedure finish. Its length must be
+ * @a num_data . @a mask can be set to @a final_mask if users want
+ * to overwrite it in-place.
+ * @n must-be-aligned
+ * @param[out] rms The root-mean-square of @a residual .
+ * @param[out] boundary A 1D array containing the boundary positions
+ * of spline pieces, which are indices of @a data .
+ * Its length must be ( @a num_pieces +1). The element values will be
+ * stored in ascending order. The first element will always be zero,
+ * the left edge of the first (left-most) spline piece, while the last
+ * element will be @a num_data , which is the next of the right edge
+ * of the last (right-most) spline piece.
+ * @n must-be-aligned
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		size_t num_pieces, size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, double coeff[/*num_pieces*/][4],
+		float best_fit[/*num_data*/], float residual[/*num_data*/],
+		bool final_mask[/*num_data*/], float *rms,
+		size_t boundary[/*num_pieces+1*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Fit a baseline and subtract it from input spectrum.

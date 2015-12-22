@@ -1190,7 +1190,140 @@ inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
 }
 
 /**
- * A wrapper function of DoSubtractBaseline() to fit/subtract
+ * A wrapper function of DoFitBaseline() to fit polynomial,
+ * Chebyshev polynomial and sinusoids.
+ * It is called from its C interface sakura_LSQFit*Float().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline model, best-fit
+ * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam V Type of baseline context.
+ */
+template<typename T, typename U, typename V>
+inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
+		size_t const *nwave, size_t num_data, T const *data_arg,
+		bool const *mask_arg, T clip_threshold_sigma, uint16_t num_fitting_max,
+		size_t num_coeff, U *coeff_arg, T *best_fit_arg, T *residual_arg,
+		bool *final_mask_arg, T *rms,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	auto const type = context->baseline_type;
+	assert(
+			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(best_fit_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(residual_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto coeff = AssumeAligned(coeff_arg);
+	auto best_fit = AssumeAligned(best_fit_arg);
+	auto residual = AssumeAligned(residual_arg);
+	auto final_mask = AssumeAligned(final_mask_arg);
+
+	if (type == BaselineTypeInternal_kSinusoid) {
+		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
+	}
+	size_t const num_boundary = 2;
+	SIMD_ALIGN
+	size_t boundary[num_boundary] = { 0, num_data };
+
+	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
+			num_coeff, context->basis_data, num_boundary, boundary,
+			num_fitting_max, clip_threshold_sigma, true, context->coeff_full,
+			nullptr, final_mask, rms, context->residual_data,
+			context->best_fit_model,
+			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
+						num_coeff, context->coeff_full, context->best_fit_model,
+						context->residual_data);}, baseline_status);
+
+	if (coeff != nullptr) {
+		std::copy(context->coeff_full, context->coeff_full + num_coeff, coeff);
+	}
+	if (best_fit != nullptr) {
+		std::copy(context->best_fit_model, context->best_fit_model + num_data,
+				best_fit);
+	}
+	if (residual != nullptr) {
+		std::copy(context->residual_data, context->residual_data + num_data,
+				residual);
+	}
+}
+
+/**
+ * A wrapper function of DoFitBaseline() to fit cubic spline.
+ * It is called from its C interface sakura_LSQFitCubicSplineFloat().
+ *
+ * @tparam T Type of input/output data, best-fit baseline data,
+ * residual data, rms of residual data, and threshold level of
+ * recursive clipping.
+ * @tparam U Type of basis data of baseline and best-fit
+ * coefficients.
+ * @tparam V Type of baseline context.
+ */
+template<typename T, typename U, typename V>
+inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
+		size_t num_data, T const *data_arg, bool const *mask_arg,
+		T clip_threshold_sigma, uint16_t num_fitting_max,
+		U (*coeff_arg)[kNumBasesCubicSpline], T *best_fit_arg, T *residual_arg,
+		bool *final_mask_arg, T *rms, size_t *boundary_arg,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
+	assert(context->num_bases == kNumBasesCubicSpline);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(best_fit_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(residual_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
+	auto const data = AssumeAligned(data_arg);
+	auto const mask = AssumeAligned(mask_arg);
+	auto coeff = AssumeAligned(coeff_arg);
+	auto best_fit = AssumeAligned(best_fit_arg);
+	auto residual = AssumeAligned(residual_arg);
+	auto final_mask = AssumeAligned(final_mask_arg);
+	auto boundary = AssumeAligned(boundary_arg);
+
+	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
+	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
+			context->cspline_basis);
+	size_t const num_piece = num_boundary - 1;
+	size_t const num_coeff = GetNumberOfLsqBases(context->baseline_type, num_piece);
+	auto coeff_full =
+			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
+
+	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_lsq_bases_max, num_coeff,
+			context->cspline_basis, num_boundary, boundary, num_fitting_max,
+			clip_threshold_sigma, true, context->cspline_lsq_coeff, nullptr,
+			final_mask, rms, context->residual_data, context->best_fit_model,
+			[&]() {
+				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff_full);
+				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context, num_boundary, boundary, coeff_full, context->best_fit_model, context->residual_data);},
+			baseline_status);
+
+	if (coeff != nullptr) {
+		for (size_t i = 0; i < num_piece; ++i) {
+			std::copy(coeff_full[i], coeff_full[i] + kNumBasesCubicSpline, coeff[i]);
+		}
+	}
+	if (best_fit != nullptr) {
+		std::copy(context->best_fit_model, context->best_fit_model + num_data,
+				best_fit);
+	}
+	if (residual != nullptr) {
+		std::copy(context->residual_data, context->residual_data + num_data,
+				residual);
+	}
+}
+
+/**
+ * A wrapper function of DoFitBaseline() to fit/subtract
  * baseline for polynomial, Chebyshev polynomial and sinusoids.
  * It is called from its C interface sakura_SubtractBaselineFloat().
  *
@@ -1244,15 +1377,15 @@ inline void SubtractBaseline(V const *context, uint16_t order,
 }
 
 /**
- * A wrapper function of DoSubtractBaseline() to fit/subtract
+ * A wrapper function of DoFitBaseline() to fit/subtract
  * baseline for cubic spline.
  * It is called from its C interface sakura_SubtractBaselineCubicSplineFloat().
  *
  * @tparam T Type of input/output data, best-fit baseline data,
  * residual data, rms of residual data, and threshold level of
  * recursive clipping.
- * @tparam U Type of basis data of baseline model, best-fit
- * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam U Type of basis data of baseline and best-fit
+ * coefficients.
  * @tparam V Type of baseline context.
  * @param[out] out_arg If @a get_residual is true, it is residual
  * (baseline-subtracted) data, otherwise it is the best-fit
@@ -1298,7 +1431,7 @@ inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
 }
 
 /**
- * A wrapper function of DoSubtractBaseline() to obtain best-fit
+ * A wrapper function of DoFitBaseline() to obtain best-fit
  * baseline coefficients for polynomial, Chebyshev polynomial
  * and sinusoids.
  * It is called from its C interface sakura_GetBestFitBaselineCoefficientsFloat().
@@ -1347,7 +1480,7 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
 }
 
 /**
- * A wrapper function of DoSubtractBaseline() to obtain best-fit
+ * A wrapper function of DoFitBaseline() to obtain best-fit
  * baseline coefficients for cubic spline.
  * It is called from its C interface
  * sakura_GetBestFitBaselineCoefficientsCubicSplineFloat().
@@ -1355,8 +1488,8 @@ inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
  * @tparam T Type of input/output data, best-fit baseline data,
  * residual data, rms of residual data, and threshold level of
  * recursive clipping.
- * @tparam U Type of basis data of baseline model, best-fit
- * coefficients, and boundary data used for cubic spline fitting.
+ * @tparam U Type of basis data of baseline and best-fit
+ * coefficients.
  * @tparam V Type of baseline context.
  */
 template<typename T, typename U, typename V>
@@ -1478,14 +1611,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 				noexcept {
 	CHECK_ARGS(
 			(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) ||(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
-	CHECK_ARGS(context != nullptr);
 	BaselineTypeInternal baseline_type_internal =
 			BaselineTypeInternal_kPolynomial;
 	if (baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) {
 		baseline_type_internal = BaselineTypeInternal_kChebyshev;
 	}
-	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type_internal, order);
-	CHECK_ARGS(num_lsq_bases <= num_data);
+	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type_internal, order) <= num_data);
 
 	try {
 		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1516,8 +1648,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicS
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(0 < npiece);
-	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, npiece);
-	CHECK_ARGS(num_lsq_bases <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, npiece) <= num_data);
 
 	try {
 		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1542,11 +1673,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicS
  * Create a baseline context object for float data to fit.
  * It is only for sinusoidal baseline.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(uint16_t nwave, size_t num_data, LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
+		uint16_t nwave, size_t num_data,
+		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
-	size_t num_lsq_bases = GetNumberOfLsqBases(baseline_type, nwave);
-	CHECK_ARGS(num_lsq_bases <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, nwave) <= num_data);
 
 	try {
 		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -1589,7 +1721,9 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
  * parameters. It can be used for polynomial, Chebyshev, and cubic
  * spline baseline.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order, size_t *num_coeff) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
+		size_t *num_coeff) noexcept {
 	CHECK_ARGS(context != nullptr);
 	auto const type = context->baseline_type;
 	CHECK_ARGS(
@@ -1600,6 +1734,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloa
 		CHECK_ARGS(0 < order);
 	}
 	CHECK_ARGS(order <= context->baseline_param);
+	CHECK_ARGS(num_coeff != nullptr);
 
 	try {
 		*num_coeff = DoGetNumberOfCoefficients(type, order, 0, nullptr);
@@ -1610,6 +1745,151 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloa
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+/**
+ * Fit polynomial or Chebyshev polynomial to input data.
+ *
+ * @param[out] coeff Coefficients of the best-fit
+ * polynomial bases. Values are stored in ascending
+ * order of polynomial: the constant term comes first,
+ * then first-order, second-order and third-order.
+ * @param[out] best_fit The best-fit polynomial data,
+ * i.e., the result of least-square fitting itself.
+ * @param[out] residual The data with the best-fit
+ * polynomial subtracted.
+ * Note: either of the above parameters accept null
+ * pointer in case users do not need it.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
+		float best_fit[/*num_data*/], float residual[/*num_data*/],
+		bool final_mask[/*num_data*/], float *rms,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+	CHECK_ARGS(context != nullptr);
+	auto const type = context->baseline_type;
+	CHECK_ARGS(
+			(type == BaselineTypeInternal_kPolynomial)
+					|| (type == BaselineTypeInternal_kChebyshev));
+	CHECK_ARGS(order <= context->baseline_param);
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
+	if (coeff != nullptr) {
+		CHECK_ARGS(
+				num_coeff
+						== DoGetNumberOfCoefficients(type, order, 0, nullptr));
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
+	}
+	if (best_fit != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(best_fit));
+	}
+	if (residual != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(residual));
+	}
+	CHECK_ARGS(final_mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
+
+	try {
+		LSQFit<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(context,
+				order, 0, nullptr, num_data, data, mask, clip_threshold_sigma,
+				num_fitting_max, num_coeff, coeff, best_fit, residual,
+				final_mask, rms, baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+/**
+ * Fit cubic spline to input data.
+ *
+ * @param[out] coeff Coefficients of the best-fit
+ * cubic spline bases. It must be a 2D array with type
+ * of double[ @a num_pieces ][4]. @a coeff[i] is for
+ * the @a i th spline piece from the left side. In each
+ * @a coeff[i] , values are stored in ascending order
+ * of polynomial: the constant term comes first, then
+ * first-order, second-order and third-order.
+ * @param[out] best_fit The best-fit polynomial data,
+ * i.e., the result of least-square fitting itself.
+ * @param[out] residual The data with the best-fit
+ * polynomial subtracted.
+ * Note: either of the above parameters accept null
+ * pointer in case users do not need it.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
+LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
+		size_t num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, double coeff[/*num_pieces*/][4],
+		float best_fit[/*num_data*/], float residual[/*num_data*/],
+		bool final_mask[/*num_data*/], float *rms,
+		size_t boundary[/*num_pieces+1*/],
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
+	CHECK_ARGS(baseline_status != nullptr);
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+	CHECK_ARGS(context != nullptr);
+	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
+	CHECK_ARGS(context->baseline_type == baseline_type);
+	CHECK_ARGS(0 < num_pieces);
+	CHECK_ARGS(num_pieces <= context->baseline_param);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, num_pieces) <= num_data);
+	CHECK_ARGS(num_data == context->num_basis_data);
+	CHECK_ARGS(data != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
+	CHECK_ARGS(mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
+	CHECK_ARGS(0.0f < clip_threshold_sigma);
+	if (coeff != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
+	}
+	if (best_fit != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(best_fit));
+	}
+	if (residual != nullptr) {
+		CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(residual));
+	}
+	CHECK_ARGS(final_mask != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(final_mask));
+	CHECK_ARGS(rms != nullptr);
+	CHECK_ARGS(boundary != nullptr);
+	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
+
+	try {
+		LSQFitCubicSpline<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(
+				context, num_pieces + 1, num_data, data, mask,
+				clip_threshold_sigma, num_fitting_max, coeff, best_fit,
+				residual, final_mask, rms, boundary, baseline_status);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1903,9 +2183,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
-	size_t num_lsq_bases = DoGetNumberOfCoefficients(baseline_type, 0,
-			num_nwave, nwave);
-	CHECK_ARGS(num_lsq_bases <= num_coeff);
+	CHECK_ARGS(DoGetNumberOfCoefficients(baseline_type, 0, num_nwave, nwave) <= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -2036,9 +2314,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
 	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
-	size_t num_lsq_bases = DoGetNumberOfCoefficients(context->baseline_type, 0,
-			num_nwave, nwave);
-	CHECK_ARGS(num_lsq_bases <= num_coeff);
+	CHECK_ARGS(DoGetNumberOfCoefficients(context->baseline_type, 0, num_nwave, nwave) <= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
