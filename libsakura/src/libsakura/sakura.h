@@ -1224,13 +1224,16 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
  * @param[in] num_data
  * The number of elements in @a input_data, @a input_mask, @a output_data,
  * and @a output_mask. (0 < @a num_data <= INT_MAX)
- * @param[in] input_data Input data.
+ * @param[in] input_data Input data. If corresponding element in @a input_mask is true,
+ * the element in @a input_data must not be Inf nor NaN.
  * @n must-be-aligned
  * @param[in] input_mask Mask of input data. @a input_data is used in operation
  * if corresponding element of @a input_mask is true. If not, the corresponding
  * elements in @a input_data is ignored.
  * @n must-be-aligned
- * @param[out] output_data Output data.
+ * @param[out] output_data Output data. In case @a use_fft = true in the @a context,
+ * the pointer of @a out is allowed to be equal to that of @a in (@a input_data == @a output_data),
+ * indicating in-place operation.
  * @n must-be-aligned
  * @param[out] output_mask Output mask after the convolution operation.
  * @n must-be-aligned

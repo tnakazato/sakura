@@ -492,6 +492,9 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 	if (context->use_fft) {
 		CHECK_ARGS_WITH_MESSAGE(context->num_data == num_data,
 				"using FFT for convolution. num_data must be equal to the one in the context");
+	} else {
+		CHECK_ARGS_WITH_MESSAGE(input_data != output_data,
+				"in-place operation is not supported in convolution without FFT. ");
 	}
 	//assert(fftw_alignment_of((double *)input_data) == 0);
 	//assert(fftw_alignment_of((double *)output_data) == 0);
