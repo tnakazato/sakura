@@ -27,11 +27,13 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
+#include <initializer_list>
 #include <fftw3.h>
 #include <climits>
 #include <cfloat>
 #include <memory>
 #include <stdlib.h>
+#include <vector>
 
 #include <libsakura/localdef.h>
 #include <libsakura/sakura.h>
@@ -42,7 +44,7 @@
 /* the number of elements in input/output array to test */
 #define NUM_WIDTH 5
 #define NUM_WIDTH_THIN 2
-#define NUM_IN 24
+#define NUM_IN_EVEN 24
 #define NUM_IN_ODD 25
 #define NUM_IN_LARGE 64
 #define NUM_IN_MAX 8192
@@ -69,8 +71,13 @@ typedef enum {
 	SpikeType_kcenter,
 	SpikeType_kright,
 	SpikeType_kleftright,
-	SpikeType_kall
+	SpikeType_kall,
+	SpikeType_knegative
 } SpikeType;
+
+typedef enum {
+	MaskType_ktrue, MaskType_kfalse, MaskType_knonzerofalse, MaskType_kleftright
+} MaskType;
 
 namespace {
 void *DummyAlloc(size_t size) {
@@ -332,6 +339,75 @@ inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
 using namespace std;
 
 /*
+ *  a struct to store reference data
+ *  offset: the start index of data array to compare with reference,
+ *          i.e. data[offset] is compared with reference[0].
+ *  num_reference: the number of array elements to compare
+ *  reference: an array of reference values
+ */
+template<typename DataType>
+struct ReferenceData {
+	size_t offset;
+	vector<DataType> reference;
+
+	ReferenceData(size_t offset_index = 0, initializer_list<DataType> ref = { }) :
+			offset(offset_index), reference(ref) {
+	}
+};
+
+template<typename Kernel>
+struct ConvolveTestComponent {
+	string name;
+	Kernel kernel;
+	size_t num_data;
+	SpikeType data_type;
+	MaskType mask_type;
+	vector<ReferenceData<float>> data_ref;
+	vector<ReferenceData<bool>> mask_ref;
+
+	ConvolveTestComponent(string in_name, Kernel in_kernel, size_t in_num_data,
+			SpikeType in_dtype, MaskType in_mtype,
+			initializer_list<ReferenceData<float>> data,
+			initializer_list<ReferenceData<bool>> mask) :
+			name(in_name), num_data(in_num_data), data_type(in_dtype), mask_type(
+					in_mtype), data_ref(data), mask_ref(mask) {
+		kernel = in_kernel;
+	}
+};
+
+struct ConvolveGaussKernel {
+	float kernel_width;
+	size_t num_kernel;bool use_fft;
+	void generate(float kernel[/*num_kernel*/]) {
+		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
+				kernel_width, num_kernel, kernel);
+		ASSERT_EQ(sakura_Status_kOK, status);
+	}
+};
+
+struct ConvolveRightAngledTriangleKernel {
+	float kernel_width;
+	size_t num_kernel;bool use_fft;
+	void generate(float kernel[/*num_kernel*/]) {
+		float sum = 0.0;
+		size_t const start = num_kernel / 2 - kernel_width / 2;
+		for (size_t i = 0; i < num_kernel; ++i) {
+			float value;
+			if (i < start || i >= start + kernel_width) {
+				value = 0.0;
+			} else {
+				value = static_cast<float>(i - start + 1);
+			}
+			sum += value;
+			kernel[i] = value;
+		}
+		for (size_t i = 0; i < num_kernel; ++i) {
+			kernel[i] = kernel[i] / sum;
+		}
+	}
+};
+
+/*
  * A super class to test creating kernel of array(s) width=3, channels=128
  * INPUTS:
  *
@@ -353,7 +429,7 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 	void PrintInputs() {
-		//PrintArray("in2", NUM_IN, in2_);
+		//PrintArray("in2", NUM_IN_EVEN, in2_);
 	}
 	void PrintArray(string const name, size_t num_in, float *in) {
 		cout << name << " = (";
@@ -384,30 +460,8 @@ protected:
 		bool input_mask[ELEMENTSOF(input_data)];
 		SIMD_ALIGN
 		bool output_mask[ELEMENTSOF(input_data)];
-		for (size_t i = 0; i < input_data_size; ++i) {
-			input_data[i] = 0.0;
-			input_mask[i] = true;
-		}
-		switch (input_spike_type) {
-		case SpikeType_kleft:
-			input_data[0] = 1.0;
-			break;
-		case SpikeType_kcenter:
-			input_data[input_data_size / 2] = 1.0;
-			break;
-		case SpikeType_kright:
-			input_data[input_data_size - 1] = 1.0;
-			break;
-		case SpikeType_kleftright:
-			input_data[0] = 1.0;
-			input_data[input_data_size - 1] = 1.0;
-			break;
-		case SpikeType_kall:
-			input_data[0] = 1.0;
-			input_data[input_data_size / 2] = 1.0;
-			input_data[input_data_size - 1] = 1.0;
-			break;
-		}
+		InitializeDataAndMask(input_spike_type, MaskType_ktrue, input_data_size,
+				input_data, input_mask);
 		double start = sakura_GetCurrentTime();
 		SIMD_ALIGN float kernel[num_kernel];
 		LIBSAKURA_SYMBOL(Status) status = expected_status;
@@ -459,8 +513,147 @@ protected:
 					<< ", elapsed time : " << end_time - start_time << "sec\n";
 		}
 	}
+
+	/*
+	 * Invoke Convolution using a list of ConvolveTestComponent.
+	 */
+	template<typename ConvolveKernel>
+	void RunConvolveTestComponentList(size_t num_test,
+			ConvolveTestComponent<ConvolveKernel> const TestList[]) {
+		for (size_t i = 0; i < num_test; ++i) {
+			ConvolveTestComponent<ConvolveKernel> const test_component =
+					TestList[i];
+			cout << "[Test " << test_component.name << "]" << endl;
+			size_t const num_data = test_component.num_data;
+			SIMD_ALIGN float input_data[num_data];
+			SIMD_ALIGN float output_data[ELEMENTSOF(input_data)];
+			SIMD_ALIGN bool input_mask[ELEMENTSOF(input_data)];
+			SIMD_ALIGN bool output_mask[ELEMENTSOF(input_data)];
+			RunConvolutionTest(test_component.kernel, test_component.data_type,
+					test_component.mask_type, test_component.num_data,
+					input_data, input_mask, output_data, output_mask,
+					LIBSAKURA_SYMBOL(Status_kOK), 1, test_component.data_ref,
+					test_component.mask_ref);
+		}
+	}
+
+	/*
+	 * Run sakura_Convolve1DFloat and compare output data and mask with references.
+	 */
+	template<typename ConvolveKernel>
+	void RunConvolutionTest(ConvolveKernel kernel_param,
+			SpikeType const spike_type, MaskType const mask_type,
+			size_t const num_data, float *input_data, bool *input_mask,
+			float *output_data, bool *output_mask,
+			LIBSAKURA_SYMBOL(Status) const convolution_status,
+			size_t const num_repeat = 1,
+			vector<ReferenceData<float>> const data_ref = { },
+			vector<ReferenceData<bool>> const mask_ref = { }) {
+		// create kernel array
+		size_t const num_kernel = kernel_param.num_kernel;
+		SIMD_ALIGN float kernel[num_kernel];
+		kernel_param.generate(kernel);
+		// create context
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, num_kernel,
+				kernel, kernel_param.use_fft, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		// initialize data and mask
+		InitializeDataAndMask(spike_type, mask_type, num_data, input_data,
+				input_mask);
+		// convolution
+		if (num_repeat > 1) {
+			cout << "Iterating convolution for " << num_repeat
+					<< " loops. The length of arrays is " << num_data << endl;
+		}
+		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		LIBSAKURA_SYMBOL(Status) exec_status;
+		for (size_t i = 0; i < num_repeat; ++i) {
+			exec_status = LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data,
+					input_data, input_mask, output_data, output_mask);
+		}
+		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		if (num_repeat > 1) {
+			cout << "#x# benchmark Convolve1DFloat " << end - start << endl;
+		}
+		ASSERT_EQ(convolution_status, exec_status);
+		// destroy context
+		status = LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		// verify output data and mask
+		if (exec_status == LIBSAKURA_SYMBOL(Status_kOK)) {
+			for (size_t i = 0; i < data_ref.size(); ++i) {
+				size_t const offset = data_ref[i].offset;
+				size_t const num_reference = data_ref[i].reference.size();
+				vector<float> const reference = data_ref[i].reference;
+				ASSERT_TRUE(offset + num_reference <= num_data);
+				for (size_t j = 0; j < num_reference; ++j) {
+					EXPECT_FLOAT_EQ(reference[j], output_data[offset + j]);
+				}
+			}
+			for (size_t i = 0; i < mask_ref.size(); ++i) {
+				size_t const offset = mask_ref[i].offset;
+				size_t const num_reference = mask_ref[i].reference.size();
+				vector<bool> const reference = mask_ref[i].reference;
+				ASSERT_TRUE(offset + num_reference <= num_data);
+				for (size_t j = 0; j < num_reference; ++j) {
+					EXPECT_EQ(reference[j], output_mask[offset + j]);
+				}
+			}
+		}
+	}
+
 	bool verbose;
-};
+
+private:
+	void InitializeDataAndMask(SpikeType const spike_type,
+			MaskType const mask_type, size_t const num_data, float data[],
+			bool mask[]) {
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = 0.0;
+			mask[i] = (mask_type != MaskType_kfalse);
+		}
+		switch (spike_type) {
+		case SpikeType_kleft:
+			data[0] = 1.0;
+			break;
+		case SpikeType_kcenter:
+			data[num_data / 2] = 1.0;
+			break;
+		case SpikeType_kright:
+			data[num_data - 1] = 1.0;
+			break;
+		case SpikeType_kleftright:
+			data[0] = 1.0;
+			data[num_data - 1] = 1.0;
+			break;
+		case SpikeType_kall:
+			data[0] = 1.0;
+			data[num_data / 2] = 1.0;
+			data[num_data - 1] = 1.0;
+			break;
+		case SpikeType_knegative:
+			data[num_data / 2] = -1.0;
+			break;
+		}
+		switch (mask_type) {
+		case MaskType_ktrue:
+		case MaskType_kfalse:
+			break;
+		case MaskType_kleftright:
+			mask[0] = false;
+			mask[num_data - 1] = false;
+			break;
+		case MaskType_knonzerofalse:
+			for (size_t i = 0; i < num_data; ++i) {
+				mask[i] = (data[i] == 0.0);
+			}
+			break;
+		}
+	}
+}
+;
 
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
@@ -471,7 +664,7 @@ protected:
 TEST_F(Convolve1DOperation ,InvalidArguments) {
 	{ // num_data > INT_MAX
 		std::cout << "num_data > INT_MAX" << std::endl;
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		size_t const num_data(size_t(INT_MAX) + 1);
 		bool const use_dummy_num_data = false;
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
@@ -481,7 +674,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		size_t num_kernel = NUM_IN;
+		size_t num_kernel = NUM_IN_EVEN;
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
@@ -490,14 +683,14 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		std::cout << "num_data == 0" << std::endl;
 		size_t const num_data(0);
 		bool const use_dummy_num_data = false;
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		bool const align_check = false;
 		bool const use_fft = true;
 		bool const verbose = false;
 		size_t loop_max(1);
 		SIMD_ALIGN
-		size_t num_kernel = NUM_IN;
+		size_t num_kernel = NUM_IN_EVEN;
 		float output_data[input_data_size];
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
@@ -526,7 +719,7 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Init);
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
-		float input_data[NUM_IN];
+		float input_data[NUM_IN_EVEN];
 		SIMD_ALIGN
 		bool input_mask[ELEMENTSOF(input_data)];
 		size_t const num_data(ELEMENTSOF(input_data));
@@ -535,7 +728,7 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 			input_mask[i] = true;
 		}
 		bool use_fft = true; // with FFT
-		constexpr size_t kNumKernel = NUM_IN;
+		constexpr size_t kNumKernel = NUM_IN_EVEN;
 		SIMD_ALIGN float kernel[kNumKernel];
 		LIBSAKURA_SYMBOL(Status) status_Create =
 		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kNumKernel,
@@ -569,7 +762,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				0.069249183, 0.031861119, 0.011742971 }; // calculated data beforehand
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
-		size_t const input_data_size(NUM_IN);
+		size_t const input_data_size(NUM_IN_EVEN);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
 		bool const align_check = false;
@@ -621,7 +814,7 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
 				0.069251029, 0.031866922, 0.011754746 }; // analytic value by emulating the code
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
-		size_t const input_data_size(NUM_IN);
+		size_t const input_data_size(NUM_IN_EVEN);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
 		bool const align_check = false;
@@ -673,8 +866,8 @@ TEST_F(Convolve1DOperation , ValidateGaussianKernel) {
  */
 TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 	{ // [even](FFT) kernel_width > num_data
-		size_t const input_data_size(NUM_IN);
-		GaussianKernel::FWHM = static_cast<float>(NUM_IN + 1);
+		size_t const input_data_size(NUM_IN_EVEN);
+		GaussianKernel::FWHM = static_cast<float>(NUM_IN_EVEN + 1);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
 		bool const align_check = false;
@@ -698,8 +891,8 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		}
 	}
 	{ // [even](Without FFT) kernel_width > num_data
-		size_t const input_data_size(NUM_IN);
-		GaussianKernel::FWHM = static_cast<float>(NUM_IN + 1);
+		size_t const input_data_size(NUM_IN_EVEN);
+		GaussianKernel::FWHM = static_cast<float>(NUM_IN_EVEN + 1);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
 		bool const align_check = false;
@@ -768,7 +961,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 		}
 	}
 	{ // [even],FFT, Gaussian Kernel Shape, 2 spikes
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
@@ -783,7 +976,7 @@ TEST_F(Convolve1DOperation , OtherInputDataFFTonoff) {
 				sakura_Status_kOK, align_check, verbose, loop_max);
 	}
 	{ // [even],without FFT, Gaussian Kernel Shape, 2 spikes
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const num_data(input_data_size);
 		bool const use_dummy_num_data = false;
@@ -842,7 +1035,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		return 2 * threshold + 1;
 	};
 	{ // simple compare shape at near the center
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
 		size_t const num_data(input_data_size);
@@ -872,7 +1065,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		}
 	}
 	{ // compare edge value with 2 spikes ( fft > without fft)
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
 		size_t const num_data(input_data_size);
@@ -905,7 +1098,7 @@ TEST_F(Convolve1DOperation , CompareResultWithFFTWithoutFFT) {
 		EXPECT_FLOAT_EQ(0.31633885, output_data[input_data_size - 1]);
 	}
 	{ // compare edge value with 3 spikes ( fft > without fft)
-		size_t input_data_size(NUM_IN);
+		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const kernel_width = static_cast<size_t>(GaussianKernel::FWHM);
 		size_t const num_data(input_data_size);
@@ -1008,6 +1201,36 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 	}
 }
 
+/*
+ * Test user defined asymmetric kernel (right angled triangle)
+ */
+
+TEST_F(Convolve1DOperation, NumKernelWithoutFFTTriangle) {
+	ConvolveTestComponent<ConvolveRightAngledTriangleKernel> TriangleNumKernelTest[] =
+			{ { "num_kernel(odd) = num_data", { 4, NUM_IN_ODD, false },
+			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
+					0.3, 0.4 } } }, { } }, { "num_kernel(even) = num_data", { 4,
+			NUM_IN_EVEN, false },
+			NUM_IN_EVEN, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
+					0.3, 0.4 } } }, { } }, { "num_kernel(odd) > num_data", { 4,
+					2 * NUM_IN_ODD + 1,
+					false },
+			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
+					0.3, 0.4 } } }, { } }, { "num_kernel(even) > num_data", { 4,
+					2 * NUM_IN_ODD,
+					false },
+			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
+					0.3, 0.4 } } }, { } }, { "num_kernel(odd) < num_data", { 4,
+					13,
+					false }, NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { {
+					10, { 0.1, 0.2, 0.3, 0.4 } } }, { } }, {
+					"num_kernel(even) < num_data", { 4, 12, false },
+					NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, {
+							0.1, 0.2, 0.3, 0.4 } } }, { } } };
+	RunConvolveTestComponentList<ConvolveRightAngledTriangleKernel>(
+			ELEMENTSOF(TriangleNumKernelTest), TriangleNumKernelTest);
+}
+
 /**
  * Test for sakura_CreateGaussianKernel
  */
@@ -1068,7 +1291,7 @@ TEST_GAUSS(NumKernelIsZero) {
 
 // T-009
 TEST_GAUSS(NumKernelIsOne) {
-	// result should be independent of kernel_width if num_kernel is 1
+// result should be independent of kernel_width if num_kernel is 1
 	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(2.0f, 1);
 
 	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(256.0f, 1);
@@ -1101,7 +1324,7 @@ TEST_GAUSS(OddNumkernel) {
 
 // T-016
 TEST_GAUSS(NumkernelLessThanKernelWidth) {
-	// even
+// even
 	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 64);
 
 	// odd
@@ -1110,7 +1333,7 @@ TEST_GAUSS(NumkernelLessThanKernelWidth) {
 
 // T-017
 TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
-	// even
+// even
 	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 128);
 
 	// odd
@@ -1119,7 +1342,7 @@ TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
 
 // T-018
 TEST_GAUSS(HalfWidth) {
-	// even
+// even
 	RunGaussianTest<StandardInitializer, HalfWidthValidator>(128.0f, 128);
 
 	// odd
@@ -1151,3 +1374,7 @@ TEST_GAUSS(OddNumKernelPerformance) {
 			PerformanceTestLogger>(128.0f, kNumKernel,
 			"CreateGaussian_OddNumKernelPerformanceTest");
 }
+
+/**
+ * Test for LIBSAKURA_SYMBOL(Convolve1DFloat)
+ */
