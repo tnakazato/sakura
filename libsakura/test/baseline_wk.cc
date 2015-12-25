@@ -2923,3 +2923,341 @@ TEST_F(BaselineWK, CreateBaselineContextFloat) {
 		}
 	}
 }
+
+/*
+ * Test LSQFitPolynomial
+ * successful case
+ */
+TEST_F(BaselineWK, LSQFitPolynomialSuccessfulCases) {
+	enum NPCases {
+		NP_kNo, NP_kCoeff, NP_kBestFit, NP_kResidual, NP_kAll, NP_kNumElems
+	};
+	vector<string> np_cases_names = { "no nullptr", "coeff=nullptr",
+			"best_fit=nullptr", "residual=nullptr", "all nullptr" };
+	cout << "    Testing for ";
+
+	size_t const order = 3;
+	SIMD_ALIGN
+	double coeff_answer[order + 1];
+	SetDoubleConstant(1.0, ELEMENTSOF(coeff_answer), coeff_answer);
+	SIMD_ALIGN
+	double coeff[ELEMENTSOF(coeff_answer)];
+	float rms;
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	size_t const num_data = ELEMENTSOF(coeff_answer);
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(coeff_answer), coeff_answer, num_data, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	if (verbose) {
+		PrintArray("data", num_data, data);
+	}
+	SIMD_ALIGN
+	float best_fit[num_data];
+	SIMD_ALIGN
+	float residual[num_data];
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextFloat(
+			sakura_BaselineType_kPolynomial, order, num_data, &context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	for (NPCases item = static_cast<NPCases>(0); item < NP_kNumElems; item =
+			static_cast<NPCases>(item + 1)) {
+		cout << np_cases_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+
+		double *coeff_ptr = coeff;
+		float *best_fit_ptr = best_fit;
+		float *residual_ptr = residual;
+
+		switch (item) {
+		case NP_kNo:
+			break;
+		case NP_kCoeff:
+			coeff_ptr = nullptr;
+			break;
+		case NP_kBestFit:
+			best_fit_ptr = nullptr;
+			break;
+		case NP_kResidual:
+			residual_ptr = nullptr;
+			break;
+		case NP_kAll:
+			coeff_ptr = nullptr;
+			best_fit_ptr = nullptr;
+			residual_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+		LIBSAKURA_SYMBOL (Status) fit_status =
+				LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(context, order,
+						num_data, data, mask, 5.0f, 1, ELEMENTSOF(coeff),
+						coeff_ptr, best_fit_ptr, residual_ptr, mask, &rms,
+						&baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), fit_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+		bool check_coeff = true;
+		bool check_best_fit = true;
+		bool check_residual = true;
+		if (item == NP_kCoeff || item == NP_kAll) {
+			check_coeff = false;
+		}
+		if (item == NP_kBestFit || item == NP_kAll) {
+			check_best_fit = false;
+		}
+		if (item == NP_kResidual || item == NP_kAll) {
+			check_residual = false;
+		}
+		if (check_coeff) {
+			for (size_t i = 0; i < ELEMENTSOF(coeff_answer); ++i) {
+				CheckAlmostEqual(coeff_answer[i], coeff[i], 1.0e-6);
+			}
+		}
+		if (check_best_fit) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
+			}
+		}
+		if (check_residual) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(0.0, residual[i], 1.0e-6);
+			}
+		}
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status =
+			sakura_DestroyBaselineContextFloat(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+	cout << endl;
+}
+
+/*
+ * Test LSQFitCubicSpline
+ * successful case
+ */
+TEST_F(BaselineWK, LSQFitCubicSplineSuccessfulCases) {
+	enum NPCases {
+		NP_kNo, NP_kCoeff, NP_kBestFit, NP_kResidual, NP_kAll, NP_kNumElems
+	};
+	vector<string> np_cases_names = { "no nullptr", "coeff=nullptr",
+			"best_fit=nullptr", "residual=nullptr", "all nullptr" };
+	cout << "    Testing for ";
+
+	size_t const num_pieces = 3;
+	SIMD_ALIGN
+	size_t boundary[num_pieces + 1];
+	SIMD_ALIGN
+	double coeff_answer[4 * num_pieces];
+	SetDoubleConstant(1.0, ELEMENTSOF(coeff_answer), coeff_answer);
+	SIMD_ALIGN
+	double coeff[num_pieces][4];
+	float rms;
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	size_t const num_data = ELEMENTSOF(coeff_answer);
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatPolynomial(4, coeff_answer, num_data, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	if (verbose) {
+		PrintArray("data", num_data, data);
+	}
+	SIMD_ALIGN
+	float best_fit[num_data];
+	SIMD_ALIGN
+	float residual[num_data];
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status =
+			sakura_CreateBaselineContextCubicSplineFloat(num_pieces, num_data,
+					&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	for (NPCases item = static_cast<NPCases>(0); item < NP_kNumElems; item =
+			static_cast<NPCases>(item + 1)) {
+		cout << np_cases_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+
+		double (*coeff_ptr)[4] = coeff;
+		float *best_fit_ptr = best_fit;
+		float *residual_ptr = residual;
+
+		switch (item) {
+		case NP_kNo:
+			break;
+		case NP_kCoeff:
+			coeff_ptr = nullptr;
+			break;
+		case NP_kBestFit:
+			best_fit_ptr = nullptr;
+			break;
+		case NP_kResidual:
+			residual_ptr = nullptr;
+			break;
+		case NP_kAll:
+			coeff_ptr = nullptr;
+			best_fit_ptr = nullptr;
+			residual_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+		LIBSAKURA_SYMBOL (Status) fit_status =
+		LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(context, num_pieces, num_data,
+				data, mask, 5.0f, 1, coeff_ptr, best_fit_ptr, residual_ptr,
+				mask, &rms, boundary, &baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), fit_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+		bool check_coeff = true;
+		bool check_best_fit = true;
+		bool check_residual = true;
+		if (item == NP_kCoeff || item == NP_kAll) {
+			check_coeff = false;
+		}
+		if (item == NP_kBestFit || item == NP_kAll) {
+			check_best_fit = false;
+		}
+		if (item == NP_kResidual || item == NP_kAll) {
+			check_residual = false;
+		}
+		if (check_coeff) {
+			for (size_t i = 0; i < ELEMENTSOF(coeff_answer); ++i) {
+				CheckAlmostEqual(coeff_answer[i], coeff[i / 4][i % 4], 1.0e-6);
+			}
+		}
+		if (check_best_fit) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
+			}
+		}
+		if (check_residual) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(0.0, residual[i], 1.0e-6);
+			}
+		}
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status =
+			sakura_DestroyBaselineContextFloat(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+	cout << endl;
+}
+
+/*
+ * Test LSQFitSinusoid
+ * successful case
+ */
+TEST_F(BaselineWK, LSQFitSinusoidSuccessfulCases) {
+	enum NPCases {
+		NP_kNo, NP_kCoeff, NP_kBestFit, NP_kResidual, NP_kAll, NP_kNumElems
+	};
+	vector<string> np_cases_names = { "no nullptr", "coeff=nullptr",
+			"best_fit=nullptr", "residual=nullptr", "all nullptr" };
+	cout << "    Testing for ";
+
+	size_t const nwave_max = 3;
+	size_t const num_nwave = nwave_max + 1;
+	size_t const nwave[num_nwave] = { 0, 1, 2, 3 };
+	SIMD_ALIGN
+	double coeff_answer[nwave_max * 2 + 1];
+	SetDoubleConstant(1.0, ELEMENTSOF(coeff_answer), coeff_answer);
+	SIMD_ALIGN
+	double coeff[ELEMENTSOF(coeff_answer)];
+	float rms;
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	size_t const num_data = ELEMENTSOF(coeff_answer)+5;
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatSinusoidal(num_nwave, nwave, coeff_answer, num_data, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	if (verbose) {
+		PrintArray("data", num_data, data);
+	}
+	SIMD_ALIGN
+	float best_fit[num_data];
+	SIMD_ALIGN
+	float residual[num_data];
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL (Status) create_status =
+			sakura_CreateBaselineContextSinusoidFloat(nwave_max, num_data,
+					&context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+	for (NPCases item = static_cast<NPCases>(0); item < NP_kNumElems; item =
+			static_cast<NPCases>(item + 1)) {
+		cout << np_cases_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+
+		double *coeff_ptr = coeff;
+		float *best_fit_ptr = best_fit;
+		float *residual_ptr = residual;
+
+		switch (item) {
+		case NP_kNo:
+			break;
+		case NP_kCoeff:
+			coeff_ptr = nullptr;
+			break;
+		case NP_kBestFit:
+			best_fit_ptr = nullptr;
+			break;
+		case NP_kResidual:
+			residual_ptr = nullptr;
+			break;
+		case NP_kAll:
+			coeff_ptr = nullptr;
+			best_fit_ptr = nullptr;
+			residual_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+		LIBSAKURA_SYMBOL (Status) fit_status =
+				LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(context, num_nwave, nwave,
+						num_data, data, mask, 5.0f, 1, ELEMENTSOF(coeff),
+						coeff_ptr, best_fit_ptr, residual_ptr, mask, &rms,
+						&baseline_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), fit_status);
+		EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+		bool check_coeff = true;
+		bool check_best_fit = true;
+		bool check_residual = true;
+		if (item == NP_kCoeff || item == NP_kAll) {
+			check_coeff = false;
+		}
+		if (item == NP_kBestFit || item == NP_kAll) {
+			check_best_fit = false;
+		}
+		if (item == NP_kResidual || item == NP_kAll) {
+			check_residual = false;
+		}
+		if (check_coeff) {
+			for (size_t i = 0; i < ELEMENTSOF(coeff_answer); ++i) {
+				CheckAlmostEqual(coeff_answer[i], coeff[i], 1.0e-6);
+			}
+		}
+		if (check_best_fit) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
+			}
+		}
+		if (check_residual) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(0.0, residual[i], 1.0e-6);
+			}
+		}
+	}
+
+	LIBSAKURA_SYMBOL (Status) destroy_status =
+			sakura_DestroyBaselineContextFloat(context);
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
+
+	cout << endl;
+}
