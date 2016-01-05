@@ -12,7 +12,8 @@ usage() {
 #tarball_file=$2
 
 # Get the sources
-src_url='https://alma-dms.mtk.nao.ac.jp/svn/sakura/trunk/libsakura'
+#src_url='https://alma-dms.mtk.nao.ac.jp/svn/sakura/trunk/libsakura'
+src_url='https://dms.alma.nao.ac.jp/svn/sakura/trunk/libsakura'
 project_name=`basename "$src_url"`
 
 tmp_dir=`mktemp -d -p /tmp sakura.XXXX`
@@ -31,7 +32,7 @@ src_parent_abs=`dirname $src_dir_abs`
 # Tarball file
 version_major=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head --lines=1 | egrep --only-matching '[0-9]+'`
 version_minor=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head --lines=1 | egrep --only-matching '[0-9]+'`
-svn_revision=`svn info | grep 'Revision:' | egrep --only-matching '[0-9]+'`
+svn_revision=`env LANG=en_US.UTF-8 svn info | grep 'Revision:' | egrep --only-matching '[0-9]+'`
 release_version="${version_major}.${version_minor}.${svn_revision}"
 
 tarball_dir="$work_dir"
