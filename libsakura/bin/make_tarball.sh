@@ -16,7 +16,7 @@ usage() {
 src_url='https://dms.alma.nao.ac.jp/svn/sakura/trunk/libsakura'
 project_name=`basename "$src_url"`
 
-tmp_dir=`mktemp -d -p /tmp sakura.XXXX`
+tmp_dir=`env TMPDIR=/tmp mktemp -d sakura.XXXX`
 src_dir="$tmp_dir/$project_name"
 
 mkdir "$src_dir"
@@ -30,8 +30,8 @@ src_dir_abs=`pwd`
 src_parent_abs=`dirname $src_dir_abs`
 
 # Tarball file
-version_major=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head --lines=1 | egrep --only-matching '[0-9]+'`
-version_minor=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head --lines=1 | egrep --only-matching '[0-9]+'`
+version_major=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head -n 1 | egrep --only-matching '[0-9]+'`
+version_minor=`egrep 'set.+libsakura_VERSION_MAJOR' CMakeLists.txt | head -n 1 | egrep --only-matching '[0-9]+'`
 svn_revision=`env LANG=en_US.UTF-8 svn info | grep 'Revision:' | egrep --only-matching '[0-9]+'`
 release_version="${version_major}.${version_minor}.${svn_revision}"
 
@@ -57,7 +57,7 @@ EOF
 echo 's/^\./'$project_name'/g' >> $sed_script
 
 release_contents="${src_parent_abs}/release_contents.txt"
-find | sed -f "$sed_script" > "$release_contents"
+find . | sed -f "$sed_script" > "$release_contents"
 
 # Tarball file creation
 cd "$work_dir"
