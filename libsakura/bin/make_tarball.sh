@@ -16,7 +16,7 @@ usage() {
 src_url='https://dms.alma.nao.ac.jp/svn/sakura/trunk/libsakura'
 project_name=`basename "$src_url"`
 
-tmp_dir=`env TMPDIR=/tmp mktemp -d sakura.XXXX`
+tmp_dir=`mktemp -d /tmp/sakura.XXXX`
 src_dir="$tmp_dir/$project_name"
 
 mkdir "$src_dir"
