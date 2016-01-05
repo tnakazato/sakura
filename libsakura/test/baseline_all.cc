@@ -25,31 +25,6 @@
 
 using namespace std;
 
-typedef enum {
-		/**
-			 * @brief Polynomial
-			 */LIBSAKURA_SYMBOL(MyBaselineType_kPolynomial),
-
-			/**
-			 * @brief Chebyshev Polynomial
-			 */LIBSAKURA_SYMBOL(MyBaselineType_kChebyshev),
-
-
-			/**
-			 * @brief CubicSpline
-			 */LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline),
-
-
-			/**
-			 * @brief Sinusoid
-			 */LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid),
-
-
-			/**
-			 * @brief Number of baseline functions implemented
-			 */LIBSAKURA_SYMBOL(MyBaselineType_kNumElements)
-		}LIBSAKURA_SYMBOL(MyBaselineType);
-
 /*
  * A super class to test baseline functions
  */
@@ -75,43 +50,35 @@ protected:
 
 };
 
-
-void Destroy(LIBSAKURA_SYMBOL (Status) status, LIBSAKURA_SYMBOL(BaselineContextFloat) *context){
+void Destroy(LIBSAKURA_SYMBOL (Status) status,
+LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 	LIBSAKURA_SYMBOL (Status) destroy_status =
 			sakura_DestroyBaselineContextFloat(context);
 	EXPECT_EQ(status, destroy_status);
 }
 
-
-void Create(LIBSAKURA_SYMBOL (Status) status, sakura_MyBaselineType const mybaseline_type, int16_t const order,
-		size_t const num_data, struct sakura_BaselineContextFloat** context){
-
-
-
+void Create(LIBSAKURA_SYMBOL (Status) status,
+		BaselineTypeInternal const mybaseline_type, int16_t const order,
+		size_t const num_data, struct sakura_BaselineContextFloat** context) {
 	LIBSAKURA_SYMBOL (Status) create_status;
-	sakura_BaselineType baseline_type;
 
-	if(mybaseline_type == LIBSAKURA_SYMBOL(MyBaselineType_kPolynomial)){
-		baseline_type=LIBSAKURA_SYMBOL(BaselineType_kPolynomial);
-		create_status = sakura_CreateBaselineContextFloat(baseline_type, order,
-					num_data, context);
-
-	}else if(mybaseline_type == LIBSAKURA_SYMBOL(MyBaselineType_kChebyshev)){
-		baseline_type=LIBSAKURA_SYMBOL(BaselineType_kChebyshev);
-		create_status = sakura_CreateBaselineContextFloat(baseline_type, order,
-					num_data, context);
-
-	}else if(mybaseline_type == LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline)){
-		create_status = sakura_CreateBaselineContextCubicSplineFloat(
-					order, num_data, context);
-
-	}else if(mybaseline_type == LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid)){
+	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
+		create_status = sakura_CreateBaselineContextFloat(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+				context);
+	} else if (mybaseline_type == BaselineTypeInternal_kChebyshev) {
+		create_status = sakura_CreateBaselineContextFloat(
+				LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data,
+				context);
+	} else if (mybaseline_type == BaselineTypeInternal_kCubicSpline) {
+		create_status = sakura_CreateBaselineContextCubicSplineFloat(order,
+				num_data, context);
+	} else if (mybaseline_type == BaselineTypeInternal_kSinusoid) {
 		create_status = sakura_CreateBaselineContextSinusoidFloat(order,
-					num_data, context);
+				num_data, context);
 	}
 
 	EXPECT_EQ(status, create_status);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,20 +92,17 @@ void Create(LIBSAKURA_SYMBOL (Status) status, sakura_MyBaselineType const mybase
 TEST_F(Baseline, CreateBaselineContextFloatWithPolynomial_ChebyshevPolynomial) {
 	uint16_t const order(0);
 	size_t const num_chan(1);
-
 	size_t const num_func_types = 2;
-	LIBSAKURA_SYMBOL(MyBaselineType) func_types[num_func_types]={LIBSAKURA_SYMBOL(MyBaselineType_kPolynomial),
-			LIBSAKURA_SYMBOL(MyBaselineType_kChebyshev)
-	};
+	BaselineTypeInternal func_types[num_func_types] = {
+			BaselineTypeInternal_kPolynomial, BaselineTypeInternal_kChebyshev };
 
-	for(size_t i=0; i < num_func_types ; ++i){
+	for (size_t i = 0; i < num_func_types; ++i) {
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-		Create(LIBSAKURA_SYMBOL(Status_kOK), func_types[i], order, num_chan, &context);
+		Create(LIBSAKURA_SYMBOL(Status_kOK), func_types[i], order, num_chan,
+				&context);
 		Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 	}
-
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
@@ -149,10 +113,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece10_Numdata30) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), npiece, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+			npiece, num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
@@ -163,10 +127,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece1LB_Numdata30) 
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), npiece, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+			npiece, num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
@@ -177,25 +141,25 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece1LB_Numdata4LB)
 	size_t const num_data(4);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), npiece, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+			npiece, num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
  * successful case (with cubicspline model using npiece=65535(max))
  */
 /*
-TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece65535UB_Num_data65538LB) {
-	uint16_t const npiece(65535);
-	size_t const num_data(65538);
+ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece65535UB_Num_data65538LB) {
+ uint16_t const npiece(65535);
+ size_t const num_data(65538);
 
-	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), npiece, num_data, &context);
-	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
-}
-*/
+ LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+ Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(BaselineType_kCubicSpline), npiece, num_data, &context);
+ Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
+ }
+ */
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
@@ -206,10 +170,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece10IR_Numdata13L
 	size_t const num_data(13);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), npiece, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+			npiece, num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
@@ -220,10 +184,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSplineUsingNpiece10IR_Numdat
 	size_t const num_data(12);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), npiece, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+			BaselineTypeInternal_kCubicSpline, npiece, num_data, &context);
 	//Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
@@ -234,10 +198,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_ContextNULL) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) ** context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), npiece, num_data, context);
+	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+			BaselineTypeInternal_kCubicSpline, npiece, num_data, context);
 	//Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
@@ -248,7 +212,8 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata30IR) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid), nwave, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+			num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
 
@@ -261,10 +226,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata30IR) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid), nwave, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+			num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
@@ -275,7 +240,8 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata1LB) {
 	size_t const num_data(1);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid), nwave, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+			num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
 
@@ -288,10 +254,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata21LB) {
 	size_t const num_data(21);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid), nwave, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+			num_data, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
@@ -302,10 +268,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata20OR) {
 	size_t const num_data(20);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid), nwave, num_data, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+			BaselineTypeInternal_kSinusoid, nwave, num_data, &context);
 	//Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
@@ -316,11 +282,10 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_NULLcontext) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) **context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),LIBSAKURA_SYMBOL(MyBaselineType_kSinusoid), nwave, num_data, context);
+	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+			BaselineTypeInternal_kSinusoid, nwave, num_data, context);
 	//Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // TEST (Destroy)
@@ -335,7 +300,8 @@ TEST_F(Baseline, DestroyBaselineContextFloat) {
 	size_t const num_chan(4096);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK),LIBSAKURA_SYMBOL(MyBaselineType_kCubicSpline), order, num_chan, &context);
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+			order, num_chan, &context);
 	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
 }
 
@@ -348,6 +314,4 @@ TEST_F(Baseline, DestroyBaselineContextFloatWithContextNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	Destroy(LIBSAKURA_SYMBOL(Status_kInvalidArgument), context);
 }
-
-
 
