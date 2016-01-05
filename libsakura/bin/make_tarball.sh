@@ -13,7 +13,8 @@ usage() {
 
 # Get the sources
 #src_url='https://alma-dms.mtk.nao.ac.jp/svn/sakura/trunk/libsakura'
-src_url='https://dms.alma.nao.ac.jp/svn/sakura/trunk/libsakura'
+#src_url='https://dms.alma.nao.ac.jp/svn/sakura/trunk/libsakura'
+src_url=$(cd $(dirname $0)/.. ; env LANG=en_US.UTF-8 svn info | grep -E "^URL:" | cut -d " " -f 2) 
 project_name=`basename "$src_url"`
 
 tmp_dir=`mktemp -d /tmp/sakura.XXXX`
