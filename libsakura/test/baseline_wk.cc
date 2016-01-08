@@ -2880,7 +2880,7 @@ TEST_F(BaselineWK, CreateBaselineContextFloat) {
 			} else if (bltypes[itype] == BaselineTypeInternal_kCubicSpline) {
 				num_data_valid_min = order + 3;
 			} else if (bltypes[itype] == BaselineTypeInternal_kSinusoid) {
-				num_data_valid_min = 2 * order + 1;
+				num_data_valid_min = 2 * order + 2;
 			}
 			for (size_t num_data = 0; num_data < num_data_valid_min + 3;
 					++num_data) {

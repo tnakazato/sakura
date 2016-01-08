@@ -233,11 +233,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata30IR) {
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
- * successful case (with sinusoid model using boundaries consisting of order=0LB and num_chan=1LB)
+ * successful case (with sinusoid model using boundaries consisting of order=0LB and num_chan=2LB)
  */
-TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata1LB) {
+TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata2LB) {
 	uint16_t const nwave(0);
-	size_t const num_data(1);
+	size_t const num_data(2);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
@@ -247,25 +247,25 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata1LB) {
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
- * successful case (with sinusoid model using boundaries consisting of nwave=10IR and num_data=21LB)
+ * successful case (with sinusoid model using boundaries consisting of nwave=10IR and num_data=22LB)
  */
-TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata21LB) {
+TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata22LB) {
+	uint16_t const nwave(10);
+	size_t const num_data(22);
+
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+			num_data, &context);
+	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
+}
+
+/*
+ * Test sakura_CreateBaselineContextFloatWithSinusoid
+ * failure case (with sinusoid model using values consisting of nwave=10IR and num_data=21OR)
+ */
+TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata21OR) {
 	uint16_t const nwave(10);
 	size_t const num_data(21);
-
-	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
-			num_data, &context);
-	Destroy(LIBSAKURA_SYMBOL(Status_kOK), context);
-}
-
-/*
- * Test sakura_CreateBaselineContextFloatWithSinusoid
- * failure case (with sinusoid model using values consisting of nwave=10IR and num_data=20OR)
- */
-TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata20OR) {
-	uint16_t const nwave(10);
-	size_t const num_data(20);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),

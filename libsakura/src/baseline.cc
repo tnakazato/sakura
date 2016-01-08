@@ -1608,7 +1608,7 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
  * Create a baseline context object for float data to fit.
  * It is only for polynomial and Chebyshev polynomial baseline.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
 LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 		size_t num_data, LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				noexcept {
@@ -1681,7 +1681,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinuso
 		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
 	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, nwave) <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, nwave) + 1 <= num_data);
 
 	try {
 		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
@@ -2101,7 +2101,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 }
 
 //-------------------------------------------------------------------------------------------
-// The following 9 functions:
+// The following 10 functions:
+//   sakura_CreateBaselineContextFloat(),
 //   sakura_SubtractBaselineFloat(),
 //   sakura_SubtractBaselineCubicSplineFloat(),
 //   sakura_SubtractBaselineSinusoidFloat(),
@@ -2113,11 +2114,49 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 //   sakura_SubtractBaselineSinusoidUsingCoefficientsFloat(),
 // will be deprecated once CASA-side codes use the new
 // integrated/renamed APIs
+//   sakura_CreateBaselineContextPolynomialFloat(),
 //   sakura_LSQFit*Float() and
 //   sakura_Subtract*Float(),
 // where '*' can be replaced by either of 'Polynomial', 'CubicSpline',
 // or 'Sinusoid'.  (2015/12/22 WK)
 //-------------------------------------------------------------------------------------------
+
+/**
+ * Create a baseline context object for float data to fit.
+ * It is only for polynomial and Chebyshev polynomial baseline.
+ */
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+		size_t num_data, LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+				noexcept {
+	CHECK_ARGS(
+			(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) ||(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
+	BaselineTypeInternal baseline_type_internal =
+			BaselineTypeInternal_kPolynomial;
+	if (baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) {
+		baseline_type_internal = BaselineTypeInternal_kChebyshev;
+	}
+	CHECK_ARGS(context != nullptr);
+	CHECK_ARGS(GetNumberOfLsqBases(baseline_type_internal, order) <= num_data);
+
+	try {
+		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
+				baseline_type_internal, order, 1, 0, num_data, context);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed.");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (const std::invalid_argument &e) {
+		LOG4CXX_ERROR(logger, "Order must be smaller than num_data.");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
 
 /**
  * Fit baseline using polynomial or Chebyshev polynomial then subtract it.

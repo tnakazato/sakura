@@ -1522,8 +1522,35 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
+ /**
+  * @brief Create an object containing baseline model data.
+  * @details
+  * @note A baseline context object can not be shared between
+  * threads, as it contains working areas exclusive for a specific
+  * thread.
+  * @param[in] baseline_type Type of basis function. It should
+  * be either of sakura_BaselineType_kPolynomial or
+  * sakura_BaselineType_kChebyshev.
+  * @param[in] order Polynomial order. It must be positive or
+  * zero.
+  * @param[in] num_data Number of data to fit baseline. It must
+  * be equal to or larger than the number of model bases, which
+  * is ( @a order+1 ), thus the smallest allowed value of
+  * @a num_data is 1.
+  * @param[out] context An object containing baseline model data.
+  * When @a context is no longer used, it must be destroyed by
+  * @ref sakura_DestroyBaselineContextFloat .
+  * @return Status code.
+  *
+  * MT-safe
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
+ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+ 		size_t num_data,
+ 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+ 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+
 /**
- * @copybrief sakura_CreateBaselineContextFloat
+ * @copybrief sakura_CreateBaselineContextPolynomialFloat
  * @details
  * @note A baseline context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
@@ -1546,7 +1573,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @copybrief sakura_CreateBaselineContextFloat
+ * @copybrief sakura_CreateBaselineContextPolynomialFloat
  * @details
  * @note A baseline context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
@@ -1554,9 +1581,9 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * @param[in] nwave Maximum wave number of sinusoids. It must be
  * positive or zero.
  * @param[in] num_data Number of data to fit baseline. It must
- * be equal to or larger than the number of model bases, which
- * is ( @a nwave*2+1 ), thus the smallest allowed value of
- * @a num_data is 1.
+ * be equal to or larger than the number of model bases plus one,
+ * which is ( @a nwave*2+2 ), thus the smallest allowed value of
+ * @a num_data is 2.
  * @param[out] context An object containing baseline model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyBaselineContextFloat .
@@ -1600,7 +1627,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * specified in creation of @a context .
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateBaselineContextFloat() to create @a context .
+ * given to sakura_CreateBaselineContextPolynomialFloat() to create
+ * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask Input mask data with length of @a num_data .
@@ -1679,7 +1707,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * creation of @a context .
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateBaselineContextFloat() to create @a context .
+ * given to sakura_CreateBaselineContextCubicSplineFloat() to create
+ * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask Input mask data with length of @a num_data .
@@ -1767,7 +1796,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
   * ascending order and must not be duplicate.
   * @param[in] num_data Number of elements in the arrays @a data, @a mask,
   * @a final_mask, and @a out. It must be equal to @a num_data which was
-  * given to sakura_CreateBaselineContextFloat() to create @a context .
+  * given to sakura_CreateBaselineContextSinusoidFloat() to create
+  * @a context .
   * @param[in] data Input data with length of @a num_data .
   * @n must-be-aligned
   * @param[in] mask Input mask data with length of @a num_data .
@@ -2000,14 +2030,14 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * This procedure is repeatedly done for ( @a num_fitting_max-1) times
  * or until the fitting result converges. Once fitting is done, the
  * updated mask information is stored in @a final_mask .
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
  * @param[in] num_pieces Number of spline pieces. It must be positive
  * and also must not exceed the number of spline pieces specified in
  * creation of @a context .
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out. It must be equal to @a num_data
- * which was given to sakura_CreateBaselineContextFloat() to create
- * @a context .
+ * which was given to sakura_CreateBaselineContextCubicSplineFloat() to
+ * create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data . The
@@ -2069,7 +2099,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * This procedure is repeatedly done for ( @a num_fitting_max-1 ) times
  * or until the fitting result converges. Once fitting is done, the
  * updated mask information is stored in @a final_mask .
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers within the index range of @a data
  * to be used for sinusoidal fitting. The values must be positive or
@@ -2081,8 +2111,8 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * exceed @a num_data.
  * @param[in] num_data The number of elements in the arrays @a data,
  * @a mask, @a final_mask, and @a out. It must be equal to @a num_data
- * which was given to sakura_CreateBaselineContextFloat() to create
- * @a context .
+ * which was given to sakura_CreateBaselineContextSinusoidFloat() to
+ * create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask The input mask data with length of @a num_data .
