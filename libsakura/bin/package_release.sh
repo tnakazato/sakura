@@ -164,7 +164,7 @@ fi
 rhel_version_major=$(lsb_release -r | grep -E --only-matching '[0-9]+' | head --lines=1)
 
 # Legacy libsakura libraries for CASA
-export LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
+export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
 
 # RPM Macros
 my_rpm_macros="$HOME/.rpmmacros"
@@ -237,7 +237,7 @@ ln -s gtest-1.7.0 gtest
 cd build && rm -rf *
 prefix_root=%{_prefix}
 prefix_no_root=${prefix_root:1}
-sse4_install_prefix=${RPM_BUILD_ROOT}/${prefix_no_root}/%{name}/default
+sse4_install_prefix=${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default
 cmake \
   -D CMAKE_INSTALL_PREFIX=${sse4_install_prefix} \
   -D CMAKE_BUILD_TYPE=Release \
@@ -254,11 +254,11 @@ make install
 # Dirty: move share doc directory to the right place: just under /usr/lib64/casa/01
 prefix_root=%{_prefix}
 prefix_no_root=${prefix_root:1}
-mv ${RPM_BUILD_ROOT}/${prefix_no_root}/%{name}/default/share ${RPM_BUILD_ROOT}/${prefix_no_root}
+mv ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/share ${RPM_BUILD_ROOT}/${prefix_no_root}
 # Recursively delete empty directories (Doxygen: CREATE_SUBDIRS=YES)
 # from the installation tree
 find ${RPM_BUILD_ROOT}/${prefix_no_root}/share -type d -empty -delete
-cp ${LEGACY_LIBS} ${RPM_BUILD_ROOT}/${prefix_no_root}/%{name}/default/lib
+cp ${SAKURA_LEGACY_LIBS} ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/lib
 INSTALL_END
 
 cat >> $spec_file <<'EOF_SPEC_FILE'
