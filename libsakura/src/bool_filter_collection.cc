@@ -592,6 +592,43 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 //	return DoElementFuncBoolFilter(operation_for_element, num_data, data_int, result);
 }
 #endif
+#if defined(__AVX2__)
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
+		size_t num_data, uint8_t const data[/*num_data*/],
+		bool result[/*num_data*/]) noexcept {
+	CHECK_ARGS(IsValidDataAndResult(data, result));
+	STATIC_ASSERT(sizeof(data[0])==sizeof(result[0]));
+	STATIC_ASSERT(true==1);
+	STATIC_ASSERT(false==0);
+
+	constexpr uint8_t kZero = 0;
+	try {
+		constexpr auto kElementsPerLoop = sizeof(LIBSAKURA_SYMBOL(SimdPacketAVX)) / (LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]));
+		const auto data_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(data));
+		const auto result_ptr = AssumeAligned(reinterpret_cast<__m256i *>(result));
+		const auto zero = _mm256_set1_epi8(kZero);
+		const auto one = _mm256_set1_epi8(1);
+		const auto n = num_data / (LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0])) / kElementsPerLoop;
+		for (size_t i = 0; i < n; ++i) {
+			//Returns 0xFF if data==zero, else 0x00
+			auto mask = _mm256_cmpeq_epi8(*data_ptr, zero);
+			result_ptr[i] = _mm256_add_epi8(mask, one);
+		}
+		// process remaining elements
+		const auto end = n * (LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0])) * kElementsPerLoop;
+		data = &data[end];
+		result = &result[end];
+		num_data -= end;
+		auto operation_for_element = [kZero](decltype(data[0]) data_value) {
+			return (data_value != kZero);
+		};
+		return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+}
+#else
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
@@ -601,6 +638,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		};
 	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
 }
+#endif
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		size_t num_data, uint32_t const data[/*num_data*/],
