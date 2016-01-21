@@ -1085,7 +1085,16 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 	auto residual_data = AssumeAligned(residual_data_arg);
 	auto best_fit_model = AssumeAligned(best_fit_model_arg);
 
-	size_t num_unmasked_data = num_data;
+	size_t num_unmasked_data = 0;
+	for (size_t i = 0; i < num_data; ++i) {
+		if (mask[i]) ++num_unmasked_data;
+	}
+	if (num_unmasked_data < num_coeff) {
+		*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
+		throw std::runtime_error("Too few unmasked data for baseline fitting!");
+	}
+
+	num_unmasked_data = num_data;
 	size_t num_clipped = num_data;
 	for (size_t i = 0; i < num_data; ++i) {
 		final_mask[i] = mask[i];
