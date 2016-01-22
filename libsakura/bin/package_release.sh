@@ -1,6 +1,29 @@
 #!/bin/bash -e
 # -e  Exit immediately if a command exits with a non-zero status.
 
+# TODO: enable parallel rpm build on ana02 and an03
+# -> need to sort out / simplify tmp dirs and tmp files :
+#    only 1 top tmp dir in current dir, output files must also go there  
+
+# TOFIX:
+: <<'TOFIX'
+Permission issue when signing on RHEL5:
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /var/tmp/libsakura-2.0-1.el5-6910
+Generating signature: 1005
+gpg: WARNING: standard input reopened
+gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
+gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
+gpg: WARNING: standard input reopened
+gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
+gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
+Wrote: /tmp/libsakura_rpmbuild.6853/RPMS/x86_64/libsakura-2.0-1.el5.x86_64.rpm
+
+Build-time path hardcoded in generated documentation:
+<title>LibSakura: /tmp/libsakura_rpmbuild.HdDw/BUILD/libsakura/src/libsakura/sakura.h File Reference</title>
+TOFIX
+
+set -o pipefail
+
 export PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin
 
 # Script exit status message
@@ -159,8 +182,6 @@ fi
 
 # 2. -------- Binary RPM file creation
 rpmbuild_dir=$(mktemp -d -p /tmp ${project_name}_rpmbuild.XXXX)
-echo "rpmbuild tmp dir:"
-echo ${rpmbuild_dir}
 
 # External resources directory
 rpm_resources_dir="/nfsstore/sakura_casa/rpm"
@@ -189,25 +210,29 @@ rhel_version_major=$(lsb_release -r | grep -E --only-matching '[0-9]+' | head --
 export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
 
 # RPM Macros
-my_rpm_macros="$HOME/.rpmmacros"
+my_rpm_macros="${rpmbuild_dir}/rpmmacros"
+rpm_define_options=""
+sign_option=""
+rpmbuild_macros() {
 cat > ${my_rpm_macros} <<EOF_RPM_MACROS
 %_topdir ${rpmbuild_dir}
 %_prefix /usr/lib64/casa/01
 EOF_RPM_MACROS
-
-# %dist tag and gpg signature on RHEL5
-sign_option=""
-if [ ${rhel_version_major} = "5" ] ; then
-    # %dist tag is not defined on RHEL5
-    echo >> ${my_rpm_macros} "%dist .el${rhel_version_major}" 
-    # gpg signature
-    echo >> ${my_rpm_macros} "%_signature gpg" 
-    echo >> ${my_rpm_macros} "%_gpg_name NAOJ Sakura" 
-    # rpmbuild command / sign option
-    sign_option="--sign"
-    # PGP private key directory
-    export GNUPGHOME=${rpm_resources_dir}/gnupg
-fi
+    # %dist tag and gpg signature on RHEL5   
+    if [ ${rhel_version_major} = "5" ] ; then
+        # %dist tag is not defined on RHEL5
+        echo >> ${my_rpm_macros} "%dist .el${rhel_version_major}" 
+        # gpg signature
+        echo >> ${my_rpm_macros} "%_signature gpg" 
+        echo >> ${my_rpm_macros} "%_gpg_name NAOJ Sakura" 
+        # rpmbuild command / sign option
+        sign_option="--sign"
+        # PGP private key directory
+        export GNUPGHOME=${rpm_resources_dir}/gnupg
+    fi
+    # Equivalent command line options 
+    rpm_define_options=$(sed "s:%\(.*\):--define='\1':g" ${my_rpm_macros})
+}
 
 # Directory structure required by rpmbuild command
 rpmbuild_prepare(){
@@ -317,11 +342,12 @@ set_build_env() {
 
 # RPM generation
 rpmbuild_prepare
+rpmbuild_macros
 set_build_env
 create_spec_file
 
-# rpm_define_options=$(sed 's:^%\(.*\):--define \"\1\":g' ${my_rpm_macros} | tr '\n' ' ')
-rpmbuild -v ${sign_option} -bb ${spec_file} 2>&1 | tee rpm_build.$(hostname).log
+rm -f ${HOME}/.rpmmacros
+eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 2>&1 | tee rpm_build.$(hostname).log
 
 # Move rpm file to working directory and rename if needed
 rpm_file=$(find ${rpmbuild_dir}/RPMS -type f)
@@ -332,21 +358,8 @@ if [[ ${rpm_short_name} -eq ${TRUE} ]]; then
 fi
 mv ${rpm_file} ${work_dir}/${rpm_name}
 
-: <<'TOFIX'
-Permission issue when signing on RHEL5:
-Checking for unpackaged file(s): /usr/lib/rpm/check-files /var/tmp/libsakura-2.0-1.el5-6910
-Generating signature: 1005
-gpg: WARNING: standard input reopened
-gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
-gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
-gpg: WARNING: standard input reopened
-gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
-gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
-Wrote: /tmp/libsakura_rpmbuild.6853/RPMS/x86_64/libsakura-2.0-1.el5.x86_64.rpm
 
-Build-time path hardcoded in generated documentation:
-<title>LibSakura: /tmp/libsakura_rpmbuild.HdDw/BUILD/libsakura/src/libsakura/sakura.h File Reference</title>
-TOFIX
+
 
 
 
