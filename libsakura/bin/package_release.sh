@@ -24,6 +24,12 @@ src_url=${src_url_default}
 # Sakura sources / svn revision
 svn_revision_default='HEAD'
 svn_revision=${svn_revision_default}
+# Sakura sources / svn branch
+svn_branch_default='trunk'
+svn_branch=${svn_branch_default}
+svn_branches_prefix='branches'
+# Binary RPM / enable/disable generation
+do_rpm=${TRUE}
 # Binary RPM / package version
 rpm_package_version='1'
 # Binary RPM / file name / include or not svn revision 
@@ -51,6 +57,10 @@ while [[ $# > 0 ]] ; do
         shift
         src_url=$1
         ;;
+        -b|--svn_branch)
+        shift
+        svn_branch=$1
+        ;;
         -r|--svn_revision)
         shift
         svn_revision=$1
@@ -65,8 +75,11 @@ while [[ $# > 0 ]] ; do
         --rpm_long_version)
         rpm_short_version=${FALSE}
         ;;
-        --rpm_no_legacy)
+        --rpm_no_legacy_libs)
         rpm_legacy_libs=${FALSE}
+        ;;
+        --no_rpm)
+        do_rpm=${FALSE}
         ;;
         *) # Unknown option
         usage
@@ -83,7 +96,12 @@ work_dir=`pwd`
 # Checkout sakura sources
 project_name="libsakura"
 
-tmp_dir=`mktemp -d -p /tmp ${project_name}.XXXX`
+# svn branch URL
+if [[ ${svn_branch} != ${svn_branch_default} ]]; then
+    src_url=${src_url/${svn_branch_default}/"${svn_branches_prefix}/${svn_branch}"} 
+fi
+
+tmp_dir=$(mktemp -d -p /tmp ${project_name}_src.XXXX)
 echo "Checkout tmp dir:"
 echo ${tmp_dir}
 src_dir="$tmp_dir/$project_name"
@@ -135,29 +153,33 @@ tar --no-recursion --directory="$src_parent_abs" --files-from="$release_contents
 echo 'Created tarball file:'
 echo "$tarball_file"
 
-# TODO: Tarball check
-# n_mismatches=`tar tfz "$tarball_file" | sed 's:/$::g' | diff - ${release_contents} | wc -l`
+if [[ ${do_rpm} -eq ${FALSE} ]]; then
+    exit 0
+fi
 
 # 2. -------- Binary RPM file creation
-rpmbuild_dir="${work_dir}/rpmbuild"
+rpmbuild_dir=$(mktemp -d -p /tmp ${project_name}_rpmbuild.XXXX)
+echo "rpmbuild tmp dir:"
+echo ${rpmbuild_dir}
 
 # External resources directory
 rpm_resources_dir="/nfsstore/sakura_casa/rpm"
 
 # Google test sources
-gtest_basename="gtest-1.7.0"
-gtest_name="${gtest_basename}.zip"
-gtest_file="${work_dir}/${gtest_name}"
 gtest_url="https://github.com/google/googletest/archive/release-1.7.0.zip"
+gtest_name="googletest-release-1.7.0.zip"
+gtest_file="${rpm_resources_dir}/../${gtest_name}"
+gtest_expansion_name=$(basename ${gtest_name} ".zip") 
 
 if [[ ! -f ${gtest_file} ]] ; then
-   echo "Downloading gtest"
-   wget --quiet "${gtest_url}"
-   gtest_org_file=`basename ${gtest_url} .zip` # release-1.7.0.zip 
-   unzip -qq ${gtest_org_file}
-   gtest_org_dir="googletest-${gtest_org_file}" # googletest-release-1.7.0 directory
-   mv ${gtest_org_dir} ${gtest_basename}
-   zip -q -r ${gtest_name} ${gtest_basename} # gtest-1.7.0.zip
+   echo "File not found:"
+   echo ${gtest_file}
+   echo "==> 1. Download from:"
+   echo ${gtest_url}
+   echo "==> 2. Copy to:"
+   echo ${gtest_file}
+   echo "ERROR: Google Testing Framework zip file missing"
+   exit 1
 fi
 
 # RHEL version
@@ -215,11 +237,11 @@ Group:          Development/Libraries
 License:        LGPLv3 or later
 URL:            NotReady
 PREAMBLE_URL
-cat >> $spec_file <<PREAMBLE_SOURCE0
+cat >> $spec_file <<PREAMBLE_SOURCES
 Source0:        ${tarball_name}
-PREAMBLE_SOURCE0
-cat >> $spec_file <<'INSTALL_END'
-Source1:        gtest-1.7.0.zip
+Source1:        ${gtest_name}
+PREAMBLE_SOURCES
+cat >> $spec_file <<'GTEST_BEGIN'
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXX)
 Prefix:         /usr/lib64/casa/01
 
@@ -232,7 +254,11 @@ Sakura library is optimized to use SIMD instructions to maximize utilization of 
 %prep
 %setup -q -n %{name}
 %setup -q -T -D -a 1 -n %{name}
-ln -s gtest-1.7.0 gtest
+GTEST_BEGIN
+cat >> $spec_file <<GTEST_END
+ln -s ${gtest_expansion_name} gtest
+GTEST_END
+cat >> $spec_file <<'INSTALL_END'
 %build
 cd build && rm -rf *
 prefix_root=%{_prefix}
@@ -260,7 +286,6 @@ mv ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/share ${RPM_BUILD_ROO
 find ${RPM_BUILD_ROOT}/${prefix_no_root}/share -type d -empty -delete
 cp ${SAKURA_LEGACY_LIBS} ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/lib
 INSTALL_END
-
 cat >> $spec_file <<'EOF_SPEC_FILE'
 #
 # -------- Spec file %files stage:
@@ -295,6 +320,7 @@ rpmbuild_prepare
 set_build_env
 create_spec_file
 
+# rpm_define_options=$(sed 's:^%\(.*\):--define \"\1\":g' ${my_rpm_macros} | tr '\n' ' ')
 rpmbuild -v ${sign_option} -bb ${spec_file} 2>&1 | tee rpm_build.$(hostname).log
 
 # Move rpm file to working directory and rename if needed
@@ -305,6 +331,22 @@ if [[ ${rpm_short_name} -eq ${TRUE} ]]; then
     rpm_name=${rpm_name/\.${svn_revision}/} 
 fi
 mv ${rpm_file} ${work_dir}/${rpm_name}
+
+: <<'TOFIX'
+Permission issue when signing on RHEL5:
+Checking for unpackaged file(s): /usr/lib/rpm/check-files /var/tmp/libsakura-2.0-1.el5-6910
+Generating signature: 1005
+gpg: WARNING: standard input reopened
+gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
+gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
+gpg: WARNING: standard input reopened
+gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
+gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
+Wrote: /tmp/libsakura_rpmbuild.6853/RPMS/x86_64/libsakura-2.0-1.el5.x86_64.rpm
+
+Build-time path hardcoded in generated documentation:
+<title>LibSakura: /tmp/libsakura_rpmbuild.HdDw/BUILD/libsakura/src/libsakura/sakura.h File Reference</title>
+TOFIX
 
 
 
