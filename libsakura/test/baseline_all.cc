@@ -62,6 +62,8 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 		size_t const num_data, struct sakura_BaselineContextFloat** context) {
 	LIBSAKURA_SYMBOL (Status) create_status;
 
+
+
 	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
 		create_status = sakura_CreateBaselineContextFloat(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
@@ -81,12 +83,72 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 	EXPECT_EQ(status, create_status);
 }
 
-void Create_Destroy(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybaseline_type,
-		int16_t const order,size_t const num_data, struct sakura_BaselineContextFloat** context){
-	Create(status, mybaseline_type, order, num_data, context);
-	Destroy(status, *context);
 
+
+//void Create_Destroy(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybaseline_type,
+//		int16_t const order,size_t const num_data, struct sakura_BaselineContextFloat** context){
+//	Create(status, mybaseline_type, order, num_data, context);
+//	Destroy(status, *context);
+//}
+
+
+
+
+
+
+
+struct FitExecute{
+	static void execute(){ cout << "FitExecute" << endl;}
+};
+
+struct NullExecute{
+	static void execute(){cout << "NullExecute"<< endl;}
+
+	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
+			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
+			cout << "doing nothig"<< endl;
+		}
+
+	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat* context){
+			cout << "doing nothing" << endl;
+	}
+
+
+	};
+
+struct CreatExecute{
+	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
+			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
+		Create(status,mybaseline_type,order,num_data, context);
+		cout << "CreatExecute" << endl;
+
+	//static void execute(){}
+
+	}
+};
+
+struct DestroyExecute{
+	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat* context){
+		Destroy(status, context);
+		cout << "DestroyExecute" << endl;
+	}
+};
+
+template<class T_creator, class T_fitter, class T_destroyer>
+void TestRun(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybaseline_type,
+		int16_t const order,size_t const num_data,
+		struct sakura_BaselineContextFloat** context){
+
+	T_creator::execute(status,mybaseline_type,order,num_data, context);
+	T_fitter::execute();
+	T_destroyer::execute(status, *context);
+	//T_destroyer::execute();
 }
+
+
+
+
+
 
 
 
@@ -101,15 +163,17 @@ void Create_Destroy(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const 
  */
 TEST_F(Baseline, CreateBaselineContextFloatWithPolynomial_ChebyshevPolynomial) {
 	uint16_t const order(0);
-	size_t const num_chan(1);
+	size_t const num_data(1);
 	size_t const num_func_types = 2;
 	BaselineTypeInternal func_types[num_func_types] = {
 			BaselineTypeInternal_kPolynomial, BaselineTypeInternal_kChebyshev };
 
 	for (size_t i = 0; i < num_func_types; ++i) {
 		LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-		Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), func_types[i], order, num_chan,
-				&context);
+		//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), func_types[i], order, num_chan,
+		//		&context);
+		TestRun<CreatExecute, NullExecute, DestroyExecute>
+		(LIBSAKURA_SYMBOL(Status_kOK),func_types[i],order,num_data,&context);
 	}
 }
 
@@ -122,8 +186,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece10_Numdata30) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
-			npiece, num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+	//		npiece, num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+		(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,npiece,num_data,&context);
 }
 
 /*
@@ -135,8 +202,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece1LB_Numdata30) 
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
-			npiece, num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+	//		npiece, num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+		(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,npiece,num_data,&context);
 }
 
 /*
@@ -148,8 +218,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece1LB_Numdata4LB)
 	size_t const num_data(4);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
-			npiece, num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+	//		npiece, num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+			(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,npiece,num_data,&context);
 }
 
 /*
@@ -176,8 +249,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_Npiece10IR_Numdata13L
 	size_t const num_data(13);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
-			npiece, num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+	//		npiece, num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,npiece,num_data,&context);
 }
 
 /*
@@ -189,8 +265,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSplineUsingNpiece10IR_Numdat
 	size_t const num_data(12);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-			BaselineTypeInternal_kCubicSpline, npiece, num_data, &context);
+	//Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+	//		BaselineTypeInternal_kCubicSpline, npiece, num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, NullExecute>
+	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kCubicSpline,npiece,num_data,&context);
 }
 
 /*
@@ -215,8 +294,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata30IR) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
-			num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+	//		num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
 }
 
 /*
@@ -228,8 +310,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata30IR) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
-			num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+	//		num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
 }
 
 /*
@@ -241,8 +326,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave0LB_Numdata2LB) {
 	size_t const num_data(2);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
-			num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+	//		num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
 }
 
 /*
@@ -254,8 +342,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata22LB) {
 	size_t const num_data(22);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
-			num_data, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid, nwave,
+	//		num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+		(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
 
 }
 
@@ -295,11 +386,14 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_NULLcontext) {
  */
 TEST_F(Baseline, DestroyBaselineContextFloat) {
 	uint16_t const order(20);
-	size_t const num_chan(4096);
+	size_t const num_data(4096);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
-			order, num_chan, &context);
+	//Create_Destroy(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline,
+	//		order, num_chan, &context);
+
+	TestRun<CreatExecute, NullExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,order,num_data,&context);
 }
 
 /*
@@ -310,5 +404,8 @@ TEST_F(Baseline, DestroyBaselineContextFloat) {
 TEST_F(Baseline, DestroyBaselineContextFloatWithContextNullPointer) {
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
 	Destroy(LIBSAKURA_SYMBOL(Status_kInvalidArgument), context);
+
+	//TestRun<CreatExecute, NullExecute, DestroyExecute>
+	//(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,order,num_data,&context);
 }
 
