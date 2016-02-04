@@ -62,8 +62,6 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 		size_t const num_data, struct sakura_BaselineContextFloat** context) {
 	LIBSAKURA_SYMBOL (Status) create_status;
 
-
-
 	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
 		create_status = sakura_CreateBaselineContextFloat(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
@@ -106,23 +104,19 @@ struct NullExecute{
 
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
 			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
-			cout << "doing nothig"<< endl;
+			cout << "NullExecute"<< endl;
 		}
 
 	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat* context){
-			cout << "doing nothing" << endl;
+			cout << "NullExecute" << endl;
 	}
-
-
-	};
+};
 
 struct CreatExecute{
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
 			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
 		Create(status,mybaseline_type,order,num_data, context);
 		cout << "CreatExecute" << endl;
-
-	//static void execute(){}
 
 	}
 };
@@ -142,7 +136,6 @@ void TestRun(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybasel
 	T_creator::execute(status,mybaseline_type,order,num_data, context);
 	T_fitter::execute();
 	T_destroyer::execute(status, *context);
-	//T_destroyer::execute();
 }
 
 
