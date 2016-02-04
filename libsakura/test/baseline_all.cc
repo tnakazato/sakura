@@ -359,8 +359,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata21OR) {
 	size_t const num_data(21);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-			BaselineTypeInternal_kSinusoid, nwave, num_data, &context);
+	//Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+	//		BaselineTypeInternal_kSinusoid, nwave, num_data, &context);
+
+	TestRun<CreatExecute, NullExecute, NullExecute>
+	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
 }
 
 /*
@@ -372,8 +375,11 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_NULLcontext) {
 	size_t const num_data(30);
 
 	LIBSAKURA_SYMBOL(BaselineContextFloat) **context = nullptr;
-	Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
-			BaselineTypeInternal_kSinusoid, nwave, num_data, context);
+	//Create(LIBSAKURA_SYMBOL(Status_kInvalidArgument),
+	//		BaselineTypeInternal_kSinusoid, nwave, num_data, context);
+
+	TestRun<CreatExecute, NullExecute, NullExecute>
+	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kSinusoid,nwave,num_data,context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -402,10 +408,13 @@ TEST_F(Baseline, DestroyBaselineContextFloat) {
  * returned value must be Status_kInvalidArgument
  */
 TEST_F(Baseline, DestroyBaselineContextFloatWithContextNullPointer) {
-	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	Destroy(LIBSAKURA_SYMBOL(Status_kInvalidArgument), context);
+	uint16_t const order(20);
+	size_t const num_data(4096);
 
-	//TestRun<CreatExecute, NullExecute, DestroyExecute>
-	//(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kCubicSpline,order,num_data,&context);
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	//Destroy(LIBSAKURA_SYMBOL(Status_kInvalidArgument), context);
+
+	TestRun<NullExecute, NullExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kCubicSpline,order,num_data,&context);
 }
 
