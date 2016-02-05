@@ -62,6 +62,35 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 		size_t const num_data, struct sakura_BaselineContextFloat** context) {
 	LIBSAKURA_SYMBOL (Status) create_status;
 
+	//cout << "context " << context << endl;
+	//cout << "*context "<< *context << endl;
+	cout << "&contest " << &context << endl;
+
+	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
+		create_status = sakura_CreateBaselineContextFloat(
+				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
+				context);
+	} else if (mybaseline_type == BaselineTypeInternal_kChebyshev) {
+		create_status = sakura_CreateBaselineContextFloat(
+				LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data,
+				context);
+	} else if (mybaseline_type == BaselineTypeInternal_kCubicSpline) {
+		create_status = sakura_CreateBaselineContextCubicSplineFloat(order,
+				num_data, context);
+	} else if (mybaseline_type == BaselineTypeInternal_kSinusoid) {
+		create_status = sakura_CreateBaselineContextSinusoidFloat(order,
+				num_data, context);
+	}
+
+	EXPECT_EQ(status, create_status);
+}
+
+void Create2(LIBSAKURA_SYMBOL (Status) status,
+		BaselineTypeInternal const mybaseline_type, int16_t const order,
+		size_t const num_data, struct sakura_BaselineContextFloat** context) {
+	LIBSAKURA_SYMBOL (Status) create_status;
+
+
 	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
 		create_status = sakura_CreateBaselineContextFloat(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
@@ -87,16 +116,23 @@ struct FitExecute{
 };
 
 struct NullExecute{
-	static void execute(){cout << "NullExecute"<< endl;}
+	static void execute(){cout << "NullExecute0"<< endl;}
 
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
 			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
-			cout << "NullExecute"<< endl;
+			cout << "NullExecute1"<< endl;
 		}
 
+	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat** context){
+				cout << "NullExecute2"<< endl;
+			}
+
+
+
 	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat* context){
-			cout << "NullExecute" << endl;
+			cout << "NullExecute3" << endl;
 	}
+
 };
 
 struct CreatExecute{
@@ -108,11 +144,26 @@ struct CreatExecute{
 	}
 };
 
+struct CreatExecute2{
+	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
+			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
+		Create2(status,mybaseline_type,order,num_data, context);
+		cout << "CreatExecute2" << endl;
+
+	}
+};
+
+
+
 struct DestroyExecute{
 	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat* context){
 		Destroy(status, context);
 		cout << "DestroyExecute" << endl;
 	}
+
+	//static void execute(){}
+
+
 };
 
 template<class T_creator, class T_fitter, class T_destroyer>
@@ -123,10 +174,39 @@ void TestRun(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybasel
 	T_creator::execute(status,mybaseline_type,order,num_data, context);
 	T_fitter::execute();
 	T_destroyer::execute(status, *context);
+
+/*
+	if(context==nullptr){
+		T_destroyer::execute(status, context);
+	}else{
+		T_destroyer::execute(status, *context);
+	}
+*/
+
 }
 
 
+template<class T_creator, class T_fitter, class T_destroyer>
+void TestRun2(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybaseline_type,
+		int16_t const order,size_t const num_data,
+		struct sakura_BaselineContextFloat** context){
 
+	T_creator::execute(status,mybaseline_type,order,num_data, context);
+	T_fitter::execute();
+	//T_destroyer::execute(status, *context);
+
+
+
+	if(context==nullptr){
+		T_destroyer::execute(status, context);
+		//T_destroyer::execute();
+	}else{
+		T_destroyer::execute(status, *context);
+	}
+
+
+
+}
 
 
 
@@ -229,16 +309,28 @@ TEST_F(Baseline, CreateBaselineContextFloatWithCubicSplineUsingNpiece10IR_Numdat
 /*
  * Test sakura_CreateBaselineContextFloatWithCubicSpline
  * failure case (with cubicspline model using context=NULL)
- */
+
 TEST_F(Baseline, CreateBaselineContextFloatWithCubicSpline_ContextNULL) {
 	uint16_t const npiece(10);
 	size_t const num_data(30);
 
+	LIBSAKURA_SYMBOL(BaselineContextFloat) ** context = nullptr;
+	TestRun2<CreatExecute, NullExecute, NullExecute>
+	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kCubicSpline,npiece,num_data,context);
+
+
+
+
 	//LIBSAKURA_SYMBOL(BaselineContextFloat) ** context = nullptr;
-	//TestRun<CreatExecute, NullExecute, NullExecute>
-	//(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kCubicSpline,npiece,num_data,context);
+	//cout <<"####### context " << context << endl;
+	//LIBSAKURA_SYMBOL (Status) create_status = sakura_CreateBaselineContextCubicSplineFloat(npiece,
+	//				num_data, context);
+	//EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
 
 }
+*/
+
+
 
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
@@ -309,16 +401,17 @@ TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_Nwave10IR_Numdata21OR) {
 /*
  * Test sakura_CreateBaselineContextFloatWithSinusoid
  * failure case (with sinusoid model using context=NULL)
- */
+
 TEST_F(Baseline, CreateBaselineContextFloatWithSinusoid_NULLcontext) {
 	uint16_t const nwave(10);
 	size_t const num_data(30);
 
-	//LIBSAKURA_SYMBOL(BaselineContextFloat) **context = nullptr;
-	//TestRun<CreatExecute, NullExecute, NullExecute>
-	//(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kSinusoid,nwave,num_data,context);
-}
+	LIBSAKURA_SYMBOL(BaselineContextFloat) **context = nullptr;
+	TestRun2<CreatExecute, NullExecute, NullExecute>
+	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kSinusoid,nwave,num_data,context);
 
+}
+*/
 ////////////////////////////////////////////////////////////////////////////////
 // TEST: Destroy
 ////////////////////////////////////////////////////////////////////////////////
