@@ -5,23 +5,6 @@
 # -> need to sort out / simplify tmp dirs and tmp files :
 #    only 1 top tmp dir in current dir, output files must also go there  
 
-# TOFIX:
-: <<'TOFIX'
-Permission issue when signing on RHEL5:
-Checking for unpackaged file(s): /usr/lib/rpm/check-files /var/tmp/libsakura-2.0-1.el5-6910
-Generating signature: 1005
-gpg: WARNING: standard input reopened
-gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
-gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
-gpg: WARNING: standard input reopened
-gpg: WARNING: unsafe ownership on homedir `/nfsstore/sakura_casa/rpm/gnupg'
-gpg: can't create `/nfsstore/sakura_casa/rpm/gnupg/random_seed': Permission denied
-Wrote: /tmp/libsakura_rpmbuild.6853/RPMS/x86_64/libsakura-2.0-1.el5.x86_64.rpm
-
-Build-time path hardcoded in generated documentation:
-<title>LibSakura: /tmp/libsakura_rpmbuild.HdDw/BUILD/libsakura/src/libsakura/sakura.h File Reference</title>
-TOFIX
-
 set -o pipefail
 
 export PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin
@@ -64,7 +47,39 @@ rpm_legacy_libs=${TRUE}
 
 # Usage
 usage() {
-	echo "Usage: $0 [options...]"
+	echo "Usage: $(basename $0) [options...]"
+cat <<USAGE_END
+
+Synopsys:
+    Package a release of Sakura into tar source archive and rpm binary archive. 
+
+Options:
+    -h|--help ..................: display this message and exit
+    Release selection
+    -u|--src_url <url> .........: URL of Sakura repository
+         default ...............: ${src_url_default}
+    -b|--svn_branch ............: trunk or branch name under 
+                                  ${src_url_default/trunk\/libsakura/${svn_branches_prefix}}                        
+         default ...............: ${svn_branch_default}
+    -r|--svn_revision ..........: svn revision number of release to package
+    RPM-related options
+    --no_rpm|--norpm ...........: do not create rpm archive
+    -p|--rpm_package_version ...: package version
+         default ...............: ${rpm_package_version}
+    -ln|--rpm_long_name ........: include svn revision number in rpm file name
+    -lv|--rpm_long_version .....: include svn revision number in rpm archive
+    --rpm_no_legacy_libs .......: do not include Sakura legacy libraries in rpm archive
+
+Examples:
+---- Package HEAD revision of trunk, tar + rpm:
+$(basename $0)
+---- Package HEAD revision of trunk, tar only:
+$(basename $0)  --norpm
+---- Package revision 1880 of trunk, tar + rpm:
+$(basename $0) -r 1880
+---- Package revision 1770 of branch 'release-casa-4_5', tar + rpm:
+$(basename $0) -b release-casa-4_5 -r 1770
+USAGE_END
 }
 
 
@@ -92,16 +107,16 @@ while [[ $# > 0 ]] ; do
         shift
         rpm_package_version=$1
         ;;
-        --rpm_long_name)
+        -ln|--rpm_long_name)
         rpm_short_name=${FALSE}
         ;;
-        --rpm_long_version)
+        -lv|--rpm_long_version)
         rpm_short_version=${FALSE}
         ;;
         --rpm_no_legacy_libs)
         rpm_legacy_libs=${FALSE}
         ;;
-        --no_rpm)
+        --no_rpm|--norpm)
         do_rpm=${FALSE}
         ;;
         *) # Unknown option
@@ -125,14 +140,14 @@ if [[ ${svn_branch} != ${svn_branch_default} ]]; then
 fi
 
 tmp_dir=$(mktemp -d -p /tmp ${project_name}_src.XXXX)
-echo "Checkout tmp dir:"
-echo ${tmp_dir}
 src_dir="$tmp_dir/$project_name"
-
 mkdir "$src_dir"
+
 # Note: svn co command must be run from a clean, 'svn free' directory
 cd "$src_dir" || { echo "Error: cannot access source directory:" ; echo "$src_dir"  ; exit 1 ; }
 svn co --quiet --revision ${svn_revision} "$src_url" "$src_dir" 
+svn_info_log="$tmp_dir/svn_info.log"
+svn info $PWD > ${svn_info_log}
 
 src_dir_abs=`pwd`
 src_parent_abs=`dirname $src_dir_abs`
@@ -173,10 +188,12 @@ cd "$work_dir"
 rm -f "$tarball_file"
 tar --no-recursion --directory="$src_parent_abs" --files-from="$release_contents" --create --verbose --gzip --file "$tarball_file" 1>/dev/null
 
-echo 'Created tarball file:'
-echo "$tarball_file"
-
 if [[ ${do_rpm} -eq ${FALSE} ]]; then
+    echo 'The following release ...'
+    cat ${svn_info_log}
+    echo
+    echo '... has been packaged into:'
+    echo "$tarball_file"
     exit 0
 fi
 
@@ -189,7 +206,7 @@ rpm_resources_dir="/nfsstore/sakura_casa/rpm"
 # Google test sources
 gtest_url="https://github.com/google/googletest/archive/release-1.7.0.zip"
 gtest_name="googletest-release-1.7.0.zip"
-gtest_file="${rpm_resources_dir}/../${gtest_name}"
+gtest_file="${rpm_resources_dir}/${gtest_name}"
 gtest_expansion_name=$(basename ${gtest_name} ".zip") 
 
 if [[ ! -f ${gtest_file} ]] ; then
@@ -290,6 +307,7 @@ prefix_root=%{_prefix}
 prefix_no_root=${prefix_root:1}
 sse4_install_prefix=${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default
 cmake \
+  -D CMAKE_MODULE_PATH=$(dirname $PWD)/cmake-modules \
   -D CMAKE_INSTALL_PREFIX=${sse4_install_prefix} \
   -D CMAKE_BUILD_TYPE=Release \
   -D SIMD_ARCH=SSE4 \
@@ -347,7 +365,10 @@ set_build_env
 create_spec_file
 
 rm -f ${HOME}/.rpmmacros
-eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 2>&1 | tee rpm_build.$(hostname).log
+echo 'rpm build: start ...'
+echo "  . build log file: rpm_build.$(hostname).log"
+eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 1>rpm_build.$(hostname).log 2>&1 
+echo 'rpm build: done'
 
 # Move rpm file to working directory and rename if needed
 rpm_file=$(find ${rpmbuild_dir}/RPMS -type f)
@@ -357,6 +378,15 @@ if [[ ${rpm_short_name} -eq ${TRUE} ]]; then
     rpm_name=${rpm_name/\.${svn_revision}/} 
 fi
 mv ${rpm_file} ${work_dir}/${rpm_name}
+
+echo
+echo 'The following release: ...'
+echo '-------------------------------------------------------------------------'
+sed '/^$/ d' ${svn_info_log}
+echo '-------------------------------------------------------------------------'
+echo '... has been packaged into:'
+echo "$tarball_file"
+echo "${work_dir}/${rpm_name}"
 
 
 
