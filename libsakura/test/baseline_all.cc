@@ -64,7 +64,7 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 
 	//cout << "context " << context << endl;
 	//cout << "*context "<< *context << endl;
-	cout << "&contest " << &context << endl;
+	//cout << "&contest " << &context << endl;
 
 	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
 		create_status = sakura_CreateBaselineContextFloat(
