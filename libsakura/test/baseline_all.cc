@@ -127,8 +127,6 @@ struct NullExecute{
 				cout << "NullExecute2"<< endl;
 			}
 
-
-
 	static void execute(LIBSAKURA_SYMBOL (Status) status, struct sakura_BaselineContextFloat* context){
 			cout << "NullExecute3" << endl;
 	}
