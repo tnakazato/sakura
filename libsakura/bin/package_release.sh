@@ -58,13 +58,13 @@ Options:
     Release selection
     -u|--src_url <url> .........: URL of Sakura repository
          default ...............: ${src_url_default}
-    -b|--svn_branch ............: trunk or branch name under 
+    -b|--svn_branch <branch>....: trunk or branch name under 
                                   ${src_url_default/trunk\/libsakura/${svn_branches_prefix}}                        
          default ...............: ${svn_branch_default}
-    -r|--svn_revision ..........: svn revision number of release to package
+    -r|--svn_revision <rev>.....: svn revision number of release to package
     RPM-related options
     --no_rpm|--norpm ...........: do not create rpm archive
-    -p|--rpm_package_version ...: package version
+    -p|--rpm_package_version <p>: package version
          default ...............: ${rpm_package_version}
     -ln|--rpm_long_name ........: include svn revision number in rpm file name
     -lv|--rpm_long_version .....: include svn revision number in rpm archive
