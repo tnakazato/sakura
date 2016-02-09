@@ -1237,6 +1237,7 @@ inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
 	if (type == BaselineTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
+	if (num_fitting_max == 0) return;
 	size_t const num_boundary = 2;
 	SIMD_ALIGN
 	size_t boundary[num_boundary] = { 0, num_data };
@@ -1302,6 +1303,7 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
+	if (num_fitting_max == 0) return;
 	size_t const num_piece = num_boundary - 1;
 	size_t const num_coeff = GetNumberOfLsqBases(context->baseline_type,
 			num_piece);
