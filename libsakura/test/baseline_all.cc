@@ -86,6 +86,41 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 
 struct FitExecute{
 	static void execute(){ cout << "FitExecute" << endl;}
+
+/*
+	static void execute(LIBSAKURA_SYMBOL(LSQFitPolynomialFloat) * context,
+				size_t order, size_t num_data, float const data[],
+				bool const mask[], float clip_threshold_sigma, uint16_t num_fitting_max,
+				size_t num_coeff, double coeff[], float best_fit[], float residual[],
+				bool final_mask[], float * rms, sakura_BaselineStatus * baseline_status)
+		{
+			cout << "LSQFitPolynomialFloat" << endl;
+		}
+
+
+	static void execute(LIBSAKURA_SYMBOL(LSQFitSinusoidFloat) * context,
+			size_t num_wave, size_t const nwave[], size_t num_data, float const data[],
+			bool const mask[], float clip_threshold_sigma, uint16_t num_fitting_max,
+			size_t num_coeff, double coeff[], float best_fit[], float residual[],
+			bool final_mask[], float * rms, sakura_BaselineStatus * baseline_status)
+	{
+		cout << "LSQFitSinusoidFloat" << endl;
+	}
+
+
+
+	static void execute(LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat) * context,
+				size_t num_pieces, size_t num_data, float const data[],
+				bool const mask[], float clip_threshold_sigma, uint16_t num_fitting_max,
+				size_t num_coeff, double coeff[], float best_fit[], float residual[],
+				bool final_mask[], float * rms, size_t 	boundary[],
+				sakura_BaselineStatus * baseline_status)
+		{
+			cout << "LSQFitCubicSplineFloat" << endl;
+		}
+*/
+
+
 };
 
 struct NullExecute{
@@ -130,6 +165,7 @@ void TestRun(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybasel
 	T_creator::execute(status,mybaseline_type,order,num_data, context);
 	T_fitter::execute();
 	if(context!=nullptr){
+		//Tfitter::execute(context, order,  );
 		T_destroyer::execute(status, *context);
 	}
 
@@ -357,3 +393,23 @@ TEST_F(Baseline, DestroyBaselineContextFloatWithContextNullPointer) {
 	(LIBSAKURA_SYMBOL(Status_kInvalidArgument),BaselineTypeInternal_kCubicSpline,order,num_data,&context);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// TEST: Fit
+////////////////////////////////////////////////////////////////////////////////
+/*
+ * Test sakura_Status sakura_LSQFitSinusoidFloat
+ * successful case (with sinusoid model using boundaries consisting of nwave=10IR and num_data=30IR)
+
+TEST_F(Baseline, LSQFitSinusoidFloat_Nwave10IR_Numdata30IR) {
+	uint16_t const nwave(10);
+	size_t const num_data(30);
+
+	//LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)
+	//(struct sakura_BaselineContextFloat const * 	context,);
+
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+	TestRun<CreatExecute, FitExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
+}
+ */
