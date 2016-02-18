@@ -87,17 +87,28 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 struct FitExecute{
 	static void execute(){ cout << "FitExecute" << endl;}
 
-/*
-	static void execute(LIBSAKURA_SYMBOL(LSQFitPolynomialFloat) * context,
+	static void execute(struct sakura_BaselineContextFloat const * context,
 				size_t order, size_t num_data, float const data[],
 				bool const mask[], float clip_threshold_sigma, uint16_t num_fitting_max,
-				size_t num_coeff, double coeff[], float best_fit[], float residual[],
-				bool final_mask[], float * rms, sakura_BaselineStatus * baseline_status)
+				size_t num_coeff, double coeff_ptr[], float best_fit_ptr[], float residual_ptr[],
+				bool final_mask[], float * rms, sakura_BaselineStatus  *baseline_status)
+
 		{
-			cout << "LSQFitPolynomialFloat" << endl;
+
+		LIBSAKURA_SYMBOL (Status) fit_status =
+				LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(context,
+						order, num_data, data,
+						mask, clip_threshold_sigma, num_fitting_max,
+						num_coeff, coeff_ptr, best_fit_ptr, residual_ptr,
+						final_mask,
+						rms,
+						baseline_status);
+
+		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), fit_status);
+		cout << "LSQFitPolynomialFloat" << endl;
 		}
 
-
+/*
 	static void execute(LIBSAKURA_SYMBOL(LSQFitSinusoidFloat) * context,
 			size_t num_wave, size_t const nwave[], size_t num_data, float const data[],
 			bool const mask[], float clip_threshold_sigma, uint16_t num_fitting_max,
@@ -162,13 +173,87 @@ void TestRun(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybasel
 		int16_t const order,size_t const num_data,
 		struct sakura_BaselineContextFloat** context){
 
+
+
+
 	T_creator::execute(status,mybaseline_type,order,num_data, context);
 	T_fitter::execute();
 	if(context!=nullptr){
-		//Tfitter::execute(context, order,  );
 		T_destroyer::execute(status, *context);
 	}
 
+}
+
+template<class T_creator, class T_fitter, class T_destroyer>
+void TestRun2(LIBSAKURA_SYMBOL (Status) status,
+		BaselineTypeInternal const mybaseline_type,
+		int16_t const order,
+		size_t const num_data,
+		float *data_ptr,
+		bool *mask_ptr,
+		float clip_threshold_sigma,
+		uint16_t num_fitting_max,
+		size_t num_coeff,
+		double * coeff_ptr,
+		float * best_fit_ptr,
+		float * residual_ptr,
+		bool * final_mask,
+		float * rms_ptr,
+		LIBSAKURA_SYMBOL(BaselineStatus) * baseline_status,
+		struct sakura_BaselineContextFloat** context
+		){
+
+	T_creator::execute(status,mybaseline_type,order,num_data, context);
+	T_fitter::execute();
+
+	if(context!=nullptr){
+		T_fitter::execute(*context,
+				order, num_data, data_ptr, mask_ptr, clip_threshold_sigma,
+				num_fitting_max,num_coeff, coeff_ptr, best_fit_ptr, residual_ptr,
+				final_mask,
+				rms_ptr,
+				baseline_status);
+
+		T_destroyer::execute(status, *context);
+	}
+
+}
+
+
+
+//Set (coeff[0]+coeff[1]*x+coeff[2]*x*x+...) float values into an array
+void SetFloatPolynomial(size_t num_coeff, double const *coeff,
+		size_t num_data, float *data) {
+	for (size_t i = 0; i < num_data; ++i) {
+		double val = 0.0;
+		double x = (double) i;
+		for (size_t j = 0; j < num_coeff; ++j) {
+			val *= x;
+			val += coeff[num_coeff - 1 - j];
+		}
+		data[i] = static_cast<float>(val);
+	}
+}
+
+// Set constant double values into an array
+void SetDoubleConstant(double value, size_t const num_data, double *data) {
+	for (size_t i = 0; i < num_data; ++i) {
+		data[i] = value;
+	}
+}
+// Set constant boolean values into an array
+void SetBoolConstant(bool value, size_t const num_data, bool *data) {
+	for (size_t i = 0; i < num_data; ++i) {
+		data[i] = value;
+	}
+}
+
+
+// Check if the expected and actual values are enough close to each other
+void CheckAlmostEqual(double expected, double actual, double tolerance) {
+	double deviation = fabs(actual - expected);
+	double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
+	ASSERT_LE(deviation, val);
 }
 
 
@@ -398,18 +483,127 @@ TEST_F(Baseline, DestroyBaselineContextFloatWithContextNullPointer) {
 // TEST: Fit
 ////////////////////////////////////////////////////////////////////////////////
 /*
- * Test sakura_Status sakura_LSQFitSinusoidFloat
- * successful case (with sinusoid model using boundaries consisting of nwave=10IR and num_data=30IR)
-
-TEST_F(Baseline, LSQFitSinusoidFloat_Nwave10IR_Numdata30IR) {
-	uint16_t const nwave(10);
-	size_t const num_data(30);
-
-	//LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)
-	//(struct sakura_BaselineContextFloat const * 	context,);
-
-	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-	TestRun<CreatExecute, FitExecute, DestroyExecute>
-	(LIBSAKURA_SYMBOL(Status_kOK),BaselineTypeInternal_kSinusoid,nwave,num_data,&context);
-}
+ * Test LSQFitPolynomial
+ * successful case
  */
+
+TEST_F(Baseline, LSQFitPolynomialSuccessfulCases) {
+	enum NPCases {
+		NP_kNo, NP_kCoeff, NP_kBestFit, NP_kResidual, NP_kAll, NP_kNumElems
+	};
+	vector<string> np_cases_names = { "no nullptr", "coeff=nullptr",
+			"best_fit=nullptr", "residual=nullptr", "all nullptr" };
+	cout << "    Testing for ";
+
+	size_t const order = 3;
+	SIMD_ALIGN
+	double coeff_answer[order + 1];
+	SetDoubleConstant(1.0, ELEMENTSOF(coeff_answer), coeff_answer);
+	SIMD_ALIGN
+	double coeff[ELEMENTSOF(coeff_answer)];
+	float rms;
+	LIBSAKURA_SYMBOL(BaselineStatus) baseline_status;
+
+	size_t const num_data = ELEMENTSOF(coeff_answer);
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatPolynomial(ELEMENTSOF(coeff_answer), coeff_answer, num_data, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	//if (verbose) {
+	//	PrintArray("data", num_data, data);
+	//}
+	SIMD_ALIGN
+	float best_fit[num_data];
+	SIMD_ALIGN
+	float residual[num_data];
+	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
+
+	for (NPCases item = static_cast<NPCases>(0); item < NP_kNumElems; item =
+			static_cast<NPCases>(item + 1)) {
+		cout << np_cases_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+
+		double *coeff_ptr = coeff;
+		float *best_fit_ptr = best_fit;
+		float *residual_ptr = residual;
+
+		switch (item) {
+		case NP_kNo:
+			break;
+		case NP_kCoeff:
+			coeff_ptr = nullptr;
+			break;
+		case NP_kBestFit:
+			best_fit_ptr = nullptr;
+			break;
+		case NP_kResidual:
+			residual_ptr = nullptr;
+			break;
+		case NP_kAll:
+			coeff_ptr = nullptr;
+			best_fit_ptr = nullptr;
+			residual_ptr = nullptr;
+			break;
+		default:
+			assert(false);
+		}
+
+
+		TestRun2<CreatExecute, FitExecute, DestroyExecute>
+			(LIBSAKURA_SYMBOL(Status_kOK),
+					BaselineTypeInternal_kPolynomial,
+					order,
+					num_data,
+					data,
+					mask,
+					5.0f,
+					1,
+					ELEMENTSOF(coeff),
+					coeff_ptr,
+					best_fit_ptr,
+					residual_ptr,
+					mask,
+					&rms,
+					&baseline_status,
+					&context);
+
+		bool check_coeff = true;
+		bool check_best_fit = true;
+		bool check_residual = true;
+		if (item == NP_kCoeff || item == NP_kAll) {
+			check_coeff = false;
+		}
+		if (item == NP_kBestFit || item == NP_kAll) {
+			check_best_fit = false;
+		}
+		if (item == NP_kResidual || item == NP_kAll) {
+			check_residual = false;
+		}
+		if (check_coeff) {
+			for (size_t i = 0; i < ELEMENTSOF(coeff_answer); ++i) {
+				CheckAlmostEqual(coeff_answer[i], coeff[i], 1.0e-6);
+			}
+		}
+		if (check_best_fit) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
+			}
+		}
+		if (check_residual) {
+			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+				CheckAlmostEqual(0.0, residual[i], 1.0e-6);
+			}
+		}
+	}
+
+
+	cout << endl;
+}
+
+
+
+
+
+
+
