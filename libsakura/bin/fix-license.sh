@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # @SAKURA_LICENSE_HEADER_START@
-# Copyright (C) 2013-2015
+# Copyright (C) 2013-2016
 # National Astronomical Observatory of Japan
 # 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
 # 
@@ -44,6 +44,6 @@ notice="$1"
 root="$2"
 tmp="$root/tmp.$$"
 
-find . -type f | grep -v '/.svn/' | while read file; do
+find $root -type f | grep -v '/.svn/' | while read file; do
 	file $file | grep --quiet text && grep --quiet "$header_pre$header_start" $file && replace $file
 done
