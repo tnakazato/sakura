@@ -76,7 +76,6 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 	} else if (mybaseline_type == BaselineTypeInternal_kSinusoid) {
 		create_status = sakura_CreateBaselineContextSinusoidFloat(order,
 				num_data, context);
-		cout <<"BaselineTypeInternal_kSinusoid in Create" << endl;
 	}
 
 
@@ -163,13 +162,8 @@ struct CreatExecuteNuLL{
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
 			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
 
-		//if(context==nullptr){
-		//	Create(status,mybaseline_type,order,num_data, nullptr);
-		//}else{
 			Create(status,mybaseline_type,order,num_data, nullptr);
-		//cout << "CreatExecute" << endl;
-		//}
-		cout << "CreatExecuteNuLL" << endl;
+			cout << "CreatExecuteNuLL" << endl;
 
 	};
 };
@@ -188,7 +182,7 @@ struct DestroyExecute{
 struct DestroyExecuteNuLL{
 	static void execute(LIBSAKURA_SYMBOL (Status) status,struct sakura_BaselineContextFloat* context){
 		Destroy(status, nullptr);
-		cout << "DestroyExecute" << endl;
+		cout << "DestroyExecuteNuLL" << endl;
 	}
 };
 
@@ -264,7 +258,7 @@ void TestRun2(LIBSAKURA_SYMBOL (Status) status,
 	}
 }
 
-
+/*
 template<class T_creator, class T_fitter, class T_destroyer>
 void TestRun3(LIBSAKURA_SYMBOL (Status) status,
 		BaselineTypeInternal const mybaseline_type,
@@ -297,7 +291,7 @@ void TestRun3(LIBSAKURA_SYMBOL (Status) status,
 		T_destroyer::execute(status, context);
 	}
 }
-
+*/
 
 
 
