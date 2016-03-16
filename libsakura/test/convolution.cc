@@ -52,6 +52,8 @@
 
 #define TEST_GAUSS(Name) TEST(CreateGaussianKernelTest, Name)
 
+#define BENCH "#x# benchmark "
+
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
 	bool use_fft;
@@ -300,8 +302,7 @@ struct PerformanceTestLogger {
 	}
 	static void PrintElapsedTime(std::string const test_name,
 			double elapsed_time) {
-		std::cout << "#x# benchmark " << test_name << " " << elapsed_time
-				<< std::endl;
+		std::cout << BENCH << test_name << " " << elapsed_time << std::endl;
 	}
 };
 
@@ -452,7 +453,8 @@ protected:
 			size_t num_data, bool use_dummy_num_data, size_t num_kernel,
 			bool use_fft, float output_data[],
 			LIBSAKURA_SYMBOL(Status) expected_status, bool align_check,
-			bool verbose, size_t loop_max) {
+			bool verbose, size_t loop_max, double *elapsed_create = nullptr,
+			double *elapsed_convolve = nullptr) {
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		SIMD_ALIGN
 		float input_data[input_data_size];
@@ -511,6 +513,12 @@ protected:
 			std::cout << "create elapsed time : " << end - start << "sec\n";
 			std::cout << "convolve : " << num_data << "ch, loop = " << loop_max
 					<< ", elapsed time : " << end_time - start_time << "sec\n";
+		}
+		if (elapsed_create) {
+			*elapsed_create = end - start;
+		}
+		if (elapsed_convolve) {
+			*elapsed_convolve = end_time - start_time;
 		}
 	}
 
@@ -1158,9 +1166,17 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
 		size_t num_kernel = get_num_kernel(kernel_width);
 		SIMD_ALIGN
 		float output_data[input_data_size];
+		double elapsed_create = 0.0;
+		double elapsed_convolve = 0.0;
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
+				sakura_Status_kOK, align_check, verbose, loop_max,
+				&elapsed_create, &elapsed_convolve);
+		char const *test_name = "Convolve1DOperation_PerformanceTestWithoutFFT";
+		std::cout << BENCH << test_name << "_Create " << elapsed_create
+				<< std::endl;
+		std::cout << BENCH << test_name << "_Convolve " << elapsed_convolve
+				<< std::endl;
 	}
 }
 
@@ -1169,6 +1185,9 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
  * RESULT: elapsed time will be output
  */
 TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
+	double elapsed_create = 0.0;
+	double elapsed_convolve = 0.0;
+	char const *test_name = "Convolve1DOperation_PerformanceTestWithFFT";
 	{ // [even], FFT, Gaussian Kernel Shape,input delta
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		size_t const input_data_size(NUM_IN_MAX);
@@ -1182,7 +1201,13 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		float output_data[input_data_size];
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
+				sakura_Status_kOK, align_check, verbose, loop_max,
+				&elapsed_create, &elapsed_convolve);
+
+		std::cout << BENCH << test_name << "_Even_Create " << elapsed_create
+				<< std::endl;
+		std::cout << BENCH << test_name << "_Even_Convolve " << elapsed_convolve
+				<< std::endl;
 	}
 	{ // [odd], FFT, Gaussian Kernel Shape,input delta
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
@@ -1197,7 +1222,13 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 		float output_data[input_data_size];
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_data, use_fft, output_data,
-				sakura_Status_kOK, align_check, verbose, loop_max);
+				sakura_Status_kOK, align_check, verbose, loop_max,
+				&elapsed_create, &elapsed_convolve);
+
+		std::cout << BENCH << test_name << "_Odd_Create " << elapsed_create
+				<< std::endl;
+		std::cout << BENCH << test_name << "_Odd_Convolve " << elapsed_convolve
+				<< std::endl;
 	}
 }
 
