@@ -37,7 +37,7 @@ namespace {
 	} \
 } while (false)
 
-template<typename DataType, size_t kNumBounds>
+template<typename DataType, size_t kNumBoundsS>
 struct SetTrueIfInRangesInclusiveVector {
 	inline static void process(size_t num_data,
 			DataType const *data, DataType const *lower_bounds,
@@ -47,7 +47,7 @@ struct SetTrueIfInRangesInclusiveVector {
 
 		for (size_t i = 0; i < num_data; ++i) {
 			bool is_in_range = false;
-			for (size_t j = 0; j < kNumBounds; ++j) {
+			for (size_t j = 0; j < kNumBoundsS; ++j) {
 				is_in_range |= ((data[i] - lower_bounds[j])
 						* (upper_bounds[j] - data[i]) >= kZero);
 			}
@@ -57,38 +57,38 @@ struct SetTrueIfInRangesInclusiveVector {
 };
 
 //#if defined(__AVX2__)
-//template<size_t kNumBounds>
-//struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
+//template<size_t kNumBoundsS>
+//struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 //	inline static void process(size_t num_data,
 //			float const *data, float const *lower_bounds,
 //			float const *upper_bounds,
 //			bool *result) {
-//		constexpr float kZero = 0.0f;
-//		size_t num_bounds = kNumBounds;
+//		constexpr float kZeroF = 0.0f;
+//		constexpr int kZeroI = 0;
+//		size_t num_bounds = kNumBoundsS;
 //		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
-//		if (false) {
+//		if (true) {
 //			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(lower_bounds));
 //			const auto upper_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(upper_bounds));
 //			const auto n = num_bounds / kElementsPerLoop;
 //			for (size_t i = 0; i < num_data; ++i) {
-//				int is_in_range = 0;
+//				bool is_in_range = false;
 //				const auto data_packed = _mm256_set1_ps(data[i]);
 //				for (size_t j = 0; j < n; ++j) {
-//					//Returns 0xFFFFFFFF if data is in current range, else 0x00000000
-//					const auto is_in_this_range = _mm256_testz_ps(_mm256_cmp_ps(data_packed, lower_bounds_ptr[j], _CMP_GE_OS),
-//																						  _mm256_cmp_ps(data_packed, upper_bounds_ptr[j], _CMP_LE_OS));
-//					is_in_range |= is_in_this_range;
+//					// not_in_range = 1 (out of all packed ranges), 0 (in any of packed ranges)
+//					const auto not_in_range = _mm256_testz_ps(_mm256_cmp_ps(data_packed, lower_bounds_ptr[j], _CMP_GE_OQ),
+//							_mm256_cmp_ps(data_packed, upper_bounds_ptr[j], _CMP_LE_OQ));
+//					is_in_range |= (not_in_range==kZeroI);
 //				}
 //				// process remaining elements
 //				const auto end = n * kElementsPerLoop;
-//				lower_bounds = &lower_bounds[end];
-//				upper_bounds = &upper_bounds[end];
-//				num_bounds -= end;
-//				for (size_t j = 0; j < num_bounds; ++j) {
-//					is_in_range += static_cast<int>((data[i] - lower_bounds[j])
-//							* (upper_bounds[j] - data[i]) >= kZero);
+//				const auto lower_bounds_left = &lower_bounds[end];
+//				const auto upper_bounds_left = &upper_bounds[end];
+//				size_t num_bounds_left = num_bounds - end;
+//				for (size_t j = 0; j < num_bounds_left; ++j) {
+//					is_in_range |= ((data[i] - lower_bounds_left[j]) * (upper_bounds_left[j] - data[i]) >= kZeroF);
 //				}
-//				result[i] = (is_in_range != kZero);
+//				result[i] = is_in_range;
 //			}
 //		}
 //		else {
@@ -98,14 +98,14 @@ struct SetTrueIfInRangesInclusiveVector {
 //			const auto n = num_data / kElementsPerLoop;
 //			STATIC_ASSERT(false==0);
 //			for (size_t i = 0; i < n; ++i) {
-//				auto is_in_range = _mm256_setzero_si256(); // false
-//				for (size_t j = 0; j < kNumBounds; ++j) {
+//				auto is_in_range = _mm256_setzero_ps(); // false
+//				for (size_t j = 0; j < kNumBoundsS; ++j) {
 //					const auto lower = _mm256_set1_ps(lower_bounds[j]);
 //					const auto upper = _mm256_set1_ps(upper_bounds[j]);
 //					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
 //					is_in_range = _mm256_or_ps(is_in_range,
-//							_mm256_and_ps(_mm256_cmp_ps(data_ptr[i], lower, _CMP_GE_OS),
-//									_mm256_cmp_ps(data_ptr[i], upper, _CMP_LE_OS)));
+//							_mm256_and_ps(_mm256_cmp_ps(data_ptr[i], lower, _CMP_GE_OQ),
+//									_mm256_cmp_ps(data_ptr[i], upper, _CMP_LE_OQ)));
 //
 //				}
 //				result_ptr[i] = _mm256_castsi256_si128(_mm256_castps_si256(is_in_range));//_mm256_cvtepi32_epi8(is_in_range);
@@ -120,11 +120,11 @@ struct SetTrueIfInRangesInclusiveVector {
 //
 //			for (size_t i = 0; i < num_data; ++i) {
 //				uint8_t is_in_range = 0;
-//				for (size_t j = 0; j < kNumBounds; ++j) {
+//				for (size_t j = 0; j < kNumBoundsS; ++j) {
 //					is_in_range |= static_cast<uint8_t>((data[i] - lower_bounds[j])
-//							* (upper_bounds[j] - data[i]) >= kZero);
+//							* (upper_bounds[j] - data[i]) >= kZeroF);
 //				}
-//				result_alias[i] = is_in_range;
+//				result_alias[i] |= is_in_range;
 //			}
 //		}
 //	}
