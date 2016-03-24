@@ -38,22 +38,98 @@ namespace {
 } while (false)
 
 template<typename DataType, size_t kNumBounds>
-inline void SetTrueIfInRangesInclusiveVector(size_t num_data,
-		DataType const *data, DataType const *lower_bounds,
-		DataType const *upper_bounds,
-		bool *result) {
-	uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
-	constexpr DataType kZero = 0;
+struct SetTrueIfInRangesInclusiveVector {
+	inline static void process(size_t num_data,
+			DataType const *data, DataType const *lower_bounds,
+			DataType const *upper_bounds,
+			bool *result) {
+		constexpr DataType kZero = 0;
 
-	for (size_t i = 0; i < num_data; ++i) {
-		uint8_t is_in_range = 0;
-		for (size_t j = 0; j < kNumBounds; ++j) {
-			is_in_range |= static_cast<uint8_t>((data[i] - lower_bounds[j])
-					* (upper_bounds[j] - data[i]) >= kZero);
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) >= kZero);
+			}
+			result[i] = is_in_range;
 		}
-		result_alias[i] = is_in_range;
 	}
-}
+};
+
+//#if defined(__AVX2__)
+//template<size_t kNumBounds>
+//struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
+//	inline static void process(size_t num_data,
+//			float const *data, float const *lower_bounds,
+//			float const *upper_bounds,
+//			bool *result) {
+//		constexpr float kZero = 0.0f;
+//		size_t num_bounds = kNumBounds;
+//		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
+//		if (false) {
+//			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(lower_bounds));
+//			const auto upper_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(upper_bounds));
+//			const auto n = num_bounds / kElementsPerLoop;
+//			for (size_t i = 0; i < num_data; ++i) {
+//				int is_in_range = 0;
+//				const auto data_packed = _mm256_set1_ps(data[i]);
+//				for (size_t j = 0; j < n; ++j) {
+//					//Returns 0xFFFFFFFF if data is in current range, else 0x00000000
+//					const auto is_in_this_range = _mm256_testz_ps(_mm256_cmp_ps(data_packed, lower_bounds_ptr[j], _CMP_GE_OS),
+//																						  _mm256_cmp_ps(data_packed, upper_bounds_ptr[j], _CMP_LE_OS));
+//					is_in_range |= is_in_this_range;
+//				}
+//				// process remaining elements
+//				const auto end = n * kElementsPerLoop;
+//				lower_bounds = &lower_bounds[end];
+//				upper_bounds = &upper_bounds[end];
+//				num_bounds -= end;
+//				for (size_t j = 0; j < num_bounds; ++j) {
+//					is_in_range += static_cast<int>((data[i] - lower_bounds[j])
+//							* (upper_bounds[j] - data[i]) >= kZero);
+//				}
+//				result[i] = (is_in_range != kZero);
+//			}
+//		}
+//		else {
+//			const auto data_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(data));
+//			const auto result_ptr = AssumeAligned(reinterpret_cast<__m128i *>(result));
+//			//const auto zero = _mm256_set1_ps(kZero);
+//			const auto n = num_data / kElementsPerLoop;
+//			STATIC_ASSERT(false==0);
+//			for (size_t i = 0; i < n; ++i) {
+//				auto is_in_range = _mm256_setzero_si256(); // false
+//				for (size_t j = 0; j < kNumBounds; ++j) {
+//					const auto lower = _mm256_set1_ps(lower_bounds[j]);
+//					const auto upper = _mm256_set1_ps(upper_bounds[j]);
+//					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+//					is_in_range = _mm256_or_ps(is_in_range,
+//							_mm256_and_ps(_mm256_cmp_ps(data_ptr[i], lower, _CMP_GE_OS),
+//									_mm256_cmp_ps(data_ptr[i], upper, _CMP_LE_OS)));
+//
+//				}
+//				result_ptr[i] = _mm256_castsi256_si128(_mm256_castps_si256(is_in_range));//_mm256_cvtepi32_epi8(is_in_range);
+//			}
+//
+//			// process remaining elements
+//			const auto end = n * kElementsPerLoop;
+//			data = &data[end];
+//			result = &result[end];
+//			num_data -= end;
+//			uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+//
+//			for (size_t i = 0; i < num_data; ++i) {
+//				uint8_t is_in_range = 0;
+//				for (size_t j = 0; j < kNumBounds; ++j) {
+//					is_in_range |= static_cast<uint8_t>((data[i] - lower_bounds[j])
+//							* (upper_bounds[j] - data[i]) >= kZero);
+//				}
+//				result_alias[i] = is_in_range;
+//			}
+//		}
+//	}
+//};
+//#endif
 
 template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
@@ -165,23 +241,23 @@ void SetTrueIfInRangesInclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesInclusiveFunc const funcs[] = {
-			SetTrueIfInRangesInclusiveVector<DataType, 0>,
-			SetTrueIfInRangesInclusiveVector<DataType, 1>,
-			SetTrueIfInRangesInclusiveVector<DataType, 2>,
-			SetTrueIfInRangesInclusiveVector<DataType, 3>,
-			SetTrueIfInRangesInclusiveVector<DataType, 4>,
-			SetTrueIfInRangesInclusiveVector<DataType, 5>,
-			SetTrueIfInRangesInclusiveVector<DataType, 6>,
-			SetTrueIfInRangesInclusiveVector<DataType, 7>,
-			SetTrueIfInRangesInclusiveVector<DataType, 8>,
-			SetTrueIfInRangesInclusiveVector<DataType, 9>,
-			SetTrueIfInRangesInclusiveVector<DataType, 10>,
-			SetTrueIfInRangesInclusiveVector<DataType, 11>,
-			SetTrueIfInRangesInclusiveVector<DataType, 12>,
-			SetTrueIfInRangesInclusiveVector<DataType, 13>,
-			SetTrueIfInRangesInclusiveVector<DataType, 14>,
-			SetTrueIfInRangesInclusiveVector<DataType, 15>,
-			SetTrueIfInRangesInclusiveVector<DataType, 16> };
+			SetTrueIfInRangesInclusiveVector<DataType, 0>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 1>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 2>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 3>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 4>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 5>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 6>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 7>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 8>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 9>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 10>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 11>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 12>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 13>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 14>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 15>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 16>::process };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
@@ -320,8 +396,10 @@ LIBSAKURA_SYMBOL(Status) DoRangesBoolFilter(Func func, size_t num_data,
 		DataType const upper_bounds[/*num_condition*/],
 		bool result[/*num_data*/]) {
 
-	CHECK_ARGS(IsValidDataAndResult(data, result) &&
-			IsValidBounds(num_condition, lower_bounds, upper_bounds));
+	CHECK_ARGS(
+			IsValidDataAndResult(data, result)
+					&& IsValidBounds(num_condition, lower_bounds,
+							upper_bounds));
 
 	try {
 		func(/*num_data, data, num_condition, lower_bounds, upper_bounds, result*/);
@@ -437,7 +515,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value > threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
@@ -446,7 +525,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanInt)(
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value > threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
@@ -455,7 +535,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value >= threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsInt)(
@@ -464,7 +545,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqual
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value >= threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
@@ -473,7 +555,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value < threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
@@ -482,7 +565,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanInt)(
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value < threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
@@ -491,7 +575,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFl
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value <= threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt)(
@@ -500,7 +585,8 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsIn
 	auto operation_for_element = [threshold](decltype(data[0]) data_value) {
 		return (data_value <= threshold);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 #if defined(__AVX2__)
@@ -565,7 +651,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 	result = &result[end];
 	num_data -= end;
 	auto operation_for_element = [](decltype(data[0]) data_value) -> bool {
-		union {float fvalue; int ivalue; } value;
+		union {float fvalue; int ivalue;}value;
 		value.fvalue = data_value;
 		return ((value.ivalue & kExponetMask) != kExponetMask);
 	};
@@ -579,11 +665,12 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
 	STATIC_ASSERT(sizeof(kExponetMask) == sizeof(data[0]));
 	// code 1'
 	auto operation_for_element = [](decltype(data[0]) data_value) -> bool {
-		union {float fvalue; int ivalue; } value;
+		union {float fvalue; int ivalue;}value;
 		value.fvalue = data_value;
 		return ((value.ivalue & kExponetMask) != kExponetMask);
 	};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 	// code 2'
 //	uint32_t const *data_int = reinterpret_cast<uint32_t const *>(data);
 //	auto operation_for_element = [](decltype(data_int[0]) data_value) -> bool {
@@ -607,12 +694,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		const auto data_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(data));
 		const auto result_ptr = AssumeAligned(reinterpret_cast<__m256i *>(result));
 		const auto zero = _mm256_set1_epi8(kZero);
-		const auto one = _mm256_set1_epi8(1);
+//		const auto one = _mm256_set1_epi8(1);
+		const auto one = _mm256_set1_epi8(0x01);
 		const auto n = num_data / kElementsPerLoop;
 		for (size_t i = 0; i < n; ++i) {
 			//Returns 0xFF if data==zero, else 0x00
-			auto mask = _mm256_cmpeq_epi8(*data_ptr, zero);
-			result_ptr[i] = _mm256_add_epi8(mask, one);
+			auto mask = _mm256_cmpeq_epi8(data_ptr[i], zero);
+//			result_ptr[i] = _mm256_add_epi8(mask, one);
+			result_ptr[i] = _mm256_andnot_si256(mask, one);
 		}
 		// process remaining elements
 		const auto end = n * kElementsPerLoop;
@@ -634,9 +723,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint8_t kZero = 0;
 	auto operation_for_element = [kZero](decltype(data[0]) data_value) {
-			return (data_value != kZero);
-		};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+		return (data_value != kZero);
+	};
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 #endif
 
@@ -645,9 +735,10 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint8_t kZero = 0;
 	auto operation_for_element = [kZero](decltype(data[0]) data_value) {
-			return (data_value != kZero);
-		};
-	return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
+		return (data_value != kZero);
+	};
+	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
+			result);
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(
