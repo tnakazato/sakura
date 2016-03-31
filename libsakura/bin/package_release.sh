@@ -36,6 +36,10 @@ svn_branch=${svn_branch_default}
 svn_branches_prefix='branches'
 # Binary RPM / enable/disable generation
 do_rpm=${TRUE}
+# External resources directory
+rpm_resources_dir_default="/nfsstore/sakura_casa/rpm"
+#rpm_resources_dir_default="${HOME}/nfsstore/sakura_casa/rpm"
+rpm_resources_dir=${rpm_resources_dir_default}
 # Binary RPM / package version
 rpm_package_version='1'
 # Binary RPM / file name / include or not svn revision 
@@ -200,9 +204,6 @@ fi
 # 2. -------- Binary RPM file creation
 rpmbuild_dir=$(mktemp -d -p /tmp ${project_name}_rpmbuild.XXXX)
 
-# External resources directory
-rpm_resources_dir="/nfsstore/sakura_casa/rpm"
-
 # Google test sources
 gtest_url="https://github.com/google/googletest/archive/release-1.7.0.zip"
 gtest_name="googletest-release-1.7.0.zip"
@@ -224,7 +225,9 @@ fi
 rhel_version_major=$(lsb_release -r | grep -E --only-matching '[0-9]+' | head --lines=1)
 
 # Legacy libsakura libraries for CASA
-export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
+if [[ ${rpm_legacy_libs} -eq ${TRUE} ]] ; then
+	export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
+fi
 
 # RPM Macros
 my_rpm_macros="${rpmbuild_dir}/rpmmacros"
@@ -300,7 +303,7 @@ GTEST_BEGIN
 cat >> $spec_file <<GTEST_END
 ln -s ${gtest_expansion_name} gtest
 GTEST_END
-cat >> $spec_file <<'INSTALL_END'
+cat >> $spec_file <<'SAKURA_LEGACY_BEGIN'
 %build
 cd build && rm -rf *
 prefix_root=%{_prefix}
@@ -327,8 +330,14 @@ mv ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/share ${RPM_BUILD_ROO
 # Recursively delete empty directories (Doxygen: CREATE_SUBDIRS=YES)
 # from the installation tree
 find ${RPM_BUILD_ROOT}/${prefix_no_root}/share -type d -empty -delete
-cp ${SAKURA_LEGACY_LIBS} ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/lib
-INSTALL_END
+SAKURA_LEGACY_BEGIN
+
+if [[ ${rpm_legacy_libs} -eq ${TRUE} ]] ; then
+	cat >> $spec_file <<-'PREAMBLE_END'
+		cp ${SAKURA_LEGACY_LIBS} ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/lib
+	PREAMBLE_END
+fi
+
 cat >> $spec_file <<'EOF_SPEC_FILE'
 #
 # -------- Spec file %files stage:
@@ -343,8 +352,10 @@ EOF_SPEC_FILE
 
 # RPM build environment
 set_build_env() {
-    build_host=$(hostname)
+    build_host=$(hostname --short)
     case ${build_host} in
+        ana01)
+        ;;
         ana02)
         source /opt/rh/devtoolset-3/enable
         ;;
@@ -367,7 +378,7 @@ create_spec_file
 rm -f ${HOME}/.rpmmacros
 echo 'rpm build: start ...'
 echo "  . build log file: rpm_build.$(hostname).log"
-eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 1>rpm_build.$(hostname).log 2>&1 
+eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 1>rpm_build.$(hostname --short).log 2>&1 
 echo 'rpm build: done'
 
 # Move rpm file to working directory and rename if needed
