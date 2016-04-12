@@ -6,6 +6,7 @@
 #    only 1 top tmp dir in current dir, output files must also go there  
 
 set -o pipefail
+set -x
 
 export PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin
 
@@ -37,8 +38,8 @@ svn_branches_prefix='branches'
 # Binary RPM / enable/disable generation
 do_rpm=${TRUE}
 # External resources directory
-rpm_resources_dir_default="/nfsstore/sakura_casa/rpm"
-#rpm_resources_dir_default="${HOME}/nfsstore/sakura_casa/rpm"
+#rpm_resources_dir_default="/nfsstore/sakura_casa/rpm"
+rpm_resources_dir_default="${HOME}/nfsstore/sakura_casa/rpm"
 rpm_resources_dir=${rpm_resources_dir_default}
 # Binary RPM / package version
 rpm_package_version='1'
@@ -234,9 +235,10 @@ my_rpm_macros="${rpmbuild_dir}/rpmmacros"
 rpm_define_options=""
 sign_option=""
 rpmbuild_macros() {
+#%_prefix /usr/lib64/casa/01
 cat > ${my_rpm_macros} <<EOF_RPM_MACROS
 %_topdir ${rpmbuild_dir}
-%_prefix /usr/lib64/casa/01
+%_prefix /opt/casa/01
 EOF_RPM_MACROS
     # %dist tag and gpg signature on RHEL5   
     if [ ${rhel_version_major} = "5" ] ; then
@@ -288,7 +290,9 @@ Source1:        ${gtest_name}
 PREAMBLE_SOURCES
 cat >> $spec_file <<'GTEST_BEGIN'
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXX)
-Prefix:         /usr/lib64/casa/01
+#Prefix:         /usr/lib64/casa/01
+Prefix:         /opt/casa/01
+
 
 # Fix for rpm generation error on RHEL5: 
 # disable debuginfo package generation
@@ -309,12 +313,16 @@ cd build && rm -rf *
 prefix_root=%{_prefix}
 prefix_no_root=${prefix_root:1}
 sse4_install_prefix=${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default
-cmake \
+LDFLAGS=-Wl,--enable-new-dtags cmake \
   -D CMAKE_MODULE_PATH=$(dirname $PWD)/cmake-modules \
   -D CMAKE_INSTALL_PREFIX=${sse4_install_prefix} \
   -D CMAKE_BUILD_TYPE=Release \
   -D SIMD_ARCH=SSE4 \
   -D BUILD_DOC:BOOL=ON \
+  -D CMAKE_SKIP_BUILD_RPATH=FALSE \
+  -D CMAKE_BUILD_WITH_INSTALL_RPATH=FALSE \
+  -D CMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE \
+  -D CMAKE_INSTALL_RPATH='/cas-8362/some/non/existent/path/for/later/rpath/replacement' \
   ..
 
 make
@@ -345,7 +353,8 @@ cat >> $spec_file <<'EOF_SPEC_FILE'
 
 %files
 %defattr(-,root,root)
-/usr/lib64/casa/01
+#/usr/lib64/casa/01
+/opt/casa/01
 # %doc /usr/lib64/casa/01/share/doc/libsakura/api/html
 EOF_SPEC_FILE
 }
@@ -377,7 +386,7 @@ create_spec_file
 
 rm -f ${HOME}/.rpmmacros
 echo 'rpm build: start ...'
-echo "  . build log file: rpm_build.$(hostname).log"
+echo "  . build log file: rpm_build.$(hostname --short).log"
 eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 1>rpm_build.$(hostname --short).log 2>&1 
 echo 'rpm build: done'
 
