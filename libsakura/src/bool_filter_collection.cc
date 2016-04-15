@@ -37,7 +37,7 @@ namespace {
 	} \
 } while (false)
 
-template<typename DataType, size_t kNumBoundsS>
+template<typename DataType, size_t kNumBounds>
 struct SetTrueIfInRangesInclusiveVector {
 	inline static void process(size_t num_data,
 			DataType const *data, DataType const *lower_bounds,
@@ -47,7 +47,7 @@ struct SetTrueIfInRangesInclusiveVector {
 
 		for (size_t i = 0; i < num_data; ++i) {
 			bool is_in_range = false;
-			for (size_t j = 0; j < kNumBoundsS; ++j) {
+			for (size_t j = 0; j < kNumBounds; ++j) {
 				is_in_range |= ((data[i] - lower_bounds[j])
 						* (upper_bounds[j] - data[i]) >= kZero);
 			}
@@ -57,15 +57,15 @@ struct SetTrueIfInRangesInclusiveVector {
 };
 
 #if defined(__AVX2__)
-template<size_t kNumBoundsS>
-struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
+template<size_t kNumBounds>
+struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
 	inline static void process(size_t num_data,
 			float const *data, float const *lower_bounds,
 			float const *upper_bounds,
 			bool *result) {
 		constexpr float kZero = 0.0f;
 		constexpr int kZeroI = 0;
-		size_t num_bounds = kNumBoundsS;
+		size_t num_bounds = kNumBounds;
 		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
 		if (true) {//pack by boundaries
 			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(lower_bounds));
@@ -104,7 +104,7 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 			const auto truth = _mm_set1_epi8(true);
 			for (size_t i = 0; i < n; ++i) {
 				__m256 is_in_range = _mm256_setzero_ps(); // false
-				for (size_t j = 0; j < kNumBoundsS; ++j) {
+				for (size_t j = 0; j < kNumBounds; ++j) {
 					const auto lower = _mm256_set1_ps(lower_bounds[j]);
 					const auto upper = _mm256_set1_ps(upper_bounds[j]);
 					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
@@ -127,7 +127,7 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 
 			for (size_t i = 0; i < num_data; ++i) {
 				bool is_in_range = false;
-				for (size_t j = 0; j < kNumBoundsS; ++j) {
+				for (size_t j = 0; j < kNumBounds; ++j) {
 					is_in_range |= ((data[i] - lower_bounds[j])
 							* (upper_bounds[j] - data[i]) >= kZero);
 				}
@@ -136,15 +136,15 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 		}
 	}
 };
-template<size_t kNumBoundsS>
-struct SetTrueIfInRangesInclusiveVector<int, kNumBoundsS> {
+template<size_t kNumBounds>
+struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 	inline static void process(size_t num_data,
 			int const *data, int const *lower_bounds,
 			int const *upper_bounds,
 			bool *result) {
 		constexpr int kZero = 0.0f;
 		constexpr int kZeroI = 0;
-		size_t num_bounds = kNumBoundsS;
+		size_t num_bounds = kNumBounds;
 		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
 		if (true) {//pack by boundaries
 			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(lower_bounds));
@@ -183,7 +183,7 @@ struct SetTrueIfInRangesInclusiveVector<int, kNumBoundsS> {
 			const auto truth = _mm_set1_epi8(true);
 			for (size_t i = 0; i < n; ++i) {
 				__m256i is_in_range = _mm256_setzero_si256(); // false
-				for (size_t j = 0; j < kNumBoundsS; ++j) {
+				for (size_t j = 0; j < kNumBounds; ++j) {
 					const auto lower = _mm256_set1_epi32(lower_bounds[j]);
 					const auto upper = _mm256_set1_epi32(upper_bounds[j]);
 					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
@@ -208,7 +208,7 @@ struct SetTrueIfInRangesInclusiveVector<int, kNumBoundsS> {
 
 			for (size_t i = 0; i < num_data; ++i) {
 				bool is_in_range = false;
-				for (size_t j = 0; j < kNumBoundsS; ++j) {
+				for (size_t j = 0; j < kNumBounds; ++j) {
 					is_in_range |= ((data[i] - lower_bounds[j])
 							* (upper_bounds[j] - data[i]) >= kZero);
 				}
