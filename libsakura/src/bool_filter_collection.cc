@@ -260,6 +260,23 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 }
 
 template<typename DataType, size_t kNumBounds>
+inline void SetTrueIfInRangesExclusiveVector(size_t num_data,
+			DataType const *data, DataType const *lower_bounds,
+			DataType const *upper_bounds,
+			bool *result) {
+		constexpr DataType kZero = 0;
+
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) > kZero);
+			}
+			result[i] = is_in_range;
+		}
+	}
+
+template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
@@ -383,23 +400,23 @@ void SetTrueIfInRangesExclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesExclusiveFunc const funcs[] = {
-			SetTrueIfInRangesExclusiveScalar<DataType, 0>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 1>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 2>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 3>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 4>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 5>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 6>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 7>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 8>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 9>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 10>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 11>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 12>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 13>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 14>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 15>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 16> };
+			SetTrueIfInRangesExclusiveVector<DataType, 0>,
+			SetTrueIfInRangesExclusiveVector<DataType, 1>,
+			SetTrueIfInRangesExclusiveVector<DataType, 2>,
+			SetTrueIfInRangesExclusiveVector<DataType, 3>,
+			SetTrueIfInRangesExclusiveVector<DataType, 4>,
+			SetTrueIfInRangesExclusiveVector<DataType, 5>,
+			SetTrueIfInRangesExclusiveVector<DataType, 6>,
+			SetTrueIfInRangesExclusiveVector<DataType, 7>,
+			SetTrueIfInRangesExclusiveVector<DataType, 8>,
+			SetTrueIfInRangesExclusiveVector<DataType, 9>,
+			SetTrueIfInRangesExclusiveVector<DataType, 10>,
+			SetTrueIfInRangesExclusiveVector<DataType, 11>,
+			SetTrueIfInRangesExclusiveVector<DataType, 12>,
+			SetTrueIfInRangesExclusiveVector<DataType, 13>,
+			SetTrueIfInRangesExclusiveVector<DataType, 14>,
+			SetTrueIfInRangesExclusiveVector<DataType, 15>,
+			SetTrueIfInRangesExclusiveVector<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
