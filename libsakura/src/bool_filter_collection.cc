@@ -63,7 +63,7 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 			float const *data, float const *lower_bounds,
 			float const *upper_bounds,
 			bool *result) {
-		constexpr float kZeroF = 0.0f;
+		constexpr float kZero = 0.0f;
 		constexpr int kZeroI = 0;
 		size_t num_bounds = kNumBoundsS;
 		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
@@ -86,7 +86,7 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 				const auto upper_bounds_left = &upper_bounds[end];
 				size_t num_bounds_left = num_bounds - end;
 				for (size_t j = 0; j < num_bounds_left; ++j) {
-					is_in_range |= ((data[i] - lower_bounds_left[j]) * (upper_bounds_left[j] - data[i]) >= kZeroF);
+					is_in_range |= ((data[i] - lower_bounds_left[j]) * (upper_bounds_left[j] - data[i]) >= kZero);
 				}
 				result[i] = is_in_range;
 			}
@@ -94,10 +94,10 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 		else {//pack by data
 			const auto data_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(data));
 			const auto result_ptr = AssumeAligned(reinterpret_cast<uint64_t *>(result));
-			constexpr int32_t kZero = 0x80808080;
+			constexpr int32_t kZeroMask = 0x80808080;
 			constexpr int32_t kLSBytes = 0x0c080400;
-			const auto idx = _mm256_set_epi32(kZero, kZero, kLSBytes, kZero,
-					kZero, kZero, kZero, kLSBytes);
+			const auto idx = _mm256_set_epi32(kZeroMask, kZeroMask, kLSBytes, kZeroMask,
+					kZeroMask, kZeroMask, kZeroMask, kLSBytes);
 			__m128i result128i;
 			const auto n = num_data / kElementsPerLoop;
 			STATIC_ASSERT(false==0);
@@ -129,7 +129,88 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBoundsS> {
 				bool is_in_range = false;
 				for (size_t j = 0; j < kNumBoundsS; ++j) {
 					is_in_range |= ((data[i] - lower_bounds[j])
-							* (upper_bounds[j] - data[i]) >= kZeroF);
+							* (upper_bounds[j] - data[i]) >= kZero);
+				}
+				result_alias[i] = is_in_range;
+			}
+		}
+	}
+};
+template<size_t kNumBoundsS>
+struct SetTrueIfInRangesInclusiveVector<int, kNumBoundsS> {
+	inline static void process(size_t num_data,
+			int const *data, int const *lower_bounds,
+			int const *upper_bounds,
+			bool *result) {
+		constexpr int kZero = 0.0f;
+		constexpr int kZeroI = 0;
+		size_t num_bounds = kNumBoundsS;
+		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
+		if (true) {//pack by boundaries
+			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(lower_bounds));
+			const auto upper_bounds_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(upper_bounds));
+			const auto n = num_bounds / kElementsPerLoop;
+			for (size_t i = 0; i < num_data; ++i) {
+				bool is_in_range = false;
+				const auto data_packed = _mm256_set1_epi32(data[i]);
+				for (size_t j = 0; j < n; ++j) {
+					// not_in_range = 1 (out of all packed ranges), 0 (in any of packed ranges)
+					const auto not_in_range = _mm256_testz_si256(_mm256_or_si256(_mm256_cmpgt_epi32(data_packed, lower_bounds_ptr[j]),_mm256_cmpeq_epi32(data_packed, lower_bounds_ptr[j])),
+							_mm256_or_si256(_mm256_cmpgt_epi32(upper_bounds_ptr[j], data_packed), _mm256_cmpeq_epi32(upper_bounds_ptr[j], data_packed)));
+					is_in_range |= (not_in_range==kZeroI);
+				}
+				// process remaining elements
+				const auto end = n * kElementsPerLoop;
+				const auto lower_bounds_left = &lower_bounds[end];
+				const auto upper_bounds_left = &upper_bounds[end];
+				size_t num_bounds_left = num_bounds - end;
+				for (size_t j = 0; j < num_bounds_left; ++j) {
+					is_in_range |= ((data[i] - lower_bounds_left[j]) * (upper_bounds_left[j] - data[i]) >= kZero);
+				}
+				result[i] = is_in_range;
+			}
+		}
+		else {//pack by data
+			const auto data_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(data));
+			const auto result_ptr = AssumeAligned(reinterpret_cast<uint64_t *>(result));
+			constexpr int32_t kZeroMask = 0x80808080;
+			constexpr int32_t kLSBytes = 0x0c080400;
+			const auto idx = _mm256_set_epi32(kZeroMask, kZeroMask, kLSBytes, kZeroMask,
+					kZeroMask, kZeroMask, kZeroMask, kLSBytes);
+			__m128i result128i;
+			const auto n = num_data / kElementsPerLoop;
+			STATIC_ASSERT(false==0);
+			const auto truth = _mm_set1_epi8(true);
+			for (size_t i = 0; i < n; ++i) {
+				__m256i is_in_range = _mm256_setzero_si256(); // false
+				for (size_t j = 0; j < kNumBoundsS; ++j) {
+					const auto lower = _mm256_set1_epi32(lower_bounds[j]);
+					const auto upper = _mm256_set1_epi32(upper_bounds[j]);
+					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+					is_in_range = _mm256_or_si256(is_in_range,
+							_mm256_and_si256(_mm256_or_si256(_mm256_cmpgt_epi32(data_ptr[i], lower),
+									                          _mm256_cmpeq_epi32(data_ptr[i], lower)),
+									          _mm256_or_si256(_mm256_cmpgt_epi32(upper,data_ptr[i]),
+									        		            _mm256_cmpeq_epi32(upper,data_ptr[i]))));
+
+				}
+				auto lsbytes = _mm256_shuffle_epi8(is_in_range, idx);
+				result128i = _mm_or_si128(_mm256_castsi256_si128(lsbytes), _mm256_extracti128_si256(lsbytes, 1));
+				result_ptr[i] = _mm_extract_epi64(_mm_and_si128(result128i,truth), 0);
+			}
+
+			// process remaining elements
+			const auto end = n * kElementsPerLoop;
+			data = &data[end];
+			result = &result[end];
+			num_data -= end;
+			uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+
+			for (size_t i = 0; i < num_data; ++i) {
+				bool is_in_range = false;
+				for (size_t j = 0; j < kNumBoundsS; ++j) {
+					is_in_range |= ((data[i] - lower_bounds[j])
+							* (upper_bounds[j] - data[i]) >= kZero);
 				}
 				result_alias[i] = is_in_range;
 			}
