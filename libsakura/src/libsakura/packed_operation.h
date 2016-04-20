@@ -1183,19 +1183,31 @@ public:
 	static inline Arch::PacketType And(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
+#if defined(__AVX2__)
+		result.raw_int32 = _mm256_and_si256(lhs.raw_int32, rhs.raw_int32);
+#else
 		result.raw_float = _mm256_and_ps(lhs.raw_float, rhs.raw_float);
+#endif
 		return result;
 	}
 	static inline Arch::PacketType Or(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
+#if defined(__AVX2__)
+		result.raw_int32 = _mm256_or_si256(lhs.raw_int32, rhs.raw_int32);
+#else
 		result.raw_float = _mm256_or_ps(lhs.raw_float, rhs.raw_float);
+#endif
 		return result;
 	}
 	static inline Arch::PacketType Xor(Arch::PacketType lhs,
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
+#if defined(__AVX2__)
+		result.raw_int32 = _mm256_xor_si256(lhs.raw_int32, rhs.raw_int32);
+#else
 		result.raw_float = _mm256_xor_ps(lhs.raw_float, rhs.raw_float);
+#endif
 		return result;
 	}
 };
@@ -1250,6 +1262,29 @@ public:
 			Arch::PacketType rhs) {
 		Arch::PacketType result;
 		result.raw_float = _mm256_div_ps(lhs.raw_float, rhs.raw_float);
+		return result;
+	}
+	static inline Arch::PacketType Not(Arch::PacketType operand) {
+		Arch::PacketType all_one;
+		all_one.set1(~static_cast<int32_t>(0));
+		return Xor(operand, all_one);
+	}
+	static inline Arch::PacketType And(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_and_ps(lhs.raw_float, rhs.raw_float);
+		return result;
+	}
+	static inline Arch::PacketType Or(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_or_ps(lhs.raw_float, rhs.raw_float);
+		return result;
+	}
+	static inline Arch::PacketType Xor(Arch::PacketType lhs,
+			Arch::PacketType rhs) {
+		Arch::PacketType result;
+		result.raw_float = _mm256_xor_ps(lhs.raw_float, rhs.raw_float);
 		return result;
 	}
 };
