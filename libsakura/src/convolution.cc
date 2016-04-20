@@ -93,6 +93,9 @@ inline void DestroyFFTPlan(fftwf_plan ptr) {
  */
 inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
 		float* kernel) {
+	assert(num_kernel > 0);
+	assert(kernel_width > 0.0f);
+
 	// special treatment of the case that num_kernel is 1
 	if (num_kernel == 1) {
 		kernel[0] = 1.0;
@@ -100,7 +103,6 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel, float kernel_width,
 	}
 
 	assert((2 * num_kernel - 1) >= 0);
-	assert(kernel_width != 0);
 	double const reciprocal_of_denominator = 1.66510922231539551270632928979040
 			/ static_cast<double>(kernel_width); // sqrt(log(16)) / kernel_width
 	double const peak_value = .939437278699651333772340328410
