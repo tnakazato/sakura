@@ -116,7 +116,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) {
 }
 
 void Create(LIBSAKURA_SYMBOL (Status) status,
-		BaselineTypeInternal const mybaseline_type, int16_t const order,
+		BaselineTypeInternal const mybaseline_type, uint16_t const order,
 		size_t const num_data, struct sakura_BaselineContextFloat** context) {
 	LIBSAKURA_SYMBOL (Status) create_status;
 
@@ -132,6 +132,9 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 		create_status = sakura_CreateBaselineContextCubicSplineFloat(order,
 				num_data, context);
 	} else if (mybaseline_type == BaselineTypeInternal_kSinusoid) {
+		//cout << "Creat_Sinusoid" << endl;
+		//cout << "order = " << order <<endl;
+		//cout << "num_data = " << num_data <<endl;
 		create_status = sakura_CreateBaselineContextSinusoidFloat(order,
 				num_data, context);
 	}
@@ -153,6 +156,8 @@ struct FitExecute{
 				size_t const * boundary,
 				double *coeff_answer_ptr){
 
+		cout << "FitExecute" << endl;
+
 		sakura_BaselineStatus  baseline_status;
 		float rms;
 		double *coeff_ptr = coeff;
@@ -161,6 +166,8 @@ struct FitExecute{
 		enum NPCases {NP_kNo, NP_kCoeff, NP_kBestFit, NP_kResidual, NP_kAll, NP_kNumElems};
 		vector<string> np_cases_names = { "no nullptr", "coeff=nullptr",
 								"best_fit=nullptr", "residual=nullptr", "all nullptr" };
+
+
 
 		if(mybaseline_type==BaselineTypeInternal_kPolynomial){
 
@@ -239,28 +246,83 @@ struct FitExecute{
 
 
 
-		//todo
 		if(mybaseline_type==BaselineTypeInternal_kSinusoid){
-				/*
-				cout << "#############order "<< order << endl;
-				for(int i=0; i < 4; ++i){
-						cout << "#############nwave " << *nwave << endl;
-						++nwave;
-				}
-				cout << "#############num_data " << num_data << endl;
-				*/
+
+				cout << "    Testing for ";
+
+				for (NPCases item = static_cast<NPCases>(0); item < NP_kNumElems; item =
+							static_cast<NPCases>(item + 1)) {
+						cout << np_cases_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
+
+						switch (item) {
+								case NP_kNo:
+									break;
+								case NP_kCoeff:
+									coeff_ptr = nullptr;
+									break;
+								case NP_kBestFit:
+									best_fit_ptr = nullptr;
+									break;
+								case NP_kResidual:
+									residual_ptr = nullptr;
+									break;
+								case NP_kAll:
+									coeff_ptr = nullptr;
+									best_fit_ptr = nullptr;
+									residual_ptr = nullptr;
+									break;
+								default:
+									assert(false);
+								}
 
 				LIBSAKURA_SYMBOL (Status) fit_status =
 					LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(context,
-							order+1, nwave, num_data, data,
+							order, nwave, num_data, data,
 							mask, clip_threshold_sigma, num_fitting_max,
-							num_coeff, coeff, best_fit, residual,
+							num_coeff, coeff_ptr, best_fit_ptr, residual_ptr,
 							final_mask,
 							&rms,
 							&baseline_status);
+
 				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), fit_status);
+				EXPECT_EQ(LIBSAKURA_SYMBOL(BaselineStatus_kOK), baseline_status);
+
+						bool check_coeff = true;
+						bool check_best_fit = true;
+						bool check_residual = true;
+						if (item == NP_kCoeff || item == NP_kAll) {
+							check_coeff = false;
+						}
+						if (item == NP_kBestFit || item == NP_kAll) {
+							check_best_fit = false;
+						}
+						if (item == NP_kResidual || item == NP_kAll) {
+							check_residual = false;
+						}
+						if (check_coeff) {
+							for (size_t i = 0; i < ELEMENTSOF(coeff_answer_ptr); ++i) {
+								CheckAlmostEqual(coeff_answer_ptr[i], coeff[i], 1.0e-6);
+							}
+						}
+						if (check_best_fit) {
+							for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+								CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
+							}
+						}
+						if (check_residual) {
+							for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+								CheckAlmostEqual(0.0, residual[i], 1.0e-6);
+							}
+						}
+					}
+
+					cout << endl;
+
 				cout << "LSQFitSinusoidFloat" << endl;
 		}
+
+
+
 
 		//todo
 		if(mybaseline_type==BaselineTypeInternal_kCubicSpline){
@@ -279,7 +341,7 @@ struct NullExecute{
 	static void execute(){cout << "NullExecute0"<< endl;}
 
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
-			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
+			uint16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
 			cout << "NullExecute1"<< endl;
 		}
 
@@ -295,7 +357,7 @@ struct NullExecute{
 
 struct CreateExecute{
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
-			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
+			uint16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
 
 			Create(status,mybaseline_type,order,num_data, context);
 		cout << "CreatExecute" << endl;
@@ -305,7 +367,7 @@ struct CreateExecute{
 
 struct CreateExecuteNuLL{
 	static void execute(LIBSAKURA_SYMBOL (Status) status, BaselineTypeInternal const mybaseline_type,
-			int16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
+			uint16_t const order, size_t const num_data, struct sakura_BaselineContextFloat** context){
 
 			Create(status,mybaseline_type,order,num_data, nullptr);
 			cout << "CreatExecuteNuLL" << endl;
@@ -360,62 +422,57 @@ struct InitializeExecute{
 struct InitializePoly{
 		static void execute(LIBSAKURA_SYMBOL (Status) &status,
 					BaselineTypeInternal &mybaseline_type,
-					int16_t  *order,
-					size_t  * nwave, //sinusoid
-					float * clip_threshold_sigma,
-					uint16_t * num_fitting_max,
-					size_t * num_coeff,
+					size_t dummy1[],
+					//size_t const dummy2[],
+					uint16_t  order[],
+					//size_t  * nwave, //sinusoid
+					float clip_threshold_sigma[],
+					uint16_t num_fitting_max[],
+					size_t num_coeff[],
 					size_t  * boundary, //cubic
-					size_t * num_coeff_answer
+					size_t num_coeff_answer[],
+					size_t *num_data
 					){
 
 					*order=3;
-					*num_fitting_max=2;
-					*num_coeff=*order+1;
-					*clip_threshold_sigma =3;
-					*num_coeff_answer=*order+1;
+					*num_fitting_max = 2;
+					*num_coeff= *order + 1;
+					*clip_threshold_sigma = 3;
+					*num_coeff_answer = *order + 1;
+					*num_data = *order + 1;
 
-			cout << "InitializePolyExecute" << endl;
-
+		cout << "InitializePolyExecute" << endl;
 		}
-
 };
 
-/*
+
 struct InitializeSinusoid{
 		static void execute(LIBSAKURA_SYMBOL (Status) &status,
 					BaselineTypeInternal &mybaseline_type,
-					int16_t  *nwave_max,
-					size_t  * nwave, //sinusoid
+					size_t *num_nwave,
+					uint16_t  *nwave_max,
+					//size_t  * nwave, //sinusoid
 					float * clip_threshold_sigma,
 					uint16_t * num_fitting_max,
 					size_t * num_coeff,
 					size_t  * boundary, //cubic
-					size_t * num_coeff_answer
+					size_t * num_coeff_answer,
+					size_t * num_data
 					){
 
 					*nwave_max = 3;
-					*num_nwave=*nwave_max + 1;
-
-					for(size_t i=0; i < 4;++i){
-						nwave[i]=i;
-					}
-
-
+					*num_nwave = *nwave_max + 1;
 					*num_fitting_max=2;
-					*num_coeff=*nwave_max+1;
-					*clip_threshold_sigma =3;
-					*num_coeff_answer=*nwave_max * 2 + 1;
+					*num_coeff= *nwave_max*2 + 1;
+					*clip_threshold_sigma = 3;
+					*num_coeff_answer= *nwave_max*2 + 1;
+					*num_data = (*nwave_max*2 + 1) + 5;
 
 			cout << "InitializeSinusoid" << endl;
 
 		}
 
 };
-*/
-
-
-
 
 
 template<class T_creator, class T_fitter, class T_destroyer>
@@ -431,8 +488,6 @@ void TestRun0(LIBSAKURA_SYMBOL (Status) status,BaselineTypeInternal const mybase
 	}
 
 }
-
-
 
 
 template<class T_creator, class T_fitter, class T_destroyer>
@@ -482,77 +537,70 @@ template<class T_initializer, class T_creator, class T_fitter, class T_destroyer
 void TestRun3(LIBSAKURA_SYMBOL(Status)  status, BaselineTypeInternal mybaseline_type
 		){
 
+	//all
 	LIBSAKURA_SYMBOL(BaselineContextFloat) * context = nullptr;
-
-	uint16_t num_fitting_max;
-	float clip_threshold_sigma;
-	//size_t  *nwave=nullptr; //sinusoid
-	//bool * final_mask=nullptr;
-	size_t * boundary=nullptr;//cubic
-	int16_t order;
 	size_t num_coeff;
+	float clip_threshold_sigma;
+	uint16_t num_fitting_max;
+	size_t num_coeff_answer;
+	size_t  num_data;
+	uint16_t order_nwavemax_npiece;
+
+	//cubic
+	size_t * boundary=nullptr;
+
+	//sinusoid, cubic
+	size_t num_nwave_pieces;
 
 	//sinusoid
-	size_t nwave_max = 3; //=order
-	size_t const num_nwave = nwave_max + 1; //=order+1
-
-	//size_t const nwave[num_nwave] = { 0, 1, 2, 3 };
-	//size_t  nwave[num_nwave] = { 0, 1, 2, 3 };
-	size_t nwave[num_nwave];
-	size_t num_coeff_answer;
-
-
+	size_t *nwave=nullptr;
 
 	T_initializer::execute(status,
 			mybaseline_type,
-			&order,
-			nwave,
+			&num_nwave_pieces,
+			&order_nwavemax_npiece,
+			//nwave,
 			&clip_threshold_sigma,
 			&num_fitting_max,
 			&num_coeff,
 			boundary,
-			&num_coeff_answer
+			&num_coeff_answer,
+			&num_data
 			);
 
-
-
 	SIMD_ALIGN
-	//double coeff_answer[order+1];
 	double coeff_answer[num_coeff_answer];
 	SetDoubleConstant(1.0, ELEMENTSOF(coeff_answer), coeff_answer);
 	SIMD_ALIGN
 	double coeff[ELEMENTSOF(coeff_answer)];
-
-	size_t  num_data=ELEMENTSOF(coeff_answer);
-	if (mybaseline_type==BaselineTypeInternal_kSinusoid){
-		num_data = ELEMENTSOF(coeff_answer) + 5;
-	}
-
+	SIMD_ALIGN
+	float data[num_data];
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
 	SIMD_ALIGN
 	float best_fit[num_data];
 	SIMD_ALIGN
 	float residual[num_data];
-	SIMD_ALIGN
-	float data[num_data];
 
 	if(mybaseline_type==BaselineTypeInternal_kPolynomial){
 		SetFloatPolynomial(ELEMENTSOF(coeff_answer), coeff_answer, num_data, data);
 	}else if(mybaseline_type==BaselineTypeInternal_kSinusoid){
-		SetFloatSinusoidal(num_nwave, nwave, coeff_answer, num_data, data);
-
-
+		nwave=new size_t[num_nwave_pieces];
+		for(size_t i=0; i<num_nwave_pieces; ++i){
+			nwave[i]=i;
+		}
+		SetFloatSinusoidal(num_nwave_pieces, nwave, coeff_answer, num_data, data);
+		order_nwavemax_npiece = num_nwave_pieces;
 	}
 
-	SIMD_ALIGN
-	bool mask[ELEMENTSOF(data)];
-	SetBoolConstant(true, ELEMENTSOF(data), mask);
-
-	T_creator::execute(status,mybaseline_type,order,num_data, &context);
-	T_fitter::execute();
+	T_creator::execute(status,mybaseline_type,order_nwavemax_npiece,num_data, &context);
+	//T_fitter::execute();
 	if(context!=nullptr){
-		T_fitter::execute(mybaseline_type, context,order, nwave, num_data, data, mask, clip_threshold_sigma,
+		T_fitter::execute(mybaseline_type, context, order_nwavemax_npiece, nwave, num_data, data, mask, clip_threshold_sigma,
 							num_fitting_max, num_coeff, coeff, best_fit, residual,
 							mask, boundary, coeff_answer);
+		delete[] nwave;
 		T_destroyer::execute(status, context);
 	}
 }
@@ -829,13 +877,30 @@ TEST_F(Baseline, LSQFitPolynomialSuccessfulCases_TestRun3) {
  * Test LSQFitSinusoid
  * successful case using TestRun3
  */
-/*
+
 TEST_F(Baseline, LSQFitSinusoidSuccessfulCases_TestRun3) {
 
 	TestRun3<InitializeSinusoid, CreateExecute, FitExecute, DestroyExecute>
 	(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kSinusoid);
 }
+
+/*
+ * Test LSQFitCspline
+ * successful case using TestRun3
+ */
+/*
+TEST_F(Baseline, LSQFitCsplineSuccessfulCases_TestRun3) {
+	TestRun3<InitializeCspline, CreateExecute, FitExecute, DestroyExecute>
+	(LIBSAKURA_SYMBOL(Status_kOK), BaselineTypeInternal_kCubicSpline);
+}
 */
+
+
+
+
+
+
+
 
 
 
