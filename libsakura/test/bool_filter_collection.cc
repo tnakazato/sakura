@@ -36,6 +36,7 @@
 /* the number of elements in input/output array to test */
 #define NUM_IN 8
 #define NUM_RANGE 2 // DO NOT MODIFY THIS!
+#define MAX_NUM_RANGE 17 // DO NOT MODIFY THIS!
 #define NUM_IN_LONG (1 << 18) //2**18
 #define UNALIGN_OFFSET 1 // should be != ALIGNMENT
 #define POS_INF (1.0f / 0.0f) // positive infinity in float
@@ -68,10 +69,10 @@ struct NumConditionAndAnswer {
 };
 // a struct to store test parameters for both uint8 and uint32
 struct RangesTestComponent {
-	string name;               // name of operation
+	string name;               // name of operationGetNumTest()
 	RangesFunction<float> funcfloat;
 	RangesFunction<int> funcint;
-	NumConditionAndAnswer num_condition_answer[2];
+	NumConditionAndAnswer num_condition_answer[MAX_NUM_RANGE + 1];
 	static size_t GetNumTest() {
 		return ELEMENTSOF(num_condition_answer);
 	}
@@ -82,11 +83,44 @@ RangesTestComponent RangesTestCase[] { { "Inclusive Ranges", { LIBSAKURA_SYMBOL(
 		SetTrueIfInRangesInclusiveFloat) }, { LIBSAKURA_SYMBOL(
 		SetTrueIfInRangesInclusiveInt) }, { { NUM_RANGE, { false, true, false,
 true, false, true, false, true } }, { 0, { false, false, false, false,
-false, false, false, false } } } }, { "Exclusive Ranges", { LIBSAKURA_SYMBOL(
-		SetTrueIfInRangesExclusiveFloat) }, { LIBSAKURA_SYMBOL(
+false, false, false, false } }, { 1, { false, true, false,
+true,
+false, false, false, false } }, { 3, { false, true, false,
+true, false, true, false, true } }, { 4, { false, true, false,
+true, false, true, false, true } }, { 5, { false, true, false,
+true, false, true, false, true } }, { 6, { false, true, false,
+true, false, true, false, true } }, { 7, { false, true, false,
+true, false, true, false, true } }, { 8, { false, true, false,
+true, false, true, false, true } }, { 9, { false, true, false,
+true, false, true, false, true } }, { 10, { false, true, false,
+true, false, true, false, true } }, { 11, { false, true, false,
+true, false, true, false, true } }, { 12, { false, true, false,
+true, false, true, false, true } }, { 13, { false, true, false,
+true, false, true, false, true } }, { 14, { false, true, false,
+true, false, true, false, true } }, { 15, { false, true, false,
+true, false, true, false, true } }, { 16, { false, true, false,
+true, false, true, false, true } }, { 17, { false, true, false,
+true, false, true, false, true } } } }, { "Exclusive Ranges", {
+		LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat) }, { LIBSAKURA_SYMBOL(
 		SetTrueIfInRangesExclusiveInt) }, { { NUM_RANGE, { false, true, false,
 true, false, false, false, false } }, { 0, { false, false, false, false,
-false, false, false, false } } } }, };
+false, false, false, false } }, { 1, { false, true, false, true,
+false, false, false, false } }, { 3, { false, true, false,
+true, false, false, false, false } }, { 4, { false, true, false,
+true, false, false, false, false } }, { 5, { false, true, false,
+true, false, false, false, false } }, { 6, { false, true, false,
+true, false, false, false, false } }, { 7, { false, true, false,
+true, false, false, false, false } }, { 8, { false, true, false,
+true, false, false, false, false } }, { 9, { false, true, false,
+true, false, false, false, false } }, { 10, { false, true, false,
+true, false, false, false, false } }, { 11, { false, true, false,
+true, false, false, false, false } }, { 12, { false, true, false,
+true, false, false, false, false } }, { 13, { false, true, false,
+true, false, false, false, false } }, { 14, { false, true, false,
+true, false, false, false, false } }, { 15, { false, true, false,
+true, false, false, false, false } }, { 16, { false, true, false,
+true, false, false, false, false } }, { 17, { false, true, false,
+true, false, false, false, false } } } }, };
 
 /*
  * Helper functions to select proper ranges_func_ptr_t from
@@ -300,11 +334,10 @@ protected:
 		SIMD_ALIGN
 		bool result[ELEMENTSOF(data)];
 		SIMD_ALIGN
-		DataType lower[NUM_RANGE];
+		DataType lower[MAX_NUM_RANGE]; //[NUM_RANGE];
 		SIMD_ALIGN
 		DataType upper[ELEMENTSOF(lower)];
 		size_t const num_range(ELEMENTSOF(lower));
-
 		for (size_t irun = 0; irun < num_test; ++irun) {
 			size_t const num_data(array_length[irun]);
 			// Loop over sakura functions and number of conditions
@@ -312,7 +345,7 @@ protected:
 			RunRangesTest(num_data, data, num_range, lower, upper, result,
 					ELEMENTSOF(RangesTestCase), RangesTestCase,
 					LIBSAKURA_SYMBOL(Status_kOK), true,
-					num_data == NUM_IN ? 2 : 1);
+					num_data == NUM_IN ? MAX_NUM_RANGE + 1 : 1);
 		}
 	}
 
@@ -324,7 +357,7 @@ protected:
 		SIMD_ALIGN
 		bool result[ELEMENTSOF(data)];
 		SIMD_ALIGN
-		DataType lower[NUM_RANGE];
+		DataType lower[MAX_NUM_RANGE]; //[NUM_RANGE];
 		SIMD_ALIGN
 		DataType upper[ELEMENTSOF(lower)];
 		size_t const num_range(ELEMENTSOF(lower));
@@ -333,7 +366,8 @@ protected:
 		cout << "[Performance tests]" << endl;
 		RunRangesTest(num_long, data, num_range, lower, upper, result,
 				ELEMENTSOF(RangesTestCase), RangesTestCase,
-				LIBSAKURA_SYMBOL(Status_kOK), true, 1, num_repeat);
+				LIBSAKURA_SYMBOL(Status_kOK), true, 1,//MAX_NUM_RANGE + 1,
+				num_repeat);
 	}
 
 	/*
@@ -497,12 +531,9 @@ protected:
 		// initialize input data only if asked
 		if (initialize) {
 			GetDataOfLength(num_data, in_data);
-			GetBounds(lower_bounds, upper_bounds);
 		}
 		if (verbose_) {
 			PrintArray("data", num_data, in_data);
-			PrintArray("lower_bound", num_condition, lower_bounds);
-			PrintArray("upper_bound", num_condition, upper_bounds);
 		}
 		// get data type name to identify benchmark tests
 		int success = 0;
@@ -527,6 +558,16 @@ protected:
 				cout << "Testing: " << std::get<0>(kit)
 						<< " (number of ranges = " << num_and_ans.num_condition
 						<< ")" << endl;
+				if (initialize) {
+					GetBounds(num_and_ans.num_condition, lower_bounds,
+							upper_bounds);
+				}
+				if (verbose_) {
+					PrintArray("lower_bound", num_and_ans.num_condition,
+							lower_bounds);
+					PrintArray("upper_bound", num_and_ans.num_condition,
+							upper_bounds);
+				}
 				LIBSAKURA_SYMBOL(Status) status;
 				double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 				for (size_t irun = 0; irun < num_repeat; ++irun) {
@@ -540,6 +581,7 @@ protected:
 					string test_name = std::get<0>(kit);
 					string_replace(test_name, " ", "_");
 					cout << "#x# benchmark BoolFilter_" << test_name << "_"
+							<< num_and_ans.num_condition << "_"
 							<< data_type_name << " " << end - start << endl;
 				}
 
@@ -628,16 +670,25 @@ protected:
 		GetDataInLength(ELEMENTSOF(data_), data_, num_out, out_data);
 	}
 	// Copy values of lower and upper bounds to given arrays from lower_[] and upper_[]
-	void GetBounds(DataType *lower, DataType *upper) {
+	void GetBounds(size_t num_condition, DataType *lower, DataType *upper) {
 		// Handling of nullptr array
-		DataType dummy_bound[NUM_RANGE];
+		DataType dummy_bound[num_condition];
 		DataType *lower_ptr = (lower != nullptr) ? lower : dummy_bound;
 		DataType *upper_ptr = (upper != nullptr) ? upper : dummy_bound;
-		EXPECT_EQ(NUM_RANGE, ELEMENTSOF(lower_ptr));
-		EXPECT_EQ(NUM_RANGE, ELEMENTSOF(upper_ptr));
-		for (size_t i = 0; i < NUM_RANGE; ++i) {
-			lower_ptr[i] = lower_[i];
-			upper_ptr[i] = upper_[i];
+//		EXPECT_LE(num_condition, ELEMENTSOF(lower_ptr));
+//		EXPECT_LE(num_condition, ELEMENTSOF(upper_ptr));
+		size_t iswitch =
+				num_condition > NUM_RANGE ? num_condition - NUM_RANGE : 0;
+		size_t iend =
+				num_condition > NUM_RANGE ?
+						iswitch + NUM_RANGE : iswitch + num_condition;
+		for (size_t i = 0; i < iswitch; ++i) {
+			lower_ptr[i] = static_cast<DataType>(1000 + i * 3);
+			upper_ptr[i] = static_cast<DataType>(1000 + i * 3 + 2);
+		}
+		for (size_t i = iswitch; i < iend; ++i) {
+			lower_ptr[i] = lower_[i - iswitch];
+			upper_ptr[i] = upper_[i - iswitch];
 		}
 	}
 
@@ -927,8 +978,8 @@ template<>
 SimpleTestComponent<uint32_t> BoolFilterSimple<uint32_t>::test_components[] = {
 		{ "Uint32ToBool", LIBSAKURA_SYMBOL(Uint32ToBool), { 0, 1, (1 << 1), (1
 				<< 3), (1 << 11), (1 << 16), (1 << 24), (1 << 30) }, { false,
-				true, true, true, true, true, true,
-				true } } };
+		true, true, true, true, true, true,
+		true } } };
 
 /*
  * Test cases of a bool array
@@ -974,13 +1025,14 @@ TEST_F(BoolFilterInt, RangesVariousLength) {
  * Test bool filter generation using ranges for an array for a large array
  */
 TEST_F(BoolFilterFloat, RangesPerformance) {
-	RunRangesPerformanceTest(NUM_IN_LONG, 2000);
+//	RunRangesPerformanceTest(NUM_IN_LONG, 2000);
+	RunRangesPerformanceTest(20007, 20000);
 }
 
 TEST_F(BoolFilterInt, RangesPerformance) {
-	RunRangesPerformanceTest(NUM_IN_LONG, 2000);
+//	RunRangesPerformanceTest(NUM_IN_LONG, 2000);
+	RunRangesPerformanceTest(20007, 20000);
 }
-
 /*
  * Test failure cases of bool filter generation using ranges
  */
