@@ -345,7 +345,7 @@ protected:
 			RunRangesTest(num_data, data, num_range, lower, upper, result,
 					ELEMENTSOF(RangesTestCase), RangesTestCase,
 					LIBSAKURA_SYMBOL(Status_kOK), true,
-					num_data == NUM_IN ? MAX_NUM_RANGE + 1 : 1);
+					num_data == num_max ? MAX_NUM_RANGE + 1 : 1);
 		}
 	}
 
