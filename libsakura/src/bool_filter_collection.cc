@@ -62,101 +62,60 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
 			float const *lower_bounds, float const *upper_bounds,
 			bool *result) {
 		constexpr float kZero = 0.0f;
-		constexpr int kZeroI = 0;
-		size_t num_bounds = kNumBounds;
 		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize
 				/ sizeof(data[0]);
 		LIBSAKURA_SYMBOL(SimdPacketAVX) upper, lower, data_packet;
-		if (true) { //pack by boundaries
-			const auto lower_bounds_ptr =
-					AssumeAligned(
-							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(lower_bounds));
-			const auto upper_bounds_ptr =
-					AssumeAligned(
-							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(upper_bounds));
-			const auto n = num_bounds / kElementsPerLoop;
-			for (size_t i = 0; i < num_data; ++i) {
-				bool is_in_range = false;
-				data_packet.set1(data[i]);
-//				const auto data_packet = _mm256_set1_ps(data[i]);
-				for (size_t j = 0; j < n; ++j) {
-					upper.raw_float = upper_bounds_ptr[j];
-					lower.raw_float = lower_bounds_ptr[j];
-					// not_in_range = 1 (out of all packed ranges), 0 (in any of packed ranges)
-					const auto not_in_range =
-							_mm256_testz_ps(
-									LIBSAKURA_SYMBOL(SimdCompare)<
-											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
-											lower, data_packet).raw_float,
-									LIBSAKURA_SYMBOL(SimdCompare)<
-											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
-											data_packet, upper).raw_float);
-					is_in_range |= (not_in_range == kZeroI);
-				}
-				// process remaining elements
-				const auto end = n * kElementsPerLoop;
-				const auto lower_bounds_left = &lower_bounds[end];
-				const auto upper_bounds_left = &upper_bounds[end];
-				size_t num_bounds_left = num_bounds - end;
-				for (size_t j = 0; j < num_bounds_left; ++j) {
-					is_in_range |= ((data[i] - lower_bounds_left[j])
-							* (upper_bounds_left[j] - data[i]) >= kZero);
-				}
-				result[i] = is_in_range;
-			}
-		} else { //pack by data
-			const auto data_ptr =
-					AssumeAligned(
-							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(data));
-			const auto result_ptr = AssumeAligned(
-					reinterpret_cast<uint64_t *>(result));
-			const auto n = num_data / kElementsPerLoop;
-			STATIC_ASSERT(false==0);
-			const auto truth = _mm_set1_epi8(true);
-			LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
-			for (size_t i = 0; i < n; ++i) {
-				data_packet.raw_float = data_ptr[i];
-				is_in_range.set1(static_cast<float>(0)); // false
-				for (size_t j = 0; j < kNumBounds; ++j) {
-					lower.set1(lower_bounds[j]);
-					upper.set1(upper_bounds[j]);
-					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
-					is_in_range =
-							LIBSAKURA_SYMBOL(SimdMath)<
-							LIBSAKURA_SYMBOL(SimdArchAVX), float>::Or(
-									is_in_range,
-									LIBSAKURA_SYMBOL(SimdMath)<
-									LIBSAKURA_SYMBOL(SimdArchAVX), float>::And(
-											LIBSAKURA_SYMBOL(SimdCompare)<
-											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
-													lower, data_packet),
-											LIBSAKURA_SYMBOL(SimdCompare)<
-											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
-													data_packet, upper)));
-				}
-
-				LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result128i =
-				LIBSAKURA_SYMBOL(SimdConvert)<
-				LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
-				result_ptr[i] = _mm_extract_epi64(
-						_mm_and_si128(result128i.raw_int32, truth), 0);
+		//pack by data
+		const auto data_ptr =
+				AssumeAligned(
+						reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(data));
+		const auto result_ptr = AssumeAligned(
+				reinterpret_cast<uint64_t *>(result));
+		const auto n = num_data / kElementsPerLoop;
+		STATIC_ASSERT(false==0);
+		const auto truth = _mm_set1_epi8(true);
+		LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
+		for (size_t i = 0; i < n; ++i) {
+			data_packet.raw_float = data_ptr[i];
+			is_in_range.set1(static_cast<float>(0)); // false
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				lower.set1(lower_bounds[j]);
+				upper.set1(upper_bounds[j]);
+				//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+				is_in_range =
+						LIBSAKURA_SYMBOL(SimdMath)<
+						LIBSAKURA_SYMBOL(SimdArchAVX), float>::Or(is_in_range,
+								LIBSAKURA_SYMBOL(SimdMath)<
+								LIBSAKURA_SYMBOL(SimdArchAVX), float>::And(
+										LIBSAKURA_SYMBOL(SimdCompare)<
+										LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
+												lower, data_packet),
+										LIBSAKURA_SYMBOL(SimdCompare)<
+										LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
+												data_packet, upper)));
 			}
 
-			// process remaining elements
-			const auto end = n * kElementsPerLoop;
-			data = &data[end];
-			result = &result[end];
-			num_data -= end;
-			uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result128i =
+			LIBSAKURA_SYMBOL(SimdConvert)<
+			LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
+			result_ptr[i] = _mm_extract_epi64(
+					_mm_and_si128(result128i.raw_int32, truth), 0);
+		}
 
-			for (size_t i = 0; i < num_data; ++i) {
-				bool is_in_range = false;
-				for (size_t j = 0; j < kNumBounds; ++j) {
-					is_in_range |= ((data[i] - lower_bounds[j])
-							* (upper_bounds[j] - data[i]) >= kZero);
-				}
-				result_alias[i] = is_in_range;
+		// process remaining elements
+		const auto end = n * kElementsPerLoop;
+		data = &data[end];
+		result = &result[end];
+		num_data -= end;
+		uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) >= kZero);
 			}
+			result_alias[i] = is_in_range;
 		}
 	}
 };
@@ -166,102 +125,60 @@ struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 			int const *lower_bounds, int const *upper_bounds,
 			bool *result) {
 		constexpr int kZero = 0;
-		constexpr int kZeroI = 0;
-		size_t num_bounds = kNumBounds;
 		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize
 				/ sizeof(data[0]);
 		LIBSAKURA_SYMBOL(SimdPacketAVX) upper, lower, data_packet;
-		if (true) { //pack by boundaries
-			const auto lower_bounds_ptr =
-					AssumeAligned(
-							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(lower_bounds));
-			const auto upper_bounds_ptr =
-					AssumeAligned(
-							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(upper_bounds));
-			const auto n = num_bounds / kElementsPerLoop;
-			for (size_t i = 0; i < num_data; ++i) {
-				bool is_in_range = false;
-				data_packet.set1(static_cast<int32_t>(data[i]));
-				for (size_t j = 0; j < n; ++j) {
-					upper.raw_int32 = upper_bounds_ptr[j];
-					lower.raw_int32 = lower_bounds_ptr[j];
-					// not_in_range = 1 (out of all packed ranges), 0 (in any of packed ranges)
-					const auto not_in_range =
-							_mm256_testz_si256(
-									LIBSAKURA_SYMBOL(SimdCompare)<
-									LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::LessOrEqual(
-											lower, data_packet).raw_int32,
-									LIBSAKURA_SYMBOL(SimdCompare)<
-									LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::LessOrEqual(
-											data_packet, upper).raw_int32);
-					is_in_range |= (not_in_range == kZeroI);
-				}
-				// process remaining elements
-				const auto end = n * kElementsPerLoop;
-				const auto lower_bounds_left = &lower_bounds[end];
-				const auto upper_bounds_left = &upper_bounds[end];
-				size_t num_bounds_left = num_bounds - end;
-				for (size_t j = 0; j < num_bounds_left; ++j) {
-					is_in_range |= ((data[i] - lower_bounds_left[j])
-							* (upper_bounds_left[j] - data[i]) >= kZero);
-				}
-				result[i] = is_in_range;
-			}
-		} else { //pack by data
-			const auto data_ptr =
-					AssumeAligned(
-							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(data));
-			const auto result_ptr = AssumeAligned(
-					reinterpret_cast<uint64_t *>(result));
-			const auto n = num_data / kElementsPerLoop;
-			STATIC_ASSERT(false==0);
-			LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
-			const auto truth = _mm_set1_epi8(true);
-			for (size_t i = 0; i < n; ++i) {
-				data_packet.raw_int32 = data_ptr[i];
-				is_in_range.set1(static_cast<int>(0)); // false
-				for (size_t j = 0; j < kNumBounds; ++j) {
-					lower.set1(static_cast<int32_t>(lower_bounds[j]));
-					upper.set1(static_cast<int32_t>(upper_bounds[j]));
-					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
-					is_in_range =
-							LIBSAKURA_SYMBOL(SimdMath)<
-							LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::Or(
-									is_in_range,
-									LIBSAKURA_SYMBOL(SimdMath)<
-									LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::And(
-											LIBSAKURA_SYMBOL(SimdCompare)<
-											LIBSAKURA_SYMBOL(SimdArchAVX),
-													int32_t>::LessOrEqual(lower,
-													data_packet),
-											LIBSAKURA_SYMBOL(SimdCompare)<
-											LIBSAKURA_SYMBOL(SimdArchAVX),
-													int32_t>::LessOrEqual(
-													data_packet, upper)));
+		//pack by data
+		const auto data_ptr =
+				AssumeAligned(
+						reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(data));
+		const auto result_ptr = AssumeAligned(
+				reinterpret_cast<uint64_t *>(result));
+		const auto n = num_data / kElementsPerLoop;
+		STATIC_ASSERT(false==0);
+		LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
+		const auto truth = _mm_set1_epi8(true);
+		for (size_t i = 0; i < n; ++i) {
+			data_packet.raw_int32 = data_ptr[i];
+			is_in_range.set1(static_cast<int>(0)); // false
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				lower.set1(static_cast<int32_t>(lower_bounds[j]));
+				upper.set1(static_cast<int32_t>(upper_bounds[j]));
+				//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+				is_in_range =
+						LIBSAKURA_SYMBOL(SimdMath)<
+						LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::Or(is_in_range,
+								LIBSAKURA_SYMBOL(SimdMath)<
+								LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::And(
+										LIBSAKURA_SYMBOL(SimdCompare)<
+										LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::LessOrEqual(
+												lower, data_packet),
+										LIBSAKURA_SYMBOL(SimdCompare)<
+										LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::LessOrEqual(
+												data_packet, upper)));
 
-				}
-				LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result128i =
-				LIBSAKURA_SYMBOL(SimdConvert)<
-				LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
-				result_ptr[i] = _mm_extract_epi64(
-						_mm_and_si128(result128i.raw_int32, truth), 0);
 			}
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result128i =
+			LIBSAKURA_SYMBOL(SimdConvert)<
+			LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
+			result_ptr[i] = _mm_extract_epi64(
+					_mm_and_si128(result128i.raw_int32, truth), 0);
+		}
 
-			// process remaining elements
-			const auto end = n * kElementsPerLoop;
-			data = &data[end];
-			result = &result[end];
-			num_data -= end;
-			uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+		// process remaining elements
+		const auto end = n * kElementsPerLoop;
+		data = &data[end];
+		result = &result[end];
+		num_data -= end;
+		uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
 
-			for (size_t i = 0; i < num_data; ++i) {
-				bool is_in_range = false;
-				for (size_t j = 0; j < kNumBounds; ++j) {
-					is_in_range |= ((data[i] - lower_bounds[j])
-							* (upper_bounds[j] - data[i]) >= kZero);
-				}
-				result_alias[i] = is_in_range;
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) >= kZero);
 			}
+			result_alias[i] = is_in_range;
 		}
 	}
 };
