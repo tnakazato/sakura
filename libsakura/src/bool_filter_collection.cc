@@ -39,9 +39,8 @@ namespace {
 
 template<typename DataType, size_t kNumBounds>
 struct SetTrueIfInRangesInclusiveVector {
-	inline static void process(size_t num_data,
-			DataType const *data, DataType const *lower_bounds,
-			DataType const *upper_bounds,
+	inline static void process(size_t num_data, DataType const *data,
+			DataType const *lower_bounds, DataType const *upper_bounds,
 			bool *result) {
 		constexpr DataType kZero = 0;
 
@@ -56,29 +55,43 @@ struct SetTrueIfInRangesInclusiveVector {
 	}
 };
 
-#if defined(__AVX2__)
+#if defined(__AVX__)
 template<size_t kNumBounds>
 struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
-	inline static void process(size_t num_data,
-			float const *data, float const *lower_bounds,
-			float const *upper_bounds,
+	inline static void process(size_t num_data, float const *data,
+			float const *lower_bounds, float const *upper_bounds,
 			bool *result) {
 		constexpr float kZero = 0.0f;
 		constexpr int kZeroI = 0;
 		size_t num_bounds = kNumBounds;
-		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
-		if (true) {//pack by boundaries
-			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(lower_bounds));
-			const auto upper_bounds_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(upper_bounds));
+		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize
+				/ sizeof(data[0]);
+		LIBSAKURA_SYMBOL(SimdPacketAVX) upper, lower, data_packet;
+		if (true) { //pack by boundaries
+			const auto lower_bounds_ptr =
+					AssumeAligned(
+							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(lower_bounds));
+			const auto upper_bounds_ptr =
+					AssumeAligned(
+							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(upper_bounds));
 			const auto n = num_bounds / kElementsPerLoop;
 			for (size_t i = 0; i < num_data; ++i) {
 				bool is_in_range = false;
-				const auto data_packed = _mm256_set1_ps(data[i]);
+				data_packet.set1(data[i]);
+//				const auto data_packet = _mm256_set1_ps(data[i]);
 				for (size_t j = 0; j < n; ++j) {
+					upper.raw_float = upper_bounds_ptr[j];
+					lower.raw_float = lower_bounds_ptr[j];
 					// not_in_range = 1 (out of all packed ranges), 0 (in any of packed ranges)
-					const auto not_in_range = _mm256_testz_ps(_mm256_cmp_ps(data_packed, lower_bounds_ptr[j], _CMP_GE_OQ),
-							_mm256_cmp_ps(data_packed, upper_bounds_ptr[j], _CMP_LE_OQ));
-					is_in_range |= (not_in_range==kZeroI);
+					const auto not_in_range =
+							_mm256_testz_ps(
+									LIBSAKURA_SYMBOL(SimdCompare)<
+											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
+											lower, data_packet).raw_float,
+									LIBSAKURA_SYMBOL(SimdCompare)<
+											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
+											data_packet, upper).raw_float);
+					is_in_range |= (not_in_range == kZeroI);
 				}
 				// process remaining elements
 				const auto end = n * kElementsPerLoop;
@@ -86,36 +99,47 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
 				const auto upper_bounds_left = &upper_bounds[end];
 				size_t num_bounds_left = num_bounds - end;
 				for (size_t j = 0; j < num_bounds_left; ++j) {
-					is_in_range |= ((data[i] - lower_bounds_left[j]) * (upper_bounds_left[j] - data[i]) >= kZero);
+					is_in_range |= ((data[i] - lower_bounds_left[j])
+							* (upper_bounds_left[j] - data[i]) >= kZero);
 				}
 				result[i] = is_in_range;
 			}
-		}
-		else {//pack by data
-			const auto data_ptr = AssumeAligned(reinterpret_cast<__m256 const *>(data));
-			const auto result_ptr = AssumeAligned(reinterpret_cast<uint64_t *>(result));
-			constexpr int32_t kZeroMask = 0x80808080;
-			constexpr int32_t kLSBytes = 0x0c080400;
-			const auto idx = _mm256_set_epi32(kZeroMask, kZeroMask, kLSBytes, kZeroMask,
-					kZeroMask, kZeroMask, kZeroMask, kLSBytes);
-			__m128i result128i;
+		} else { //pack by data
+			const auto data_ptr =
+					AssumeAligned(
+							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(data));
+			const auto result_ptr = AssumeAligned(
+					reinterpret_cast<uint64_t *>(result));
 			const auto n = num_data / kElementsPerLoop;
 			STATIC_ASSERT(false==0);
 			const auto truth = _mm_set1_epi8(true);
+			LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
 			for (size_t i = 0; i < n; ++i) {
-				__m256 is_in_range = _mm256_setzero_ps(); // false
+				data_packet.raw_float = data_ptr[i];
+				is_in_range.set1(static_cast<float>(0)); // false
 				for (size_t j = 0; j < kNumBounds; ++j) {
-					const auto lower = _mm256_set1_ps(lower_bounds[j]);
-					const auto upper = _mm256_set1_ps(upper_bounds[j]);
+					lower.set1(lower_bounds[j]);
+					upper.set1(upper_bounds[j]);
 					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
-					is_in_range = _mm256_or_ps(is_in_range,
-							_mm256_and_ps(_mm256_cmp_ps(data_ptr[i], lower, _CMP_GE_OQ),
-									_mm256_cmp_ps(data_ptr[i], upper, _CMP_LE_OQ)));
-
+					is_in_range =
+							LIBSAKURA_SYMBOL(SimdMath)<
+							LIBSAKURA_SYMBOL(SimdArchAVX), float>::Or(
+									is_in_range,
+									LIBSAKURA_SYMBOL(SimdMath)<
+									LIBSAKURA_SYMBOL(SimdArchAVX), float>::And(
+											LIBSAKURA_SYMBOL(SimdCompare)<
+											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
+													lower, data_packet),
+											LIBSAKURA_SYMBOL(SimdCompare)<
+											LIBSAKURA_SYMBOL(SimdArchAVX), float>::LessOrEqual(
+													data_packet, upper)));
 				}
-				auto lsbytes = _mm256_shuffle_epi8(_mm256_castps_si256(is_in_range), idx);
-				result128i = _mm_or_si128(_mm256_castsi256_si128(lsbytes), _mm256_extracti128_si256(lsbytes, 1));
-				result_ptr[i] = _mm_extract_epi64(_mm_and_si128(result128i,truth), 0);
+
+				LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result128i =
+				LIBSAKURA_SYMBOL(SimdConvert)<
+				LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
+				result_ptr[i] = _mm_extract_epi64(
+						_mm_and_si128(result128i.raw_int32, truth), 0);
 			}
 
 			// process remaining elements
@@ -138,26 +162,39 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
 };
 template<size_t kNumBounds>
 struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
-	inline static void process(size_t num_data,
-			int const *data, int const *lower_bounds,
-			int const *upper_bounds,
+	inline static void process(size_t num_data, int const *data,
+			int const *lower_bounds, int const *upper_bounds,
 			bool *result) {
-		constexpr int kZero = 0.0f;
+		constexpr int kZero = 0;
 		constexpr int kZeroI = 0;
 		size_t num_bounds = kNumBounds;
-		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize / sizeof(data[0]);
-		if (true) {//pack by boundaries
-			const auto lower_bounds_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(lower_bounds));
-			const auto upper_bounds_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(upper_bounds));
+		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize
+				/ sizeof(data[0]);
+		LIBSAKURA_SYMBOL(SimdPacketAVX) upper, lower, data_packet;
+		if (true) { //pack by boundaries
+			const auto lower_bounds_ptr =
+					AssumeAligned(
+							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(lower_bounds));
+			const auto upper_bounds_ptr =
+					AssumeAligned(
+							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(upper_bounds));
 			const auto n = num_bounds / kElementsPerLoop;
 			for (size_t i = 0; i < num_data; ++i) {
 				bool is_in_range = false;
-				const auto data_packed = _mm256_set1_epi32(data[i]);
+				data_packet.set1(static_cast<int32_t>(data[i]));
 				for (size_t j = 0; j < n; ++j) {
+					upper.raw_int32 = upper_bounds_ptr[j];
+					lower.raw_int32 = lower_bounds_ptr[j];
 					// not_in_range = 1 (out of all packed ranges), 0 (in any of packed ranges)
-					const auto not_in_range = _mm256_testz_si256(_mm256_or_si256(_mm256_cmpgt_epi32(data_packed, lower_bounds_ptr[j]),_mm256_cmpeq_epi32(data_packed, lower_bounds_ptr[j])),
-							_mm256_or_si256(_mm256_cmpgt_epi32(upper_bounds_ptr[j], data_packed), _mm256_cmpeq_epi32(upper_bounds_ptr[j], data_packed)));
-					is_in_range |= (not_in_range==kZeroI);
+					const auto not_in_range =
+							_mm256_testz_si256(
+									LIBSAKURA_SYMBOL(SimdCompare)<
+									LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::LessOrEqual(
+											lower, data_packet).raw_int32,
+									LIBSAKURA_SYMBOL(SimdCompare)<
+									LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::LessOrEqual(
+											data_packet, upper).raw_int32);
+					is_in_range |= (not_in_range == kZeroI);
 				}
 				// process remaining elements
 				const auto end = n * kElementsPerLoop;
@@ -165,38 +202,49 @@ struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 				const auto upper_bounds_left = &upper_bounds[end];
 				size_t num_bounds_left = num_bounds - end;
 				for (size_t j = 0; j < num_bounds_left; ++j) {
-					is_in_range |= ((data[i] - lower_bounds_left[j]) * (upper_bounds_left[j] - data[i]) >= kZero);
+					is_in_range |= ((data[i] - lower_bounds_left[j])
+							* (upper_bounds_left[j] - data[i]) >= kZero);
 				}
 				result[i] = is_in_range;
 			}
-		}
-		else {//pack by data
-			const auto data_ptr = AssumeAligned(reinterpret_cast<__m256i const *>(data));
-			const auto result_ptr = AssumeAligned(reinterpret_cast<uint64_t *>(result));
-			constexpr int32_t kZeroMask = 0x80808080;
-			constexpr int32_t kLSBytes = 0x0c080400;
-			const auto idx = _mm256_set_epi32(kZeroMask, kZeroMask, kLSBytes, kZeroMask,
-					kZeroMask, kZeroMask, kZeroMask, kLSBytes);
-			__m128i result128i;
+		} else { //pack by data
+			const auto data_ptr =
+					AssumeAligned(
+							reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawInt32 const *>(data));
+			const auto result_ptr = AssumeAligned(
+					reinterpret_cast<uint64_t *>(result));
 			const auto n = num_data / kElementsPerLoop;
 			STATIC_ASSERT(false==0);
+			LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
 			const auto truth = _mm_set1_epi8(true);
 			for (size_t i = 0; i < n; ++i) {
-				__m256i is_in_range = _mm256_setzero_si256(); // false
+				data_packet.raw_int32 = data_ptr[i];
+				is_in_range.set1(static_cast<int>(0)); // false
 				for (size_t j = 0; j < kNumBounds; ++j) {
-					const auto lower = _mm256_set1_epi32(lower_bounds[j]);
-					const auto upper = _mm256_set1_epi32(upper_bounds[j]);
+					lower.set1(static_cast<int32_t>(lower_bounds[j]));
+					upper.set1(static_cast<int32_t>(upper_bounds[j]));
 					//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
-					is_in_range = _mm256_or_si256(is_in_range,
-							_mm256_and_si256(_mm256_or_si256(_mm256_cmpgt_epi32(data_ptr[i], lower),
-									                          _mm256_cmpeq_epi32(data_ptr[i], lower)),
-									          _mm256_or_si256(_mm256_cmpgt_epi32(upper,data_ptr[i]),
-									        		            _mm256_cmpeq_epi32(upper,data_ptr[i]))));
+					is_in_range =
+							LIBSAKURA_SYMBOL(SimdMath)<
+							LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::Or(
+									is_in_range,
+									LIBSAKURA_SYMBOL(SimdMath)<
+									LIBSAKURA_SYMBOL(SimdArchAVX), int32_t>::And(
+											LIBSAKURA_SYMBOL(SimdCompare)<
+											LIBSAKURA_SYMBOL(SimdArchAVX),
+													int32_t>::LessOrEqual(lower,
+													data_packet),
+											LIBSAKURA_SYMBOL(SimdCompare)<
+											LIBSAKURA_SYMBOL(SimdArchAVX),
+													int32_t>::LessOrEqual(
+													data_packet, upper)));
 
 				}
-				auto lsbytes = _mm256_shuffle_epi8(is_in_range, idx);
-				result128i = _mm_or_si128(_mm256_castsi256_si128(lsbytes), _mm256_extracti128_si256(lsbytes, 1));
-				result_ptr[i] = _mm_extract_epi64(_mm_and_si128(result128i,truth), 0);
+				LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result128i =
+				LIBSAKURA_SYMBOL(SimdConvert)<
+				LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
+				result_ptr[i] = _mm_extract_epi64(
+						_mm_and_si128(result128i.raw_int32, truth), 0);
 			}
 
 			// process remaining elements
@@ -261,20 +309,20 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 
 template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesExclusiveVector(size_t num_data,
-			DataType const *data, DataType const *lower_bounds,
-			DataType const *upper_bounds,
-			bool *result) {
-		constexpr DataType kZero = 0;
+		DataType const *data, DataType const *lower_bounds,
+		DataType const *upper_bounds,
+		bool *result) {
+	constexpr DataType kZero = 0;
 
-		for (size_t i = 0; i < num_data; ++i) {
-			bool is_in_range = false;
-			for (size_t j = 0; j < kNumBounds; ++j) {
-				is_in_range |= ((data[i] - lower_bounds[j])
-						* (upper_bounds[j] - data[i]) > kZero);
-			}
-			result[i] = is_in_range;
+	for (size_t i = 0; i < num_data; ++i) {
+		bool is_in_range = false;
+		for (size_t j = 0; j < kNumBounds; ++j) {
+			is_in_range |= ((data[i] - lower_bounds[j])
+					* (upper_bounds[j] - data[i]) > kZero);
 		}
+		result[i] = is_in_range;
 	}
+}
 
 template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
@@ -346,23 +394,23 @@ void SetTrueIfInRangesInclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesInclusiveFunc const funcs[] = {
-			SetTrueIfInRangesInclusiveVector<DataType, 0>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 1>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 2>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 3>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 4>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 5>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 6>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 7>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 8>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 9>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 10>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 11>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 12>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 13>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 14>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 15>::process,
-			SetTrueIfInRangesInclusiveVector<DataType, 16>::process };
+			SetTrueIfInRangesInclusiveScalar<DataType, 0>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 1>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 2>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 3>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 4>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 5>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 6>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 7>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 8>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 9>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 10>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 11>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 12>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 13>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 14>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 15>,
+			SetTrueIfInRangesInclusiveScalar<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
@@ -400,23 +448,23 @@ void SetTrueIfInRangesExclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesExclusiveFunc const funcs[] = {
-			SetTrueIfInRangesExclusiveVector<DataType, 0>,
-			SetTrueIfInRangesExclusiveVector<DataType, 1>,
-			SetTrueIfInRangesExclusiveVector<DataType, 2>,
-			SetTrueIfInRangesExclusiveVector<DataType, 3>,
-			SetTrueIfInRangesExclusiveVector<DataType, 4>,
-			SetTrueIfInRangesExclusiveVector<DataType, 5>,
-			SetTrueIfInRangesExclusiveVector<DataType, 6>,
-			SetTrueIfInRangesExclusiveVector<DataType, 7>,
-			SetTrueIfInRangesExclusiveVector<DataType, 8>,
-			SetTrueIfInRangesExclusiveVector<DataType, 9>,
-			SetTrueIfInRangesExclusiveVector<DataType, 10>,
-			SetTrueIfInRangesExclusiveVector<DataType, 11>,
-			SetTrueIfInRangesExclusiveVector<DataType, 12>,
-			SetTrueIfInRangesExclusiveVector<DataType, 13>,
-			SetTrueIfInRangesExclusiveVector<DataType, 14>,
-			SetTrueIfInRangesExclusiveVector<DataType, 15>,
-			SetTrueIfInRangesExclusiveVector<DataType, 16> };
+			SetTrueIfInRangesExclusiveScalar<DataType, 0>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 1>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 2>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 3>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 4>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 5>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 6>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 7>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 8>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 9>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 10>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 11>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 12>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 13>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 14>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 15>,
+			SetTrueIfInRangesExclusiveScalar<DataType, 16> };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
