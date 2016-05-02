@@ -23,6 +23,7 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
+#include <string>
 
 #include "libsakura/localdef.h"
 #include "libsakura/sakura.h"
@@ -119,6 +120,7 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
 		}
 	}
 };
+#if defined(__AVX2__)
 template<size_t kNumBounds>
 struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 	inline static void process(size_t num_data, int const *data,
@@ -182,6 +184,76 @@ struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 		}
 	}
 };
+#else
+template<size_t kNumBounds>
+struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
+	inline static void process(size_t num_data, int const *data,
+			int const *lower_bounds, int const *upper_bounds,
+			bool *result) {
+		constexpr int kZero = 0;
+		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketSSE)::kSize
+				/ sizeof(data[0]);
+		LIBSAKURA_SYMBOL(SimdPacketSSE) upper, lower, data_packet;
+		//pack by data
+		const auto data_ptr =
+				AssumeAligned(
+						reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketSSE)::RawInt32 const *>(data));
+		/// for SSE
+		const auto result_ptr = AssumeAligned(
+				reinterpret_cast<uint32_t *>(result));
+		///
+		const auto n = num_data / kElementsPerLoop;
+		STATIC_ASSERT(false==0);
+		LIBSAKURA_SYMBOL(SimdPacketSSE) is_in_range;
+		/// for SSE
+		const auto truth = _mm_set1_pi8(true);
+		///
+		for (size_t i = 0; i < n; ++i) {
+			data_packet.raw_int32 = data_ptr[i];
+			is_in_range.set1(static_cast<int>(0)); // false
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				lower.set1(static_cast<int32_t>(lower_bounds[j]));
+				upper.set1(static_cast<int32_t>(upper_bounds[j]));
+				//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+				is_in_range =
+						LIBSAKURA_SYMBOL(SimdMath)<
+						LIBSAKURA_SYMBOL(SimdArchSSE), int32_t>::Or(is_in_range,
+								LIBSAKURA_SYMBOL(SimdMath)<
+								LIBSAKURA_SYMBOL(SimdArchSSE), int32_t>::And(
+										LIBSAKURA_SYMBOL(SimdCompare)<
+										LIBSAKURA_SYMBOL(SimdArchSSE), int32_t>::LessOrEqual(
+												lower, data_packet),
+										LIBSAKURA_SYMBOL(SimdCompare)<
+										LIBSAKURA_SYMBOL(SimdArchSSE), int32_t>::LessOrEqual(
+												data_packet, upper)));
+
+			}
+			/// for SSE
+			LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType result64i =
+			LIBSAKURA_SYMBOL(SimdConvert)<
+			LIBSAKURA_SYMBOL(SimdArchSSE)>::Int32ToLSByte(is_in_range);
+			result_ptr[i] = _mm_cvtsi64_si32(_mm_and_si64(result64i.raw_int64, truth));
+			///
+		}
+
+		// process remaining elements
+		const auto end = n * kElementsPerLoop;
+		data = &data[end];
+		result = &result[end];
+		num_data -= end;
+		uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) >= kZero);
+			}
+			result_alias[i] = is_in_range;
+		}
+	}
+};
+#endif
 #endif
 
 template<typename DataType, size_t kNumBounds>
@@ -311,23 +383,23 @@ void SetTrueIfInRangesInclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesInclusiveFunc const funcs[] = {
-			SetTrueIfInRangesInclusiveScalar<DataType, 0>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 1>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 2>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 3>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 4>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 5>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 6>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 7>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 8>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 9>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 10>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 11>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 12>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 13>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 14>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 15>,
-			SetTrueIfInRangesInclusiveScalar<DataType, 16> };
+			SetTrueIfInRangesInclusiveVector<DataType, 0>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 1>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 2>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 3>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 4>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 5>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 6>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 7>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 8>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 9>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 10>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 11>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 12>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 13>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 14>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 15>::process,
+			SetTrueIfInRangesInclusiveVector<DataType, 16>::process };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
