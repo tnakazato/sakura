@@ -597,6 +597,15 @@ public:
 				(__m128 ) _mm_set_epi64(floats.raw_int64, floats.raw_int64));
 		return result;
 	}
+	static inline typename LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType Int32ToLSByte(
+			LIBSAKURA_SYMBOL(SimdArchSSE)::PacketType ints) {
+		LIBSAKURA_SYMBOL(SimdArchSSE)::PriorArch::PacketType result;
+		constexpr int32_t kZero = 0x80808080;
+		constexpr int32_t kLSBytes = 0x0c080400;
+		result.raw_int64 = _mm_cvtsi64_m64(_mm_extract_epi64(_mm_shuffle_epi8(ints.raw_int32,
+				_mm_set_epi32(kZero, kLSBytes, kZero, kZero)), 1));
+		return result;
+	}
 };
 
 template<>
