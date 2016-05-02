@@ -245,7 +245,8 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 }
 
 template<typename DataType, size_t kNumBounds>
-inline void SetTrueIfInRangesExclusiveVector(size_t num_data,
+struct SetTrueIfInRangesExclusiveVector {
+	inline static void process(size_t num_data,
 		DataType const *data, DataType const *lower_bounds,
 		DataType const *upper_bounds,
 		bool *result) {
@@ -260,6 +261,155 @@ inline void SetTrueIfInRangesExclusiveVector(size_t num_data,
 		result[i] = is_in_range;
 	}
 }
+};
+
+#if defined(__AVX__)
+template<size_t kNumBounds>
+struct SetTrueIfInRangesExclusiveVector<float, kNumBounds> {
+	inline static void process(size_t num_data, float const *data,
+			float const *lower_bounds, float const *upper_bounds,
+			bool *result) {
+		constexpr float kZero = 0.0f;
+		constexpr auto kElementsPerLoop = LIBSAKURA_SYMBOL(SimdPacketAVX)::kSize
+				/ sizeof(data[0]);
+		LIBSAKURA_SYMBOL(SimdPacketAVX) upper, lower, data_packet;
+		//pack by data
+		const auto data_ptr =
+				AssumeAligned(
+						reinterpret_cast<LIBSAKURA_SYMBOL(SimdPacketAVX)::RawFloat const *>(data));
+		const auto result_ptr = AssumeAligned(
+				reinterpret_cast<uint64_t *>(result));
+		const auto n = num_data / kElementsPerLoop;
+		STATIC_ASSERT(false==0);
+		const auto truth = _mm_set1_epi8(true);
+		LIBSAKURA_SYMBOL(SimdPacketAVX) is_in_range;
+		for (size_t i = 0; i < n; ++i) {
+			data_packet.raw_float = data_ptr[i];
+			is_in_range.set1(static_cast<float>(0)); // false
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				lower.set1(lower_bounds[j]);
+				upper.set1(upper_bounds[j]);
+				//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+				is_in_range =
+						LIBSAKURA_SYMBOL(SimdMath)<
+						LIBSAKURA_SYMBOL(SimdArchAVX), float>::Or(is_in_range,
+								LIBSAKURA_SYMBOL(SimdMath)<
+										LIBSAKURA_SYMBOL(SimdArchAVX), float>::And(
+										LIBSAKURA_SYMBOL(SimdCompare)<
+												LIBSAKURA_SYMBOL(SimdArchAVX),
+												float>::LessThan(lower,
+												data_packet),
+										LIBSAKURA_SYMBOL(SimdCompare)<
+												LIBSAKURA_SYMBOL(SimdArchAVX),
+												float>::LessThan(data_packet,
+												upper)));
+			}
+
+			LIBSAKURA_SYMBOL(SimdArchAVX)::PriorArch::PacketType result_prior =
+			LIBSAKURA_SYMBOL(SimdConvert)<
+			LIBSAKURA_SYMBOL(SimdArchAVX)>::Int32ToLSByte(is_in_range);
+			result_ptr[i] = _mm_extract_epi64(
+					_mm_and_si128(result_prior.raw_int32, truth), 0);
+		}
+
+		// process remaining elements
+		const auto end = n * kElementsPerLoop;
+		data = &data[end];
+		result = &result[end];
+		num_data -= end;
+		uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) > kZero);
+			}
+			result_alias[i] = is_in_range;
+		}
+	}
+};
+template<size_t kNumBounds>
+struct SetTrueIfInRangesExclusiveVector<int, kNumBounds> {
+	inline static void process(size_t num_data, int const *data,
+			int const *lower_bounds, int const *upper_bounds,
+			bool *result) {
+		constexpr int kZero = 0;
+#if defined(__AVX2__)
+		typedef LIBSAKURA_SYMBOL(SimdPacketAVX) MySimdPacket;
+		typedef LIBSAKURA_SYMBOL(SimdArchAVX) MySimdArch;
+#else
+		typedef LIBSAKURA_SYMBOL(SimdPacketSSE) MySimdPacket;
+		typedef LIBSAKURA_SYMBOL(SimdArchSSE) MySimdArch;
+#endif
+		constexpr auto kElementsPerLoop = MySimdPacket::kSize / sizeof(data[0]);
+		MySimdPacket upper, lower, data_packet;
+		//pack by data
+		const auto data_ptr = AssumeAligned(
+				reinterpret_cast<MySimdPacket::RawInt32 const *>(data));
+#if defined(__AVX2__)
+		const auto result_ptr = AssumeAligned(
+				reinterpret_cast<uint64_t *>(result));
+#else
+		const auto result_ptr = AssumeAligned(
+				reinterpret_cast<uint32_t *>(result));
+#endif
+		const auto n = num_data / kElementsPerLoop;
+		STATIC_ASSERT(false==0);
+		MySimdPacket is_in_range;
+#if defined(__AVX2__)
+		const auto truth = _mm_set1_epi8(true);
+#else
+		const auto truth = _mm_set1_pi8(true);
+#endif
+		for (size_t i = 0; i < n; ++i) {
+			data_packet.raw_int32 = data_ptr[i];
+			is_in_range.set1(static_cast<int>(0)); // false
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				lower.set1(static_cast<int32_t>(lower_bounds[j]));
+				upper.set1(static_cast<int32_t>(upper_bounds[j]));
+				//Returns 0xFFFFFFFF if data is in one of ranges, else 0x00000000
+				is_in_range =
+				LIBSAKURA_SYMBOL(SimdMath)<MySimdArch, int32_t>::Or(is_in_range,
+						LIBSAKURA_SYMBOL(SimdMath)<MySimdArch, int32_t>::And(
+								LIBSAKURA_SYMBOL(SimdCompare)<MySimdArch,
+										int32_t>::LessThan(lower,
+										data_packet),
+								LIBSAKURA_SYMBOL(SimdCompare)<MySimdArch,
+										int32_t>::LessThan(data_packet,
+										upper)));
+
+			}
+			MySimdArch::PriorArch::PacketType result_prior =
+					LIBSAKURA_SYMBOL(SimdConvert)<MySimdArch>::Int32ToLSByte(
+							is_in_range);
+#if defined(__AVX2__)
+			result_ptr[i] = _mm_extract_epi64(
+					_mm_and_si128(result_prior.raw_int32, truth), 0);
+#else
+			result_ptr[i] = _mm_cvtsi64_si32(
+					_mm_and_si64(result_prior.raw_int64, truth));
+#endif
+		}
+
+		// process remaining elements
+		const auto end = n * kElementsPerLoop;
+		data = &data[end];
+		result = &result[end];
+		num_data -= end;
+		uint8_t *result_alias = reinterpret_cast<uint8_t *>(result);
+
+		for (size_t i = 0; i < num_data; ++i) {
+			bool is_in_range = false;
+			for (size_t j = 0; j < kNumBounds; ++j) {
+				is_in_range |= ((data[i] - lower_bounds[j])
+						* (upper_bounds[j] - data[i]) > kZero);
+			}
+			result_alias[i] = is_in_range;
+		}
+	}
+};
+#endif
 
 template<typename DataType, size_t kNumBounds>
 inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
@@ -385,23 +535,23 @@ void SetTrueIfInRangesExclusive(size_t num_data,
 			bool *result);
 	// Use Scalar version for now
 	static SetTrueIfInRangesExclusiveFunc const funcs[] = {
-			SetTrueIfInRangesExclusiveScalar<DataType, 0>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 1>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 2>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 3>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 4>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 5>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 6>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 7>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 8>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 9>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 10>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 11>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 12>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 13>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 14>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 15>,
-			SetTrueIfInRangesExclusiveScalar<DataType, 16> };
+			SetTrueIfInRangesExclusiveVector<DataType, 0>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 1>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 2>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 3>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 4>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 5>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 6>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 7>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 8>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 9>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 10>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 11>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 12>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 13>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 14>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 15>::process,
+			SetTrueIfInRangesExclusiveVector<DataType, 16>::process };
 
 	// So far, only unit8_t version is vectorized
 	//std::cout << "Invoking SetTrueIfInRangesInclusiveDefault()" << std::endl;
