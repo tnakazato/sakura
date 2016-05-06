@@ -891,13 +891,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		const auto result_ptr = AssumeAligned(reinterpret_cast<__m256i *>(result));
 		const auto zero = _mm256_set1_epi8(kZero);
 		const auto one = _mm256_set1_epi8(1);
-//		const auto one = _mm256_set1_epi8(0x01);
 		const auto n = num_data / kElementsPerLoop;
 		for (size_t i = 0; i < n; ++i) {
 			//Returns 0xFF if data==zero, else 0x00
 			auto mask = _mm256_cmpeq_epi8(data_ptr[i], zero);
 			result_ptr[i] = _mm256_add_epi8(mask, one);
-//			result_ptr[i] = _mm256_andnot_si256(mask, one);
 		}
 		// process remaining elements
 		const auto end = n * kElementsPerLoop;
