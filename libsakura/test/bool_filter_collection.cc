@@ -34,7 +34,7 @@
 #include "gtest/gtest.h"
 
 /* the number of elements in input/output array to test */
-#define NUM_IN 8
+#define NUM_IN 9
 #define NUM_RANGE 2 // DO NOT MODIFY THIS!
 #define MAX_NUM_RANGE 17 // DO NOT MODIFY THIS!
 #define NUM_IN_LONG (1 << 18) //2**18
@@ -47,15 +47,15 @@ using namespace std;
 /*
  * Test of generating a boolean filter using ranges
  * Inputs (float):
- * - data = [0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5]
+ * - data = [0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5, 0.]
  * - ranges: lower = [-0.75, 0.5], upper = [-0.25, 0.75]
  * Inputs (int):
- * - data = [0, -5, -10, -5, 0, 5, 10, 5]
+ * - data = [0, -5, -10, -5, 0, 5, 10, 5, 0]
  * - ranges: lower = [-7, 5], upper = [-3, 7]
  * RESULT:
- * - RangesInclusive  = [F, T, F, T, F, T, T, T]
- * - RangesExclusive = [F, T, F, T, F, F, F, F]
- * results should be [F, F, F, F, F, F, F, F] if lower or upper is empty
+ * - RangesInclusive  = [F, T, F, T, F, T, T, T, F]
+ * - RangesExclusive = [F, T, F, T, F, F, F, F, F]
+ * results should be [F, F, F, F, F, F, F, F, F] if lower or upper is empty
  */
 // Generalize function type for boundary tests
 template<typename DataType>
@@ -82,45 +82,45 @@ struct RangesTestComponent {
 RangesTestComponent RangesTestCase[] { { "Inclusive Ranges", { LIBSAKURA_SYMBOL(
 		SetTrueIfInRangesInclusiveFloat) }, { LIBSAKURA_SYMBOL(
 		SetTrueIfInRangesInclusiveInt) }, { { NUM_RANGE, { false, true, false,
-true, false, true, false, true } }, { 0, { false, false, false, false,
-false, false, false, false } }, { 1, { false, true, false,
+true, false, true, false, true, false } }, { 0, { false, false, false, false,
+false, false, false, false, false } }, { 1, { false, true, false,
 true,
-false, false, false, false } }, { 3, { false, true, false,
-true, false, true, false, true } }, { 4, { false, true, false,
-true, false, true, false, true } }, { 5, { false, true, false,
-true, false, true, false, true } }, { 6, { false, true, false,
-true, false, true, false, true } }, { 7, { false, true, false,
-true, false, true, false, true } }, { 8, { false, true, false,
-true, false, true, false, true } }, { 9, { false, true, false,
-true, false, true, false, true } }, { 10, { false, true, false,
-true, false, true, false, true } }, { 11, { false, true, false,
-true, false, true, false, true } }, { 12, { false, true, false,
-true, false, true, false, true } }, { 13, { false, true, false,
-true, false, true, false, true } }, { 14, { false, true, false,
-true, false, true, false, true } }, { 15, { false, true, false,
-true, false, true, false, true } }, { 16, { false, true, false,
-true, false, true, false, true } }, { 17, { false, true, false,
-true, false, true, false, true } } } }, { "Exclusive Ranges", {
+false, false, false, false, false } }, { 3, { false, true, false,
+true, false, true, false, true, false } }, { 4, { false, true, false,
+true, false, true, false, true, false } }, { 5, { false, true, false,
+true, false, true, false, true, false } }, { 6, { false, true, false,
+true, false, true, false, true, false } }, { 7, { false, true, false,
+true, false, true, false, true, false } }, { 8, { false, true, false,
+true, false, true, false, true, false } }, { 9, { false, true, false,
+true, false, true, false, true, false } }, { 10, { false, true, false,
+true, false, true, false, true, false } }, { 11, { false, true, false,
+true, false, true, false, true, false } }, { 12, { false, true, false,
+true, false, true, false, true, false } }, { 13, { false, true, false,
+true, false, true, false, true, false } }, { 14, { false, true, false,
+true, false, true, false, true, false } }, { 15, { false, true, false,
+true, false, true, false, true, false } }, { 16, { false, true, false,
+true, false, true, false, true, false } }, { 17, { false, true, false,
+true, false, true, false, true, false } } } }, { "Exclusive Ranges", {
 		LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat) }, { LIBSAKURA_SYMBOL(
 		SetTrueIfInRangesExclusiveInt) }, { { NUM_RANGE, { false, true, false,
-true, false, false, false, false } }, { 0, { false, false, false, false,
-false, false, false, false } }, { 1, { false, true, false, true,
-false, false, false, false } }, { 3, { false, true, false,
-true, false, false, false, false } }, { 4, { false, true, false,
-true, false, false, false, false } }, { 5, { false, true, false,
-true, false, false, false, false } }, { 6, { false, true, false,
-true, false, false, false, false } }, { 7, { false, true, false,
-true, false, false, false, false } }, { 8, { false, true, false,
-true, false, false, false, false } }, { 9, { false, true, false,
-true, false, false, false, false } }, { 10, { false, true, false,
-true, false, false, false, false } }, { 11, { false, true, false,
-true, false, false, false, false } }, { 12, { false, true, false,
-true, false, false, false, false } }, { 13, { false, true, false,
-true, false, false, false, false } }, { 14, { false, true, false,
-true, false, false, false, false } }, { 15, { false, true, false,
-true, false, false, false, false } }, { 16, { false, true, false,
-true, false, false, false, false } }, { 17, { false, true, false,
-true, false, false, false, false } } } }, };
+true, false, false, false, false, false } }, { 0, { false, false, false, false,
+false, false, false, false, false } }, { 1, { false, true, false, true,
+false, false, false, false, false } }, { 3, { false, true, false,
+true, false, false, false, false, false } }, { 4, { false, true, false,
+true, false, false, false, false, false } }, { 5, { false, true, false,
+true, false, false, false, false, false } }, { 6, { false, true, false,
+true, false, false, false, false, false } }, { 7, { false, true, false,
+true, false, false, false, false, false } }, { 8, { false, true, false,
+true, false, false, false, false, false } }, { 9, { false, true, false,
+true, false, false, false, false, false } }, { 10, { false, true, false,
+true, false, false, false, false, false } }, { 11, { false, true, false,
+true, false, false, false, false, false } }, { 12, { false, true, false,
+true, false, false, false, false, false } }, { 13, { false, true, false,
+true, false, false, false, false, false } }, { 14, { false, true, false,
+true, false, false, false, false, false } }, { 15, { false, true, false,
+true, false, false, false, false, false } }, { 16, { false, true, false,
+true, false, false, false, false, false } }, { 17, { false, true, false,
+true, false, false, false, false, false } } } }, };
 
 /*
  * Helper functions to select proper ranges_func_ptr_t from
@@ -160,14 +160,14 @@ RangesTestHelper<int>::RangesTestKit RangesTestHelper<int>::GetItem(
 /*
  * Test of generating a boolean filter using a threshold value
  * Inputs:
- * -  data = [0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5] (float)
- *        or [0, -5, -10, -5, 0, 5, 10, 5] (int)
+ * -  data = [0., -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5, 0.] (float)
+ *        or [0, -5, -10, -5, 0, 5, 10, 5, 0] (int)
  * - threshold_ = 0
  * RESULT:
- * - GreaterThan         = [F, F, F, F, F, T, T, T]
- * - GreaterThanOrEquals = [T, F, F, F, T, T, T, T]
- * - LessThan            = [F, T, T, T, F, F, F, F]
- * - LessThanOrEquals    = [T, T, T, T, T, F, F, F]
+ * - GreaterThan         = [F, F, F, F, F, T, T, T, F]
+ * - GreaterThanOrEquals = [T, F, F, F, T, T, T, T, T]
+ * - LessThan            = [F, T, T, T, F, F, F, F, F]
+ * - LessThanOrEquals    = [T, T, T, T, T, F, F, F, T]
  */
 // Generalize function type for boundary tests
 template<typename DataType>
@@ -186,17 +186,17 @@ struct BoundaryTestComponent {
 BoundaryTestComponent BoundaryTestCase[] { { "GreaterThan", { LIBSAKURA_SYMBOL(
 		SetTrueIfGreaterThanFloat) }, { LIBSAKURA_SYMBOL(
 		SetTrueIfGreaterThanInt) }, { false, false, false, false, false, true,
-true, true } }, { "GreaterThanOrEquals", { LIBSAKURA_SYMBOL(
+true, true, false } }, { "GreaterThanOrEquals", { LIBSAKURA_SYMBOL(
 		SetTrueIfGreaterThanOrEqualsFloat) }, { LIBSAKURA_SYMBOL(
 		SetTrueIfGreaterThanOrEqualsInt) }, { true, false, false, false, true,
-true, true, true } }, { "LessThan",
+true, true, true, true } }, { "LessThan",
 		{ LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat) }, { LIBSAKURA_SYMBOL(
 				SetTrueIfLessThanInt) }, {
-		false, true, true, true, false, false, false, false } }, {
+		false, true, true, true, false, false, false, false, false } }, {
 		"LessThanOrEquals",
 		{ LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat) }, {
 				LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsInt) }, { true, true,
-		true, true, true, false, false, false } } };
+		true, true, true, false, false, false, true } } };
 
 /*
  * Helper functions to select proper boundary_func_ptr_t from
@@ -325,7 +325,7 @@ protected:
 	 * Actual test definitions
 	 */
 	void RunRangesVariousLengthTest() {
-		size_t const array_length[] = { NUM_IN, 11, 0 };
+		size_t const array_length[] = { NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
@@ -444,7 +444,7 @@ protected:
 	}
 
 	void RunBoundaryVariousLengthTest() {
-		size_t const array_length[] = { NUM_IN, 11, 0 };
+		size_t const array_length[] = { NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
@@ -654,7 +654,7 @@ protected:
 			EXPECT_EQ(return_value, status);
 			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
 				auto *answer = test_components[iop].answer; //std::get<2>(kit);
-				size_t const num_answer = ELEMENTSOF(std::get<2>(kit));
+				size_t const num_answer = ELEMENTSOF(test_components[iop].answer);
 //				PrintArray("answer", num_answer, answer);
 //				PrintArray("kit answer", num_answer, std::get<2>(kit));
 				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
@@ -714,7 +714,7 @@ class BoolFilterFloat: public BoolFilter<float> {
 template<>
 float BoolFilter<float>::threshold_ = 0.0;
 template<>
-float BoolFilter<float>::data_[] = { 0.0, -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5 };
+float BoolFilter<float>::data_[] = { 0.0, -0.5, -1.0, -0.5, 0., 0.5, 1.0, 0.5, 0.0 };
 template<>
 float BoolFilter<float>::lower_[] = { -0.75, 0.5 };
 template<>
@@ -733,7 +733,7 @@ class BoolFilterInt: public BoolFilter<int> {
 template<>
 int BoolFilter<int>::threshold_ = 0;
 template<>
-int BoolFilter<int>::data_[] = { 0, -5, -10, -5, 0, 5, 10, 5 };
+int BoolFilter<int>::data_[] = { 0, -5, -10, -5, 0, 5, 10, 5, 0 };
 template<>
 int BoolFilter<int>::lower_[] = { -7, 5 };
 template<>
@@ -773,7 +773,7 @@ protected:
 	}
 
 	void RunVariousLengthTest() {
-		size_t const array_length[] = { NUM_IN, 11, 0 };
+		size_t const array_length[] = { NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
@@ -912,7 +912,7 @@ protected:
 			EXPECT_EQ(return_value, status);
 			if (status == LIBSAKURA_SYMBOL(Status_kOK)) {
 				auto *answer = test_kit.answer;
-				size_t const num_answer = ELEMENTSOF(answer);
+				size_t const num_answer = ELEMENTSOF(test_kit.answer);
 				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 				for (size_t i = 0; i < num_data; ++i) {
 					ASSERT_EQ(answer[i % num_answer], result[i]);
@@ -942,34 +942,34 @@ protected:
 /*
  * Test cases of a float array
  * NanOrInf
- * - INPUT: [ 0, inf, -1, -0.5, -inf, nan, 1, 0.5, ... repeated ... ]
- * - RESULT: [T, F, T, T, F, F, T, T, ... repeated ... ]
+ * - INPUT: [ 0, inf, -1, -0.5, -inf, nan, 1, 0.5, 0, ... repeated ... ]
+ * - RESULT: [T, F, T, T, F, F, T, T, T, ... repeated ... ]
  */
 class BoolFilterSimpleFloat: public BoolFilterSimple<float> {
 };
 template<>
 SimpleTestComponent<float> BoolFilterSimple<float>::test_components[] = { {
 		"NanOrInf", LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat), { 0.0, POS_INF,
-				-1.0, -0.5, NEG_INF, NOT_A_NUM, 1.0, 0.5 }, { true, false, true,
-		true, false, false, true, true } } };
+				-1.0, -0.5, NEG_INF, NOT_A_NUM, 1.0, 0.5, 0.0 }, { true, false, true,
+		true, false, false, true, true, true } } };
 
 /*
  * Test cases of an uint8_t array
  * Uint8ToBool
- * - INPUT: [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, ... repeated ... ]
- * - RESULT: [F, T, T, T, T, T, T, T, ... repeated ... ]
+ * - INPUT: [00000000, 00000001, 00000010, 00000100, 00001000, 00010000, 00100000, 01000000, 10000000, ... repeated ... ]
+ * - RESULT: [F, T, T, T, T, T, T, T, F, ... repeated ... ]
  */
 class BoolFilterSimpleUint8: public BoolFilterSimple<uint8_t> {
 };
 template<>
 SimpleTestComponent<uint8_t> BoolFilterSimple<uint8_t>::test_components[] = { {
 		"Uint8ToBool", LIBSAKURA_SYMBOL(Uint8ToBool), { 0, 1, 2, 4, 8, 16, 32,
-				64 }, { false, true, true, true, true, true, true, true } } };
+				64, 128 }, { false, true, true, true, true, true, true, true, true } } };
 
 /*
  * Test cases of an uint32_t array
  * Uint32ToBool
- * - INPUT: [0...000, 0...001, 0...010, 0...01000, (1<<11), (1<<16), (1<<24), (1<<30), ... repeated ... ]
+ * - INPUT: [0...000, 0...001, 0...010, 0...01000, (1<<7), (1<<11), (1<<16), (1<<24), (1<<30), ... repeated ... ]
  * - RESULT: [F, T, T, T, T, T, T, T, ... repeated ... ]
  */
 class BoolFilterSimpleUint32: public BoolFilterSimple<uint32_t> {
@@ -977,23 +977,23 @@ class BoolFilterSimpleUint32: public BoolFilterSimple<uint32_t> {
 template<>
 SimpleTestComponent<uint32_t> BoolFilterSimple<uint32_t>::test_components[] = {
 		{ "Uint32ToBool", LIBSAKURA_SYMBOL(Uint32ToBool), { 0, 1, (1 << 1), (1
-				<< 3), (1 << 11), (1 << 16), (1 << 24), (1 << 30) }, { false,
+				<< 3), (1 << 7), (1 << 11), (1 << 16), (1 << 24), (1 << 30) }, { false,
 		true, true, true, true, true, true,
-		true } } };
+		true, true } } };
 
 /*
  * Test cases of a bool array
  * InvertBool
- * - INPUT: [F, T, F, F, T, T, F, F, ... repeated ... ]
- * - RESULT: [T, F, T, T, F, F, T, T, ... repeated ... ]
+ * - INPUT: [F, T, F, F, T, T, F, F, T, ... repeated ... ]
+ * - RESULT: [T, F, T, T, F, F, T, T, F, ... repeated ... ]
  */
 class BoolFilterSimpleBool: public BoolFilterSimple<bool> {
 };
 template<>
 SimpleTestComponent<bool> BoolFilterSimple<bool>::test_components[] = { {
 		"InvertBool", LIBSAKURA_SYMBOL(InvertBool), { false, true, false, false,
-		true, true, false, false }, { true, false, true, true, false,
-		false, true, true } } };
+		true, true, false, false, true }, { true, false, true, true, false,
+		false, true, true, false } } };
 // Test in-place (&out == &in) using an array of length 10
 template<>
 void BoolFilterSimple<bool>::RunInPlaceTests() {
