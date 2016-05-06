@@ -123,26 +123,6 @@ struct SetTrueIfInRangesInclusiveVector<float, kNumBounds> {
 	}
 };
 
-template<>
-struct SetTrueIfInRangesInclusiveVector<float, 8> {
-	inline static void process(size_t num_data, float const *data,
-			float const *lower_bounds, float const *upper_bounds,
-			bool *result) {
-		//pack by range
-		const __m256 lower = _mm256_load_ps(lower_bounds);
-		const __m256 upper = _mm256_load_ps(upper_bounds);
-		STATIC_ASSERT(false==0);
-		constexpr char mask = 1;
-		for (size_t i = 0; i < num_data; ++i) {
-			__m256 data_packet = _mm256_set1_ps(data[i]);
-			char out_of_range = _mm256_testz_ps(
-					_mm256_cmp_ps(lower, data_packet, _CMP_NGT_UQ),
-					_mm256_cmp_ps(data_packet, upper, _CMP_NGT_UQ));
-			result[i] = static_cast<bool>(out_of_range ^ mask);
-		}
-	}
-};
-
 template<size_t kNumBounds>
 struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 	inline static void process(size_t num_data, int const *data,
