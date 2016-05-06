@@ -325,7 +325,7 @@ protected:
 	 * Actual test definitions
 	 */
 	void RunRangesVariousLengthTest() {
-		size_t const array_length[] = { NUM_IN, 11, 16, 0 };
+		size_t const array_length[] = { 5, NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
@@ -444,7 +444,7 @@ protected:
 	}
 
 	void RunBoundaryVariousLengthTest() {
-		size_t const array_length[] = { NUM_IN, 11, 16, 0 };
+		size_t const array_length[] = { 5, NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
@@ -773,7 +773,7 @@ protected:
 	}
 
 	void RunVariousLengthTest() {
-		size_t const array_length[] = { NUM_IN, 11, 16, 0 };
+		size_t const array_length[] = { 5, NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
