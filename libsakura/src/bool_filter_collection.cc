@@ -204,26 +204,6 @@ struct SetTrueIfInRangesInclusiveVector<int, kNumBounds> {
 };
 #endif
 
-template<typename DataType, size_t kNumBounds>
-inline void SetTrueIfInRangesInclusiveScalar(size_t num_data,
-		DataType const *data, DataType const *lower_bounds,
-		DataType const *upper_bounds,
-		bool *result) {
-	constexpr DataType kZero = 0;
-
-	for (size_t i = 0; i < num_data; ++i) {
-		bool is_in_range = false;
-		for (size_t j = 0; j < kNumBounds; ++j) {
-			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
-					>= kZero)) {
-				is_in_range = true;
-				break;
-			}
-		}
-		result[i] = is_in_range;
-	}
-}
-
 template<typename DataType>
 inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
@@ -233,9 +213,7 @@ inline void SetTrueIfInRangesInclusiveGeneric(size_t num_data,
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
-			DataType lower_value = lower_bounds[j];
-			DataType upper_value = upper_bounds[j];
-			if (((data[i] - lower_value) * (upper_value - data[i]) >= kZero)) {
+			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i]) >= kZero)) {
 				is_in_range = true;
 				break;
 			}
@@ -411,26 +389,6 @@ struct SetTrueIfInRangesExclusiveVector<int, kNumBounds> {
 };
 #endif
 
-template<typename DataType, size_t kNumBounds>
-inline void SetTrueIfInRangesExclusiveScalar(size_t num_data,
-		DataType const *data, DataType const *lower_bounds,
-		DataType const *upper_bounds,
-		bool *result) {
-	constexpr DataType kZero = 0;
-
-	for (size_t i = 0; i < num_data; ++i) {
-		bool is_in_range = false;
-		for (size_t j = 0; j < kNumBounds; ++j) {
-			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i])
-					> kZero)) {
-				is_in_range = true;
-				break;
-			}
-		}
-		result[i] = is_in_range;
-	}
-}
-
 template<typename DataType>
 inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 		DataType const *data, size_t num_condition,
@@ -440,9 +398,7 @@ inline void SetTrueIfInRangesExclusiveGeneric(size_t num_data,
 	for (size_t i = 0; i < num_data; ++i) {
 		bool is_in_range = false;
 		for (size_t j = 0; j < num_condition; ++j) {
-			DataType lower_value = lower_bounds[j];
-			DataType upper_value = upper_bounds[j];
-			if (((data[i] - lower_value) * (upper_value - data[i]) > kZero)) {
+			if (((data[i] - lower_bounds[j]) * (upper_bounds[j] - data[i]) > kZero)) {
 				is_in_range = true;
 				break;
 			}
