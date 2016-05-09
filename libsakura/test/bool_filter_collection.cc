@@ -327,7 +327,7 @@ protected:
 	void RunRangesVariousLengthTest() {
 		size_t const array_length[] = { 5, NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
-		size_t const num_max(11);
+		size_t const num_max(16);
 		//num_max = max(array_length);
 		SIMD_ALIGN
 		DataType data[num_max];
@@ -446,7 +446,7 @@ protected:
 	void RunBoundaryVariousLengthTest() {
 		size_t const array_length[] = { 5, NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
-		size_t const num_max(11);
+		size_t const num_max(16);
 		//num_max = max(array_length);
 		SIMD_ALIGN
 		DataType data[num_max];
@@ -775,7 +775,7 @@ protected:
 	void RunVariousLengthTest() {
 		size_t const array_length[] = { 5, NUM_IN, 11, 16, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
-		size_t const num_max(11);
+		size_t const num_max(16);
 		//num_max = max(array_length);
 		SIMD_ALIGN
 		DataType data[num_max];
