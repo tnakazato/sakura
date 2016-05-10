@@ -3,20 +3,20 @@
  * Copyright (C) 2013-2016
  * National Astronomical Observatory of Japan
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
- * 
+ *
  * This file is part of Sakura.
- * 
- * Sakura is free software: you can redistribute it and/or modify it under 
- * the terms of the GNU Lesser General Public License as published by the 
- * Free Software Foundation, either version 3 of the License, or (at your 
+ *
+ * Sakura is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
- * Sakura is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public 
+ *
+ * Sakura is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
  * License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License 
+ *
+ * You should have received a copy of the GNU Lesser General Public License
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
  */
@@ -56,8 +56,8 @@
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
-	bool use_fft;
-	size_t num_data;
+//	bool use_fft;
+//	size_t num_data;
 	size_t kernel_width;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
@@ -359,26 +359,28 @@ struct ReferenceData {
 template<typename Kernel>
 struct ConvolveTestComponent {
 	string name;
-	Kernel kernel;
+	Kernel kernel;bool use_fft;
 	size_t num_data;
 	SpikeType data_type;
 	MaskType mask_type;
 	vector<ReferenceData<float>> data_ref;
-	vector<ReferenceData<bool>> mask_ref;
+	vector<ReferenceData<float>> weight_ref;
 
-	ConvolveTestComponent(string in_name, Kernel in_kernel, size_t in_num_data,
-			SpikeType in_dtype, MaskType in_mtype,
+	ConvolveTestComponent(string in_name, Kernel in_kernel, bool use_fft,
+			size_t in_num_data, SpikeType in_dtype, MaskType in_mtype,
 			initializer_list<ReferenceData<float>> data,
-			initializer_list<ReferenceData<bool>> mask) :
-			name(in_name), num_data(in_num_data), data_type(in_dtype), mask_type(
-					in_mtype), data_ref(data), mask_ref(mask) {
+			initializer_list<ReferenceData<float>> weight) :
+			name(in_name), use_fft(use_fft), num_data(in_num_data), data_type(
+					in_dtype), mask_type(in_mtype), data_ref(data), weight_ref(
+					weight) {
 		kernel = in_kernel;
 	}
 };
 
 struct ConvolveGaussKernel {
 	float kernel_width;
-	size_t num_kernel;bool use_fft;
+	size_t num_kernel;
+	//bool use_fft;
 	void generate(float kernel[/*num_kernel*/]) {
 		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 				kernel_width, num_kernel, kernel);
@@ -388,7 +390,8 @@ struct ConvolveGaussKernel {
 
 struct ConvolveRightAngledTriangleKernel {
 	float kernel_width;
-	size_t num_kernel;bool use_fft;
+	size_t num_kernel;
+	//bool use_fft;
 	void generate(float kernel[/*num_kernel*/]) {
 		float sum = 0.0;
 		size_t const start = num_kernel / 2 - kernel_width / 2;
@@ -461,7 +464,7 @@ protected:
 		SIMD_ALIGN
 		bool input_mask[ELEMENTSOF(input_data)];
 		SIMD_ALIGN
-		bool output_mask[ELEMENTSOF(input_data)];
+		float output_weight[ELEMENTSOF(input_data)];
 		InitializeDataAndMask(input_spike_type, MaskType_ktrue, input_data_size,
 				input_data, input_mask);
 		double start = sakura_GetCurrentTime();
@@ -470,15 +473,20 @@ protected:
 //		status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(kernel_width,
 //				num_kernel, kernel);
 		status = Kernel::Generate(num_kernel, kernel);
-		ASSERT_EQ(status, LIBSAKURA_SYMBOL(Status_kOK));
-		status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, num_kernel,
-				kernel, use_fft, &context);
-		ASSERT_EQ(expected_status, status);
+//		ASSERT_EQ(status, LIBSAKURA_SYMBOL(Status_kOK));
+		ASSERT_EQ(status, expected_status);
+		if (use_fft) {
+			status =
+			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
+					kernel, &context);
+			ASSERT_EQ(expected_status, status);
+		}
 		double end = sakura_GetCurrentTime();
-		if (align_check) {
-			ASSERT_TRUE(sakura_IsAligned(context->real_array))<< "real_array is not aligned";
-			ASSERT_TRUE(sakura_IsAligned(context->real_kernel_array))<< "real_kernel_array is not aligned";
+		if (use_fft) {
+			if (align_check) {
+				ASSERT_TRUE(sakura_IsAligned(context->real_array))<< "real_array is not aligned";
+				ASSERT_TRUE(sakura_IsAligned(context->real_kernel_array))<< "real_kernel_array is not aligned";
+			}
 		}
 		size_t bad_num_data = num_data;
 		if (use_dummy_num_data) {
@@ -490,8 +498,15 @@ protected:
 		double start_time = sakura_GetCurrentTime();
 		for (size_t i = 0; i < loop_max && expected_status == sakura_Status_kOK;
 				++i) {
-			status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFloat)(context,
-					num_data, input_data, input_mask, output_data, output_mask);
+			if (use_fft) {
+				status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context,
+						num_data, input_data, output_data);
+			} else {
+				status_Convolve = LIBSAKURA_SYMBOL(Convolve1DFloat)(num_kernel,
+						kernel, num_data, input_data, input_mask, output_data,
+						output_weight);
+
+			}
 			ASSERT_EQ(expected_status, status_Convolve);
 		}
 		double end_time = sakura_GetCurrentTime();
@@ -505,9 +520,11 @@ protected:
 			}
 		}
 		verbose = false;
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
-		ASSERT_EQ(expected_status, status_Destroy);
+		if (use_fft) {
+			LIBSAKURA_SYMBOL(Status) status_Destroy =
+			LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
+			ASSERT_EQ(expected_status, status_Destroy);
+		}
 		if (loop_max > 1 && expected_status == sakura_Status_kOK) {
 			std::cout << "use_fft : " << use_fft << std::endl;
 			std::cout << "create elapsed time : " << end - start << "sec\n";
@@ -536,12 +553,12 @@ protected:
 			SIMD_ALIGN float input_data[num_data];
 			SIMD_ALIGN float output_data[ELEMENTSOF(input_data)];
 			SIMD_ALIGN bool input_mask[ELEMENTSOF(input_data)];
-			SIMD_ALIGN bool output_mask[ELEMENTSOF(input_data)];
-			RunConvolutionTest(test_component.kernel, test_component.data_type,
-					test_component.mask_type, test_component.num_data,
-					input_data, input_mask, output_data, output_mask,
-					LIBSAKURA_SYMBOL(Status_kOK), 1, test_component.data_ref,
-					test_component.mask_ref);
+			SIMD_ALIGN float output_weight[ELEMENTSOF(input_data)];
+			RunConvolutionTest(test_component.kernel, test_component.use_fft,
+					test_component.data_type, test_component.mask_type,
+					test_component.num_data, input_data, input_mask,
+					output_data, output_weight, LIBSAKURA_SYMBOL(Status_kOK), 1,
+					test_component.data_ref, test_component.weight_ref);
 		}
 	}
 
@@ -549,24 +566,26 @@ protected:
 	 * Run sakura_Convolve1DFloat and compare output data and mask with references.
 	 */
 	template<typename ConvolveKernel>
-	void RunConvolutionTest(ConvolveKernel kernel_param,
+	void RunConvolutionTest(ConvolveKernel kernel_param, bool use_fft,
 			SpikeType const spike_type, MaskType const mask_type,
 			size_t const num_data, float *input_data, bool *input_mask,
-			float *output_data, bool *output_mask,
+			float *output_data, float *output_weight,
 			LIBSAKURA_SYMBOL(Status) const convolution_status,
 			size_t const num_repeat = 1,
 			vector<ReferenceData<float>> const data_ref = { },
-			vector<ReferenceData<bool>> const mask_ref = { }) {
+			vector<ReferenceData<float>> const weight_ref = { }) {
 		// create kernel array
 		size_t const num_kernel = kernel_param.num_kernel;
 		SIMD_ALIGN float kernel[num_kernel];
 		kernel_param.generate(kernel);
-		// create context
+		// create context if FFT
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, num_kernel,
-				kernel, kernel_param.use_fft, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		if (use_fft) {
+			LIBSAKURA_SYMBOL(Status) status =
+			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
+					kernel, &context);
+			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		}
 		// initialize data and mask
 		InitializeDataAndMask(spike_type, mask_type, num_data, input_data,
 				input_mask);
@@ -578,8 +597,14 @@ protected:
 		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		LIBSAKURA_SYMBOL(Status) exec_status;
 		for (size_t i = 0; i < num_repeat; ++i) {
-			exec_status = LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data,
-					input_data, input_mask, output_data, output_mask);
+			if (use_fft) {
+				exec_status = LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context,
+						num_data, input_data, output_data);
+			} else {
+				exec_status = LIBSAKURA_SYMBOL(Convolve1DFloat)(num_kernel,
+						kernel, num_data, input_data, input_mask, output_data,
+						output_weight);
+			}
 		}
 		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
 		if (num_repeat > 1) {
@@ -587,8 +612,11 @@ protected:
 		}
 		ASSERT_EQ(convolution_status, exec_status);
 		// destroy context
-		status = LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		if (use_fft) {
+			LIBSAKURA_SYMBOL(Status) status =
+			LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
+			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		}
 		// verify output data and mask
 		if (exec_status == LIBSAKURA_SYMBOL(Status_kOK)) {
 			for (size_t i = 0; i < data_ref.size(); ++i) {
@@ -600,13 +628,13 @@ protected:
 					EXPECT_FLOAT_EQ(reference[j], output_data[offset + j]);
 				}
 			}
-			for (size_t i = 0; i < mask_ref.size(); ++i) {
-				size_t const offset = mask_ref[i].offset;
-				size_t const num_reference = mask_ref[i].reference.size();
-				vector<bool> const reference = mask_ref[i].reference;
+			for (size_t i = 0; i < weight_ref.size(); ++i) {
+				size_t const offset = weight_ref[i].offset;
+				size_t const num_reference = weight_ref[i].reference.size();
+				vector<float> const reference = weight_ref[i].reference;
 				ASSERT_TRUE(offset + num_reference <= num_data);
 				for (size_t j = 0; j < num_reference; ++j) {
-					EXPECT_EQ(reference[j], output_mask[offset + j]);
+					EXPECT_EQ(reference[j], output_weight[offset + j]);
 				}
 			}
 		}
@@ -670,10 +698,10 @@ private:
  * CreateConvolve1DContextFloat will return Status_kInvalidArgument)
  */
 TEST_F(Convolve1DOperation ,InvalidArguments) {
-	{ // num_data > INT_MAX
-		std::cout << "num_data > INT_MAX" << std::endl;
+	{ // num_kernel > INT_MAX
+		std::cout << "num_kernel > INT_MAX" << std::endl;
 		size_t input_data_size(NUM_IN_EVEN);
-		size_t const num_data(size_t(INT_MAX) + 1);
+		size_t const num_kernel(size_t(INT_MAX) + 1);
 		bool const use_dummy_num_data = false;
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
 		bool const align_check = false;
@@ -682,14 +710,14 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		size_t loop_max(1);
 		SIMD_ALIGN
 		float output_data[input_data_size];
-		size_t num_kernel = NUM_IN_EVEN;
+		size_t num_data = NUM_IN_EVEN;
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
 				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
 	}
-	{ // num_data == 0
-		std::cout << "num_data == 0" << std::endl;
-		size_t const num_data(0);
+	{ // num_kernel == 0
+		std::cout << "num_kernel == 0" << std::endl;
+		size_t const num_kernel(0);
 		bool const use_dummy_num_data = false;
 		size_t input_data_size(NUM_IN_EVEN);
 		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
@@ -698,7 +726,7 @@ TEST_F(Convolve1DOperation ,InvalidArguments) {
 		bool const verbose = false;
 		size_t loop_max(1);
 		SIMD_ALIGN
-		size_t num_kernel = NUM_IN_EVEN;
+		size_t num_data = NUM_IN_EVEN;
 		float output_data[input_data_size];
 		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
 				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
@@ -739,16 +767,16 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		constexpr size_t kNumKernel = NUM_IN_EVEN;
 		SIMD_ALIGN float kernel[kNumKernel];
 		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(num_data, kNumKernel,
-				kernel, use_fft, &context);
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(kNumKernel, kernel,
+				&context);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
 		SIMD_ALIGN
 		float output_data[num_data];
 		SIMD_ALIGN
 		bool output_mask[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1DFloat)(context, num_data, input_data,
-				input_mask, output_data, output_mask);
+		LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context, num_data, input_data,
+				output_data);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
 		LIBSAKURA_SYMBOL(Status) status_Destroy =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
@@ -1238,24 +1266,21 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
 
 TEST_F(Convolve1DOperation, NumKernelWithoutFFTTriangle) {
 	ConvolveTestComponent<ConvolveRightAngledTriangleKernel> TriangleNumKernelTest[] =
-			{ { "num_kernel(odd) = num_data", { 4, NUM_IN_ODD, false },
+			{ { "num_kernel(odd) = num_data", { 4, NUM_IN_ODD }, false,
 			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
 					0.3, 0.4 } } }, { } }, { "num_kernel(even) = num_data", { 4,
-			NUM_IN_EVEN, false },
+			NUM_IN_EVEN }, false,
 			NUM_IN_EVEN, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
 					0.3, 0.4 } } }, { } }, { "num_kernel(odd) > num_data", { 4,
-					2 * NUM_IN_ODD + 1,
-					false },
+					2 * NUM_IN_ODD + 1 }, false,
 			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
 					0.3, 0.4 } } }, { } }, { "num_kernel(even) > num_data", { 4,
-					2 * NUM_IN_ODD,
-					false },
+					2 * NUM_IN_ODD }, false,
 			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
 					0.3, 0.4 } } }, { } }, { "num_kernel(odd) < num_data", { 4,
-					13,
-					false }, NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { {
-					10, { 0.1, 0.2, 0.3, 0.4 } } }, { } }, {
-					"num_kernel(even) < num_data", { 4, 12, false },
+					13 }, false, NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue,
+					{ { 10, { 0.1, 0.2, 0.3, 0.4 } } }, { } }, {
+					"num_kernel(even) < num_data", { 4, 12 }, false,
 					NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, {
 							0.1, 0.2, 0.3, 0.4 } } }, { } } };
 	RunConvolveTestComponentList<ConvolveRightAngledTriangleKernel>(

@@ -1188,42 +1188,34 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief create context for convolution
+ * @brief create context for convolution using Fourier transformation.
  * @details
- * @param[in] num_data The number of data. @a num_data must
- * be positive.  0 < num_data < INT32_MAX
  * @param[in] num_kernel The number of elements in the @a kernel.
- * @a num_kernel must be equal to @a num_data if @a use_fft is true.
- * @param[in] kernel Convolution kernel
- * @param[in] use_fft true means using FFT, false means not using FFT when
- * convolution is performed. And independent of the type of kernel.
- * If using FFT, FFT applied kernel which is already included context
- * by CreateConvolve1DContext is multiplied with input data
- * by complex-complex multiplication and then the multiplied complex
- * array is created. Finally inverse FFT is applied against it
- * and then real output data will be created.
- * If not using FFT, it is performed against real input data by real kernel
+ * @a num_kernel must be positive.  0 < num_data <= INT_MAX
+ * @param[in] kernel Convolution kernel. All elements in @a kernel must not be Inf nor NaN.
+ * @n must-be-aligned
  * @param[out] context context for convolution. The context can be shared between threads.
- * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by Convolution1D.
+ * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by Convolution1D[FFT].
  * @return status code.
  *
  * MT-unsafe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
-		size_t num_data, size_t num_kernel, float const kernel[],
-		bool use_fft, struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
+		size_t num_kernel, float const kernel[/*num_kernel*/],
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Convolution is performed.
  * @details Convolution operations are performed by shifting a kernel over the input data.
- * The kernel is stored in the context with the internal format.
  * The operation is carried out only for elements of data whose mask value is true.
- * @param[in] context
- * The context is created with sakura_CreateConvolve1DContext.
+ * @param[in] num_kernel  The number of elements in the @a kernel.
+ * @a num_kernel must be positive.  0 < @a num_kernel <= INT_MAX
+ * @param[in] kernel Convolution kernel. All elements in @a kernel must not be Inf nor NaN.
+ * @n must-be-aligned
  * @param[in] num_data
  * The number of elements in @a input_data, @a input_mask, @a output_data,
- * and @a output_mask. (0 < @a num_data <= INT_MAX)
+ * and @a output_weight. 0 < @a num_data <= INT_MAX
  * @param[in] input_data Input data. If corresponding element in @a input_mask is true,
  * the element in @a input_data must not be Inf nor NaN.
  * @n must-be-aligned
@@ -1231,22 +1223,44 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
  * if corresponding element of @a input_mask is true. If not, the corresponding
  * elements in @a input_data is ignored.
  * @n must-be-aligned
- * @param[out] output_data Output data. In case @a use_fft = true in the @a context,
- * the pointer of @a out is allowed to be equal to that of @a in (@a input_data == @a output_data),
- * indicating in-place operation.
+ * @param[out] output_data Output data.
  * @n must-be-aligned
- * @param[out] output_mask Output mask after the convolution operation.
+ * @param[out] output_weight Total weight of kernel summed up to corresponding elements
+ * of @a output_data in the convolution operation.
  * @n must-be-aligned
  * @return status code.
  *
  * MT-safe
  *
- * (But see @ref sakura_CreateConvolve1DContextFloat for detail about the thread-safety)
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
-		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
+		size_t num_kernel, float const kernel[/*num_kernel*/],
 		size_t num_data, float const input_data[/*num_data*/],
 		bool const input_mask[/*num_data*/], float output_data[/*num_data*/],
-		bool output_mask[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		float output_weight[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+ /**
+  * @brief Convolution is performed using Fourier transformation.
+  * @details Convolution operations are performed using Fourier transformation of data and kernel arrays.
+  * The kernel is stored in the context with the internal format.
+  * The operation is carried out for all elements of data.
+  * @param[in] context
+  * The context is created with sakura_CreateConvolve1DContextFFTFloat.
+  * @param[in] num_data
+  * The number of elements in @a input_data and @a output_data. @a num_data must be equal to @a num_kernel in @a context .
+  * 0 < @a num_data <= INT_MAX
+  * @param[in] input_data Input data. All elements in @a input_data must not be Inf nor NaN.
+  * @n must-be-aligned
+  * @param[out] output_data Output data. The pointer of @a out is allowed to be equal to
+  *  that of @a in (@a input_data == @a output_data), indicating in-place operation.
+  * @n must-be-aligned
+  * @return status code.
+  *
+  * MT-safe
+  *
+  * (But see @ref sakura_CreateConvolve1DContextFFTFloat for detail about the thread-safety)
+  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(
+ 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
+ 		size_t num_data, float const input_data[/*num_data*/],
+ 		float output_data[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @brief Destroy context
  * @details

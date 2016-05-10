@@ -46,8 +46,6 @@
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
-	bool use_fft;
-	size_t num_data;
 	size_t kernel_width;
 	fftwf_plan plan_real_to_complex_float;
 	fftwf_plan plan_complex_to_real_float;
@@ -149,14 +147,15 @@ inline void RevertData1D(size_t num_data, T const src[/*num_data*/],
  * @param kernel_arg
  * @param output_data_arg
  */
-inline void ConvolutionWithoutFFT(size_t num_data, float const *input_data_arg,
-bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
-		float *output_data_arg) {
+inline void ConvolutionWithoutFFT(size_t num_kernel, float const *kernel_arg,
+		size_t num_data, float const *input_data_arg,
+		bool const *input_mask_arg, float *output_data_arg, float *output_weight_arg) {
+	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
 	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(input_mask_arg);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask8));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(output_weight_arg));
 	// Need to revert kernel array in direct convolution.
 	SIMD_ALIGN
 	float revert_kernel[num_kernel];
@@ -165,9 +164,9 @@ bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
 
 	auto input_data = AssumeAligned(input_data_arg);
 	auto input_mask = AssumeAligned(mask8);
-//	auto kernel = AssumeAligned(kernel_arg);
 	auto kernel = AssumeAligned(revert_kernel);
 	auto output_data = AssumeAligned(output_data_arg);
+	auto weight_data = AssumeAligned(output_weight_arg);
 	STATIC_ASSERT(sizeof(input_mask_arg[0]) == sizeof(input_mask[0]));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
@@ -177,7 +176,6 @@ bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
 	size_t left_half = center_index;
 	// the number of elements in the right half of kernel (excluding center)
 	size_t right_half = num_kernel - left_half - 1;
-//	std::cout << "weight = (";
 	for (size_t i = 0; i < num_data; ++i) {
 		size_t lower_index = (i >= center_index) ? i - left_half : 0;
 		size_t kernel_start = (i >= center_index) ? 0 : center_index - i;
@@ -192,17 +190,12 @@ bool const *input_mask_arg, size_t num_kernel, float const *kernel_arg,
 		for (size_t j = 0; j < num_convolve; ++j) {
 			double local_weight = static_cast<double>(kernel[kernel_start + j])
 					* static_cast<double>(input_mask[lower_index + j]);
-			// need to turn around kernel in direct convolution
-//			double local_weight = static_cast<double>(kernel[(kernel_end -1 - j)])
-//										* static_cast<double>(input_mask[(lower_index + j)]);
 			value += (local_weight
 					* static_cast<double>(input_data[(lower_index + j)]));
 			weight += local_weight;
 		}
-//		std::cout << std::setprecision(12) << weight <<  ", ";
 		output_data[i] = (weight == 0.0 ? 0.0 : value / weight);
 	}
-//	std::cout << ")" << std::endl;
 }
 
 /**
@@ -224,9 +217,9 @@ inline void FlipData1D(size_t num_data, T const src[], T dst[]) {
 	}
 }
 
-inline void CreateConvolve1DContextFloat(size_t num_data, size_t num_kernel,
+inline void CreateConvolve1DContextFFTFloat(size_t num_kernel,
 		float const kernel[],
-		bool use_fft, LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 
 	assert(context != nullptr);
 	assert(kernel != nullptr);
@@ -239,167 +232,129 @@ inline void CreateConvolve1DContextFloat(size_t num_data, size_t num_kernel,
 	if (work_context == nullptr) {
 		throw std::bad_alloc();
 	}
-	work_context->use_fft = use_fft;
-	work_context->num_data = num_data;
+	float *real_kernel_array = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(float) * num_kernel, &real_kernel_array));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
+	float *imag_kernel_array = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> imag_kernel_array_work(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(float) * num_kernel, &imag_kernel_array));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(imag_kernel_array));
+	FlipData1D(num_kernel, kernel, real_kernel_array);
+	float *real_array = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_array_work(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(float) * num_kernel, &real_array));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(real_array));
+	float *imag_array = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> imag_array_work(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(float) * num_kernel, &imag_array));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(imag_array));
 
-	if (use_fft) {
-		assert(num_data == num_kernel);
-		//size_t num_fft_kernel = num_data / 2 + 1;
-		size_t num_fft_kernel = num_data;
-		float *real_kernel_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_fft_kernel, &real_kernel_array));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
-		float *imag_kernel_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> imag_kernel_array_work(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_fft_kernel, &imag_kernel_array));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(imag_kernel_array));
-		FlipData1D(num_data, kernel, real_kernel_array);
-		float *real_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_array_work(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_data, &real_array));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(real_array));
-		float *imag_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> imag_array_work(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_data, &imag_array));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(imag_array));
-
-		// Create plan for forward/backward FFT
-		// make use of guru interface
-		int rank = 1;
-		fftw_iodim dims[1];
-		dims[0].n = num_data;
-		dims[0].is = 1;
-		dims[0].os = 1;
-		fftw_iodim howmany_dims[1];
-		howmany_dims[0].n = 1;
-		howmany_dims[0].is = 1;
-		howmany_dims[0].os = 1;
-		fftwf_plan plan_real_to_complex_float = fftwf_plan_guru_split_dft_r2c(
-				rank, dims, rank, howmany_dims, real_array, real_kernel_array,
-				imag_array,
-				FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
-		ScopeGuard guard_for_fft_plan([&]() {
-			DestroyFFTPlan(plan_real_to_complex_float);
-		});
-		if (plan_real_to_complex_float == nullptr) {
-			guard_for_fft_plan.Disable();
-			throw std::bad_alloc();
-		}
-		fftwf_plan plan_complex_to_real_float = fftwf_plan_guru_split_dft_c2r(
-				rank, dims, rank, howmany_dims, real_array, imag_array,
-				imag_kernel_array,
-				FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
-		ScopeGuard guard_for_ifft_plan([&]() {
-			DestroyFFTPlan(plan_complex_to_real_float);
-		});
-		if (plan_complex_to_real_float == nullptr) {
-			guard_for_ifft_plan.Disable();
-			throw std::bad_alloc();
-		}
-
-		// Obtain Fourier transform of kernel
-		fftwf_plan plan_real_to_complex_float_kernel =
-				fftwf_plan_guru_split_dft_r2c(rank, dims, rank, howmany_dims,
-						real_kernel_array, real_kernel_array, imag_kernel_array,
-						FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
-		ScopeGuard guard_for_fft_plan_kernel([&]() {
-			DestroyFFTPlan(plan_real_to_complex_float_kernel);
-		});
-		if (plan_real_to_complex_float_kernel == nullptr) {
-			guard_for_fft_plan_kernel.Disable();
-			throw std::bad_alloc();
-		}
-		fftwf_execute(plan_real_to_complex_float_kernel);
-		guard_for_fft_plan_kernel.CleanUpNow();
-
-		work_context->kernel_width = num_kernel; //kernel_width;
-		work_context->plan_real_to_complex_float = plan_real_to_complex_float;
-		work_context->plan_complex_to_real_float = plan_complex_to_real_float;
-		work_context->real_array = real_array;
-		work_context->imag_array = imag_array;
-		work_context->real_array_work = real_array_work.release();
-		work_context->imag_array_work = imag_array_work.release();
-		work_context->real_kernel_array = real_kernel_array;
-		work_context->imag_kernel_array = imag_kernel_array;
-		work_context->real_kernel_array_work = real_kernel_array_work.release();
-		work_context->imag_kernel_array_work = imag_kernel_array_work.release();
+	// Create plan for forward/backward FFT
+	// make use of guru interface
+	int rank = 1;
+	fftw_iodim dims[1];
+	dims[0].n = num_kernel;
+	dims[0].is = 1;
+	dims[0].os = 1;
+	fftw_iodim howmany_dims[1];
+	howmany_dims[0].n = 1;
+	howmany_dims[0].is = 1;
+	howmany_dims[0].os = 1;
+	fftwf_plan plan_real_to_complex_float = fftwf_plan_guru_split_dft_r2c(rank,
+			dims, rank, howmany_dims, real_array, real_kernel_array, imag_array,
+			FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+	ScopeGuard guard_for_fft_plan([&]() {
+		DestroyFFTPlan(plan_real_to_complex_float);
+	});
+	if (plan_real_to_complex_float == nullptr) {
 		guard_for_fft_plan.Disable();
-		guard_for_ifft_plan.Disable();
-	} else {
-		float *real_kernel_array = nullptr;
-		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> real_kernel_array_work(
-				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-						sizeof(float) * num_kernel, &real_kernel_array));
-		assert(LIBSAKURA_SYMBOL(IsAligned)(real_kernel_array));
-		for (size_t i = 0; i < num_kernel; ++i) {
-			real_kernel_array[i] = kernel[i];
-		}
-
-		work_context->kernel_width = num_kernel;
-		work_context->plan_real_to_complex_float = nullptr;
-		work_context->plan_complex_to_real_float = nullptr;
-		work_context->real_array = nullptr;
-		work_context->real_array_work = nullptr;
-		work_context->real_kernel_array = real_kernel_array;
-		work_context->real_kernel_array_work = real_kernel_array_work.release();
-		work_context->imag_kernel_array = nullptr;
-		work_context->imag_kernel_array_work = nullptr;
-		work_context->imag_array = nullptr;
-		work_context->imag_array_work = nullptr;
+		throw std::bad_alloc();
 	}
+	fftwf_plan plan_complex_to_real_float = fftwf_plan_guru_split_dft_c2r(rank,
+			dims, rank, howmany_dims, real_array, imag_array, imag_kernel_array,
+			FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
+	ScopeGuard guard_for_ifft_plan([&]() {
+		DestroyFFTPlan(plan_complex_to_real_float);
+	});
+	if (plan_complex_to_real_float == nullptr) {
+		guard_for_ifft_plan.Disable();
+		throw std::bad_alloc();
+	}
+
+	// Obtain Fourier transform of kernel
+	fftwf_plan plan_real_to_complex_float_kernel =
+			fftwf_plan_guru_split_dft_r2c(rank, dims, rank, howmany_dims,
+					real_kernel_array, real_kernel_array, imag_kernel_array,
+					FFTW_ESTIMATE | FFTW_DESTROY_INPUT);
+	ScopeGuard guard_for_fft_plan_kernel([&]() {
+		DestroyFFTPlan(plan_real_to_complex_float_kernel);
+	});
+	if (plan_real_to_complex_float_kernel == nullptr) {
+		guard_for_fft_plan_kernel.Disable();
+		throw std::bad_alloc();
+	}
+	fftwf_execute(plan_real_to_complex_float_kernel);
+	guard_for_fft_plan_kernel.CleanUpNow();
+
+	work_context->kernel_width = num_kernel; //kernel_width;
+	work_context->plan_real_to_complex_float = plan_real_to_complex_float;
+	work_context->plan_complex_to_real_float = plan_complex_to_real_float;
+	work_context->real_array = real_array;
+	work_context->imag_array = imag_array;
+	work_context->real_array_work = real_array_work.release();
+	work_context->imag_array_work = imag_array_work.release();
+	work_context->real_kernel_array = real_kernel_array;
+	work_context->imag_kernel_array = imag_kernel_array;
+	work_context->real_kernel_array_work = real_kernel_array_work.release();
+	work_context->imag_kernel_array_work = imag_kernel_array_work.release();
+	guard_for_fft_plan.Disable();
+	guard_for_ifft_plan.Disable();
 	*context = work_context.release();
 }
 
-inline void Convolve1DFloat(
+inline void ConvolutionWithFFT(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
-		bool const input_mask_arg[/*num_data*/],
-		float output_data_arg[/*num_data*/],
-		bool output_mask_arg[/*num_data*/]) {
+		float output_data_arg[/*num_data*/]) {
 	assert(context->num_data == num_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_mask_arg));
 	auto input_data = AssumeAligned(input_data_arg);
-	auto input_mask = AssumeAligned(input_mask_arg);
 	auto output_data = AssumeAligned(output_data_arg);
-	auto output_mask = AssumeAligned(output_mask_arg);
-	if (context->use_fft) {
-		size_t num_fft_data = num_data / 2 + 1;
-		auto real_input_array = context->real_array;
-		auto imag_input_array = context->imag_array;
-		auto real_kernel_array = context->real_kernel_array;
-		auto imag_kernel_array = context->imag_kernel_array;
+	size_t num_fft_data = num_data / 2 + 1;
+	auto real_input_array = context->real_array;
+	auto imag_input_array = context->imag_array;
+	auto real_kernel_array = context->real_kernel_array;
+	auto imag_kernel_array = context->imag_kernel_array;
 
-		// FFT input array
-		fftwf_execute_split_dft_r2c(context->plan_real_to_complex_float,
-				const_cast<float *>(input_data), real_input_array,
-				imag_input_array);
+	// FFT input array
+	fftwf_execute_split_dft_r2c(context->plan_real_to_complex_float,
+			const_cast<float *>(input_data), real_input_array,
+			imag_input_array);
 
-		// Complex multiplication in Fourier domain
-		float scale = 1.0f / static_cast<float>(num_data);
-		for (size_t i = 0; i < num_fft_data; ++i) {
-			auto real_data = real_input_array[i];
-			auto imag_data = imag_input_array[i];
-			auto real_kernel = real_kernel_array[i];
-			auto imag_kernel = imag_kernel_array[i];
-			real_input_array[i] = (real_kernel * real_data - imag_kernel * imag_data) * scale;
-			imag_input_array[i] = (real_kernel * imag_data + imag_kernel * real_data) * scale;
-		}
-
-		// Inverse FFT
-		fftwf_execute_split_dft_c2r(context->plan_complex_to_real_float,
-				real_input_array, imag_input_array, output_data);
-	} else {
-		ConvolutionWithoutFFT(num_data, input_data, input_mask,
-				context->kernel_width, context->real_kernel_array, output_data);
+	// Complex multiplication in Fourier domain
+	float scale = 1.0f / static_cast<float>(num_data);
+	for (size_t i = 0; i < num_fft_data; ++i) {
+		auto real_data = real_input_array[i];
+		auto imag_data = imag_input_array[i];
+		auto real_kernel = real_kernel_array[i];
+		auto imag_kernel = imag_kernel_array[i];
+		real_input_array[i] =
+				(real_kernel * real_data - imag_kernel * imag_data) * scale;
+		imag_input_array[i] =
+				(real_kernel * imag_data + imag_kernel * real_data) * scale;
 	}
+
+	// Inverse FFT
+	fftwf_execute_split_dft_c2r(context->plan_complex_to_real_float,
+			real_input_array, imag_input_array, output_data);
 }
 
 inline void DestroyConvolve1DContextFloat(
@@ -460,24 +415,17 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloat)(
-		size_t num_data, size_t num_kernel, float const kernel[], bool use_fft,
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
+		size_t num_kernel, float const kernel[/*num_kernel*/],
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) noexcept {
-	CHECK_ARGS_WITH_MESSAGE(0 < num_data && num_data <= INT_MAX,
-			"num_data must satify '0 < num_data <= INT_MAX'");
 	CHECK_ARGS_WITH_MESSAGE(0 < num_kernel && num_kernel <= INT_MAX,
-			"num_kernel must satisfy '0 < num_data <= INT_MAX'");
+			"num_kernel must satisfy '0 < num_kernel <= INT_MAX'");
 	CHECK_ARGS_WITH_MESSAGE(kernel != nullptr, "kernel should not be NULL");
 	CHECK_ARGS_WITH_MESSAGE(LIBSAKURA_SYMBOL(IsAligned)(kernel),
 			"kernel should be aligned");
-	if (use_fft) {
-		CHECK_ARGS_WITH_MESSAGE(num_kernel == num_data,
-				"num_kernel must be equal to num_data if use_fft is true");
-	}
 	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
 	try {
-		CreateConvolve1DContextFloat(num_data, num_kernel, kernel, use_fft,
-				context);
+		CreateConvolve1DContextFFTFloat(num_kernel, kernel, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -492,13 +440,17 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFloa
 }
 
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
-LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
+		size_t num_kernel, float const kernel[/*num_kernel*/], size_t num_data,
 		float const input_data[/*num_data*/],
 		bool const input_mask[/*num_data*/], float output_data[/*num_data*/],
-		bool output_mask[/*num_data*/]) noexcept {
-	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
+		float output_weight[/*num_data*/]) noexcept {
+	CHECK_ARGS_WITH_MESSAGE(0 < num_kernel && num_kernel <= INT_MAX,
+			"num_data must be 0 < num_kernel <= INT_MAX");
 	CHECK_ARGS_WITH_MESSAGE(0 < num_data && num_data <= INT_MAX,
 			"num_data must be 0 < num_data <= INT_MAX");
+	CHECK_ARGS_WITH_MESSAGE(
+			kernel != nullptr && LIBSAKURA_SYMBOL(IsAligned)(kernel),
+			"invalid kernel");
 	CHECK_ARGS_WITH_MESSAGE(
 			input_data != nullptr && LIBSAKURA_SYMBOL(IsAligned)(input_data),
 			"invalid input_data");
@@ -509,20 +461,44 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 			output_data != nullptr && LIBSAKURA_SYMBOL(IsAligned)(output_data),
 			"invalid output_data");
 	CHECK_ARGS_WITH_MESSAGE(
-			output_mask != nullptr && LIBSAKURA_SYMBOL(IsAligned)(output_mask),
-			"invalid output_mask");
-	if (context->use_fft) {
-		CHECK_ARGS_WITH_MESSAGE(context->num_data == num_data,
-				"using FFT for convolution. num_data must be equal to the one in the context");
-	} else {
-		CHECK_ARGS_WITH_MESSAGE(input_data != output_data,
-				"in-place operation is not supported in convolution without FFT. ");
-	}
+			output_weight != nullptr && LIBSAKURA_SYMBOL(IsAligned)(output_weight),
+			"invalid output_weight");
+	CHECK_ARGS_WITH_MESSAGE(input_data != output_data,
+			"in-place operation is not supported in convolution without FFT. ");
 	//assert(fftw_alignment_of((double *)input_data) == 0);
 	//assert(fftw_alignment_of((double *)output_data) == 0);
 	try {
-		Convolve1DFloat(context, num_data, input_data, input_mask, output_data,
-				output_mask);
+		ConvolutionWithoutFFT(num_kernel, kernel, num_data, input_data,
+				input_mask, output_data, output_weight);
+	} catch (const std::bad_alloc &e) {
+		LOG4CXX_ERROR(logger, "Memory allocation failed");
+		return LIBSAKURA_SYMBOL(Status_kNoMemory);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(
+LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
+		float const input_data[/*num_data*/], float output_data[/*num_data*/])
+				noexcept {
+	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
+	CHECK_ARGS_WITH_MESSAGE(0 < num_data && num_data <= INT_MAX,
+			"num_data must be 0 < num_data <= INT_MAX");
+	CHECK_ARGS_WITH_MESSAGE(
+			input_data != nullptr && LIBSAKURA_SYMBOL(IsAligned)(input_data),
+			"invalid input_data");
+	CHECK_ARGS_WITH_MESSAGE(
+			output_data != nullptr && LIBSAKURA_SYMBOL(IsAligned)(output_data),
+			"invalid output_data");
+	CHECK_ARGS_WITH_MESSAGE(context->kernel_width == num_data,
+			"using FFT for convolution. num_data must be equal to the one in the context");
+	//assert(fftw_alignment_of((double *)input_data) == 0);
+	//assert(fftw_alignment_of((double *)output_data) == 0);
+	try {
+		ConvolutionWithFFT(context, num_data, input_data, output_data);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
