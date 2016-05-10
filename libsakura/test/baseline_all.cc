@@ -245,12 +245,12 @@ struct FitExecute{
 					}
 				}
 				if (check_best_fit) {
-					for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+					for (size_t i = 0; i < num_data; ++i) {
 						CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
 					}
 				}
 				if (check_residual) {
-					for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+					for (size_t i = 0; i < num_data; ++i) {
 						CheckAlmostEqual(0.0, residual[i], 1.0e-6);
 					}
 				}
@@ -323,18 +323,17 @@ struct FitExecute{
 						}
 						if (check_coeff) {
 							for (size_t i = 0; i < ELEMENTSOF(coeff_answer_ptr); ++i) {
-
 								//todo
 								CheckAlmostEqual(coeff_answer_ptr[i], coeff[i][0], 1.0e-6);
 							}
 						}
 						if (check_best_fit) {
-							for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+							for (size_t i = 0; i < num_data; ++i) {
 								CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
 							}
 						}
 						if (check_residual) {
-							for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+							for (size_t i = 0; i < num_data; ++i) {
 								CheckAlmostEqual(0.0, residual[i], 1.0e-6);
 							}
 						}
@@ -354,9 +353,6 @@ struct FitExecute{
 						static_cast<NPCases>(item + 1)) {
 					cout << np_cases_names[item] << ((item < NP_kNumElems - 1) ? ", " : "");
 
-					//double (*coeff_ptr)[4] = coeff;
-					//float *best_fit_ptr = best_fit;
-					//float *residual_ptr = residual;
 
 					switch (item) {
 					case NP_kNo:
@@ -409,12 +405,12 @@ struct FitExecute{
 						}
 					}
 					if (check_best_fit) {
-						for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+						for (size_t i = 0; i < num_data; ++i) {
 							CheckAlmostEqual(data[i], best_fit[i], 1.0e-6);
 						}
 					}
 					if (check_residual) {
-						for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
+						for (size_t i = 0; i < num_data; ++i) {
 							CheckAlmostEqual(0.0, residual[i], 1.0e-6);
 						}
 					}
