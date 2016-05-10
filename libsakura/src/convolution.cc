@@ -321,11 +321,9 @@ inline void ConvolutionWithFFT(
 LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 		float const input_data_arg[/*num_data*/],
 		float output_data_arg[/*num_data*/]) {
-	assert(context->num_data == num_data);
+	assert(context->kernel_width == num_data);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(input_mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(output_data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(output_mask_arg));
 	auto input_data = AssumeAligned(input_data_arg);
 	auto output_data = AssumeAligned(output_data_arg);
 	size_t num_fft_data = num_data / 2 + 1;
