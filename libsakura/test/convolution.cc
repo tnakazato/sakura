@@ -459,21 +459,38 @@ protected:
 			bool verbose, size_t loop_max, double *elapsed_create = nullptr,
 			double *elapsed_convolve = nullptr) {
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-		SIMD_ALIGN
-		float input_data[input_data_size];
-		SIMD_ALIGN
-		bool input_mask[ELEMENTSOF(input_data)];
-		SIMD_ALIGN
-		float output_weight[ELEMENTSOF(input_data)];
+//		SIMD_ALIGN
+//		float input_data[input_data_size];
+//		SIMD_ALIGN
+//		bool input_mask[ELEMENTSOF(input_data)];
+//		SIMD_ALIGN
+//		float output_weight[ELEMENTSOF(input_data)];
+		float *input_data = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> input_data_storage(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*input_data) * input_data_size, &input_data));
+		ASSERT_NE(input_data, nullptr);
+		bool *input_mask = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> input_mask_storage(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*input_mask) * input_data_size, &input_mask));
+		ASSERT_NE(input_mask, nullptr);
+		float *output_weight = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> output_weight_storage(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*output_weight) * input_data_size, &output_weight));
+		ASSERT_NE(output_weight, nullptr);
 		InitializeDataAndMask(input_spike_type, MaskType_ktrue, input_data_size,
 				input_data, input_mask);
 		double start = sakura_GetCurrentTime();
-		SIMD_ALIGN float kernel[num_kernel];
+//		SIMD_ALIGN float kernel[num_kernel];
+		float *kernel = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> kernel_storage(
+				DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*kernel) * num_kernel, &kernel));
+		ASSERT_NE(kernel, nullptr);
 		LIBSAKURA_SYMBOL(Status) status = expected_status;
-//		status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(kernel_width,
-//				num_kernel, kernel);
 		status = Kernel::Generate(num_kernel, kernel);
-//		ASSERT_EQ(status, LIBSAKURA_SYMBOL(Status_kOK));
 		ASSERT_EQ(status, expected_status);
 		if (use_fft) {
 			status =
