@@ -1191,7 +1191,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @brief create context for convolution using Fourier transformation.
  * @details
  * @param[in] num_kernel The number of elements in the @a kernel.
- * @a num_kernel must be positive.  0 < num_data <= INT_MAX
+ * @a num_kernel must be positive.  0 < num_kernel <= INT_MAX
  * @param[in] kernel Convolution kernel. All elements in @a kernel must not be Inf nor NaN.
  * @n must-be-aligned
  * @param[out] context context for convolution. The context can be shared between threads.
