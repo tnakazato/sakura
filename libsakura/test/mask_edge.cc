@@ -75,25 +75,25 @@ struct DefaultMaskInitializer {
 	static void Initialize(size_t num_data, bool const in[], bool **out) {
 		*out = const_cast<bool *>(in);
 		for (size_t i = 0; i < num_data; ++i) {
-			(*out)[i] = true;
+			(*out)[i] = false;
 		}
 	}
 };
 
-typedef InvalidArgumentInitializer<DefaultDataInitializer, DefaultDataInitializer,
-		DefaultMaskInitializer> BasicInvalidArgumentInitializer;
-typedef InvalidArgumentInitializer<NotAlignedInitializer, DefaultDataInitializer,
-		DefaultDataInitializer> NotAlignedXInitializer;
-typedef InvalidArgumentInitializer<DefaultDataInitializer, NotAlignedInitializer,
-		DefaultMaskInitializer> NotAlignedYInitializer;
-typedef InvalidArgumentInitializer<DefaultDataInitializer, DefaultDataInitializer,
-		NotAlignedInitializer> NotAlignedMaskInitializer;
-typedef InvalidArgumentInitializer<NullPointerInitializer, DefaultDataInitializer,
-		DefaultMaskInitializer> NullXInitializer;
-typedef InvalidArgumentInitializer<DefaultDataInitializer, NullPointerInitializer,
-		DefaultMaskInitializer> NullYInitializer;
-typedef InvalidArgumentInitializer<DefaultDataInitializer, DefaultDataInitializer,
-		NullPointerInitializer> NullMaskInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer,
+		DefaultDataInitializer, DefaultMaskInitializer> BasicInvalidArgumentInitializer;
+typedef InvalidArgumentInitializer<NotAlignedInitializer,
+		DefaultDataInitializer, DefaultDataInitializer> NotAlignedXInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer,
+		NotAlignedInitializer, DefaultMaskInitializer> NotAlignedYInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer,
+		DefaultDataInitializer, NotAlignedInitializer> NotAlignedMaskInitializer;
+typedef InvalidArgumentInitializer<NullPointerInitializer,
+		DefaultDataInitializer, DefaultMaskInitializer> NullXInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer,
+		NullPointerInitializer, DefaultMaskInitializer> NullYInitializer;
+typedef InvalidArgumentInitializer<DefaultDataInitializer,
+		DefaultDataInitializer, NullPointerInitializer> NullMaskInitializer;
 
 struct BaseInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
@@ -117,6 +117,21 @@ struct BaseInitializer {
 	}
 };
 
+struct MaskNotProperlyConfiguredInitializer {
+	static void Initialize(size_t num_data, float fraction, double const x_in[],
+			double const y_in[], bool const mask_in[], double **x_out,
+			double **y_out, bool **mask_out, bool mask_expected[],
+			sakura_Status *status_expected) {
+		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
+				x_out, y_out, mask_out, mask_expected, status_expected);
+
+		// mimic uninitialized mask
+		for (size_t i = 0; i < num_data; ++i) {
+			(*mask_out)[i] = true;
+		}
+	}
+};
+
 struct StandardSquareParamSet {
 	static constexpr double kOuterLength = 6.0;
 	static constexpr double kMiddleLength = 4.0;
@@ -129,14 +144,14 @@ struct WiderSquareParamSet {
 	static constexpr double kInnerLength = 2.0;
 };
 
-template<typename ParamSet>
+template<typename ParamSet, typename Initializer = BaseInitializer>
 struct SquareShapeInitializer {
 	static void Initialize(size_t num_data, float fraction, double const x_in[],
 			double const y_in[], bool const mask_in[], double **x_out,
 			double **y_out, bool **mask_out, bool mask_expected[],
 			sakura_Status *status_expected) {
-		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
-				x_out, y_out, mask_out, mask_expected, status_expected);
+		Initializer::Initialize(num_data, fraction, x_in, y_in, mask_in, x_out,
+				y_out, mask_out, mask_expected, status_expected);
 
 		*x_out = const_cast<double *>(x_in);
 		*y_out = const_cast<double *>(y_in);
@@ -478,6 +493,8 @@ struct NumDataThreeInitializer {
 typedef SquareShapeInitializer<StandardSquareParamSet> StandardSquare;
 typedef SquareShapeInitializer<WiderSquareParamSet> WiderSquare;
 typedef FailedSquareShapeInitializer<StandardSquareParamSet> FailedSquare;
+typedef SquareShapeInitializer<StandardSquareParamSet,
+		MaskNotProperlyConfiguredInitializer> WrongMaskSquare;
 typedef UserDefinedRangeSquareShapeInitializer<WiderSquareParamSet> UserDefinedRangeSquare;
 typedef CircularShapeInitializer<StandardCircularParamSet> StandardCircle;
 typedef CircularShapeInitializer<DonutShapeParamSet> StandardDonutShape;
@@ -487,13 +504,13 @@ typedef CircularShapeInitializer<InclinedCShapeParamSet> StandardInclinedCShape;
 
 struct NullChecker {
 	static void Check(size_t num_data, bool const mask[],
-			bool const mask_expected[]) {
+	bool const mask_expected[]) {
 	}
 };
 
 struct StandardChecker {
 	static void Check(size_t num_data, bool const mask[],
-			bool const mask_expected[]) {
+	bool const mask_expected[]) {
 		for (size_t i = 0; i < num_data; ++i) {
 			EXPECT_EQ(mask_expected[i], mask[i]) << i;
 		}
@@ -502,7 +519,7 @@ struct StandardChecker {
 
 struct AllMaskedChecker {
 	static void Check(size_t num_data, bool const mask[],
-			bool const mask_expected[]) {
+	bool const mask_expected[]) {
 		for (size_t i = 0; i < num_data; ++i) {
 			EXPECT_EQ(true, mask[i]) << i;
 		}
@@ -511,7 +528,7 @@ struct AllMaskedChecker {
 
 struct AllUnmaskedChecker {
 	static void Check(size_t num_data, bool const mask[],
-			bool const mask_expected[]) {
+	bool const mask_expected[]) {
 		for (size_t i = 0; i < num_data; ++i) {
 			EXPECT_FALSE(mask[i]) << i;
 		}
@@ -911,6 +928,14 @@ TEST_MASK(FractionTwentyPercent) {
 	// inclined C-shape
 	RunTest<StandardInclinedCShape, StandardChecker>(1000, fraction,
 			pixel_size);
+}
+
+TEST_MASK(OutputMaskNotInitialized) {
+	float const fraction = 0.1f;
+	double const pixel_size = 0.0;
+
+	// square spiral pattern
+	RunTest<WrongMaskSquare, StandardChecker>(1000, fraction, pixel_size);
 }
 
 TEST_MASK(ManualPixelSize) {

@@ -36,6 +36,13 @@ namespace {
 // a logger for this module
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("mask_edge");
 
+template<typename DataType>
+void InitializeArray(size_t n, DataType value, DataType data[]) {
+	for (size_t i = 0; i < n; ++i) {
+		data[i] = value;
+	}
+}
+
 /**
  * @brief Convert location of data points to the one in pixel coordinate.
  *
@@ -68,12 +75,10 @@ inline LIBSAKURA_SYMBOL(Status) ConvertToPixel(DataType pixel_size,
 	// To derive median separation between two neighboring data points
 	// use pixel_x and pixel_y as a working storage
 	STATIC_ASSERT(sizeof(DataType) >= sizeof(bool));
-	bool *mask = reinterpret_cast<bool *>(pixel_y);
 	for (size_t i = 0; i < num_data - 1; ++i) {
 		DataType separation_x = x[i + 1] - x[i];
 		DataType separation_y = y[i + 1] - y[i];
 		pixel_x[i] = separation_x * separation_x + separation_y * separation_y;
-		mask[i] = true;
 	}
 
 	// 2015/11/19 TN
@@ -196,9 +201,7 @@ inline LIBSAKURA_SYMBOL(Status) CountUp(size_t num_data,
 		size_t num_horizontal, size_t num_vertical, size_t counts[]) {
 
 	// initialization
-	for (size_t i = 0; i < num_horizontal * num_vertical; ++i) {
-		counts[i] = 0;
-	}
+	InitializeArray(num_horizontal * num_vertical, 0ul, counts);
 
 	// data counts for each pixel
 	for (size_t i = 0; i < num_data; ++i) {
@@ -395,9 +398,7 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					num_pixel * sizeof(size_t), &edge));
-	for (size_t i = 0; i < num_pixel; ++i) {
-		edge[i] = 0;
-	}
+	InitializeArray(num_pixel, 0ul, edge);
 
 	// iteration loop for detection of data points and edge trimming
 	do {
@@ -487,11 +488,11 @@ inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 		DataType pixel_size, size_t num_data, DataType const x[],
 		DataType const y[], DataType const *blc_x, DataType const *blc_y,
 		DataType const *trc_x, DataType const *trc_y, bool mask[]) {
+	// initialize mask
+	InitializeArray(num_data, false, mask);
+
 	// do nothing if effective fraction is zero
 	if (fraction * static_cast<float>(num_data) < 1.0f) {
-		for (size_t i = 0; i < num_data; ++i) {
-			mask[i] = false;
-		}
 		return sakura_Status_kOK;
 	}
 
