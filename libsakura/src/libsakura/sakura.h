@@ -2657,6 +2657,13 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * repeated until number of masked position exceeds the threshold given by
  * @a num_data times @a fraction.
  *
+ * @remark Note that threshold for the detection stage will become 0 if @a num_data times
+ * @a fraction is less than 1. No data will be masked in that case.
+ *
+ * @remark Note also that @a x and @a y are intended to represent any trajectory in the two-dimensional
+ * plane (e.g., regularly sampled two-dimensional position data of a certain object).
+ * Thus, orders of @a x and @a y are important.
+ *
  * @param[in] fraction Fraction of the data to be masked. Threshold for mask operation
  * is evaluated by @a fraction times @a num_data. 0 <= @a fraction <= 1.
  * @param[in] pixel_size Size of the pixel. If it is zero, pixel size is set to a half of
