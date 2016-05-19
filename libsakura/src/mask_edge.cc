@@ -432,34 +432,6 @@ inline LIBSAKURA_SYMBOL(Status) DetectDataNearEdge(float fraction,
 }
 
 /**
- * @brief Mask isolated unmasked points
- *
- * @param[in] num_mask number of mask
- * @param[in,out] mask boolean mask
- */
-inline LIBSAKURA_SYMBOL(Status) ImproveDetection(size_t num_mask,
-bool mask[]) {
-	constexpr size_t kIsolationThreshold = 3;
-	size_t isolation_count = 0;
-	for (size_t i = 0; i < num_mask; ++i) {
-		if (mask[i]) {
-			if (0 < isolation_count && isolation_count < kIsolationThreshold) {
-				size_t start = i - isolation_count;
-				size_t end = i;
-				for (size_t j = start; j < end; ++j) {
-					mask[j] = true;
-				}
-			}
-			isolation_count = 0;
-		} else {
-			++isolation_count;
-		}
-	}
-
-	return LIBSAKURA_SYMBOL(Status_kOK);
-}
-
-/**
  * Edge detection algorithm consists of the following steps:
  *
  *    ConvertToPixel
@@ -480,8 +452,6 @@ bool mask[]) {
  *        find map edge and mask points that are located in edge pixels.
  *        edge finding and masking process is repeated until the fraction
  *        of number of masked points exceeds user-specified fraction.
- *    ImproveDetection
- *        isolated unmasked points are masked.
  */
 template<typename DataType>
 inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
@@ -554,13 +524,6 @@ inline LIBSAKURA_SYMBOL(Status) CreateMaskNearEdge(float fraction,
 	size_t num_masked = 0;
 	status = DetectDataNearEdge(fraction, num_horizontal, num_vertical, counts,
 			num_data, pixel_x, pixel_y, mask, &num_masked);
-
-	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		return status;
-	}
-
-	// ImproveDetection
-	status = ImproveDetection(num_data, mask);
 
 	return status;
 }
