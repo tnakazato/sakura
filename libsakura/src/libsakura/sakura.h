@@ -2668,7 +2668,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * is evaluated by @a fraction times @a num_data. 0 <= @a fraction <= 1.
  * @param[in] pixel_size Size of the pixel. If it is zero, pixel size is set to a half of
  * median of the distance between neighboring two positions that are provided by @a x and @a y.
- * @a pixel_size must be greater than 0. Setting 0 works most of the cases.
+ * @a pixel_size must be greater than or equal to 0. Setting 0 works most of the cases.
  * @param[in] num_data Number of data.
  * @param[in] x List of horizontal positions. The length must be @a num_data.\n
  * must-be-aligned
