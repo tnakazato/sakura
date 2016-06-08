@@ -708,7 +708,7 @@ private:
  * if num_data = 0,kernel_width = 0, LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = UnknownType,
  * CreateConvolve1DContextFloat will return Status_kInvalidArgument)
  */
-TEST(CreateContextTest, InvalidArguments) {
+TEST(ContextTest, InvalidArguments) {
 	{ // num_kernel > INT_MAX
 		std::cout << "num_kernel > INT_MAX" << std::endl;
 		size_t const num_kernel = (size_t(INT_MAX) + 1);
