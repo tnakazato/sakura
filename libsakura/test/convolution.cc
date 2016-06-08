@@ -458,13 +458,24 @@ protected:
 			LIBSAKURA_SYMBOL(Status) expected_status, bool align_check,
 			bool verbose, size_t loop_max, double *elapsed_create = nullptr,
 			double *elapsed_convolve = nullptr) {
+
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-//		SIMD_ALIGN
-//		float input_data[input_data_size];
-//		SIMD_ALIGN
-//		bool input_mask[ELEMENTSOF(input_data)];
-//		SIMD_ALIGN
-//		float output_weight[ELEMENTSOF(input_data)];
+		double start = sakura_GetCurrentTime();
+		float *kernel = nullptr;
+		unique_ptr<void, DefaultAlignedMemory> kernel_storage(DefaultAlignedMemory::AlignedAllocateOrException(
+						sizeof(*kernel) * num_kernel, &kernel));
+		ASSERT_NE(kernel, nullptr);
+		LIBSAKURA_SYMBOL(Status) status = expected_status;
+		status = Kernel::Generate(num_kernel, kernel);
+		ASSERT_EQ(status, expected_status);
+		if (use_fft) {
+			status =
+			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
+					kernel, &context);
+			ASSERT_EQ(expected_status, status);
+		}
+		double end = sakura_GetCurrentTime();
+
 		float *input_data = nullptr;
 		unique_ptr<void, DefaultAlignedMemory> input_data_storage(
 				DefaultAlignedMemory::AlignedAllocateOrException(
@@ -482,23 +493,6 @@ protected:
 		ASSERT_NE(output_weight, nullptr);
 		InitializeDataAndMask(input_spike_type, MaskType_ktrue, input_data_size,
 				input_data, input_mask);
-		double start = sakura_GetCurrentTime();
-//		SIMD_ALIGN float kernel[num_kernel];
-		float *kernel = nullptr;
-		unique_ptr<void, DefaultAlignedMemory> kernel_storage(
-				DefaultAlignedMemory::AlignedAllocateOrException(
-						sizeof(*kernel) * num_kernel, &kernel));
-		ASSERT_NE(kernel, nullptr);
-		LIBSAKURA_SYMBOL(Status) status = expected_status;
-		status = Kernel::Generate(num_kernel, kernel);
-		ASSERT_EQ(status, expected_status);
-		if (use_fft) {
-			status =
-			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
-					kernel, &context);
-			ASSERT_EQ(expected_status, status);
-		}
-		double end = sakura_GetCurrentTime();
 		if (use_fft) {
 			if (align_check) {
 				ASSERT_TRUE(sakura_IsAligned(context->real_array))<< "real_array is not aligned";
@@ -714,40 +708,28 @@ private:
  * if num_data = 0,kernel_width = 0, LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = UnknownType,
  * CreateConvolve1DContextFloat will return Status_kInvalidArgument)
  */
-TEST_F(Convolve1DOperation ,InvalidArguments) {
+TEST(CreateContextTest, InvalidArguments) {
 	{ // num_kernel > INT_MAX
 		std::cout << "num_kernel > INT_MAX" << std::endl;
-		size_t input_data_size(NUM_IN_EVEN);
-		size_t const num_kernel(size_t(INT_MAX) + 1);
-		bool const use_dummy_num_data = false;
-		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
+		size_t const num_kernel = (size_t(INT_MAX) + 1);
 		SIMD_ALIGN
-		float output_data[input_data_size];
-		size_t num_data = NUM_IN_EVEN;
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
-				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
-				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
+		float kernel[NUM_IN_EVEN]; // dummy kernel array
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
+				kernel, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 	}
 	{ // num_kernel == 0
 		std::cout << "num_kernel == 0" << std::endl;
-		size_t const num_kernel(0);
-		bool const use_dummy_num_data = false;
-		size_t input_data_size(NUM_IN_EVEN);
-		GaussianKernel::FWHM = static_cast<float>(NUM_WIDTH);
-		bool const align_check = false;
-		bool const use_fft = true;
-		bool const verbose = false;
-		size_t loop_max(1);
+		size_t const num_kernel = 0;
 		SIMD_ALIGN
-		size_t num_data = NUM_IN_EVEN;
-		float output_data[input_data_size];
-		RunBaseTest<GaussianKernel>(input_data_size, SpikeType_kcenter,
-				num_data, use_dummy_num_data, num_kernel, use_fft, output_data,
-				sakura_Status_kInvalidArgument, align_check, verbose, loop_max);
+		float kernel[num_kernel];
+		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
+				kernel, &context);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 	}
 }
 
@@ -780,7 +762,6 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 			input_data[i] = 0.0;
 			input_mask[i] = true;
 		}
-		bool use_fft = true; // with FFT
 		constexpr size_t kNumKernel = NUM_IN_EVEN;
 		SIMD_ALIGN float kernel[kNumKernel];
 		LIBSAKURA_SYMBOL(Status) status_Create =
@@ -789,8 +770,6 @@ TEST(Convolve1DOperationFailed , FailedMallocContext) {
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
 		SIMD_ALIGN
 		float output_data[num_data];
-		SIMD_ALIGN
-		bool output_mask[num_data];
 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
 		LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context, num_data, input_data,
 				output_data);
