@@ -121,11 +121,11 @@ void Create(LIBSAKURA_SYMBOL (Status) status,
 	LIBSAKURA_SYMBOL (Status) create_status;
 
 	if (mybaseline_type == BaselineTypeInternal_kPolynomial) {
-		create_status = sakura_CreateBaselineContextFloat(
+		create_status = sakura_CreateBaselineContextPolynomialFloat(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), order, num_data,
 				context);
 	} else if (mybaseline_type == BaselineTypeInternal_kChebyshev) {
-		create_status = sakura_CreateBaselineContextFloat(
+		create_status = sakura_CreateBaselineContextPolynomialFloat(
 				LIBSAKURA_SYMBOL(BaselineType_kChebyshev), order, num_data,
 				context);
 	} else if (mybaseline_type == BaselineTypeInternal_kCubicSpline) {

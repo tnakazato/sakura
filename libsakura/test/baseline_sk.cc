@@ -227,19 +227,6 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 	SIMD_ALIGN
 	size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 	LIBSAKURA_SYMBOL (Status) subbl_status;
-	//old API
-	subbl_status =
-	LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(context,
-			num_data, in_data, num_pieces, coeff, boundary, out);
-	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-	for (size_t i = 0; i < num_data; ++i) {
-		EXPECT_EQ(answer[i], out[i]);
-	}
-	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
-	}
-	//new API
 	subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context, num_data,
 			in_data, num_pieces, coeff, boundary, out);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
@@ -250,7 +237,6 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloat) {
 		PrintArray("out   ", num_data, out);
 		PrintArray("answer", num_data, answer);
 	}
-	//end new API
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
 			sakura_DestroyBaselineContextFloat(context);
@@ -296,17 +282,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		SIMD_ALIGN
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data_unaligned, num_pieces, coeff,
-				boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data_unaligned, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -345,17 +323,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		SIMD_ALIGN
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff_unaligned,
-				boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff_unaligned, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -394,17 +364,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		size_t *boundary_unaligned = boundary + 1;
 		assert(!LIBSAKURA_SYMBOL(IsAligned)(boundary_unaligned));
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff,
-				boundary_unaligned, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary_unaligned, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -443,17 +405,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNotAlign
 		SIMD_ALIGN
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary,
-				out_unaligned);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out_unaligned);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -494,16 +448,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 				0.5f } };
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -536,16 +483,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		double (*coeff)[4] = nullptr;
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -577,16 +517,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		}
 		size_t *boundary = nullptr;
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -618,16 +551,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		}
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -655,16 +581,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatWithNullPoin
 		}
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -707,17 +626,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		size_t boundary[3] = { 0, 4, num_data };
 		size_t const bad_num_data(num_data + 1);
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, bad_num_data, in_data, num_pieces, coeff, boundary,
-				out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				bad_num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -748,17 +659,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		size_t boundary[3] = { 0, 4, num_data };
 		size_t bad_num_data = context->num_bases - 1;
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-				LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-						context, bad_num_data, in_data, num_pieces, coeff,
-						boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				bad_num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
 
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
@@ -789,18 +692,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SetFloatConstant(0.0f, 4, reinterpret_cast<float *>(coeff[0]));
 		size_t boundary[3] = { 0, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-				LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-						context, num_data, in_data, num_pieces, coeff, boundary,
-						out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
-
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -833,18 +727,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SIMD_ALIGN
 		size_t boundary[num_pieces + 1] = { 1, 4, num_data };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-				LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-						context, num_data, in_data, num_pieces, coeff, boundary,
-						out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
-
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -877,18 +762,9 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatInvalidArgum
 		SIMD_ALIGN
 		size_t boundary[num_pieces + 1] = { 0, 4, num_data + 1 };
 		LIBSAKURA_SYMBOL (Status) subbl_status;
-		//old API
-		subbl_status =
-				LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-						context, num_data, in_data, num_pieces, coeff, boundary,
-						out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//new API
 		subbl_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(context,
 				num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), subbl_status);
-		//end new API
-
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyBaselineContextFloat(context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
@@ -947,28 +823,6 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 	}
 	LIBSAKURA_SYMBOL (Status) subbl_status;
 	size_t loop_max = 1000;
-	//old API
-	double start_time1 = sakura_GetCurrentTime();
-	for (size_t i = 0; i < loop_max; ++i) {
-		subbl_status =
-		LIBSAKURA_SYMBOL(SubtractBaselineCubicSplineUsingCoefficientsFloat)(
-				context, num_data, in_data, num_pieces, coeff, boundary, out);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
-	}
-	double end_time1 = sakura_GetCurrentTime();
-	std::cout << std::setprecision(5)
-			<< "#x# benchmark BaselineSK_SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceTest"
-			<< " " << (end_time1 - start_time1) << std::endl;
-
-	for (size_t i = 0; i < num_data; ++i) {
-		EXPECT_EQ(answer[i], out[i]);
-	}
-	//verbose = true;
-	if (verbose) {
-		PrintArray("out   ", num_data, out);
-		PrintArray("answer", num_data, answer);
-	}
-	//new API
 	double start_time = sakura_GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
 		subbl_status =
@@ -989,10 +843,8 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 		PrintArray("out   ", num_data, out);
 		PrintArray("answer", num_data, answer);
 	}
-	//end new API
 
 	LIBSAKURA_SYMBOL (Status) destroy_status =
 			sakura_DestroyBaselineContextFloat(context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 }
-

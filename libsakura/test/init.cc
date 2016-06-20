@@ -69,7 +69,7 @@ TEST(Global, Init) {
 		free_count = 0;
 		//uint16_t const nw = {1};
 		LIBSAKURA_SYMBOL(BaselineContextFloat) *context = nullptr;
-		auto status = LIBSAKURA_SYMBOL(CreateBaselineContextFloat)(
+		auto status = LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
 				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 5, 100, &context);
 		EXPECT_EQ(status, sakura_Status_kOK);
 		EXPECT_NE(nullptr, context);
