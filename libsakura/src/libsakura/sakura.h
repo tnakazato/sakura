@@ -1188,7 +1188,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief create context for convolution using Fourier transformation.
+ * @brief Create context for convolution using Fourier transformation.
  * @details
  * @param[in] num_kernel The number of elements in the @a kernel.
  * @a num_kernel must be positive.  0 < num_kernel <= INT_MAX
