@@ -1943,6 +1943,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
    * @param[out] out The output data. Its length must be @a num_data .
    * @n must-be-aligned
    * @return Status code.
+   *
+   * MT-safe
    */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
   		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
   		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
