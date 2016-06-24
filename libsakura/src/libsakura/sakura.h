@@ -1960,6 +1960,8 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * baseline fitting. This value should be the actual number of
  * simultaneous equations of least-square fitting.
  * @return Status code.
+ *
+ * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
 		uint16_t order, size_t *num_coeff)
