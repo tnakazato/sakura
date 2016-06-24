@@ -1154,7 +1154,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
 
 /**
- * @brief create Gaussian kernel
+ * @brief Create Gaussian kernel.
  *
  * @details
  * Create 1 dimensional Gaussian kernel according to FWHM given by @a kernel_width.
