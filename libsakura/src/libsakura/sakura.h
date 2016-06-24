@@ -1195,7 +1195,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @param[in] kernel Convolution kernel. All elements in @a kernel must not be Inf nor NaN.
  * @n must-be-aligned
  * @param[out] context context for convolution. The context can be shared between threads.
- * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by Convolution1D[FFT].
+ * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by
+ * @ref sakura_Convolve1DFFTFloat.
  * @return status code.
  *
  * MT-unsafe
