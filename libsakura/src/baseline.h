@@ -35,30 +35,30 @@
 typedef enum {
 	/**
 	 * @brief Polynomial
-	 */BaselineTypeInternal_kPolynomial,
+	 */LSQFitTypeInternal_kPolynomial,
 
 	/**
 	 * @brief Chebyshev Polynomial
-	 */BaselineTypeInternal_kChebyshev,
+	 */LSQFitTypeInternal_kChebyshev,
 
 	/**
 	 * @brief Natural Cubic Spline
-	 */BaselineTypeInternal_kCubicSpline,
+	 */LSQFitTypeInternal_kCubicSpline,
 
 	/**
 	 * @brief Sinusoids
-	 */BaselineTypeInternal_kSinusoid,
+	 */LSQFitTypeInternal_kSinusoid,
 
 	/**
 	 * @brief Number of baseline functions implemented
-	 */BaselineTypeInternal_kNumElements
-} BaselineTypeInternal;
+	 */LSQFitTypeInternal_kNumElements
+} LSQFitTypeInternal;
 
 extern "C" {
-struct LIBSAKURA_SYMBOL(BaselineContextFloat) {
+struct LIBSAKURA_SYMBOL(LSQFitContextFloat) {
 	size_t num_bases; /**< Number of basis functions. */
 	size_t num_basis_data; /**< Number of discrete data points of each basis function. */
-	size_t num_lsq_bases_max; /**< Maximum number of simultaneous equations for least-square fitting: @a baseline_param + 1 @a for Polynomial and Chebyshev, @a baseline_param + 3 @a for CubicSpline, and @a 2 * baseline_param + 1 @a for Sinusoid. */
+	size_t num_lsq_bases_max; /**< Maximum number of simultaneous equations for least-square fitting: @a lsqfit_param + 1 @a for Polynomial and Chebyshev, @a lsqfit_param + 3 @a for CubicSpline, and @a 2 * lsqfit_param + 1 @a for Sinusoid. */
 	void *basis_data_storage; /**< An address returned when allocating @a basis_data @a . This one itself is not aligned, and is hold just for deallocating. */
 	double *basis_data; /**< A pointer to aligned 1D array for basis data. Its size is @a num_bases * num_basis_data @a . The basis data of the @a j @a th basis at the @a i @a th point is stored at the [ @a num_basis_data * i + j @a ]-th element. */
 	void *lsq_matrix_storage; /**< An address returned when allocating @a lsq_matrix @a . This one itself is not aligned, and is hold just for deallocating. */
@@ -74,13 +74,13 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat) {
 	void *use_bases_idx_storage; /**< An address returned when allocating @a use_bases_idx @a . This one itself is not aligned, and is hold just for deallocating. */
 	size_t *use_bases_idx; /**< A pointer to aligned 1D array for indices of bases that are used for fitting. Its size is @a num_lsq_bases_max @a . For baseline type other than Sinusoid, the element values should be equal to their index. */
 	void *coeff_full_storage; /**< An address returned when allocating @a coeff_full @a . This one itself is not aligned, and is hold just for deallocating. */
-	double *coeff_full; /**< A pointer to aligned 1D array for storing full coefficients. Its size is @a baseline_param * 4 @a for CubicSpline, and @a num_lsq_bases_max @a for other baseline types. */
+	double *coeff_full; /**< A pointer to aligned 1D array for storing full coefficients. Its size is @a lsqfit_param * 4 @a for CubicSpline, and @a num_lsq_bases_max @a for other baseline types. */
 	void *cspline_basis_storage; /**< An address returned when allocating @a cspline_basis @a . This one itself is not aligned, and is hold just for deallocating. */
 	double *cspline_basis; /**< A pointer to aligned 1D array for basis functions used in cubic spline fitting. Its size is @a num_basis_data * num_lsq_bases_max @a . */
 	void *cspline_lsq_coeff_storage; /**< An address returned when allocating @a cspline_lsq_coeff @a . This one itself is not aligned, and is hold just for deallocating. */
 	double *cspline_lsq_coeff; /**< A pointer to aligned 1D array for least-square fitting results. Its size is @a num_lsq_bases_max @a . */
-	BaselineTypeInternal baseline_type; /**< Functional type of baseline. */
-	uint16_t baseline_param; /**< order for Polynomial or Chebyshev, npiece for CubicSpline, or maximum wave number for Sinusoid.*/
+	LSQFitTypeInternal lsqfit_type; /**< Functional type of lsq fitting. */
+	uint16_t lsqfit_param; /**< order for Polynomial or Chebyshev, npiece for CubicSpline, or maximum wave number for Sinusoid.*/
 };
 }
 

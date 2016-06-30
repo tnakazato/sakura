@@ -68,12 +68,12 @@ TEST(Global, Init) {
 		alloc_count = 0;
 		free_count = 0;
 		//uint16_t const nw = {1};
-		LIBSAKURA_SYMBOL(BaselineContextFloat) *context = nullptr;
-		auto status = LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
-				LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 5, 100, &context);
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context = nullptr;
+		auto status = LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
+				LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), 5, 100, &context);
 		EXPECT_EQ(status, sakura_Status_kOK);
 		EXPECT_NE(nullptr, context);
-		status = LIBSAKURA_SYMBOL(DestroyBaselineContextFloat)(context);
+		status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(context);
 		EXPECT_EQ(status, sakura_Status_kOK);
 		EXPECT_LT(0, alloc_count);
 		EXPECT_LT(0, free_count);

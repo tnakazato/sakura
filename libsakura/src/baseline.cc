@@ -88,34 +88,34 @@ inline bool IsUniqueAndAscendingOrder(size_t num_array, size_t const *array) {
 
 /**
  * Returns the number of steady bases, which are computable
- * using overall baseline parameter @a order only and don't
+ * using overall fitting parameter @a order only and don't
  * depend on other conditions specific to each data, for
  * example, mask information etc.
  *
- * @param[in] baseline_type Type of baseline. It must be one
- * of the elements in sakura_BaselineType.
- * @param[in] order Parameter of baseline. It is the maximum
- * polynomial order if baseline_type is
- * BaselineTypeInternal_kPolynomial or
- * BaselineTypeInternal_kChebyshev, or the maximum wave number
- * if baseline_type is BaselineTypeInternal_kSinusoid.
+ * @param[in] lsqfit_type Type of fitting. It must be one
+ * of the elements in sakura_LSQFitType.
+ * @param[in] order Parameter of fitting. It is the maximum
+ * polynomial order if lsqfit_type is
+ * LSQFitTypeInternal_kPolynomial or
+ * LSQFitTypeInternal_kChebyshev, or the maximum wave number
+ * if lsqfit_type is LSQFitTypeInternal_kSinusoid.
  * @return The returned number should be one of the followings:
  * ( @a order +1) for Polynomial and Chebyshev Polynomial,
  * ( 4 ) for Cubic Spline and
  * ( 2 * @a order +1) for Sinusoid.
  */
-inline size_t GetNumberOfContextBases(BaselineTypeInternal const baseline_type,
+inline size_t GetNumberOfContextBases(LSQFitTypeInternal const lsqfit_type,
 		uint16_t const order) {
 	size_t num_bases = 0;
-	switch (baseline_type) {
-	case BaselineTypeInternal_kPolynomial:
-	case BaselineTypeInternal_kChebyshev:
+	switch (lsqfit_type) {
+	case LSQFitTypeInternal_kPolynomial:
+	case LSQFitTypeInternal_kChebyshev:
 		num_bases = order + 1;
 		break;
-	case BaselineTypeInternal_kCubicSpline:
+	case LSQFitTypeInternal_kCubicSpline:
 		num_bases = kNumBasesCubicSpline;
 		break;
-	case BaselineTypeInternal_kSinusoid:
+	case LSQFitTypeInternal_kSinusoid:
 		num_bases = 2 * order + 1;
 		break;
 	default:
@@ -126,32 +126,32 @@ inline size_t GetNumberOfContextBases(BaselineTypeInternal const baseline_type,
 }
 
 /**
- * Returns the number of all bases for the given baseline type.
+ * Returns the number of all bases for the given fitting type.
  *
- * @param[in] baseline_type Type of baseline. It must be one
- * of the elements in sakura_BaselineType.
- * @param[in] order Parameter of baseline. It is the maximum
- * polynomial order if baseline_type is
- * BaselineTypeInternal_kPolynomial or
- * BaselineTypeInternal_kChebyshev, or the number of spline
- * pieces if baseline_type is BaselineTypeInternal_kCubicSpline,
- * or the maximum wave number if baseline_type is
- * BaselineTypeInternal_kSinusoid.
+ * @param[in] lsqfit_type Type of fitting. It must be one
+ * of the elements in sakura_LSQFitType.
+ * @param[in] order Parameter of fitting. It is the maximum
+ * polynomial order if lsqfit_type is
+ * LSQFitTypeInternal_kPolynomial or
+ * LSQFitTypeInternal_kChebyshev, or the number of spline
+ * pieces if lsqfit_type is LSQFitTypeInternal_kCubicSpline,
+ * or the maximum wave number if lsqfit_type is
+ * LSQFitTypeInternal_kSinusoid.
  * @return The returned number should be one of the followings:
  * ( @a order +1) for Polynomial and Chebyshev Polynomial,
  * ( @a order +3 ) for Cubic Spline and
  * ( 2 * @a order +1) for Sinusoid.
  */
-inline size_t GetNumberOfLsqBases(BaselineTypeInternal const baseline_type,
+inline size_t GetNumberOfLsqBases(LSQFitTypeInternal const lsqfit_type,
 		size_t const order) {
 	size_t num_bases = 0;
-	switch (baseline_type) {
-	case BaselineTypeInternal_kPolynomial:
-	case BaselineTypeInternal_kChebyshev:
-	case BaselineTypeInternal_kSinusoid:
-		num_bases = GetNumberOfContextBases(baseline_type, order);
+	switch (lsqfit_type) {
+	case LSQFitTypeInternal_kPolynomial:
+	case LSQFitTypeInternal_kChebyshev:
+	case LSQFitTypeInternal_kSinusoid:
+		num_bases = GetNumberOfContextBases(lsqfit_type, order);
 		break;
-	case BaselineTypeInternal_kCubicSpline:
+	case LSQFitTypeInternal_kCubicSpline:
 		num_bases = kNumBasesCubicSpline - 1 + order;
 		break;
 	default:
@@ -162,41 +162,40 @@ inline size_t GetNumberOfLsqBases(BaselineTypeInternal const baseline_type,
 }
 
 /**
- * Returns the number of baseline coefficients.
+ * Returns the number of fitting coefficients.
  *
- * @param[in] baseline_type Type of baseline. It must be one
- * of the elements in sakura_BaselineType.
+ * @param[in] lsqfit_type Type of fitting. It must be one
+ * of the elements in sakura_LSQFitType.
  * @param[in] order It is used as the maximum polynomial order
- * if baseline_type is BaselineTypeInternal_kPolynomial or
- * BaselineTypeInternal_kChebyshev, or it is used as the number
- * of spline pieces if baseline_type is
- * BaselineTypeInternal_kCubicSpline.
+ * if lsqfit_type is LSQFitTypeInternal_kPolynomial or
+ * LSQFitTypeInternal_kChebyshev, or it is used as the number
+ * of spline pieces if lsqfit_type is
+ * LSQFitTypeInternal_kCubicSpline.
  * @param[in] num_nwave The length of @a nwave .
  * @param[in] nwave The maximum wave number. It is used only
- * if baseline_type is BaselineTypeInternal_kSinusoid.
+ * if lsqfit_type is LSQFitTypeInternal_kSinusoid.
  * @return The returned number should be one of the followings:
  * ( @a order +1) for Polynomial and Chebyshev Polynomial,
  * ( @a order *4 ) for Cubic Spline,
  * ( 2 * @a num_nwave -1) for Sinusoid with @a nwave containing '0', or
  * ( 2 * @a num_nwave ) for Sinusoid with @a nwave not containing '0'.
  */
-inline size_t DoGetNumberOfCoefficients(
-		BaselineTypeInternal const baseline_type, uint16_t const order,
-		size_t const num_nwave, size_t const *nwave) {
+inline size_t DoGetNumberOfCoefficients(LSQFitTypeInternal const lsqfit_type,
+		uint16_t const order, size_t const num_nwave, size_t const *nwave) {
 	size_t num_bases = 0;
-	switch (baseline_type) {
-	case BaselineTypeInternal_kPolynomial:
-	case BaselineTypeInternal_kChebyshev:
+	switch (lsqfit_type) {
+	case LSQFitTypeInternal_kPolynomial:
+	case LSQFitTypeInternal_kChebyshev:
 		num_bases = order + 1;
 		break;
-	case BaselineTypeInternal_kCubicSpline:
+	case LSQFitTypeInternal_kCubicSpline:
 		if (order < 1) {
 			throw std::invalid_argument(
 					"order (number of pieces) must be a positive value!");
 		}
 		num_bases = kNumBasesCubicSpline * order;
 		break;
-	case BaselineTypeInternal_kSinusoid:
+	case LSQFitTypeInternal_kSinusoid:
 		if (!IsUniqueAndAscendingOrder(num_nwave, nwave)) {
 			throw std::invalid_argument(
 					"nwave elements must be in ascending order and not duplicate.");
@@ -246,10 +245,10 @@ inline void DoSetBasisDataPolynomial(size_t num_bases, U const i_d, size_t *idx,
 
 /**
  * The function to compute polynomial basis data and set them
- * in the given baseline context. The maximum polynomial order
- * is taken from the given baseline context.
+ * in the given lsqfit context. The maximum polynomial order
+ * is taken from the given lsqfit context.
  *
- * @tparam T Type of baseline context.
+ * @tparam T Type of lsqfit context.
  * @tparam U Type of basis data.
  */
 template<typename T, typename U>
@@ -268,10 +267,10 @@ inline void SetBasisDataPolynomial(T *context) {
 
 /**
  * The function to compute Chebyshev polynomial basis data
- * and set them in the given baseline context. The maximum
- * order is taken from the given baseline context.
+ * and set them in the given lsqfit context. The maximum
+ * order is taken from the given lsqfit context.
  *
- * @tparam T Type of baseline context.
+ * @tparam T Type of lsqfit context.
  * @tparam U Type of basis data.
  */
 template<typename T, typename U>
@@ -306,8 +305,8 @@ inline void SetBasisDataChebyshev(T *context) {
 
 /**
  * The function to compute sinusoidal basis data and set them
- * in the given baseline context. The maximum wave number is
- * taken from the given baseline context. The value of the
+ * in the given lsqfit context. The maximum wave number is
+ * taken from the given lsqfit context. The value of the
  * @a j -th basis at the @a i -th position is stored at
  * @a context->basis_data[ @a i * ( @a context->num_basis_data
  * ) + @a j ]. As for the order of basis functions, constant
@@ -315,7 +314,7 @@ inline void SetBasisDataChebyshev(T *context) {
  * followed by sine and cosine for wave number of 1, sine and
  * cosine for wave number of 2, and so on.
  *
- * @tparam T Type of baseline context.
+ * @tparam T Type of lsqfit context.
  * @tparam U Type of basis data.
  */
 template<typename T, typename U>
@@ -325,7 +324,7 @@ inline void SetBasisDataSinusoid(T *context) {
 	auto data = AssumeAligned(context->basis_data);
 
 	size_t num_basis_data = context->num_basis_data;
-	size_t max_nwave = context->baseline_param;
+	size_t max_nwave = context->lsqfit_param;
 	size_t idx = 0;
 	if (num_basis_data == 1) {
 		data[idx] = 1.0;
@@ -345,15 +344,15 @@ inline void SetBasisDataSinusoid(T *context) {
 
 /**
  * It allocates memory space to be used as temporary working
- * area for baseline-related calculation and set them the
- * members of the given baseline context.
- * @param[in,out] context The baseline context.
+ * area for fitting-related calculation and set them the
+ * members of the given lsqfit context.
+ * @param[in,out] context The lsqfit context.
  */
 template<typename T>
 inline void AllocateWorkSpaces(T *context) {
-	auto const type = context->baseline_type;
+	auto const type = context->lsqfit_type;
 	context->num_lsq_bases_max = GetNumberOfLsqBases(type,
-			context->baseline_param);
+			context->lsqfit_param);
 	size_t num_lsq_matrix = context->num_lsq_bases_max
 			* context->num_lsq_bases_max;
 	context->lsq_matrix = nullptr;
@@ -401,7 +400,7 @@ inline void AllocateWorkSpaces(T *context) {
 							* context->num_lsq_bases_max,
 					&context->use_bases_idx));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->use_bases_idx));
-	if (type != BaselineTypeInternal_kSinusoid) {
+	if (type != LSQFitTypeInternal_kSinusoid) {
 		for (size_t i = 0; i < context->num_lsq_bases_max; ++i) {
 			context->use_bases_idx[i] = i;
 		}
@@ -409,9 +408,9 @@ inline void AllocateWorkSpaces(T *context) {
 	context->use_bases_idx_storage = storage_for_use_bases_idx.release();
 
 	size_t num_coeff_full_max = context->num_lsq_bases_max;
-	if (type == BaselineTypeInternal_kCubicSpline) {
+	if (type == LSQFitTypeInternal_kCubicSpline) {
 		num_coeff_full_max = DoGetNumberOfCoefficients(type,
-				context->baseline_param, 0, nullptr);
+				context->lsqfit_param, 0, nullptr);
 	}
 	context->coeff_full = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_full(
@@ -426,7 +425,7 @@ inline void AllocateWorkSpaces(T *context) {
 	context->cspline_basis_storage = nullptr;
 	context->cspline_lsq_coeff = nullptr;
 	context->cspline_lsq_coeff_storage = nullptr;
-	if (type == BaselineTypeInternal_kCubicSpline) {
+	if (type == LSQFitTypeInternal_kCubicSpline) {
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_basis(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(*context->cspline_basis)
@@ -447,15 +446,15 @@ inline void AllocateWorkSpaces(T *context) {
 }
 
 /**
- * Set basis data in the given baseline context.
+ * Set basis data in the given lsqfit context.
  * @param[in] order The maximum polynomial order for polynomial
  * or Chebyshev polynomial, or the number of spline pieces
  * for cubic spline, or the maximum wave number for sinusoid.
- * @param[in,out] context Pointer to the baseline context.
+ * @param[in,out] context Pointer to the lsqfit context.
  */
 template<typename T>
 inline void SetBasisData(size_t const order, T *context) {
-	auto const type = context->baseline_type;
+	auto const type = context->lsqfit_type;
 	context->num_bases = GetNumberOfContextBases(type, order);
 	size_t min_num_basis_data = GetNumberOfLsqBases(type, order);
 
@@ -464,17 +463,17 @@ inline void SetBasisData(size_t const order, T *context) {
 	}
 	AllocateMemoryForBasisData<T>(context);
 	switch (type) {
-	case BaselineTypeInternal_kPolynomial:
+	case LSQFitTypeInternal_kPolynomial:
 		SetBasisDataPolynomial<T, double>(context);
 		break;
-	case BaselineTypeInternal_kChebyshev:
+	case LSQFitTypeInternal_kChebyshev:
 		SetBasisDataChebyshev<T, double>(context);
 		break;
-	case BaselineTypeInternal_kCubicSpline:
+	case LSQFitTypeInternal_kCubicSpline:
 		assert(context->num_bases == kNumBasesCubicSpline);
 		SetBasisDataPolynomial<T, double>(context);
 		break;
-	case BaselineTypeInternal_kSinusoid:
+	case LSQFitTypeInternal_kSinusoid:
 		SetBasisDataSinusoid<T, double>(context);
 		break;
 	default:
@@ -484,11 +483,11 @@ inline void SetBasisData(size_t const order, T *context) {
 }
 
 /**
- * Destroy baseline context object.
- * @param[in] context Pointer to baseline context.
+ * Destroy lsqfit context object.
+ * @param[in] context Pointer to lsqfit context.
  */
 template<typename T>
-inline void DestroyBaselineContext(T *context) {
+inline void DestroyLSQFitContext(T *context) {
 	if (context != nullptr) {
 		if (context->basis_data_storage != nullptr) {
 			LIBSAKURA_PREFIX::Memory::Free(context->basis_data_storage);
@@ -525,23 +524,23 @@ inline void DestroyBaselineContext(T *context) {
 }
 
 /**
- * The main function to create baseline context object.
+ * The main function to create lsqfit context object.
  *
- * @tparam T Type of baseline context.
- * @param[in] baseline_type Type of baseline function. It must be
- * one of those defined in sakura_BaselineType .
- * @param[in] order It is used only if @a baseline_type is
- * BaselineTypeInternal_kPolynomial or BaselineTypeInternal_kChebyshev .
- * @param[in] npiece It is used only if @a baseline_type is
- * BaselineTypeInternal_kCubicSpline .
- * @param[in] nwave It is used only if @a baseline_type is
- * BaselineTypeInternal_kSinusoid .
+ * @tparam T Type of lsqfit context.
+ * @param[in] lsqfit_type Type of fitting function. It must be
+ * one of those defined in sakura_LSQFitType .
+ * @param[in] order It is used only if @a lsqfit_type is
+ * LSQFitTypeInternal_kPolynomial or LSQFitTypeInternal_kChebyshev .
+ * @param[in] npiece It is used only if @a lsqfit_type is
+ * LSQFitTypeInternal_kCubicSpline .
+ * @param[in] nwave It is used only if @a lsqfit_type is
+ * LSQFitTypeInternal_kSinusoid .
  * @param[in] num_basis_data Length of the arrays for basis data,
  * input data, etc.
- * @parama[out] Address of pointer to baseline context object.
+ * @parama[out] Address of pointer to lsqfit context object.
  */
 template<typename T>
-inline void CreateBaselineContext(BaselineTypeInternal const baseline_type,
+inline void CreateLSQFitContext(LSQFitTypeInternal const lsqfit_type,
 		uint16_t const order, uint16_t const npiece, uint16_t const nwave,
 		size_t const num_basis_data, T **context) {
 	try {
@@ -552,29 +551,29 @@ inline void CreateBaselineContext(BaselineTypeInternal const baseline_type,
 			throw std::bad_alloc();
 		}
 		work_context->basis_data_storage = nullptr;
-		work_context->baseline_type = baseline_type;
+		work_context->lsqfit_type = lsqfit_type;
 		work_context->num_basis_data = num_basis_data;
-		switch (baseline_type) {
-		case BaselineTypeInternal_kPolynomial:
-		case BaselineTypeInternal_kChebyshev:
-			work_context->baseline_param = order;
+		switch (lsqfit_type) {
+		case LSQFitTypeInternal_kPolynomial:
+		case LSQFitTypeInternal_kChebyshev:
+			work_context->lsqfit_param = order;
 			break;
-		case BaselineTypeInternal_kCubicSpline:
-			work_context->baseline_param = npiece;
+		case LSQFitTypeInternal_kCubicSpline:
+			work_context->lsqfit_param = npiece;
 			break;
-		case BaselineTypeInternal_kSinusoid:
-			work_context->baseline_param = nwave;
+		case LSQFitTypeInternal_kSinusoid:
+			work_context->lsqfit_param = nwave;
 			break;
 		default:
 			assert(false);
 			break;
 		}
 
-		SetBasisData<T>(work_context->baseline_param, work_context.get());
+		SetBasisData<T>(work_context->lsqfit_param, work_context.get());
 		AllocateWorkSpaces<T>(work_context.get());
 		*context = work_context.release();
 	} catch (...) {
-		DestroyBaselineContext<T>(*context);
+		DestroyLSQFitContext<T>(*context);
 		throw;
 	}
 }
@@ -719,7 +718,7 @@ inline void AddMulMatrixCubicSpline<float, double>(size_t num_boundary,
 inline std::string GetNotEnoughDataMessage(
 		uint16_t const idx_erroneous_fitting) {
 	std::string s;
-	s = "SubtractBaseline: available data became too few in the ";
+	s = "LSQFit: available data became too few in the ";
 	s += idx_erroneous_fitting;
 	s += " ";
 
@@ -756,7 +755,7 @@ inline std::string GetNotEnoughDataMessage(
  * @tparam U Type of the elements of @a boundary_arg
  * @param[in] num_mask Length of @a mask_arg
  * @param[in] mask_arg Array of mask. If true, the corresponding data
- * with the same index are used for baseline fitting.
+ * with the same index are used for model fitting.
  * @param[in] num_boundary Length of @a boundary_arg . It must be
  * the (number of spline pieces + 1).
  * @param[out] boundary_arg Positions of spline piece boundaries. The
@@ -838,7 +837,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 	}
 	U const three = static_cast<U>(3.0);
 	for (size_t i = 1; i < num_boundary - 1; ++i) {
-		size_t j = GetNumberOfLsqBases(BaselineTypeInternal_kCubicSpline, i);
+		size_t j = GetNumberOfLsqBases(LSQFitTypeInternal_kCubicSpline, i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
 		auto const b = static_cast<U>(boundary[i]);
 		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
@@ -925,20 +924,20 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 }
 
 /**
- * Compute the best-fit baseline model using basis data and
+ * Compute the best-fit model using basis data and
  * coefficients, then subtract it from input data.
  *
- * @tparam T Type of input data, best-fit baseline and
+ * @tparam T Type of input data, best-fit model and
  * residual data.
  * @tparam U Type of coefficients.
- * @tparam V Type of baseline context.
+ * @tparam V Type of lsqfit context.
  * @param[in] num_data Length of @a data , @a best_fit_model
  * and @a residual_data .
  * @param[in] data Input data.
- * @param[in] context Baseline context.
+ * @param[in] context LSQFit context.
  * @param[in] num_coeff Length of @a coeff .
  * @param[in] coeff Coefficients.
- * @param[out] best_fit_model The best-fit baseline data.
+ * @param[out] best_fit_model The best-fit model data.
  * @param[out] residual_data Residual data.
  */
 template<typename T, typename U, typename V>
@@ -951,24 +950,24 @@ inline void GetBestFitModelAndResidual(size_t num_data, T const *data,
 }
 
 /**
- * Compute the best-fit cubic spline baseline using basis
+ * Compute the best-fit cubic spline model using basis
  * data, coefficients and boundary positions, then subtract
  * it from input data.
  *
- * @tparam T Type of input data, best-fit baseline and
+ * @tparam T Type of input data, best-fit model and
  * residual data.
  * @tparam U Type of coefficients.
- * @tparam V Type of baseline context.
+ * @tparam V Type of lsqfit context.
  * @param[in] num_data Length of @a data , @a best_fit_model
  * and @a residual_data .
  * @param[in] data Input data.
- * @param[in] context Baseline context.
+ * @param[in] context LSQFit context.
  * @param[in] num_boundary Number of elements of @a boundary .
  * @param[in] boundary Positions of Spline boundaries.
  * @param[in] coeff_full Coefficients. It is a 2D array
  * and the coefficients for @a i -th piece must be stored at
  * @a coeff_full[i][] .
- * @param best_fit_model[out] The best-fit baseline data.
+ * @param best_fit_model[out] The best-fit model data.
  * @param residual_data[out] Residual data.
  */
 template<typename T, typename U, typename V>
@@ -977,7 +976,7 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
 		size_t const *boundary,
 		double const (*coeff_full)[kNumBasesCubicSpline], T *best_fit_model,
 		T *residual_data) {
-	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
+	assert(context->lsqfit_type == LSQFitTypeInternal_kCubicSpline);
 	assert(context->num_bases == kNumBasesCubicSpline);
 	AddMulMatrixCubicSpline<T, U>(num_boundary, boundary, coeff_full, num_data,
 			context->basis_data, best_fit_model);
@@ -990,7 +989,7 @@ inline void GetBestFitModelAndResidualCubicSpline(size_t num_data,
  *
  * @tparam T Type of data and lower/upper limits.
  * @param[in] num_boundary Number of elements of @a boundary_arg .
- * It must be 2 for baseline types other than Cubic Spline.
+ * It must be 2 for fitting types other than Cubic Spline.
  * @param[in] boundary_arg Boundary positions. Its length must be
  * (number of spline pieces +1).
  * @param[in] data_arg Input data.
@@ -1043,29 +1042,28 @@ inline void ClipData(size_t num_boundary, size_t *boundary_arg,
 }
 
 /**
- * This function contains the algorithm of baseline fitting itself,
- * and is called from its wrapper functions SubtractBaseline(),
- * SubtractBaselineCubicSpline(), GetBestFitBaselineCoefficients()
- * or GetBestFitBaselineCoefficientsCubicSpline().
+ * This function contains the algorithm of fitting itself,
+ * and is called from its wrapper functions Subtract() and
+ * SubtractCubicSpline(),
  *
- * @tparam T Type of input/output data, best-fit baseline data,
+ * @tparam T Type of input/output data, best-fit model data,
  * residual data, rms of residual data, and threshold level of
  * recursive clipping.
- * @tparam U Type of basis data of baseline model, best-fit
+ * @tparam U Type of basis data of fitting model, best-fit
  * coefficients, and boundary data used for cubic spline fitting.
- * @tparam V Type of baseline context.
+ * @tparam V Type of lsqfit context.
  * @param[out] out_arg If @a get_residual is true, it is residual
- * (baseline-subtracted) data, otherwise it is the best-fit
- * baseline.
+ * (model-subtracted) data, otherwise it is the best-fit
+ * model.
  */
 template<typename T, typename U, typename V, typename Func>
-inline void DoFitBaseline(V const *context, size_t num_data, T const *data_arg,
+inline void DoLSQFit(V const *context, size_t num_data, T const *data_arg,
 bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 		U const *basis_arg, size_t num_boundary, size_t *boundary_arg,
 		uint16_t num_fitting_max, T clip_threshold_sigma, bool get_residual,
 		U *coeff_arg, T *out_arg, bool *final_mask_arg, T *rms,
 		T *residual_data_arg, T *best_fit_model_arg, Func func,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(basis_arg));
@@ -1087,11 +1085,12 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 
 	size_t num_unmasked_data = 0;
 	for (size_t i = 0; i < num_data; ++i) {
-		if (mask[i]) ++num_unmasked_data;
+		if (mask[i])
+			++num_unmasked_data;
 	}
 	if (num_unmasked_data < num_coeff) {
-		*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
-		throw std::runtime_error("Too few unmasked data for baseline fitting!");
+		*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kNotEnoughData);
+		throw std::runtime_error("Too few unmasked data for fitting!");
 	}
 
 	num_unmasked_data = num_data;
@@ -1105,7 +1104,7 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 	assert(0.0 < clip_threshold_sigma);
 	for (uint16_t i = 1; i <= num_fitting_max; ++i) {
 		if (num_unmasked_data < num_coeff) {
-			*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData);
+			*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kNotEnoughData);
 			throw std::runtime_error(GetNotEnoughDataMessage(i));
 		}
 		if (num_unmasked_data <= num_clipped) {
@@ -1171,14 +1170,14 @@ bool const *mask_arg, size_t num_context_bases, size_t num_coeff,
 /**
  * Convert user-given wave number set used for sinusoidal
  * fitting to the array of indices to access basis data
- * stored in baseline context, then set the array into
- * the baseline context itself.
+ * stored in lsqfit context, then set the array into
+ * the lsqfit context itself.
  *
- * @tparam T Type of baseline context.
+ * @tparam T Type of lsqfit context.
  * @param[in] num_nwave Length of nwave.
  * @param[in] nwave User-given set of wave numbers that
  * are used for least-square fitting actually.
- * @param[out] context Baseline context in which the
+ * @param[out] context LSQFit context in which the
  * array of indices to access basis data are stored.
  */
 template<typename T>
@@ -1199,16 +1198,16 @@ inline void SetSinusoidUseBasesIndex(size_t const num_nwave,
 }
 
 /**
- * A wrapper function of DoFitBaseline() to fit polynomial,
+ * A wrapper function of DoLSQFit() to fit polynomial,
  * Chebyshev polynomial and sinusoids.
  * It is called from its C interface sakura_LSQFit*Float().
  *
- * @tparam T Type of input/output data, best-fit baseline data,
+ * @tparam T Type of input/output data, best-fit model data,
  * residual data, rms of residual data, and threshold level of
  * recursive clipping.
- * @tparam U Type of basis data of baseline model, best-fit
+ * @tparam U Type of basis data of fitting model, best-fit
  * coefficients, and boundary data used for cubic spline fitting.
- * @tparam V Type of baseline context.
+ * @tparam V Type of lsqfit context.
  */
 template<typename T, typename U, typename V>
 inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
@@ -1216,10 +1215,10 @@ inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
 		bool const *mask_arg, T clip_threshold_sigma, uint16_t num_fitting_max,
 		size_t num_coeff, U *coeff_arg, T *best_fit_arg, T *residual_arg,
 		bool *final_mask_arg, T *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	auto const type = context->baseline_type;
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status) {
+	auto const type = context->lsqfit_type;
 	assert(
-			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
+			(type == LSQFitTypeInternal_kPolynomial)||(type == LSQFitTypeInternal_kChebyshev)||(type == LSQFitTypeInternal_kSinusoid));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
@@ -1234,22 +1233,23 @@ inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
 	auto residual = AssumeAligned(residual_arg);
 	auto final_mask = AssumeAligned(final_mask_arg);
 
-	if (type == BaselineTypeInternal_kSinusoid) {
+	if (type == LSQFitTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
-	if (num_fitting_max == 0) return;
+	if (num_fitting_max == 0)
+		return;
 	size_t const num_boundary = 2;
 	SIMD_ALIGN
 	size_t boundary[num_boundary] = { 0, num_data };
 
-	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
+	DoLSQFit<T, U, V>(context, num_data, data, mask, context->num_bases,
 			num_coeff, context->basis_data, num_boundary, boundary,
 			num_fitting_max, clip_threshold_sigma, true, context->coeff_full,
 			nullptr, final_mask, rms, context->residual_data,
 			context->best_fit_model,
 			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
 						num_coeff, context->coeff_full, context->best_fit_model,
-						context->residual_data);}, baseline_status);
+						context->residual_data);}, lsqfit_status);
 
 	if (coeff != nullptr) {
 		std::copy(context->coeff_full, context->coeff_full + num_coeff, coeff);
@@ -1265,15 +1265,15 @@ inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
 }
 
 /**
- * A wrapper function of DoFitBaseline() to fit cubic spline.
+ * A wrapper function of DoLSQFit() to fit cubic spline.
  * It is called from its C interface sakura_LSQFitCubicSplineFloat().
  *
- * @tparam T Type of input/output data, best-fit baseline data,
+ * @tparam T Type of input/output data, best-fit model data,
  * residual data, rms of residual data, and threshold level of
  * recursive clipping.
- * @tparam U Type of basis data of baseline and best-fit
+ * @tparam U Type of basis data of fitting and best-fit
  * coefficients.
- * @tparam V Type of baseline context.
+ * @tparam V Type of lsqfit context.
  */
 template<typename T, typename U, typename V>
 inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
@@ -1281,8 +1281,8 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 		T clip_threshold_sigma, uint16_t num_fitting_max,
 		U (*coeff_arg)[kNumBasesCubicSpline], T *best_fit_arg, T *residual_arg,
 		bool *final_mask_arg, T *rms, size_t *boundary_arg,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status) {
+	assert(context->lsqfit_type == LSQFitTypeInternal_kCubicSpline);
 	assert(context->num_bases == kNumBasesCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
@@ -1303,14 +1303,15 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
 	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
 			context->cspline_basis);
-	if (num_fitting_max == 0) return;
+	if (num_fitting_max == 0)
+		return;
 	size_t const num_piece = num_boundary - 1;
-	size_t const num_coeff = GetNumberOfLsqBases(context->baseline_type,
+	size_t const num_coeff = GetNumberOfLsqBases(context->lsqfit_type,
 			num_piece);
 	auto coeff_full =
 			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
 
-	DoFitBaseline<T, U, V>(context, num_data, data, mask,
+	DoLSQFit<T, U, V>(context, num_data, data, mask,
 			context->num_lsq_bases_max, num_coeff, context->cspline_basis,
 			num_boundary, boundary, num_fitting_max, clip_threshold_sigma, true,
 			context->cspline_lsq_coeff, nullptr, final_mask, rms,
@@ -1318,7 +1319,7 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 			[&]() {
 				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff_full);
 				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context, num_boundary, boundary, coeff_full, context->best_fit_model, context->residual_data);},
-			baseline_status);
+			lsqfit_status);
 
 	if (coeff != nullptr) {
 		for (size_t i = 0; i < num_piece; ++i) {
@@ -1337,233 +1338,24 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 }
 
 /**
- * A wrapper function of DoFitBaseline() to fit/subtract
- * baseline for polynomial, Chebyshev polynomial and sinusoids.
- * It is called from its C interface sakura_SubtractBaselineFloat().
- *
- * @tparam T Type of input/output data, best-fit baseline data,
- * residual data, rms of residual data, and threshold level of
- * recursive clipping.
- * @tparam U Type of basis data of baseline model, best-fit
- * coefficients, and boundary data used for cubic spline fitting.
- * @tparam V Type of baseline context.
- * @param[out] out_arg If @a get_residual is true, it is residual
- * (baseline-subtracted) data, otherwise it is the best-fit
- * baseline.
- */
-template<typename T, typename U, typename V>
-inline void SubtractBaseline(V const *context, uint16_t order,
-		size_t const num_nwave, size_t const *nwave, size_t num_data,
-		T const *data_arg, bool const *mask_arg, T clip_threshold_sigma,
-		uint16_t num_fitting_max, bool get_residual, T *out_arg,
-		bool *final_mask_arg, T *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	auto const type = context->baseline_type;
-	assert(
-			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	auto const data = AssumeAligned(data_arg);
-	auto const mask = AssumeAligned(mask_arg);
-	auto out = AssumeAligned(out_arg);
-	auto final_mask = AssumeAligned(final_mask_arg);
-
-	if (type == BaselineTypeInternal_kSinusoid) {
-		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
-	}
-	size_t const num_coeff = DoGetNumberOfCoefficients(type, order, num_nwave,
-			nwave);
-	size_t const num_boundary = 2;
-	SIMD_ALIGN
-	size_t boundary[num_boundary] = { 0, num_data };
-
-	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, num_boundary, boundary,
-			num_fitting_max, clip_threshold_sigma, get_residual,
-			context->coeff_full, out, final_mask, rms, context->residual_data,
-			context->best_fit_model,
-			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
-						num_coeff, context->coeff_full, context->best_fit_model,
-						context->residual_data);}, baseline_status);
-}
-
-/**
- * A wrapper function of DoFitBaseline() to fit/subtract
- * baseline for cubic spline.
- * It is called from its C interface sakura_SubtractBaselineCubicSplineFloat().
- *
- * @tparam T Type of input/output data, best-fit baseline data,
- * residual data, rms of residual data, and threshold level of
- * recursive clipping.
- * @tparam U Type of basis data of baseline and best-fit
- * coefficients.
- * @tparam V Type of baseline context.
- * @param[out] out_arg If @a get_residual is true, it is residual
- * (baseline-subtracted) data, otherwise it is the best-fit
- * baseline.
- */
-template<typename T, typename U, typename V>
-inline void SubtractBaselineCubicSpline(V const *context, size_t num_boundary,
-		size_t num_data, T const *data_arg, bool const *mask_arg,
-		T clip_threshold_sigma, uint16_t num_fitting_max, bool get_residual,
-		T *out_arg, bool *final_mask_arg, float *rms, size_t *boundary_arg,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
-	assert(context->num_bases == kNumBasesCubicSpline);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
-	auto const data = AssumeAligned(data_arg);
-	auto const mask = AssumeAligned(mask_arg);
-	auto out = AssumeAligned(out_arg);
-	auto final_mask = AssumeAligned(final_mask_arg);
-	auto boundary = AssumeAligned(boundary_arg);
-
-	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
-	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
-			context->cspline_basis);
-	size_t num_coeff = GetNumberOfLsqBases(BaselineTypeInternal_kCubicSpline,
-			num_boundary - 1);
-	auto coeff_full =
-			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
-
-	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
-			context->cspline_basis, num_boundary, boundary, num_fitting_max,
-			clip_threshold_sigma, get_residual, context->cspline_lsq_coeff, out,
-			final_mask, rms, context->residual_data, context->best_fit_model,
-			[&]() {
-				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff_full);
-				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-						num_boundary, boundary, coeff_full, context->best_fit_model, context->residual_data);
-			}, baseline_status);
-}
-
-/**
- * A wrapper function of DoFitBaseline() to obtain best-fit
- * baseline coefficients for polynomial, Chebyshev polynomial
- * and sinusoids.
- * It is called from its C interface sakura_GetBestFitBaselineCoefficientsFloat().
- *
- * @tparam T Type of input/output data, best-fit baseline data,
- * residual data, rms of residual data, and threshold level of
- * recursive clipping.
- * @tparam U Type of basis data of baseline model, best-fit
- * coefficients, and boundary data used for cubic spline fitting.
- * @tparam V Type of baseline context.
- */
-template<typename T, typename U, typename V>
-inline void GetBestFitBaselineCoefficients(V const *context, size_t num_data,
-		T const *data_arg, bool const *mask_arg, T clip_threshold_sigma,
-		uint16_t num_fitting_max, size_t num_nwave, size_t const *nwave,
-		size_t num_coeff, U *coeff_arg,
-		bool *final_mask_arg, T *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	auto const type = context->baseline_type;
-	assert(
-			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	auto const data = AssumeAligned(data_arg);
-	auto const mask = AssumeAligned(mask_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto final_mask = AssumeAligned(final_mask_arg);
-
-	if (type == BaselineTypeInternal_kSinusoid) {
-		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
-	}
-	size_t const num_boundary = 2;
-	SIMD_ALIGN
-	size_t boundary[num_boundary] = { 0, num_data };
-
-	DoFitBaseline<T, U, V>(context, num_data, data, mask, context->num_bases,
-			num_coeff, context->basis_data, num_boundary, boundary,
-			num_fitting_max, clip_threshold_sigma, true, coeff, nullptr,
-			final_mask, rms, context->residual_data, context->best_fit_model,
-			[&]() {GetBestFitModelAndResidual<T, U, V>(num_data, data, context,
-						num_coeff, coeff, context->best_fit_model,
-						context->residual_data);}, baseline_status);
-}
-
-/**
- * A wrapper function of DoFitBaseline() to obtain best-fit
- * baseline coefficients for cubic spline.
- * It is called from its C interface
- * sakura_GetBestFitBaselineCoefficientsCubicSplineFloat().
- *
- * @tparam T Type of input/output data, best-fit baseline data,
- * residual data, rms of residual data, and threshold level of
- * recursive clipping.
- * @tparam U Type of basis data of baseline and best-fit
- * coefficients.
- * @tparam V Type of baseline context.
- */
-template<typename T, typename U, typename V>
-inline void GetBestFitBaselineCoefficientsCubicSpline(V const *context,
-		size_t num_data, T const *data_arg, bool const *mask_arg,
-		T clip_threshold_sigma, uint16_t num_fitting_max, size_t num_boundary,
-		U (*coeff_arg)[kNumBasesCubicSpline], bool *final_mask_arg, T *rms,
-		size_t *boundary_arg,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) {
-	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
-	assert(context->num_bases == kNumBasesCubicSpline);
-	assert(LIBSAKURA_SYMBOL(IsAligned)(context->basis_data));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(final_mask_arg));
-	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
-	auto const data = AssumeAligned(data_arg);
-	auto const mask = AssumeAligned(mask_arg);
-	auto coeff = AssumeAligned(coeff_arg);
-	auto final_mask = AssumeAligned(final_mask_arg);
-	auto boundary = AssumeAligned(boundary_arg);
-
-	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
-	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
-			context->cspline_basis);
-	size_t num_coeff = GetNumberOfLsqBases(BaselineTypeInternal_kCubicSpline,
-			num_boundary - 1);
-
-	DoFitBaseline<T, U, V>(context, num_data, data, mask, num_coeff, num_coeff,
-			context->cspline_basis, num_boundary, boundary, num_fitting_max,
-			clip_threshold_sigma, true, context->cspline_lsq_coeff, nullptr,
-			final_mask, rms, context->residual_data, context->best_fit_model,
-			[&]() {
-				GetFullCubicSplineCoefficients(num_boundary, boundary, context->cspline_lsq_coeff, coeff);
-				GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-						num_boundary, boundary, coeff, context->best_fit_model, context->residual_data);
-			}, baseline_status);
-}
-
-/**
- * Subtract baseline using basis data in baseline context and
+ * Subtract baseline using basis data in lsqfit context and
  * user-given coefficients. This function is for polynomial,
- * Chebyshev polynomial and sinusoid.
- * It is called from C interface
- * sakura_SubtractBaselineUsingCoefficientsFloat().
+ * Chebyshev polynomial and sinusoid, therefore called from
+ * C interface sakura_SubtractPolynomialFloat() and/or
+ * sakura_SubtractSinusoidFloat().
  *
  * @tparam T Type of input/output data.
  * @tparam U Type of coefficients.
- * @tparam V Type of baseline context.
- * @param[out] out_arg Baseline-subtracted data.
+ * @tparam V Type of lsqfit context.
+ * @param[out] out_arg Model-subtracted data.
  */
 template<typename T, typename U, typename V>
-//inline void SubtractBaselineUsingCoefficients(V const *context, size_t num_data,
-inline void Subtract(V const *context, size_t num_data,
-		T const *data_arg, size_t num_coeff, U const *coeff_arg,
-		size_t num_nwave, size_t const *nwave, T *out_arg) {
-	auto const type = context->baseline_type;
+inline void Subtract(V const *context, size_t num_data, T const *data_arg,
+		size_t num_coeff, U const *coeff_arg, size_t num_nwave,
+		size_t const *nwave, T *out_arg) {
+	auto const type = context->lsqfit_type;
 	assert(
-			(type == BaselineTypeInternal_kPolynomial)||(type == BaselineTypeInternal_kChebyshev)||(type == BaselineTypeInternal_kSinusoid));
+			(type == LSQFitTypeInternal_kPolynomial)||(type == LSQFitTypeInternal_kChebyshev)||(type == LSQFitTypeInternal_kSinusoid));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -1571,7 +1363,7 @@ inline void Subtract(V const *context, size_t num_data,
 	auto const coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
 
-	if (type == BaselineTypeInternal_kSinusoid) {
+	if (type == LSQFitTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
 	GetBestFitModelAndResidual<T, U, V>(num_data, data, context, num_coeff,
@@ -1579,22 +1371,21 @@ inline void Subtract(V const *context, size_t num_data,
 }
 
 /**
- * Subtract baseline using basis data in baseline context and
- * user-given coefficients. This function is for cubic spline.
- * It is called from C interface
- * sakura_SubtractBaselineCubicSplineUsingCoefficientsFloat().
+ * Subtract baseline using basis data in lsqfit context and
+ * user-given coefficients. This function is for cubic spline,
+ * therefore called from C interface sakura_SubtractCubicSplineFloat().
  *
  * @tparam T Type of input/output data.
  * @tparam U Type of coefficients.
- * @tparam V Type of baseline context.
- * @param[out] out_arg Baseline-subtracted data.
+ * @tparam V Type of lsqfit context.
+ * @param[out] out_arg Model-subtracted data.
  */
 template<typename T, typename U, typename V>
-inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
-		size_t num_data, T const *data_arg, size_t num_boundary,
+inline void SubtractCubicSpline(V const *context, size_t num_data,
+		T const *data_arg, size_t num_boundary,
 		U const (*coeff_arg)[kNumBasesCubicSpline], size_t const *boundary_arg,
 		T *out_arg) {
-	assert(context->baseline_type == BaselineTypeInternal_kCubicSpline);
+	assert(context->lsqfit_type == LSQFitTypeInternal_kCubicSpline);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(data_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
@@ -1617,26 +1408,24 @@ inline void SubtractBaselineCubicSplineUsingCoefficients(V const *context,
 } while (false)
 
 /**
- * Create a baseline context object for float data to fit.
- * It is only for polynomial and Chebyshev polynomial baseline.
+ * Create a lsqfit context object for float data to fit.
+ * It is only for polynomial and Chebyshev polynomial model.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
-		size_t num_data, LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
-				noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
+LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
 	CHECK_ARGS(
-			(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kPolynomial)) ||(baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)));
-	BaselineTypeInternal baseline_type_internal =
-			BaselineTypeInternal_kPolynomial;
-	if (baseline_type == LIBSAKURA_SYMBOL(BaselineType_kChebyshev)) {
-		baseline_type_internal = BaselineTypeInternal_kChebyshev;
+			(lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kPolynomial)) ||(lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kChebyshev)));
+	LSQFitTypeInternal lsqfit_type_internal = LSQFitTypeInternal_kPolynomial;
+	if (lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kChebyshev)) {
+		lsqfit_type_internal = LSQFitTypeInternal_kChebyshev;
 	}
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(GetNumberOfLsqBases(baseline_type_internal, order) <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type_internal, order) <= num_data);
 
 	try {
-		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
-				baseline_type_internal, order, 1, 0, num_data, context);
+		CreateLSQFitContext<LIBSAKURA_SYMBOL(LSQFitContextFloat)>(
+				lsqfit_type_internal, order, 1, 0, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1654,20 +1443,20 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 }
 
 /**
- * Create a baseline context object for float data to fit.
- * It is only for cubic spline baseline.
+ * Create a lsqfit context object for float data to fit.
+ * It is only for cubic spline model.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(
 		uint16_t npiece, size_t num_data,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
-	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
+	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kCubicSpline;
 	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(0 < npiece);
-	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, npiece) <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, npiece) <= num_data);
 
 	try {
-		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
-				baseline_type, 0, npiece, 0, num_data, context);
+		CreateLSQFitContext<LIBSAKURA_SYMBOL(LSQFitContextFloat)>(lsqfit_type,
+				0, npiece, 0, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1685,19 +1474,19 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicS
 }
 
 /**
- * Create a baseline context object for float data to fit.
- * It is only for sinusoidal baseline.
+ * Create a lsqfit context object for float data to fit.
+ * It is only for sinusoidal model.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(
 		uint16_t nwave, size_t num_data,
-		LIBSAKURA_SYMBOL(BaselineContextFloat) **context) noexcept {
-	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
+	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, nwave) + 1 <= num_data);
+	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, nwave) + 1 <= num_data);
 
 	try {
-		CreateBaselineContext<LIBSAKURA_SYMBOL(BaselineContextFloat)>(
-				baseline_type, 0, 1, nwave, num_data, context);
+		CreateLSQFitContext<LIBSAKURA_SYMBOL(LSQFitContextFloat)>(lsqfit_type,
+				0, 1, nwave, num_data, context);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1715,14 +1504,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinuso
 }
 
 /**
- * Destroy baseline context object.
+ * Destroy lsqfit context object.
  */
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContextFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
+LIBSAKURA_SYMBOL(LSQFitContextFloat) *context) noexcept {
 	CHECK_ARGS(context != nullptr);
 
 	try {
-		DestroyBaselineContext< LIBSAKURA_SYMBOL(BaselineContextFloat)
+		DestroyLSQFitContext< LIBSAKURA_SYMBOL(LSQFitContextFloat)
 		>(context);
 	} catch (...) {
 		assert(false);
@@ -1732,23 +1521,23 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) *context) noexcept {
 }
 
 /**
- * Computes the number of coefficients for given baseline type and
+ * Computes the number of coefficients for given fitting type and
  * parameters. It can be used for polynomial, Chebyshev, and cubic
- * spline baseline.
+ * spline model.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, uint16_t order,
 		size_t *num_coeff) noexcept {
 	CHECK_ARGS(context != nullptr);
-	auto const type = context->baseline_type;
+	auto const type = context->lsqfit_type;
 	CHECK_ARGS(
-			(type == BaselineTypeInternal_kPolynomial)
-					|| (type == BaselineTypeInternal_kChebyshev)
-					|| (type == BaselineTypeInternal_kCubicSpline));
-	if (type == BaselineTypeInternal_kCubicSpline) {
+			(type == LSQFitTypeInternal_kPolynomial)
+					|| (type == LSQFitTypeInternal_kChebyshev)
+					|| (type == LSQFitTypeInternal_kCubicSpline));
+	if (type == LSQFitTypeInternal_kCubicSpline) {
 		CHECK_ARGS(0 < order);
 	}
-	CHECK_ARGS(order <= context->baseline_param);
+	CHECK_ARGS(order <= context->lsqfit_param);
 	CHECK_ARGS(num_coeff != nullptr);
 
 	try {
@@ -1778,21 +1567,21 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
  * pointer in case users do not need it.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, uint16_t order,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
 		float best_fit[/*num_data*/], float residual[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
-	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status) noexcept {
+	CHECK_ARGS(lsqfit_status != nullptr);
+	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kNG);
 	CHECK_ARGS(context != nullptr);
-	auto const type = context->baseline_type;
+	auto const type = context->lsqfit_type;
 	CHECK_ARGS(
-			(type == BaselineTypeInternal_kPolynomial)
-					|| (type == BaselineTypeInternal_kChebyshev));
-	CHECK_ARGS(order <= context->baseline_param);
+			(type == LSQFitTypeInternal_kPolynomial)
+					|| (type == LSQFitTypeInternal_kChebyshev));
+	CHECK_ARGS(order <= context->lsqfit_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1816,10 +1605,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
 	CHECK_ARGS(rms != nullptr);
 
 	try {
-		LSQFit<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(context,
+		LSQFit<float, double, LIBSAKURA_SYMBOL(LSQFitContextFloat)>(context,
 				order, 0, nullptr, num_data, data, mask, clip_threshold_sigma,
 				num_fitting_max, num_coeff, coeff, best_fit, residual,
-				final_mask, rms, baseline_status);
+				final_mask, rms, lsqfit_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1830,7 +1619,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1852,22 +1641,22 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, uint16_t order,
  * pointer in case users do not need it.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_pieces,
 		size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, double coeff[/*num_pieces*/][4],
 		float best_fit[/*num_data*/], float residual[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
 		size_t boundary[/*num_pieces+1*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
-	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status) noexcept {
+	CHECK_ARGS(lsqfit_status != nullptr);
+	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kNG);
 	CHECK_ARGS(context != nullptr);
-	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kCubicSpline;
-	CHECK_ARGS(context->baseline_type == baseline_type);
+	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kCubicSpline;
+	CHECK_ARGS(context->lsqfit_type == lsqfit_type);
 	CHECK_ARGS(0 < num_pieces);
-	CHECK_ARGS(num_pieces <= context->baseline_param);
-	CHECK_ARGS(GetNumberOfLsqBases(baseline_type, num_pieces) <= num_data);
+	CHECK_ARGS(num_pieces <= context->lsqfit_param);
+	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, num_pieces) <= num_data);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1890,10 +1679,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(boundary));
 
 	try {
-		LSQFitCubicSpline<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(
+		LSQFitCubicSpline<float, double, LIBSAKURA_SYMBOL(LSQFitContextFloat)>(
 				context, num_pieces + 1, num_data, data, mask,
 				clip_threshold_sigma, num_fitting_max, coeff, best_fit,
-				residual, final_mask, rms, boundary, baseline_status);
+				residual, final_mask, rms, boundary, lsqfit_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1904,7 +1693,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
@@ -1926,23 +1715,23 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_pieces,
  * pointer in case users do not need it.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_data,
 		float const data[/*num_data*/], bool const mask[/*num_data*/],
 		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
 		double coeff[/*num_coeff*/], float best_fit[/*num_data*/],
 		float residual[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status) noexcept {
-	CHECK_ARGS(baseline_status != nullptr);
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kNG);
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status) noexcept {
+	CHECK_ARGS(lsqfit_status != nullptr);
+	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kNG);
 	CHECK_ARGS(context != nullptr);
-	BaselineTypeInternal const baseline_type = BaselineTypeInternal_kSinusoid;
-	CHECK_ARGS(context->baseline_type == baseline_type);//BaselineTypeInternal_kSinusoid);
+	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
+	CHECK_ARGS(context->lsqfit_type == lsqfit_type);//LSQFitTypeInternal_kSinusoid);
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
-	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->lsqfit_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -1950,7 +1739,7 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(mask));
 	CHECK_ARGS(0.0f < clip_threshold_sigma);
 	CHECK_ARGS(
-			DoGetNumberOfCoefficients(baseline_type, 0, num_nwave, nwave)
+			DoGetNumberOfCoefficients(lsqfit_type, 0, num_nwave, nwave)
 					<= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	if (coeff != nullptr) {
@@ -1967,10 +1756,10 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
 	CHECK_ARGS(rms != nullptr);
 
 	try {
-		LSQFit<float, double, LIBSAKURA_SYMBOL(BaselineContextFloat)>(context,
-				0, num_nwave, nwave, num_data, data, mask, clip_threshold_sigma,
+		LSQFit<float, double, LIBSAKURA_SYMBOL(LSQFitContextFloat)>(context, 0,
+				num_nwave, nwave, num_data, data, mask, clip_threshold_sigma,
 				num_fitting_max, num_coeff, coeff, best_fit, residual,
-				final_mask, rms, baseline_status);
+				final_mask, rms, lsqfit_status);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -1981,26 +1770,26 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_nwave,
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);
 	}
-	*baseline_status = LIBSAKURA_SYMBOL(BaselineStatus_kOK);
+	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kOK);
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
 /**
- * Subtract baseline using basis data in baseline context and
- * user-given coefficients. This function is for baseline type
+ * Subtract baseline using basis data in lsqfit context and
+ * user-given coefficients. This function is for fitting type
  * of polynomial and Chebyshev polynomial.
  *
- * @param[out] out_arg Baseline-subtracted data.
+ * @param[out] out_arg Model-subtracted data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_coeff,
 		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
 	CHECK_ARGS(context != nullptr);
-	auto const type = context->baseline_type;
+	auto const type = context->lsqfit_type;
 	CHECK_ARGS(
-			(type == BaselineTypeInternal_kPolynomial)
-					|| (type == BaselineTypeInternal_kChebyshev));
+			(type == LSQFitTypeInternal_kPolynomial)
+					|| (type == LSQFitTypeInternal_kChebyshev));
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -2012,10 +1801,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		//SubtractBaselineUsingCoefficients<float, double,
-		Subtract<float, double,
-		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				num_coeff, coeff, 0, nullptr, out);
+		Subtract<float, double, LIBSAKURA_SYMBOL(LSQFitContextFloat)>(context,
+				num_data, data, num_coeff, coeff, 0, nullptr, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -2027,22 +1814,22 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 }
 
 /**
- * Subtract baseline using basis data in baseline context and
- * user-given coefficients. This function is for baseline type
+ * Subtract baseline using basis data in lsqfit context and
+ * user-given coefficients. This function is for fitting type
  * of cubic spline.
  *
- * @param[out] out_arg Baseline-subtracted data.
+ * @param[out] out_arg Model-subtracted data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*num_pieces*/][kNumBasesCubicSpline],
 		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
 				noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kCubicSpline);
+	CHECK_ARGS(context->lsqfit_type == LSQFitTypeInternal_kCubicSpline);
 	CHECK_ARGS(0 < num_pieces);
-	CHECK_ARGS(num_pieces <= context->baseline_param);
+	CHECK_ARGS(num_pieces <= context->lsqfit_param);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
@@ -2056,9 +1843,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		SubtractBaselineCubicSplineUsingCoefficients<float, double,
-		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				num_pieces + 1, coeff, boundary, out);
+		SubtractCubicSpline<float, double, LIBSAKURA_SYMBOL(LSQFitContextFloat)>(
+				context, num_data, data, num_pieces + 1, coeff, boundary, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
@@ -2070,29 +1856,29 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 }
 
 /**
- * Subtract baseline using basis data in baseline context and
- * user-given coefficients. This function is for baseline type
+ * Subtract baseline using basis data in lsqfit context and
+ * user-given coefficients. This function is for fitting type
  * of sinusoids.
  *
- * @param[out] out_arg Baseline-subtracted data.
+ * @param[out] out_arg Model-subtracted data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
-LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
+LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
 		float const data[/*num_data*/], size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double const coeff[/*num_coeff*/], float out[/*num_data*/]) noexcept {
 	CHECK_ARGS(context != nullptr);
-	CHECK_ARGS(context->baseline_type == BaselineTypeInternal_kSinusoid);
+	CHECK_ARGS(context->lsqfit_type == LSQFitTypeInternal_kSinusoid);
 	CHECK_ARGS(num_data == context->num_basis_data);
 	CHECK_ARGS(data != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(data));
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
-	CHECK_ARGS(nwave[num_nwave - 1] <= context->baseline_param);
+	CHECK_ARGS(nwave[num_nwave - 1] <= context->lsqfit_param);
 	CHECK_ARGS(
-			DoGetNumberOfCoefficients(context->baseline_type, 0, num_nwave,
-					nwave) <= num_coeff);
+			DoGetNumberOfCoefficients(context->lsqfit_type, 0, num_nwave, nwave)
+					<= num_coeff);
 	CHECK_ARGS(num_coeff <= context->num_bases);
 	CHECK_ARGS(coeff != nullptr);
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(coeff));
@@ -2100,10 +1886,8 @@ LIBSAKURA_SYMBOL(BaselineContextFloat) const *context, size_t num_data,
 	CHECK_ARGS(LIBSAKURA_SYMBOL(IsAligned)(out));
 
 	try {
-		//SubtractBaselineUsingCoefficients<float, double,
-		Subtract<float, double,
-		LIBSAKURA_SYMBOL(BaselineContextFloat)>(context, num_data, data,
-				num_coeff, coeff, num_nwave, nwave, out);
+		Subtract<float, double, LIBSAKURA_SYMBOL(LSQFitContextFloat)>(context,
+				num_data, data, num_coeff, coeff, num_nwave, nwave, out);
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed.");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);

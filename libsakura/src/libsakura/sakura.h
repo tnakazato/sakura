@@ -1504,20 +1504,20 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LMFitGaussianFloat)(
 typedef enum {
 	/**
 	 * @brief OK
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kOK) = 0,
+	 */LIBSAKURA_SYMBOL(LSQFitStatus_kOK) = 0,
 
 	/**
 	 * @brief NG
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kNG) = 1,
+	 */LIBSAKURA_SYMBOL(LSQFitStatus_kNG) = 1,
 
 	/**
 	 * @brief Not enough data for baseline fitting
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kNotEnoughData) = 2,
+	 */LIBSAKURA_SYMBOL(LSQFitStatus_kNotEnoughData) = 2,
 
 	/**
 	 * @brief Number of error codes implemented
-	 */LIBSAKURA_SYMBOL(BaselineStatus_kNumElements)
-}LIBSAKURA_SYMBOL(BaselineStatus);
+	 */LIBSAKURA_SYMBOL(LSQFitStatus_kNumElements)
+}LIBSAKURA_SYMBOL(LSQFitStatus);
 
 /**
  * @brief Enumerations to define baseline type.
@@ -1525,21 +1525,21 @@ typedef enum {
 typedef enum {
 	/**
 	 * @brief Polynomial
-	 */LIBSAKURA_SYMBOL(BaselineType_kPolynomial),
+	 */LIBSAKURA_SYMBOL(LSQFitType_kPolynomial),
 
 	/**
 	 * @brief Chebyshev Polynomial
-	 */LIBSAKURA_SYMBOL(BaselineType_kChebyshev),
+	 */LIBSAKURA_SYMBOL(LSQFitType_kChebyshev),
 
 	/**
 	 * @brief Number of baseline functions implemented
-	 */LIBSAKURA_SYMBOL(BaselineType_kNumElements)
-}LIBSAKURA_SYMBOL(BaselineType);
+	 */LIBSAKURA_SYMBOL(LSQFitType_kNumElements)
+}LIBSAKURA_SYMBOL(LSQFitType);
 
 /**
  * @brief Context struct for baseline fitting
  */
-struct LIBSAKURA_SYMBOL(BaselineContextFloat);
+struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
 
 /**
  * @brief Create an object containing baseline model data.
@@ -1547,9 +1547,9 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @note A baseline context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
  * thread.
- * @param[in] baseline_type Type of basis function. It should
- * be either of sakura_BaselineType_kPolynomial or
- * sakura_BaselineType_kChebyshev.
+ * @param[in] lsqfit_type Type of basis function. It should
+ * be either of sakura_LSQFitType_kPolynomial or
+ * sakura_LSQFitType_kChebyshev.
  * @param[in] order Polynomial order. It must be positive or
  * zero.
  * @param[in] num_data Number of data to fit baseline. It must
@@ -1558,18 +1558,18 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
  * @a num_data is 1.
  * @param[out] context An object containing baseline model data.
  * When @a context is no longer used, it must be destroyed by
- * @ref sakura_DestroyBaselineContextFloat .
+ * @ref sakura_DestroyLSQFitContextFloat .
  * @return Status code.
  *
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
-LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
+LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 		size_t num_data,
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @copybrief sakura_CreateBaselineContextPolynomialFloat
+ * @copybrief sakura_CreateLSQFitContextPolynomialFloat
  * @details
  * @note A baseline context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
@@ -1582,17 +1582,17 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * is 4.
  * @param[out] context An object containing baseline model data.
  * When @a context is no longer used, it must be destroyed by
- * @ref sakura_DestroyBaselineContextFloat .
+ * @ref sakura_DestroyLSQFitContextFloat .
  * @return Status code.
  *
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextCubicSplineFloat)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(
 		uint16_t npiece, size_t num_data,
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @copybrief sakura_CreateBaselineContextPolynomialFloat
+ * @copybrief sakura_CreateLSQFitContextPolynomialFloat
  * @details
  * @note A baseline context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
@@ -1605,24 +1605,24 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * @a num_data is 2.
  * @param[out] context An object containing baseline model data.
  * When @a context is no longer used, it must be destroyed by
- * @ref sakura_DestroyBaselineContextFloat .
+ * @ref sakura_DestroyLSQFitContextFloat .
  * @return Status code.
  *
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextSinusoidFloat)(
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(
 		uint16_t nwave, size_t num_data,
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Destroy an object containing baseline model data.
  * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
  * @return Status code.
  *
  * MT-safe
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyBaselineContextFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) *context)
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) *context)
 				LIBSAKURA_NOEXCEPT;
 
 /**
@@ -1641,12 +1641,12 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
  * times or until the fitting result converges. Once fitting is done,
  * the updated mask information is stored in @a final_mask .
- * @param[in] context A context created by @ref sakura_CreateBaselineContextPolynomialFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextPolynomialFloat .
  * @param[in] order Polynomial order. It should not exceed the @a order
  * specified in creation of @a context .
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateBaselineContextPolynomialFloat() to create
+ * given to sakura_CreateLSQFitContextPolynomialFloat() to create
  * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
@@ -1689,18 +1689,18 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of @a residual .
- * @param[out] baseline_status Baseline-specific error code.
+ * @param[out] lsqfit_status Baseline-specific error code.
  * @return Status code.
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		uint16_t order, size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
 		float best_fit[/*num_data*/], float residual[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -1720,13 +1720,13 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * for ( @a num_fitting_max-1 ) times or until the fitting result converges.
  * Once fitting is done, the updated mask information is stored in
  * @a final_mask .
- * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextCubicSplineFloat .
  * @param[in] num_pieces Number of spline pieces. It must be positive
  * and also must not exceed the number of spline pieces specified in
  * creation of @a context .
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateBaselineContextCubicSplineFloat() to create
+ * given to sakura_CreateLSQFitContextCubicSplineFloat() to create
  * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
@@ -1775,19 +1775,19 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * element will be @a num_data , which is the next of the right edge
  * of the last (right-most) spline piece.
  * @n must-be-aligned
- * @param[out] baseline_status Baseline-specific error code.
+ * @param[out] lsqfit_status Baseline-specific error code.
  * @return Status code.
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_pieces, size_t num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, double coeff[/*num_pieces*/][4],
 		float best_fit[/*num_data*/], float residual[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
 		size_t boundary[/*num_pieces+1*/],
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -1806,7 +1806,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
  * times or until the fitting result converges. Once fitting is done,
  * the updated mask information is stored in @a final_mask .
- * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers within the index range of @a data
  * to be used for sinusoidal fitting. The values must be positive or
@@ -1815,7 +1815,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * ascending order and must not be duplicate.
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateBaselineContextSinusoidFloat() to create
+ * given to sakura_CreateLSQFitContextSinusoidFloat() to create
  * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
@@ -1862,28 +1862,28 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  * to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of @a residual .
- * @param[out] baseline_status Baseline-specific error code.
+ * @param[out] lsqfit_status Baseline-specific error code.
  * @return Status code.
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_nwave, size_t const nwave[/*num_nwave*/], size_t num_data,
 		float const data[/*num_data*/],
 		bool const mask[/*num_data*/], float clip_threshold_sigma,
 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
 		float best_fit[/*num_data*/], float residual[/*num_data*/],
 		bool final_mask[/*num_data*/], float *rms,
-		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
  * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
  * It must be equal to @a num_data which was given to
- * sakura_CreateBaselineContextFloat() to create @a context .
+ * sakura_CreateLSQFitContextFloat() to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_coeff The number of elements in @a coeff .
@@ -1901,7 +1901,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
 		double const coeff[/*num_data*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
@@ -1909,10 +1909,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 /**
  * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
  * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextCubicSplineFloat .
  * @param[in] num_data The number of elements in @a data and @a out .
  * It must be equal to @a num_data which was given to
- * sakura_CreateBaselineContextCubicSplineFloat() to create @a context .
+ * sakura_CreateLSQFitContextCubicSplineFloat() to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_pieces The number of spline pieces. If zero is
@@ -1937,7 +1937,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
 		double const coeff[/*num_pieces*/][4],
 		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
@@ -1946,10 +1946,10 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 /**
  * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
  * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
  * It must be equal to @a num_data which was given to
- * sakura_CreateBaselineContextSinusoidFloat() to create @a context .
+ * sakura_CreateLSQFitContextSinusoidFloat() to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_nwave The number of elements in the array @a nwave .
@@ -1977,7 +1977,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
 		double const coeff[/*num_data*/], float out[/*num_data*/])
@@ -1986,7 +1986,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
 /**
  * @brief Return the number of basis functions used for baseline fitting.
  * @details
- * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+ * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
  * @param[in] order Parameter for the specified function.
  * It is the order (for polynomial and Chebyshev polynomial), or
  * the number of pieces (for cubic spline), or the maximum wave
@@ -2000,7 +2000,7 @@ LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
-		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		uint16_t order, size_t *num_coeff)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
