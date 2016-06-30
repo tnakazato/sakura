@@ -832,7 +832,7 @@ inline void DoLMFitGaussianDouble(size_t const num_data,
 
 	// evaluate errors in the estimated parameter values
 	auto jac = lm.fjac;
-	if (0 != functor.df(params, jac)) {
+	if (0 != functor.df(params, jac)) { // re-calculate Jacobian to get correct values
 		throw std::runtime_error(
 				"LMFitGaussianDouble: failed to evaluate Jacobian.");
 	}
