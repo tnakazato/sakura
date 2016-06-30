@@ -387,11 +387,33 @@ protected:
 		}
 	}
 
+	// Set Gaussian profile(s) + noise data
+	void SetFloatGaussian(size_t num_data, float const sigma_noise,
+			size_t const num_line, double const *ans_height,
+			double const *ans_center, double const *ans_sigma, float *data) {
+		SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
+		// Add Gaussian profile to the input data
+		for (size_t iline = 0; iline < num_line; ++iline) {
+			for (size_t i = 0; i < num_data; ++i) {
+				double value = ((double) i - ans_center[iline])
+						/ ans_sigma[iline];
+				data[i] += ans_height[iline] * exp(-0.5 / M_PI * value * value);
+			}
+		}
+	}
+
 	// Check if the expected and actual values are enough close to each other
 	void CheckAlmostEqual(double expected, double actual, double tolerance) {
 		double deviation = fabs(actual - expected);
 		double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
 		ASSERT_LE(deviation, val);
+	}
+
+	// Check if the actual values are in range [expected-error, expected+error]
+	void CheckInRange(double expected, double actual, double error) {
+		double const factor = 5.0; //to cope with moderate accuracy in LM estimate
+		ASSERT_GE(actual, expected - factor * error);
+		ASSERT_LE(actual, expected + factor * error);
 	}
 
 	//1D float array
@@ -2526,117 +2548,217 @@ TEST_F(NumericOperation, UpdateLSQCoefficientsBadOrder) {
 	}
 }
 
-//LM start---------------------------------------
 /*
- TEST_F(NumericOperation, FitGaussianSingleComponent) {
- size_t const num_data = 100;
- SIMD_ALIGN
- float data[num_data];
- float sigma_noise = 1.0;
- SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
- // Answer of Gaussian parameters
- double ans_ampl = 7.0;
- double ans_peak = 37.0;
- double ans_sigma = 3.5;
- // Add Gaussian profile to the input data
- for (size_t i = 0; i < num_data; ++i) {
- double value = ((double) i - ans_peak) / ans_sigma;
- data[i] += ans_ampl * exp(-0.5 / M_PI * value * value);
- }
- SIMD_ALIGN
- bool mask[ELEMENTSOF(data)];
- SetBoolConstant(true, ELEMENTSOF(data), mask);
- // Add bad data and mask them
- for (size_t i = 0; i < 10; ++i) {
- data[i] = 100.0;
- mask[i] = false;
- }
- for (size_t i = 50; i < 52; ++i) {
- data[i] = -300.0;
- mask[i] = false;
- }
- for (size_t i = 80; i < 100; ++i) {
- data[i] = 300.0;
- mask[i] = false;
- }
- for (size_t i = 0; i < num_data; ++i) {
- //std::cout << i << "   " << data[i] << std::endl;
- }
-
- // Initial guess of Gaussian parameters
- double out_ampl = 1.0;
- double out_peak = 50.0;
- double out_sigma = 1.0;
- LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
- data, mask, 1, &out_ampl, &out_peak, &out_sigma);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-
- std::cout << "[out] ampl = " << out_ampl << ", peak = " << out_peak
- << ", sigma = " << out_sigma << std::endl;
- std::cout << "[ans] ampl = " << ans_ampl << ", peak = " << ans_peak
- << ", sigma = " << ans_sigma << std::endl;
- }
-
- TEST_F(NumericOperation, FitGaussianDoubleComponents) {
- size_t const num_data = 100;
- SIMD_ALIGN
- float data[num_data];
- float sigma_noise = 0.10;
- SetFloatConstantWithGaussianNoise(0.0f, sigma_noise, num_data, data);
- // Answer of Gaussian parameters
- size_t const num_line = 2;
- double ans_ampl[num_line] = {7.0, 6.0};
- double ans_peak[num_line] = {27.0, 70.0};
- double ans_sigma[num_line] = {1.0, 1.5};
- // Add Gaussian profile to the input data
- for (size_t iline = 0; iline < num_line; ++iline) {
- for (size_t i = 0; i < num_data; ++i) {
- double value = ((double) i - ans_peak[iline]) / ans_sigma[iline];
- data[i] += ans_ampl[iline] * exp(-0.5 / M_PI * value * value);
- }
- }
- SIMD_ALIGN
- bool mask[ELEMENTSOF(data)];
- SetBoolConstant(true, ELEMENTSOF(data), mask);
- // Add bad data and mask them
- for (size_t i = 0; i < 10; ++i) {
- data[i] = 100.0;
- mask[i] = false;
- }
- for (size_t i = 50; i < 52; ++i) {
- data[i] = -300.0;
- mask[i] = false;
- }
- for (size_t i = 90; i < 100; ++i) {
- data[i] = 300.0;
- mask[i] = false;
- }
- for (size_t i = 0; i < num_data; ++i) {
- //std::cout << i << "   " << data[i] << std::endl;
- }
-
- // Initial guess of Gaussian parameters
- double out_ampl[num_line] = {10.0, 10.0};
- double out_peak[num_line] = {25.0, 69.0};
- double out_sigma[num_line] = {1.0, 1.0};
-
- for (size_t iline = 0; iline < num_line; ++iline) {
- for (size_t i = 0; i < num_data; ++i) {
- mask[i] = false;
- }
- size_t i_min = out_peak[iline]-5.0*out_sigma[iline];
- size_t i_max = out_peak[iline]+5.0*out_sigma[iline];
- for (size_t i = i_min; i < i_max; ++i) {
- mask[i] = true;
- }
- LIBSAKURA_SYMBOL (Status) status = sakura_FitGaussianByLMFloat(num_data,
- data, mask, 1, &out_ampl[iline], &out_peak[iline], &out_sigma[iline]);
- ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
- std::cout << "[out" << iline << "] ampl = " << out_ampl[iline] << ", peak = " << out_peak[iline]
- << ", sigma = " << out_sigma[iline] << std::endl;
- std::cout << "[ans" << iline << "] ampl = " << ans_ampl[iline] << ", peak = " << ans_peak[iline]
- << ", sigma = " << ans_sigma[iline] << std::endl;
- }
- }
+ * Test sakura_LMFitGaussianFloat
+ * successful case with single Gaussian + noise data with some masked out regions
  */
-//LM end ----------------------
+TEST_F(NumericOperation, LMFitGaussianFloatSingle) {
+	size_t const num_data = 100;
+	float sigma_noise = 1.0;
+	// Answer of Gaussian parameters
+	size_t const num_lines = 1;
+	double ans_height[num_lines] = { 7.0 };
+	double ans_center[num_lines] = { 37.0 };
+	double ans_sigma[num_lines] = { 3.5 };
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatGaussian(num_data, sigma_noise, num_lines, ans_height, ans_center,
+			ans_sigma, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	// Add bad data and mask them
+	for (size_t i = 0; i < 10; ++i) {
+		data[i] = 100.0;
+		mask[i] = false;
+	}
+	for (size_t i = 50; i < 52; ++i) {
+		data[i] = -300.0;
+		mask[i] = false;
+	}
+	for (size_t i = 80; i < 100; ++i) {
+		data[i] = 300.0;
+		mask[i] = false;
+	}
+
+	// Initial guess of Gaussian parameters
+	double out_height[1] = { 1.0 };
+	double out_center[1] = { 50.0 };
+	double out_sigma[1] = { 1.0 };
+
+	double err_height[1];
+	double err_center[1];
+	double err_sigma[1];
+
+	LIBSAKURA_SYMBOL (Status) status = sakura_LMFitGaussianFloat(num_data, data,
+			mask, num_lines, out_height, out_center, out_sigma, err_height,
+			err_center, err_sigma);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+	std::cout << "(height) answer: " << ans_height[0] << ", result: "
+			<< out_height[0] << ", error(1sigma): " << err_height[0]
+			<< std::endl;
+	std::cout << "(center) answer: " << ans_center[0] << ", result: "
+			<< out_center[0] << ", error(1sigma): " << err_center[0]
+			<< std::endl;
+	std::cout << "(sigma)  answer: " << ans_sigma[0] << ", result: "
+			<< out_sigma[0] << ", error(1sigma): " << err_sigma[0] << std::endl;
+
+	CheckInRange(ans_height[0], out_height[0], err_height[0]);
+	CheckInRange(ans_center[0], out_center[0], err_center[0]);
+	CheckInRange(ans_sigma[0], out_sigma[0], err_sigma[0]);
+}
+
+/*
+ * Test sakura_LMFitGaussianFloat
+ * successful case with two Gaussians + noise data with some masked out regions
+ * Note: the input data contain two Gaussian profiles, but fitting is done
+ * for each peak, since it is quite difficult to fit double Gaussians at once
+ * using Eigen's LM solver...
+ */
+TEST_F(NumericOperation, LMFitGaussianFloatDouble) {
+	size_t const num_data = 100;
+	float const sigma_noise = 0.10;
+	// Answer of Gaussian parameters
+	size_t const num_line = 2;
+	double const ans_height[num_line] = { 7.0, 6.0 };
+	double const ans_center[num_line] = { 27.0, 70.0 };
+	double const ans_sigma[num_line] = { 1.0, 1.5 };
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatGaussian(num_data, sigma_noise, num_line, ans_height, ans_center,
+			ans_sigma, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	// Add bad data and mask them
+	for (size_t i = 0; i < 10; ++i) {
+		data[i] = 100.0;
+		mask[i] = false;
+	}
+	for (size_t i = 50; i < 52; ++i) {
+		data[i] = -300.0;
+		mask[i] = false;
+	}
+	for (size_t i = 90; i < 100; ++i) {
+		data[i] = 300.0;
+		mask[i] = false;
+	}
+
+	// Initial guess of Gaussian parameters
+	double out_height[num_line] = { 10.0, 10.0 };
+	double out_center[num_line] = { 25.0, 69.0 };
+	double out_sigma[num_line] = { 1.0, 1.0 };
+
+	double err_height[num_line];
+	double err_center[num_line];
+	double err_sigma[num_line];
+
+	for (size_t iline = 0; iline < num_line; ++iline) {
+		for (size_t i = 0; i < num_data; ++i) {
+			mask[i] = false;
+		}
+		size_t i_min = out_center[iline] - 5.0 * out_sigma[iline];
+		size_t i_max = out_center[iline] + 5.0 * out_sigma[iline];
+		for (size_t i = i_min; i < i_max; ++i) {
+			mask[i] = true;
+		}
+		LIBSAKURA_SYMBOL (Status) status = sakura_LMFitGaussianFloat(num_data,
+				data, mask, 1, &out_height[iline], &out_center[iline],
+				&out_sigma[iline], &err_height[iline], &err_center[iline],
+				&err_sigma[iline]);
+		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+
+		std::cout << "line profile #" << iline << ":" << std::endl;
+		std::cout << "(height) answer: " << ans_height[iline] << ", result: "
+				<< out_height[iline] << ", error(1sigma): " << err_height[iline]
+				<< std::endl;
+		std::cout << "(center) answer: " << ans_center[iline] << ", result: "
+				<< out_center[iline] << ", error(1sigma): " << err_center[iline]
+				<< std::endl;
+		std::cout << "(sigma)  answer: " << ans_sigma[iline] << ", result: "
+				<< out_sigma[iline] << ", error(1sigma): " << err_sigma[iline]
+				<< std::endl;
+
+		CheckInRange(ans_height[iline], out_height[iline], err_height[iline]);
+		CheckInRange(ans_center[iline], out_center[iline], err_center[iline]);
+		CheckInRange(ans_sigma[iline], out_sigma[iline], err_sigma[iline]);
+	}
+}
+
+/*
+ * Test sakura_LMFitGaussianFloat
+ * failure case: num_data is less than needed value (= 3*num_lines)
+ */
+TEST_F(NumericOperation, LMFitGaussianFloatTooFewNumData) {
+	size_t const num_data = 2;
+	float sigma_noise = 1.0;
+	// Answer of Gaussian parameters
+	size_t const num_lines = 1;
+	double ans_height[num_lines] = { 7.0 };
+	double ans_center[num_lines] = { 37.0 };
+	double ans_sigma[num_lines] = { 3.5 };
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatGaussian(num_data, sigma_noise, num_lines, ans_height, ans_center,
+			ans_sigma, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+
+	// Initial guess of Gaussian parameters
+	double out_height[1] = { 1.0 };
+	double out_center[1] = { 50.0 };
+	double out_sigma[1] = { 1.0 };
+
+	double err_height[1];
+	double err_center[1];
+	double err_sigma[1];
+
+	LIBSAKURA_SYMBOL (Status) status = sakura_LMFitGaussianFloat(num_data, data,
+			mask, num_lines, out_height, out_center, out_sigma, err_height,
+			err_center, err_sigma);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+}
+
+/*
+ * Test sakura_LMFitGaussianFloat
+ * failure case: number of effective data is less than needed value (= 3*num_lines)
+ */
+TEST_F(NumericOperation, LMFitGaussianFloatTooFewNumDataDueToMasking) {
+	size_t const num_data = 10;
+	float sigma_noise = 1.0;
+	// Answer of Gaussian parameters
+	size_t const num_lines = 1;
+	double ans_height[num_lines] = { 7.0 };
+	double ans_center[num_lines] = { 37.0 };
+	double ans_sigma[num_lines] = { 3.5 };
+	SIMD_ALIGN
+	float data[num_data];
+	SetFloatGaussian(num_data, sigma_noise, num_lines, ans_height, ans_center,
+			ans_sigma, data);
+	SIMD_ALIGN
+	bool mask[ELEMENTSOF(data)];
+	SetBoolConstant(true, ELEMENTSOF(data), mask);
+	// Give large mask (only 2 data effective at index of 0 and 4)
+	for (size_t i = 1; i < 4; ++i) {
+		mask[i] = false;
+	}
+	for (size_t i = 5; i < num_data; ++i) {
+		mask[i] = false;
+	}
+
+	// Initial guess of Gaussian parameters
+	double out_height[1] = { 1.0 };
+	double out_center[1] = { 50.0 };
+	double out_sigma[1] = { 1.0 };
+
+	double err_height[1];
+	double err_center[1];
+	double err_sigma[1];
+
+	LIBSAKURA_SYMBOL (Status) status = sakura_LMFitGaussianFloat(num_data, data,
+			mask, num_lines, out_height, out_center, out_sigma, err_height,
+			err_center, err_sigma);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNG), status);
+}

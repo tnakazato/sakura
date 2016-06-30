@@ -75,7 +75,7 @@ static T NegMultiplyAdd(T const &a, T const &b, T const &c) {
 }
 
 template<>
-__m256d NegMultiplyAdd(__m256d                     const &a, __m256d                     const &b, __m256d                     const &c) {
+__m256d NegMultiplyAdd(__m256d                                           const &a, __m256d                                           const &b, __m256d                                           const &c) {
 #if defined(__AVX2__)
 	return _mm256_fnmadd_pd(a, b, c);
 #else
@@ -86,7 +86,8 @@ __m256d NegMultiplyAdd(__m256d                     const &a, __m256d            
 #endif
 
 template<size_t kNumBases, typename Func1, typename Func2>
-inline void OperateAddMulVectorTemplate(size_t const *use_idx, double k, double const *vec, Func1 func1, Func2 func2, double *out) {
+inline void OperateAddMulVectorTemplate(size_t const *use_idx, double k,
+		double const *vec, Func1 func1, Func2 func2, double *out) {
 	size_t i = 0;
 #if defined(__AVX__) && !defined(ARCH_SCALAR)
 	constexpr size_t kPackElements = sizeof(__m256d) / sizeof(double);
@@ -709,86 +710,151 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 }
 
 //--LM part--------------------------------------
-/*
- template<typename T, int Nx = Dynamic, int Ny = Dynamic>
- struct Functor {
- typedef T Scalar;
- enum {
- InputsAtCompileTime = Nx, ValuesAtCompileTime = Ny
- };
- typedef Matrix<Scalar, Nx, 1> InputType;
- typedef Matrix<Scalar, Ny, 1> ValueType;
- typedef Matrix<Scalar, Ny, Nx> JacobianType;
- };
+constexpr size_t kNumParamsSingleGaussian = 3;
 
- struct FunctorDouble: Functor<double> {
- FunctorDouble(int inputs, int values, double *x, double *y) :
- inputs_(inputs), values_(values), x(x), y(y) {
- }
- int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
- return 0;
- }
- const int inputs_;
- const int values_;
- int inputs() const {
- return inputs_;
- }
- int values() const {
- return values_;
- }
- double *x;
- double *y;
- };
+template<typename T, int Nx = Dynamic, int Ny = Dynamic>
+struct Functor {
+	typedef T Scalar;
+	enum {
+		InputsAtCompileTime = Nx, ValuesAtCompileTime = Ny
+	};
+	typedef Matrix<Scalar, Nx, 1> InputType;
+	typedef Matrix<Scalar, Ny, 1> ValueType;
+	typedef Matrix<Scalar, Ny, Nx> JacobianType;
+};
 
- struct GaussianFunctorDouble: FunctorDouble {
- GaussianFunctorDouble(size_t num_components, int inputs, int values,
- double *x, double *y) :
- FunctorDouble(inputs, values, x, y), num_components_(num_components) {
- }
- ;
- int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
- //params are {peak_amplitude, peak_position, sigma}.
- for (int i = 0; i < values_; ++i) {
- values_to_minimize[i] = 0.0;
- for (size_t iline = 0; iline < num_components_; ++iline) {
- double v = (x[i] - params[3 * iline + 1])
- / params[3 * iline + 2];
- values_to_minimize[i] += params[3 * iline]
- * exp(-0.5 / M_PI * v * v);
- }
- values_to_minimize[i] -= y[i];
- }
- return 0;
- }
- size_t num_components_;
- };
+struct FunctorDouble: Functor<double> {
+	FunctorDouble(int num_params, int num_data, double *x, double *y) :
+			num_params_(num_params), num_data_(num_data), x_(x), y_(y) {
+	}
+	int operator()(const VectorXd &params, VectorXd &values_to_minimize) const {
+		return 0;
+	}
+	int inputs() const {
+		return num_params_;
+	}
+	int values() const {
+		return num_data_;
+	}
+	int const num_params_;
+	int const num_data_;
+	double *x_;
+	double *y_;
+};
 
- void DoFitGaussianByLMDouble(size_t const n, size_t const num_data,
- double const x_data[], double const y_data[], double peak_amplitude[],
- double peak_position[], double sigma[]) {
- size_t const num_parameters = 3 * n;
- VectorXd params(num_parameters);
- for (size_t i = 0; i < n; ++i) {
- params << peak_amplitude[i], peak_position[i], sigma[i];
- }
+struct GaussianFunctorDouble: FunctorDouble {
+	GaussianFunctorDouble(size_t num_peaks, int num_data, double *data_x,
+			double *data_y) :
+			FunctorDouble(kNumParamsSingleGaussian * num_peaks, num_data,
+					data_x, data_y), num_peaks_(num_peaks) {
+	}
+	;
+	int operator()(VectorXd const &params, VectorXd &values_to_minimize) const {
+		//params are {height0, center0, sigma0, height1, center1, sigma1, height2, ...}.
+		for (int i = 0; i < num_data_; ++i) {
+			values_to_minimize[i] = -1.0 * y_[i];
+			for (size_t ipeak = 0; ipeak < num_peaks_; ++ipeak) {
+				size_t const idx = kNumParamsSingleGaussian * ipeak;
+				double const v = (x_[i] - params[idx + 1]) / params[idx + 2];
+				values_to_minimize[i] += params[idx] * exp(-0.5 / M_PI * v * v);
+			}
+		}
+		return 0;
+	}
+	int df(VectorXd const &params, MatrixXd &fjac) {
+		for (int i = 0; i < num_data_; ++i) {
+			for (size_t ipeak = 0; ipeak < num_peaks_; ++ipeak) {
+				size_t const idx = kNumParamsSingleGaussian * ipeak;
+				double const v = (x_[i] - params[idx + 1]) / params[idx + 2];
+				double const w = exp(-0.5 / M_PI * v * v);
+				fjac(i, idx) = w;
+				fjac(i, idx + 1) = w * v * params[idx] / params[idx + 2] / M_PI;
+				fjac(i, idx + 2) = fjac(i, idx + 1) * v;
+			}
+		}
+		return 0;
+	}
+	size_t num_peaks_;
+};
 
- std::vector<double> x(&x_data[0], &x_data[num_data]);
- std::vector<double> y(&y_data[0], &y_data[num_data]);
- GaussianFunctorDouble functor(n, num_parameters, x.size(), &x[0], &y[0]);
- NumericalDiff<GaussianFunctorDouble> num_diff(functor);
- LevenbergMarquardt < NumericalDiff<GaussianFunctorDouble> > lm(num_diff);
- int info = lm.minimize(params);
- if (info == 0) {
- throw std::runtime_error(
- "FitGaussianByLMDouble: invalid data or parameter for Gaussian fitting.");
- }
- for (size_t i = 0; i < n; ++i) {
- peak_amplitude[i] = params[3 * i];
- peak_position[i] = params[3 * i + 1];
- sigma[i] = params[3 * i + 2];
- }
- }
+/**
+ * Fit Gaussian to the input data using Levenberg-Marquardt method.
+ *
+ * @param[in] num_data Number of input data. It must be equal to or
+ * larger than the number of Gaussian parameters (3 * num_peaks).
+ * @param[in] data_x X values of input data
+ * @param[in] data_y Y values of input data
+ * @param[in] num_peaks Number of Gaussians
+ * @param[in/out] height An array to store initial guess of Gaussian
+ * heights. It will be overwritten with the fitting results.
+ * @param[in/out] center An array to store initial guess of Gaussian
+ * centers. It will be overwritten with the fitting results.
+ * @param[in/out] sigma An array to store initial guess of Gaussian
+ * sigmas. It will be overwritten with the fitting results.
+ * @param[out] err_height An array to store errors of fitted
+ * Gaussian heights
+ * @param[out] err_center An array to store errors of fitted
+ * Gaussian centers
+ * @param[out] err_sigma An array to store errors of fitted
+ * Gaussian sigmas
  */
+inline void DoLMFitGaussianDouble(size_t const num_data,
+		double const data_x[/*num_data*/], double const data_y[/*num_data*/],
+		size_t const num_peaks, double height[/*num_peaks*/],
+		double center[/*num_peaks*/], double sigma[/*num_peaks*/],
+		double err_height[/*num_peaks*/], double err_center[/*num_peaks*/],
+		double err_sigma[/*num_peaks*/]) {
+	size_t const num_parameters = kNumParamsSingleGaussian * num_peaks;
+	if (num_data < num_parameters) {
+		throw std::runtime_error(
+				"LMFitGaussianDouble: num_data less than needed number.");
+	}
+	VectorXd params(num_parameters);
+	for (size_t i = 0; i < num_peaks; ++i) {
+		// give initial guesses
+		params << height[i], center[i], sigma[i];
+	}
+	std::vector<double> x(&data_x[0], &data_x[num_data]);
+	std::vector<double> y(&data_y[0], &data_y[num_data]);
+	GaussianFunctorDouble functor(num_peaks, x.size(), &x[0], &y[0]);
+	LevenbergMarquardt<GaussianFunctorDouble> lm(functor);
+	if (0 == lm.minimize(params)) {
+		throw std::runtime_error(
+				"LMFitGaussianDouble: invalid data or parameters.");
+	}
+
+	size_t iparam = 0;
+	for (size_t ipeak = 0; ipeak < num_peaks; ++ipeak) {
+		height[ipeak] = params[iparam++];
+		center[ipeak] = params[iparam++];
+		sigma[ipeak] = params[iparam++];
+	}
+
+	// evaluate errors in the estimated parameter values
+	auto jac = lm.fjac;
+	if (0 != functor.df(params, jac)) {
+		throw std::runtime_error(
+				"LMFitGaussianDouble: failed to evaluate Jacobian.");
+	}
+	VectorXd residual(num_data);
+	functor(params, residual);
+	double const rms = sqrt(residual.squaredNorm() / num_data);
+	auto squared = [](double v) {return v * v;};
+	auto get_error = [&](size_t iparam_offset, double err[]) {
+		size_t i = iparam_offset;
+		for (size_t ipeak = 0; ipeak < num_peaks; ++ipeak) {
+			double norm = 0.0;
+			for (size_t idata = 0; idata < num_data; ++idata) {
+				norm += squared(jac(idata, i));
+			}
+			err[ipeak] = rms / sqrt(norm);
+			i += kNumParamsSingleGaussian;
+		}
+	};
+	get_error(0, err_height);
+	get_error(1, err_center);
+	get_error(2, err_sigma);
+}
 //--End LM part----------------------------------
 } /* anonymous namespace */
 
@@ -798,41 +864,6 @@ void UpdateLSQCoefficientsEntry(size_t const num_data,
 	} \
 } while (false)
 
-//--LM part--------------------------------------
-/*
- extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
- size_t const num_data, float const data[], bool const mask[],
- size_t const num_lines, double amplitude[//num_lines
- ],
- double position[//num_lines
- ],
- double sigma[//num_lines
- ]
- ) noexcept {
- try {
- double data_x[num_data];
- double data_y[num_data];
- size_t num_data_effective = 0;
- for (size_t i = 0; i < num_data; ++i) {
- if (mask[i]) {
- data_x[num_data_effective] = static_cast<double>(i);
- data_y[num_data_effective] = static_cast<double>(data[i]);
- ++num_data_effective;
- }
- }
- DoFitGaussianByLMDouble(num_lines, num_data_effective, data_x, data_y, amplitude, position, sigma);
- } catch (const std::runtime_error &e) {
- LOG4CXX_ERROR(logger, e.what());
- return LIBSAKURA_SYMBOL(Status_kNG);
- } catch (...) {
- assert(false);
- return LIBSAKURA_SYMBOL(Status_kUnknownError);
- }
-
- return LIBSAKURA_SYMBOL(Status_kOK);
- }
- */
-//--End LM part----------------------------------
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
 		size_t const num_data, float const data[], bool const mask[],
 		size_t const num_model_bases, double const basis_data[],
@@ -928,6 +959,38 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SolveSimultaneousEquationsB
 	try {
 		SolveSimultaneousEquationsByLU<double, MatrixXd, VectorXd>(
 				num_equations, in_matrix, in_vector, out);
+	} catch (...) {
+		assert(false);
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+
+	return LIBSAKURA_SYMBOL(Status_kOK);
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LMFitGaussianFloat)(
+		size_t const num_data, float const data[], bool const mask[],
+		size_t const num_peaks, double height[/*num_peaks*/],
+		double center[/*num_peaks*/], double sigma[/*num_peaks*/],
+		double err_height[/*num_peaks*/], double err_center[/*num_peaks*/],
+		double err_sigma[/*num_peaks*/]) noexcept {
+	CHECK_ARGS(3 * num_peaks <= num_data);
+
+	try {
+		double data_x[num_data];
+		double data_y[num_data];
+		size_t num_data_effective = 0;
+		for (size_t i = 0; i < num_data; ++i) {
+			if (mask[i]) {
+				data_x[num_data_effective] = static_cast<double>(i);
+				data_y[num_data_effective] = static_cast<double>(data[i]);
+				++num_data_effective;
+			}
+		}
+		DoLMFitGaussianDouble(num_data_effective, data_x, data_y, num_peaks,
+				height, center, sigma, err_height, err_center, err_sigma);
+	} catch (const std::runtime_error &e) {
+		LOG4CXX_ERROR(logger, e.what());
+		return LIBSAKURA_SYMBOL(Status_kNG);
 	} catch (...) {
 		assert(false);
 		return LIBSAKURA_SYMBOL(Status_kUnknownError);

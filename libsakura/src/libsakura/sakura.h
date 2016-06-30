@@ -1233,35 +1233,35 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  *
  * MT-safe
  *
- */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(
-		size_t num_kernel, float const kernel[/*num_kernel*/],
-		size_t num_data, float const input_data[/*num_data*/],
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(size_t num_kernel,
+		float const kernel[/*num_kernel*/], size_t num_data,
+		float const input_data[/*num_data*/],
 		bool const input_mask[/*num_data*/], float output_data[/*num_data*/],
 		float output_weight[/*num_data*/]) LIBSAKURA_NOEXCEPT;
- /**
-  * @brief Convolution is performed using Fourier transformation.
-  * @details Convolution operations are performed using Fourier transformation of data and kernel arrays.
-  * The kernel is stored in the context with the internal format.
-  * The operation is carried out for all elements of data.
-  * @param[in] context
-  * The context is created with sakura_CreateConvolve1DContextFFTFloat.
-  * @param[in] num_data
-  * The number of elements in @a input_data and @a output_data. @a num_data must be equal to @a num_kernel in @a context .
-  * 0 < @a num_data <= INT_MAX
-  * @param[in] input_data Input data. All elements in @a input_data must not be Inf nor NaN.
-  * @n must-be-aligned
-  * @param[out] output_data Output data. The pointer of @a out is allowed to be equal to
-  *  that of @a in (@a input_data == @a output_data), indicating in-place operation.
-  * @n must-be-aligned
-  * @return status code.
-  *
-  * MT-safe
-  *
-  * (But see @ref sakura_CreateConvolve1DContextFFTFloat for detail about the thread-safety)
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(
- 		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
- 		size_t num_data, float const input_data[/*num_data*/],
- 		float output_data[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+/**
+ * @brief Convolution is performed using Fourier transformation.
+ * @details Convolution operations are performed using Fourier transformation of data and kernel arrays.
+ * The kernel is stored in the context with the internal format.
+ * The operation is carried out for all elements of data.
+ * @param[in] context
+ * The context is created with sakura_CreateConvolve1DContextFFTFloat.
+ * @param[in] num_data
+ * The number of elements in @a input_data and @a output_data. @a num_data must be equal to @a num_kernel in @a context .
+ * 0 < @a num_data <= INT_MAX
+ * @param[in] input_data Input data. All elements in @a input_data must not be Inf nor NaN.
+ * @n must-be-aligned
+ * @param[out] output_data Output data. The pointer of @a out is allowed to be equal to
+ *  that of @a in (@a input_data == @a output_data), indicating in-place operation.
+ * @n must-be-aligned
+ * @return status code.
+ *
+ * MT-safe
+ *
+ * (But see @ref sakura_CreateConvolve1DContextFFTFloat for detail about the thread-safety)
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(
+		struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context,
+		size_t num_data, float const input_data[/*num_data*/],
+		float output_data[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @brief Destroy context
  * @details
@@ -1459,13 +1459,44 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 //LM part----------------------------------------------------------------
-//LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FitGaussianByLMFloat)(
-//		 size_t const num_data, float const data[/*num_data*/],
-//		 bool const mask[/*num_data*/], size_t const num_lines,
-//		 double amplitude[/*num_lines*/], double mean[/*num_lines*/],
-//		 double sigma[/*num_lines*/])
-//			LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
-//end LM part----------------------------------------------------------------
+ /**
+ * @brief Fit Gaussian to the input data using Levenberg-Marquardt method.
+ * @details
+ * Fit Gaussian to the input data using Levenberg-Marquardt method.
+ * The input data can contain multiple Gaussian profiles, however,
+ * note that fitting multiple Gaussians at once is quite difficult
+ * using Eigen's LM solver and the results may not be correct.
+ * @param[in] num_data Number of input data. It must be equal to or
+ * larger than the number of Gaussian parameters (3 * @a num_peaks ).
+ * @param[in] data The input data with length of @a num_data .
+ * @param[in] mask The input mask data with length of @a num_data .
+ * @param[in] num_peaks Number of Gaussians to be fitted.
+ * @param[in/out] height An array to store initial guess of Gaussian
+ * heights. Its length must be @a num_peaks and will be overwritten
+ * with the fitting results.
+ * @param[in/out] center An array to store initial guess of Gaussian
+ * centers. Its length must be @a num_peaks and will be overwritten
+ * with the fitting results.
+ * @param[in/out] sigma An array to store initial guess of Gaussian
+ * sigmas. Its length must be @a num_peaks and will be overwritten
+ * with the fitting results.
+ * @param[out] err_height An array to store errors of fitted
+ * Gaussian heights. Its length must be @a num_peaks .
+ * @param[out] err_center An array to store errors of fitted
+ * Gaussian centers. Its length must be @a num_peaks .
+ * @param[out] err_sigma An array to store errors of fitted
+ * Gaussian sigmas. Its length must be @a num_peaks .
+ * @return Status code.
+ *
+ * MT-safe
+  */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LMFitGaussianFloat)(
+		size_t const num_data, float const data[/*num_data*/],
+		bool const mask[/*num_data*/], size_t const num_peaks,
+		double height[/*num_peaks*/], double err_height[/*num_peaks*/],
+		double center[/*num_peaks*/], double err_center[/*num_peaks*/],
+		double sigma[/*num_peaks*/], double err_sigma[/*num_peaks*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Enumerations to define baseline-specific error code.
@@ -1510,32 +1541,32 @@ typedef enum {
  */
 struct LIBSAKURA_SYMBOL(BaselineContextFloat);
 
- /**
-  * @brief Create an object containing baseline model data.
-  * @details
-  * @note A baseline context object can not be shared between
-  * threads, as it contains working areas exclusive for a specific
-  * thread.
-  * @param[in] baseline_type Type of basis function. It should
-  * be either of sakura_BaselineType_kPolynomial or
-  * sakura_BaselineType_kChebyshev.
-  * @param[in] order Polynomial order. It must be positive or
-  * zero.
-  * @param[in] num_data Number of data to fit baseline. It must
-  * be equal to or larger than the number of model bases, which
-  * is ( @a order+1 ), thus the smallest allowed value of
-  * @a num_data is 1.
-  * @param[out] context An object containing baseline model data.
-  * When @a context is no longer used, it must be destroyed by
-  * @ref sakura_DestroyBaselineContextFloat .
-  * @return Status code.
-  *
-  * MT-safe
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
- LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
- 		size_t num_data,
- 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
- 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+/**
+ * @brief Create an object containing baseline model data.
+ * @details
+ * @note A baseline context object can not be shared between
+ * threads, as it contains working areas exclusive for a specific
+ * thread.
+ * @param[in] baseline_type Type of basis function. It should
+ * be either of sakura_BaselineType_kPolynomial or
+ * sakura_BaselineType_kChebyshev.
+ * @param[in] order Polynomial order. It must be positive or
+ * zero.
+ * @param[in] num_data Number of data to fit baseline. It must
+ * be equal to or larger than the number of model bases, which
+ * is ( @a order+1 ), thus the smallest allowed value of
+ * @a num_data is 1.
+ * @param[out] context An object containing baseline model data.
+ * When @a context is no longer used, it must be destroyed by
+ * @ref sakura_DestroyBaselineContextFloat .
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateBaselineContextPolynomialFloat)(
+LIBSAKURA_SYMBOL(BaselineType) const baseline_type, uint16_t order,
+		size_t num_data,
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) **context)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @copybrief sakura_CreateBaselineContextPolynomialFloat
@@ -1759,198 +1790,198 @@ struct LIBSAKURA_SYMBOL(BaselineContextFloat);
 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
- /**
-  * @brief Fit a sinusoidal curve to input data.
-  * @details A sinusoidal curve is fitted to input data based on
-  * Least-Square method. As output, coefficients of bases of the
-  * best-fit curve, the best-fit curve value itself and the residuals
-  * (i.e., input - best-fit curve) are stored in @a coeff , @a best_fit
-  * and @a residual , respectively. If @a num_fitting_max greater than 1
-  * is given, fitting is executed recursively. Once best-fit curve is
-  * subtracted from input data, mean and standard deviation of the
-  * residual is computed to update @a mask so that @a mask has false
-  * value at data points where residual value exceeds threshold defined
-  * by @a clip_threshold_sigma , then Least-Square fitting is again
-  * performed to the input data with updated @a mask to update @a coeff
-  * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
-  * times or until the fitting result converges. Once fitting is done,
-  * the updated mask information is stored in @a final_mask .
-  * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
-  * @param[in] num_nwave The number of elements in the array @a nwave .
-  * @param[in] nwave Wave numbers within the index range of @a data
-  * to be used for sinusoidal fitting. The values must be positive or
-  * zero (for constant term), but not exceed the @a maximum wave number
-  * specified in creation of @a context . The values must be stored in
-  * ascending order and must not be duplicate.
-  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
-  * @a final_mask, and @a out. It must be equal to @a num_data which was
-  * given to sakura_CreateBaselineContextSinusoidFloat() to create
-  * @a context .
-  * @param[in] data Input data with length of @a num_data .
-  * @n must-be-aligned
-  * @param[in] mask Input mask data with length of @a num_data .
-  * The @a i th element of @a data is included in input spectrum if the
-  * @a i th element of @a mask is true, while it is excluded from input
-  * spectrum if the corresponding element of @a mask is false.
-  * @n must-be-aligned
-  * @param[in] clip_threshold_sigma Threshold of clipping in unit of
-  * sigma. It must be a positive value.
-  * @param[in] num_fitting_max Upper limit of how many times fitting is
-  * performed recursively. Before executing the second or later fitting,
-  * outlier in @a data is masked via clipping to be not used. If 1 is
-  * given, fitting is done just once and no clipping will be applied.
-  * If 0 is given, fitting is not executed and the values of @a residual
-  * should be identical with those of @a data .
-  * @param[in] num_coeff The number of elements in the array @a coeff.
-  * If @a coeff is not null pointer, it must be ( @a num_nwave*2-1 )
-  * or ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
-  * respectively, and must not exceed @a num_data, while the value is
-  * not checked when @a coeff is null pointer.
-  * @param[out] coeff Coefficients of the sinusoidal fit. Its length
-  * must be @a num_coeff . If @a nwave contains zero, the first element
-  * is of the constant term. If not, the first and the second elements
-  * are for sine and cosine terms for the smallest wave number in
-  * @a nwave, respectively. Coefficients of sine and cosine terms for
-  * the second-smallest wave number come next, and so on. Null pointer
-  * can be given in case users do not need this value.
-  * @n must-be-aligned
-  * @param[out] best_fit The best-fit curve data, i.e., the result of
-  * least-square fitting itself. Its length must be @a num_data .
-  * @a data can be set to @a best_fit if users want to overwrite it
-  * in-place. Null pointer can be given in case users do not need
-  * this value.
-  * @n must-be-aligned
-  * @param[out] residual Residual (input - best-fit) data. Its length
-  * must be @a num_data . @a data can be set to @a residual if users
-  * want to overwrite it in-place. Null pointer can be given in case
-  * users do not need this value.
-  * @n must-be-aligned
-  * @param[out] final_mask The final status of mask data after
-  * recursive clipping procedure finish. Its length must be
-  * @a num_data . @a mask can be set to @a final_mask if users want
-  * to overwrite it in-place.
-  * @n must-be-aligned
-  * @param[out] rms The root-mean-square of @a residual .
-  * @param[out] baseline_status Baseline-specific error code.
-  * @return Status code.
-  *
-  * MT-safe
-  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
- 		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
- 		size_t num_nwave, size_t const nwave[/*num_nwave*/],
- 		size_t num_data, float const data[/*num_data*/],
- 		bool const mask[/*num_data*/], float clip_threshold_sigma,
- 		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
- 		float best_fit[/*num_data*/], float residual[/*num_data*/],
- 		bool final_mask[/*num_data*/], float *rms,
- 		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
- 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+/**
+ * @brief Fit a sinusoidal curve to input data.
+ * @details A sinusoidal curve is fitted to input data based on
+ * Least-Square method. As output, coefficients of bases of the
+ * best-fit curve, the best-fit curve value itself and the residuals
+ * (i.e., input - best-fit curve) are stored in @a coeff , @a best_fit
+ * and @a residual , respectively. If @a num_fitting_max greater than 1
+ * is given, fitting is executed recursively. Once best-fit curve is
+ * subtracted from input data, mean and standard deviation of the
+ * residual is computed to update @a mask so that @a mask has false
+ * value at data points where residual value exceeds threshold defined
+ * by @a clip_threshold_sigma , then Least-Square fitting is again
+ * performed to the input data with updated @a mask to update @a coeff
+ * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
+ * times or until the fitting result converges. Once fitting is done,
+ * the updated mask information is stored in @a final_mask .
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
+ * @param[in] num_nwave The number of elements in the array @a nwave .
+ * @param[in] nwave Wave numbers within the index range of @a data
+ * to be used for sinusoidal fitting. The values must be positive or
+ * zero (for constant term), but not exceed the @a maximum wave number
+ * specified in creation of @a context . The values must be stored in
+ * ascending order and must not be duplicate.
+ * @param[in] num_data Number of elements in the arrays @a data, @a mask,
+ * @a final_mask, and @a out. It must be equal to @a num_data which was
+ * given to sakura_CreateBaselineContextSinusoidFloat() to create
+ * @a context .
+ * @param[in] data Input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] mask Input mask data with length of @a num_data .
+ * The @a i th element of @a data is included in input spectrum if the
+ * @a i th element of @a mask is true, while it is excluded from input
+ * spectrum if the corresponding element of @a mask is false.
+ * @n must-be-aligned
+ * @param[in] clip_threshold_sigma Threshold of clipping in unit of
+ * sigma. It must be a positive value.
+ * @param[in] num_fitting_max Upper limit of how many times fitting is
+ * performed recursively. Before executing the second or later fitting,
+ * outlier in @a data is masked via clipping to be not used. If 1 is
+ * given, fitting is done just once and no clipping will be applied.
+ * If 0 is given, fitting is not executed and the values of @a residual
+ * should be identical with those of @a data .
+ * @param[in] num_coeff The number of elements in the array @a coeff.
+ * If @a coeff is not null pointer, it must be ( @a num_nwave*2-1 )
+ * or ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
+ * respectively, and must not exceed @a num_data, while the value is
+ * not checked when @a coeff is null pointer.
+ * @param[out] coeff Coefficients of the sinusoidal fit. Its length
+ * must be @a num_coeff . If @a nwave contains zero, the first element
+ * is of the constant term. If not, the first and the second elements
+ * are for sine and cosine terms for the smallest wave number in
+ * @a nwave, respectively. Coefficients of sine and cosine terms for
+ * the second-smallest wave number come next, and so on. Null pointer
+ * can be given in case users do not need this value.
+ * @n must-be-aligned
+ * @param[out] best_fit The best-fit curve data, i.e., the result of
+ * least-square fitting itself. Its length must be @a num_data .
+ * @a data can be set to @a best_fit if users want to overwrite it
+ * in-place. Null pointer can be given in case users do not need
+ * this value.
+ * @n must-be-aligned
+ * @param[out] residual Residual (input - best-fit) data. Its length
+ * must be @a num_data . @a data can be set to @a residual if users
+ * want to overwrite it in-place. Null pointer can be given in case
+ * users do not need this value.
+ * @n must-be-aligned
+ * @param[out] final_mask The final status of mask data after
+ * recursive clipping procedure finish. Its length must be
+ * @a num_data . @a mask can be set to @a final_mask if users want
+ * to overwrite it in-place.
+ * @n must-be-aligned
+ * @param[out] rms The root-mean-square of @a residual .
+ * @param[out] baseline_status Baseline-specific error code.
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		size_t num_nwave, size_t const nwave[/*num_nwave*/], size_t num_data,
+		float const data[/*num_data*/],
+		bool const mask[/*num_data*/], float clip_threshold_sigma,
+		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
+		float best_fit[/*num_data*/], float residual[/*num_data*/],
+		bool final_mask[/*num_data*/], float *rms,
+		LIBSAKURA_SYMBOL(BaselineStatus) *baseline_status)
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
-  /**
-   * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
-   * @details
-   * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
-   * @param[in] num_data The number of elements in @a data and @a out.
-   * It must be equal to @a num_data which was given to
-   * sakura_CreateBaselineContextFloat() to create @a context .
-   * @param[in] data The input data with length of @a num_data .
-   * @n must-be-aligned
-   * @param[in] num_coeff The number of elements in @a coeff .
-   * It must be in range (0 < @a num_coeff <= @a order+1 ), where
-   * @a order is the polynomial or Chebyshev polynomial order
-   * specified in creation of @a context .
-   * @param[in] coeff Coefficients of model data. Its length must
-   * be @a num_coeff. Its first element must be of constant term,
-   * followed by those of first order, second order,
-   * and so on.
-   * @n must-be-aligned
-   * @param[out] out The output data. Its length must be @a num_data .
-   * @n must-be-aligned
-   * @return Status code.
-   *
-   * MT-safe
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
-  		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-  		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
-  		double const coeff[/*num_data*/], float out[/*num_data*/])
-  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+/**
+ * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
+ * @details
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextFloat .
+ * @param[in] num_data The number of elements in @a data and @a out.
+ * It must be equal to @a num_data which was given to
+ * sakura_CreateBaselineContextFloat() to create @a context .
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] num_coeff The number of elements in @a coeff .
+ * It must be in range (0 < @a num_coeff <= @a order+1 ), where
+ * @a order is the polynomial or Chebyshev polynomial order
+ * specified in creation of @a context .
+ * @param[in] coeff Coefficients of model data. Its length must
+ * be @a num_coeff. Its first element must be of constant term,
+ * followed by those of first order, second order,
+ * and so on.
+ * @n must-be-aligned
+ * @param[out] out The output data. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
+		double const coeff[/*num_data*/], float out[/*num_data*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
-  /**
-   * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
-   * @details
-   * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
-   * @param[in] num_data The number of elements in @a data and @a out .
-   * It must be equal to @a num_data which was given to
-   * sakura_CreateBaselineContextCubicSplineFloat() to create @a context .
-   * @param[in] data The input data with length of @a num_data .
-   * @n must-be-aligned
-   * @param[in] num_pieces The number of spline pieces. If zero is
-   * given, no subtraction executed.
-   * @param[in] coeff Coefficients of cubic spline curve. It must be
-   * a 2D array with type of double[ @a num_pieces ][4]. @a coeff[i]
-   * is for the @a i th spline piece from the left side. The first
-   * element in each @a coeff[i] must be of constant term, followed
-   * by the ones of first, second, and third orders.
-   * @n must-be-aligned
-   * @param[in] boundary A 1D array containing the boundary positions,
-   * which are indices of parameters @a data and @a out , of spline
-   * pieces. Its length must be ( @a num_pieces +1). The element
-   * values should be stored in ascending order. The first element
-   * must always be zero, the left edge of the first (left-most) spline
-   * piece, while the last element must be @a num_data , which is the
-   * next of the right edge of the last (right-most) spline piece.
-   * @n must-be-aligned
-   * @param[out] out The output data. Its length must be @a num_data .
-   * @n must-be-aligned
-   * @return Status code.
-   *
-   * MT-safe
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
-  		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-  		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
-  		double const coeff[/*num_pieces*/][4],
-  		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
-  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+/**
+ * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
+ * @details
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextCubicSplineFloat .
+ * @param[in] num_data The number of elements in @a data and @a out .
+ * It must be equal to @a num_data which was given to
+ * sakura_CreateBaselineContextCubicSplineFloat() to create @a context .
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] num_pieces The number of spline pieces. If zero is
+ * given, no subtraction executed.
+ * @param[in] coeff Coefficients of cubic spline curve. It must be
+ * a 2D array with type of double[ @a num_pieces ][4]. @a coeff[i]
+ * is for the @a i th spline piece from the left side. The first
+ * element in each @a coeff[i] must be of constant term, followed
+ * by the ones of first, second, and third orders.
+ * @n must-be-aligned
+ * @param[in] boundary A 1D array containing the boundary positions,
+ * which are indices of parameters @a data and @a out , of spline
+ * pieces. Its length must be ( @a num_pieces +1). The element
+ * values should be stored in ascending order. The first element
+ * must always be zero, the left edge of the first (left-most) spline
+ * piece, while the last element must be @a num_data , which is the
+ * next of the right edge of the last (right-most) spline piece.
+ * @n must-be-aligned
+ * @param[out] out The output data. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		size_t num_data, float const data[/*num_data*/], size_t num_pieces,
+		double const coeff[/*num_pieces*/][4],
+		size_t const boundary[/*num_pieces+1*/], float out[/*num_data*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
-  /**
-   * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
-   * @details
-   * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
-   * @param[in] num_data The number of elements in @a data and @a out.
-   * It must be equal to @a num_data which was given to
-   * sakura_CreateBaselineContextSinusoidFloat() to create @a context .
-   * @param[in] data The input data with length of @a num_data .
-   * @n must-be-aligned
-   * @param[in] num_nwave The number of elements in the array @a nwave .
-   * @param[in] nwave Wave numbers within the index range of @a data
-   * to be used for sinusoidal fitting. The values must be positive
-   * or zero (for constant term), but not exceed the maximum wave
-   * number specified in creation of @a context . The values must
-   * be stored in ascending order and must not be duplicate.
-   * @param[in] num_coeff The number of elements in @a coeff .
-   * It must be in range (0 < @a num_coeff <= @a num_model_bases ),
-   * where @a num_model_bases is ( @a num_nwave*2-1 ) or
-   * ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
-   * respectively. Also it must not exceed @a num_data .
-   * @param[in] coeff Coefficients of model data. Its length must
-   * be @a num_coeff. If @a nwave contains zero, the first element
-   * must be of the constant term. If not, the first and the second
-   * elements are for sine and cosine terms for the smallest wave
-   * number in @a nwave, respectively. Coefficients of sine and
-   * cosine terms for the second-smallest wave number come next,
-   * and so on.
-   * @n must-be-aligned
-   * @param[out] out The output data. Its length must be @a num_data .
-   * @n must-be-aligned
-   * @return Status code.
-   *
-   * MT-safe
-   */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
-  		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
-  		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
-  		size_t const nwave[/*num_nwave*/], size_t num_coeff,
-  		double const coeff[/*num_data*/], float out[/*num_data*/])
-  				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
+/**
+ * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
+ * @details
+ * @param[in] context A context created by @ref sakura_CreateBaselineContextSinusoidFloat .
+ * @param[in] num_data The number of elements in @a data and @a out.
+ * It must be equal to @a num_data which was given to
+ * sakura_CreateBaselineContextSinusoidFloat() to create @a context .
+ * @param[in] data The input data with length of @a num_data .
+ * @n must-be-aligned
+ * @param[in] num_nwave The number of elements in the array @a nwave .
+ * @param[in] nwave Wave numbers within the index range of @a data
+ * to be used for sinusoidal fitting. The values must be positive
+ * or zero (for constant term), but not exceed the maximum wave
+ * number specified in creation of @a context . The values must
+ * be stored in ascending order and must not be duplicate.
+ * @param[in] num_coeff The number of elements in @a coeff .
+ * It must be in range (0 < @a num_coeff <= @a num_model_bases ),
+ * where @a num_model_bases is ( @a num_nwave*2-1 ) or
+ * ( @a num_nwave*2 ) in cases @a nwave contains zero or not,
+ * respectively. Also it must not exceed @a num_data .
+ * @param[in] coeff Coefficients of model data. Its length must
+ * be @a num_coeff. If @a nwave contains zero, the first element
+ * must be of the constant term. If not, the first and the second
+ * elements are for sine and cosine terms for the smallest wave
+ * number in @a nwave, respectively. Coefficients of sine and
+ * cosine terms for the second-smallest wave number come next,
+ * and so on.
+ * @n must-be-aligned
+ * @param[out] out The output data. Its length must be @a num_data .
+ * @n must-be-aligned
+ * @return Status code.
+ *
+ * MT-safe
+ */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
+		struct LIBSAKURA_SYMBOL(BaselineContextFloat) const *context,
+		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
+		size_t const nwave[/*num_nwave*/], size_t num_coeff,
+		double const coeff[/*num_data*/], float out[/*num_data*/])
+				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
  * @brief Return the number of basis functions used for baseline fitting.
