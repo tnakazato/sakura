@@ -756,7 +756,7 @@ struct GaussianFunctorDouble: FunctorDouble {
 			for (size_t ipeak = 0; ipeak < num_peaks_; ++ipeak) {
 				size_t const idx = kNumParamsSingleGaussian * ipeak;
 				double const v = (x_[i] - params[idx + 1]) / params[idx + 2];
-				values_to_minimize[i] += params[idx] * exp(-0.5 / M_PI * v * v);
+				values_to_minimize[i] += params[idx] * exp(-0.5 * v * v);
 			}
 		}
 		return 0;
@@ -766,9 +766,9 @@ struct GaussianFunctorDouble: FunctorDouble {
 			for (size_t ipeak = 0; ipeak < num_peaks_; ++ipeak) {
 				size_t const idx = kNumParamsSingleGaussian * ipeak;
 				double const v = (x_[i] - params[idx + 1]) / params[idx + 2];
-				double const w = exp(-0.5 / M_PI * v * v);
+				double const w = exp(-0.5 * v * v);
 				fjac(i, idx) = w;
-				fjac(i, idx + 1) = w * v * params[idx] / params[idx + 2] / M_PI;
+				fjac(i, idx + 1) = w * v * params[idx] / params[idx + 2];
 				fjac(i, idx + 2) = fjac(i, idx + 1) * v;
 			}
 		}

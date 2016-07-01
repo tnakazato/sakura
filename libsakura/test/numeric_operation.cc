@@ -397,7 +397,7 @@ protected:
 			for (size_t i = 0; i < num_data; ++i) {
 				double value = ((double) i - ans_center[iline])
 						/ ans_sigma[iline];
-				data[i] += ans_height[iline] * exp(-0.5 / M_PI * value * value);
+				data[i] += ans_height[iline] * exp(-0.5 * value * value);
 			}
 		}
 	}
@@ -2582,9 +2582,9 @@ TEST_F(NumericOperation, LMFitGaussianFloatSingle) {
 	}
 
 	// Initial guess of Gaussian parameters
-	double out_height[1] = { 1.0 };
-	double out_center[1] = { 50.0 };
-	double out_sigma[1] = { 1.0 };
+	double out_height[1] = { 5.0 };
+	double out_center[1] = { 40.0 };
+	double out_sigma[1] = { 5.0 };
 
 	double err_height[1];
 	double err_center[1];
