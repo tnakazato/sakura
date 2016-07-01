@@ -1313,7 +1313,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * in actual fitting. It must be a positive number and must not exceed
  * @a num_model_bases .
  * @a param[in] use_bases_idx A 1D array containing indices of basis model
- * that are to be used for fitting. As for baseline types other than
+ * that are to be used for fitting. As for fitting types other than
  * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
  * Element values must not be duplicate, and must be in ascending order.
  * @n must-be-aligned
@@ -1387,7 +1387,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * in actual fitting. It must be in range 0 < @a num_lsq_bases <=
  * @a num_model_bases.
  * @a param[in] use_bases_idx A 1D array containing indices of basis model
- * that are to be used for fitting. As for baseline types other than
+ * that are to be used for fitting. As for fitting types other than
  * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
  * Element values must be in ascending order.
  * @n must-be-aligned
@@ -1499,7 +1499,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LMFitGaussianFloat)(
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Enumerations to define baseline-specific error code.
+ * @brief Enumerations to define least-square fitting specific error code.
  */
 typedef enum {
 	/**
@@ -1511,7 +1511,7 @@ typedef enum {
 	 */LIBSAKURA_SYMBOL(LSQFitStatus_kNG) = 1,
 
 	/**
-	 * @brief Not enough data for baseline fitting
+	 * @brief Not enough data for least-square fitting
 	 */LIBSAKURA_SYMBOL(LSQFitStatus_kNotEnoughData) = 2,
 
 	/**
@@ -1520,7 +1520,7 @@ typedef enum {
 }LIBSAKURA_SYMBOL(LSQFitStatus);
 
 /**
- * @brief Enumerations to define baseline type.
+ * @brief Enumerations to define type of least-square fitting models.
  */
 typedef enum {
 	/**
@@ -1532,19 +1532,19 @@ typedef enum {
 	 */LIBSAKURA_SYMBOL(LSQFitType_kChebyshev),
 
 	/**
-	 * @brief Number of baseline functions implemented
+	 * @brief Number of fitting models
 	 */LIBSAKURA_SYMBOL(LSQFitType_kNumElements)
 }LIBSAKURA_SYMBOL(LSQFitType);
 
 /**
- * @brief Context struct for baseline fitting
+ * @brief Context struct for least-square fitting
  */
 struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
 
 /**
- * @brief Create an object containing baseline model data.
+ * @brief Create an object containing model data for least-square fitting.
  * @details
- * @note A baseline context object can not be shared between
+ * @note A lsqfit context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
  * thread.
  * @param[in] lsqfit_type Type of basis function. It should
@@ -1552,11 +1552,11 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  * sakura_LSQFitType_kChebyshev.
  * @param[in] order Polynomial order. It must be positive or
  * zero.
- * @param[in] num_data Number of data to fit baseline. It must
- * be equal to or larger than the number of model bases, which
- * is ( @a order+1 ), thus the smallest allowed value of
+ * @param[in] num_data Number of data to fit. It must be equal
+ * to or larger than the number of model bases, which is
+ * ( @a order+1 ), thus the smallest allowed value of
  * @a num_data is 1.
- * @param[out] context An object containing baseline model data.
+ * @param[out] context An object containing model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
  * @return Status code.
@@ -1571,16 +1571,15 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @copybrief sakura_CreateLSQFitContextPolynomialFloat
  * @details
- * @note A baseline context object can not be shared between
+ * @note A lsqfit context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
  * thread.
  * @param[in] npiece Number of spline pieces. It must be a
  * positive value.
- * @param[in] num_data Number of data to fit baseline. It must
- * be equal to or larger than the number of model bases (
- * @a npiece+3 ), thus the smallest allowed value of @a num_data
- * is 4.
- * @param[out] context An object containing baseline model data.
+ * @param[in] num_data Number of data to fit. It must be equal
+ * to or larger than the number of model bases ( @a npiece+3 ),
+ * thus the smallest allowed value of @a num_data is 4.
+ * @param[out] context An object containing model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
  * @return Status code.
@@ -1594,16 +1593,16 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @copybrief sakura_CreateLSQFitContextPolynomialFloat
  * @details
- * @note A baseline context object can not be shared between
+ * @note A lsqfit context object can not be shared between
  * threads, as it contains working areas exclusive for a specific
  * thread.
  * @param[in] nwave Maximum wave number of sinusoids. It must be
  * positive or zero.
- * @param[in] num_data Number of data to fit baseline. It must
- * be equal to or larger than the number of model bases plus one,
+ * @param[in] num_data Number of data to fit. It must be equal
+ * to or larger than the number of model bases plus one,
  * which is ( @a nwave*2+2 ), thus the smallest allowed value of
  * @a num_data is 2.
- * @param[out] context An object containing baseline model data.
+ * @param[out] context An object containing model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
  * @return Status code.
@@ -1615,7 +1614,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Destroy an object containing baseline model data.
+ * @brief Destroy an object containing model data for least-square fitting.
  * @details
  * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
  * @return Status code.
@@ -1689,7 +1688,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of @a residual .
- * @param[out] lsqfit_status Baseline-specific error code.
+ * @param[out] lsqfit_status LSQFit-specific error code.
  * @return Status code.
  *
  * MT-safe
@@ -1775,7 +1774,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * element will be @a num_data , which is the next of the right edge
  * of the last (right-most) spline piece.
  * @n must-be-aligned
- * @param[out] lsqfit_status Baseline-specific error code.
+ * @param[out] lsqfit_status LSQFit-specific error code.
  * @return Status code.
  *
  * MT-safe
@@ -1862,7 +1861,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * to overwrite it in-place.
  * @n must-be-aligned
  * @param[out] rms The root-mean-square of @a residual .
- * @param[out] lsqfit_status Baseline-specific error code.
+ * @param[out] lsqfit_status LSQFit-specific error code.
  * @return Status code.
  *
  * MT-safe
@@ -1878,7 +1877,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Subtract baseline from input data. Baseline is calculated by baseline model and given coefficients.
+ * @brief Subtract best-fit polynomial model from input data.
  * @details
  * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
@@ -1907,7 +1906,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Subtract cubic spline baseline from input data. Baseline is calculated by cubic curve model and given coefficients.
+ * @brief Subtract best-fit cubic spline model from input data.
  * @details
  * @param[in] context A context created by @ref sakura_CreateLSQFitContextCubicSplineFloat .
  * @param[in] num_data The number of elements in @a data and @a out .
@@ -1944,7 +1943,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Subtract sinusoidal baseline from input data. Baseline is calculated by baseline model and given coefficients.
+ * @brief Subtract best-fit sinusoidal model from input data.
  * @details
  * @param[in] context A context created by @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
@@ -1984,7 +1983,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Return the number of basis functions used for baseline fitting.
+ * @brief Return the number of basis functions used for least-square fitting.
  * @details
  * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
  * @param[in] order Parameter for the specified function.
@@ -1994,8 +1993,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * while other models accept zero value. The value should not
  * exceed the @a order specified in creation of @a context .
  * @param[out] num_coeff Number of basis functions to be used for
- * baseline fitting. This value should be the actual number of
- * simultaneous equations of least-square fitting.
+ * least-square fitting. This value should be the actual number
+ * of normal equations.
  * @return Status code.
  *
  * MT-safe
