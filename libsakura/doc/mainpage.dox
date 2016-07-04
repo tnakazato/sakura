@@ -3,10 +3,33 @@
  * @mainpage Sakura Library API
  *
  * @section intro Introduction
- * Sakura Library(libsakura) is a library that ...
+ * Sakura Library (libsakura) is a data analysis library that aims at more efficient 
+ * processing than ever. To improve a performance, Sakura Library makes use of an SIMD 
+ * instruction by writing either a compiler-friendly code, which helps the compiler to produce 
+ * highly optimized object code that effectively uses SIMD instructions, or manually optimized 
+ * code based on an intrinsic instructions that depend on a certain architecture. 
+ *
+ * At this moment, main target of the Sakura Library is a reduction of radioastronomical 
+ * data taken by radioastronomical telescopes. However, functions in Sakura Library is 
+ * designed as generic as possible. Thus, Sakura Library should be applicable to any kind 
+ * of data analysis. 
  *
  * @section getting Getting Sakura Library
  * 
+ * Main page of the Sakura Library is 
+ * 
+ * %http://www.tobedetermined/sakura/
+ *
+ * Source code of the Sakura Library are distributed in gzip-compressed tarballs. 
+ * Latest release can be downloaded from:
+ *
+ * ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/releases/latest_src
+ *
+ * Name of the tarball folows a naming scheme below:
+ * @verbatim
+ libsakura-<major version>.<minor version>.<code revision>.tgz
+ @endverbatim
+ *
  * @section link How to link libsakura to your application
  * Include <libsakura/sakura.h> from your sources.
  * @code
@@ -39,8 +62,10 @@ $ ./a.out
  * @section api API
  * Public API of Sakura Library is available @ref sakura.h "here".
  * All parameters marked as 'must-be-aligned' must be aligned at vector operation word boundary.
- * You can get the word size by calling @ref sakura_GetAlignment .
- * You are responsible to serialize calling functions which are not marked as 'MT-safe' as well.
+ * You can get required word size by calling @ref sakura_GetAlignment.
+ * Functions marked as 'MT-safe' can safely be called from threads that are running in parallel. 
+ * On the other hand, functions without 'MT-safe' sign must be called sequentially, i.e., 
+ * you should not use those functions on multi-thread processing. 
  *
  * @section contact Contact us
  * Please send bug report to #######@@alma.nao.ac.jp if you find a bug.
