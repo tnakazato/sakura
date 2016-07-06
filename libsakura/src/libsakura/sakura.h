@@ -1902,7 +1902,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
 		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_coeff,
-		double const coeff[/*num_data*/], float out[/*num_data*/])
+		double const coeff[/*num_coeff*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
@@ -1979,7 +1979,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_data, float const data[/*num_data*/], size_t num_nwave,
 		size_t const nwave[/*num_nwave*/], size_t num_coeff,
-		double const coeff[/*num_data*/], float out[/*num_data*/])
+		double const coeff[/*num_coeff*/], float out[/*num_data*/])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
