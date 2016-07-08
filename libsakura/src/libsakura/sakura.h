@@ -1208,8 +1208,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 
 /**
  * @brief Convolution is performed.
- * @details Convolution operations are performed by shifting a kernel over the input data.
- * The operation is carried out only for elements of data whose mask value is true.
+ * @details Convolution operation is performed by shifting a kernel over the input data.
+ * The operation is carried out only for elements of data whose mask values are true.
  * @param[in] num_kernel  The number of elements in the @a kernel.
  * @a num_kernel must be positive.  0 < @a num_kernel <= INT_MAX
  * @param[in] kernel Convolution kernel. All elements in @a kernel must not be Inf nor NaN.
@@ -1231,6 +1231,19 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @n must-be-aligned
  * @return status code.
  *
+ * @note
+ * The function does not define mask of convolved data, @a output_data .
+ * User is responsible for defining it if necessary.
+ * Instead, the function gives @a output_weight to support user define
+ * mask after convolution. @n
+ * In general, weight value is expected to be smaller if some of elements,
+ * that are supposed to contribute in convolution, are ignored due to
+ * @a input_mask being false. Therefore values of @a output_weight can be
+ * used as an indicator of degree of mask affecting the corresponding
+ * elements in @a output_data. @n
+ * Note, however, elements near the edge of array also have small weights
+ * because of boundary effect.
+ *
  * MT-safe
  *
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Convolve1DFloat)(size_t num_kernel,
@@ -1240,11 +1253,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 		float output_weight[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
  * @brief Convolution is performed using Fourier transformation.
- * @details Convolution operations are performed using Fourier transformation of data and kernel arrays.
- * The kernel is stored in the context with the internal format.
+ * @details Convolution operation is performed using Fourier transformation of data and kernel arrays.
+ * The kernel is stored in a context in an internal format.
  * The operation is carried out for all elements of data.
  * @param[in] context
- * The context is created with sakura_CreateConvolve1DContextFFTFloat.
+ * The context created by @ref sakura_CreateConvolve1DContextFFTFloat.
  * @param[in] num_data
  * The number of elements in @a input_data and @a output_data. @a num_data must be equal to @a num_kernel in @a context .
  * 0 < @a num_data <= INT_MAX
@@ -1263,9 +1276,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 		size_t num_data, float const input_data[/*num_data*/],
 		float output_data[/*num_data*/]) LIBSAKURA_NOEXCEPT;
 /**
- * @brief Destroy context
+ * @brief Destroy context for convolution.
  * @details
- * @param[in] context context.
+ * @param[in] context
+ * The context created by @ref sakura_CreateConvolve1DContextFFTFloat
+ * and to be destroyed.
  * @return status code.
  *
  * MT-unsafe
