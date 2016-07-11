@@ -227,7 +227,9 @@ typedef struct {
 	 * sum of squared valid data
 	 */
 	double square_sum;
-
+	/**
+	 * min value of valid data. NaN if no valid data.
+	 */
 	float min;
 	/**
 	 * max value of valid data. NaN if no valid data.
@@ -254,7 +256,7 @@ typedef struct {
  * the corresponding element in @a data is ignored.
  * <br/>must-be-aligned
  * @param[out] result An address where the result should be stored. Some fields may be set to NaN if it is impossible to figure out.
- * If there is more than one occurrence of min or max value, it is undefined which index of the occurrence is selected for @a index_of_min or @a index_of_max.
+ * If there is more than one occurrences of min or max value, it is undefined which index of the occurrences is selected for @a index_of_min or @a index_of_max.
  * @return status code
  *
  * MT-safe
@@ -297,14 +299,14 @@ typedef struct {
  * The median is a center value if @a num_data is odd. Otherwise, the median is
  * an average of two center values.
  * The caller is responsible to take a median value from @a new_data as
- * a median absolute deviation.
+ * a median absolute deviation as below.
  *
  *  mad = (@a new_data[@a num_data/2] + @a new_data[@a num_data/2 - @a num_data%2]) / 2 if @a num_data > 0
  *
  * @param[in] num_data	The number of elements in @a data and @a new_data .
  * @param[in] data	Each value in data must not be Inf nor NaN. @a data must be sorted.
  * <br/>must-be-aligned
- * @param[in] new_data	An array where the results are stored. @a new_data may points @a data.
+ * @param[out] new_data	An array where the results are stored. @a new_data may points @a data.
  * <br/>must-be-aligned
  * @return status code
  *
