@@ -113,10 +113,11 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
 /**
  * @brief Initializes Sakura Library.
  *
- * Initialize libsakura by calling this function before calling any other function of Sakura Library.
+ * You must initialize libsakura by calling this function before calling any other function of Sakura Library.
  *
  * Without calling @ref sakura_CleanUp() , don't call this function again.
- * @param[in]	allocator	An allocator which is used when Sakura Library needs to allocate memory dynamically. malloc(3) is used if NULL is provided. See @ref sakura_UserAllocator .
+ *
+ * @param[in]	allocator	An allocator which is used when Sakura Library needs to allocate memory dynamically. posix_memalign(3) is used if NULL is provided. See @ref sakura_UserAllocator .
  * @param[in]	deallocator	A deallocator which is used when Sakura Library needs to free dynamically allocated memory. free(3) is used if NULL is provided. See @ref sakura_UserDeallocator .
  * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
  *
@@ -138,7 +139,7 @@ void LIBSAKURA_SYMBOL(CleanUp)() LIBSAKURA_NOEXCEPT;
 /**
  * @brief Returns a current time.
  * Precision of the time depends on std::chrono::system_clock.
- * @return Current time in seconds since the Epoch.
+ * @return Current time in seconds since the Epoch. You should not assume when the Epoch is. Only the difference between two returned values is make sense.
  *
  * MT-safe
  */
@@ -2019,7 +2020,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**
- * @brief Copy elements in the @a src matrix into the @a dst matrix with flipping elements to reorder
+ * @brief Copy elements in the @a src array into the @a dst array with flipping elements to reorder
  * as some FFT library expects.
  *
  * @details
@@ -2046,7 +2047,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * @endcode
  *
  * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
- * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
+ * @param[in] dims Dimensions of the array @a src and @a dst. In other words, the number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order. For example,
  * when you have @code{.cpp}
  * float matrix[4][3];
@@ -2054,9 +2055,9 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * this parameter should be @code
  * { 3, 4 }
  * @endcode
- * @param[in] src	Source matrix.
+ * @param[in] src	Source multidimensional array.
  * @n must-be-aligned
- * @param[in] dst	Destination matrix.
+ * @param[in] dst	Destination multidimensional array.
  * @n must-be-aligned
  * @return status code.
  *
@@ -2067,7 +2068,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Copy elements in the @a src matrix into the @a dst matrix with unflipping elements to the original order.
+ * @brief Copy elements in the @a src array into the @a dst array with unflipping elements to the original order.
  *
  * @details
  * When you provide @a inner_most_untouched = false, @a elements = {3, 4} and @a src = {
@@ -2086,7 +2087,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * @endcode
  *
  * @param[in] inner_most_untouched If true, the order of the inner most dimension is untouched.
- * @param[in] dims Dimensions of the matrix @a src and @a dst. In other words, the number of elements in @a elements.
+ * @param[in] dims Dimensions of the array @a src and @a dst. In other words, the number of elements in @a elements.
  * @param[in] elements Numbers of elements of each dimension of @a src and @a dst with the inner-to-outer order. For example,
  * when you have @code{.cpp}
  * float matrix[4][3];
@@ -2094,9 +2095,9 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * this parameter should be @code
  * { 3, 4 }
  * @endcode
- * @param[in] src	Source matrix.
+ * @param[in] src	Source multidimensional array.
  * @n must-be-aligned
- * @param[in] dst	Destination matrix.
+ * @param[in] dst	Destination multidimensional array.
  * @n must-be-aligned
  * @return status code.
  *
@@ -2121,14 +2122,14 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the matrixes.
+ * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the multidimensional arrays.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the matrixes.
+ * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the multidimensional arrays.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
