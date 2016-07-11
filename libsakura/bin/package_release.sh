@@ -6,7 +6,7 @@
 #    only 1 top tmp dir in current dir, output files must also go there  
 
 set -o pipefail
-set -x
+#set -x
 
 export PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin
 
@@ -38,11 +38,11 @@ svn_branches_prefix='branches'
 # Binary RPM / enable/disable generation
 do_rpm=${TRUE}
 # External resources directory
-#rpm_resources_dir_default="/nfsstore/sakura_casa/rpm"
-rpm_resources_dir_default="${HOME}/nfsstore/sakura_casa/rpm"
+rpm_resources_dir_default="/nfsstore/sakura_casa/rpm"
 rpm_resources_dir=${rpm_resources_dir_default}
 # Binary RPM / package version
-rpm_package_version='1'
+rpm_package_version_default='1'
+rpm_package_version=${rpm_package_version_default}
 # Binary RPM / file name / include or not svn revision 
 rpm_short_name=${TRUE} # svn revision not included in rpm file name 
 # Binary RPM / sakura version / include or not svn revision
@@ -60,20 +60,27 @@ Synopsys:
 
 Options:
     -h|--help ..................: display this message and exit
+
     Release selection
     -u|--src_url <url> .........: URL of Sakura repository
          default ...............: ${src_url_default}
     -b|--svn_branch <branch>....: trunk or branch name under 
-                                  ${src_url_default/trunk\/libsakura/${svn_branches_prefix}}                        
+                                  ${src_url_default/trunk/libsakura/${svn_branches_prefix}}                        
          default ...............: ${svn_branch_default}
     -r|--svn_revision <rev>.....: svn revision number of release to package
+
     RPM-related options
     --no_rpm|--norpm ...........: do not create rpm archive
+    --rpm_resources_dir ........: path to directory storing resources required
+                                  to create the rpm file.
+         default ...............: ${rpm_resources_dir_default}
     -p|--rpm_package_version <p>: package version
-         default ...............: ${rpm_package_version}
+         default ...............: ${rpm_package_version_default}
     -ln|--rpm_long_name ........: include svn revision number in rpm file name
     -lv|--rpm_long_version .....: include svn revision number in rpm archive
     --rpm_no_legacy_libs .......: do not include Sakura legacy libraries in rpm archive
+                                  applies only to rhel5 and rhel6 rpms
+                                  rhel7 rpm does not include Sakura legacy libraries
 
 Examples:
 ---- Package HEAD revision of trunk, tar + rpm:
@@ -111,6 +118,10 @@ while [[ $# > 0 ]] ; do
         -p|--rpm_package_version)
         shift
         rpm_package_version=$1
+        ;;
+        --rpm_resources_dir)
+        shift
+        rpm_resources_dir=$1
         ;;
         -ln|--rpm_long_name)
         rpm_short_name=${FALSE}
@@ -226,6 +237,11 @@ fi
 rhel_version_major=$(lsb_release -r | grep -E --only-matching '[0-9]+' | head --lines=1)
 
 # Legacy libsakura libraries for CASA
+# -- RHEL7: never include legacy libsakura libraries, enforce rpm_legacy_libs=false
+if [[ "${rhel_version_major}" = "7" ]] ; then
+    rpm_legacy_libs=${FALSE}
+fi
+# -- RHEL5 and RHEL6: include legacy libsakura libraries based on ${rpm_legacy_libs}
 if [[ ${rpm_legacy_libs} -eq ${TRUE} ]] ; then
 	export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
 fi
@@ -234,11 +250,25 @@ fi
 my_rpm_macros="${rpmbuild_dir}/rpmmacros"
 rpm_define_options=""
 sign_option=""
+# -- CASA default install directory
+case "${rhel_version_major}" in
+    5|6)
+    casa_install_prefix=/usr/lib64/casa/01
+    ;;
+    7)
+    casa_install_prefix=/opt/casa/01
+    ;;
+    *) # Unknown RHEL distribution
+    echo "Error: RHEL version major must be 5,6 or 7 but is set to:" 
+    echo "${rhel_version_major}"
+    exit 1
+    ;; 
+esac
+
 rpmbuild_macros() {
-#%_prefix /usr/lib64/casa/01
 cat > ${my_rpm_macros} <<EOF_RPM_MACROS
 %_topdir ${rpmbuild_dir}
-%_prefix /opt/casa/01
+%_prefix ${casa_install_prefix}
 EOF_RPM_MACROS
     # %dist tag and gpg signature on RHEL5   
     if [ ${rhel_version_major} = "5" ] ; then
@@ -266,6 +296,20 @@ rpmbuild_prepare(){
 
 # RPM Spec file generation
 spec_file="${project_name}.el${rhel_version_major}.spec"
+# -- RPATH control
+case "${rhel_version_major}" in
+    5|6)
+    need_rpath=${FALSE}
+    ;;
+    7)
+    need_rpath=${TRUE}
+    ;;
+    *) # Unknown RHEL distribution
+    echo "Error: RHEL version major must be 5,6 or 7 but is set to:" 
+    echo "${rhel_version_major}"
+    exit 1
+    ;; 
+esac
 create_spec_file() {
 rpm_release_version=${release_version}
 if [[ ${rpm_short_version} -eq ${TRUE} ]]; then
@@ -288,12 +332,12 @@ cat >> $spec_file <<PREAMBLE_SOURCES
 Source0:        ${tarball_name}
 Source1:        ${gtest_name}
 PREAMBLE_SOURCES
-cat >> $spec_file <<'GTEST_BEGIN'
+cat >> $spec_file <<'PREAMBLE_PREFIX'
 BuildRoot:      %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXX)
-#Prefix:         /usr/lib64/casa/01
-Prefix:         /opt/casa/01
+Prefix:         %{_prefix}
+PREAMBLE_PREFIX
 
-
+cat >> $spec_file <<'GTEST_BEGIN'
 # Fix for rpm generation error on RHEL5: 
 # disable debuginfo package generation
 %define debug_package %{nil}
@@ -307,31 +351,54 @@ GTEST_BEGIN
 cat >> $spec_file <<GTEST_END
 ln -s ${gtest_expansion_name} gtest
 GTEST_END
-cat >> $spec_file <<'SAKURA_LEGACY_BEGIN'
+cat >> $spec_file <<'CMAKE_COMMAND_BEGIN'
 %build
 cd build && rm -rf *
 prefix_root=%{_prefix}
 prefix_no_root=${prefix_root:1}
 sse4_install_prefix=${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default
-LDFLAGS=-Wl,--enable-new-dtags cmake \
+CMAKE_COMMAND_BEGIN
+# RPATH / LDFLAGS
+ld_flags=""
+if [[ ${need_rpath} -eq ${TRUE} ]] ; then
+    ld_flags='LDFLAGS=-Wl,--enable-new-dtags'
+fi
+# CMake command / common options
+# Note: need to escape last backslash when here-document is parsed    
+cat >> $spec_file <<CMAKE_COMMAND
+${ld_flags} cmake \\
+CMAKE_COMMAND
+cat >> $spec_file <<'CMAKE_OPTION_DOC'
   -D CMAKE_MODULE_PATH=$(dirname $PWD)/cmake-modules \
   -D CMAKE_INSTALL_PREFIX=${sse4_install_prefix} \
   -D CMAKE_BUILD_TYPE=Release \
   -D SIMD_ARCH=SSE4 \
   -D BUILD_DOC:BOOL=ON \
-  -D CMAKE_SKIP_BUILD_RPATH=FALSE \
-  -D CMAKE_BUILD_WITH_INSTALL_RPATH=FALSE \
-  -D CMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE \
+CMAKE_OPTION_DOC
+# CMake command / rpath options
+if [[ ${need_rpath} -eq ${TRUE} ]] ; then
+	# Careful: editor must not insert spaces instead of tabs for this to work
+	# First character of lines below must be tabs
+	cat >> $spec_file <<-'CMAKE_RPATH_OPTIONS'
+	  -D CMAKE_SKIP_BUILD_RPATH=FALSE \
+	  -D CMAKE_BUILD_WITH_INSTALL_RPATH=FALSE \
+	  -D CMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE \
+	CMAKE_RPATH_OPTIONS
+fi
+# CMake command / common options    
+cat >> $spec_file <<'CMAKE_COMMAND_END'
   -D CMAKE_INSTALL_RPATH='/cas-8362/some/non/existent/path/for/later/rpath/replacement' \
   ..
-
+CMAKE_COMMAND_END
+# Make + install
+cat >> $spec_file <<'SAKURA_LEGACY_BEGIN'
 make
 make apidoc
 %install
 rm -rf ${RPM_BUILD_ROOT}
 cd build
 make install
-# Dirty: move share doc directory to the right place: just under /usr/lib64/casa/01
+# Dirty: move share doc directory to the right place: just under casa_prefix
 prefix_root=%{_prefix}
 prefix_no_root=${prefix_root:1}
 mv ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/share ${RPM_BUILD_ROOT}/${prefix_no_root}
@@ -339,23 +406,23 @@ mv ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/share ${RPM_BUILD_ROO
 # from the installation tree
 find ${RPM_BUILD_ROOT}/${prefix_no_root}/share -type d -empty -delete
 SAKURA_LEGACY_BEGIN
-
+# Sakura legacy libraries
 if [[ ${rpm_legacy_libs} -eq ${TRUE} ]] ; then
 	cat >> $spec_file <<-'PREAMBLE_END'
 		cp ${SAKURA_LEGACY_LIBS} ${RPM_BUILD_ROOT}/${prefix_no_root}/lib/%{name}/default/lib
 	PREAMBLE_END
 fi
-
-cat >> $spec_file <<'EOF_SPEC_FILE'
+# Installed files to be packaged
+cat >> $spec_file <<'INSTALLED_FILES_SELECTION'
 #
 # -------- Spec file %files stage:
-# select installed files for packaging
-
+# select which installed files must be packaged
 %files
 %defattr(-,root,root)
-#/usr/lib64/casa/01
-/opt/casa/01
-# %doc /usr/lib64/casa/01/share/doc/libsakura/api/html
+INSTALLED_FILES_SELECTION
+#%{_prefix}: does not work, so write the install prefix from bash
+cat >> $spec_file <<EOF_SPEC_FILE
+${casa_install_prefix}
 EOF_SPEC_FILE
 }
 
@@ -387,6 +454,8 @@ create_spec_file
 rm -f ${HOME}/.rpmmacros
 echo 'rpm build: start ...'
 echo "  . build log file: rpm_build.$(hostname --short).log"
+# TODO: if rpmbuild fails FAIL message is not displayed on standard output
+# since it is redirected to rpm_build.log
 eval rpmbuild -v ${sign_option} ${rpm_define_options} -bb ${spec_file} 1>rpm_build.$(hostname --short).log 2>&1 
 echo 'rpm build: done'
 
