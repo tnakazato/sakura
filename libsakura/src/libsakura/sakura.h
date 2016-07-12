@@ -2146,7 +2146,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  * -# Conversion stage\n
  * Position distribution given by @a x and @a y are converted to pixel coordinate.
- * Users is able to specify pixel size via @a pixel_size. If @a pixel_size is zero,
+ * User is able to specify pixel size via @a pixel_size. If @a pixel_size is zero,
  * it is set to a half of median separation between neighboring two positions.
  * If @a num_data is odd, there are several choices for median separation since
  * there are number of separation between two positions are even. In such case,
