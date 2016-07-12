@@ -1497,13 +1497,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[in] data The input data with length of @a num_data .
  * @param[in] mask The input mask data with length of @a num_data .
  * @param[in] num_peaks Number of Gaussians to be fitted.
- * @param[in/out] height An array to store initial guess of Gaussian
+ * @param[in,out] height An array to store initial guess of Gaussian
  * heights. Its length must be @a num_peaks and will be overwritten
  * with the fitting results.
- * @param[in/out] center An array to store initial guess of Gaussian
+ * @param[in,out] center An array to store initial guess of Gaussian
  * centers. Its length must be @a num_peaks and will be overwritten
  * with the fitting results.
- * @param[in/out] sigma An array to store initial guess of Gaussian
+ * @param[in,out] sigma An array to store initial guess of Gaussian
  * sigmas. Its length must be @a num_peaks and will be overwritten
  * with the fitting results.
  * @param[out] err_height An array to store errors of fitted
