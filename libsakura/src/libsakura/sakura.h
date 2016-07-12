@@ -1334,7 +1334,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for fitting types other than
  * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
- * Element values must not be duplicate, and must be in ascending order.
+ * Element values must not be duplicated, and must be in ascending order.
  * @n must-be-aligned
  * @param[out] lsq_matrix A 1D array containing the values of a matrix
  * at the left side of simultaneous equations for least-square fitting.
@@ -1436,7 +1436,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * Users must be careful in using this function about which and how many
  * data are to be excluded not to fall into destructive cases that the
  * number of used data becomes less than @a num_model_bases or not to
- * exclude the same data duplicatedly.
+ * exclude the same data in duplicate.
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UpdateLSQCoefficientsDouble)(
