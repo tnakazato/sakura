@@ -1911,7 +1911,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @brief Subtract best-fit polynomial model from input data.
  * @details
- * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
+ * @param[in] context A context created by
+ * @ref sakura_CreateLSQFitContextPolynomialFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
  * It must be equal to @a num_data which was given to
  * sakura_CreateLSQFitContextFloat() to create @a context .
@@ -1940,7 +1941,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @brief Subtract best-fit cubic spline model from input data.
  * @details
- * @param[in] context A context created by @ref sakura_CreateLSQFitContextCubicSplineFloat .
+ * @param[in] context A context created by
+ * @ref sakura_CreateLSQFitContextCubicSplineFloat .
  * @param[in] num_data The number of elements in @a data and @a out .
  * It must be equal to @a num_data which was given to
  * sakura_CreateLSQFitContextCubicSplineFloat() to create @a context .
@@ -1977,7 +1979,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @brief Subtract best-fit sinusoidal model from input data.
  * @details
- * @param[in] context A context created by @ref sakura_CreateLSQFitContextSinusoidFloat .
+ * @param[in] context A context created by
+ * @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
  * It must be equal to @a num_data which was given to
  * sakura_CreateLSQFitContextSinusoidFloat() to create @a context .
@@ -2017,13 +2020,15 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @brief Return the number of basis functions used for least-square fitting.
  * @details
- * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
+ * @param[in] context A context created by
+ * @ref sakura_CreateLSQFitContextPolynomialFloat or
+ * @ref sakura_CreateLSQFitContextCubicSplineFloat .
  * @param[in] order Parameter for the specified function.
  * It is the order (for polynomial and Chebyshev polynomial), or
- * the number of pieces (for cubic spline), or the maximum wave
- * number (for sinusoidal). It must be positive for cubic spline,
- * while other models accept zero value. The value should not
- * exceed the @a order specified in creation of @a context .
+ * the number of pieces (for cubic spline). It must be positive
+ * for cubic spline, while other models accept zero value. The
+ * value should not exceed the @a order specified in creation of
+ * @a context .
  * @param[out] num_coeff Number of basis functions to be used for
  * least-square fitting. This value should be the actual number
  * of normal equations.
