@@ -1172,13 +1172,12 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * Resulting @a kernel has the value that it is normalized, i.e. sum(@a kernel) = 1.0.
  * Actual formula for @a kernel is as follows:
  *
- *     peak_location = @a num_kernel / 2
- *
- *     sigma = @a kernel_width / sqrt(log(16))
- *
- *     peak_value = sqrt(8 * log(2) / 2 * pi) / @a kernel_width
- *
- *     @a kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) ) / sum_of_kernel
+ * @code
+ * peak_location = num_kernel / 2
+ * sigma = kernel_width / sqrt(log(16))
+ * peak_value = sqrt(8 * log(2) / 2 * pi) / kernel_width
+ * kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) ) / sum_of_kernel
+ * @endcode
  *
  * @param[in] kernel_width FWHM (Full Width of Half Maximum) of Gaussian.
  * @a kernel_width must be greater than 0.
