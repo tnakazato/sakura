@@ -1588,6 +1588,8 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  * @param[out] context An object containing model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
+ * Note also that this object will not be modified from the
+ * initial value in case this function fails.
  * @return Status code.
  *
  * MT-safe
@@ -1611,6 +1613,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * @param[out] context An object containing model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
+ * Note also that this object will not be modified from the
+ * initial value in case this function fails.
  * @return Status code.
  *
  * MT-safe
@@ -1634,6 +1638,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * @param[out] context An object containing model data.
  * When @a context is no longer used, it must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
+ * Note also that this object will not be modified from the
+ * initial value in case this function fails.
  * @return Status code.
  *
  * MT-safe
