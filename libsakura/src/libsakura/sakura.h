@@ -1036,7 +1036,7 @@ typedef enum {
  *
  * @par Impact of sort order on performance:
  * When input arrays, @a base_position and/or @a base_data, are sorted in descending order,
- * the arrays are internally reversed in ascending order and store them to working array.
+ * the arrays are internally reversed in ascending order and then stored in working arrays.
  * Therefore, descending inputs may cause degradation of performance compared with ascending inputs.
  *
  * @par Note on polynomial interpolation:
