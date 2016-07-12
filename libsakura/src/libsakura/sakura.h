@@ -1331,7 +1331,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[in] num_lsq_bases The number of model basis functions to be used
  * in actual fitting. It must be a positive number and must not exceed
  * @a num_model_bases .
- * @a param[in] use_bases_idx A 1D array containing indices of basis model
+ * @param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for fitting types other than
  * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
  * Element values must not be duplicate, and must be in ascending order.
@@ -1405,7 +1405,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[in] num_lsq_bases The number of model basis functions to be used
  * in actual fitting. It must be in range 0 < @a num_lsq_bases <=
  * @a num_model_bases.
- * @a param[in] use_bases_idx A 1D array containing indices of basis model
+ * @param[in] use_bases_idx A 1D array containing indices of basis model
  * that are to be used for fitting. As for fitting types other than
  * sinusoidal, it should be always [0, 1, 2, ..., (num_lsq_bases-1)].
  * Element values must be in ascending order.
