@@ -1348,12 +1348,16 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * simultaneous equations for least-square fitting. Its length should be
  * equal to @a num_model_bases .
  * @n must-be-aligned
- * @return Status code. sakura_Status_kOK if finished successfully,
- * sakura_Status_kInvalidArgument in case parameters does not meet the
- * above criteria, sakura_Status_kNG in case the number of unmasked data
- * (for which mask is @a false ) is less than the number of simultaneous
- * equations, and sakura_Status_kUnknownError in case other exceptions
- * emitted internally.
+ * @return Status code.
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
+ * if finished successfully,
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * in case parameters does not meet the above criteria,
+ * @link sakura_Status::sakura_Status_kNG sakura_Status_kNG @endlink
+ * in case the number of unmasked data (for which mask is @a false ) is
+ * less than the number of simultaneous equations, and
+ * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * in case other exceptions emitted internally.
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GetLSQCoefficientsDouble)(
@@ -1421,10 +1425,13 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * simultaneous equations for least-square fitting. Its length should be
  * equal to @a num_lsq_bases .
  * @n must-be-aligned
- * @return Status code. sakura_Status_kOK if finished successfully,
- * sakura_Status_kInvalidArgument in case parameters does not meet the above
- * criteria, and sakura_Status_kUnknownError in case other exceptions emitted
- * internally.
+ * @return Status code.
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink
+ * if finished successfully,
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * in case parameters does not meet the above criteria, and
+ * @link sakura_Status::sakura_Status_kUnknownError sakura_Status_kUnknownError @endlink
+ * in case other exceptions emitted internally.
  * @par Caution:
  * Users must be careful in using this function about which and how many
  * data are to be excluded not to fall into destructive cases that the
@@ -1567,8 +1574,11 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  * threads, as it contains working areas exclusive for a specific
  * thread.
  * @param[in] lsqfit_type Type of basis function. It should
- * be either of sakura_LSQFitType_kPolynomial or
- * sakura_LSQFitType_kChebyshev.
+ * be either of
+ * @link sakura_LSQFitType::sakura_LSQFitType_kPolynomial sakura_LSQFitType_kPolynomial @endlink
+ * or
+ * @link sakura_LSQFitType::sakura_LSQFitType_kChebyshev sakura_LSQFitType_kChebyshev @endlink
+ * .
  * @param[in] order Polynomial order. It must be positive or
  * zero.
  * @param[in] num_data Number of data to fit. It must be equal
