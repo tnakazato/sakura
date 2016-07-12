@@ -1020,12 +1020,12 @@ typedef enum {
  * for other unknown error.
  * Possible reason for
  * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
- * is either of (1) invalid @a interpolation_method or (2) any of input/output array is not aligned.
+ * is either of (1) invalid @a interpolation_method or (2) arrays are not aligned.
  *
  * @pre @a base_position and @a interpolate_position must be sorted. Also, these arrays should not
  * have duplicate values.
  *
- * @par Difference between sakura_InterpolateXAxisFloat() and sakura_InterpolateYAxisFloat():
+ * @par Difference between @ref sakura_InterpolateXAxisFloat and @ref sakura_InterpolateYAxisFloat:
  * Difference between these two similar functions is a memory layout of @a base_data and
  * @a interpolated_data. The former assumes the layout like [num_array][num_base] so that
  * @a base_data should store the data in the following order,
