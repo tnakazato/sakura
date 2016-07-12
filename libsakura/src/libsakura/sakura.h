@@ -2151,26 +2151,29 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * If @a num_data is odd, there are several choices for median separation since
  * there are number of separation between two positions are even. In such case,
  * the median separation is evaluated as
- * \code
- * median_separation = sorted_separation[(num_data - 1) / 2];
- * \endcode
+ * @verbatim
+median_separation = sorted_separation[(num_data - 1) / 2];
+@endverbatim
  * It is recommended to set @a pixel_size to zero. Please consider to set nonzero value only if
  * zero @a pixel_size doesn't work on your data.
+ * Number of pixels along horizontal and vertical axes is determined by
+ * @verbatim
+(ceil(wx / pixel_size), ceil(wy / pixel_size))
+@endverbatim
+ * where wx and wy are evaluated from @a blc_x, @a blc_y, @a trc_x, and @a trc_y if they are
+ * all non-NULL. The formula is
+ * @verbatim
+wx = (*trc_x - *blc_x) * 1.1
+wy = (*trc_y - *blc_y) * 1.1
+@endverbatim
+ * Otherwise, they are calculated by
+ * @verbatim
+wx = (max(x) - min(x)) * 1.1
+wy = (max(y) - min(y)) * 1.1
+@endverbatim
  *
  * -# Count stage\n
- * Prepare pixel data that covers all positions. Count up data points in each pixel.
- * Pixel is a square with size of @a pixel_size * median(distance) where distance is an array
- * given by
- * \code
- * for (size_t i = 1; i < num_data; ++i) {
- *     distance[i] = pow(x[i]-x[i-1], 2) + pow(y[i]-y[i-1], 2);
- * }
- * \endcode
- * Number of pixels along horizontal and vertical axes is determined by
- *    (ceil(wx / pixel size), ceil(wy / pixel size))
- * where wx and wy are evaluated by ((@a *trc_x - @a *blc_x) * 1.1, (@a *trc_y - @a *blc_y) * 1.1)
- * and if any of @a blc_x, @a blc_y, @a trc_x, and @a trc_y are NULL, they are replaced with
- * min(@a x), min(@a y), max(@a x), and max(@a y), respectively.
+ * Count up data points in each pixel.
  *
  * -# Binalization stage\n
  * Binarize pixel data. Pixel value is set to one if it has non-zero value. Zero remains zero.
