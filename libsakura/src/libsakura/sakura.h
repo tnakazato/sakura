@@ -1376,7 +1376,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * This function updates the coefficients of normal equation for LSQ fitting
  * created by sakura_GetLSQCoefficientsDouble(), by subtracting values
  * corresponding to data points which have been used in the previous
- * calculation but not this time. this is faster than newly calculating
+ * calculation but not this time. This is faster than newly calculating
  * coefficients if the number of points to be excluded this time is less
  * than half of those previously used.
  * @par
