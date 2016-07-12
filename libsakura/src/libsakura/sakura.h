@@ -1491,7 +1491,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * Fit Gaussian to the input data using Levenberg-Marquardt method.
  * The input data can contain multiple Gaussian profiles, however,
  * note that fitting multiple Gaussians at once is quite difficult
- * using Eigen's LM solver and the results may not be correct.
+ * and thus the results may not be correct.
  * @param[in] num_data Number of input data. It must be equal to or
  * larger than the number of Gaussian parameters (3 * @a num_peaks ).
  * @param[in] data The input data with length of @a num_data .
