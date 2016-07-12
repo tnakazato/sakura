@@ -173,10 +173,10 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)() LIBSAKURA_NOEXCEPT;
  *
  * It returns @a arena if @a arena is already aligned.
  *
- * @param[in] size_of_arena size of the memory region pointed by @a arena
- * @param[in] arena start address of a memory region
- * @param[in] size_required required size after alignment
- * @return aligned address if at least @a size_required bytes are available in @a arena after alignment,
+ * @param[in] size_of_arena Size of the memory region pointed by @a arena
+ * @param[in] arena Start address of a memory region
+ * @param[in] size_required Required size after alignment
+ * @return Aligned address if at least @a size_required bytes are available in @a arena after alignment,
  * otherwise NULL.
  *
  * MT-safe
@@ -189,9 +189,9 @@ void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
  * It returns @a arena if @a arena is already aligned.
  *
  * @param[in] elements_in_arena The number of elements in @a arena , not a size in bytes.
- * @param[in] arena start address of an array
- * @param[in] elements_required required number of elements after alignment
- * @return aligned address if at least @a elements_required are available in @a arena after alignment,
+ * @param[in] arena Start address of an array
+ * @param[in] elements_required Required number of elements after alignment
+ * @return Aligned address if at least @a elements_required are available in @a arena after alignment,
  * otherwise NULL.
  *
  * MT-safe
@@ -257,7 +257,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] result An address where the result should be stored. Some fields may be set to NaN if it is impossible to figure out.
  * If there is more than one occurrences of min or max value, it is undefined which index of the occurrences is selected for @a index_of_min or @a index_of_max.
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(
@@ -283,7 +283,7 @@ typedef struct {
  * @param[in,out] data Data to be sorted. Since data is sorted in place, contents of this array are not preserved.
  * If corresponding element in @a is_valid is true, the element in @a data must not be Inf nor NaN.
  * @param[out] new_num_data The number of sorted elements that don't include invalid data( <= @a num_data ) is stored here.
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(
@@ -308,7 +308,7 @@ typedef struct {
  * <br/>must-be-aligned
  * @param[out] new_data	An array where the results are stored. @a new_data may points @a data.
  * <br/>must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */
@@ -369,7 +369,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * <br/>must-be-aligned
  * @param[out] grid	The resulting grid. Its memory layout should be [@a height][@a width][@a num_polarizations_for_grid][@a num_channels_for_grid].
  * <br/>must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(GridConvolvingFloat)(
@@ -421,7 +421,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @n must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
@@ -470,7 +470,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @n must-be-aligned
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)(
@@ -505,11 +505,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @param[in] data An input array of size, @a num_data.
  * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation.
+ * @param[in] threshold The threshold of evaluation.
  * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanFloat)(
@@ -540,11 +540,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @param[in] data An input array of size, @a num_data.
  * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation.
+ * @param[in] threshold The threshold of evaluation.
  * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfGreaterThanOrEqualsFloat)(
@@ -575,11 +575,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @param[in] data An input array of size, @a num_data.
  * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation.
+ * @param[in] threshold The threshold of evaluation.
  * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanFloat)(
@@ -610,11 +610,11 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @param[in] data An input array of size, @a num_data.
  * In case the array is floating-point type, the elements should not contain Inf nor NaN.
  * @n must-be-aligned
- * @param[in] threshold the threshold of evaluation.
+ * @param[in] threshold The threshold of evaluation.
  * In case the parameter is floating-point type, the value should not be Inf nor NaN.
  * @param[out] result The output array of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfLessThanOrEqualsFloat)(
@@ -641,7 +641,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @n must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)(
@@ -659,7 +659,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * @n must-be-aligned
  * @param[out] result The output array of of size, @a num_data.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(size_t num_data,
@@ -685,7 +685,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  * The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.
  * @n must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_data,
@@ -723,7 +723,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.@n
  * must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)(
@@ -770,7 +770,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.@n
  * must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  *
@@ -818,7 +818,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.@n
  * must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseImplicationUint8)(
@@ -857,7 +857,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.@n
  * must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseNotUint8)(
@@ -904,7 +904,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.@n
  * must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)(
@@ -951,7 +951,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * elements in @a edit_mask is false. The pointer of @a out is allowed to be equal to
  * that of @a in (@a result == @a data), indicating in-place operation.@n
  * must-be-aligned
- * @return status code
+ * @return Status code
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)(
@@ -1048,35 +1048,35 @@ typedef enum {
  * Note also that @a polynomial_order 0 is equivalent to nearest interpolation.
  *
  * @par
- * @param[in] interpolation_method interpolation method.
- * @param[in] polynomial_order maximum polynomial order for polynomial interpolation.
+ * @param[in] interpolation_method Interpolation method.
+ * @param[in] polynomial_order Maximum polynomial order for polynomial interpolation.
  * Actual order will be determined by a balance
  * between @a polynomial_order and @a num_base.
  * This parameter is effective only when @a interpolation_method is
  * @link sakura_InterpolationMethod::sakura_InterpolationMethod_kPolynomial sakura_InterpolationMethod_kPolynomial @endlink.
  * In other interpolation methods, it is ignored.
- * @param[in] num_base number of elements for data points. Its value must be greater than 0.
- * @param[in] base_position position of data points. Its length must be @a num_base.
+ * @param[in] num_base Number of elements for data points. Its value must be greater than 0.
+ * @param[in] base_position Position of data points. Its length must be @a num_base.
  * It must be sorted either ascending or descending.
  * must-be-aligned
- * @param[in] num_array number of arrays given in @a base_data.
- * @param[in] base_data value of data points. Its length must be @a num_base times @a num_array.
+ * @param[in] num_array Number of arrays given in @a base_data.
+ * @param[in] base_data Value of data points. Its length must be @a num_base times @a num_array.
  * must-be-aligned
- * @param[in] base_mask boolean mask for data. Its length must be @a num_base times @a num_array.
+ * @param[in] base_mask Boolean mask for data. Its length must be @a num_base times @a num_array.
  * False points will be excluded from the interpolation
  * must-be-aligned
- * @param[in] num_interpolated number of elements for points that wants to get
+ * @param[in] num_interpolated Number of elements for points that wants to get
  * interpolated value.
- * @param[in] interpolated_position location of points that wants to get interpolated
+ * @param[in] interpolated_position Location of points that wants to get interpolated
  * value. Its length must be @a num_interpolated.
  * must-be-aligned
- * @param[out] interpolated_data storage for interpolation result. Its length must be
+ * @param[out] interpolated_data Storage for interpolation result. Its length must be
  * @a num_interpolated times @a num_array.
  * must-be-aligned
- * @param[out] interpolated_mask boolean mask for interpolation result. Its length must be
+ * @param[out] interpolated_mask Boolean mask for interpolation result. Its length must be
  * @a num_interpolated times @a num_array.
  * must-be-aligned
- * @return status code.
+ * @return Status code.
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateXAxisFloat)(
@@ -1126,22 +1126,22 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @a num_scaling_factor should be 1 or equal to @a num_data. If @a num_scaling_factor is 1,
  * @a scaling_factor[0] will be used to scale all @a data elements.
  *
- * @param[in] num_scaling_factor number of elements of @a scaling_factor. Its value should be
+ * @param[in] num_scaling_factor Number of elements of @a scaling_factor. Its value should be
  * 1 or equal to @a num_data. If @a num_scaling_factor is 1, @a scaling_factor[0] will be
  * applied to all array elements.
- * @param[in] scaling_factor scaling factor corresponding to system temperature. number of
+ * @param[in] scaling_factor Scaling factor corresponding to system temperature. number of
  * elements must be @a num_scaling_factor.
  * must-be-aligned
- * @param[in] num_data number of data
- * @param[in] data data to be normalized. number of elements must be @a num_data.
+ * @param[in] num_data Number of data
+ * @param[in] data Data to be normalized. number of elements must be @a num_data.
  * must-be-aligned
- * @param[in] reference reference data. number of elements must be @a num_data.
+ * @param[in] reference Reference data. number of elements must be @a num_data.
  * must-be-aligned
- * @param[out] result resulting normalized data. one can give same array with either
+ * @param[out] result Resulting normalized data. one can give same array with either
  * @a data or @a reference for in-place calculation. number of elements must be @a num_data.
  * must-be-aligned
  *
- * @return status code.
+ * @return Status code.
  *
  * MT-safe
  */
@@ -1184,6 +1184,8 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @param[in] num_kernel The number of elements in the @a kernel
  * @param[out] kernel Output kernel array
  * @n must-be-aligned
+ *
+ * @return Status code.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 		float kernel_width, size_t num_kernel, float kernel[])
@@ -1196,10 +1198,10 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @a num_kernel must be positive.  0 < num_kernel <= INT_MAX
  * @param[in] kernel Convolution kernel. All elements in @a kernel must not be Inf nor NaN.
  * @n must-be-aligned
- * @param[out] context context for convolution. The context can be shared between threads.
+ * @param[out] context Context for convolution. The context can be shared between threads.
  * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by
  * @ref sakura_Convolve1DFFTFloat.
- * @return status code.
+ * @return Status code.
  *
  * MT-unsafe
  */
@@ -1231,7 +1233,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[out] output_weight Total weight of kernel summed up to corresponding elements
  * of @a output_data in the convolution operation.
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  *
  * @note
  * The function does not define mask of convolved data, @a output_data .
@@ -1268,7 +1270,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[out] output_data Output data. The pointer of @a out is allowed to be equal to
  *  that of @a in (@a input_data == @a output_data), indicating in-place operation.
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  *
  * MT-safe
  *
@@ -1283,7 +1285,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @param[in] context
  * The context created by @ref sakura_CreateConvolve1DContextFFTFloat
  * and to be destroyed.
- * @return status code.
+ * @return Status code.
  *
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(
@@ -2060,7 +2062,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * @n must-be-aligned
  * @param[in] dst	Destination multidimensional array.
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  *
  * MT-safe
  */
@@ -2100,7 +2102,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * @n must-be-aligned
  * @param[in] dst	Destination multidimensional array.
  * @n must-be-aligned
- * @return status code.
+ * @return Status code.
  *
  * MT-safe
  */
@@ -2221,6 +2223,8 @@ wy = (max(y) - min(y)) * 1.1
  * with each data points provided by @a x and @a y. The points near edge will be masked,
  * i.e., mask value will be set to true for those points.\n
  * must-be-aligned
+ *
+ * @return Status code.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateMaskNearEdgeDouble)(
 		float fraction, double pixel_size, size_t num_data, double const x[],
