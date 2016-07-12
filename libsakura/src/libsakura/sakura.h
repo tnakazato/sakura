@@ -704,7 +704,7 @@ bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
  * @note
  * The function can also be used to invoke material nonimplication of @a data and @a bit_mask .
  * Input the complement of @a bit_mask (~@a bit_mask ) to invoke material nonimplication.
- * For details of mateial nonimplication, see, e.g.,@n
+ * For details of material nonimplication, see, e.g.,@n
  * http://en.wikipedia.org/wiki/Truth_table
  *
  * @param[in] bit_mask A bit mask. The bit operation is invoked
