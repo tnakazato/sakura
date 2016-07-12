@@ -1645,7 +1645,10 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
 /**
  * @brief Destroy an object containing model data for least-square fitting.
  * @details
- * @param[in] context A context created by @ref sakura_CreateLSQFitContextFloat .
+ * @param[in] context A context created by
+ * @ref sakura_CreateLSQFitContextPolynomialFloat or
+ * @ref sakura_CreateLSQFitContextCubicSplineFloat or
+ * @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @return Status code.
  *
  * MT-safe
