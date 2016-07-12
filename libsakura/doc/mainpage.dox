@@ -12,7 +12,8 @@
  * intrinsics.  
  *
  * At this moment, main target of the Sakura Library is a reduction of astronomical 
- * data taken by radio telescopes. However, functions in Sakura Library are 
+ * data taken by radio telescopes, especially single-dish radio telescopes. 
+ * However, functions in Sakura Library are 
  * designed as generic as possible. Thus, Sakura Library should be applicable to any kind 
  * of data analysis. 
  *
