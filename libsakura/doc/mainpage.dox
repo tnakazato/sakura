@@ -4,13 +4,15 @@
  *
  * @section intro Introduction
  * Sakura Library (libsakura) is a data analysis library that aims at more efficient 
- * processing than ever. To improve a performance, Sakura Library makes use of an SIMD 
- * instruction by writing either a compiler-friendly code, which helps the compiler to produce 
- * highly optimized object code that effectively uses SIMD instructions, or manually optimized 
- * code based on an intrinsic instructions that depend on a certain architecture. 
+ * processing than ever. To improve a performance, Sakura Library vectorizes the operation  
+ * by making effective use of SIMD instructions. This is accomplished by implementing each 
+ * function as compiler-friendly as possible so that the compiler produces highly vectorized 
+ * object code. If the compiler fails to vectorize, or misses using desired SIMD instructions, 
+ * in a certain function, we write manually vectorized code for that function using 
+ * intrinsics.  
  *
- * At this moment, main target of the Sakura Library is a reduction of radioastronomical 
- * data taken by radioastronomical telescopes. However, functions in Sakura Library is 
+ * At this moment, main target of the Sakura Library is a reduction of astronomical 
+ * data taken by radio telescopes. However, functions in Sakura Library are 
  * designed as generic as possible. Thus, Sakura Library should be applicable to any kind 
  * of data analysis. 
  *
