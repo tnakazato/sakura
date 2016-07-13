@@ -105,13 +105,13 @@ struct TestTarget<float> {
 	static LIBSAKURA_SYMBOL(Status) Flip(
 	bool inner_most_untouched, size_t dims, size_t const elements[],
 			float const src[], float dst[]) {
-		return LIBSAKURA_SYMBOL(FlipMatrixFloat)(inner_most_untouched, dims,
+		return LIBSAKURA_SYMBOL(FlipArrayFloat)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
 	bool inner_most_untouched, size_t dims, size_t const elements[],
 			float const src[], float dst[]) {
-		return LIBSAKURA_SYMBOL(UnflipMatrixFloat)(inner_most_untouched, dims,
+		return LIBSAKURA_SYMBOL(UnflipArrayFloat)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 };
@@ -121,13 +121,13 @@ struct TestTarget<double> {
 	static LIBSAKURA_SYMBOL(Status) Flip(
 	bool inner_most_untouched, size_t dims, size_t const elements[],
 			double const src[], double dst[]) {
-		return LIBSAKURA_SYMBOL(FlipMatrixDouble)(inner_most_untouched, dims,
+		return LIBSAKURA_SYMBOL(FlipArrayDouble)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
 	bool inner_most_untouched, size_t dims, size_t const elements[],
 			double const src[], double dst[]) {
-		return LIBSAKURA_SYMBOL(UnflipMatrixDouble)(inner_most_untouched, dims,
+		return LIBSAKURA_SYMBOL(UnflipArrayDouble)(inner_most_untouched, dims,
 				elements, src, dst);
 	}
 };
@@ -137,14 +137,14 @@ struct TestTarget<complex<double> > {
 	static LIBSAKURA_SYMBOL(Status) Flip(
 	bool inner_most_untouched, size_t dims, size_t const elements[],
 			complex<double> const src[], complex<double> dst[]) {
-		return LIBSAKURA_SYMBOL(FlipMatrixDouble2)(inner_most_untouched, dims,
+		return LIBSAKURA_SYMBOL(FlipArrayDouble2)(inner_most_untouched, dims,
 				elements, reinterpret_cast<double const (*)[2]>(src),
 				reinterpret_cast<double (*)[2]>(dst));
 	}
 	static LIBSAKURA_SYMBOL(Status) Unflip(
 	bool inner_most_untouched, size_t dims, size_t const elements[],
 			complex<double> const src[], complex<double> dst[]) {
-		return LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(inner_most_untouched, dims,
+		return LIBSAKURA_SYMBOL(UnflipArrayDouble2)(inner_most_untouched, dims,
 				elements, reinterpret_cast<double const (*)[2]>(src),
 				reinterpret_cast<double (*)[2]>(dst));
 	}
