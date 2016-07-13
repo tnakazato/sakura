@@ -64,16 +64,16 @@ namespace {
 
 auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("Convolution");
 
-inline fftwf_complex* AllocateFFTArray(size_t num_data) {
-	return reinterpret_cast<fftwf_complex*>(fftwf_malloc(
-			sizeof(fftwf_complex) * num_data));
-}
-
-inline void FreeFFTArray(fftwf_complex *ptr) {
-	if (ptr != nullptr) {
-		fftwf_free(ptr);
-	}
-}
+//inline fftwf_complex* AllocateFFTArray(size_t num_data) {
+//	return reinterpret_cast<fftwf_complex*>(fftwf_malloc(
+//			sizeof(fftwf_complex) * num_data));
+//}
+//
+//inline void FreeFFTArray(fftwf_complex *ptr) {
+//	if (ptr != nullptr) {
+//		fftwf_free(ptr);
+//	}
+//}
 
 inline void DestroyFFTPlan(fftwf_plan ptr) {
 	if (ptr != nullptr) {
