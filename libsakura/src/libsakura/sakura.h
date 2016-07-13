@@ -427,8 +427,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveFloat)(
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
-		float const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		float const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfInRangesInclusiveFloat
@@ -436,8 +436,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesInclusiveInt)(
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
-		int const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		int const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @brief Sets true if the values in an input array (@a data ) are in any of specified range (exclusive).
@@ -476,8 +476,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveFloat)(
 		size_t num_data, float const data[/*num_data*/], size_t num_condition,
 		float const lower_bounds[/*num_condition*/],
-		float const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		float const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @copybrief sakura_SetTrueIfInRangesExclusiveFloat
@@ -485,8 +485,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SetTrueIfInRangesExclusiveInt)(
 		size_t num_data, int const data[/*num_data*/], size_t num_condition,
 		int const lower_bounds[/*num_condition*/],
-		int const upper_bounds[/*num_condition*/],
-		bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		int const upper_bounds[/*num_condition*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @brief Sets true if the values in the input array (@a data ) are greater than a threshold.
@@ -689,7 +689,8 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)(
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InvertBool)(size_t num_data,
-bool const data[/*num_data*/], bool result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+		bool const data[/*num_data*/], bool result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @brief Invoke bit operation AND between a bit mask and an array.
@@ -1122,34 +1123,72 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
  * @n
  * The function allows in-place calculation, i.e., @a result array can be either @a data or
  * @a reference. In this case, @a data or @a reference will be overwritten.
- * @pre
- * @a num_scaling_factor should be 1 or equal to @a num_data. If @a num_scaling_factor is 1,
- * @a scaling_factor[0] will be used to scale all @a data elements.
  *
- * @param[in] num_scaling_factor Number of elements of @a scaling_factor. Its value should be
- * 1 or equal to @a num_data. If @a num_scaling_factor is 1, @a scaling_factor[0] will be
- * applied to all array elements.
- * @param[in] scaling_factor Scaling factor corresponding to system temperature. number of
- * elements must be @a num_scaling_factor.
- * must-be-aligned
+ * Only difference from @ref sakura_CalibrateDataWithConstScalingFloat is whether
+ * @a scaling_factor is array or scalar. Note that, due to this difference,
+ * order of the arguments is slightly different between the two.
+ *
  * @param[in] num_data Number of data
- * @param[in] data Data to be normalized. number of elements must be @a num_data.
+ * @param[in] scaling_factor Scaling factor. This is an array and number of
+ * elements must be @a num_data.
  * must-be-aligned
- * @param[in] reference Reference data. number of elements must be @a num_data.
+ * @param[in] data Data to be normalized. Number of elements must be @a num_data.
  * must-be-aligned
- * @param[out] result Resulting normalized data. one can give same array with either
- * @a data or @a reference for in-place calculation. number of elements must be @a num_data.
+ * @param[in] reference Reference data. Number of elements must be @a num_data.
+ * must-be-aligned
+ * @param[out] result Resulting normalized data. One can give same array with either
+ * @a data or @a reference for in-place calculation. Number of elements must be @a num_data.
  * must-be-aligned
  *
  * @return Status code.
  *
  * MT-safe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
-		size_t num_scaling_factor,
-		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CalibrateDataWithArrayScalingFloat)(
+		size_t num_data, float const scaling_factor[/*num_data*/],
 		float const data[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) LIBSAKURA_NOEXCEPT;
+
+/**
+ * @brief Normalize data against reference value with scaling factor.
+ * @details
+ * Normalize the data against reference value with scaling factor. The function normalizes the @a data
+ * by the assumption that
+ * the value in @a reference is normalized to @a scaling_factor. Specifically, it will calculate,
+ * @verbatim result = scaling_factor * (data - reference) / reference @endverbatim
+ *
+ * @n
+ * The function returns result status. For successful run, return value will be
+ * @link sakura_Status::sakura_Status_kOK sakura_Status_kOK @endlink.
+ * On the other hand, it will return
+ * @link sakura_Status::sakura_Status_kInvalidArgument sakura_Status_kInvalidArgument @endlink
+ * if any invalid values are passed to arguments.
+ * @n
+ * @n
+ * The function allows in-place calculation, i.e., @a result array can be either @a data or
+ * @a reference. In this case, @a data or @a reference will be overwritten.
+ *
+ * See @ref sakura_CalibrateDataWithArrayScalingFloat about the difference between those
+ * two similar functions.
+ *
+ * @param[in] scaling_factor Scaling factor. This is a scalar.
+ * @param[in] num_data Number of data
+ * @param[in] data Data to be normalized. Number of elements must be @a num_data.
+ * must-be-aligned
+ * @param[in] reference Reference data. Number of elements must be @a num_data.
+ * must-be-aligned
+ * @param[out] result Resulting normalized data. One can give same array with either
+ * @a data or @a reference for in-place calculation. Number of elements must be @a num_data.
+ * must-be-aligned
+ *
+ * @return Status code.
+ *
+ * MT-safe
+ */
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CalibrateDataWithConstScalingFloat)(
+		float scaling_factor, size_t num_data, float const data[/*num_data*/],
+		float const reference[/*num_data*/], float result[/*num_data*/])
+				LIBSAKURA_NOEXCEPT;
 
 /**
  * @brief Context struct for convolution
@@ -1485,7 +1524,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 //LM part----------------------------------------------------------------
- /**
+/**
  * @brief Fit Gaussian to the input data using Levenberg-Marquardt method.
  * @details
  * Fit Gaussian to the input data using Levenberg-Marquardt method.
@@ -1515,7 +1554,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @return Status code.
  *
  * MT-safe
-  */
+ */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LMFitGaussianFloat)(
 		size_t const num_data, float const data[/*num_data*/],
 		bool const mask[/*num_data*/], size_t const num_peaks,
@@ -1592,8 +1631,7 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  *
  * MT-safe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
-LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
-		size_t num_data,
+LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
 		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) **context)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -1904,11 +1942,10 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
 		struct LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
 		size_t num_nwave, size_t const nwave[/*num_nwave*/], size_t num_data,
-		float const data[/*num_data*/],
-		bool const mask[/*num_data*/], float clip_threshold_sigma,
-		uint16_t num_fitting_max, size_t num_coeff, double coeff[/*num_coeff*/],
-		float best_fit[/*num_data*/], float residual[/*num_data*/],
-		bool final_mask[/*num_data*/], float *rms,
+		float const data[/*num_data*/], bool const mask[/*num_data*/],
+		float clip_threshold_sigma, uint16_t num_fitting_max, size_t num_coeff,
+		double coeff[/*num_coeff*/], float best_fit[/*num_data*/],
+		float residual[/*num_data*/], bool final_mask[/*num_data*/], float *rms,
 		LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status)
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
@@ -2089,7 +2126,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  * MT-safe
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayFloat)(
-bool inner_most_untouched, size_t dims, size_t const elements[],
+		bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
@@ -2129,35 +2166,35 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * MT-safe
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayFloat)(
-bool inner_most_untouched, size_t dims, size_t const elements[],
+		bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copydoc sakura_FlipArrayFloat
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayDouble)(
-bool inner_most_untouched, size_t dims, size_t const elements[],
+		bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @copydoc sakura_UnflipArrayFloat
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayDouble)(
-bool inner_most_untouched, size_t dims, size_t const elements[],
+		bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @brief Same as @ref sakura_FlipArrayFloat except the element type of the multidimensional arrays.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayDouble2)(
-bool inner_most_untouched, size_t dims, size_t const elements[],
+		bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 /**
  * @brief Same as @ref sakura_UnflipArrayFloat except the element type of the multidimensional arrays.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayDouble2)(
-bool inner_most_untouched, size_t dims, size_t const elements[],
+		bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 /**
@@ -2176,25 +2213,25 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  * there are number of separation between two positions are even. In such case,
  * the median separation is evaluated as
  * @verbatim
-median_separation = sorted_separation[(num_data - 1) / 2];
-@endverbatim
+ median_separation = sorted_separation[(num_data - 1) / 2];
+ @endverbatim
  * It is recommended to set @a pixel_size to zero. Please consider to set nonzero value only if
  * zero @a pixel_size doesn't work on your data.
  * Number of pixels along horizontal and vertical axes is determined by
  * @verbatim
-(ceil(wx / pixel_size), ceil(wy / pixel_size))
-@endverbatim
+ (ceil(wx / pixel_size), ceil(wy / pixel_size))
+ @endverbatim
  * where wx and wy are evaluated from @a blc_x, @a blc_y, @a trc_x, and @a trc_y if they are
  * all non-NULL. The formula is
  * @verbatim
-wx = (*trc_x - *blc_x) * 1.1
-wy = (*trc_y - *blc_y) * 1.1
-@endverbatim
+ wx = (*trc_x - *blc_x) * 1.1
+ wy = (*trc_y - *blc_y) * 1.1
+ @endverbatim
  * Otherwise, they are calculated by
  * @verbatim
-wx = (max(x) - min(x)) * 1.1
-wy = (max(y) - min(y)) * 1.1
-@endverbatim
+ wx = (max(x) - min(x)) * 1.1
+ wy = (max(y) - min(y)) * 1.1
+ @endverbatim
  *
  * -# Count stage\n
  * Count up data points in each pixel.

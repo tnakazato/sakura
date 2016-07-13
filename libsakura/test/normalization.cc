@@ -181,8 +181,8 @@ class PerformanceTestLogger {
 public:
 	static void LogElapsed(const char *name, size_t /*num_segments*/,
 			size_t /*iteration*/, double elapsed_time) {
-		std::cout << "#x# benchmark Normalization_" << name << " " << elapsed_time
-				<< std::endl;
+		std::cout << "#x# benchmark Normalization_" << name << " "
+				<< elapsed_time << std::endl;
 	}
 };
 } // anonymous namespace
@@ -192,7 +192,7 @@ public:
 	virtual void SetUp() {
 		// Initialize sakura
 		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
-				nullptr);
+		nullptr);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
 	virtual void TearDown() {
@@ -201,18 +201,18 @@ public:
 	template<typename Logger>
 	void PerformTest(const char *name,
 	LIBSAKURA_SYMBOL(Status) expected_status, size_t num_scaling_factor,
-			float const scaling_factor[], size_t num_data, size_t num_segments,
-			float const target[], float const reference[], float result[],
-			float const expected[],
-			bool check_result, size_t iteration = 1) {
+	float const scaling_factor[], size_t num_data, size_t num_segments,
+	float const target[], float const reference[], float result[],
+	float const expected[],
+	bool check_result, size_t iteration = 1) {
 		size_t memory_size = (num_scaling_factor
-				+ num_data * num_segments * ((target == result) ? 2 : 3)) * 4; // bytes
+		+ num_data * num_segments * ((target == result) ? 2 : 3)) * 4; // bytes
 		std::cout << "memory usage: " << (double) memory_size / 1.0e9 << "GB"
-				<< std::endl;
+		<< std::endl;
 		std::string message =
-				(expected_status == sakura_Status_kOK) ?
-						"NormalizeData had any problems during execution." :
-						"NormalizeData should fail!";
+		(expected_status == sakura_Status_kOK) ?
+		"NormalizeData had any problems during execution." :
+		"NormalizeData should fail!";
 		float *target_saved = nullptr;
 		std::unique_ptr<float[]> storage_for_saved;
 		if (target == result) {
@@ -220,7 +220,7 @@ public:
 			size_t num_arena = num_data + sakura_alignment - 1;
 			storage_for_saved.reset(new float[num_arena]);
 			target_saved = sakura_AlignFloat(num_arena, storage_for_saved.get(),
-					num_data);
+			num_data);
 			for (size_t i = 0; i < num_data; ++i) {
 				target_saved[i] = target[i];
 			}
@@ -235,15 +235,20 @@ public:
 			}
 			for (size_t i = 0; i < num_segments; ++i) {
 				float const *ws =
-						(num_scaling_factor == 1) ?
-								scaling_factor : &scaling_factor[i * num_data];
+				(num_scaling_factor == 1) ?
+				scaling_factor : &scaling_factor[i * num_data];
 				float const *wt = &target[i * num_data];
 				float const *wf = &reference[i * num_data];
 				float *wr = &result[i * num_data];
 				double start = sakura_GetCurrentTime();
-				LIBSAKURA_SYMBOL(Status) result_status =
-				LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
-						num_scaling_factor, ws, num_data, wt, wf, wr);
+				LIBSAKURA_SYMBOL(Status) result_status = LIBSAKURA_SYMBOL(Status_kNG);
+				if (num_scaling_factor == 1) {
+					result_status = LIBSAKURA_SYMBOL(CalibrateDataWithConstScalingFloat)(
+					ws[0], num_data, wt, wf, wr);
+				} else {
+					result_status = LIBSAKURA_SYMBOL(CalibrateDataWithArrayScalingFloat)(
+					num_data, ws, wt, wf, wr);
+				}
 				double end = sakura_GetCurrentTime();
 				elapsed_time += end - start;
 				EXPECT_EQ(expected_status, result_status) << message;
@@ -251,13 +256,13 @@ public:
 				if (check_result && (expected_status == result_status)) {
 					// Value check
 					for (size_t index = i * num_data;
-							index < (i + 1) * num_data; ++index) {
+					index < (i + 1) * num_data; ++index) {
 						//std::cout << "Expected value at index " << index << ": "
 						//		<< expected[index] << std::endl;
 						EXPECT_FLOAT_EQ(expected[index], result[index])
-								<< "normalized value differs from expected value at "
-								<< index << ": " << expected[index] << ", "
-								<< result[index];
+						<< "normalized value differs from expected value at "
+						<< index << ": " << expected[index] << ", "
+						<< result[index];
 					}
 				}
 			}
@@ -269,25 +274,25 @@ public:
 	void RunPerformanceTest(const char *name) {
 		size_t const num_data = NUM_CHAN * NUM_ARRAY;
 		size_t const num_scaling_factor =
-				(NUM_SCALING == 1) ? NUM_SCALING : num_data;
+		(NUM_SCALING == 1) ? NUM_SCALING : num_data;
 		size_t sakura_alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 		size_t num_arena = num_scaling_factor + sakura_alignment - 1;
 		std::unique_ptr<float[]> storage_for_scaling_factor(
-				new float[num_arena]);
+		new float[num_arena]);
 		float *scaling_factor = sakura_AlignFloat(num_arena,
-				storage_for_scaling_factor.get(), num_scaling_factor);
+		storage_for_scaling_factor.get(), num_scaling_factor);
 		for (size_t i = 0; i < num_scaling_factor; ++i)
-			scaling_factor[i] = 1.0;
+		scaling_factor[i] = 1.0;
 		num_arena = num_data + sakura_alignment - 1;
 		std::unique_ptr<float[]> storage_for_target(new float[num_arena]);
 		float *target = sakura_AlignFloat(num_arena, storage_for_target.get(),
-				num_data);
+		num_data);
 		std::unique_ptr<float[]> storage_for_reference(new float[num_arena]);
 		float *reference = sakura_AlignFloat(num_arena,
-				storage_for_reference.get(), num_data);
+		storage_for_reference.get(), num_data);
 		std::unique_ptr<float[]> storage_for_result(new float[num_arena]);
 		float *_result = sakura_AlignFloat(num_arena, storage_for_result.get(),
-				num_data);
+		num_data);
 		for (size_t i = 0; i < num_data; ++i) {
 			target[i] = 2.0;
 			reference[i] = 1.0;
@@ -298,21 +303,21 @@ public:
 			EXPECT_EQ(target, result);
 		}
 		PerformTest<PerformanceTestLogger>(name, LIBSAKURA_SYMBOL(Status_kOK),
-				NUM_SCALING, scaling_factor, NUM_CHAN, NUM_ARRAY, target,
-				reference, result, nullptr,
-				false, ITER);
+		NUM_SCALING, scaling_factor, NUM_CHAN, NUM_ARRAY, target,
+		reference, result, nullptr,
+		false, ITER);
 	}
 	template<typename Initializer, typename Helper, size_t NUM_DATA,
-			size_t NUM_SCALING, bool IN_PLACE>
+	size_t NUM_SCALING, bool IN_PLACE>
 	void RunTest(const char *name, bool check_result = true,
 	LIBSAKURA_SYMBOL(Status) expected_status = LIBSAKURA_SYMBOL(Status_kOK)) {
 		SIMD_ALIGN
 		float scaling_factor[NUM_SCALING], target[NUM_DATA],
-				reference[NUM_DATA], result[NUM_DATA], expected[NUM_DATA];
+		reference[NUM_DATA], result[NUM_DATA], expected[NUM_DATA];
 		Initializer::Initialize(scaling_factor, target, reference, expected);
 		PerformTest<TestLogger>(name, expected_status, NUM_SCALING,
-				scaling_factor, NUM_DATA, 1, target, reference,
-				(IN_PLACE) ? target : result, expected, check_result);
+		scaling_factor, NUM_DATA, 1, target, reference,
+		(IN_PLACE) ? target : result, expected, check_result);
 		Helper::AdditionalTest(target, result, expected);
 	}
 };
@@ -326,9 +331,9 @@ APPLYCAL_FLOAT_TEST(NullPointer) {
 	InitializeFloatArray(num_data, target, 1.0);
 
 	PerformTest<TestLogger>("NullPointer",
-	LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
 			scaling_factor, num_data, 1, target, nullptr, target, nullptr,
-			false);
+	false);
 }
 
 APPLYCAL_FLOAT_TEST(InputArrayNotAligned) {
@@ -340,32 +345,31 @@ APPLYCAL_FLOAT_TEST(InputArrayNotAligned) {
 	InitializeFloatArray(num_data + 1, target, 1.0, 1.0);
 
 	PerformTest<TestLogger>("InputArrayNotAligned",
-	LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
+			LIBSAKURA_SYMBOL(Status_kInvalidArgument), num_scaling_factor,
 			scaling_factor, num_data, 1, &target[1], target, target, nullptr,
-			false);
+	false);
 }
 
 APPLYCAL_FLOAT_TEST(ZeroLengthData) {
-	RunTest<ZeroLengthDataInitializer<0, 1>, EmptyHelper, 0, 1,
-	false>("ZeroLengthData");
+	RunTest<ZeroLengthDataInitializer<0, 1>, EmptyHelper, 0, 1, false>(
+			"ZeroLengthData");
 }
 
-APPLYCAL_FLOAT_TEST(ZeroLengthScalingFactor) {
-	RunTest<ZeroLengthScalingFactorInitializer<1, 0>, EmptyHelper, 1, 0,
-	false>("ZeroLengthScalingFactor", false,
-	LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-}
+//APPLYCAL_FLOAT_TEST(ZeroLengthScalingFactor) {
+//	RunTest<ZeroLengthScalingFactorInitializer<1, 0>, EmptyHelper, 1, 0, false>(
+//			"ZeroLengthScalingFactor", false,
+//			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+//}
 
-APPLYCAL_FLOAT_TEST(InvaidNumberOfScalingFactor) {
-	RunTest<InvalidNumberOfScalingFactorInitializer<3, 2>, EmptyHelper, 3, 2,
-	false>("InvalidNumberOfScalingFactor", false,
-			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-}
+//APPLYCAL_FLOAT_TEST(InvaidNumberOfScalingFactor) {
+//	RunTest<InvalidNumberOfScalingFactorInitializer<3, 2>, EmptyHelper, 3, 2,
+//			false>("InvalidNumberOfScalingFactor", false,
+//			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+//}
 
 APPLYCAL_FLOAT_TEST(ZeroDivision) {
 	RunTest<ZeroDivisionTestInitializer<2, 1>, ZeroDivisionTestHelper<2, 1>, 2,
-			1,
-			false>("ZeroDivision", false);
+			1, false>("ZeroDivision", false);
 }
 
 APPLYCAL_FLOAT_TEST(BasicTest) {
@@ -382,10 +386,11 @@ APPLYCAL_FLOAT_TEST(SingleScalingFactor) {
 			"SingleScalingFactor");
 }
 
-APPLYCAL_FLOAT_TEST(TooManyScalingFactor) {
-	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>(
-			"TooManyScalingFactor", false, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-}
+//APPLYCAL_FLOAT_TEST(TooManyScalingFactor) {
+//	RunTest<TooManyScalingFactorTestInitializer<2, 3>, EmptyHelper, 2, 3, false>(
+//			"TooManyScalingFactor", false,
+//			LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+//}
 
 APPLYCAL_FLOAT_TEST(IntrinsicsTest) {
 	RunTest<IntrinsicsTestInitializer<10, 10>, EmptyHelper, 10, 10, false>(

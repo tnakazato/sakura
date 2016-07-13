@@ -42,24 +42,29 @@ auto logger = LIBSAKURA_PREFIX::Logger::GetLogger("normalization");
 
 template<class DataType>
 struct InPlaceImpl {
-	static void NormalizeDataAgainstReference(size_t num_scaling_factor,
-			DataType const scaling_factor[/*num_scaling_factor*/],
-			size_t num_data, DataType const reference[/*num_data*/],
+	static void CalibrateData(size_t num_data,
+			DataType const scaling_factor[/*num_data*/],
+			DataType const reference[/*num_data*/],
 			DataType result[/*num_data*/]) {
 		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result,
 				num_data);
 		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
 				const_cast<DataType *>(reference), num_data);
-		if (num_scaling_factor == 1) {
-			DataType const constant_scaling_factor = scaling_factor[0];
-			eigen_result = constant_scaling_factor
-					* (eigen_result - eigen_reference) / eigen_reference;
-		} else {
-			Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
-					const_cast<DataType *>(scaling_factor), num_data);
-			eigen_result = eigen_scaling_factor
-					* (eigen_result - eigen_reference) / eigen_reference;
-		}
+		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_scaling_factor(
+				const_cast<DataType *>(scaling_factor), num_data);
+		eigen_result = eigen_scaling_factor * (eigen_result - eigen_reference)
+				/ eigen_reference;
+	}
+	static void CalibrateData(DataType scaling_factor, size_t num_data,
+			DataType const reference[/*num_data*/],
+			DataType result[/*num_data*/]) {
+		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_result(result,
+				num_data);
+		Map<Array<DataType, Dynamic, 1>, Aligned> eigen_reference(
+				const_cast<DataType *>(reference), num_data);
+		DataType const constant_scaling_factor = scaling_factor;
+		eigen_result = constant_scaling_factor
+				* (eigen_result - eigen_reference) / eigen_reference;
 	}
 };
 
@@ -69,11 +74,10 @@ struct InPlaceImpl {
 template<>
 struct InPlaceImpl<float> {
 	typedef __m256 SimdType;
-	static void NormalizeDataAgainstReference(size_t num_scaling_factor,
-			float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+	static void CalibrateData(size_t num_data,
+			float const scaling_factor[/*num_data*/],
 			float const reference[/*num_data*/], float result[/*num_data*/]) {
-		constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)
-		::kNumFloat;
+		constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
 		size_t num_packed_operation = num_data / kNumFloat;
 		size_t num_data_packed = num_packed_operation * kNumFloat;
 		assert(num_data_packed <= num_data);
@@ -83,25 +87,33 @@ struct InPlaceImpl<float> {
 		auto packed_result = reinterpret_cast<SimdType *>(result);
 		auto const reference_extra = &reference[num_data_packed];
 		auto result_extra = &result[num_data_packed];
-		if (num_scaling_factor == 1) {
-			SimdType const packed_scalar_factor = _mm256_broadcast_ss(
-					scaling_factor);
-			IterateSimd(
-					[packed_scalar_factor] (size_t i) {return packed_scalar_factor;},
-					num_packed_operation, packed_reference, packed_result);
-			IterateExtra(
-					[scaling_factor] (size_t i) {return scaling_factor[0];},
-					num_extra, reference_extra, result_extra);
-		} else {
-			assert(num_scaling_factor == num_data);
-			auto const packed_factor =
-					reinterpret_cast<SimdType const *>(scaling_factor);
-			IterateSimd([packed_factor] (size_t i) {return packed_factor[i];},
-					num_packed_operation, packed_reference, packed_result);
-			auto const factor_extra = &scaling_factor[num_data_packed];
-			IterateExtra([factor_extra] (size_t i) {return factor_extra[i];},
-					num_extra, reference_extra, result_extra);
-		}
+		auto const packed_factor =
+				reinterpret_cast<SimdType const *>(scaling_factor);
+		IterateSimd([packed_factor] (size_t i) {return packed_factor[i];},
+				num_packed_operation, packed_reference, packed_result);
+		auto const factor_extra = &scaling_factor[num_data_packed];
+		IterateExtra([factor_extra] (size_t i) {return factor_extra[i];},
+				num_extra, reference_extra, result_extra);
+	}
+	static void CalibrateData(float scaling_factor, size_t num_data,
+			float const reference[/*num_data*/], float result[/*num_data*/]) {
+		constexpr size_t kNumFloat = LIBSAKURA_SYMBOL(SimdPacketAVX)::kNumFloat;
+		size_t num_packed_operation = num_data / kNumFloat;
+		size_t num_data_packed = num_packed_operation * kNumFloat;
+		assert(num_data_packed <= num_data);
+		size_t num_extra = num_data - num_data_packed;
+		auto const packed_reference =
+				reinterpret_cast<SimdType const *>(reference);
+		auto packed_result = reinterpret_cast<SimdType *>(result);
+		auto const reference_extra = &reference[num_data_packed];
+		auto result_extra = &result[num_data_packed];
+		SimdType const packed_scalar_factor = _mm256_broadcast_ss(
+				&scaling_factor);
+		IterateSimd(
+				[packed_scalar_factor] (size_t i) {return packed_scalar_factor;},
+				num_packed_operation, packed_reference, packed_result);
+		IterateExtra([scaling_factor] (size_t i) {return scaling_factor;},
+				num_extra, reference_extra, result_extra);
 	}
 private:
 	template<class Feeder>
@@ -131,18 +143,17 @@ private:
 
 template<class DataType>
 struct DefaultImpl {
-	static void NormalizeDataAgainstReference(size_t num_scaling_factor,
-			DataType const *scaling_factor, size_t num_data,
+	static void CalibrateData(size_t num_data, DataType const *scaling_factor,
 			DataType const *target, DataType const *reference,
 			DataType *result) {
-		if (num_scaling_factor == 1) {
-			Iterate([scaling_factor] (size_t i) {return scaling_factor[0];},
-					num_data, target, reference, result);
-		} else {
-			assert(num_scaling_factor == num_data);
-			Iterate([scaling_factor] (size_t i) {return scaling_factor[i];},
-					num_data, target, reference, result);
-		}
+		Iterate([scaling_factor] (size_t i) {return scaling_factor[i];},
+				num_data, target, reference, result);
+	}
+	static void CalibrateData(DataType scaling_factor, size_t num_data,
+			DataType const *target, DataType const *reference,
+			DataType *result) {
+		Iterate([scaling_factor] (size_t i) {return scaling_factor;}, num_data,
+				target, reference, result);
 	}
 private:
 	template<class Feeder>
@@ -160,12 +171,9 @@ private:
 };
 
 template<class DataType>
-void NormalizeDataAgainstReference(size_t num_scaling_factor,
-		DataType const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+void CalibrateData(size_t num_data, DataType const scaling_factor[/*num_data*/],
 		DataType const target[/*num_data*/],
 		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
-	assert(num_scaling_factor > 0);
-	assert(num_scaling_factor == 1 || num_scaling_factor == num_data);
 	assert(scaling_factor != nullptr);
 	assert(target != nullptr);
 	assert(reference != nullptr);
@@ -175,21 +183,37 @@ void NormalizeDataAgainstReference(size_t num_scaling_factor,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(reference));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
 	if (target == result) {
-		InPlaceImpl<DataType>::NormalizeDataAgainstReference(
-				num_scaling_factor, scaling_factor, num_data, reference,
-				result);
+		InPlaceImpl<DataType>::CalibrateData(num_data, scaling_factor,
+				reference, result);
 	} else {
-		DefaultImpl<DataType>::NormalizeDataAgainstReference(
-				num_scaling_factor, scaling_factor, num_data, target, reference,
-				result);
+		DefaultImpl<DataType>::CalibrateData(num_data, scaling_factor, target,
+				reference, result);
+	}
+}
+
+template<class DataType>
+void CalibrateData(DataType scaling_factor, size_t num_data,
+		DataType const target[/*num_data*/],
+		DataType const reference[/*num_data*/], DataType result[/*num_data*/]) {
+	assert(target != nullptr);
+	assert(reference != nullptr);
+	assert(result != nullptr);
+	assert(LIBSAKURA_SYMBOL(IsAligned)(target));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(reference));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(result));
+	if (target == result) {
+		InPlaceImpl<DataType>::CalibrateData(scaling_factor, num_data,
+				reference, result);
+	} else {
+		DefaultImpl<DataType>::CalibrateData(scaling_factor, num_data, target,
+				reference, result);
 	}
 }
 
 } /* anonymous namespace */
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferenceFloat)(
-		size_t num_scaling_factor,
-		float const scaling_factor[/*num_scaling_factor*/], size_t num_data,
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CalibrateDataWithArrayScalingFloat)(
+		size_t num_data, float const scaling_factor[/*num_data*/],
 		float const target[/*num_data*/], float const reference[/*num_data*/],
 		float result[/*num_data*/]) noexcept {
 	if (num_data == 0) {
@@ -197,21 +221,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferen
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	}
 
-	if (num_scaling_factor == 0) {
-		// scaling factor must be given
-		LOG4CXX_ERROR(logger, "Empty scaling factor (num_scaling_factor == 0)");
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	if (num_scaling_factor != 1 && num_scaling_factor != num_data) {
-		// scaling factor must be given
-		LOG4CXX_ERROR(logger,
-				"Invalid number of scaling factor. num_scaling_factor must be 1 or >= num_data");
-		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
-	}
-
-	if (scaling_factor == nullptr || target == nullptr || reference == nullptr
-			|| result == nullptr) {
+	if (scaling_factor == nullptr|| target == nullptr || reference == nullptr || result == nullptr) {
 		// null pointer
 		LOG4CXX_ERROR(logger, "Input pointers are null");
 		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -227,8 +237,41 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(NormalizeDataAgainstReferen
 	}
 
 	try {
-		NormalizeDataAgainstReference(num_scaling_factor, scaling_factor,
-				num_data, target, reference, result);
+		CalibrateData(num_data, scaling_factor, target, reference, result);
+		return LIBSAKURA_SYMBOL(Status_kOK);
+	} catch (...) {
+		// any exception is thrown during interpolation
+		assert(false);
+		LOG4CXX_ERROR(logger, "Aborted due to unknown error");
+		return LIBSAKURA_SYMBOL(Status_kUnknownError);
+	}
+}
+
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CalibrateDataWithConstScalingFloat)(
+		float scaling_factor, size_t num_data, float const target[/*num_data*/],
+		float const reference[/*num_data*/], float result[/*num_data*/])
+				noexcept {
+	if (num_data == 0) {
+		// Nothing to do
+		return LIBSAKURA_SYMBOL(Status_kOK);
+	}
+
+	if (target == nullptr|| reference == nullptr || result == nullptr) {
+		// null pointer
+		LOG4CXX_ERROR(logger, "Input pointers are null");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	if (!LIBSAKURA_SYMBOL(IsAligned)(target)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(reference)
+			|| !LIBSAKURA_SYMBOL(IsAligned)(result)) {
+		// array is not aligned
+		LOG4CXX_ERROR(logger, "Arrays are not aligned");
+		return LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+	}
+
+	try {
+		CalibrateData(scaling_factor, num_data, target, reference, result);
 		return LIBSAKURA_SYMBOL(Status_kOK);
 	} catch (...) {
 		// any exception is thrown during interpolation
