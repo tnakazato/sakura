@@ -1413,7 +1413,7 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * @copybrief sakura_GetLSQCoefficientsDouble
  * @details
  * This function updates the coefficients of normal equation for LSQ fitting
- * created by sakura_GetLSQCoefficientsDouble(), by subtracting values
+ * created by @ref sakura_GetLSQCoefficientsDouble , by subtracting values
  * corresponding to data points which have been used in the previous
  * calculation but not this time. This is faster than newly calculating
  * coefficients if the number of points to be excluded this time is less
@@ -1719,7 +1719,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * specified in creation of @a context .
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateLSQFitContextPolynomialFloat() to create
+ * given to @ref sakura_CreateLSQFitContextPolynomialFloat to create
  * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
@@ -1799,7 +1799,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * creation of @a context .
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateLSQFitContextCubicSplineFloat() to create
+ * given to @ref sakura_CreateLSQFitContextCubicSplineFloat to create
  * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
@@ -1879,7 +1879,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * values. This procedure is repeatedly done for ( @a num_fitting_max-1 )
  * times or until the fitting result converges. Once fitting is done,
  * the updated mask information is stored in @a final_mask .
- * @param[in] context A context created by @ref sakura_CreateLSQFitContextSinusoidFloat .
+ * @param[in] context A context created by
+ * @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @param[in] num_nwave The number of elements in the array @a nwave .
  * @param[in] nwave Wave numbers within the index range of @a data
  * to be used for sinusoidal fitting. The values must be positive or
@@ -1888,7 +1889,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * ascending order and must not be duplicate.
  * @param[in] num_data Number of elements in the arrays @a data, @a mask,
  * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to sakura_CreateLSQFitContextSinusoidFloat() to create
+ * given to @ref sakura_CreateLSQFitContextSinusoidFloat to create
  * @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
@@ -1956,7 +1957,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @ref sakura_CreateLSQFitContextPolynomialFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
  * It must be equal to @a num_data which was given to
- * sakura_CreateLSQFitContextFloat() to create @a context .
+ * @ref sakura_CreateLSQFitContextPolynomialFloat to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_coeff The number of elements in @a coeff .
@@ -1986,7 +1987,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @ref sakura_CreateLSQFitContextCubicSplineFloat .
  * @param[in] num_data The number of elements in @a data and @a out .
  * It must be equal to @a num_data which was given to
- * sakura_CreateLSQFitContextCubicSplineFloat() to create @a context .
+ * @ref sakura_CreateLSQFitContextCubicSplineFloat to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_pieces The number of spline pieces. If zero is
@@ -2024,7 +2025,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @ref sakura_CreateLSQFitContextSinusoidFloat .
  * @param[in] num_data The number of elements in @a data and @a out.
  * It must be equal to @a num_data which was given to
- * sakura_CreateLSQFitContextSinusoidFloat() to create @a context .
+ * @ref sakura_CreateLSQFitContextSinusoidFloat to create @a context .
  * @param[in] data The input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] num_nwave The number of elements in the array @a nwave .
