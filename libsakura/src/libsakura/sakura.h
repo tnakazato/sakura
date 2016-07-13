@@ -1092,7 +1092,7 @@ LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
 				LIBSAKURA_NOEXCEPT;
 
 /**
- * @copybrief sakura_IntepolateXAxisFloat
+ * @copybrief sakura_InterpolateXAxisFloat
  * @copydetails sakura_InterpolateXAxisFloat
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(InterpolateYAxisFloat)(
 LIBSAKURA_SYMBOL(InterpolationMethod) interpolation_method,
