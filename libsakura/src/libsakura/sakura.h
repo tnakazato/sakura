@@ -1577,10 +1577,8 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  * be either of
  * @link sakura_LSQFitType::sakura_LSQFitType_kPolynomial sakura_LSQFitType_kPolynomial @endlink
  * or
- * @link sakura_LSQFitType::sakura_LSQFitType_kChebyshev sakura_LSQFitType_kChebyshev @endlink
- * .
- * @param[in] order Polynomial order. It must be positive or
- * zero.
+ * @link sakura_LSQFitType::sakura_LSQFitType_kChebyshev sakura_LSQFitType_kChebyshev @endlink .
+ * @param[in] order Polynomial order. It must be positive or zero.
  * @param[in] num_data Number of data to fit. It must be equal
  * to or larger than the number of model bases, which is
  * ( @a order+1 ), thus the smallest allowed value of
