@@ -197,7 +197,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[], T const src[],
 
 } // namespace
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) noexcept {
 	typedef Type4 T;
@@ -206,7 +206,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) noexcept {
 	typedef Type4 T;
@@ -215,7 +215,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) noexcept {
 	typedef Type8 T;
@@ -224,7 +224,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) noexcept {
 	typedef Type8 T;
@@ -233,7 +233,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) noexcept {
 	typedef Type16 T;
@@ -242,7 +242,7 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
 			reinterpret_cast<T const *>(src), reinterpret_cast<T *>(dst));
 }
 
-extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
+extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) noexcept {
 	typedef Type16 T;

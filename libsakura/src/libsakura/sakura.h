@@ -82,7 +82,7 @@ typedef enum {
 }LIBSAKURA_SYMBOL (Status);
 
 /**
- * @brief A type of the allocator function called by Sakura Library.
+ * @brief A type of the allocator function used by Sakura Library.
  *
  * Implementation of the function of this type must be reentrant.
  *
@@ -97,7 +97,7 @@ typedef enum {
 typedef void *(*LIBSAKURA_SYMBOL(UserAllocator))(size_t size);
 
 /**
- * @brief A type of the deallocator function called by Sakura Library.
+ * @brief A type of the deallocator function used by Sakura Library.
  *
  * Implementation of the function of this type must be reentrant.
  *
@@ -119,7 +119,7 @@ typedef void (*LIBSAKURA_SYMBOL(UserDeallocator))(void *pointer);
  *
  * @param[in]	allocator	An allocator which is used when Sakura Library needs to allocate memory dynamically. posix_memalign(3) is used if NULL is provided. See @ref sakura_UserAllocator .
  * @param[in]	deallocator	A deallocator which is used when Sakura Library needs to free dynamically allocated memory. free(3) is used if NULL is provided. See @ref sakura_UserDeallocator .
- * @return Only when sakura_Status_kOK is returned, you can use Sakura Library.
+ * @return Only when @ref sakura_Status_kOK is returned, you can use Sakura Library.
  *
  * MT-unsafe
  */LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Initialize)(
@@ -130,7 +130,7 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator)
 /**
  * @brief Cleans up Sakura Library.
  *
- * When you call this function, no function of Sakura Library must not be running.
+ * When you call this function, no function of Sakura Library must be running.
  *
  * MT-unsafe
  */
@@ -206,9 +206,9 @@ double *LIBSAKURA_SYMBOL(AlignDouble)(size_t elements_in_arena, double *arena,
 		size_t elements_required) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief A structure to which the result of @ref sakura_ComputeStatisticsFloat and @ref sakura_ComputeAccurateStatisticsFloat is stored.
+ * @brief A structure in which the result of @ref sakura_ComputeStatisticsFloat and @ref sakura_ComputeAccurateStatisticsFloat is stored.
  *
- * You can also figure out following statistics from the members of this struct if count > 0:
+ * You can also calculate following statistics from the members of this struct if count > 0:
  *  - mean = sum / count
  *  - rms = sqrt(square_sum / count)
  *  - variance = abs(square_sum / count - mean * mean)
@@ -2090,7 +2090,7 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order,
  *
  * MT-safe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixFloat)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
@@ -2130,35 +2130,35 @@ bool inner_most_untouched, size_t dims, size_t const elements[],
  *
  * MT-safe
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixFloat)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayFloat)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		float const src[], float dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @copydoc sakura_FlipMatrixFloat
+ * @copydoc sakura_FlipArrayFloat
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @copydoc sakura_UnflipMatrixFloat
+ * @copydoc sakura_UnflipArrayFloat
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayDouble)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[], double dst[]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Same as @ref sakura_FlipMatrixFloat except the element type of the multidimensional arrays.
+ * @brief Same as @ref sakura_FlipArrayFloat except the element type of the multidimensional arrays.
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipMatrixDouble2)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(FlipArrayDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
 /**
- * @brief Same as @ref sakura_UnflipMatrixFloat except the element type of the multidimensional arrays.
+ * @brief Same as @ref sakura_UnflipArrayFloat except the element type of the multidimensional arrays.
  */
-LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipMatrixDouble2)(
+LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(UnflipArrayDouble2)(
 bool inner_most_untouched, size_t dims, size_t const elements[],
 		double const src[][2], double dst[][2]) LIBSAKURA_NOEXCEPT;
 
