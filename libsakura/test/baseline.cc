@@ -246,11 +246,12 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithZeroNumPieces) {
 	uint16_t const npiece(0);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextCubicSplineFloat(npiece, num_chan,
 					&context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+	EXPECT_EQ(nullptr, context);
 }
 
 /*
@@ -262,12 +263,13 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithInvalidLSQFitType) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextPolynomialFloat(
 					LIBSAKURA_SYMBOL(LSQFitType_kNumElements), order,
 					num_chan, &context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+	EXPECT_EQ(nullptr, context);
 }
 
 /*
@@ -296,12 +298,13 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithOrderLargerThanNumData) {
 	uint16_t const order(20);
 	size_t const num_chan(10);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextPolynomialFloat(
 					LIBSAKURA_SYMBOL(LSQFitType_kChebyshev), order, num_chan,
 					&context);
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+	EXPECT_EQ(nullptr, context);
 
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 }
@@ -315,7 +318,7 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithTooSmallNumData) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
 	LIBSAKURA_SYMBOL (Status) create_status;
 
 	size_t const num_func_types = 3;
@@ -352,6 +355,7 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithTooSmallNumData) {
 					type_ext, order, num_data, &context);
 		}
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), create_status);
+		EXPECT_EQ(nullptr, context);
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		std::cout << "ok." << std::flush << std::endl;
 	}

@@ -1622,11 +1622,11 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  * to or larger than the number of model bases, which is
  * ( @a order+1 ), thus the smallest allowed value of
  * @a num_data is 1.
- * @param[out] context An object containing model data.
- * When @a context is no longer used, it must be destroyed by
+ * @param[out] context Pointer to pointer to an object containing
+ * model data. When no longer used, the object must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
- * Note also that this object will not be modified from the
- * initial value in case this function fails.
+ * Note also that null pointer will be set to @a *context
+ * in case this function fails.
  * @return Status code.
  *
  * MT-safe
@@ -1646,11 +1646,11 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @param[in] num_data Number of data to fit. It must be equal
  * to or larger than the number of model bases ( @a npiece+3 ),
  * thus the smallest allowed value of @a num_data is 4.
- * @param[out] context An object containing model data.
- * When @a context is no longer used, it must be destroyed by
+ * @param[out] context Pointer to pointer to an object containing
+ * model data. When no longer used, the object must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
- * Note also that this object will not be modified from the
- * initial value in case this function fails.
+ * Note also that null pointer will be set to @a *context
+ * in case this function fails.
  * @return Status code.
  *
  * MT-safe
@@ -1671,11 +1671,11 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * to or larger than the number of model bases plus one,
  * which is ( @a nwave*2+2 ), thus the smallest allowed value of
  * @a num_data is 2.
- * @param[out] context An object containing model data.
- * When @a context is no longer used, it must be destroyed by
+ * @param[out] context Pointer to pointer to an object containing
+ * model data. When no longer used, the object must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
- * Note also that this object will not be modified from the
- * initial value in case this function fails.
+ * Note also that null pointer will be set to @a *context
+ * in case this function fails.
  * @return Status code.
  *
  * MT-safe

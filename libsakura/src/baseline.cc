@@ -1414,13 +1414,14 @@ inline void SubtractCubicSpline(V const *context, size_t num_data,
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
 LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
 LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
+	CHECK_ARGS(context != nullptr);
+	if (*context != nullptr) *context = nullptr;
 	CHECK_ARGS(
 			(lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kPolynomial)) ||(lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kChebyshev)));
 	LSQFitTypeInternal lsqfit_type_internal = LSQFitTypeInternal_kPolynomial;
 	if (lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kChebyshev)) {
 		lsqfit_type_internal = LSQFitTypeInternal_kChebyshev;
 	}
-	CHECK_ARGS(context != nullptr);
 	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type_internal, order) <= num_data);
 
 	try {
@@ -1449,9 +1450,10 @@ LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(
 		uint16_t npiece, size_t num_data,
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
-	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kCubicSpline;
 	CHECK_ARGS(context != nullptr);
+	if (*context != nullptr) *context = nullptr;
 	CHECK_ARGS(0 < npiece);
+	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kCubicSpline;
 	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, npiece) <= num_data);
 
 	try {
@@ -1480,8 +1482,9 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSpl
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(
 		uint16_t nwave, size_t num_data,
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
-	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
 	CHECK_ARGS(context != nullptr);
+	if (*context != nullptr) *context = nullptr;
+	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
 	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, nwave) + 1 <= num_data);
 
 	try {
