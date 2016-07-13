@@ -184,7 +184,7 @@ size_t LIBSAKURA_SYMBOL (GetAlignment)() LIBSAKURA_NOEXCEPT;
 void *LIBSAKURA_SYMBOL(AlignAny)(size_t size_of_arena, void *arena,
 		size_t size_required) LIBSAKURA_NOEXCEPT;
 /**
- * @brief Returns an aligned address close to @a arena by adding 0 or minimum offset.
+ * @copybrief sakura_AlignAny
  *
  * It returns @a arena if @a arena is already aligned.
  *
