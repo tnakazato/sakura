@@ -1026,7 +1026,7 @@ typedef enum {
  * @pre @a base_position and @a interpolate_position must be sorted. Also, these arrays should not
  * have duplicate values.
  *
- * @par Difference between @ref sakura_InterpolateXAxisFloat and @ref sakura_InterpolateYAxisFloat:
+ * @par Difference between sakura_InterpolateXAxisFloat and sakura_InterpolateYAxisFloat:
  * Difference between these two similar functions is a memory layout of @a base_data and
  * @a interpolated_data. The former assumes the layout like [num_array][num_base] so that
  * @a base_data should store the data in the following order,
@@ -1048,7 +1048,6 @@ typedef enum {
  * with order 1, not 2, that passes through given two points.
  * Note also that @a polynomial_order 0 is equivalent to nearest interpolation.
  *
- * @par
  * @param[in] interpolation_method Interpolation method.
  * @param[in] polynomial_order Maximum polynomial order for polynomial interpolation.
  * Actual order will be determined by a balance
