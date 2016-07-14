@@ -246,7 +246,7 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithZeroNumPieces) {
 	uint16_t const npiece(0);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextCubicSplineFloat(npiece, num_chan,
 					&context);
@@ -263,7 +263,7 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithInvalidLSQFitType) {
 	uint16_t const order(20);
 	size_t const num_chan(4096);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextPolynomialFloat(
 					LIBSAKURA_SYMBOL(LSQFitType_kNumElements), order,
@@ -298,7 +298,7 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithOrderLargerThanNumData) {
 	uint16_t const order(20);
 	size_t const num_chan(10);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextPolynomialFloat(
 					LIBSAKURA_SYMBOL(LSQFitType_kChebyshev), order, num_chan,
@@ -318,7 +318,7 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithTooSmallNumData) {
 	uint16_t const order(20);
 	uint16_t const npiece(1);
 
-	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context;
+	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status;
 
 	size_t const num_func_types = 3;
@@ -373,12 +373,14 @@ TEST_F(Baseline, GetBaselineModelPolynomial) {
 	double answer[ELEMENTSOF(out)];
 
 	// Setup answer----------------------------
+	// Note that the model values are normalized to be 1 at the right end
 	size_t idx = 0;
 	for (size_t i = 0; i < num_chan; ++i) {
+		double factor = static_cast<double>(i)/static_cast<double>(num_chan-1);
 		for (size_t j = 0; j < num_model; ++j) {
 			double value = 1.0;
 			for (size_t k = 0; k < j; ++k) {
-				value *= (double) i;
+				value *= factor;
 			}
 
 			answer[idx] = value;
@@ -2804,7 +2806,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 		throw bad_alloc();
 	}
 	for (size_t i = 0; i < num_data; ++i) {
-		in_data[i] = i * i + 2 * i + 3;
+		in_data[i] = 2 * i + 3;
 	}
 	float *out = nullptr;
 	unique_ptr<void, DefaultAlignedMemory> storage_for_out(
@@ -2835,7 +2837,7 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
 	SIMD_ALIGN
-	double coeff[num_coeff] = { 3.0f, 2.0f, 1.0f };
+	double coeff[num_coeff] = { 3.0, 2.0 };
 
 	size_t loop_max = 1000;
 	double start_time, end_time;

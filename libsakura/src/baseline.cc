@@ -260,8 +260,11 @@ inline void SetBasisDataPolynomial(T *context) {
 	size_t num_basis_data = context->num_basis_data;
 	size_t num_bases = context->num_bases;
 	size_t idx = 0;
+	U max_data_x = static_cast<U>(num_basis_data - 1);
+	assert(0.0 < max_data_x);
 	for (size_t i = 0; i < num_basis_data; ++i) {
-		DoSetBasisDataPolynomial<U>(num_bases, static_cast<U>(i), &idx, data);
+		DoSetBasisDataPolynomial<U>(num_bases, static_cast<U>(i) / max_data_x,
+				&idx, data);
 	}
 }
 
@@ -836,10 +839,11 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 		coeff[0][i] = coeff_raw[i];
 	}
 	U const three = static_cast<U>(3.0);
+	U const max_data_x = static_cast<U>(boundary[num_boundary-1]-1);
 	for (size_t i = 1; i < num_boundary - 1; ++i) {
 		size_t j = GetNumberOfLsqBases(LSQFitTypeInternal_kCubicSpline, i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
-		auto const b = static_cast<U>(boundary[i]);
+		auto const b = static_cast<U>(boundary[i]) * max_data_x;
 		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
 		coeff[i][1] = coeff[i - 1][1] + three * b * b * c;
 		coeff[i][2] = coeff[i - 1][2] - three * b * c;
@@ -865,7 +869,7 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
  */
 template<typename U>
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
-		size_t const *boundary_arg, U const i_d, size_t *idx, U *out_arg) {
+		size_t const *boundary_arg, U const i_d, U const max_data_x, size_t *idx, U *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
 	assert(i_d <= boundary_arg[num_boundary-1]);
@@ -877,11 +881,13 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	auto cube = [](U v) {return static_cast<U>(v * v * v);};
 	auto force_non_negative = [](U v) {return static_cast<U>(std::max(0.0, v));};
 
-	auto cube_prev = cube(i_d - static_cast<U>(boundary[1]));
+	//auto cube_prev = cube(i_d - static_cast<U>(boundary[1]));
+	auto cube_prev = cube((i_d - static_cast<U>(boundary[1]))/max_data_x);
 	out[i - 1] -= force_non_negative(cube_prev);
 
 	for (size_t j = 2; j < num_boundary; ++j) {
-		auto cube_current = cube(i_d - static_cast<U>(boundary[j]));
+		//auto cube_current = cube(i_d - static_cast<U>(boundary[j]));
+		auto cube_current = cube((i_d - static_cast<U>(boundary[j]))/max_data_x);
 		out[i] = force_non_negative(
 				cube_prev - force_non_negative(cube_current));
 		cube_prev = cube_current;
@@ -908,17 +914,18 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
+	U max_data_x = static_cast<U>(num_data - 1);
 	size_t idx = 0;
 	if (num_boundary <= 2) {
 		for (size_t i = 0; i < num_data; ++i) {
 			U i_d = static_cast<U>(i);
-			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d, &idx, out);
+			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d/max_data_x, &idx, out);
 		}
 	} else {
 		for (size_t i = 0; i < num_data; ++i) {
 			U i_d = static_cast<U>(i);
-			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d, &idx, out);
-			SetAuxiliaryCubicBases<U>(num_boundary, boundary, i_d, &idx, out);
+			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d/max_data_x, &idx, out);
+			SetAuxiliaryCubicBases<U>(num_boundary, boundary, i_d, max_data_x, &idx, out);
 		}
 	}
 }
@@ -1253,6 +1260,14 @@ inline void LSQFit(V const *context, uint16_t order, size_t const num_nwave,
 
 	if (coeff != nullptr) {
 		std::copy(context->coeff_full, context->coeff_full + num_coeff, coeff);
+		if (type == LSQFitTypeInternal_kPolynomial) {
+			double max_data_x = static_cast<double>(num_data - 1);
+			double factor = 1.0;
+			for (size_t i = 0; i < num_coeff; ++i) {
+				coeff[i] /= factor;
+				factor *= max_data_x;
+			}
+		}
 	}
 	if (best_fit != nullptr) {
 		std::copy(context->best_fit_model, context->best_fit_model + num_data,
@@ -1311,9 +1326,9 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 	auto coeff_full =
 			reinterpret_cast<U (*)[kNumBasesCubicSpline]>(context->coeff_full);
 
-	DoLSQFit<T, U, V>(context, num_data, data, mask,
-			context->num_lsq_bases_max, num_coeff, context->cspline_basis,
-			num_boundary, boundary, num_fitting_max, clip_threshold_sigma, true,
+	DoLSQFit<T, U, V>(context, num_data, data, mask, context->num_lsq_bases_max,
+			num_coeff, context->cspline_basis, num_boundary, boundary,
+			num_fitting_max, clip_threshold_sigma, true,
 			context->cspline_lsq_coeff, nullptr, final_mask, rms,
 			context->residual_data, context->best_fit_model,
 			[&]() {
@@ -1322,9 +1337,15 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 			lsqfit_status);
 
 	if (coeff != nullptr) {
+		double max_data_x = static_cast<double>(num_data - 1);
 		for (size_t i = 0; i < num_piece; ++i) {
 			std::copy(coeff_full[i], coeff_full[i] + kNumBasesCubicSpline,
 					coeff[i]);
+			double factor = 1.0;
+			for (size_t j = 0; j < kNumBasesCubicSpline; ++j) {
+				coeff[i][j] /= factor;
+				factor *= max_data_x;
+			}
 		}
 	}
 	if (best_fit != nullptr) {
@@ -1363,11 +1384,26 @@ inline void Subtract(V const *context, size_t num_data, T const *data_arg,
 	auto const coeff = AssumeAligned(coeff_arg);
 	auto out = AssumeAligned(out_arg);
 
+	U *coeff_apply = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_apply(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(U) * num_coeff, &coeff_apply));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_apply));
+	std::copy(coeff, coeff + num_coeff, coeff_apply);
+
+	if (type == LSQFitTypeInternal_kPolynomial) {
+		double max_data_x = static_cast<double>(num_data - 1);
+		double factor = 1.0;
+		for (size_t i = 0; i < num_coeff; ++i) {
+			coeff_apply[i] *= factor;
+			factor *= max_data_x;
+		}
+	}
 	if (type == LSQFitTypeInternal_kSinusoid) {
 		SetSinusoidUseBasesIndex<V>(num_nwave, nwave, const_cast<V *>(context));
 	}
 	GetBestFitModelAndResidual<T, U, V>(num_data, data, context, num_coeff,
-			coeff, context->best_fit_model, out);
+			coeff_apply, context->best_fit_model, out);
 }
 
 /**
@@ -1395,8 +1431,22 @@ inline void SubtractCubicSpline(V const *context, size_t num_data,
 	auto const boundary = AssumeAligned(boundary_arg);
 	auto out = AssumeAligned(out_arg);
 
+	U (*coeff_apply)[kNumBasesCubicSpline] = nullptr;
+	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_apply(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(U) * kNumBasesCubicSpline * (num_boundary-1), &coeff_apply));
+	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_apply));
+	double max_data_x = static_cast<double>(num_data - 1);
+	for (size_t i = 0; i < num_boundary-1; ++i) {
+		std::copy(coeff[i], coeff[i] + kNumBasesCubicSpline, coeff_apply[i]);
+		double factor = 1.0;
+		for (size_t j = 0; j < kNumBasesCubicSpline; ++j) {
+			coeff_apply[i][j] *= factor;
+			factor *= max_data_x;
+		}
+	}
 	GetBestFitModelAndResidualCubicSpline<T, U, V>(num_data, data, context,
-			num_boundary, boundary, coeff, context->best_fit_model, out);
+			num_boundary, boundary, coeff_apply, context->best_fit_model, out);
 }
 
 } /* anonymous namespace */
@@ -1415,7 +1465,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomi
 LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
 LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
 	CHECK_ARGS(context != nullptr);
-	if (*context != nullptr) *context = nullptr;
+	*context = nullptr;
 	CHECK_ARGS(
 			(lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kPolynomial)) ||(lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kChebyshev)));
 	LSQFitTypeInternal lsqfit_type_internal = LSQFitTypeInternal_kPolynomial;
@@ -1451,7 +1501,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSpl
 		uint16_t npiece, size_t num_data,
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
 	CHECK_ARGS(context != nullptr);
-	if (*context != nullptr) *context = nullptr;
+	*context = nullptr;
 	CHECK_ARGS(0 < npiece);
 	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kCubicSpline;
 	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, npiece) <= num_data);
@@ -1483,7 +1533,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoid
 		uint16_t nwave, size_t num_data,
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
 	CHECK_ARGS(context != nullptr);
-	if (*context != nullptr) *context = nullptr;
+	*context = nullptr;
 	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
 	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, nwave) + 1 <= num_data);
 
