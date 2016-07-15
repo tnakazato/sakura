@@ -261,7 +261,7 @@ inline void SetBasisDataPolynomial(T *context) {
 	size_t num_bases = context->num_bases;
 	size_t idx = 0;
 	U max_data_x = static_cast<U>(num_basis_data - 1);
-	assert(0.0 < max_data_x);
+	assert(0.0 <= max_data_x);
 	for (size_t i = 0; i < num_basis_data; ++i) {
 		DoSetBasisDataPolynomial<U>(num_bases, static_cast<U>(i) / max_data_x,
 				&idx, data);
@@ -843,7 +843,8 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 	for (size_t i = 1; i < num_boundary - 1; ++i) {
 		size_t j = GetNumberOfLsqBases(LSQFitTypeInternal_kCubicSpline, i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
-		auto const b = static_cast<U>(boundary[i]) * max_data_x;
+		//auto const b = static_cast<U>(boundary[i]) * max_data_x;
+		auto const b = static_cast<U>(boundary[i]) / max_data_x;
 		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
 		coeff[i][1] = coeff[i - 1][1] + three * b * b * c;
 		coeff[i][2] = coeff[i - 1][2] - three * b * c;
