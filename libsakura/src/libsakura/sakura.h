@@ -1239,7 +1239,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
  * @param[out] context Context for convolution. The context can be shared between threads.
  * It has to be destroyed by @ref sakura_DestroyConvolve1DContextFloat after use by
  * @ref sakura_Convolve1DFFTFloat .
- * The context is returned without any change if context creation failed.
+ * Note also that null pointer will be set to @a *context
+ * in case this function fails.
+ *
  * @return Status code.
  *
  * MT-unsafe

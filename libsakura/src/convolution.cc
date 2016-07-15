@@ -223,6 +223,7 @@ inline void CreateConvolve1DContextFFTFloat(size_t num_kernel,
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 
 	assert(context != nullptr);
+	*context = nullptr;
 	assert(kernel != nullptr);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel));
 	std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
