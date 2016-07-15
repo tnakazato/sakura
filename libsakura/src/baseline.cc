@@ -839,11 +839,10 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
 		coeff[0][i] = coeff_raw[i];
 	}
 	U const three = static_cast<U>(3.0);
-	U const max_data_x = static_cast<U>(boundary[num_boundary-1]-1);
+	U const max_data_x = static_cast<U>(boundary[num_boundary - 1] - 1);
 	for (size_t i = 1; i < num_boundary - 1; ++i) {
 		size_t j = GetNumberOfLsqBases(LSQFitTypeInternal_kCubicSpline, i);
 		auto const c = coeff_raw[j] - coeff[i - 1][3];
-		//auto const b = static_cast<U>(boundary[i]) * max_data_x;
 		auto const b = static_cast<U>(boundary[i]) / max_data_x;
 		coeff[i][0] = coeff[i - 1][0] - b * b * b * c;
 		coeff[i][1] = coeff[i - 1][1] + three * b * b * c;
@@ -870,7 +869,8 @@ inline void GetFullCubicSplineCoefficients(size_t num_boundary,
  */
 template<typename U>
 inline void SetAuxiliaryCubicBases(size_t const num_boundary,
-		size_t const *boundary_arg, U const i_d, U const max_data_x, size_t *idx, U *out_arg) {
+		size_t const *boundary_arg, U const i_d, U const max_data_x,
+		size_t *idx, U *out_arg) {
 	size_t i = *idx;
 	assert(1 <= i);
 	assert(i_d <= boundary_arg[num_boundary-1]);
@@ -883,12 +883,13 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
 	auto force_non_negative = [](U v) {return static_cast<U>(std::max(0.0, v));};
 
 	//auto cube_prev = cube(i_d - static_cast<U>(boundary[1]));
-	auto cube_prev = cube((i_d - static_cast<U>(boundary[1]))/max_data_x);
+	auto cube_prev = cube((i_d - static_cast<U>(boundary[1])) / max_data_x);
 	out[i - 1] -= force_non_negative(cube_prev);
 
 	for (size_t j = 2; j < num_boundary; ++j) {
 		//auto cube_current = cube(i_d - static_cast<U>(boundary[j]));
-		auto cube_current = cube((i_d - static_cast<U>(boundary[j]))/max_data_x);
+		auto cube_current = cube(
+				(i_d - static_cast<U>(boundary[j])) / max_data_x);
 		out[i] = force_non_negative(
 				cube_prev - force_non_negative(cube_current));
 		cube_prev = cube_current;
@@ -920,13 +921,16 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 	if (num_boundary <= 2) {
 		for (size_t i = 0; i < num_data; ++i) {
 			U i_d = static_cast<U>(i);
-			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d/max_data_x, &idx, out);
+			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d / max_data_x,
+					&idx, out);
 		}
 	} else {
 		for (size_t i = 0; i < num_data; ++i) {
 			U i_d = static_cast<U>(i);
-			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d/max_data_x, &idx, out);
-			SetAuxiliaryCubicBases<U>(num_boundary, boundary, i_d, max_data_x, &idx, out);
+			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d / max_data_x,
+					&idx, out);
+			SetAuxiliaryCubicBases<U>(num_boundary, boundary, i_d, max_data_x,
+					&idx, out);
 		}
 	}
 }
@@ -1435,10 +1439,11 @@ inline void SubtractCubicSpline(V const *context, size_t num_data,
 	U (*coeff_apply)[kNumBasesCubicSpline] = nullptr;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_apply(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
-					sizeof(U) * kNumBasesCubicSpline * (num_boundary-1), &coeff_apply));
+					sizeof(U) * kNumBasesCubicSpline * (num_boundary - 1),
+					&coeff_apply));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(coeff_apply));
 	double max_data_x = static_cast<double>(num_data - 1);
-	for (size_t i = 0; i < num_boundary-1; ++i) {
+	for (size_t i = 0; i < num_boundary - 1; ++i) {
 		std::copy(coeff[i], coeff[i] + kNumBasesCubicSpline, coeff_apply[i]);
 		double factor = 1.0;
 		for (size_t j = 0; j < kNumBasesCubicSpline; ++j) {

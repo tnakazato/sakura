@@ -310,7 +310,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseWithMa
 		}
 		for (size_t i = 0; i < num_masked_idx; ++i) {
 			mask[masked_idx[i]] = false;
-			//data[masked_idx[i]] = -100000.0; // spike, which should not affect the fitting result
+			data[masked_idx[i]] = -100000.0; // spike, which should not affect the fitting result
 		}
 		coeff_status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(context,
 				num_pieces, num_data, data, mask, 5.0f, 1, out, nullptr,
@@ -318,7 +318,7 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineSuccessfulCaseWithMa
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(LSQFitStatus_kOK), baseline_status);
 		for (size_t i = 0; i < ELEMENTSOF(answer); ++i) {
-			CheckAlmostEqual(answer[i], out[i / 4][i % 4], 1.0);
+			CheckAlmostEqual(answer[i], out[i / 4][i % 4], 1.0e-5);
 		}
 	}
 
@@ -393,27 +393,26 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplineZeroNumClippingMax) 
  * time-consuming successful case for performance measurement
  */
 TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
-	size_t const num_repeat = 1;//300;
+	size_t const num_repeat = 300;
 	size_t const num_pieces = 2;
 	SIMD_ALIGN
 	double answer[4 * num_pieces];
 	for (size_t i = 0; i < ELEMENTSOF(answer); i += 4) {
 		answer[i] = 1.0;
-		answer[i + 1] = 0.0;//1e-4;
-		answer[i + 2] = 0.0;//1e-8;
-		answer[i + 3] = 0.0;//1e-12;
+		answer[i + 1] = 0.0;
+		answer[i + 2] = 0.0;
+		answer[i + 3] = 0.0;
 	}
-	size_t const num_data = 15;//70000;
+	size_t const num_data = 70000;
 	SIMD_ALIGN
 	float in_data[num_data];
-	//SetFloatPolynomial(ELEMENTSOF(answer), answer, num_data, in_data);
 	SetFloatPolynomial(4, answer, num_data, in_data);
 	SIMD_ALIGN
 	bool mask[ELEMENTSOF(in_data)];
 	SetBoolConstant(true, ELEMENTSOF(in_data), mask);
-	//if (verbose) {
+	if (verbose) {
 		PrintArray("in_data", num_data, in_data);
-	//}
+	}
 	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextCubicSplineFloat(num_pieces, num_data,
@@ -2910,17 +2909,17 @@ TEST_F(BaselineWK, LSQFitCubicSplineSuccessfulCases) {
 		}
 		if (check_coeff) {
 			for (size_t i = 0; i < ELEMENTSOF(coeff_answer); ++i) {
-				CheckAlmostEqual(coeff_answer[i], coeff[i / 4][i % 4], 1.0);
+				CheckAlmostEqual(coeff_answer[i], coeff[i / 4][i % 4], 1.0e-5);
 			}
 		}
 		if (check_best_fit) {
 			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-				CheckAlmostEqual(data[i], best_fit[i], 1.0e-3);
+				CheckAlmostEqual(data[i], best_fit[i], 1.0e-5);
 			}
 		}
 		if (check_residual) {
 			for (size_t i = 0; i < ELEMENTSOF(data); ++i) {
-				CheckAlmostEqual(0.0, residual[i], 1.0);
+				CheckAlmostEqual(0.0, residual[i], 1.0e-5);
 			}
 		}
 	}
