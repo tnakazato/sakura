@@ -431,6 +431,7 @@ set_build_env() {
     build_host=$(hostname --short)
     case ${build_host} in
         ana01)
+		source /opt/rh/devtoolset-3/enable
         ;;
         ana02)
         source /opt/rh/devtoolset-3/enable
