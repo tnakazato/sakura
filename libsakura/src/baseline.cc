@@ -910,6 +910,7 @@ inline void SetAuxiliaryCubicBases(size_t const num_boundary,
  */
 template<typename U>
 inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
+		size_t const idx_pad,
 		size_t const *boundary_arg, U *out_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(boundary_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(out_arg));
@@ -923,6 +924,7 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 			U i_d = static_cast<U>(i);
 			DoSetBasisDataPolynomial<U>(kNumBasesCubicSpline, i_d / max_data_x,
 					&idx, out);
+			idx += idx_pad;
 		}
 	} else {
 		for (size_t i = 0; i < num_data; ++i) {
@@ -931,6 +933,7 @@ inline void SetFullCubicSplineBasisData(size_t num_data, size_t num_boundary,
 					&idx, out);
 			SetAuxiliaryCubicBases<U>(num_boundary, boundary, i_d, max_data_x,
 					&idx, out);
+			idx += idx_pad;
 		}
 	}
 }
@@ -1321,8 +1324,9 @@ inline void LSQFitCubicSpline(V const *context, size_t num_boundary,
 	auto boundary = AssumeAligned(boundary_arg);
 
 	GetBoundariesOfPiecewiseData(num_data, mask, num_boundary, boundary);
-	SetFullCubicSplineBasisData<U>(num_data, num_boundary, boundary,
-			context->cspline_basis);
+	size_t basis_padding = context->num_lsq_bases_max - num_boundary - 2;
+	SetFullCubicSplineBasisData<U>(num_data, num_boundary, basis_padding,
+			boundary, context->cspline_basis);
 	if (num_fitting_max == 0)
 		return;
 	size_t const num_piece = num_boundary - 1;
