@@ -243,7 +243,7 @@ if [[ "${rhel_version_major}" = "7" ]] ; then
 fi
 # -- RHEL5 and RHEL6: include legacy libsakura libraries based on ${rpm_legacy_libs}
 if [[ ${rpm_legacy_libs} -eq ${TRUE} ]] ; then
-	export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690}/el${rhel_version_major} -type f)
+	export SAKURA_LEGACY_LIBS=$(find ${rpm_resources_dir}/libsakura-{0.1.1352,1.1.1690,2.0.1882}/el${rhel_version_major} -type f)
 fi
 
 # RPM Macros
