@@ -433,9 +433,9 @@ inline void RunContextTest(size_t const num_kernel, bool const valid_context_poi
 			DefaultAlignedMemory::AlignedAllocateOrException(
 					sizeof(float) * num_dummy, &dummy_kernel));
 	ASSERT_NE(dummy_kernel, nullptr);
-	// set some values to kernel
-	RightAngledTriangleKernel kernel_generator = {static_cast<float>(num_dummy), num_dummy};
-	kernel_generator.generate(dummy_kernel);
+//	// set some values to kernel
+//	RightAngledTriangleKernel kernel_generator = {static_cast<float>(num_dummy), num_dummy};
+//	kernel_generator.generate(dummy_kernel);
 	// initialize kernel
 	float *kernel = nullptr;
 	KernelInitializer::Initialize(num_kernel, dummy_kernel, &kernel);
@@ -456,7 +456,9 @@ inline void RunContextTest(size_t const num_kernel, bool const valid_context_poi
 	// context should be nullptr when context creation failed
 	if (create_status != LIBSAKURA_SYMBOL(Status_kOK) && valid_context_pointer) {
 		ASSERT_EQ(nullptr, *context_ptr_ptr);
-		// destroy context if context is create OR caller insists on destroying
+	}
+	// destroy context
+	if (context_ptr_ptr != nullptr) {
 		LIBSAKURA_SYMBOL(Status) status =
 				LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(*context_ptr_ptr);
 		//std::cout << "destroy status = " << status << std::endl;
