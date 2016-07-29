@@ -101,6 +101,18 @@ void Deallocate(void *ptr) {
 	free(ptr);
 }
 
+struct SakuraOkInitializer {
+	static LIBSAKURA_SYMBOL(Status) Initialize() {
+		return LIBSAKURA_SYMBOL(Initialize)(nullptr, nullptr);
+	}
+};
+
+struct SakuraNoMemoryInitializer {
+	static LIBSAKURA_SYMBOL(Status) Initialize() {
+		return LIBSAKURA_SYMBOL(Initialize)(DummyAlloc, nullptr);
+	}
+};
+
 struct StandardInitializer {
 	static void Initialize(size_t num_kernel, void *storage_ptr,
 			float **kernel) {
@@ -136,6 +148,22 @@ struct NotGoodValidator {
 			float const *kernel, sakura_Status const status) {
 		// only validate returned status
 		EXPECT_EQ(sakura_Status_kNG, status);
+	}
+};
+
+struct NoMemoryValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// only validate returned status
+		EXPECT_EQ(sakura_Status_kNoMemory, status);
+	}
+};
+
+struct StatusOKValidator {
+	static void Validate(float kernel_width, size_t num_kernel,
+			float const *kernel, sakura_Status const status) {
+		// execution must be successful
+		EXPECT_EQ(sakura_Status_kOK, status);
 	}
 };
 
@@ -335,6 +363,52 @@ inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
 	Validator::Validate(kernel_width, num_kernel, kernel, status);
 }
 
+/*
+ * Test creation and destroy of context
+ * Note: destroy_status is evaluated only when creation is successful
+ */
+template<typename SakuraInitializer, typename KernelInitializer,
+		typename CreateValidator, typename DestroyValidator>
+inline void RunContextTest(size_t const num_kernel) {
+	//initialize sakura
+	LIBSAKURA_SYMBOL(Status) init_status = SakuraInitializer::Initialize();
+	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), init_status);
+	void *dummy_kernel = nullptr;
+	// avoid allocating storage > INT_MAX
+	size_t const num_dummy =
+			(num_kernel <= INT_MAX) ? num_kernel + 1 : NUM_IN_ODD;
+	std::unique_ptr<void, DefaultAlignedMemory> kernel_storage(
+			DefaultAlignedMemory::AlignedAllocateOrException(
+					sizeof(float) * num_dummy, &dummy_kernel));
+	ASSERT_NE(dummy_kernel, nullptr);
+	// initialize kernel
+	float *kernel = nullptr;
+	KernelInitializer::Initialize(num_kernel, dummy_kernel, &kernel);
+	// initialize context
+	LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+	// create context
+	LIBSAKURA_SYMBOL(Status) create_status =
+	LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel, kernel,
+			&context);
+	//std::cout << "create kernel status = " << create_status << std::endl;
+	constexpr float kDummyKernelWidth = 0;
+	CreateValidator::Validate(kDummyKernelWidth, num_kernel, kernel,
+			create_status);
+	// context should be nullptr when context creation failed
+	if (create_status != LIBSAKURA_SYMBOL(Status_kOK))
+		ASSERT_EQ(nullptr, context);
+	// destroy context if context is create OR caller insists on destroying
+	// if (create_status == LIBSAKURA_SYMBOL(Status_kOK) || force_destroy) {
+	LIBSAKURA_SYMBOL(Status) status =
+	LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
+	//std::cout << "destroy status = " << status << std::endl;
+	DestroyValidator::Validate(kDummyKernelWidth, num_kernel, kernel, status);
+	// 	ASSERT_EQ(destroy_status, status);
+	// }
+	// Clean-up sakura
+	LIBSAKURA_SYMBOL(CleanUp)();
+}
+
 } /* namespace */
 
 using namespace std;
@@ -462,7 +536,8 @@ protected:
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		double start = sakura_GetCurrentTime();
 		float *kernel = nullptr;
-		unique_ptr<void, DefaultAlignedMemory> kernel_storage(DefaultAlignedMemory::AlignedAllocateOrException(
+		unique_ptr<void, DefaultAlignedMemory> kernel_storage(
+				DefaultAlignedMemory::AlignedAllocateOrException(
 						sizeof(*kernel) * num_kernel, &kernel));
 		ASSERT_NE(kernel, nullptr);
 		LIBSAKURA_SYMBOL(Status) status = expected_status;
@@ -489,7 +564,8 @@ protected:
 		float *output_weight = nullptr;
 		unique_ptr<void, DefaultAlignedMemory> output_weight_storage(
 				DefaultAlignedMemory::AlignedAllocateOrException(
-						sizeof(*output_weight) * input_data_size, &output_weight));
+						sizeof(*output_weight) * input_data_size,
+						&output_weight));
 		ASSERT_NE(output_weight, nullptr);
 		InitializeDataAndMask(input_spike_type, MaskType_ktrue, input_data_size,
 				input_data, input_mask);
@@ -628,7 +704,7 @@ protected:
 			LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
 			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
-		// verify output data and mask
+		// verify output data and weight
 		if (exec_status == LIBSAKURA_SYMBOL(Status_kOK)) {
 			for (size_t i = 0; i < data_ref.size(); ++i) {
 				size_t const offset = data_ref[i].offset;
@@ -703,34 +779,55 @@ private:
 ;
 
 /*
- * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
- * RESULT:
- * if num_data = 0,kernel_width = 0, LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = UnknownType,
- * CreateConvolve1DContextFloat will return Status_kInvalidArgument)
+ * Test failure cases of context creation and destroy.
+ * (context=nullptr after execution of create function)
  */
-TEST(ContextTest, InvalidArguments) {
-	{ // num_kernel > INT_MAX
-		std::cout << "num_kernel > INT_MAX" << std::endl;
-		size_t const num_kernel = (size_t(INT_MAX) + 1);
-		SIMD_ALIGN
-		float kernel[NUM_IN_EVEN]; // dummy kernel array
-		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
-				kernel, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
-	{ // num_kernel == 0
-		std::cout << "num_kernel == 0" << std::endl;
-		size_t const num_kernel = 0;
-		SIMD_ALIGN
-		float kernel[num_kernel];
-		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
-				kernel, &context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
-	}
+// create T-001, destroy T-001
+TEST(ContextTest, NumKernelIsZero) {
+	RunContextTest<SakuraOkInitializer, StandardInitializer,
+			InvalidArgumentValidator, InvalidArgumentValidator>(0);
+}
+//create T-002, destroy T-001
+TEST(ContextTest, NumKernelGreaterThanIntMax) {
+	RunContextTest<SakuraOkInitializer, StandardInitializer,
+			InvalidArgumentValidator, InvalidArgumentValidator>(
+			(size_t) INT_MAX + 1);
+}
+//create T-003, destroy T-001
+TEST(ContextTest, NullKernel) {
+	RunContextTest<SakuraOkInitializer, NullPointerInitializer,
+			InvalidArgumentValidator, InvalidArgumentValidator>(25);
+}
+//create T-004, destroy T-001
+TEST(ContextTest, UnalignedKernel) {
+	RunContextTest<SakuraOkInitializer, NotAlignedInitializer,
+			InvalidArgumentValidator, InvalidArgumentValidator>(25);
+}
+//create T-005, destroy T-001
+// TEST(ContextTest, ContextIsNullPtr) {
+// 	RunContextTest<SakuraOkInitializer,StandardInitializer,
+// 		       InvalidArgumentValidator,InvalidArgumentValidator>(25,false);
+// }
+//create T-006, destroy T-001
+TEST(ContextTest, NoMemoryKernel) {
+	// context generation fails with Status_kNoMemory.
+	RunContextTest<SakuraNoMemoryInitializer, StandardInitializer,
+			NoMemoryValidator, InvalidArgumentValidator>(25);
+}
+
+/*
+ * Successful context creation and destroy
+ * num_kernel = UB is not tested because of valgrind memory consumption issue.
+ */
+//create T-007, destroy T-002
+TEST(ContextTest, NumKernelIsLB) {
+	RunContextTest<SakuraOkInitializer, StandardInitializer, StatusOKValidator,
+			StatusOKValidator>(1);
+}
+//create T-009, destroy T-002
+TEST(ContextTest, NumKernelIsIR) {
+	RunContextTest<SakuraOkInitializer, StandardInitializer, StatusOKValidator,
+			StatusOKValidator>(25);
 }
 
 /*
@@ -741,45 +838,6 @@ TEST(ContextTest, InvalidArguments) {
  * message "num_data does't equal to context->num_data" will be shown.
  * TODO KS memo: this test did not test what it is intended. Implement proper test here.
  */
-
-/*
- * Test Failed malloc of context
- * RESULT:
- * Convolve1D will return Status_kInvalidArgument
- */
-TEST(Convolve1DOperationFailed , FailedMallocContext) {
-	{
-		LIBSAKURA_SYMBOL(Status) status_Init = LIBSAKURA_SYMBOL(Initialize)(
-				DummyAlloc, nullptr);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Init);
-		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
-		SIMD_ALIGN
-		float input_data[NUM_IN_EVEN];
-		SIMD_ALIGN
-		bool input_mask[ELEMENTSOF(input_data)];
-		size_t const num_data(ELEMENTSOF(input_data));
-		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
-			input_data[i] = 0.0;
-			input_mask[i] = true;
-		}
-		constexpr size_t kNumKernel = NUM_IN_EVEN;
-		SIMD_ALIGN float kernel[kNumKernel];
-		LIBSAKURA_SYMBOL(Status) status_Create =
-		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(kNumKernel, kernel,
-				&context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
-		SIMD_ALIGN
-		float output_data[num_data];
-		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
-		LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context, num_data, input_data,
-				output_data);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
-		LIBSAKURA_SYMBOL(Status) status_Destroy =
-		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
-		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
-		LIBSAKURA_SYMBOL(CleanUp)();
-	}
-}
 
 /*
  * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
@@ -1430,3 +1488,75 @@ TEST_GAUSS(OddNumKernelPerformance) {
 /**
  * Test for LIBSAKURA_SYMBOL(Convolve1DFloat)
  */
+
+///////////////// Duplicated Obsolete tests //////////////////////////////
+// /*
+//  * Test creating gaussian kernel by sakura_CreateConvolve1DContextFloat
+//  * RESULT:
+//  * if num_data = 0,kernel_width = 0, LIBSAKURA_SYMBOL(Convolve1DKernelType_kGaussian) = UnknownType,
+//  * CreateConvolve1DContextFloat will return Status_kInvalidArgument)
+//  */
+// TEST(ContextTest, InvalidArguments) {
+// 	{ // num_kernel > INT_MAX
+// 		std::cout << "num_kernel > INT_MAX" << std::endl;
+// 		size_t const num_kernel = (size_t(INT_MAX) + 1);
+// 		SIMD_ALIGN
+// 		float kernel[NUM_IN_EVEN]; // dummy kernel array
+// 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+// 		LIBSAKURA_SYMBOL(Status) status =
+// 		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel, kernel,
+// 				&context);
+// 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+// 		ASSERT_EQ(nullptr, context);
+// 	}
+// 	{ // num_kernel == 0
+// 		std::cout << "num_kernel == 0" << std::endl;
+// 		size_t const num_kernel = 0;
+// 		SIMD_ALIGN
+// 		float kernel[num_kernel];
+// 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+// 		LIBSAKURA_SYMBOL(Status) status =
+// 		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel, kernel,
+// 				&context);
+// 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
+// 		ASSERT_EQ(nullptr, context);
+// 	}
+// }
+// /*
+//  * Test Failed malloc of context
+//  * RESULT:
+//  * Convolve1D will return Status_kInvalidArgument
+//  */
+// TEST(Convolve1DOperationFailed , FailedMallocContext) {
+// 	{
+// 		LIBSAKURA_SYMBOL(Status) status_Init = LIBSAKURA_SYMBOL(Initialize)(
+// 				DummyAlloc, nullptr);
+// 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status_Init);
+// 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+// 		SIMD_ALIGN
+// 		float input_data[NUM_IN_EVEN];
+// 		SIMD_ALIGN
+// 		bool input_mask[ELEMENTSOF(input_data)];
+// 		size_t const num_data(ELEMENTSOF(input_data));
+// 		for (size_t i = 0; i < ELEMENTSOF(input_data); ++i) {
+// 			input_data[i] = 0.0;
+// 			input_mask[i] = true;
+// 		}
+// 		constexpr size_t kNumKernel = NUM_IN_EVEN;
+// 		SIMD_ALIGN float kernel[kNumKernel];
+// 		LIBSAKURA_SYMBOL(Status) status_Create =
+// 		LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(kNumKernel, kernel,
+// 				&context);
+// 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kNoMemory), status_Create);
+// 		SIMD_ALIGN
+// 		float output_data[num_data];
+// 		LIBSAKURA_SYMBOL(Status) status_Convolve1d =
+// 		LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context, num_data, input_data,
+// 				output_data);
+// 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Convolve1d);
+// 		LIBSAKURA_SYMBOL(Status) status_Destroy =
+// 		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(context);
+// 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status_Destroy);
+// 		LIBSAKURA_SYMBOL(CleanUp)();
+// 	}
+// }
