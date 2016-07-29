@@ -224,7 +224,6 @@ inline void CreateConvolve1DContextFFTFloat(size_t num_kernel,
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat)** context) {
 
 	assert(context != nullptr);
-	*context = nullptr;
 	assert(kernel != nullptr);
 	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel));
 	std::unique_ptr<LIBSAKURA_SYMBOL(Convolve1DContextFloat),
@@ -419,12 +418,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 		size_t num_kernel, float const kernel[/*num_kernel*/],
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) noexcept {
+	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
+	*context = nullptr;
 	CHECK_ARGS_WITH_MESSAGE(0 < num_kernel && num_kernel <= INT_MAX,
 			"num_kernel must satisfy '0 < num_kernel <= INT_MAX'");
 	CHECK_ARGS_WITH_MESSAGE(kernel != nullptr, "kernel should not be NULL");
 	CHECK_ARGS_WITH_MESSAGE(LIBSAKURA_SYMBOL(IsAligned)(kernel),
 			"kernel should be aligned");
-	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
 	try {
 		CreateConvolve1DContextFFTFloat(num_kernel, kernel, context);
 	} catch (const std::bad_alloc &e) {
