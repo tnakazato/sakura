@@ -149,7 +149,8 @@ inline void RevertData1D(size_t num_data, T const src[/*num_data*/],
  */
 inline void ConvolutionWithoutFFT(size_t num_kernel, float const *kernel_arg,
 		size_t num_data, float const *input_data_arg,
-		bool const *input_mask_arg, float *output_data_arg, float *output_weight_arg) {
+		bool const *input_mask_arg, float *output_data_arg,
+		float *output_weight_arg) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(kernel_arg));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(input_data_arg));
 	uint8_t const *mask8 = reinterpret_cast<uint8_t const *>(input_mask_arg);
@@ -418,27 +419,14 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
 		size_t num_kernel, float const kernel[/*num_kernel*/],
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) **context) noexcept {
-	std::cout << "num_kernel (in func) = " << num_kernel << std::endl;
 	CHECK_ARGS_WITH_MESSAGE(0 < num_kernel && num_kernel <= INT_MAX,
 			"num_kernel must satisfy '0 < num_kernel <= INT_MAX'");
-	std::cout << "passed num_kernel test" << std::endl;
-	if (kernel==nullptr)
-		std::cout << "kernel is NULLptr"<< std::endl;
 	CHECK_ARGS_WITH_MESSAGE(kernel != nullptr, "kernel should not be NULL");
-	std::cout << "passed kernel ptr test" << std::endl;
-	if (!LIBSAKURA_SYMBOL(IsAligned)(kernel))
-		std::cout << "kernel is not aligned"<< std::endl;
 	CHECK_ARGS_WITH_MESSAGE(LIBSAKURA_SYMBOL(IsAligned)(kernel),
 			"kernel should be aligned");
-	std::cout << "passed kernel alignment test" << std::endl;
-	if (context==nullptr)
-		std::cout << "context is NULLptr!!!" << std::endl;
 	CHECK_ARGS_WITH_MESSAGE(context != nullptr, "context should not be NULL");
-	std::cout << "passed context ptr test" << std::endl;
 	try {
-		std::cout << "now executing sakura func" << std::endl;
 		CreateConvolve1DContextFFTFloat(num_kernel, kernel, context);
-		std::cout << "complete execution of sakura func" << std::endl;
 	} catch (const std::bad_alloc &e) {
 		LOG4CXX_ERROR(logger, "Memory allocation failed");
 		return LIBSAKURA_SYMBOL(Status_kNoMemory);
