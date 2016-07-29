@@ -86,11 +86,11 @@ void *DummyAlloc(size_t size) {
 	return nullptr;
 }
 
-
 void Deallocate(void *ptr) {
 	free(ptr);
 }
 
+// KS TODO: replace GaussianKernel with ConvolveGaussKernel
 struct GaussianKernel {
 	static LIBSAKURA_SYMBOL(Status) Generate(size_t num_kernel,
 			float kernel[]) {
@@ -106,7 +106,7 @@ struct ConvolveGaussKernel {
 	float kernel_width;
 	size_t num_kernel;
 	//bool use_fft;
-	void generate(float kernel[/*num_kernel*/]) {
+	void Generate(float kernel[/*num_kernel*/]) {
 		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 				kernel_width, num_kernel, kernel);
 		ASSERT_EQ(sakura_Status_kOK, status);
@@ -117,7 +117,7 @@ struct RightAngledTriangleKernel {
 	float kernel_width;
 	size_t num_kernel;
 	//bool use_fft;
-	void generate(float kernel[/*num_kernel*/]) {
+	void Generate(float kernel[/*num_kernel*/]) {
 		float sum = 0.0;
 		size_t const start = num_kernel / 2 - kernel_width / 2;
 		for (size_t i = 0; i < num_kernel; ++i) {
@@ -148,23 +148,23 @@ struct SakuraNoMemoryInitializer {
 	}
 };
 
-struct StandardInitializer {
-	static void Initialize(size_t num_kernel, void *storage_ptr,
+struct StandardArrayInitializer {
+	static void Initialize(size_t /*num_kernel*/, void *storage_ptr,
 			float **kernel) {
 		*kernel = reinterpret_cast<float *>(storage_ptr);
 	}
 };
 
-struct NotAlignedInitializer {
-	static void Initialize(size_t num_kernel, void *storage_ptr,
+struct NotAlignedArrayInitializer {
+	static void Initialize(size_t /*num_kernel*/, void *storage_ptr,
 			float **kernel) {
 		float *aligned_kernel = reinterpret_cast<float *>(storage_ptr);
 		*kernel = aligned_kernel + 1;
 	}
 };
 
-struct NullPointerInitializer {
-	static void Initialize(size_t num_kernel, void *storage_ptr,
+struct NullPointerArrayInitializer {
+	static void Initialize(size_t /*num_kernel*/, void *storage_ptr,
 			float **kernel) {
 		*kernel = nullptr;
 	}
@@ -349,22 +349,25 @@ struct WideKernelValidator {
 	}
 };
 
-//struct ContextValidator {
-//	static void Validate(size_t num_kernel, float const *kernel,
-//			LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context) {
-//		ASSERT_EQ(context->kernel_width, num_kernel);
+struct ContextValidator {
+	static void Validate(size_t num_kernel, float const *kernel,
+	LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context) {
+		ASSERT_EQ(context->kernel_width, num_kernel);
 //		float *flipped_kernel = nullptr;
 //		std::unique_ptr<void, DefaultAlignedMemory> kernel_storage(
 //				DefaultAlignedMemory::AlignedAllocateOrException(
 //						sizeof(float) * num_kernel, &flipped_kernel));
-//		size_t const nelem[1]={num_kernel};
-//		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(FlipArrayFloat)(false, 1, nelem, kernel, flipped_kernel);
+//		size_t const nelem[1] = { num_kernel };
+//		// KS TODO: workaround 1 element shift between FlipArrayFloat and FlipData1D
+//		LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(FlipArrayFloat)(
+//				false, 1, nelem, kernel, flipped_kernel);
 //		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+//		// KS TODO: FFT flipped_kernel
 //		for (size_t i = 0; i < num_kernel; ++i) {
 //			EXPECT_FLOAT_EQ(flipped_kernel[i], context->real_kernel_array[i]);
 //		}
-//	}
-//};
+	}
+};
 
 struct NullLogger {
 	static void PrintAllocatedSize(size_t storage_size) {
@@ -421,7 +424,8 @@ inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
  */
 template<typename SakuraInitializer, typename KernelInitializer,
 		typename CreateValidator, typename DestroyValidator>
-inline void RunContextTest(size_t const num_kernel, bool const valid_context_pointer=true) {
+inline void RunContextTest(size_t const num_kernel,
+		bool const valid_context_pointer = true) {
 	//initialize sakura
 	LIBSAKURA_SYMBOL(Status) init_status = SakuraInitializer::Initialize();
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), init_status);
@@ -433,9 +437,10 @@ inline void RunContextTest(size_t const num_kernel, bool const valid_context_poi
 			DefaultAlignedMemory::AlignedAllocateOrException(
 					sizeof(float) * num_dummy, &dummy_kernel));
 	ASSERT_NE(dummy_kernel, nullptr);
-//	// set some values to kernel
-//	RightAngledTriangleKernel kernel_generator = {static_cast<float>(num_dummy), num_dummy};
-//	kernel_generator.generate(dummy_kernel);
+	// set some values to kernel
+	RightAngledTriangleKernel kernel_generator = {
+			static_cast<float>(num_dummy), num_dummy };
+	kernel_generator.Generate(dummy_kernel);
 	// initialize kernel
 	float *kernel = nullptr;
 	KernelInitializer::Initialize(num_kernel, dummy_kernel, &kernel);
@@ -454,15 +459,19 @@ inline void RunContextTest(size_t const num_kernel, bool const valid_context_poi
 	CreateValidator::Validate(kDummyKernelWidth, num_kernel, kernel,
 			create_status);
 	// context should be nullptr when context creation failed
-	if (create_status != LIBSAKURA_SYMBOL(Status_kOK) && valid_context_pointer) {
+	if (create_status != LIBSAKURA_SYMBOL(Status_kOK)
+			&& valid_context_pointer) {
 		ASSERT_EQ(nullptr, *context_ptr_ptr);
+	} else if (create_status == LIBSAKURA_SYMBOL(Status_kOK)) {
+		ContextValidator::Validate(num_kernel, kernel, *context_ptr_ptr);
 	}
 	// destroy context
 	if (context_ptr_ptr != nullptr) {
 		LIBSAKURA_SYMBOL(Status) status =
-				LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(*context_ptr_ptr);
+		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(*context_ptr_ptr);
 		//std::cout << "destroy status = " << status << std::endl;
-		DestroyValidator::Validate(kDummyKernelWidth, num_kernel, kernel, status);
+		DestroyValidator::Validate(kDummyKernelWidth, num_kernel, kernel,
+				status);
 	}
 	// Clean-up sakura
 	LIBSAKURA_SYMBOL(CleanUp)();
@@ -689,7 +698,7 @@ protected:
 		// create kernel array
 		size_t const num_kernel = kernel_param.num_kernel;
 		SIMD_ALIGN float kernel[num_kernel];
-		kernel_param.generate(kernel);
+		kernel_param.Generate(kernel);
 		// create context if FFT
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		if (use_fft) {
@@ -809,34 +818,34 @@ private:
  */
 // create T-001, destroy T-001
 TEST(ContextTest, NumKernelIsZero) {
-	RunContextTest<SakuraOkInitializer, StandardInitializer,
+	RunContextTest<SakuraOkInitializer, StandardArrayInitializer,
 			InvalidArgumentValidator, InvalidArgumentValidator>(0);
 }
 //create T-002, destroy T-001
 TEST(ContextTest, NumKernelIsGreaterThanIntMax) {
-	RunContextTest<SakuraOkInitializer, StandardInitializer,
+	RunContextTest<SakuraOkInitializer, StandardArrayInitializer,
 			InvalidArgumentValidator, InvalidArgumentValidator>(
 			(size_t) INT_MAX + 1);
 }
 //create T-003, destroy T-001
 TEST(ContextTest, KernelIsNull) {
-	RunContextTest<SakuraOkInitializer, NullPointerInitializer,
+	RunContextTest<SakuraOkInitializer, NullPointerArrayInitializer,
 			InvalidArgumentValidator, InvalidArgumentValidator>(25);
 }
 //create T-004, destroy T-001
 TEST(ContextTest, KernelIsNotAligned) {
-	RunContextTest<SakuraOkInitializer, NotAlignedInitializer,
+	RunContextTest<SakuraOkInitializer, NotAlignedArrayInitializer,
 			InvalidArgumentValidator, InvalidArgumentValidator>(25);
 }
 //create T-005, destroy T-001
- TEST(ContextTest, ContextIsNullPtr) {
- 	RunContextTest<SakuraOkInitializer,StandardInitializer,
- 		       InvalidArgumentValidator,InvalidArgumentValidator>(25, false);
- }
+TEST(ContextTest, ContextIsNullPtr) {
+	RunContextTest<SakuraOkInitializer, StandardArrayInitializer,
+			InvalidArgumentValidator, InvalidArgumentValidator>(25, false);
+}
 //create T-006, destroy T-001
 TEST(ContextTest, KernelNoMemory) {
 	// context generation fails with Status_kNoMemory.
-	RunContextTest<SakuraNoMemoryInitializer, StandardInitializer,
+	RunContextTest<SakuraNoMemoryInitializer, StandardArrayInitializer,
 			NoMemoryValidator, InvalidArgumentValidator>(25);
 }
 
@@ -846,13 +855,27 @@ TEST(ContextTest, KernelNoMemory) {
  */
 //create T-007, destroy T-002
 TEST(ContextTest, NumKernelIsLB) {
-	RunContextTest<SakuraOkInitializer, StandardInitializer, StatusOKValidator,
+	RunContextTest<SakuraOkInitializer, StandardArrayInitializer, StatusOKValidator,
 			StatusOKValidator>(1);
 }
 //create T-009, destroy T-002
 TEST(ContextTest, NumKernelIsIR) {
-	RunContextTest<SakuraOkInitializer, StandardInitializer, StatusOKValidator,
+	RunContextTest<SakuraOkInitializer, StandardArrayInitializer, StatusOKValidator,
 			StatusOKValidator>(25);
+}
+
+/*
+ * Test Convolution operation with FFT
+ */
+// convolve w/ FFT T-001
+TEST_F(Convolve1DOperation , ContextIsNull) {
+	LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+	size_t const num_data = 1;
+	SIMD_ALIGN float input_data[num_data];
+	SIMD_ALIGN float output_data[ELEMENTSOF(input_data)];
+	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context,
+			num_data, input_data, output_data);
+	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
 
 /*
@@ -1344,8 +1367,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFT) {
  */
 
 TEST_F(Convolve1DOperation, NumKernelWithoutFFTTriangle) {
-	ConvolveTestComponent<RightAngledTriangleKernel> TriangleNumKernelTest[] =
-			{ { "num_kernel(odd) = num_data", { 4, NUM_IN_ODD }, false,
+	ConvolveTestComponent<RightAngledTriangleKernel> TriangleNumKernelTest[] = {
+			{ "num_kernel(odd) = num_data", { 4, NUM_IN_ODD }, false,
 			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { { 10, { 0.1, 0.2,
 					0.3, 0.4 } } }, { } }, { "num_kernel(even) = num_data", { 4,
 			NUM_IN_EVEN }, false,
@@ -1371,12 +1394,12 @@ TEST_F(Convolve1DOperation, NumKernelWithoutFFTTriangle) {
  */
 // T-001
 TEST_GAUSS(NegativeKernelWidth) {
-	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(-1.0f, 10);
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(-1.0f, 10);
 }
 
 // T-002
 TEST_GAUSS(ZeroKernelWidth) {
-	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(0.0f, 10);
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(0.0f, 10);
 }
 
 // T-003
@@ -1386,7 +1409,7 @@ TEST_GAUSS(PositiveInfiniteKernelWidth) {
 	float positive_inf = kOne / kZero;
 	ASSERT_TRUE(std::isinf(positive_inf));
 	ASSERT_GT(positive_inf, FLT_MAX);
-	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(positive_inf,
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(positive_inf,
 			10);
 }
 
@@ -1397,7 +1420,7 @@ TEST_GAUSS(NegativeInfiniteKernelWidth) {
 	float negative_inf = -kOne / kZero;
 	ASSERT_TRUE(std::isinf(negative_inf));
 	ASSERT_LT(negative_inf, FLT_MIN);
-	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(negative_inf,
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(negative_inf,
 			10);
 }
 
@@ -1405,99 +1428,99 @@ TEST_GAUSS(NegativeInfiniteKernelWidth) {
 TEST_GAUSS(NotANumberKernelWidth) {
 	float nan_value = std::nan("");
 	ASSERT_TRUE(std::isnan(nan_value));
-	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(nan_value,
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(nan_value,
 			10);
 }
 
 // T-006
 TEST_GAUSS(KernelIsNull) {
-	RunGaussianTest<NullPointerInitializer, InvalidArgumentValidator>(2.0f, 10);
+	RunGaussianTest<NullPointerArrayInitializer, InvalidArgumentValidator>(2.0f, 10);
 }
 
 // T-007
 TEST_GAUSS(KernelIsNotAligned) {
-	RunGaussianTest<NotAlignedInitializer, InvalidArgumentValidator>(2.0f, 10);
+	RunGaussianTest<NotAlignedArrayInitializer, InvalidArgumentValidator>(2.0f, 10);
 }
 
 // T-008
 TEST_GAUSS(NumKernelIsZero) {
-	RunGaussianTest<StandardInitializer, InvalidArgumentValidator>(2.0f, 0);
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(2.0f, 0);
 }
 
 // T-009
 TEST_GAUSS(NumKernelIsOne) {
 // result should be independent of kernel_width if num_kernel is 1
-	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(2.0f, 1);
+	RunGaussianTest<StandardArrayInitializer, NumKernelOneValidator>(2.0f, 1);
 
-	RunGaussianTest<StandardInitializer, NumKernelOneValidator>(256.0f, 1);
+	RunGaussianTest<StandardArrayInitializer, NumKernelOneValidator>(256.0f, 1);
 }
 
 // T-010
 TEST_GAUSS(NumKernelIsTwo) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 2);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(2.0f, 2);
 }
 
 // T-011
 TEST_GAUSS(NumKernelIsThree) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 3);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(2.0f, 3);
 }
 
 // T-012
 TEST_GAUSS(NumKernelIsFour) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(2.0f, 4);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(2.0f, 4);
 }
 
 // T-014
 TEST_GAUSS(EvenNumkernel) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(24.0f, 64);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(24.0f, 64);
 }
 
 // T-013
 TEST_GAUSS(OddNumkernel) {
-	RunGaussianTest<StandardInitializer, StandardValidator>(24.0f, 65);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(24.0f, 65);
 }
 
 // T-016
 TEST_GAUSS(NumkernelLessThanKernelWidth) {
 // even
-	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 64);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(128.0f, 64);
 
 	// odd
-	RunGaussianTest<StandardInitializer, StandardValidator>(128.0f, 65);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(128.0f, 65);
 }
 
 // T-017
 TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
 // even
-	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 128);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(64.0f, 128);
 
 	// odd
-	RunGaussianTest<StandardInitializer, StandardValidator>(64.0f, 129);
+	RunGaussianTest<StandardArrayInitializer, StandardValidator>(64.0f, 129);
 }
 
 // T-018
 TEST_GAUSS(HalfWidth) {
 // even
-	RunGaussianTest<StandardInitializer, HalfWidthValidator>(128.0f, 128);
+	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(128.0f, 128);
 
 	// odd
-	RunGaussianTest<StandardInitializer, HalfWidthValidator>(129.0f, 129);
+	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(129.0f, 129);
 }
 
 // T-019
 TEST_GAUSS(NarrowKernelWidth) {
-	RunGaussianTest<StandardInitializer, NarrowKernelValidator>(FLT_MIN, 128);
+	RunGaussianTest<StandardArrayInitializer, NarrowKernelValidator>(FLT_MIN, 128);
 }
 
 // T-020
 TEST_GAUSS(WideKernelWidth) {
-	RunGaussianTest<StandardInitializer, WideKernelValidator>(FLT_MAX, 128);
+	RunGaussianTest<StandardArrayInitializer, WideKernelValidator>(FLT_MAX, 128);
 }
 
 // T-021
 TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456; // 2^28
-	RunGaussianTest<StandardInitializer, StandardValidator,
+	RunGaussianTest<StandardArrayInitializer, StandardValidator,
 			PerformanceTestLogger>(128.0f, kNumKernel,
 			"CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
 }
@@ -1505,7 +1528,7 @@ TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
 // T-022
 TEST_GAUSS(OddNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456 + 1; // 2^28 + 1
-	RunGaussianTest<StandardInitializer, StandardValidator,
+	RunGaussianTest<StandardArrayInitializer, StandardValidator,
 			PerformanceTestLogger>(128.0f, kNumKernel,
 			"CreateGaussian_OddNumKernelPerformanceTest");
 }
