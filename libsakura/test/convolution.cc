@@ -908,23 +908,6 @@ TEST_F(Convolve1DOperation , ThreeSpikesWithFFTDataIsEven) {
 /*
  * Test Performance of Convolve1D
  */
-// convolve w/ FFT T-023 (num_data = even)
-TEST_F(Convolve1DOperation , PerformanceTestWithFFTDataIsEven) {
-	initializer_list<float> gaussian_kernel = initializer_list<float>( {
-			0.011742966, 0.031861115, 0.069249175, 0.12056981, 0.16816399,
-			0.18788746, 0.16816399, 0.12056981, 0.069249175, 0.031861115,
-			0.011742966 }); // Kernel values
-	float const kernel_width = NUM_WIDTH;
-	size_t const num_data = NUM_IN_MAX;
-	size_t num_repeat = 10000;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (even)", { kernel_width, num_data }, true,
-			num_data, SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
-					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } }, };
-	RunConvolveTestComponentList<GaussianKernel>(ELEMENTSOF(GaussianKernelTest),
-			GaussianKernelTest, num_repeat);
-}
-
 // convolve w/ FFT T-022 (num_data = odd)
 TEST_F(Convolve1DOperation , PerformanceTestWithFFTDataIsOdd) {
 	initializer_list<float> gaussian_kernel = initializer_list<float>( {
@@ -941,6 +924,22 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFTDataIsOdd) {
 	RunConvolveTestComponentList<GaussianKernel>(ELEMENTSOF(GaussianKernelTest),
 			GaussianKernelTest, num_repeat);
 
+}
+// convolve w/ FFT T-023 (num_data = even)
+TEST_F(Convolve1DOperation , PerformanceTestWithFFTDataIsEven) {
+	initializer_list<float> gaussian_kernel = initializer_list<float>( {
+			0.011742966, 0.031861115, 0.069249175, 0.12056981, 0.16816399,
+			0.18788746, 0.16816399, 0.12056981, 0.069249175, 0.031861115,
+			0.011742966 }); // Kernel values
+	float const kernel_width = NUM_WIDTH;
+	size_t const num_data = NUM_IN_MAX;
+	size_t num_repeat = 10000;
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
+			"Gaussian kernel (even)", { kernel_width, num_data }, true,
+			num_data, SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
+					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } }, };
+	RunConvolveTestComponentList<GaussianKernel>(ELEMENTSOF(GaussianKernelTest),
+			GaussianKernelTest, num_repeat);
 }
 
 /**********************************************************************
@@ -1083,7 +1082,7 @@ TEST_F(Convolve1DOperation , PerformanceTestWithoutFFT) {
  * Test user defined asymmetric kernel (right angled triangle)
  */
 // convolve w/o FFT T-037-042
-TEST_F(Convolve1DOperation, NumKernelWithoutFFTTriangle) {
+TEST_F(Convolve1DOperation, TriangleWithoutFFTNumKernelVSNumData) {
 	ReferenceData<float> ref_data = { 10, { 0.1, 0.2, 0.3, 0.4 } };
 	ConvolveTestComponent<RightAngledTriangleKernel> TriangleNumKernelTest[] = {
 			// T-037
