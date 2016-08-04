@@ -584,8 +584,7 @@ protected:
 							test_component.num_data + 1 : 1;
 			// don't need allocate input_mask and output_weight if use_fft = true
 			size_t const num_maskweight =
-					test_component.use_fft ?
-							1 : test_component.num_data;
+					test_component.use_fft ? 1 : test_component.num_data;
 			size_t const num_maskweight_dummy = num_maskweight + 1;
 			// allocate storage for input/output data arrays
 			void *dummy_input_data = nullptr;
@@ -835,6 +834,9 @@ TEST(ContextTest, NumKernelIsIR) {
 /**********************************************************************
  * Test Convolution operation with FFT
  *********************************************************************/
+/*
+ * Failure cases of Convolution
+ */
 // convolve w/ FFT T-001
 TEST_F(Convolve1DOperation , ContextIsNull) {
 	LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
@@ -845,37 +847,19 @@ TEST_F(Convolve1DOperation , ContextIsNull) {
 			context, num_data, input_data, output_data);
 	ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kInvalidArgument), status);
 }
-
-/*
- * Failure cases of Convolution
- */
-// convolve w/ FFT T-002
-TEST_F(Convolve1DOperation , NumDataIsZero) {
-	size_t const num_data = 0;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, 1 }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { }, { } } };
-	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
-			StandardArrayInitializer, StandardArrayInitializer,
-			StandardArrayInitializer, InvalidArgumentValidator>(
-			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
-}
-// convolve w/ FFT T-003
-TEST_F(Convolve1DOperation , NumDataIsGreaterThanIntMax) {
-	size_t const num_data = static_cast<size_t>(INT_MAX) + 1;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, 1 }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { }, { } } };
-	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
-			StandardArrayInitializer, StandardArrayInitializer,
-			StandardArrayInitializer, InvalidArgumentValidator>(
-			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
-}
-// convolve w/ FFT T-006 (num_data != num_kernel)
-TEST_F(Convolve1DOperation , NumDataNENumKernel) {
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, NUM_IN_EVEN }, true,
-			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { }, { } } };
+// convolve w/ FFT T-002 ~ 004
+TEST_F(Convolve1DOperation , NumDataIsInvalid) {
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = {
+	// T-002 (num_data = 0)
+			{ "num_data = 0", { NUM_WIDTH, 1 }, true, 0, SpikeType_kcenter,
+					MaskType_knone, { }, { } },
+			// T-003 (num_data = INT_MAX)
+			{ "num_data = INT_MAX", { NUM_WIDTH, 1 }, true,
+					(static_cast<size_t>(INT_MAX) + 1), SpikeType_kcenter,
+					MaskType_knone, { }, { } },
+			// T-004 (num_data != num_kernel)
+			{ "num_data != num_kernel", { NUM_WIDTH, NUM_IN_EVEN }, true,
+			NUM_IN_ODD, SpikeType_kcenter, MaskType_knone, { }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, InvalidArgumentValidator>(
@@ -885,8 +869,8 @@ TEST_F(Convolve1DOperation , NumDataNENumKernel) {
 TEST_F(Convolve1DOperation , InDataIsNull) {
 	size_t const num_data = NUM_IN_ODD;
 	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { }, { } } };
+			"in_data = nullptr", { NUM_WIDTH, num_data }, true, num_data,
+			SpikeType_kcenter, MaskType_knone, { }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, NullPointerArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, InvalidArgumentValidator>(
@@ -896,8 +880,8 @@ TEST_F(Convolve1DOperation , InDataIsNull) {
 TEST_F(Convolve1DOperation , InDataIsNotAligned) {
 	size_t const num_data = NUM_IN_ODD;
 	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { }, { } } };
+			"not aligned in_data", { NUM_WIDTH, num_data }, true, num_data,
+			SpikeType_kcenter, MaskType_knone, { }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, NotAlignedArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, InvalidArgumentValidator>(
@@ -907,8 +891,8 @@ TEST_F(Convolve1DOperation , InDataIsNotAligned) {
 TEST_F(Convolve1DOperation , OutDataIsNull) {
 	size_t const num_data = NUM_IN_ODD;
 	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { }, { } } };
+			"out_data = nullptr", { NUM_WIDTH, num_data }, true, num_data,
+			SpikeType_kcenter, MaskType_knone, { }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, NullPointerArrayInitializer,
 			StandardArrayInitializer, InvalidArgumentValidator>(
@@ -918,55 +902,40 @@ TEST_F(Convolve1DOperation , OutDataIsNull) {
 TEST_F(Convolve1DOperation , OutDataIsNotAligned) {
 	size_t const num_data = NUM_IN_ODD;
 	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { }, { } } };
+			"Not aligned out_data", { NUM_WIDTH, num_data }, true, num_data,
+			SpikeType_kcenter, MaskType_knone, { }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, NotAlignedArrayInitializer,
 			StandardArrayInitializer, InvalidArgumentValidator>(
 			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
 }
 
-// convolve w/ FFT T-010 (num_data = 1: LB)
-TEST_F(Convolve1DOperation , NumDataIsLB) {
-	size_t const num_data = 1;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { NUM_WIDTH, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { { 0, { 1.0 } } }, { } } };
-	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
-			StandardArrayInitializer, StandardArrayInitializer,
-			StandardArrayInitializer, StatusOKValidator>(
-			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
-}
 /*
  * Convolution by narrow Gaussian kernel (kernel_width < num_data)
  */
-// convolve w/ FFT T-012 (num_data=odd)
-TEST_F(Convolve1DOperation , GaussWithFFTDataIsOdd) {
-	initializer_list<float> gaussian_kernel = initializer_list<float>( {
+// convolve w/ FFT T-010, 012 ~ 013
+TEST_F(Convolve1DOperation , GaussWithFFTVariousNumData) {
+	initializer_list<float> gaussian_ref = initializer_list<float>( {
 			0.031861115, 0.069249175, 0.12056981, 0.16816399, 0.18788746,
 			0.16816399, 0.12056981, 0.069249175, 0.031861115 }); // Kernel values
-	float const kernel_width = NUM_WIDTH;
-	size_t const num_data = NUM_IN_ODD;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { kernel_width, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
-					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } } };
-	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
-			StandardArrayInitializer, StandardArrayInitializer,
-			StandardArrayInitializer, StatusOKValidator>(
-			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
-}
-// convolve w/ FFT T-013 (num_data=even)
-TEST_F(Convolve1DOperation , GaussWithFFTDataIsEven) {
-	initializer_list<float> gaussian_kernel = initializer_list<float>( {
-			0.031861115, 0.069249175, 0.12056981, 0.16816399, 0.18788746,
-			0.16816399, 0.12056981, 0.069249175, 0.031861115 }); // Kernel values
-	float const kernel_width = NUM_WIDTH;
-	size_t const num_data = NUM_IN_EVEN;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (even)", { kernel_width, num_data }, true,
-			num_data, SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
-					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } } };
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] =
+			{
+			// T-010 (num_data = 1: LB)
+					{ "Gaussian kernel (num_data = 1: LB)", { NUM_WIDTH, 1 },
+					true, 1, SpikeType_kcenter, MaskType_knone,
+							{ { 0, { 1.0 } } }, { } },
+					// T-012 (num_data=odd)
+					{ "Gaussian kernel (num_data = odd)", { NUM_WIDTH,
+							NUM_IN_ODD },
+					true, NUM_IN_ODD, SpikeType_kcenter, MaskType_knone, { {
+					NUM_IN_ODD / 2 - gaussian_ref.size() / 2, gaussian_ref } },
+							{ } },
+					// T-013 (num_data=even)
+					{ "Gaussian kernel (num_data = even)", { NUM_WIDTH,
+							NUM_IN_EVEN },
+					true, NUM_IN_EVEN, SpikeType_kcenter, MaskType_knone, { {
+					NUM_IN_EVEN / 2 - gaussian_ref.size() / 2, gaussian_ref } },
+							{ } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StatusOKValidator>(
@@ -975,35 +944,31 @@ TEST_F(Convolve1DOperation , GaussWithFFTDataIsEven) {
 /*
  * Convolution by wide Gaussian kernel (kernel_width > num_data)
  */
-// convolve w/ FFT T-014 (num_data=odd)
-TEST_F(Convolve1DOperation , WideGaussWithFFTDataIsOdd) {
-	initializer_list<float> gaussian_kernel = initializer_list<float>( {
+// convolve w/ FFT T-014 ~ 015
+TEST_F(Convolve1DOperation , WideGaussWithFFT) {
+	initializer_list<float> gaussian_ref_odd = initializer_list<float>( {
 			0.043915681541, 0.0455670394003, 0.0468942411244, 0.047865845263,
 			0.0484584420919, 0.0486575998366, 0.0484584420919, 0.047865845263,
 			0.0468942411244, 0.0455670394003, 0.043915681541 }); // Kernel values
-	float const kernel_width = NUM_IN_ODD + 1;
-	size_t const num_data = NUM_IN_ODD;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"wide Gaussian kernel (odd)", { kernel_width, num_data }, true,
-			num_data, SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
-					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } } };
-	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
-			StandardArrayInitializer, StandardArrayInitializer,
-			StandardArrayInitializer, StatusOKValidator>(
-			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
-}
-// convolve w/ FFT T-015 (num_data=even)
-TEST_F(Convolve1DOperation , WideGaussWithFFTDataIsEven) {
-	initializer_list<float> gaussian_kernel = initializer_list<float>( {
+	initializer_list<float> gaussian_ref_even = initializer_list<float>( {
 			0.0453697890043, 0.0472178347409, 0.0487070940435, 0.0497995242476,
 			0.0504667051136, 0.0506910830736, 0.0504667051136, 0.0497995242476,
 			0.0487070940435, 0.0472178347409, 0.0453697890043 }); // Kernel values
-	float const kernel_width = NUM_IN_EVEN + 1;
-	size_t const num_data = NUM_IN_EVEN;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"wide Gaussian kernel (even)", { kernel_width, num_data }, true,
-			num_data, SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
-					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } } };
+	size_t const num_data_even = NUM_IN_EVEN;
+	size_t const num_data_odd = NUM_IN_ODD;
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = {
+			// T-014 (num_data=odd)
+			{ "wide Gaussian kernel (num_data = odd)", { num_data_odd + 1,
+					num_data_odd }, true, num_data_odd, SpikeType_kcenter,
+					MaskType_knone, { { num_data_odd / 2
+							- gaussian_ref_odd.size() / 2, gaussian_ref_odd } },
+					{ } },
+			// T-015 (num_data=even)
+			{ "wide Gaussian kernel (num_data = even)", { num_data_even + 1,
+					num_data_even }, true, num_data_even, SpikeType_kcenter,
+					MaskType_knone,
+					{ { num_data_even / 2 - gaussian_ref_even.size() / 2,
+							gaussian_ref_even } }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StatusOKValidator>(
@@ -1013,27 +978,17 @@ TEST_F(Convolve1DOperation , WideGaussWithFFTDataIsEven) {
 /*
  * Convolution by Gaussian kernel. Data has 2 spikes at edges
  */
-// convolve w/ FFT T-016 (num_data=odd)
-TEST_F(Convolve1DOperation , TwoSpikesWithFFTDataIsOdd) {
-	float const kernel_width = NUM_WIDTH;
-	size_t const num_data = NUM_IN_ODD;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd) edge spikes data",
-			{ kernel_width, num_data }, true, num_data, SpikeType_kleftright,
-			MaskType_ktrue, { }, { } } };
-	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
-			StandardArrayInitializer, StandardArrayInitializer,
-			StandardArrayInitializer, StatusOKValidator>(
-			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
-}
-// convolve w/ FFT T-017 (num_data=even)
-TEST_F(Convolve1DOperation , TwoSpikesWithFFTDataIsEven) {
-	float const kernel_width = NUM_WIDTH;
-	size_t const num_data = NUM_IN_EVEN;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (even) edge spikes data",
-			{ kernel_width, num_data }, true, num_data, SpikeType_kleftright,
-			MaskType_ktrue, { }, { } } };
+// convolve w/ FFT T-016 ~ 017
+TEST_F(Convolve1DOperation , GaussWithFFTTwoSpikes) {
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = {
+			// T-016 (num_data=odd)
+			{ "Gaussian kernel (num_data = odd) edge spikes in data", {
+					NUM_WIDTH, NUM_IN_ODD }, true, NUM_IN_ODD,
+					SpikeType_kleftright, MaskType_knone, { }, { } },
+			// T-017 (num_data=even)
+			{ "Gaussian kernel (num_data = even) edge spikes in data", {
+					NUM_WIDTH, NUM_IN_EVEN }, true, NUM_IN_EVEN,
+					SpikeType_kleftright, MaskType_knone, { }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StatusOKValidator>(
@@ -1042,14 +997,40 @@ TEST_F(Convolve1DOperation , TwoSpikesWithFFTDataIsEven) {
 /*
  * Convolution by Gaussian kernel. Data has 3 spikes at center and edges
  */
-// convolve w/ FFT T-019  (num_data = even)
-TEST_F(Convolve1DOperation , ThreeSpikesWithFFTDataIsEven) {
-	float const kernel_width = NUM_WIDTH;
-	size_t const num_data = NUM_IN_EVEN;
-	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (even) 3 spikes data", { kernel_width, num_data },
-			true, num_data, SpikeType_kall, MaskType_ktrue, { { num_data / 2, {
-					0.187887762 } } }, { } } };
+// convolve w/ FFT T-018 ~ 019
+TEST_F(Convolve1DOperation , GaussWithFFTThreeSpikes) {
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = {
+			// T-018  (num_data = odd)
+			{ "Gaussian kernel (num_data = odd) 3 spikes in data", { NUM_WIDTH,
+					NUM_IN_ODD },
+			true, NUM_IN_ODD, SpikeType_kall, MaskType_knone, { }, { } },
+			// T-019  (num_data = even)
+			{ "Gaussian kernel (num_data = even) 3 spikes in data", { NUM_WIDTH,
+					NUM_IN_EVEN },
+			true, NUM_IN_EVEN, SpikeType_kall, MaskType_knone, { { NUM_IN_EVEN
+					/ 2, { 0.187887762 } } }, { } }, };
+	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StatusOKValidator>(
+			ELEMENTSOF(GaussianKernelTest), GaussianKernelTest);
+}
+/*
+ * Convolution by Gaussian kernel. Data has negative spikes at center
+ */
+// convolve w/ FFT T-020 ~ 021
+TEST_F(Convolve1DOperation , GaussWithFFTNegativeSpike) {
+	initializer_list<float> gaussian_ref = initializer_list<float>( {
+			-0.031861115, -0.069249175, -0.12056981, -0.16816399, -0.18788746,
+			-0.16816399, -0.12056981, -0.069249175, -0.031861115 }); // Kernel values
+	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = {
+			// T-020 (num_data=odd)
+			{ "Gaussian kernel (num_data = odd)", { NUM_WIDTH, NUM_IN_ODD },
+			true, NUM_IN_ODD, SpikeType_knegative, MaskType_knone, { {
+			NUM_IN_ODD / 2 - gaussian_ref.size() / 2, gaussian_ref } }, { } },
+			// T-021 (num_data=even)
+			{ "Gaussian kernel (num_data = even)", { NUM_WIDTH, NUM_IN_EVEN },
+			true, NUM_IN_EVEN, SpikeType_knegative, MaskType_knone, { {
+			NUM_IN_EVEN / 2 - gaussian_ref.size() / 2, gaussian_ref } }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StatusOKValidator>(
@@ -1068,8 +1049,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFTDataIsOdd) {
 	size_t const num_data = NUM_IN_LARGE - 1;
 	size_t num_repeat = 10000;
 	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (odd)", { kernel_width, num_data }, true, num_data,
-			SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
+			"Gaussian kernel (num_data = odd)", { kernel_width, num_data },
+			true, num_data, SpikeType_kcenter, MaskType_knone, { { num_data / 2
 					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1087,8 +1068,8 @@ TEST_F(Convolve1DOperation , PerformanceTestWithFFTDataIsEven) {
 	size_t const num_data = NUM_IN_LARGE;
 	size_t num_repeat = 10000;
 	ConvolveTestComponent<GaussianKernel> GaussianKernelTest[] = { {
-			"Gaussian kernel (even)", { kernel_width, num_data }, true,
-			num_data, SpikeType_kcenter, MaskType_ktrue, { { num_data / 2
+			"Gaussian kernel (num_data = even)", { kernel_width, num_data },
+			true, num_data, SpikeType_kcenter, MaskType_knone, { { num_data / 2
 					- gaussian_kernel.size() / 2, gaussian_kernel } }, { } }, };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
