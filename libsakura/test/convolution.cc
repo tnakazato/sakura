@@ -662,13 +662,15 @@ protected:
 		kernel_param.Generate(kernel);
 		// create context if FFT
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
+		bool in_place_operation = false;
 		if (use_fft) {
 			LIBSAKURA_SYMBOL(Status) status =
 			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
 					kernel, &context);
 			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-			if (input_data == output_data) {
-						cout << "Invoking in-place convolution." << endl;
+			if (input_data == output_data && input_data != nullptr) {
+				in_place_operation = true;
+				cout << "Invoking in-place convolution." << endl;
 			}
 		} else {
 			ASSERT_NE(input_data, output_data);
@@ -680,6 +682,10 @@ protected:
 			InitializeDataAndMask(spike_type, mask_type, num_data, input_data,
 					input_mask);
 		}
+		auto reinitialize_function =
+				in_place_operation ?
+						InPlaceAction::reinitialize :
+						OutOfPlaceAction::reinitialize;
 		// convolution
 		if (num_repeat > 1) {
 			cout << "Iterating convolution for " << num_repeat
@@ -690,6 +696,7 @@ protected:
 		if (use_fft) {
 			start = LIBSAKURA_SYMBOL(GetCurrentTime)();
 			for (size_t i = 0; i < num_repeat; ++i) {
+				reinitialize_function(spike_type, num_data, input_data);
 				exec_status = LIBSAKURA_SYMBOL(Convolve1DFFTFloat)(context,
 						num_data, input_data, output_data);
 			}
@@ -743,16 +750,39 @@ protected:
 	bool verbose;
 
 private:
-	static void InitializeDataAndMask(SpikeType const spike_type,
+	// set data and mask arrays based on SpikeType and MaskType
+	void InitializeDataAndMask(SpikeType const spike_type,
 			MaskType const mask_type, size_t const num_data, float data[],
 			bool mask[]) {
-		for (size_t i = 0; i < num_data; ++i) {
-			data[i] = 0.0;
-		}
+		// data
+		InitializeData(spike_type, num_data, data);
+		// mask
 		if (mask_type != MaskType_knone) {
 			for (size_t i = 0; i < num_data; ++i) {
 				mask[i] = (mask_type != MaskType_kfalse);
 			}
+		}
+		switch (mask_type) {
+		case MaskType_ktrue:
+		case MaskType_kfalse:
+		case MaskType_knone:
+			break;
+		case MaskType_kleftright:
+			mask[0] = false;
+			mask[num_data - 1] = false;
+			break;
+		case MaskType_knonzerofalse:
+			for (size_t i = 0; i < num_data; ++i) {
+				mask[i] = (data[i] == 0.0);
+			}
+			break;
+		}
+	}
+	// set data array based on SpikeType
+	static void InitializeData(SpikeType const spike_type,
+			size_t const num_data, float data[]) {
+		for (size_t i = 0; i < num_data; ++i) {
+			data[i] = 0.0;
 		}
 		switch (spike_type) {
 		case SpikeType_kleft:
@@ -777,35 +807,18 @@ private:
 			data[num_data / 2] = -1.0;
 			break;
 		}
-		switch (mask_type) {
-		case MaskType_ktrue:
-		case MaskType_kfalse:
-		case MaskType_knone:
-			break;
-		case MaskType_kleftright:
-			mask[0] = false;
-			mask[num_data - 1] = false;
-			break;
-		case MaskType_knonzerofalse:
-			for (size_t i = 0; i < num_data; ++i) {
-				mask[i] = (data[i] == 0.0);
-			}
-			break;
-		}
 	}
 	// Re-initialization of input data and mask for the case of in-place operation.
 	struct InPlaceAction {
 		static void reinitialize(SpikeType const spike_type,
-				MaskType const mask_type, size_t const num_data, float *data,
-				bool *mask) {
-			InitializeDataAndMask(spike_type, mask_type, num_data, data, mask);
+				size_t const num_data, float *data) {
+			InitializeData(spike_type, num_data, data);
 		}
 	};
 	// Dummy function (does nothing) for re-initialization for the case of out-of-place operation.
 	struct OutOfPlaceAction {
 		static void reinitialize(SpikeType const spike_type,
-				MaskType const mask_type, size_t const num_data, float data[],
-				bool mask[]) {
+				size_t const num_data, float data[]) {
 			// do nothing
 		}
 	};
@@ -954,9 +967,8 @@ TEST_F(Convolve1DOperation , InPlaceConvolution) {
 	size_t const num_data = NUM_IN_ODD;
 	ConvolveTestComponent<GaussianKernel> TestList[] = { {
 			"In-place convolution (&output_data == &input_data)", { NUM_WIDTH,
-					NUM_IN_ODD }, true, num_data, SpikeType_kcenter,
-			MaskType_knone, { { NUM_IN_ODD / 2 - gaussian_ref.size() / 2,
-					gaussian_ref } }, { } } };
+			NUM_IN_ODD }, true, num_data, SpikeType_kcenter, MaskType_knone, { {
+			NUM_IN_ODD / 2 - gaussian_ref.size() / 2, gaussian_ref } }, { } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, InPlaceArrayInitializer,
 			StandardArrayInitializer, StatusOKValidator>(ELEMENTSOF(TestList),
