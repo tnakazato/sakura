@@ -628,7 +628,7 @@ protected:
 							test_component.num_data + 1 : 1;
 			// don't need allocate input_mask and output_weight if use_fft = true
 			size_t const num_maskweight =
-					test_component.use_fft ? 1 : test_component.num_data;
+			  (test_component.use_fft || test_component.num_data > INT_MAX) ? 1 : test_component.num_data;
 			size_t const num_maskweight_dummy = num_maskweight + 1;
 			// allocate storage for input/output data arrays
 			void *dummy_input_data = nullptr;
@@ -691,7 +691,7 @@ protected:
 					1, vector<ReferenceData<float>> const data_ref = { },
 			vector<ReferenceData<float>> const weight_ref = { }) {
 		// create kernel array
-		size_t const num_kernel = kernel_param.num_kernel;
+		size_t const num_kernel = kernel_param.num_kernel; // nominal kernel array size
 		size_t const num_dummy = (num_kernel <= INT_MAX) ? num_kernel + 1 : 1;
 		float *dummy_kernel = nullptr;
 		std::unique_ptr<void, DefaultAlignedMemory> kernel_storage(
@@ -705,12 +705,13 @@ protected:
 		kernel_param.Generate(dummy_kernel);
 		float *kernel = nullptr;
 		KernelInitializer::Initialize(dummy_kernel, &kernel);
+		size_t const num_kernel_actural = kernel_param.num_kernel; // actual kernel array size
 		// create context if FFT
 		LIBSAKURA_SYMBOL(Convolve1DContextFloat) *context = nullptr;
 		bool in_place_operation = false;
 		if (use_fft) {
 			LIBSAKURA_SYMBOL(Status) status =
-			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel,
+			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel_actural,
 					kernel, &context);
 			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
@@ -720,8 +721,7 @@ protected:
 		}
 		// initialize data and mask (only if the size of data and mask
 		// arrays is actually num_data)
-		if (input_data
-				!= nullptr&& input_mask != nullptr && num_data <= INT_MAX) {
+		if (input_data != nullptr && input_mask != nullptr && num_data <= INT_MAX) {
 			if (use_fft) { // set only data
 				InitializeData(spike_type, num_data, input_data);
 			} else { // set data and mask
@@ -734,7 +734,7 @@ protected:
 						InPlaceAction::reinitialize :
 						OutOfPlaceAction::reinitialize;
 		if (verbose) {
-			PrintArray("kernel", num_kernel, kernel);
+			PrintArray("kernel", num_kernel_actural, kernel);
 			PrintArray("data (in)", num_data, input_data);
 			if (!use_fft)
 				PrintArray("mask (in)", num_data, input_mask);
@@ -766,7 +766,7 @@ protected:
 					<< (num_data % 2 == 0 ? "Even" : "Odd") << " "
 					<< end - start << endl;
 		}
-		ConvolveValidator::Validate(kernel_param.kernel_width, num_kernel,
+		ConvolveValidator::Validate(kernel_param.kernel_width, num_kernel_actural,
 				kernel, exec_status);
 		// destroy context
 		if (use_fft) {
@@ -1060,28 +1060,25 @@ TEST_F(Convolve1DOperation , GaussWithFFTVariousNumData) {
  */
 // convolve w/ FFT T-014 ~ 015
 TEST_F(Convolve1DOperation , WideGaussWithFFT) {
-	vector<float> gaussian_ref_odd{	0.043915681541, 0.0455670394003, 0.0468942411244, 0.047865845263,
-			0.0484584420919, 0.0486575998366, 0.0484584420919, 0.047865845263,
-			0.0468942411244, 0.0455670394003, 0.043915681541 }; // Kernel values
-	vector<float> gaussian_ref_even{ 0.0453697890043, 0.0472178347409, 0.0487070940435, 0.0497995242476,
-			0.0504667051136, 0.0506910830736, 0.0504667051136, 0.0497995242476,
-			0.0487070940435, 0.0472178347409, 0.0453697890043 }; // Kernel values
 	size_t const num_data_even = NUM_IN_EVEN;
 	size_t const num_data_odd = NUM_IN_ODD;
-	ConvolveTestComponent<GaussianKernel> TestList[] =
-			{
+	vector<float> gaussian_odd{ 0.043915681541, 0.0455670394003, 0.0468942411244, 0.047865845263,
+			0.0484584420919, 0.0486575998366, 0.0484584420919, 0.047865845263,
+			0.0468942411244, 0.0455670394003, 0.043915681541 }; // analytic value by emulating the code
+	vector<float> gaussian_even{ 0.0453697890043, 0.0472178347409, 0.0487070940435, 0.0497995242476,
+			0.0504667051136, 0.0506910830736, 0.0504667051136, 0.0497995242476,
+			0.0487070940435, 0.0472178347409, 0.0453697890043 }; // analytic value by emulating the code
+	ReferenceData<float> ref_odd = {num_data_odd/ 2 - gaussian_odd.size() / 2, gaussian_odd};
+	ReferenceData<float> ref_even = {num_data_even / 2 - gaussian_even.size() / 2, gaussian_even};
+	ConvolveTestComponent<GaussianKernel> TestList[] = {
 			// T-014 (num_data=odd)
-					{ "wide Gaussian kernel (num_data = odd)", { num_data_odd
-							+ 1, num_data_odd }, true, num_data_odd,
-							SpikeType_kcenter, MaskType_knone, { { num_data_odd
-									/ 2 - gaussian_ref_odd.size() / 2,
-									gaussian_ref_odd } } },
-					// T-015 (num_data=even)
-					{ "wide Gaussian kernel (num_data = even)", { num_data_even
-							+ 1, num_data_even }, true, num_data_even,
-							SpikeType_kcenter, MaskType_knone, { { num_data_even
-									/ 2 - gaussian_ref_even.size() / 2,
-									gaussian_ref_even } } } };
+			{ "wide Gaussian kernel (num_data = odd)", { num_data_odd
+					+ 1, num_data_odd }, true, num_data_odd,
+					SpikeType_kcenter, MaskType_knone, { { ref_odd } } },
+			// T-015 (num_data=even)
+			{ "wide Gaussian kernel (num_data = even)", { num_data_even
+					+ 1, num_data_even }, true, num_data_even,
+					SpikeType_kcenter, MaskType_knone, { { ref_even } } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1298,8 +1295,7 @@ TEST_F(Convolve1DOperation , WithOutFFTNumDataIsInvalid) {
 			{ "num_kernel = 0", { NUM_WIDTH, 0 }, false, NUM_IN_ODD,
 					SpikeType_kcenter, MaskType_knone },
 			// T-002 (num_kernel > INT_MAX)
-			{ "num_kernel > INT_MAX", { NUM_WIDTH, static_cast<size_t>(INT_MAX)
-					+ 1 }, false,
+			{ "num_kernel > INT_MAX", { NUM_WIDTH, static_cast<size_t>(INT_MAX) + 1}, false,
 			NUM_IN_ODD, SpikeType_kcenter, MaskType_knone },
 			// T-003 (num_data = 0)
 			{ "num_data = 0", { NUM_WIDTH, 1 }, false, 0, SpikeType_kcenter,
