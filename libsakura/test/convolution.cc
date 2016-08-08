@@ -72,7 +72,8 @@ typedef enum {
 	SpikeType_kright,
 	SpikeType_kleftright,
 	SpikeType_kall,
-	SpikeType_knegative
+	SpikeType_knegative,
+	SpikeType_kedgenaninf
 } SpikeType;
 
 typedef enum {
@@ -503,13 +504,14 @@ struct ReferenceData {
 	ReferenceData(size_t offset_index = 0, initializer_list<DataType> ref = { }) :
 			offset(offset_index), reference(ref) {
 	}
-  ReferenceData(size_t offset_index = 0, vector<DataType> ref = vector<DataType>()) :
+	ReferenceData(size_t offset_index = 0,
+			vector<DataType> ref = vector<DataType>()) :
 			offset(offset_index), reference(ref) {
 	}
 };
 // Compare result array with a vector of reference data.
 inline void CompareResultWithReference(size_t num_result, float const *result,
-			  vector<ReferenceData<float>> const &reference_list) {
+		vector<ReferenceData<float>> const &reference_list) {
 	for (size_t i = 0; i < reference_list.size(); ++i) {
 		size_t const offset = reference_list[i].offset;
 		size_t const num_reference = reference_list[i].reference.size();
@@ -600,7 +602,7 @@ protected:
 	/*
 	 * Invoke Convolution using a list of ConvolveTestComponent.
 	 * this function loops over the list, allocate arrays for each ConvolveTestComponent
- 	 * and invoke RunConvolutionTest function in each loop.
+	 * and invoke RunConvolutionTest function in each loop.
 	 */
 	template<typename ConvolveKernel, typename KernelInitializer,
 			typename InDataInitializer, typename InMaskInitializer,
@@ -628,7 +630,8 @@ protected:
 							test_component.num_data + 1 : 1;
 			// don't need allocate input_mask and output_weight if use_fft = true
 			size_t const num_maskweight =
-			  (test_component.use_fft || test_component.num_data > INT_MAX) ? 1 : test_component.num_data;
+					(test_component.use_fft || test_component.num_data > INT_MAX) ?
+							1 : test_component.num_data;
 			size_t const num_maskweight_dummy = num_maskweight + 1;
 			// allocate storage for input/output data arrays
 			void *dummy_input_data = nullptr;
@@ -711,8 +714,8 @@ protected:
 		bool in_place_operation = false;
 		if (use_fft) {
 			LIBSAKURA_SYMBOL(Status) status =
-			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel_actural,
-					kernel, &context);
+			LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
+					num_kernel_actural, kernel, &context);
 			ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 		}
 		if (input_data == output_data && input_data != nullptr) {
@@ -721,7 +724,8 @@ protected:
 		}
 		// initialize data and mask (only if the size of data and mask
 		// arrays is actually num_data)
-		if (input_data != nullptr && input_mask != nullptr && num_data <= INT_MAX) {
+		if (input_data
+				!= nullptr&& input_mask != nullptr && num_data <= INT_MAX) {
 			if (use_fft) { // set only data
 				InitializeData(spike_type, num_data, input_data);
 			} else { // set data and mask
@@ -766,8 +770,8 @@ protected:
 					<< (num_data % 2 == 0 ? "Even" : "Odd") << " "
 					<< end - start << endl;
 		}
-		ConvolveValidator::Validate(kernel_param.kernel_width, num_kernel_actural,
-				kernel, exec_status);
+		ConvolveValidator::Validate(kernel_param.kernel_width,
+				num_kernel_actural, kernel, exec_status);
 		// destroy context
 		if (use_fft) {
 			LIBSAKURA_SYMBOL(Status) status =
@@ -790,22 +794,22 @@ protected:
 
 	// representative references
 	// Gaussian (kernel_width=5) 
-	vector<float> const gaussian_ref_fft{0.031861115, 0.069249175, 0.12056981,
-                          0.16816399, 0.18788746, 0.16816399, 0.12056981, 0.069249175,
-                          0.031861115 }; // Kernel values
-	vector<float> const gauss_weight_ref_L{
-			0.59394373002975898, 0.76210771502975894, 0.88267752502975894,
-			0.95192670052975892, 0.98378781572975893 };
-	vector<float> const gauss_weight_ref_R_odd{
-			0.98378781572975893, 0.95192670052975892, 0.88267752502975894,
-			0.76210771502975894, 0.59394373002975898 }; // analytic value
-	vector<float> const gauss_weight_ref_R_even{
-			0.98378779394430194, 0.95192667874430192, 0.88267750324430194,
-			0.76210769324430194, 0.59394370824430198 };
+	vector<float> const gaussian_ref_fft { 0.031861115, 0.069249175, 0.12056981,
+			0.16816399, 0.18788746, 0.16816399, 0.12056981, 0.069249175,
+			0.031861115 }; // Kernel values
+	vector<float> const gauss_weight_ref_L { 0.59394373002975898,
+			0.76210771502975894, 0.88267752502975894, 0.95192670052975892,
+			0.98378781572975893 };
+	vector<float> const gauss_weight_ref_R_odd { 0.98378781572975893,
+			0.95192670052975892, 0.88267752502975894, 0.76210771502975894,
+			0.59394373002975898 }; // analytic value
+	vector<float> const gauss_weight_ref_R_even { 0.98378779394430194,
+			0.95192667874430192, 0.88267750324430194, 0.76210769324430194,
+			0.59394370824430198 };
 	// right-angled triangle (kernel_width = 4)
-	vector<float> const triangle_ref{ 0.1, 0.2, 0.3, 0.4 };
-	vector<float> const triangle_weight_ref_L{0.6, 1.0 };
-	vector<float> const triangle_weight_ref_R{1.0, 0.9, 0.7 };
+	vector<float> const triangle_ref { 0.1, 0.2, 0.3, 0.4 }; // Kernel values
+	vector<float> const triangle_weight_ref_L { 0.6, 1.0 };
+	vector<float> const triangle_weight_ref_R { 1.0, 0.9, 0.7 };
 
 private:
 	// set data and mask arrays based on SpikeType and MaskType
@@ -863,6 +867,11 @@ private:
 			break;
 		case SpikeType_knegative:
 			data[num_data / 2] = -1.0;
+			break;
+		case SpikeType_kedgenaninf:
+			data[0] = (0.0f / 0.0f); // NaN (not a number) in float
+			data[num_data / 2] = 1.0;
+			data[num_data - 1] = (1.0f / 0.0f); // positive infinity in float
 			break;
 		}
 	}
@@ -1020,8 +1029,10 @@ TEST_F(Convolve1DOperation , WithFFTOutDataIsNotAligned) {
 TEST_F(Convolve1DOperation , WithFFTInPlaceConvolution) {
 	ConvolveTestComponent<GaussianKernel> TestList[] =
 			{ { "In-place convolution (&output_data == &input_data)", {
-			NUM_WIDTH, NUM_IN_ODD }, true, NUM_IN_ODD, SpikeType_kcenter, MaskType_knone, { {
-				NUM_IN_ODD / 2 - gaussian_ref_fft.size() / 2, gaussian_ref_fft } } } };
+			NUM_WIDTH, NUM_IN_ODD }, true, NUM_IN_ODD, SpikeType_kcenter,
+					MaskType_knone, { {
+					NUM_IN_ODD / 2 - gaussian_ref_fft.size() / 2,
+							gaussian_ref_fft } } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			InPlaceArrayInitializer, StandardArrayInitializer, StatusOKValidator>(
@@ -1062,23 +1073,27 @@ TEST_F(Convolve1DOperation , GaussWithFFTVariousNumData) {
 TEST_F(Convolve1DOperation , WideGaussWithFFT) {
 	size_t const num_data_even = NUM_IN_EVEN;
 	size_t const num_data_odd = NUM_IN_ODD;
-	vector<float> gaussian_odd{ 0.043915681541, 0.0455670394003, 0.0468942411244, 0.047865845263,
-			0.0484584420919, 0.0486575998366, 0.0484584420919, 0.047865845263,
-			0.0468942411244, 0.0455670394003, 0.043915681541 }; // analytic value by emulating the code
-	vector<float> gaussian_even{ 0.0453697890043, 0.0472178347409, 0.0487070940435, 0.0497995242476,
-			0.0504667051136, 0.0506910830736, 0.0504667051136, 0.0497995242476,
-			0.0487070940435, 0.0472178347409, 0.0453697890043 }; // analytic value by emulating the code
-	ReferenceData<float> ref_odd = {num_data_odd/ 2 - gaussian_odd.size() / 2, gaussian_odd};
-	ReferenceData<float> ref_even = {num_data_even / 2 - gaussian_even.size() / 2, gaussian_even};
+	vector<float> gaussian_odd { 0.043915681541, 0.0455670394003,
+			0.0468942411244, 0.047865845263, 0.0484584420919, 0.0486575998366,
+			0.0484584420919, 0.047865845263, 0.0468942411244, 0.0455670394003,
+			0.043915681541 }; // analytic value by emulating the code
+	vector<float> gaussian_even { 0.0453697890043, 0.0472178347409,
+			0.0487070940435, 0.0497995242476, 0.0504667051136, 0.0506910830736,
+			0.0504667051136, 0.0497995242476, 0.0487070940435, 0.0472178347409,
+			0.0453697890043 }; // analytic value by emulating the code
+	ReferenceData<float> ref_odd = { num_data_odd / 2 - gaussian_odd.size() / 2,
+			gaussian_odd };
+	ReferenceData<float> ref_even = { num_data_even / 2
+			- gaussian_even.size() / 2, gaussian_even };
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
-			// T-014 (num_data=odd)
-			{ "wide Gaussian kernel (num_data = odd)", { num_data_odd
-					+ 1, num_data_odd }, true, num_data_odd,
-					SpikeType_kcenter, MaskType_knone, { { ref_odd } } },
+	// T-014 (num_data=odd)
+			{ "wide Gaussian kernel (num_data = odd)", { num_data_odd + 1,
+					num_data_odd }, true, num_data_odd, SpikeType_kcenter,
+					MaskType_knone, { { ref_odd } } },
 			// T-015 (num_data=even)
-			{ "wide Gaussian kernel (num_data = even)", { num_data_even
-					+ 1, num_data_even }, true, num_data_even,
-					SpikeType_kcenter, MaskType_knone, { { ref_even } } } };
+			{ "wide Gaussian kernel (num_data = even)", { num_data_even + 1,
+					num_data_even }, true, num_data_even, SpikeType_kcenter,
+					MaskType_knone, { { ref_even } } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1089,8 +1104,10 @@ TEST_F(Convolve1DOperation , WideGaussWithFFT) {
  */
 // convolve w/ FFT T-016 ~ 017
 TEST_F(Convolve1DOperation , GaussWithFFTTwoSpikes) {
-	vector<float> gaussian_ref_ledge{ 0.356051445, 0.288733795, 0.189818985, 0.101110291, 0.0436040814 };
-	vector<float> gaussian_ref_redge{ 0.0436040814, 0.101110291, 0.189818985, 0.288733795, 0.356051445 };
+	vector<float> gaussian_ref_ledge { 0.356051445, 0.288733795, 0.189818985,
+			0.101110291, 0.0436040814 };
+	vector<float> gaussian_ref_redge { 0.0436040814, 0.101110291, 0.189818985,
+			0.288733795, 0.356051445 };
 	ConvolveTestComponent<GaussianKernel> TestList[] =
 			{
 			// T-016 (num_data=odd)
@@ -1117,11 +1134,16 @@ TEST_F(Convolve1DOperation , GaussWithFFTTwoSpikes) {
  */
 // convolve w/ FFT T-018 ~ 019
 TEST_F(Convolve1DOperation , GaussWithFFTThreeSpikes) {
-	vector<float> gaussian_ref_L{ 0.35605147, 0.28873407, 0.18982185, 0.10113387 };
-	vector<float> gaussian_ref_C_odd{ 0.12057296, 0.16816429, 0.18788746, 0.16816429, 0.12057296 };
-	vector<float> gaussian_ref_R_odd{ 0.10113387, 0.18982185, 0.28873407, 0.35605147 };
-	vector<float> gaussian_ref_C_even{ 0.12057296, 0.16816429, 0.18788776, 0.16816713, 0.12059626 };
-	vector<float> gaussian_ref_R_even{ 0.10126565, 0.18984257, 0.28873666, 0.35605172 };
+	vector<float> gaussian_ref_L { 0.35605147, 0.28873407, 0.18982185,
+			0.10113387 };
+	vector<float> gaussian_ref_C_odd { 0.12057296, 0.16816429, 0.18788746,
+			0.16816429, 0.12057296 };
+	vector<float> gaussian_ref_R_odd { 0.10113387, 0.18982185, 0.28873407,
+			0.35605147 };
+	vector<float> gaussian_ref_C_even { 0.12057296, 0.16816429, 0.18788776,
+			0.16816713, 0.12059626 };
+	vector<float> gaussian_ref_R_even { 0.10126565, 0.18984257, 0.28873666,
+			0.35605172 };
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
 	// T-018  (num_data = odd)
 			{ "Gaussian kernel (num_data = odd) 3 spikes in data", {
@@ -1149,8 +1171,9 @@ TEST_F(Convolve1DOperation , GaussWithFFTThreeSpikes) {
  */
 // convolve w/ FFT T-020 ~ 021
 TEST_F(Convolve1DOperation , GaussWithFFTNegativeSpike) {
-	vector<float> data_ref{ -0.031861115, -0.069249175, -0.12056981, -0.16816399, -0.18788746, -0.16816399,
-			-0.12056981, -0.069249175, -0.031861115 };
+	vector<float> data_ref { -0.031861115, -0.069249175, -0.12056981,
+			-0.16816399, -0.18788746, -0.16816399, -0.12056981, -0.069249175,
+			-0.031861115 };
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
 	// T-020 (num_data=odd)
 			{ "Gaussian kernel (num_data = odd)", { NUM_WIDTH, NUM_IN_ODD },
@@ -1209,16 +1232,17 @@ TEST_F(Convolve1DOperation , TriangleWithFFT) {
 	size_t const offset_odd = num_data_odd / 2 - triangle_ref.size() / 2;
 	size_t const offset_even = num_data_even / 2 - triangle_ref.size() / 2;
 	// reference data
-	vector<float> triangle_ref_L{ 0.7, 0.4 };
-	vector<float> triangle_ref_R{ 0.1, 0.3, 0.5 };
-	vector<float> wide_ref_odd{ 0.01538462, 0.01846154, 0.02153846, 0.02461538, 0.02769231,
-			0.03076923, 0.03384615, 0.03692308, 0.04, 0.04307692, 0.04615385,
-			0.04923077, 0.05230769, 0.05538461, 0.05846154, 0.06153846,
-			0.06461538, 0.06769231, 0.07076923, 0.07384615, 0.07692308 };
-	vector<float> wide_ref_even{ 0.01, 0.01333333, 0.016666667, 0.02, 0.02333333, 0.026666667, 0.03,
-			0.03333334, 0.036666667, 0.04, 0.04333333, 0.046666667, 0.05,
-			0.05333333, 0.056666667, 0.06, 0.06333333, 0.066666667, 0.07,
-			0.07333333, 0.076666667, 0.08 };
+	vector<float> triangle_ref_L { 0.7, 0.4 };
+	vector<float> triangle_ref_R { 0.1, 0.3, 0.5 };
+	vector<float> wide_ref_odd { 0.01538462, 0.01846154, 0.02153846, 0.02461538,
+			0.02769231, 0.03076923, 0.03384615, 0.03692308, 0.04, 0.04307692,
+			0.04615385, 0.04923077, 0.05230769, 0.05538461, 0.05846154,
+			0.06153846, 0.06461538, 0.06769231, 0.07076923, 0.07384615,
+			0.07692308 };
+	vector<float> wide_ref_even { 0.01, 0.01333333, 0.016666667, 0.02,
+			0.02333333, 0.026666667, 0.03, 0.03333334, 0.036666667, 0.04,
+			0.04333333, 0.046666667, 0.05, 0.05333333, 0.056666667, 0.06,
+			0.06333333, 0.066666667, 0.07, 0.07333333, 0.076666667, 0.08 };
 	ConvolveTestComponent<RightAngledTriangleKernel> TestList[] = {
 	// T-024 (num_data = odd)
 			{ "Asynmetric kernel (center spike, num_data = odd)", {
@@ -1295,7 +1319,8 @@ TEST_F(Convolve1DOperation , WithOutFFTNumDataIsInvalid) {
 			{ "num_kernel = 0", { NUM_WIDTH, 0 }, false, NUM_IN_ODD,
 					SpikeType_kcenter, MaskType_knone },
 			// T-002 (num_kernel > INT_MAX)
-			{ "num_kernel > INT_MAX", { NUM_WIDTH, static_cast<size_t>(INT_MAX) + 1}, false,
+			{ "num_kernel > INT_MAX", { NUM_WIDTH, static_cast<size_t>(INT_MAX)
+					+ 1 }, false,
 			NUM_IN_ODD, SpikeType_kcenter, MaskType_knone },
 			// T-003 (num_data = 0)
 			{ "num_data = 0", { NUM_WIDTH, 1 }, false, 0, SpikeType_kcenter,
@@ -1437,11 +1462,12 @@ TEST_F(Convolve1DOperation , WithOutFFTInPlaceConvolution) {
  */
 // convolve w/o FFT T-016, 018 ~ 019
 TEST_F(Convolve1DOperation , GaussWithOutFFTVariousNumData) {
-	vector<float> gaussian_ref_odd{ 0.031861969, 0.069249393, 0.12056985, 0.16816399, 0.18788746,
-			0.16816399, 0.12056985, 0.069249393, 0.031861969 }; // analytic value by emulating the code
-	vector<float> gaussian_ref_even{ 0.011745105, 0.03186197, 0.069249394, 0.12056985, 0.16816399,
-			0.18788747, 0.16816404, 0.1205702, 0.069251029, 0.031866922,
-			0.011754746 }; // analytic value by emulating the code
+	vector<float> gaussian_ref_odd { 0.031861969, 0.069249393, 0.12056985,
+			0.16816399, 0.18788746, 0.16816399, 0.12056985, 0.069249393,
+			0.031861969 }; // analytic value by emulating the code
+	vector<float> gaussian_ref_even { 0.011745105, 0.03186197, 0.069249394,
+			0.12056985, 0.16816399, 0.18788747, 0.16816404, 0.1205702,
+			0.069251029, 0.031866922, 0.011754746 }; // analytic value by emulating the code
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
 	// T-016 (num_data = 1: LB)
 			{ "Gaussian kernel (num_data = 1: LB)", { NUM_WIDTH, 1 },
@@ -1473,18 +1499,26 @@ TEST_F(Convolve1DOperation , GaussWithOutFFTVariousNumData) {
  */
 // convolve w/o FFT T-020-023
 TEST_F(Convolve1DOperation, GaussWithoutFFTNumKernelVSNumData) {
-	vector<float> long_ref_odd{ 0.0318619674, 0.0692493947, 0.120569846, 0.168163988, 0.187887460,
-			0.168163988, 0.120569846, 0.06924939477, 0.0318619674 }; // analytic value by emulating the code
-	vector<float> long_ref_even{ 0.031861967, 0.069249395, 0.12056985, 0.16816399, 0.18788746,
-			0.16816399, 0.12056985, 0.069249395, 0.031861967 }; // analytic value by emulating the code
-	vector<float> short_ref_odd{ 0.031925101, 0.069388248, 0.12081194, 0.16850170, 0.18826478,
-			0.16850170, 0.120811941, 0.069388248, 0.031925101 };
-	vector<float> short_ref_even{ 0.032036397, 0.069630146, 0.12123312, 0.16908912, 0.18892111,
-			0.16908912, 0.12123312, 0.069630146, 0.032036397 };
-	vector<float> short_weight_L_odd{ 0.59413238, 0.76263409, 0.88344604, 0.95283428, 0.98475938 };
-	vector<float> short_weight_R_odd{ 0.98475938, 0.95283428, 0.88344604, 0.76263409, 0.59413238 };
-	vector<float> short_weight_L_even{ 0.59620363, 0.76529275, 0.88652587, 0.95615602, 0.98819241 };
-	vector<float> short_weight_R_even{ 0.98470625, 0.95266985, 0.88303971, 0.76180659, 0.59271746 };
+	vector<float> long_ref_odd { 0.0318619674, 0.0692493947, 0.120569846,
+			0.168163988, 0.187887460, 0.168163988, 0.120569846, 0.06924939477,
+			0.0318619674 }; // analytic value by emulating the code
+	vector<float> long_ref_even { 0.031861967, 0.069249395, 0.12056985,
+			0.16816399, 0.18788746, 0.16816399, 0.12056985, 0.069249395,
+			0.031861967 }; // analytic value by emulating the code
+	vector<float> short_ref_odd { 0.031925101, 0.069388248, 0.12081194,
+			0.16850170, 0.18826478, 0.16850170, 0.120811941, 0.069388248,
+			0.031925101 };
+	vector<float> short_ref_even { 0.032036397, 0.069630146, 0.12123312,
+			0.16908912, 0.18892111, 0.16908912, 0.12123312, 0.069630146,
+			0.032036397 };
+	vector<float> short_weight_L_odd { 0.59413238, 0.76263409, 0.88344604,
+			0.95283428, 0.98475938 };
+	vector<float> short_weight_R_odd { 0.98475938, 0.95283428, 0.88344604,
+			0.76263409, 0.59413238 };
+	vector<float> short_weight_L_even { 0.59620363, 0.76529275, 0.88652587,
+			0.95615602, 0.98819241 };
+	vector<float> short_weight_R_even { 0.98470625, 0.95266985, 0.88303971,
+			0.76180659, 0.59271746 };
 	ConvolveTestComponent<GaussianKernel> TestList[] =
 			{
 			// T-020
@@ -1532,24 +1566,24 @@ TEST_F(Convolve1DOperation, GaussWithoutFFTNumKernelVSNumData) {
  */
 // convolve w/o FFT T-024 ~ 025
 TEST_F(Convolve1DOperation , WideGaussWithOutFFT) {
-	vector<float> gaussian_ref_odd{ 0.052354915, 0.052003436, 0.051467945, 0.050736419, 0.049800864,
-			0.048657602, 0.049800864, 0.050736419, 0.051467945, 0.052003436,
-			0.052354915 }; // analytic values obtained by a script which emulates code
-	vector<float> gaussian_ref_even{ 0.052494097, 0.052322092, 0.051935662, 0.051320437, 0.050466707,
-			0.052084927, 0.053482965, 0.054660225, 0.05562174, 0.056377983,
-			0.056944642 }; // analytic values obtained by emulating code
-	vector<float> weight_ref_odd{ 0.52432880, 0.5727872420, 0.62065308730, 0.66754732840,
-			0.71311436780, 0.7570300493, 0.7990084570, 0.838807242,
-			0.8762313258, 0.9111349117, 0.9434218202, 0.9730442278, 1.0,
-			0.9730442278, 0.9434218202, 0.9111349117, 0.8762313258,
+	vector<float> gaussian_ref_odd { 0.052354915, 0.052003436, 0.051467945,
+			0.050736419, 0.049800864, 0.048657602, 0.049800864, 0.050736419,
+			0.051467945, 0.052003436, 0.052354915 }; // analytic values obtained by a script which emulates code
+	vector<float> gaussian_ref_even { 0.052494097, 0.052322092, 0.051935662,
+			0.051320437, 0.050466707, 0.052084927, 0.053482965, 0.054660225,
+			0.05562174, 0.056377983, 0.056944642 }; // analytic values obtained by emulating code
+	vector<float> weight_ref_odd { 0.52432880, 0.5727872420, 0.62065308730,
+			0.66754732840, 0.71311436780, 0.7570300493, 0.7990084570,
+			0.838807242, 0.8762313258, 0.9111349117, 0.9434218202, 0.9730442278,
+			1.0, 0.9730442278, 0.9434218202, 0.9111349117, 0.8762313258,
 			0.8388072420, 0.7990084570, 0.7570300493, 0.7131143678,
 			0.6675473284, 0.62065308730, 0.572787242, 0.52432879990 };
-	vector<float> weight_ref_even{ 0.5387260371, 0.5891927422, 0.63899226640, 0.68769936040,
-			0.73491719510, 0.78028698410, 0.82349598920, 0.8642836264,
-			0.90244549650, 0.9378352551, 0.9703643782, 0.999999992,
-			0.97323899290, 0.94360337910, 0.9110742560, 0.8756844974,
-			0.8375226273, 0.7967349901, 0.753525985, 0.708156196, 0.6609383613,
-			0.6122312673, 0.5624317431, 0.5119650380 };
+	vector<float> weight_ref_even { 0.5387260371, 0.5891927422, 0.63899226640,
+			0.68769936040, 0.73491719510, 0.78028698410, 0.82349598920,
+			0.8642836264, 0.90244549650, 0.9378352551, 0.9703643782,
+			0.999999992, 0.97323899290, 0.94360337910, 0.9110742560,
+			0.8756844974, 0.8375226273, 0.7967349901, 0.753525985, 0.708156196,
+			0.6609383613, 0.6122312673, 0.5624317431, 0.5119650380 };
 	size_t const num_data_odd = NUM_IN_ODD;
 	size_t const num_data_even = NUM_IN_EVEN;
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
@@ -1573,11 +1607,12 @@ TEST_F(Convolve1DOperation , WideGaussWithOutFFT) {
  */
 // convolve w/o FFT T-026 ~ 027
 TEST_F(Convolve1DOperation, GaussWithoutFFTTwoSpikes) {
-	vector<float> data_ref_L{ 0.316338822, 0.220656452, 0.136595536, 0.0727463316 };
-	vector<float> data_ref_R_odd{ 0.072746331688628943, 0.13659553640038027, 0.22065645273441889,
-			0.31633882218200382 };
-	vector<float> data_ref_R_even{ 0.072746333353475745, 0.13659553977170918, 0.2206564590420598,
-			0.31633883378509969 };
+	vector<float> data_ref_L { 0.316338822, 0.220656452, 0.136595536,
+			0.0727463316 };
+	vector<float> data_ref_R_odd { 0.072746331688628943, 0.13659553640038027,
+			0.22065645273441889, 0.31633882218200382 };
+	vector<float> data_ref_R_even { 0.072746333353475745, 0.13659553977170918,
+			0.2206564590420598, 0.31633883378509969 };
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
 	// T-026 (num_data = odd)
 			{ "Gaussian kernel (odd) edge spikes data", { NUM_WIDTH,
@@ -1605,11 +1640,16 @@ TEST_F(Convolve1DOperation, GaussWithoutFFTTwoSpikes) {
  */
 // convolve w/o FFT T-028 ~ 029
 TEST_F(Convolve1DOperation, GaussWithoutFFTThreeSpikes) {
-	vector<float> gaussian_ref_L { 0.316338859, 0.220656819, 0.136598784, 0.0727711028 };
-	vector<float> gaussian_ref_C_odd{ 0.120572713, 0.168164267, 0.187887503, 0.168164267, 0.120572713 };
-	vector<float> gaussian_ref_R_odd{ 0.0727711028, 0.136598784, 0.220656819, 0.316338858 };
-	vector<float> gaussian_ref_C_even{ 0.120572713, 0.168164289, 0.187887747, 0.16816690, 0.120593775 };
-	vector<float> gaussian_ref_R_even{ 0.072909543, 0.136622254, 0.220660221, 0.316339304 };
+	vector<float> gaussian_ref_L { 0.316338859, 0.220656819, 0.136598784,
+			0.0727711028 };
+	vector<float> gaussian_ref_C_odd { 0.120572713, 0.168164267, 0.187887503,
+			0.168164267, 0.120572713 };
+	vector<float> gaussian_ref_R_odd { 0.0727711028, 0.136598784, 0.220656819,
+			0.316338858 };
+	vector<float> gaussian_ref_C_even { 0.120572713, 0.168164289, 0.187887747,
+			0.16816690, 0.120593775 };
+	vector<float> gaussian_ref_R_even { 0.072909543, 0.136622254, 0.220660221,
+			0.316339304 };
 	ConvolveTestComponent<GaussianKernel> TestList[] = {
 	// T-028 (num_data = odd)
 			{ "Gaussian kernel (odd) edge spikes data", { NUM_WIDTH,
@@ -1638,35 +1678,84 @@ TEST_F(Convolve1DOperation, GaussWithoutFFTThreeSpikes) {
 			StatusOKValidator>(ELEMENTSOF(TestList), TestList);
 
 }
-
 /*
  * Convolution by Gaussian kernel. Data has negative spikes at center
  */
 // convolve w/ FFT T-030 ~ 031
 TEST_F(Convolve1DOperation , GaussWithOutFFTNegativeSpike) {
-	vector<float> data_odd{ -0.031861969, -0.069249393, -0.12056985, -0.16816399, -0.18788746,
-			-0.16816399, -0.12056985, -0.069249393, -0.031861969 }; // analytic value by emulating the code
-	vector<float> data_even{ -0.011745105, -0.03186197, -0.069249394, -0.12056985, -0.16816399,
-			-0.18788747, -0.16816404, -0.1205702, -0.069251029, -0.031866922,
-			-0.011754746 }; // analytic value by emulating the code
-	ReferenceData<float> ref_odd = { NUM_IN_ODD / 2 - data_odd.size() / 2, data_odd};
-	ReferenceData<float> ref_even = { NUM_IN_EVEN / 2 - data_even.size() / 2, data_even};
-	ConvolveTestComponent<GaussianKernel> TestList[] =
-			{
-			// T-030 (num_data=odd)
-					{ "Gaussian kernel (num_data = odd)", { NUM_WIDTH,
-							NUM_IN_ODD },
-					false, NUM_IN_ODD, SpikeType_knegative, MaskType_ktrue, { { ref_odd } },
-							{ { 0, gauss_weight_ref_L }, { NUM_IN_ODD
-									- gauss_weight_ref_R_odd.size(),
-									gauss_weight_ref_R_odd } } },
-					// T-031 (num_data=even)
-					{ "Gaussian kernel (num_data = even)", { NUM_WIDTH,
-							NUM_IN_EVEN },
-					false, NUM_IN_EVEN, SpikeType_knegative, MaskType_ktrue,
-							{ { ref_even } }, { { 0, gauss_weight_ref_L }, { NUM_IN_EVEN
-											- gauss_weight_ref_R_even.size(),
-											gauss_weight_ref_R_even } } } };
+	vector<float> data_odd { -0.031861969, -0.069249393, -0.12056985,
+			-0.16816399, -0.18788746, -0.16816399, -0.12056985, -0.069249393,
+			-0.031861969 }; // analytic value by emulating the code
+	vector<float> data_even { -0.011745105, -0.03186197, -0.069249394,
+			-0.12056985, -0.16816399, -0.18788747, -0.16816404, -0.1205702,
+			-0.069251029, -0.031866922, -0.011754746 }; // analytic value by emulating the code
+	ReferenceData<float> ref_odd = { NUM_IN_ODD / 2 - data_odd.size() / 2,
+			data_odd };
+	ReferenceData<float> ref_even = { NUM_IN_EVEN / 2 - data_even.size() / 2,
+			data_even };
+	ConvolveTestComponent<GaussianKernel> TestList[] = {
+	// T-030 (num_data=odd)
+			{ "Gaussian kernel (num_data = odd)", { NUM_WIDTH,
+			NUM_IN_ODD },
+			false, NUM_IN_ODD, SpikeType_knegative, MaskType_ktrue, {
+					{ ref_odd } },
+					{ { 0, gauss_weight_ref_L }, {
+					NUM_IN_ODD - gauss_weight_ref_R_odd.size(),
+							gauss_weight_ref_R_odd } } },
+			// T-031 (num_data=even)
+			{ "Gaussian kernel (num_data = even)", { NUM_WIDTH,
+			NUM_IN_EVEN },
+			false, NUM_IN_EVEN, SpikeType_knegative, MaskType_ktrue, { {
+					ref_even } }, { { 0, gauss_weight_ref_L }, {
+			NUM_IN_EVEN - gauss_weight_ref_R_even.size(),
+					gauss_weight_ref_R_even } } } };
+	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StatusOKValidator>(ELEMENTSOF(TestList), TestList);
+}
+/*
+ * Convolution by Gaussian kernel with mask
+ */
+// convolve w/o FFT T-032 ~ 035
+TEST_F(Convolve1DOperation, GaussWithoutFFTVariousMask) {
+	vector<float> gaussian_ref { 0.031866919, 0.069251028, 0.12057019,
+			0.16816404, 0.18788747, 0.16816404, 0.120570191, 0.069251028,
+			0.031866919 }; // analytic value by emulating the code
+	vector<float> maskall_weight_ref { 0.40605625, 0.59394345, 0.76210485,
+			0.88265394, 0.95177134, 0.98296780 };
+	vector<float> maskedge_weight_ref { 0.40605627, 0.59394373, 0.76210772,
+			0.88267754, 0.95192670, 0.98378782 };
+	ReferenceData<float> const maskall_weight_L = { 0, maskall_weight_ref };
+	reverse(maskall_weight_ref.begin(), maskall_weight_ref.end());
+	ReferenceData<float> const maskall_weight_R = { NUM_IN_ODD
+			- maskall_weight_ref.size(), maskall_weight_ref };
+	ReferenceData<float> const maskedge_weight_L = { 0, maskedge_weight_ref };
+	reverse(maskedge_weight_ref.begin(), maskedge_weight_ref.end());
+	ReferenceData<float> const maskedge_weight_R = { NUM_IN_ODD
+			- maskedge_weight_ref.size(), maskedge_weight_ref };
+	ReferenceData<float> const zeros = { 0, vector<float>(NUM_IN_ODD, 0.0) };
+	ConvolveTestComponent<GaussianKernel> TestList[] = {
+	// T-032 (mask non-zero elements)
+			{ "mask out non-zero elements", { NUM_WIDTH,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kall,
+					MaskType_knonzerofalse, { { zeros } }, { maskall_weight_L,
+							maskall_weight_R } },
+			// T-033 (mask all)
+			{ "mask out all elements", { NUM_WIDTH,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kall, MaskType_kfalse, {
+					{ zeros } }, { { zeros } } },
+			// T-034 (mask edge spikes)
+			{ "mask out spikes at edges", { NUM_WIDTH,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kall,
+					MaskType_kleftright, { { NUM_IN_ODD / 2
+							- gaussian_ref.size() / 2, gaussian_ref } }, {
+							maskedge_weight_L, maskedge_weight_R } },
+			// T-035 (mask nan and inf elements at edges)
+			{ "mask out nan and inf elements", { NUM_WIDTH,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kedgenaninf,
+					MaskType_kleftright, {/*ref_data*/}, { maskedge_weight_L,
+							maskedge_weight_R } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1697,48 +1786,199 @@ TEST_F(Convolve1DOperation, PerformanceTestWithoutFFT) {
 /*
  * Test user defined asymmetric kernel (right angled triangle)
  */
-// convolve w/o FFT T-037-042
+// convolve w/o FFT T-037 ~ 042
 TEST_F(Convolve1DOperation, TriangleWithoutFFTNumKernelVSNumData) {
-	ReferenceData<float> ref_data = { 10, { 0.1, 0.2, 0.3, 0.4 } };
-	ConvolveTestComponent<RightAngledTriangleKernel> TriangleNumKernelTest[] = {
-	// T-037
-			{ "num_kernel(odd) = num_data", { 4, NUM_IN_ODD }, false,
-			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { ref_data }, { { 0,
-					triangle_weight_ref_L }, { NUM_IN_ODD
-					- triangle_weight_ref_R.size(), triangle_weight_ref_R } } },
-			// T-038
-			{ "num_kernel(even) = num_data", { 4, NUM_IN_EVEN }, false,
-			NUM_IN_EVEN, SpikeType_kcenter, MaskType_ktrue, { ref_data }, { { 0,
-					triangle_weight_ref_L }, { NUM_IN_EVEN
-					- triangle_weight_ref_R.size(), triangle_weight_ref_R } } },
-			// T-039
-			{ "num_kernel(odd) > num_data", { 4, 2 * NUM_IN_ODD + 1 },
-			false, NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { ref_data },
-					{ { 0, triangle_weight_ref_L }, { NUM_IN_ODD
-							- triangle_weight_ref_R.size(),
+	constexpr size_t kKernelWidth = 4;
+	ReferenceData<float> ref_data = { 10, triangle_ref };
+	ConvolveTestComponent<RightAngledTriangleKernel> TriangleNumKernelTest[] =
+			{
+			// T-037
+					{ "num_kernel(odd) = num_data",
+							{ kKernelWidth, NUM_IN_ODD }, false,
+							NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, {
+									ref_data }, { { 0, triangle_weight_ref_L },
+									{ NUM_IN_ODD - triangle_weight_ref_R.size(),
+											triangle_weight_ref_R } } },
+					// T-038
+					{ "num_kernel(even) = num_data",
+							{ kKernelWidth, NUM_IN_EVEN },
+							false,
+							NUM_IN_EVEN, SpikeType_kcenter, MaskType_ktrue, {
+									ref_data }, { { 0, triangle_weight_ref_L },
+									{ NUM_IN_EVEN
+											- triangle_weight_ref_R.size(),
+											triangle_weight_ref_R } } },
+					// T-039
+					{ "num_kernel(odd) > num_data", { kKernelWidth, 2
+							* NUM_IN_ODD + 1 },
+					false, NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, {
+							ref_data }, { { 0, triangle_weight_ref_L }, {
+					NUM_IN_ODD - triangle_weight_ref_R.size(),
 							triangle_weight_ref_R } } },
-			// T-040
-			{ "num_kernel(even) > num_data", { 4, 2 * NUM_IN_ODD }, false,
-			NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { ref_data }, { { 0,
-					triangle_weight_ref_L }, { NUM_IN_ODD
-					- triangle_weight_ref_R.size(), triangle_weight_ref_R } } },
-			// T-041
-			{ "num_kernel(odd) < num_data", { 4, 13 }, false, NUM_IN_ODD,
-					SpikeType_kcenter, MaskType_ktrue, { ref_data }, { { 0,
-							triangle_weight_ref_L }, { NUM_IN_ODD
-							- triangle_weight_ref_R.size(),
-							triangle_weight_ref_R } } },
-			// T-042
-			{ "num_kernel(even) < num_data", { 4, 12 }, false, NUM_IN_ODD,
-					SpikeType_kcenter, MaskType_ktrue, { ref_data }, { { 0,
-							triangle_weight_ref_L }, { NUM_IN_ODD
-							- triangle_weight_ref_R.size(),
-							triangle_weight_ref_R } } } };
+					// T-040
+					{ "num_kernel(even) > num_data", { kKernelWidth, 2
+							* NUM_IN_ODD },
+					false,
+					NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { ref_data },
+							{ { 0, triangle_weight_ref_L }, { NUM_IN_ODD
+									- triangle_weight_ref_R.size(),
+									triangle_weight_ref_R } } },
+					// T-041
+					{ "num_kernel(odd) < num_data", { kKernelWidth, 13 }, false,
+					NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { ref_data },
+							{ { 0, triangle_weight_ref_L }, { NUM_IN_ODD
+									- triangle_weight_ref_R.size(),
+									triangle_weight_ref_R } } },
+					// T-042
+					{ "num_kernel(even) < num_data", { kKernelWidth, 12 },
+					false,
+					NUM_IN_ODD, SpikeType_kcenter, MaskType_ktrue, { ref_data },
+							{ { 0, triangle_weight_ref_L }, { NUM_IN_ODD
+									- triangle_weight_ref_R.size(),
+									triangle_weight_ref_R } } } };
 	RunConvolveTestComponentList<RightAngledTriangleKernel,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StatusOKValidator>(
 			ELEMENTSOF(TriangleNumKernelTest), TriangleNumKernelTest);
+}
+// convolve w/o FFT T-043 ~ 044
+TEST_F(Convolve1DOperation, WideTriangleWithoutFFT) {
+	size_t const num_data_odd = NUM_IN_ODD;
+	size_t const num_data_even = NUM_IN_EVEN;
+	// reference data
+	vector<float> data_odd { 0.010989011, 0.019047619, 0.025, 0.0294117649,
+			0.032679739, 0.035087720, 0.036842104, 0.038095238, 0.038961038,
+			0.039525692, 0.039855074, 0.04, 0.039999999, 0.0432098749,
+			0.046583852, 0.050156740, 0.053968253, 0.058064514, 0.0625,
+			0.067340068, 0.072664359, 0.078571431, 0.085185182, 0.092664093,
+			0.10121458 };
+	vector<float> data_even { 0.01098901, 0.019047620, 0.024999999, 0.029411765,
+			0.032679740, 0.035087718, 0.036842105, 0.038095239, 0.038961038296,
+			0.039525694, 0.039855071, 0.0399999990, 0.043478260, 0.047138047,
+			0.051020409, 0.055172415, 0.059649125, 0.064516128, 0.069852940,
+			0.075757580, 0.082352941, 0.089795915, 0.098290600, 0.108108112 };
+	vector<float> weight_L_odd { 0.280, 0.32307692, 0.3692308, 0.41846154 };
+	vector<float> weight_R_odd { 0.86153846, 0.83076923, 0.79692307, 0.760 };
+	vector<float> weight_L_even { 0.30333333, 0.35, 0.4, 0.453333345 };
+	vector<float> weight_R_even { 0.85, 0.81666667, 0.78, 0.74 };
+	ConvolveTestComponent<RightAngledTriangleKernel> TestList[] = {
+	// T-043 (num_data = odd)
+			{ "Asynmetric kernel (kernel_width > num_data, num_data = odd)", {
+					num_data_odd + 1, num_data_odd }, false, num_data_odd,
+					SpikeType_kcenter, MaskType_ktrue, { { 0, data_odd } }, { {
+							0, weight_L_odd }, { num_data_odd
+							- weight_R_odd.size(), weight_R_odd } } },
+			// T-044 (num_data = even)
+			{ "Asynmetric kernel (kernel_width > num_data, num_data = even)", {
+					num_data_odd + 1, num_data_even },
+			false, num_data_even, SpikeType_kcenter, MaskType_ktrue, { { 0,
+					data_even } }, { { 0, weight_L_even }, { num_data_even
+					- weight_R_even.size(), weight_R_even } } } };
+	RunConvolveTestComponentList<RightAngledTriangleKernel,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StatusOKValidator>(ELEMENTSOF(TestList),
+			TestList);
+}
+
+// convolve w/o FFT T-045 ~ 050
+TEST_F(Convolve1DOperation, TriangleWithoutFFTVariousInData) {
+	constexpr size_t kKernelWidth = 4;
+	size_t const num_data_odd = NUM_IN_ODD;
+	size_t const num_data_even = NUM_IN_EVEN;
+	ReferenceData<float> ref_data_C = { 10, triangle_ref };
+	ReferenceData<float> ref_deta_negative = { 10, { -0.1, -0.2, -0.3, -0.4 } };
+	ReferenceData<float> ref_data_L = { 0, { 0.5, 0.4, 0.0 } };
+	vector<float> data_R { 0.0, 0.10, 0.22222222, 0.42857143 };
+	ReferenceData<float> ref_data_R_odd =
+			{ num_data_odd - data_R.size(), data_R };
+	ReferenceData<float> ref_data_R_even = { num_data_even - data_R.size(),
+			data_R };
+	ReferenceData<float> ref_weight_L = { 0, triangle_weight_ref_L };
+	ReferenceData<float> ref_weight_R_odd = { num_data_odd
+			- triangle_weight_ref_R.size(), triangle_weight_ref_R };
+	ReferenceData<float> ref_weight_R_even = { num_data_even
+			- triangle_weight_ref_R.size(), triangle_weight_ref_R };
+	ConvolveTestComponent<RightAngledTriangleKernel> TestList[] =
+			{
+// T-045 (num_data = odd)
+					{ "Asynmetric kernel (2 spikes at edges, num_data = odd)", {
+							kKernelWidth, num_data_odd }, false, num_data_odd,
+							SpikeType_kleftright, MaskType_ktrue, { ref_data_L,
+									ref_data_R_odd }, { ref_weight_L,
+									ref_weight_R_odd } },
+					// T-046 (num_data = even)
+					{ "Asynmetric kernel (2 spikes at edges, num_data = even)",
+							{ kKernelWidth, num_data_even },
+							false, num_data_even, SpikeType_kleftright,
+							MaskType_ktrue, { ref_data_L, ref_data_R_even }, {
+									ref_weight_L, ref_weight_R_even } },
+					// T-047 (num_data = odd)
+					{ "Asynmetric kernel (3 spikes at center and edges, num_data = odd)",
+							{ kKernelWidth, num_data_odd }, false, num_data_odd,
+							SpikeType_kall, MaskType_ktrue, { ref_data_L,
+									ref_data_C, ref_data_R_odd }, {
+									ref_weight_L, ref_weight_R_odd } },
+					// T-048 (num_data = even)
+					{ "Asynmetric kernel (3 spikes at center and edges, num_data = even)",
+							{ kKernelWidth, num_data_even },
+							false, num_data_even, SpikeType_kall,
+							MaskType_ktrue, { ref_data_L, ref_data_C,
+									ref_data_R_even }, { ref_weight_L,
+									ref_weight_R_even } },
+					// T-049 (num_data = odd)
+					{ "Asynmetric kernel (negative spike at center, num_data = odd)",
+							{ kKernelWidth, num_data_odd }, false, num_data_odd,
+							SpikeType_knegative, MaskType_ktrue, {
+									ref_deta_negative }, { ref_weight_L,
+									ref_weight_R_odd } },
+					// T-050 (num_data = even)
+					{ "Asynmetric kernel (negative spike at center, num_data = even)",
+							{ kKernelWidth, num_data_even },
+							false, num_data_even, SpikeType_knegative,
+							MaskType_ktrue, { ref_deta_negative }, {
+									ref_weight_L, ref_weight_R_even } }, };
+	RunConvolveTestComponentList<RightAngledTriangleKernel,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StatusOKValidator>(ELEMENTSOF(TestList),
+			TestList);
+}
+// convolve w/o FFT T-051 ~ 054
+TEST_F(Convolve1DOperation, TriangleWithoutFFTVariousMask) {
+	constexpr size_t kKernelWidth = 4;
+	ReferenceData<float> const zeros = { 0, vector<float>(NUM_IN_ODD, 0.0) };
+	ReferenceData<float> const maskedge_weight_L = { 0, { 0.3, 0.6, 1.0 } };
+	ReferenceData<float> const maskcenter_weight = { 9, { 1.0, 0.9, 0.8, 0.7,
+			0.6, 1.0 } };
+	ReferenceData<float> const maskedge_weight_R =
+			{ 21, { 1.0, 0.9, 0.7, 0.4 } };
+	ConvolveTestComponent<RightAngledTriangleKernel> TestList[] = {
+// T-051 (mask non-zero elements)
+			{ "Asynmetric kernel (mask out non-zero elements)", { kKernelWidth,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kall,
+					MaskType_knonzerofalse, { zeros }, { maskedge_weight_L,
+							maskcenter_weight, maskedge_weight_R } },
+			// T-052 (mask all)
+			{ "Asynmetric kernel (mask out non-zero elements)", { kKernelWidth,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kall, MaskType_kfalse, {
+					zeros }, { zeros } },
+			// T-053 (mask edge spikes)
+			{ "Asynmetric kernel (mask out spikes at edges)", { kKernelWidth,
+			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kall,
+					MaskType_kleftright, { { 10, triangle_ref } }, {
+							maskedge_weight_L, maskedge_weight_R } },
+			// T-054 (mask nan and inf elements at edges)
+			{ "Asynmetric kernel (mask out nan and inf elements)", {
+					kKernelWidth, NUM_IN_ODD }, false, NUM_IN_ODD,
+					SpikeType_kedgenaninf, MaskType_kleftright, {/*ref_data*/},
+					{ maskedge_weight_L, maskedge_weight_R } } };
+	RunConvolveTestComponentList<RightAngledTriangleKernel,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StandardArrayInitializer,
+			StandardArrayInitializer, StatusOKValidator>(ELEMENTSOF(TestList),
+			TestList);
 }
 
 /**
