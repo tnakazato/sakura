@@ -163,7 +163,7 @@ inline void ConvolutionWithoutFFT(size_t num_kernel, float const *kernel_arg,
 	assert(LIBSAKURA_SYMBOL(IsAligned)(revert_kernel));
 	RevertData1D(num_kernel, kernel_arg, revert_kernel);
 
-	auto input_data = AssumeAligned(input_data_arg);
+	auto raw_input_data = AssumeAligned(input_data_arg);
 	auto input_mask = AssumeAligned(mask8);
 	auto kernel = AssumeAligned(revert_kernel);
 	auto output_data = AssumeAligned(output_data_arg);
@@ -171,6 +171,12 @@ inline void ConvolutionWithoutFFT(size_t num_kernel, float const *kernel_arg,
 	STATIC_ASSERT(sizeof(input_mask_arg[0]) == sizeof(input_mask[0]));
 	STATIC_ASSERT(true == 1);
 	STATIC_ASSERT(false == 0);
+	// temporal data array to handle Nan/Inf
+	SIMD_ALIGN
+	float input_data[num_data];
+	for (size_t i = 0; i < num_data; ++i) {
+		input_data[i] = input_mask[i] == 0 ? 0.0 : raw_input_data[i];
+	}
 	// the center index in *reverted* kernel
 	size_t center_index = num_kernel - 1 - (num_kernel / 2);
 	// the number of elements in the left half of kernel (excluding center)

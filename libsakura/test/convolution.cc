@@ -1754,7 +1754,8 @@ TEST_F(Convolve1DOperation, GaussWithoutFFTVariousMask) {
 			// T-035 (mask nan and inf elements at edges)
 			{ "mask out nan and inf elements", { NUM_WIDTH,
 			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kedgenaninf,
-					MaskType_kleftright, {/*ref_data*/}, { maskedge_weight_L,
+					MaskType_kleftright, {{ NUM_IN_ODD / 2
+							- gaussian_ref.size() / 2, gaussian_ref }}, { maskedge_weight_L,
 							maskedge_weight_R } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1972,7 +1973,7 @@ TEST_F(Convolve1DOperation, TriangleWithoutFFTVariousMask) {
 			// T-054 (mask nan and inf elements at edges)
 			{ "Asynmetric kernel (mask out nan and inf elements)", {
 					kKernelWidth, NUM_IN_ODD }, false, NUM_IN_ODD,
-					SpikeType_kedgenaninf, MaskType_kleftright, {/*ref_data*/},
+					SpikeType_kedgenaninf, MaskType_kleftright, { { 10, triangle_ref } },
 					{ maskedge_weight_L, maskedge_weight_R } } };
 	RunConvolveTestComponentList<RightAngledTriangleKernel,
 			StandardArrayInitializer, StandardArrayInitializer,
