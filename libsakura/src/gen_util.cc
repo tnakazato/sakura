@@ -106,12 +106,6 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator) noexcept {
 extern "C" void LIBSAKURA_SYMBOL(CleanUp)() noexcept {
 }
 
-extern "C" double LIBSAKURA_SYMBOL(GetCurrentTime)() noexcept {
-	using namespace std::chrono;
-	auto now = system_clock::now().time_since_epoch();
-	return duration_cast<duration<double, seconds::period>>(now).count();
-}
-
 extern "C" size_t LIBSAKURA_SYMBOL (GetAlignment)() noexcept {
 	return LIBSAKURA_ALIGNMENT;
 }

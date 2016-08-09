@@ -136,15 +136,6 @@ LIBSAKURA_SYMBOL(UserDeallocator) deallocator)
  */
 void LIBSAKURA_SYMBOL(CleanUp)() LIBSAKURA_NOEXCEPT;
 
-/**
- * @brief Returns a current time.
- * Precision of the time depends on std::chrono::system_clock.
- * @return Current time in seconds since the Epoch. You should not assume when the Epoch is. Only the difference between two returned values is make sense.
- *
- * MT-safe
- */
-double LIBSAKURA_SYMBOL(GetCurrentTime)() LIBSAKURA_NOEXCEPT;
-
 /*
  * memory alignment(for SIMD)
  */
