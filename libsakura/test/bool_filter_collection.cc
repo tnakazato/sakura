@@ -32,6 +32,7 @@
 #include "aligned_memory.h"
 #include "loginit.h"
 #include "gtest/gtest.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_IN 9
@@ -569,14 +570,14 @@ protected:
 							upper_bounds);
 				}
 				LIBSAKURA_SYMBOL(Status) status;
-				double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+				double start = GetCurrentTime();
 				for (size_t irun = 0; irun < num_repeat; ++irun) {
 					// Actual execution of bit operation function
 					status = (std::get<1>(kit).function)(num_data, in_data,
 							num_and_ans.num_condition, lower_bounds,
 							upper_bounds, result);
 				} // end of num_repeat loop
-				double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+				double end = GetCurrentTime();
 				if (num_repeat > 1) {
 					string test_name = std::get<0>(kit);
 					string_replace(test_name, " ", "_");
@@ -630,13 +631,13 @@ protected:
 			auto kit = my_testcase.GetItem(num_operation, test_components, iop);
 			LIBSAKURA_SYMBOL(Status) status;
 			cout << "Testing: " << std::get<0>(kit) << endl;
-			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			double start = GetCurrentTime();
 			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Actual execution of bit operation function
 				status = (std::get<1>(kit).function)(num_data, in_data,
 						threshold_, result);
 			} // end of num_repeat loop
-			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			double end = GetCurrentTime();
 			if (num_repeat > 1) {
 				string test_name = std::get<0>(kit);
 				string_replace(test_name, " ", "_");
@@ -886,7 +887,7 @@ protected:
 			if (verbose_) {
 				PrintArray("data", num_data, in_data);
 			}
-			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			double start = GetCurrentTime();
 			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Need to refresh data for in-place operation
 				InitializeAction::reinitialize(ELEMENTSOF(test_kit.data),
@@ -894,7 +895,7 @@ protected:
 				// Actual execution of bit operation function
 				status = (test_kit.function)(num_data, in_data, result);
 			} // end of num_repeat loop
-			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			double end = GetCurrentTime();
 			if (num_repeat > 1) {
 				string test_name = test_kit.name;
 				string_replace(test_name, " ", "_");

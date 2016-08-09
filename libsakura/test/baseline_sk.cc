@@ -41,6 +41,7 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 #include "baseline.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_DATA 5
@@ -823,14 +824,14 @@ TEST_F(BaselineSK, SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceT
 	}
 	LIBSAKURA_SYMBOL (Status) subbl_status;
 	size_t loop_max = 1000;
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
 		subbl_status =
 		LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
 				context, num_data, in_data, num_pieces, coeff, boundary, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark BaselineSK_SubtractBaselineCubicSplineUsingCoefficientsFloatPerformanceTest"
 			<< " " << (end_time - start_time) << std::endl;

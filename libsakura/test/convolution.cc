@@ -41,6 +41,7 @@
 #include "loginit.h"
 #include "gtest/gtest.h"
 #include "aligned_memory.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_WIDTH 5
@@ -415,10 +416,10 @@ inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
 	Initializer::Initialize(storage_ptr, &kernel);
 
 	// run
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	sakura_Status status = sakura_CreateGaussianKernelFloat(kernel_width,
 			num_kernel, kernel);
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	Logger::PrintElapsedTime(test_name, end_time - start_time);
 
 	// verification
@@ -749,7 +750,7 @@ protected:
 					<< " loops. The length of arrays is " << num_data << endl;
 		}
 		LIBSAKURA_SYMBOL(Status) exec_status;
-		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double start = GetCurrentTime();
 		if (use_fft) {
 			for (size_t i = 0; i < num_repeat; ++i) {
 				reinitialize_function(spike_type, num_data, input_data);
@@ -763,7 +764,7 @@ protected:
 						output_weight);
 			}
 		}
-		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double end = GetCurrentTime();
 		if (num_repeat > 1) {
 			cout << "#x# benchmark Convolve1DFloat_With"
 					<< (use_fft ? "" : "Out") << "FFT_Data"

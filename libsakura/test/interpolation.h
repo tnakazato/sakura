@@ -33,6 +33,8 @@
 #include <stdarg.h>
 #include <vector>
 
+#include "testutil.h"
+
 inline void InitializeDoubleArray(size_t num_array, double array[], ...) {
 	va_list arguments_list;
 	va_start(arguments_list, array);
@@ -85,12 +87,12 @@ protected:
 		// execute interpolation
 		double elapsed = 0.0;
 		for (size_t iter = 0; iter < iteration; ++iter) {
-			double start = sakura_GetCurrentTime();
+			double start = GetCurrentTime();
 			sakura_Status result = T::Run(interpolation_method,
 					polynomial_order_, num_base, x_base_, num_array, y_base_,
 					mask_base_, num_interpolated, x_interpolated_,
 					y_interpolated_, mask_interpolated_);
-			double end = sakura_GetCurrentTime();
+			double end = GetCurrentTime();
 			elapsed += end - start;
 			InspectResult(expected_status, result, num_interpolated, num_array,
 					check_result, check_mask);

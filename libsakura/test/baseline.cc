@@ -43,6 +43,7 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 #include "baseline.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_DATA 5
@@ -202,12 +203,12 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithPolynomialPerformanceTest) {
 	double start, end;
 	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) create_status =
 				sakura_CreateLSQFitContextPolynomialFloat(
 						LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), order,
 						num_chan, &context);
-		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		end = GetCurrentTime();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 		Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
@@ -226,12 +227,12 @@ TEST_F(Baseline, CreateLSQFitContextFloatWithChebyshevPolynomial) {
 	size_t const num_chan(65535);
 
 	LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
-	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	double start = GetCurrentTime();
 	LIBSAKURA_SYMBOL (Status) create_status =
 			sakura_CreateLSQFitContextPolynomialFloat(
 					LIBSAKURA_SYMBOL(LSQFitType_kChebyshev), order, num_chan,
 					&context);
-	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	double end = GetCurrentTime();
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 	Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
@@ -473,10 +474,10 @@ TEST_F(Baseline, DestroyLSQFitContextFloat) {
 						num_chan, &context);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
 
-		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) destroy_status =
 				sakura_DestroyLSQFitContextFloat(context);
-		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		end = GetCurrentTime();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), destroy_status);
 	}
@@ -610,13 +611,13 @@ TEST_F(Baseline, GetBestFitBaselineCoefficientsFloatPerformanceTest) {
 	size_t const num_repeat(1000);
 	elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(context, order, num_data,
 				in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
 				num_coeff, coeff, nullptr, nullptr, final_mask, &rms,
 				&subbl_blstatus);
-		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double end = GetCurrentTime();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
@@ -1341,13 +1342,13 @@ TEST_F(Baseline, SubtractBaselineFloatPerformanceTest) {
 	size_t const num_repeat(1);
 	elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status) subbl_status =
 		LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(context, order, num_data,
 				in_data, in_mask, clipping_threshold_sigma, num_fitting_max,
 				order + 1, nullptr, nullptr, out, final_mask, &rms,
 				&subbl_blstatus);
-		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		end = GetCurrentTime();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
@@ -2298,12 +2299,12 @@ TEST_F(Baseline, SubtractBaselineFloatChebyshevPerformanceTest) {
 	LIBSAKURA_SYMBOL (LSQFitStatus) subbl_blstatus;
 
 	double start, end;
-	start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	start = GetCurrentTime();
 	LIBSAKURA_SYMBOL (Status) subbl_status =
 	LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(context, order, num_data, in_data,
 			in_mask, clipping_threshold_sigma, num_fitting_max, order + 1,
 			nullptr, nullptr, out, final_mask, &rms, &subbl_blstatus);
-	end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	end = GetCurrentTime();
 	cout << "Elapsed Time: " << (end - start) << " sec." << endl;
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark Baseline_SubtractBaselineFloatChebyshevPerformanceTest"
@@ -2842,13 +2843,13 @@ TEST_F(Baseline, SubtractBaselineUsingCoefficientsFloatPerformanceTest) {
 	size_t loop_max = 1000;
 	double start_time, end_time;
 	LIBSAKURA_SYMBOL (Status) subbl_status;
-	start_time = sakura_GetCurrentTime();
+	start_time = GetCurrentTime();
 	for (size_t i = 0; i < loop_max; ++i) {
 		subbl_status = LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(context,
 				num_data, in_data, num_coeff, coeff, out);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), subbl_status);
 	}
-	end_time = sakura_GetCurrentTime();
+	end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark Baseline_SubtractPolynomialFloatPerformanceTest"
 			<< " " << (end_time - start_time) << std::endl;

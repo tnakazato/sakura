@@ -41,6 +41,7 @@
 #include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_DATA0 65536
@@ -582,11 +583,11 @@ TEST_F(NumericOperation, GetLSQCoefficients) {
 	double start, end;
 	double elapsed_time = 0.0;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		start = sakura_GetCurrentTime();
+		start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status)
 		status = sakura_GetLSQCoefficientsDouble(num_data, in_data, in_mask,
 				num_model, model, num_model, use_idx, out, out_vector);
-		end = sakura_GetCurrentTime();
+		end = GetCurrentTime();
 		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
@@ -1147,12 +1148,12 @@ TEST_F(NumericOperation, UpdateLSQCoefficients) {
 		for (size_t j = 0; j < ELEMENTSOF(in_lsq_vector); ++j) {
 			in_lsq_vector[j] = in_lsq_vector_orig[j];
 		}
-		double start = sakura_GetCurrentTime();
+		double start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status)
 		status = sakura_UpdateLSQCoefficientsDouble(num_data, in_data, in_mask,
 				num_exclude_indices, exclude_indices, num_model, model,
 				num_model, use_idx, in_lsq_matrix, in_lsq_vector);
-		double end = sakura_GetCurrentTime();
+		double end = GetCurrentTime();
 		elapsed_time += (end - start);
 		ASSERT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
@@ -2038,11 +2039,11 @@ TEST_F(NumericOperation, SolveSimultaneousEquationsByLUBigOrderModel) {
 	double elapsed_time = 0.0;
 	size_t const num_repeat = NUM_REPEAT3;
 	for (size_t i = 0; i < num_repeat; ++i) {
-		start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		start = GetCurrentTime();
 		LIBSAKURA_SYMBOL (Status)
 		solve_status = sakura_SolveSimultaneousEquationsByLUDouble(num_model,
 				lsq_matrix, lsq_vector, out);
-		end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		end = GetCurrentTime();
 		elapsed_time += (end - start);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), solve_status);
 	}

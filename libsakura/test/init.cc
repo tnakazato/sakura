@@ -281,17 +281,17 @@ TEST(Global, AlignShort) {
 	sakura_CleanUp();
 }
 
-TEST(Global, GetCurrentTime) {
-	sakura_Status result = sakura_Initialize(nullptr, nullptr);
-	EXPECT_EQ(result, sakura_Status_kOK);
-
-	{
-		auto before = sakura_GetCurrentTime();
-		sleep(1);
-		auto after = sakura_GetCurrentTime();
-		auto diff = after - before;
-		EXPECT_TRUE(1 <= diff && diff < 1.2);
-	}
-
-	sakura_CleanUp();
-}
+//TEST(Global, GetCurrentTime) {
+//	sakura_Status result = sakura_Initialize(nullptr, nullptr);
+//	EXPECT_EQ(result, sakura_Status_kOK);
+//
+//	{
+//		auto before = sakura_GetCurrentTime();
+//		sleep(1);
+//		auto after = sakura_GetCurrentTime();
+//		auto diff = after - before;
+//		EXPECT_TRUE(1 <= diff && diff < 1.2);
+//	}
+//
+//	sakura_CleanUp();
+//}

@@ -32,6 +32,8 @@
 #include <fstream>
 #include <string>
 
+#include "testutil.h"
+
 #define TEST_MASK(Name) TEST(CreateMaskNearEdgeTest, Name)
 
 template<typename XInitializer, typename YInitializer, typename MaskInitializer>
@@ -573,10 +575,10 @@ void RunTest(size_t num_data, float fraction, double pixel_size,
 	Initializer::Initialize(num_data, fraction, x_storage, y_storage,
 			mask_storage, &x, &y, &mask, mask_expected, &status_expected);
 
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	sakura_Status status = sakura_CreateMaskNearEdgeDouble(fraction, pixel_size,
 			num_data, x, y, blc_x, blc_y, trc_x, trc_y, mask);
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	Printer::Print(test_name, end_time - start_time);
 
 	ASSERT_EQ(status_expected, status);

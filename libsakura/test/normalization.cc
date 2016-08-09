@@ -36,6 +36,7 @@
 
 #include "loginit.h"
 #include "aligned_memory.h"
+#include "testutil.h"
 
 #define APPLYCAL_FLOAT_TEST(NAME) TEST_F(NormalizeDataFloatTest, NAME)
 
@@ -240,7 +241,7 @@ public:
 				float const *wt = &target[i * num_data];
 				float const *wf = &reference[i * num_data];
 				float *wr = &result[i * num_data];
-				double start = sakura_GetCurrentTime();
+				double start = GetCurrentTime();
 				LIBSAKURA_SYMBOL(Status) result_status = LIBSAKURA_SYMBOL(Status_kNG);
 				if (num_scaling_factor == 1) {
 					result_status = LIBSAKURA_SYMBOL(CalibrateDataWithConstScalingFloat)(
@@ -249,7 +250,7 @@ public:
 					result_status = LIBSAKURA_SYMBOL(CalibrateDataWithArrayScalingFloat)(
 					num_data, ws, wt, wf, wr);
 				}
-				double end = sakura_GetCurrentTime();
+				double end = GetCurrentTime();
 				elapsed_time += end - start;
 				EXPECT_EQ(expected_status, result_status) << message;
 

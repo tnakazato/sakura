@@ -33,6 +33,7 @@
 #include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_IN 8 // length of base data. DO NOT MODIFY!
@@ -583,7 +584,7 @@ private:
 			auto kit = my_testcase.GetItem(num_operation, test_components, iop);
 			LIBSAKURA_SYMBOL(Status) status;
 			cout << "Testing bit operation: " << std::get<0>(kit) << endl;
-			double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			double start = GetCurrentTime();
 			for (size_t irun = 0; irun < num_repeat; ++irun) {
 				// Need to refresh data for in-place operation
 				InitializeAction::reinitialize(num_data, in_data, mask);
@@ -592,7 +593,7 @@ private:
 						(std::get<1>(kit) ? ~bit_mask_ : bit_mask_), num_data,
 						in_data, mask, out_data);
 			} // end of num_repeat loop
-			double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+			double end = GetCurrentTime();
 			if (num_repeat > 1){
 				string test_name = std::get<0>(kit);
 				string_replace(test_name, " ", "_");

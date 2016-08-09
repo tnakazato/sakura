@@ -40,6 +40,7 @@
 #include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
+#include "testutil.h"
 
 using namespace std;
 
@@ -177,12 +178,12 @@ void TestGeneric(bool inner_most_untouched, size_t dims,
 					sizeof(flipped_data[0]) * prod, &flipped_data));
 	LIBSAKURA_SYMBOL(Status) result;
 	{
-		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double start = GetCurrentTime();
 		for (int i = 0; i < kRepeat; ++i) {
 			result = TestTarget<T>::Flip(inner_most_untouched, dims, elements,
 					data, flipped_data);
 		}
-		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double end = GetCurrentTime();
 		if (kTiming) {
 			timingReporter(end - start, "Flip");
 		}
@@ -205,12 +206,12 @@ void TestGeneric(bool inner_most_untouched, size_t dims,
 					sizeof(rev_data[0]) * prod, &rev_data));
 
 	{
-		double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double start = GetCurrentTime();
 		for (int i = 0; i < kRepeat; ++i) {
 			result = TestTarget<T>::Unflip(inner_most_untouched, dims, elements,
 					flipped_data, rev_data);
 		}
-		double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+		double end = GetCurrentTime();
 		if (kTiming) {
 			timingReporter(end - start, "Unflip");
 		}

@@ -45,6 +45,7 @@
 #include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
+#include "testutil.h"
 
 namespace {
 double SumSquared(size_t elements, float const data[], bool const is_valid[]) {
@@ -974,13 +975,13 @@ void ReportBenchmark(MessageType const &key, double sec) {
 
 template<typename T>
 void Timing(char const str[], T stats_func) {
-	double start = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	double start = GetCurrentTime();
 
 	for (size_t i = 0; i < 15; ++i) {
 		LIBSAKURA_SYMBOL(Status) status = stats_func();
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
 	}
-	double end = LIBSAKURA_SYMBOL(GetCurrentTime)();
+	double end = GetCurrentTime();
 	ReportBenchmark(str, end - start);
 }
 

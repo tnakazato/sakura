@@ -52,6 +52,7 @@
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
 #include "baseline.h"
+#include "testutil.h"
 
 /* the number of elements in input/output array to test */
 #define NUM_DATA 5
@@ -425,14 +426,14 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsCubicSplinePerformanceTest) {
 	size_t boundary[num_pieces + 1];
 	LIBSAKURA_SYMBOL(LSQFitStatus) baseline_status;
 	LIBSAKURA_SYMBOL(Status) coeff_status;
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		coeff_status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(context,
 				num_pieces, num_data, in_data, mask, 5.0f, 1, out, nullptr,
 				nullptr, mask, &rms, boundary, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), coeff_status);
 	}
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark BaselineWK_LSQFitCubicSplinePerformanceTest"
 			<< " " << (end_time - start_time) << std::endl;
@@ -763,14 +764,14 @@ TEST_F(BaselineWK, SubtractBaselineCubicSplinePerformanceTest) {
 	size_t boundary[num_pieces + 1];
 	LIBSAKURA_SYMBOL(Status) sub_status;
 
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		sub_status = LIBSAKURA_SYMBOL(LSQFitCubicSplineFloat)(context,
 				num_pieces, num_data, data, mask, 5.0f, 1, nullptr, nullptr,
 				out, mask, &rms, boundary, &baseline_status);
 		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), sub_status);
 	}
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark BaselineWK_LSQFitCubicSplinePerformanceTest"
 			<< " " << (end_time - start_time) << std::endl;
@@ -1345,13 +1346,13 @@ TEST_F(BaselineWK, GetBestFitBaselineCoefficientsSinusoidPerformanceTest) {
 	LIBSAKURA_SYMBOL(LSQFitStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) coeff_status;
 
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		coeff_status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(context, num_nwave,
 				nwave, num_data, data, mask, 5.0f, 1, num_coeff, out, nullptr,
 				nullptr, mask, &rms, &baseline_status);
 	}
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark BaselineWK_LSQFitSinusoidPerformanceTest" << " "
 			<< (end_time - start_time) << std::endl;
@@ -1915,13 +1916,13 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidPerformanceTest) {
 	LIBSAKURA_SYMBOL(LSQFitStatus) baseline_status;
 	LIBSAKURA_SYMBOL (Status) sub_status;
 
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		sub_status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(context, num_nwave,
 				nwave, num_data, data, mask, 5.0f, 1, num_coeff, nullptr,
 				nullptr, out, mask, &rms, &baseline_status);
 	}
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark BaselineWK_LSQFitSinusoidPerformanceTest" << " "
 			<< (end_time - start_time) << std::endl;
@@ -2371,12 +2372,12 @@ TEST_F(BaselineWK, SubtractBaselineSinusoidUsingCoefficientsPerformanceTest) {
 	}
 	LIBSAKURA_SYMBOL (Status) sub_status;
 
-	double start_time = sakura_GetCurrentTime();
+	double start_time = GetCurrentTime();
 	for (size_t i = 0; i < num_repeat; ++i) {
 		sub_status = LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(context, num_data,
 				data, num_nwave, nwave, num_coeff, coeff, out);
 	}
-	double end_time = sakura_GetCurrentTime();
+	double end_time = GetCurrentTime();
 	std::cout << std::setprecision(5)
 			<< "#x# benchmark BaselineWK_SubtractSinusoidPerformanceTest" << " "
 			<< (end_time - start_time) << std::endl;

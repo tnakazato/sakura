@@ -38,6 +38,7 @@
 #include "loginit.h"
 #include "aligned_memory.h"
 #include "gtest/gtest.h"
+#include "testutil.h"
 
 #define ELEMENTSOF(x) (sizeof(x) / sizeof((x)[0]))
 #define STATIC_ASSERT(x) static_assert((x), # x)
@@ -50,7 +51,7 @@ using namespace std;
 
 namespace {
 inline double CurrentTime() {
-	return LIBSAKURA_SYMBOL(GetCurrentTime)();
+	return GetCurrentTime();
 }
 
 template<typename T>
