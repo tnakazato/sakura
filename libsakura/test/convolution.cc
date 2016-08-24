@@ -99,7 +99,7 @@ struct GaussianKernel {
 	size_t num_kernel;
 	//bool use_fft;
 	void Generate(float kernel[/*num_kernel*/]) {
-		float const peak_location = static_cast<float>(num_kernel/2);
+		float const peak_location = static_cast<float>(num_kernel / 2);
 		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
 				peak_location, kernel_width, num_kernel, kernel);
 		ASSERT_EQ(sakura_Status_kOK, status);
@@ -180,40 +180,45 @@ struct InPlaceArrayInitializer { // dummy initializer for in-place operation
 };
 
 struct InvalidArgumentValidator {
-	static void Validate(float kernel_width, size_t num_kernel,
-			float const *kernel, sakura_Status const status) {
+	static void Validate(float /*peak_location*/, float kernel_width,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
 		// only validate returned status
 		EXPECT_EQ(sakura_Status_kInvalidArgument, status);
 	}
 };
 
 struct NotGoodValidator {
-	static void Validate(float /*kernel_width*/, size_t /*num_kernel*/,
-			float const */*kernel*/, sakura_Status const status) {
+	static void Validate(float /*peak_location*/, float /*kernel_width*/,
+			size_t /*num_kernel*/, float const */*kernel*/,
+			sakura_Status const status) {
 		// only validate returned status
 		EXPECT_EQ(sakura_Status_kNG, status);
 	}
 };
 
 struct NoMemoryValidator {
-	static void Validate(float /*kernel_width*/, size_t /*num_kernel*/,
-			float const */*kernel*/, sakura_Status const status) {
+	static void Validate(float /*peak_location*/, float /*kernel_width*/,
+			size_t /*num_kernel*/, float const */*kernel*/,
+			sakura_Status const status) {
 		// only validate returned status
 		EXPECT_EQ(sakura_Status_kNoMemory, status);
 	}
 };
 
 struct StatusOKValidator {
-	static void Validate(float /*kernel_width*/, size_t /*num_kernel*/,
-			float const */*kernel*/, sakura_Status const status) {
+	static void Validate(float /*peak_location*/, float /*kernel_width*/,
+			size_t /*num_kernel*/, float const */*kernel*/,
+			sakura_Status const status) {
 		// execution must be successful
 		EXPECT_EQ(sakura_Status_kOK, status);
 	}
 };
 
 struct NumKernelOneValidator {
-	static void Validate(float /*kernel_width*/, size_t num_kernel,
-			float const *kernel, sakura_Status const status) {
+	static void Validate(float /*peak_location*/, float /*kernel_width*/,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
 		// num_kernel must be 1
 		ASSERT_EQ(1, num_kernel);
 
@@ -224,9 +229,10 @@ struct NumKernelOneValidator {
 	}
 };
 
-struct StandardValidator {
-	static void Validate(float kernel_width, size_t num_kernel,
-			float const *kernel, sakura_Status const status) {
+struct BasicGaussKernelValidator {
+	static void Validate(float peak_location, float kernel_width,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
 		// execution must be successful
 		EXPECT_EQ(sakura_Status_kOK, status);
 
@@ -236,7 +242,6 @@ struct StandardValidator {
 		float *expected_kernel = reinterpret_cast<float *>(storage.get());
 		double sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
 		double peak_value = 1.0 / (sqrt(2.0 * M_PI) * sigma);
-		size_t peak_location = num_kernel / 2;
 		double expected_sum = 0.0;
 		for (size_t i = 0; i < num_kernel; ++i) {
 			auto separation = static_cast<double>(peak_location)
@@ -252,15 +257,6 @@ struct StandardValidator {
 			EXPECT_FLOAT_EQ(expected, kernel[i]);
 		}
 
-		// validate symmetry
-		if (num_kernel > 1) {
-			size_t num_tail = peak_location - ((num_kernel % 2 == 0) ? 1 : 0);
-			for (size_t i = 0; i < num_tail; ++i) {
-				// must match exactly so use EXPECT_EQ instead of EXPECT_FLOAT_EQ
-				EXPECT_EQ(kernel[peak_location - i], kernel[peak_location + i]);
-			}
-		}
-
 		// validate sum
 		expected_sum = 1.0;
 		double actual_sum = 0.0;
@@ -271,22 +267,52 @@ struct StandardValidator {
 	}
 };
 
-struct HalfWidthValidator {
-	static void Validate(float kernel_width, size_t num_kernel,
-			float const *kernel, sakura_Status const status) {
-		// kernel_width must be equal to num_kernel
-		ASSERT_EQ(kernel_width, static_cast<float>(num_kernel));
+struct SymmetricKernelValidator {
+	static void Validate(float peak_location, float kernel_width,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
+		// the additional symmetry check makes sense only if peak is in kernel.
+		// otherwise, use BasicGaussKernelValidator
+		ASSERT_LE(0.0, peak_location);
+		ASSERT_GT(num_kernel, peak_location);
+		// peak_location should be x.0 or x.5 for symmetry
+		size_t peak_index = static_cast<size_t>(peak_location);
+		ASSERT_TRUE(fabs(peak_location-peak_index)<1.0e-6 || fabs(peak_location-peak_index-0.5f)<1.0e-6 );
 
-		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
+		BasicGaussKernelValidator::Validate(peak_location, kernel_width,
+				num_kernel, kernel, status);
+		// validate symmetry
+		if (num_kernel > 1) {
+//			size_t num_tail = peak_index - ((num_kernel % 2 == 0) ? 1 : 0);
+			size_t offset = fabs(peak_location-peak_index)<1.0e-6 ? 0 : 1;
+			size_t num_tail = std::min(peak_index, num_kernel-1-peak_index-offset);
+			for (size_t i = 0; i < num_tail; ++i) {
+				// must match exactly so use EXPECT_EQ instead of EXPECT_FLOAT_EQ
+				EXPECT_EQ(kernel[peak_index - i], kernel[peak_index + offset + i]);
+			}
+		}
+	}
+};
+
+struct HalfWidthValidator {
+	static void Validate(float peak_location, float kernel_width,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
+		// kernel_width must be equal to num_kernel and peak must be equal to num_kernel/2
+		ASSERT_EQ(kernel_width, static_cast<float>(num_kernel));
+		ASSERT_FLOAT_EQ(peak_location, static_cast<float>(num_kernel / 2));
+
+		SymmetricKernelValidator::Validate(peak_location, kernel_width,
+				num_kernel, kernel, status);
 
 		// additional check: edge values should be half maximum
-		size_t peak_location = num_kernel / 2;
-		auto peak_value = kernel[peak_location];
+		size_t peak_index = num_kernel / 2;
+		auto peak_value = kernel[peak_index];
 		// correction factor for odd case:
 		// in this case, FWHM is slightly shifted with respect to edge
 		// so that correction must be needed for verification
 		double half_width = kernel_width / 2.0f;
-		double actual_width = static_cast<double>(peak_location);
+		double actual_width = static_cast<double>(peak_index);
 		double sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
 		double correction_factor = 1.0;
 		if (num_kernel % 2 > 0) {
@@ -309,27 +335,29 @@ struct HalfWidthValidator {
 };
 
 struct NarrowKernelValidator {
-	static void Validate(float kernel_width, size_t num_kernel,
-			float const *kernel, sakura_Status const status) {
+	static void Validate(float peak_location, float kernel_width,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
 		// kernel_width must be equal to num_kernel
 		ASSERT_EQ(FLT_MIN, kernel_width);
 
-		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
+		SymmetricKernelValidator::Validate(peak_location, kernel_width,
+				num_kernel, kernel, status);
 
-		size_t peak_location = num_kernel / 2;
-		std::cout << "peak: kernel[" << peak_location << "]="
-				<< kernel[peak_location] << std::endl;
-		std::cout << "off-peak: kernel[" << peak_location - 1 << "]="
-				<< kernel[peak_location - 1] << std::endl;
-		std::cout << "off-peak: kernel[" << peak_location + 1 << "]="
-				<< kernel[peak_location + 1] << std::endl;
+		size_t peak_index = static_cast<size_t>(peak_location);
+		std::cout << "peak: kernel[" << peak_index << "]="
+				<< kernel[peak_index] << std::endl;
+		std::cout << "off-peak: kernel[" << peak_index - 1 << "]="
+				<< kernel[peak_index - 1] << std::endl;
+		std::cout << "off-peak: kernel[" << peak_index + 1 << "]="
+				<< kernel[peak_index + 1] << std::endl;
 
 		// kernel is so narrow that value of the kernel except peak_location
 		// is zero
-		for (size_t i = 0; i < peak_location; ++i) {
+		for (size_t i = 0; i < peak_index; ++i) {
 			EXPECT_FLOAT_EQ(0.0f, kernel[i]);
 		}
-		for (size_t i = peak_location + 1; i < num_kernel; ++i) {
+		for (size_t i = peak_index + 1; i < num_kernel; ++i) {
 			EXPECT_FLOAT_EQ(0.0f, kernel[i]);
 		}
 
@@ -337,23 +365,26 @@ struct NarrowKernelValidator {
 };
 
 struct WideKernelValidator {
-	static void Validate(float kernel_width, size_t num_kernel,
-			float const *kernel, sakura_Status const status) {
-		// kernel_width must be equal to num_kernel
+	static void Validate(float peak_location, float kernel_width,
+			size_t num_kernel, float const *kernel,
+			sakura_Status const status) {
+		// kernel_width must be equal to FLT_MAX and peak must be equal to num_kernel/2
 		ASSERT_EQ(FLT_MAX, kernel_width);
+		ASSERT_FLOAT_EQ(peak_location, static_cast<float>(num_kernel / 2));
 
-		StandardValidator::Validate(kernel_width, num_kernel, kernel, status);
+		SymmetricKernelValidator::Validate(peak_location, kernel_width,
+				num_kernel, kernel, status);
 
-		size_t peak_location = num_kernel / 2;
-		std::cout << "peak: kernel[" << peak_location << "]="
-				<< kernel[peak_location] << std::endl;
+		size_t peak_index = num_kernel / 2;
+		std::cout << "peak: kernel[" << peak_index << "]="
+				<< kernel[peak_index] << std::endl;
 		std::cout << "edge: kernel[" << 0 << "]=" << kernel[0] << std::endl;
 		std::cout << "edge: kernel[" << num_kernel - 1 << "]="
 				<< kernel[num_kernel - 1] << std::endl;
 
 		// kernel is so wide that all the kernel value are the same
 		for (size_t i = 0; i < num_kernel; ++i) {
-			EXPECT_FLOAT_EQ(kernel[peak_location], kernel[i]);
+			EXPECT_FLOAT_EQ(kernel[peak_index], kernel[i]);
 		}
 	}
 };
@@ -399,8 +430,8 @@ struct PerformanceTestLogger {
 };
 
 template<typename Initializer, typename Validator, typename Logger = NullLogger>
-inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
-		std::string const test_name = "") {
+inline void RunGaussianTest(float const peak_location, float const kernel_width,
+		size_t const num_kernel, std::string const test_name = "") {
 	// prepare storage
 	void *storage_ptr = nullptr;
 	size_t const alignment = sakura_GetAlignment();
@@ -418,14 +449,14 @@ inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
 
 	// run
 	double start_time = GetCurrentTime();
-	float const peak_location = static_cast<float>(num_kernel/2);
-	sakura_Status status = sakura_CreateGaussianKernelFloat(peak_location, kernel_width,
-			num_kernel, kernel);
+	sakura_Status status = sakura_CreateGaussianKernelFloat(peak_location,
+			kernel_width, num_kernel, kernel);
 	double end_time = GetCurrentTime();
 	Logger::PrintElapsedTime(test_name, end_time - start_time);
 
 	// verification
-	Validator::Validate(kernel_width, num_kernel, kernel, status);
+	Validator::Validate(peak_location, kernel_width, num_kernel, kernel,
+			status);
 }
 
 /*
@@ -465,9 +496,9 @@ bool const valid_context_pointer = true) {
 	LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(num_kernel, kernel,
 			context_ptr_ptr);
 	//std::cout << "create kernel status = " << create_status << std::endl;
-	constexpr float kDummyKernelWidth = 0;
-	CreateValidator::Validate(kDummyKernelWidth, num_kernel, kernel,
-			create_status);
+	constexpr float kDummyKernelValue = 0.0f;
+	CreateValidator::Validate(kDummyKernelValue, kDummyKernelValue, num_kernel,
+			kernel, create_status);
 	// context should be nullptr when context creation failed
 	if (create_status != LIBSAKURA_SYMBOL(Status_kOK)
 			&& valid_context_pointer) {
@@ -480,8 +511,8 @@ bool const valid_context_pointer = true) {
 		LIBSAKURA_SYMBOL(Status) status =
 		LIBSAKURA_SYMBOL(DestroyConvolve1DContextFloat)(*context_ptr_ptr);
 		//std::cout << "destroy status = " << status << std::endl;
-		DestroyValidator::Validate(kDummyKernelWidth, num_kernel, kernel,
-				status);
+		DestroyValidator::Validate(kDummyKernelValue, kDummyKernelValue,
+				num_kernel, kernel, status);
 	}
 	// Clean-up sakura
 	LIBSAKURA_SYMBOL(CleanUp)();
@@ -773,8 +804,9 @@ protected:
 					<< (num_data % 2 == 0 ? "Even" : "Odd") << " "
 					<< end - start << endl;
 		}
-		ConvolveValidator::Validate(kernel_param.kernel_width,
-				num_kernel_actural, kernel, exec_status);
+		ConvolveValidator::Validate(kernel_param.kernel_width / 2.,
+				kernel_param.kernel_width, num_kernel_actural, kernel,
+				exec_status);
 		// destroy context
 		if (use_fft) {
 			LIBSAKURA_SYMBOL(Status) status =
@@ -1757,9 +1789,9 @@ TEST_F(Convolve1DOperation, GaussWithoutFFTVariousMask) {
 			// T-035 (mask nan and inf elements at edges)
 			{ "mask out nan and inf elements", { NUM_WIDTH,
 			NUM_IN_ODD }, false, NUM_IN_ODD, SpikeType_kedgenaninf,
-					MaskType_kleftright, {{ NUM_IN_ODD / 2
-							- gaussian_ref.size() / 2, gaussian_ref }}, { maskedge_weight_L,
-							maskedge_weight_R } } };
+					MaskType_kleftright, { { NUM_IN_ODD / 2
+							- gaussian_ref.size() / 2, gaussian_ref } }, {
+							maskedge_weight_L, maskedge_weight_R } } };
 	RunConvolveTestComponentList<GaussianKernel, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1919,26 +1951,30 @@ TEST_F(Convolve1DOperation, TriangleWithoutFFTVariousInData) {
 							MaskType_ktrue, { ref_data_L, ref_data_R_even }, {
 									ref_weight_L, ref_weight_R_even } },
 					// T-047 (num_data = odd)
-					{ "Asynmetric kernel (3 spikes at center and edges, num_data = odd)",
+					{
+							"Asynmetric kernel (3 spikes at center and edges, num_data = odd)",
 							{ kKernelWidth, num_data_odd }, false, num_data_odd,
 							SpikeType_kall, MaskType_ktrue, { ref_data_L,
 									ref_data_C, ref_data_R_odd }, {
 									ref_weight_L, ref_weight_R_odd } },
 					// T-048 (num_data = even)
-					{ "Asynmetric kernel (3 spikes at center and edges, num_data = even)",
+					{
+							"Asynmetric kernel (3 spikes at center and edges, num_data = even)",
 							{ kKernelWidth, num_data_even },
 							false, num_data_even, SpikeType_kall,
 							MaskType_ktrue, { ref_data_L, ref_data_C,
 									ref_data_R_even }, { ref_weight_L,
 									ref_weight_R_even } },
 					// T-049 (num_data = odd)
-					{ "Asynmetric kernel (negative spike at center, num_data = odd)",
+					{
+							"Asynmetric kernel (negative spike at center, num_data = odd)",
 							{ kKernelWidth, num_data_odd }, false, num_data_odd,
 							SpikeType_knegative, MaskType_ktrue, {
 									ref_deta_negative }, { ref_weight_L,
 									ref_weight_R_odd } },
 					// T-050 (num_data = even)
-					{ "Asynmetric kernel (negative spike at center, num_data = even)",
+					{
+							"Asynmetric kernel (negative spike at center, num_data = even)",
 							{ kKernelWidth, num_data_even },
 							false, num_data_even, SpikeType_knegative,
 							MaskType_ktrue, { ref_deta_negative }, {
@@ -1976,8 +2012,9 @@ TEST_F(Convolve1DOperation, TriangleWithoutFFTVariousMask) {
 			// T-054 (mask nan and inf elements at edges)
 			{ "Asynmetric kernel (mask out nan and inf elements)", {
 					kKernelWidth, NUM_IN_ODD }, false, NUM_IN_ODD,
-					SpikeType_kedgenaninf, MaskType_kleftright, { { 10, triangle_ref } },
-					{ maskedge_weight_L, maskedge_weight_R } } };
+					SpikeType_kedgenaninf, MaskType_kleftright, { { 10,
+							triangle_ref } }, { maskedge_weight_L,
+							maskedge_weight_R } } };
 	RunConvolveTestComponentList<RightAngledTriangleKernel,
 			StandardArrayInitializer, StandardArrayInitializer,
 			StandardArrayInitializer, StandardArrayInitializer,
@@ -1990,14 +2027,14 @@ TEST_F(Convolve1DOperation, TriangleWithoutFFTVariousMask) {
  */
 // T-001
 TEST_GAUSS(NegativeKernelWidth) {
-	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(-1.0f,
-			10);
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(5.0f,
+			-1.0f, 10);
 }
 
 // T-002
 TEST_GAUSS(ZeroKernelWidth) {
-	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(0.0f,
-			10);
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(5.0f,
+			0.0f, 10);
 }
 
 // T-003
@@ -2007,7 +2044,7 @@ TEST_GAUSS(PositiveInfiniteKernelWidth) {
 	float positive_inf = kOne / kZero;
 	ASSERT_TRUE(std::isinf(positive_inf));
 	ASSERT_GT(positive_inf, FLT_MAX);
-	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(5.0f,
 			positive_inf, 10);
 }
 
@@ -2018,7 +2055,7 @@ TEST_GAUSS(NegativeInfiniteKernelWidth) {
 	float negative_inf = -kOne / kZero;
 	ASSERT_TRUE(std::isinf(negative_inf));
 	ASSERT_LT(negative_inf, FLT_MIN);
-	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(5.0f,
 			negative_inf, 10);
 }
 
@@ -2026,114 +2063,164 @@ TEST_GAUSS(NegativeInfiniteKernelWidth) {
 TEST_GAUSS(NotANumberKernelWidth) {
 	float nan_value = std::nan("");
 	ASSERT_TRUE(std::isnan(nan_value));
-	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(5.0f,
 			nan_value, 10);
 }
 
 // T-006
 TEST_GAUSS(KernelIsNull) {
-	RunGaussianTest<NullPointerArrayInitializer, InvalidArgumentValidator>(2.0f,
-			10);
+	RunGaussianTest<NullPointerArrayInitializer, InvalidArgumentValidator>(5.0f,
+			2.0f, 10);
 }
 
 // T-007
 TEST_GAUSS(KernelIsNotAligned) {
-	RunGaussianTest<NotAlignedArrayInitializer, InvalidArgumentValidator>(2.0f,
-			10);
+	RunGaussianTest<NotAlignedArrayInitializer, InvalidArgumentValidator>(5.0f,
+			2.0f, 10);
 }
 
 // T-008
 TEST_GAUSS(NumKernelIsZero) {
-	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(2.0f,
-			0);
+	RunGaussianTest<StandardArrayInitializer, InvalidArgumentValidator>(0.0f,
+			2.0f, 0);
 }
 
 // T-009
 TEST_GAUSS(NumKernelIsOne) {
 // result should be independent of kernel_width if num_kernel is 1
-	RunGaussianTest<StandardArrayInitializer, NumKernelOneValidator>(2.0f, 1);
+	RunGaussianTest<StandardArrayInitializer, NumKernelOneValidator>(0.0f, 2.0f,
+			1);
 
-	RunGaussianTest<StandardArrayInitializer, NumKernelOneValidator>(256.0f, 1);
+	RunGaussianTest<StandardArrayInitializer, NumKernelOneValidator>(0.0f,
+			256.0f, 1);
 }
 
 // T-010
 TEST_GAUSS(NumKernelIsTwo) {
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(2.0f, 2);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(1.0f,
+			2.0f, 2);
 }
 
 // T-011
 TEST_GAUSS(NumKernelIsThree) {
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(2.0f, 3);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(1.0f,
+			2.0f, 3);
 }
 
 // T-012
 TEST_GAUSS(NumKernelIsFour) {
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(2.0f, 4);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(2.0f,
+			2.0f, 4);
 }
 
 // T-014
 TEST_GAUSS(EvenNumkernel) {
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(24.0f, 64);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(32.0f,
+			24.0f, 64);
 }
 
 // T-013
 TEST_GAUSS(OddNumkernel) {
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(24.0f, 65);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(32.0f,
+			24.0f, 65);
 }
 
 // T-016
 TEST_GAUSS(NumkernelLessThanKernelWidth) {
 // even
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(128.0f, 64);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(32.0f,
+			128.0f, 64);
 
 	// odd
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(128.0f, 65);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(32.0f,
+			128.0f, 65);
 }
 
 // T-017
 TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
 // even
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(64.0f, 128);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(64.0f,
+			64.0f, 128);
 
 	// odd
-	RunGaussianTest<StandardArrayInitializer, StandardValidator>(64.0f, 129);
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(64.0f,
+			64.0f, 129);
 }
 
 // T-018
 TEST_GAUSS(HalfWidth) {
 // even
-	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(128.0f, 128);
+	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(64.0f, 128.0f,
+			128);
 
 	// odd
-	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(129.0f, 129);
+	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(64.0f, 129.0f,
+			129);
 }
 
 // T-019
 TEST_GAUSS(NarrowKernelWidth) {
-	RunGaussianTest<StandardArrayInitializer, NarrowKernelValidator>(FLT_MIN,
-			128);
+	RunGaussianTest<StandardArrayInitializer, NarrowKernelValidator>(64.0f,
+	FLT_MIN, 128);
 }
 
 // T-020
 TEST_GAUSS(WideKernelWidth) {
-	RunGaussianTest<StandardArrayInitializer, WideKernelValidator>(FLT_MAX,
-			128);
+	RunGaussianTest<StandardArrayInitializer, WideKernelValidator>(64.0f,
+	FLT_MAX, 128);
 }
 
 // T-021
 TEST_GAUSS(PowerOfTwoNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456; // 2^28
-	RunGaussianTest<StandardArrayInitializer, StandardValidator,
-			PerformanceTestLogger>(128.0f, kNumKernel,
-			"CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator,
+			PerformanceTestLogger>(static_cast<float>(kNumKernel / 2), 128.0f,
+			kNumKernel, "CreateGaussian_PowerOfTwoNumKernelPerformanceTest");
 }
 
 // T-022
 TEST_GAUSS(OddNumKernelPerformance) {
 	constexpr size_t kNumKernel = 268435456 + 1; // 2^28 + 1
-	RunGaussianTest<StandardArrayInitializer, StandardValidator,
-			PerformanceTestLogger>(128.0f, kNumKernel,
-			"CreateGaussian_OddNumKernelPerformanceTest");
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator,
+			PerformanceTestLogger>(static_cast<float>(kNumKernel / 2), 128.0f,
+			kNumKernel, "CreateGaussian_OddNumKernelPerformanceTest");
+}
+
+// T-023
+TEST_GAUSS(EvenNumkernelSymmetric) {
+// even
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(31.5f,
+			24.0f, 64);
+}
+
+// T-024
+TEST_GAUSS(PeaklocationIsNegative) {
+	RunGaussianTest<StandardArrayInitializer, BasicGaussKernelValidator>(-1.0f,
+			24.0f, 64);
+}
+
+// T-025
+TEST_GAUSS(PeaklocationFarFromCenterOffPeakSymmetric) {
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(21.5f,
+			24.0f, 64);
+}
+
+// T-026
+TEST_GAUSS(PeaklocationFarFromCenterOnPeakSymmetric) {
+	RunGaussianTest<StandardArrayInitializer, SymmetricKernelValidator>(42.0f,
+			24.0f, 64);
+}
+
+// T-027
+TEST_GAUSS(PeaklocationIsOffPixel) {
+	RunGaussianTest<StandardArrayInitializer, BasicGaussKernelValidator>(32.3f,
+			24.0f, 64);
+}
+
+// T-028
+TEST_GAUSS(PeaklocationIsGraterThanNumkernel) {
+	RunGaussianTest<StandardArrayInitializer, BasicGaussKernelValidator>(70.0f,
+			24.0f, 64);
 }
 
 /**
