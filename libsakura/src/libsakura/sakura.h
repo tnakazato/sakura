@@ -1189,25 +1189,18 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @brief Create Gaussian kernel.
  *
  * @details
- * Create 1 dimensional Gaussian kernel according to FWHM given by @a kernel_width.
- * Peak location of the Gaussian is evaluated by @a num_kernel / 2. It indicates that
- * resulting kernel will be slightly asymmetric when @a num_kernel is even. For example,
- * peak location is 1 and 2 if @a num_kernel is 3 and 4, respectively. If @a num_kernel
- * is 3 (odd), resulting kernel is symmetric, i.e. @a kernel[1] is a peak and
- * @a kernel[0] == @a kernel[2]. On the other hand, the kernel is asymmetric if @a num_kernel
- * is 4 (even). In this case, peak is @a kernel[2] and @a kernel[1] == @a kernel[3] but
- * there is no counterpart for @a kernel[0].
+ * Create 1 dimensional Gaussian kernel according to a peak location and FWHM given by @a peak_location and @a kernel_width.
  *
  * Resulting @a kernel has the value that it is normalized, i.e. sum(@a kernel) = 1.0.
  * Actual formula for @a kernel is as follows:
  *
  * @code
- * peak_location = num_kernel / 2
  * sigma = kernel_width / sqrt(log(16))
  * peak_value = sqrt(8 * log(2) / 2 * pi) / kernel_width
  * kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) ) / sum_of_kernel
  * @endcode
  *
+ * @param[in] peak_location the peak location of Gaussian
  * @param[in] kernel_width FWHM (Full Width of Half Maximum) of Gaussian.
  * @a kernel_width must be greater than 0.
  * @param[in] num_kernel The number of elements in the @a kernel
@@ -1217,7 +1210,7 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @return Status code.
  */
 LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
-		float kernel_width, size_t num_kernel, float kernel[])
+		float peak_location, float kernel_width, size_t num_kernel, float kernel[])
 				LIBSAKURA_NOEXCEPT LIBSAKURA_WARN_UNUSED_RESULT;
 
 /**

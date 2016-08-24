@@ -99,8 +99,9 @@ struct GaussianKernel {
 	size_t num_kernel;
 	//bool use_fft;
 	void Generate(float kernel[/*num_kernel*/]) {
+		float const peak_location = static_cast<float>(num_kernel/2);
 		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
-				kernel_width, num_kernel, kernel);
+				peak_location, kernel_width, num_kernel, kernel);
 		ASSERT_EQ(sakura_Status_kOK, status);
 		if (false) {
 			std::cout << "Gaussian kernel [" << num_kernel << "] = {";
@@ -417,7 +418,8 @@ inline void RunGaussianTest(float const kernel_width, size_t const num_kernel,
 
 	// run
 	double start_time = GetCurrentTime();
-	sakura_Status status = sakura_CreateGaussianKernelFloat(kernel_width,
+	float const peak_location = static_cast<float>(num_kernel/2);
+	sakura_Status status = sakura_CreateGaussianKernelFloat(peak_location, kernel_width,
 			num_kernel, kernel);
 	double end_time = GetCurrentTime();
 	Logger::PrintElapsedTime(test_name, end_time - start_time);
