@@ -1,7 +1,7 @@
 Sakura Library
 ==============
 
-[1] http://alma.mtk.nao.ac.jp/j/
+[1] http://alma-intweb.mtk.nao.ac.jp/~sakura/
 
 
 Overview
@@ -37,6 +37,7 @@ Sakura has been successfully tested on the following platforms
 - Canonical Ubuntu 14.4
 - Apple OS X 10.8
 - Apple OS X 10.10
+- Apple OS X 10.11
 
 Installation Procedure
 ----------------------
