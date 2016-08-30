@@ -74,6 +74,12 @@ $ ./a.out
  * On the other hand, functions without 'MT-safe' sign must be called sequentially, i.e., 
  * you should not use those functions on multi-thread processing. 
  *
+ * @section license License
+ * The Sakura Library is free software. It is distributed under 
+ * <a href="https://www.gnu.org/licenses/lgpl-3.0.en.html" target="_blank">LGPL version 3</a>. 
+ * See COPYING and COPYING.LESSER for details about terms and conditions. Those 
+ * files should be included in the source distribution of the Sakura Library. 
+ * 
  * @section contact Contact us
  * Please send bug report to sakura@alma.mtk.nao.ac.jp if you find a bug.
  */
