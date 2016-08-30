@@ -21,7 +21,7 @@
  * 
  * Main page of the Sakura Library is 
  * 
- * %http://www.tobedetermined/sakura/
+ * http://alma-intweb.mtk.nao.ac.jp/~sakura/
  *
  * Source code of the Sakura Library are distributed in gzip-compressed tarballs. 
  * Latest release can be downloaded from:
@@ -71,6 +71,6 @@ $ ./a.out
  * you should not use those functions on multi-thread processing. 
  *
  * @section contact Contact us
- * Please send bug report to #######@@alma.nao.ac.jp if you find a bug.
+ * Please send bug report to sakura@alma.mtk.nao.ac.jp if you find a bug.
  */
 ;
