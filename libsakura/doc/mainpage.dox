@@ -25,6 +25,17 @@
  * designed as generic as possible. Thus, Sakura Library should be applicable to any kind 
  * of data analysis. 
  *
+ * Currently available functions are as follows:
+ * - interpolation
+ * - least-square fitting
+ * - non-linear Gaussian fitting
+ * - data filtering/masking
+ * - convolution (1- and 2-dimensional)
+ * - calculation of statistics
+ * - bit operation
+ * - specific functions for radio astronomical data analysis
+ * - miscellaneous utility functions
+ * 
  * @section getting Getting Sakura Library
  * 
  * Main page of the Sakura Library is 
