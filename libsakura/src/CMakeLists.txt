@@ -117,6 +117,7 @@ if(BUILD_DOC)
 	add_custom_target(apidoc
 		mkdir -p "${PROJECT_BINARY_DIR}/docs"
 		COMMAND ${DOXYGEN_EXECUTABLE} ${PROJECT_BINARY_DIR}/Doxyfile
+		COMMAND cp ${PROJECT_SOURCE_DIR}/../INSTALL.txt ${PROJECT_BINARY_DIR}/docs/api/html/
 		WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
 		COMMENT "Generating the API documentation with Doxygen")
 endif(BUILD_DOC)

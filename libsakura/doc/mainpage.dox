@@ -52,6 +52,11 @@
  libsakura-<major version>.<minor version>.<code revision>.tgz
  @endverbatim
  *
+ * @section build How to build libsakura
+ * Please see <a href="./INSTALL.txt">INSTALL.txt</a> for detailed instruction on how 
+ * to build libsakura. <a href="./INSTALL.txt">INSTALL.txt</a> should also be included 
+ * in the package.
+ *
  * @section link How to link libsakura to your application
  * Include <libsakura/sakura.h> from your sources.
  * @code
