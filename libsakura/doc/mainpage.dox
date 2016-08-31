@@ -1,6 +1,10 @@
 /**
  * @~
  * @mainpage Sakura Library API
+ * <h2>
+ * Sakura Library is a high-performance, thread-safe library compatible with C and C++ 
+ * that is optimized for data analysis of astronomy and astrophysics. 
+ * </h2>
  *
  * @section intro Introduction
  * Sakura Library (libsakura) is a data analysis library that aims at more efficient 
