@@ -15,11 +15,11 @@
  * in a certain function, we write manually vectorized code for that function using 
  * intrinsics.  
  *
- * The Sakura Library is written based on C++11 standard. 
- * While its interface is compatible with C so that it is able to use from both 
- * C and C++. 
+ * The Sakura Library is written based on C++11 standard, but can be used from both 
+ * C and C++ because its interface is compatible with C.
  *  
- * At this moment, main target of the Sakura Library is a reduction of astronomical 
+ * At the present time, the main application of the Sakura Library is the reduction of 
+ * astronomical 
  * data taken by radio telescopes, especially single-dish radio telescopes. 
  * However, functions in Sakura Library are 
  * designed as generic as possible. Thus, Sakura Library should be applicable to any kind 
@@ -47,7 +47,7 @@
  *
  * ftp://alma-dl.mtk.nao.ac.jp/sakura/releases/latest_src
  *
- * Name of the tarball folows a naming scheme below:
+ * Name of the tarball follows the naming scheme below:
  * @verbatim
  libsakura-<major version>.<minor version>.<code revision>.tgz
  @endverbatim
