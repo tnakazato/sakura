@@ -1195,10 +1195,14 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * Actual formula for @a kernel is as follows:
  *
  * @code
- * sigma = kernel_width / sqrt(log(16))
+ * s = kernel_width / sqrt(log(16))
  * peak_value = sqrt(8 * log(2) / 2 * pi) / kernel_width
- * kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s * sigma**2) ) / sum_of_kernel
+ * kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s**2) ) / sum_of_kernel
  * @endcode
+ *
+ * where sqrt, log, and exp are mathematical functions of square root, logarithm to natural base,
+ * and exponential, respectively. The variable s corresponds to sqrt(2) times standard deviation
+ * of the Gaussian.
  *
  * @param[in] peak_location the peak location of Gaussian
  * @param[in] kernel_width FWHM (Full Width of Half Maximum) of Gaussian.
