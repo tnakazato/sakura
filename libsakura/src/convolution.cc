@@ -98,24 +98,23 @@ inline void Create1DGaussianKernelFloat(size_t num_kernel, float peak_location,
 	}
 
 	assert((2 * num_kernel - 1) >= 0);
-	double const reciprocal_of_denominator = 1.66510922231539551270632928979040
-			/ static_cast<double>(kernel_width); // sqrt(log(16)) / kernel_width
-	double const peak_value = .939437278699651333772340328410
-			/ static_cast<double>(kernel_width); // sqrt(8*log(2)/(2*M_PI)) / kernel_width
-//	size_t peak_location = (num_kernel) / 2;
+	// sigma_factor = sqrt(log(16)) / kernel_width = (sqrt(2) * sigma)^-1
+	double const sigma_factor = 1.66510922231539551270632928979040
+			/ static_cast<double>(kernel_width);
 
 	auto kernel_aligned = AssumeAligned(kernel);
 
 	double kernel_sum = 0.0;
 	for (size_t i = 0; i < num_kernel; ++i) {
-		double value = (static_cast<double>(i)
-				- static_cast<double>(peak_location))
-				* reciprocal_of_denominator;
-		kernel_aligned[i] = peak_value * exp(-(value * value));
+		double value_left = (static_cast<double>(i) - 0.5
+				- static_cast<double>(peak_location)) * sigma_factor;
+		double value_right = (static_cast<double>(i) + 0.5
+				- static_cast<double>(peak_location)) * sigma_factor;
+		kernel_aligned[i] = std::erf(value_right) - std::erf(value_left);
 		kernel_sum += kernel_aligned[i];
 	}
 
-	// Normalization
+	// Normalization sum(kernel) to be 1
 	for (size_t i = 0; i < num_kernel; ++i) {
 		kernel_aligned[i] /= kernel_sum;
 	}
@@ -345,8 +344,7 @@ LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context, size_t num_data,
 	}
 
 	// inverse FFT of multiplied data
-	fftw_execute_dft_c2r(context->plan_c2r, ffted_convolve_data,
-			work_data);
+	fftw_execute_dft_c2r(context->plan_c2r, ffted_convolve_data, work_data);
 
 	// substitute into output data (double -> float)
 	for (size_t i = 0; i < num_data; ++i) {

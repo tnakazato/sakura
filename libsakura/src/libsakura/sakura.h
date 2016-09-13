@@ -1189,20 +1189,25 @@ struct LIBSAKURA_SYMBOL(Convolve1DContextFloat);
  * @brief Create Gaussian kernel.
  *
  * @details
- * Create 1 dimensional Gaussian kernel according to a peak location and FWHM given by @a peak_location and @a kernel_width.
+ * Create 1 dimensional Gaussian kernel according to a peak location and FWHM given by @a peak_location
+ * and @a kernel_width.
  *
- * Resulting @a kernel has the value that it is normalized, i.e. sum(@a kernel) = 1.0.
- * Actual formula for @a kernel is as follows:
+ * The value of the kernel for i-th element is calculated by integrating Gaussian from i-1/2 to i+1/2.
+ * Integration of Gaussian function is implemented using error function (std::erf).
+ * Resulting @a kernel has the value that it is normalized so that sum(@a kernel) = 1.0.
+ * Actual formula for @a kernel is as follows. Since definite integral of Gaussian doesn't have analytic
+ * form, calculation is based on std::erf.
  *
  * @code
  * s = kernel_width / sqrt(log(16))
- * peak_value = sqrt(8 * log(2) / 2 * pi) / kernel_width
- * kernel[i] = peak_value * exp( -(i - peak_location)**2 / (s**2) ) / sum_of_kernel
+ * l = (i - 1/2 - peak_location) / s
+ * r = (i + 1/2 - peak_location) / s
+ * kernel[i] = 1/2 * {erf(r) - erf(l)}
  * @endcode
  *
- * where sqrt, log, and exp are mathematical functions of square root, logarithm to natural base,
- * and exponential, respectively. The variable s corresponds to sqrt(2) times standard deviation
- * of the Gaussian.
+ * where sqrt and log are mathematical functions of square root and logarithm to natural base.
+ * The function erf is an error function and std::erf is used here.
+ * The variable s corresponds to sqrt(2) times standard deviation of the Gaussian.
  *
  * @param[in] peak_location the peak location of Gaussian
  * @param[in] kernel_width FWHM (Full Width of Half Maximum) of Gaussian.

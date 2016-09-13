@@ -98,9 +98,19 @@ struct GaussianKernel {
 	//bool use_fft;
 	void Generate(float kernel[/*num_kernel*/]) {
 		float const peak_location = static_cast<float>(num_kernel / 2);
-		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
-				peak_location, kernel_width, num_kernel, kernel);
-		ASSERT_EQ(sakura_Status_kOK, status);
+//		sakura_Status status = LIBSAKURA_SYMBOL(CreateGaussianKernelFloat)(
+//				peak_location, kernel_width, num_kernel, kernel);
+//		ASSERT_EQ(sakura_Status_kOK, status);
+		double kernel_sum = 0.0;
+		auto const sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
+		for (size_t i = 0; i < num_kernel; ++i) {
+			auto const offset = static_cast<float>(i) - peak_location;
+			kernel[i] = exp(-offset * offset / (2.0 * sigma * sigma));
+			kernel_sum += kernel[i];
+		}
+		for (size_t i = 0; i < num_kernel; ++i) {
+			kernel[i] /= kernel_sum;
+		}
 		if (false) {
 			std::cout << "Gaussian kernel [" << num_kernel << "] = {";
 			for (size_t i = 0; i < num_kernel; ++i) {
@@ -228,6 +238,13 @@ struct NumKernelOneValidator {
 };
 
 struct BasicGaussKernelValidator {
+	template<typename T>
+	static T GetGaussianIntegration(T mu, T sigma, T a, T b) {
+		auto an = (a - mu) / (sqrt(2.0) * sigma);
+		auto bn = (b - mu) / (sqrt(2.0) * sigma);
+		return 0.5 * (std::erf(bn) - std::erf(an));
+	}
+
 	static void Validate(float peak_location, float kernel_width,
 			size_t num_kernel, float const *kernel,
 			sakura_Status const status) {
@@ -239,19 +256,19 @@ struct BasicGaussKernelValidator {
 				malloc(num_kernel * sizeof(float)), Deallocate);
 		float *expected_kernel = reinterpret_cast<float *>(storage.get());
 		double sigma = kernel_width / (2.0 * sqrt(2.0 * log(2.0)));
-		double peak_value = 1.0 / (sqrt(2.0 * M_PI) * sigma);
 		double expected_sum = 0.0;
 		for (size_t i = 0; i < num_kernel; ++i) {
-			auto separation = static_cast<double>(peak_location)
-					- static_cast<double>(i);
-			auto normalized_separation = separation / sigma;
-			expected_kernel[i] = peak_value
-					* exp(-normalized_separation * normalized_separation / 2.0);
+			double a = static_cast<double>(i) - 0.5;
+			double b = static_cast<double>(i) + 0.5;
+			expected_kernel[i] = GetGaussianIntegration<double>(peak_location,
+					sigma, a, b);
 			expected_sum += expected_kernel[i];
 		}
 		for (size_t i = 0; i < num_kernel; ++i) {
-			float expected = expected_kernel[i] / expected_sum;
-			EXPECT_TRUE(std::isfinite(kernel[i]));
+			float expected =
+					(expected_sum == 0.0) ?
+							0.0 : expected_kernel[i] / expected_sum;
+			ASSERT_TRUE(std::isfinite(kernel[i]));
 			EXPECT_FLOAT_EQ(expected, kernel[i]);
 		}
 
@@ -275,18 +292,22 @@ struct SymmetricKernelValidator {
 		ASSERT_GT(num_kernel, peak_location);
 		// peak_location should be x.0 or x.5 for symmetry
 		size_t peak_index = static_cast<size_t>(peak_location);
-		ASSERT_TRUE(fabs(peak_location-peak_index)<1.0e-6 || fabs(peak_location-peak_index-0.5f)<1.0e-6 );
+		ASSERT_TRUE(
+				fabs(peak_location - peak_index) < 1.0e-6
+						|| fabs(peak_location - peak_index - 0.5f) < 1.0e-6);
 
 		BasicGaussKernelValidator::Validate(peak_location, kernel_width,
 				num_kernel, kernel, status);
 		// validate symmetry
 		if (num_kernel > 1) {
 //			size_t num_tail = peak_index - ((num_kernel % 2 == 0) ? 1 : 0);
-			size_t offset = fabs(peak_location-peak_index)<1.0e-6 ? 0 : 1;
-			size_t num_tail = std::min(peak_index, num_kernel-1-peak_index-offset);
+			size_t offset = fabs(peak_location - peak_index) < 1.0e-6 ? 0 : 1;
+			size_t num_tail = std::min(peak_index,
+					num_kernel - 1 - peak_index - offset);
 			for (size_t i = 0; i < num_tail; ++i) {
 				// must match exactly so use EXPECT_EQ instead of EXPECT_FLOAT_EQ
-				EXPECT_EQ(kernel[peak_index - i], kernel[peak_index + offset + i]);
+				EXPECT_EQ(kernel[peak_index - i],
+						kernel[peak_index + offset + i]);
 			}
 		}
 	}
@@ -343,8 +364,8 @@ struct NarrowKernelValidator {
 				num_kernel, kernel, status);
 
 		size_t peak_index = static_cast<size_t>(peak_location);
-		std::cout << "peak: kernel[" << peak_index << "]="
-				<< kernel[peak_index] << std::endl;
+		std::cout << "peak: kernel[" << peak_index << "]=" << kernel[peak_index]
+				<< std::endl;
 		std::cout << "off-peak: kernel[" << peak_index - 1 << "]="
 				<< kernel[peak_index - 1] << std::endl;
 		std::cout << "off-peak: kernel[" << peak_index + 1 << "]="
@@ -374,8 +395,8 @@ struct WideKernelValidator {
 				num_kernel, kernel, status);
 
 		size_t peak_index = num_kernel / 2;
-		std::cout << "peak: kernel[" << peak_index << "]="
-				<< kernel[peak_index] << std::endl;
+		std::cout << "peak: kernel[" << peak_index << "]=" << kernel[peak_index]
+				<< std::endl;
 		std::cout << "edge: kernel[" << 0 << "]=" << kernel[0] << std::endl;
 		std::cout << "edge: kernel[" << num_kernel - 1 << "]="
 				<< kernel[num_kernel - 1] << std::endl;
@@ -1267,11 +1288,11 @@ TEST_F(Convolve1DOperation , TriangleWithFFT) {
 	// reference data
 	vector<float> triangle_ref_L { 0.7, 0.4 };
 	vector<float> triangle_ref_R { 0.1, 0.3, 0.5 };
-	vector<float> wide_ref_odd { 0.015384615, 0.01846154, 0.02153846, 0.02461538,
-			0.02769231, 0.03076923, 0.03384615, 0.03692308, 0.04, 0.04307692,
-			0.04615385, 0.04923077, 0.05230769, 0.05538461, 0.05846154,
-			0.06153846, 0.06461538, 0.06769231, 0.07076923, 0.07384615,
-			0.07692308 };
+	vector<float> wide_ref_odd { 0.015384615, 0.01846154, 0.02153846,
+			0.02461538, 0.02769231, 0.03076923, 0.03384615, 0.03692308, 0.04,
+			0.04307692, 0.04615385, 0.04923077, 0.05230769, 0.05538461,
+			0.05846154, 0.06153846, 0.06461538, 0.06769231, 0.07076923,
+			0.07384615, 0.07692308 };
 	vector<float> wide_ref_even { 0.01, 0.01333333, 0.016666667, 0.02,
 			0.02333333, 0.026666667, 0.03, 0.03333334, 0.036666667, 0.04,
 			0.04333333, 0.046666667, 0.05, 0.05333333, 0.056666667, 0.06,
@@ -2146,15 +2167,19 @@ TEST_GAUSS(NumKernelGreaterThanKernelWidth) {
 }
 
 // T-018
-TEST_GAUSS(HalfWidth) {
-// even
-	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(64.0f, 128.0f,
-			128);
-
-	// odd
-	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(64.0f, 129.0f,
-			129);
-}
+// 2016/09/13 TN
+// Disable this test since now calculation of Gaussian at k is changed to definite
+// integral between k - 1/2 and k + 1/2 so idea of validation in HalfWidthValidator
+// doesn't make sense anymore.
+//TEST_GAUSS(HalfWidth) {
+//	// even
+//	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(64.0f, 128.0f,
+//			128);
+//
+//	// odd
+//	RunGaussianTest<StandardArrayInitializer, HalfWidthValidator>(64.0f, 129.0f,
+//			129);
+//}
 
 // T-019
 TEST_GAUSS(NarrowKernelWidth) {
