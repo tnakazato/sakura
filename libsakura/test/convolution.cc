@@ -55,16 +55,14 @@
 
 extern "C" {
 struct LIBSAKURA_SYMBOL(Convolve1DContextFloat) {
-//	bool use_fft;
-//	size_t num_data;
-	size_t kernel_width;
-	fftwf_plan plan_real_to_complex_float;
-	fftwf_plan plan_complex_to_real_float;
-	fftwf_complex *fft_applied_complex_kernel;
-	float *real_array;
+	size_t num_kernel;
+	fftw_plan plan_r2c;
+	fftw_plan plan_c2r;
+	fftw_complex *ffted_kernel;
+	fftw_complex *ffted_input_data;
+	fftw_complex *ffted_convolve_data;
+	double *real_array;
 	void *real_array_work;
-	float *real_kernel_array;
-	void *real_kernel_array_work;
 };
 }
 typedef enum {
@@ -220,7 +218,7 @@ struct NumKernelOneValidator {
 			size_t num_kernel, float const *kernel,
 			sakura_Status const status) {
 		// num_kernel must be 1
-		ASSERT_EQ(1, num_kernel);
+		ASSERT_EQ(1u, num_kernel);
 
 		// execution must be successful
 		EXPECT_EQ(sakura_Status_kOK, status);
@@ -392,7 +390,7 @@ struct WideKernelValidator {
 struct ContextValidator {
 	static void Validate(size_t num_kernel, float const *kernel,
 	LIBSAKURA_SYMBOL(Convolve1DContextFloat) const *context) {
-		ASSERT_EQ(context->kernel_width, num_kernel);
+		ASSERT_EQ(context->num_kernel, num_kernel);
 //		float *flipped_kernel = nullptr;
 //		std::unique_ptr<void, DefaultAlignedMemory> kernel_storage(
 //				DefaultAlignedMemory::AlignedAllocateOrException(
@@ -782,7 +780,7 @@ protected:
 			cout << "Iterating convolution for " << num_repeat
 					<< " loops. The length of arrays is " << num_data << endl;
 		}
-		LIBSAKURA_SYMBOL(Status) exec_status;
+		LIBSAKURA_SYMBOL(Status) exec_status = LIBSAKURA_SYMBOL(Status_kOK);
 		double start = GetCurrentTime();
 		if (use_fft) {
 			for (size_t i = 0; i < num_repeat; ++i) {
@@ -1269,7 +1267,7 @@ TEST_F(Convolve1DOperation , TriangleWithFFT) {
 	// reference data
 	vector<float> triangle_ref_L { 0.7, 0.4 };
 	vector<float> triangle_ref_R { 0.1, 0.3, 0.5 };
-	vector<float> wide_ref_odd { 0.01538462, 0.01846154, 0.02153846, 0.02461538,
+	vector<float> wide_ref_odd { 0.015384615, 0.01846154, 0.02153846, 0.02461538,
 			0.02769231, 0.03076923, 0.03384615, 0.03692308, 0.04, 0.04307692,
 			0.04615385, 0.04923077, 0.05230769, 0.05538461, 0.05846154,
 			0.06153846, 0.06461538, 0.06769231, 0.07076923, 0.07384615,

@@ -61,7 +61,7 @@ Sakura installation procedure is broken into 5 steps:
 1.1.2 Prerequisites coming from dependencies of Sakura on third-party external libraries
 Mandatory prerequisites:
 * eigen 3.2 or higher
-* fftw 3.3.2 or higher. If you build fftw from source, use the configure options "--enable-float" and "--enable-shared" to build libfftw as a shared library.
+* fftw 3.3.2 or higher. If you build fftw from source, use the configure options "--enable-shared" to build libfftw as a shared library.
 Optional prerequisites:
 * lib4cxx. This library adds a logging feature to Sakura, allowing messages from Sakura to be logged at run-time. 
 

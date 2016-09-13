@@ -16,7 +16,7 @@ find_path(FFTW3_INCLUDE_DIR fftw3.h)
 message(STATUS "FFTW3_INCLUDE_DIR=${FFTW3_INCLUDE_DIR}")
 # support for multiple fftw3 libraries
 # set multiple library names to _components, e.g., set(_components fftw3f fftw3)
-set(_components fftw3f)
+set(_components fftw3)
 foreach(_comp ${_components})
 	find_library(${_comp}_LIBRARY ${_comp}
 		PATHS ${FFTW3_ROOT_DIR} 
