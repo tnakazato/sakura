@@ -326,7 +326,7 @@ Summary:        High performance library for astronomical data analysis.
 Vendor:         National Astronomical Observatory of Japan
 Group:          Development/Libraries
 License:        LGPLv3 or later
-URL:            NotReady
+URL:            http://alma-intweb.mtk.nao.ac.jp/~sakura/
 PREAMBLE_URL
 cat >> $spec_file <<PREAMBLE_SOURCES
 Source0:        ${tarball_name}
