@@ -35,7 +35,7 @@ print dir(libsakurapy);
 
 libsakurapy.initialize()
 
-print libsakurapy.get_current_time()
+print time.time()
 
 def test_stats():
 	try:
@@ -170,8 +170,10 @@ def test_interpolate():
 	zindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, zin)
 	yindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, yin)
 	youtdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, yout)
-	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nchan))
-	result = libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, yindata, nchan, zindata, npos, youtdata, zoutdata)
+	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nchan,))
+	inmask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]* 2 * nchan)
+	outmask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (npos, nchan,))
+	result = libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, yindata, nchan, zindata, inmask, npos, youtdata, zoutdata, outmask)
 	# the result should be [5.25]*nchan
 	del yin, yout, zin, zindata, yindata, youtdata, zoutdata
 	# interpolate in X-axis
@@ -186,7 +188,9 @@ def test_interpolate():
 	xindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xin)
 	xoutdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xout)
 	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nrow))
-	result = libsakurapy.interpolate_float_xaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, xindata, nrow, zindata, npos, xoutdata, zoutdata)
+	inmask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True, True] * nrow)
+	outmask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (npos, nrow))
+	result = libsakurapy.interpolate_float_xaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, xindata, nrow, zindata, inmask, npos, xoutdata, zoutdata, outmask)
 	# the result should be [5.75]*nrow
 
 def test_calibration():
@@ -198,7 +202,7 @@ def test_calibration():
 	offdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yoff)
 	facdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, factor)
 	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
-	out = libsakurapy.apply_position_switch_calibration(len(factor), facdata, ndata, ondata, offdata, result)
+	out = libsakurapy.apply_position_switch_calibration(ndata, facdata, ondata, offdata, result)
 	# the result should be [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
 	del yon, yoff, factor, ondata, offdata, facdata, result, out
 	
@@ -208,7 +212,10 @@ def test_convolve1D():
 	width = 3
 	y = [0.]*ndata
 	y[5] = 1.0
-	ctx1D = libsakurapy.create_convolve1D_context(ndata, libsakurapy.CONVOLVE1D_KERNEL_TYPE_GAUSSIAN, width, True);
+	peak = ndata / 2
+	kernel = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	out = libsakurapy.create_gaussian_kernel_float(peak, width, ndata, kernel)
+	ctx1D = libsakurapy.create_convolve1D_context(ndata, kernel)
 	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
 	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
 	out = libsakurapy.convolve1D(ctx1D, ndata, data, result)
@@ -226,7 +233,9 @@ def test_baseline():
 	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, m)
 	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
 	final_mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (ndata,))
-	out = libsakurapy.subtract_baseline(ndata, data, mask, ctxbl, 5., 1, True, final_mask, result)
+	coeff = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_DOUBLE, (order+1,))
+	bestfit = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))	
+	out = libsakurapy.subtract_baseline(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, bestfit, result, final_mask)
 	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
 	del ctxbl
 
