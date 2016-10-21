@@ -97,7 +97,18 @@ struct LIBSAKURA_SYMBOL(PyAlignedBuffer) {
 
 namespace {
 
-PyObject *sakura_error;
+struct module_state {
+	PyObject *error;
+};
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+#else
+#define GETSTATE(m) (&_state)
+static struct module_state _state;
+#endif
+
+//PyObject *sakura_error;
 
 void DecrementRef(PyObject *obj) {
 	Py_XDECREF(obj);
@@ -134,6 +145,8 @@ PyObject *Initialize(PyObject *self, PyObject *args) {
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 			nullptr);
 	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+		struct module_state *st = GETSTATE(m);
+		auto sakura_error = st->error;
 		PyErr_SetString(sakura_error, "Failed to initialize libsakura.");
 		return nullptr;
 	}
@@ -1623,19 +1636,65 @@ LIBSAKURA_SYMBOL(PyAlignedBuffer) *buffer, LIBSAKURA_SYMBOL(PyTypeId) *type) {
 	return LIBSAKURA_SYMBOL(Status_kOK);
 }
 
-PyMODINIT_FUNC initlibsakurapy(void) {
+#if PY_MAJOR_VERSION >= 3
+
+static int module_traverse(PyObject *m, visitproc visit, void *arg) {
+	Py_VISIT(GETSTATE(m)->error);
+	return 0;
+}
+
+static int module_clear(PyObject *m) {
+	Py_CLEAR(GETSTATE(m)->error);
+	return 0;
+}
+
+static struct PyModuleDef moduledef = {
+		PyModuleDef_HEAD_INIT,
+		MODULE_NAME,
+		NULL,
+		sizeof(struct module_state),
+		module_methods,
+		NULL,
+		module_traverse,
+		module_clear,
+		NULL
+};
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC
+PyInit_libsakurapy(void)
+
+#else
+
+#define INITERROR return
+
+PyMODINIT_FUNC initlibsakurapy(void)
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+	PyObject *mod = PyModule_Create(&moduledef);
+#else
 	PyObject *mod = Py_InitModule3(MODULE_NAME, module_methods, module_doc);
+#endif
 	if (mod == nullptr) {
-		return;
+		INITERROR;
 	}
+
+	struct module_state *st = GETSTATE(mod);
 
 	static char excep_name[] = MODULE_NAME ".error";
 	static char excep_doc[] = "error on invoking libsakura functions";
+	auto sakura_error = st->error;
 	sakura_error = PyErr_NewExceptionWithDoc(excep_name, excep_doc, nullptr,
 			nullptr);
-	if (sakura_error != nullptr) {
-		Py_INCREF(sakura_error);
-		PyModule_AddObject(mod, "error", sakura_error);
+//	if (sakura_error != nullptr) {
+//		Py_INCREF(sakura_error);
+//		PyModule_AddObject(mod, "error", sakura_error);
+//	}
+	if (sakura_error == NULL) {
+		DecrementRef(mod);
+		INITERROR;
 	}
 	PyModule_AddIntConstant(mod, "TYPE_BOOL", LIBSAKURA_SYMBOL(PyTypeId_kBool));
 	PyModule_AddIntConstant(mod, "TYPE_INT8", LIBSAKURA_SYMBOL(PyTypeId_kInt8));
@@ -1658,6 +1717,10 @@ PyMODINIT_FUNC initlibsakurapy(void) {
 	LIBSAKURA_SYMBOL(LSQFitType_kPolynomial));
 	PyModule_AddIntConstant(mod, "BASELINE_TYPE_CHEBYSHEV",
 	LIBSAKURA_SYMBOL(LSQFitType_kChebyshev));
+
+#if PY_MAJOR_VERSION >= 3
+	return mod;
+#endif
 }
 
 }
