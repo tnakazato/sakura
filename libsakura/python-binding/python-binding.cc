@@ -103,9 +103,15 @@ struct module_state {
 
 #if PY_MAJOR_VERSION >= 3
 #define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+#define LONG_FROM_SSIZE_T(s) PyLong_FromSsize_t(s)
+#define ASLONG(s) PyLong_AsLong(s)
 #else
 #define GETSTATE(m) (&_state)
 static struct module_state _state;
+
+#define LONG_FROM_SSIZE_T(s) PyInt_FromSsize_t(s)
+#define ASLONG(s) PyInt_AsLong(s)
 #endif
 
 //PyObject *sakura_error;
@@ -145,7 +151,7 @@ PyObject *Initialize(PyObject *self, PyObject *args) {
 	LIBSAKURA_SYMBOL(Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 			nullptr);
 	if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-		struct module_state *st = GETSTATE(m);
+		struct module_state *st = GETSTATE(self);
 		auto sakura_error = st->error;
 		PyErr_SetString(sakura_error, "Failed to initialize libsakura.");
 		return nullptr;
@@ -1220,7 +1226,7 @@ PyObject *GetElementsOfAlignedBuffer(PyObject *self, PyObject *args) {
 		goto out_of_memory;
 	}
 	for (size_t i = 0; i < buf->dimensions; ++i) {
-		auto element = PyInt_FromSsize_t(buf->elements[i]);
+		auto element = LONG_FROM_SSIZE_T(buf->elements[i]);
 		if (element == nullptr) {
 			goto out_of_memory;
 		}
@@ -1337,7 +1343,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 					uint8_t>(sizeof(uint8_t) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
-				auto val = PyInt_AsLong(item.get());
+				auto val = ASLONG(item.get());
 				if (PyErr_Occurred()) {
 					return nullptr;
 				}
@@ -1360,7 +1366,7 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 					int32_t>(sizeof(int32_t) * len, &aligned);
 			for (Py_ssize_t i = 0; (size_t) i < len; ++i) {
 				RefHolder item(PySequence_GetItem(dataSeq, i));
-				auto val = PyInt_AsLong(item.get());
+				auto val = ASLONG(item.get());
 				if (PyErr_Occurred()) {
 					return nullptr;
 				}
@@ -1651,7 +1657,7 @@ static int module_clear(PyObject *m) {
 static struct PyModuleDef moduledef = {
 		PyModuleDef_HEAD_INIT,
 		MODULE_NAME,
-		NULL,
+		module_doc,
 		sizeof(struct module_state),
 		module_methods,
 		NULL,
