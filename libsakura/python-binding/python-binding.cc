@@ -662,6 +662,9 @@ constexpr FuncForPython Uint8OperateBitsOr = BitOperation<uint8_t,
 		LIBSAKURA_SYMBOL(PyTypeId_kInt8),
 		LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)>;
 
+constexpr FuncForPython Uint32OperateBitsOr = BitOperation<uint32_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kInt32),
+		LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)>;
 
 template<typename Type,
 LIBSAKURA_SYMBOL(PyTypeId) TypeId,
@@ -1475,6 +1478,9 @@ PyMethodDef module_methods[] =
 		{ "operate_bits_uint8_or", Uint8OperateBitsOr, METH_VARARGS,
 				"Bit operation OR between an uint8 value and uint8 array." },
 
+		{ "operate_bits_uint32_or", Uint32OperateBitsOr, METH_VARARGS,
+				"Bit operation OR between an uint32 value and uint32 array." },
+
 		{ "set_true_float_in_ranges_exclusive",
 				FloatSetTrueIntInRangesExclusive, METH_VARARGS,
 				"Sets True if the element is in at least one of ranges." },
@@ -1495,16 +1501,16 @@ PyMethodDef module_methods[] =
 		{ "apply_position_switch_calibration", CalibrateDataWithArrayScalingFloat,
 						METH_VARARGS, "apply position switch calibration." },
 
-		{ "create_convolve1D_context", CreateConvolve1DContextFFT,
+		{ "create_convolve1d_fft_context", CreateConvolve1DContextFFT,
 				METH_VARARGS, "Creates a context for convolving 1D." },
 
-		{ "convolve1D", Convolve1DFFT,
+		{ "convolve1d_fft", Convolve1DFFT,
 				METH_VARARGS, "perform one-dimensional discrete convolution." },
 
 		{ "create_baseline_context", CreateLSQFitContextPolynomial,
 				METH_VARARGS, "Creates a context for baseline subtraction." },
 
-		{ "subtract_baseline", LSQFitPolynomial,
+		{ "lsqfit_polynomial", LSQFitPolynomial,
 				METH_VARARGS, "perform baseline subtraction." },
 
 		{ "complement_masked_value_float", ComplementMaskedValueFloat,

@@ -158,6 +158,14 @@ def test_bit():
 	out = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask,result)
 	del mask, data8, result, ndata, out
 
+	# Test operate_bits_uint8_or
+	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]*4+[False]*4)
+	data32 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, [0, 2, 1, 3]*2)
+	ndata = libsakurapy.get_elements_of_aligned_buffer(data32)[0]
+	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, (ndata,))
+	out = libsakurapy.operate_bits_uint32_or(2,ndata,data32,mask,result)
+	del mask, data32, result, ndata, out
+
 def test_interpolate():
 	# interpolate in Y-axis
 	nchan = 4
@@ -215,10 +223,10 @@ def test_convolve1D():
 	peak = ndata / 2
 	kernel = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
 	out = libsakurapy.create_gaussian_kernel_float(peak, width, ndata, kernel)
-	ctx1D = libsakurapy.create_convolve1D_context(ndata, kernel)
+	ctx1D = libsakurapy.create_convolve1d_fft_context(ndata, kernel)
 	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
 	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
-	out = libsakurapy.convolve1D(ctx1D, ndata, data, result)
+	out = libsakurapy.convolve1d_fft(ctx1D, ndata, data, result)
 	del ctx1D, data, result, out
 
 def test_baseline():
@@ -235,7 +243,7 @@ def test_baseline():
 	final_mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (ndata,))
 	coeff = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_DOUBLE, (order+1,))
 	bestfit = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))	
-	out = libsakurapy.subtract_baseline(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, bestfit, result, final_mask)
+	out = libsakurapy.lsqfit_polynomial(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, bestfit, result, final_mask)
 	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
 	del ctxbl
 
