@@ -106,6 +106,7 @@ set_target_properties(sakurapy PROPERTIES
 	VERSION ${libsakura_VERSION_MAJOR}.${libsakura_VERSION_MINOR}
 	SOVERSION ${libsakura_VERSION_MAJOR}
 	PUBLIC_HEADER "${public_headers}"
+	SUFFIX .so
 )
 
 if(LOG4CXX_FOUND)
