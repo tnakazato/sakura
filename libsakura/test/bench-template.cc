@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <deque>
 #include <chrono>
