@@ -38,7 +38,7 @@ else(FALSE)
       python${VER}
   )
   find_library(PYTHON_LIBRARY
-    NAMES python${VER}
+    NAMES python${VER} python${VER}m
     PATHS
       /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib /opt/share/casa/current/release/lib64
     PATH_SUFFIXES
