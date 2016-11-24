@@ -48,7 +48,7 @@ rpm_short_name=${TRUE} # svn revision not included in rpm file name
 # Binary RPM / sakura version / include or not svn revision
 rpm_short_version=${TRUE}
 # Binary RPM / include legacy libraries for CASA
-rpm_legacy_libs=${TRUE}
+rpm_legacy_libs=${FALSE}
 
 # Usage
 usage() {
@@ -78,8 +78,9 @@ Options:
          default ...............: ${rpm_package_version_default}
     -ln|--rpm_long_name ........: include svn revision number in rpm file name
     -lv|--rpm_long_version .....: include svn revision number in rpm archive
-    --rpm_no_legacy_libs .......: do not include Sakura legacy libraries in rpm archive
-                                  applies only to rhel5 and rhel6 rpms
+    --rpm_legacy_libs ..........: include Sakura legacy libraries in rpm archive
+                                  applies only to rhel5 and rhel6 rpms targeting CASA version < 5
+                                  rhel6 rpm targeting CASA version >= 5 does not include Sakura legacy libraries
                                   rhel7 rpm does not include Sakura legacy libraries
 
 Examples:
@@ -129,8 +130,8 @@ while [[ $# > 0 ]] ; do
         -lv|--rpm_long_version)
         rpm_short_version=${FALSE}
         ;;
-        --rpm_no_legacy_libs)
-        rpm_legacy_libs=${FALSE}
+        --rpm_legacy_libs)
+        rpm_legacy_libs=${TRUE}
         ;;
         --no_rpm|--norpm)
         do_rpm=${FALSE}
@@ -250,13 +251,21 @@ fi
 my_rpm_macros="${rpmbuild_dir}/rpmmacros"
 rpm_define_options=""
 sign_option=""
-# -- CASA default install directory
+# -- Default install directory
 case "${rhel_version_major}" in
-    5|6)
+    5)
+    # CASA version < 5
     casa_install_prefix=/usr/lib64/casa/01
     ;;
+    6)
+    # CASA version <5: casa_install_prefix=/usr/lib64/casa/01
+    # CASA version >=  5
+    casa_install_prefix=/opt/casa/02
+    ;;
     7)
-    casa_install_prefix=/opt/casa/01
+    # CASA version <5: casa_install_prefix=/opt/casa/01
+    # CASA version >=5:
+    casa_install_prefix=/opt/casa/02
     ;;
     *) # Unknown RHEL distribution
     echo "Error: RHEL version major must be 5,6 or 7 but is set to:" 
@@ -431,10 +440,10 @@ set_build_env() {
     build_host=$(hostname --short)
     case ${build_host} in
         ana01)
-		source /opt/rh/devtoolset-3/enable
+	source /opt/rh/devtoolset-4/enable
         ;;
         ana02)
-        source /opt/rh/devtoolset-3/enable
+	source /opt/rh/devtoolset-4/enable
         ;;
         ana03)
         source /opt/rh/devtoolset-2/enable
