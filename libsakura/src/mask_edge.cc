@@ -255,7 +255,7 @@ inline size_t SearchForward(size_t start, size_t increment, size_t n,
 template<typename DataType>
 inline size_t SearchBackward(size_t start, size_t increment, size_t n,
 		DataType const mask[]) {
-	for (ssize_t i = 0; i < n; ++i) {
+	for (size_t i = 0; i < n; ++i) {
 		assert(i * increment <= start);
 		size_t index = start - i * increment;
 		if (mask[index] > 0) {
