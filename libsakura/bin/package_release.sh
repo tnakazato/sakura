@@ -307,10 +307,10 @@ rpmbuild_prepare(){
 spec_file="${project_name}.el${rhel_version_major}.spec"
 # -- RPATH control
 case "${rhel_version_major}" in
-    5|6)
+    5)
     need_rpath=${FALSE}
     ;;
-    7)
+    6|7)
     need_rpath=${TRUE}
     ;;
     *) # Unknown RHEL distribution
@@ -392,11 +392,11 @@ if [[ ${need_rpath} -eq ${TRUE} ]] ; then
 	  -D CMAKE_SKIP_BUILD_RPATH=FALSE \
 	  -D CMAKE_BUILD_WITH_INSTALL_RPATH=FALSE \
 	  -D CMAKE_INSTALL_RPATH_USE_LINK_PATH=TRUE \
+	  -D CMAKE_INSTALL_RPATH='/cas-8362/some/non/existent/path/for/later/rpath/replacement' \
 	CMAKE_RPATH_OPTIONS
 fi
-# CMake command / common options    
+# CMake command / common options / path to sources   
 cat >> $spec_file <<'CMAKE_COMMAND_END'
-  -D CMAKE_INSTALL_RPATH='/cas-8362/some/non/existent/path/for/later/rpath/replacement' \
   ..
 CMAKE_COMMAND_END
 # Make + install
