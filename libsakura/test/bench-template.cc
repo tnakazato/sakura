@@ -11,9 +11,11 @@
 #include <array>
 #include <memory>
 #include <deque>
+#include <numeric>
 #include <chrono>
 #include <cassert>
 #include <cstdlib>
+#include <cmath>
 #include <cstring>
 #include <cstdio>
 #include <sys/types.h>
@@ -98,6 +100,107 @@ struct StatBench {
 		LIBSAKURA_SYMBOL(ComputeStatisticsFloat)(ws->data->size(),
 				ws->data->data(), ws->is_valid->data(), &result);
 		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+	}
+};
+
+template<size_t SIZE>
+struct StatLSQFit {
+	static constexpr uint16_t ORDER = 14U;
+	static constexpr size_t NUM_COEFF = ORDER + 1;
+	struct WSType {
+		static constexpr size_t N = SIZE;
+		std::unique_ptr<std::array<float, N>,
+				decltype(&free_obj<std::array<float, N> >)> data;
+		std::unique_ptr<std::array<bool, N>,
+				decltype(&free_obj<std::array<bool, N> >)> is_valid;
+		std::unique_ptr<std::array<double, NUM_COEFF>,
+				decltype(&free_obj<std::array<double, NUM_COEFF> >)> coeff;
+		std::unique_ptr<std::array<bool, N>,
+				decltype(&free_obj<std::array<bool, N> >)> is_valid_out;
+		WSType() :
+				data(alloc_obj<std::array<float, N> >(),
+						free_obj<std::array<float, N> >), is_valid(
+						alloc_obj<std::array<bool, N> >(),
+						free_obj<std::array<bool, N> >), coeff(
+						alloc_obj<std::array<double, NUM_COEFF> >(),
+						free_obj<std::array<double, NUM_COEFF> >), is_valid_out(
+						alloc_obj<std::array<bool, N> >(),
+						free_obj<std::array<bool, N> >) {
+		}
+	};
+	static WSType *createWS(unsigned id) {
+		WSType *ws = new WSType();
+		constexpr float period1 = WSType::N;
+		constexpr float amplitude1 = 5.0f;
+
+		constexpr float period2 = 0.695f * WSType::N;
+		constexpr float amplitude2 = 5.0f;
+		constexpr float pi = M_PI;
+		for (size_t x = 0; x < WSType::N; ++x) {
+			ws->data->data()[x] = amplitude1
+					* std::sin(2.0f * pi * static_cast<float>(x) / period1)
+					+ amplitude2
+							* std::cos(
+									2.0f * pi * static_cast<float>(x)
+											/ period2);
+		}
+		constexpr size_t edge = static_cast<size_t>(0.1 * WSType::N);
+		assert(0 < edge && edge < WSType::N);
+		float y0 = std::accumulate(ws->data->data(), &ws->data->data()[edge],
+				0.f) / static_cast<float>(edge);
+		assert(edge <= WSType::N && 0 < WSType::N);
+		float y1 = std::accumulate(&ws->data->data()[WSType::N - edge],
+				&ws->data->data()[WSType::N], 0.f) / static_cast<float>(edge);
+		float k = (y1 - y0) / static_cast<float>(WSType::N - 1 - 0);
+		for (size_t x = 0; x < WSType::N; ++x) {
+			ws->data->data()[x] -= y0 + k * static_cast<float>(x);
+		}
+		ws->is_valid->fill(true);
+		return ws;
+	}
+
+	static void destroyWS(unsigned id, WSType *ws) {
+		delete ws;
+	}
+
+	struct ThreadLocalType { // typical member is thread local context object
+		unsigned thread_id;
+		std::unique_ptr<sakura_LSQFitContextFloat,
+				decltype(&LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat))> context;
+		ThreadLocalType() :
+				thread_id(0), context(nullptr,
+						LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)) {
+		}
+	};
+
+	static ThreadLocalType *createThreadLocal(unsigned tread_id) {
+		ThreadLocalType *tl = new ThreadLocalType;
+		tl->thread_id = tread_id;
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context = nullptr;
+		auto status = LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
+				LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), ORDER, WSType::N,
+				&context);
+		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+		assert(context != nullptr);
+		tl->context.reset(context);
+		return tl;
+	}
+
+	static void destroyThreadLocal(unsigned tread_id,
+			ThreadLocalType *threadLocal) {
+		assert(threadLocal->context != nullptr);
+	}
+
+	static void run(ThreadLocalType *tl, WSType *ws, unsigned id) {
+		LIBSAKURA_SYMBOL(LSQFitStatus) result;
+		float rms = 0.f;
+		LIBSAKURA_SYMBOL(Status) status =
+		LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(tl->context.get(), ORDER,
+				WSType::N, ws->data->data(), ws->is_valid->data(), 0.0001f, 1U,
+				NUM_COEFF, ws->coeff->data(), nullptr, nullptr,
+				ws->is_valid_out->data(), &rms, &result);
+		assert(status == LIBSAKURA_SYMBOL(Status_kOK));
+		assert(result == LIBSAKURA_SYMBOL(LSQFitStatus_kOK));
 	}
 };
 
@@ -278,8 +381,12 @@ public:
 
 int main(int argc, char const * const argv[]) {
 	sakura_Status result = sakura_Initialize(nullptr, nullptr);
-	{
+
+	if (false) {
 		Bench<StatBench<1000000UL> > bench(8, 4, 20000ULL);
+		bench.run();
+	} else if (true) {
+		Bench<StatLSQFit<1000000UL> > bench(8, 1, 20000ULL);
 		bench.run();
 	}
 	sakura_CleanUp();
