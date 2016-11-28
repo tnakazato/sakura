@@ -1380,9 +1380,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * at the left side of simultaneous equations for least-square fitting.
  * Its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
  * Loop for columns comes inside that for rows, i.e., the value at the
- * @a m -th row and @a n -th column is stored at @a out [ @a
- * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
- * symmetric.
+ * @a m -th row and @a n -th column is stored at @a lsq_matrix [ @a
+ * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a lsq_matrix is
+ * actually symmetric.
  * @n must-be-aligned
  * @param[out] lsq_vector The values of a vector at the right side of
  * simultaneous equations for least-square fitting. Its length should be
@@ -1458,9 +1458,9 @@ LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateConvolve1DContextFFTFloat)(
  * at the left side of simultaneous equations for least-square fitting.
  * Its length should therefore be equal to ( @a num_lsq_bases * @a num_lsq_bases ).
  * Loop for columns comes inside that for rows, i.e., the value at the
- * @a m -th row and @a n -th column is stored at @a out [ @a
- * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a out is actually
- * symmetric.
+ * @a m -th row and @a n -th column is stored at @a lsq_matrix [ @a
+ * num_lsq_bases * ( @a m -1) + ( @a n -1)], though @a lsq_matrix is
+ * actually symmetric.
  * @param[in,out] lsq_vector The values of a vector at the right side of
  * simultaneous equations for least-square fitting. Its length should be
  * equal to @a num_lsq_bases .
@@ -1718,10 +1718,10 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @param[in] context A context created by @ref sakura_CreateLSQFitContextPolynomialFloat .
  * @param[in] order Polynomial order. It should not exceed the @a order
  * specified in creation of @a context .
- * @param[in] num_data Number of elements in the arrays @a data, @a mask,
- * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to @ref sakura_CreateLSQFitContextPolynomialFloat to create
- * @a context .
+ * @param[in] num_data Number of elements in the arrays @a data ,
+ * @a mask , @a best_fit , @a residual , and @a final_mask .
+ * It must be equal to @a num_data which was given to
+ * @ref sakura_CreateLSQFitContextPolynomialFloat to create @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask Input mask data with length of @a num_data .
@@ -1798,10 +1798,10 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @param[in] num_pieces Number of spline pieces. It must be positive
  * and also must not exceed the number of spline pieces specified in
  * creation of @a context .
- * @param[in] num_data Number of elements in the arrays @a data, @a mask,
- * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to @ref sakura_CreateLSQFitContextCubicSplineFloat to create
- * @a context .
+ * @param[in] num_data Number of elements in the arrays @a data ,
+ * @a mask , @a best_fit , @a residual , and @a final_mask . It must
+ * be equal to @a num_data which was given to
+ * @ref sakura_CreateLSQFitContextCubicSplineFloat to create @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask Input mask data with length of @a num_data .
@@ -1888,10 +1888,10 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * zero (for constant term), but not exceed the @a maximum wave number
  * specified in creation of @a context . The values must be stored in
  * ascending order and must not be duplicate.
- * @param[in] num_data Number of elements in the arrays @a data, @a mask,
- * @a final_mask, and @a out. It must be equal to @a num_data which was
- * given to @ref sakura_CreateLSQFitContextSinusoidFloat to create
- * @a context .
+ * @param[in] num_data Number of elements in the arrays @a data ,
+ * @a mask , @a best_fit , @a residual , and @a final_mask . It must
+ * be equal to @a num_data which was given to
+ * @ref sakura_CreateLSQFitContextSinusoidFloat to create @a context .
  * @param[in] data Input data with length of @a num_data .
  * @n must-be-aligned
  * @param[in] mask Input mask data with length of @a num_data .
