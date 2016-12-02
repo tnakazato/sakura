@@ -21,7 +21,7 @@
  * @SAKURA_LICENSE_HEADER_END@
  */
 /*
- * baseline.cc
+ * lsq.cc
  *
  *  Created on: 2016/09/26
  *      Author: Wataru Kawasaki
@@ -140,7 +140,8 @@ struct TestCase {
 	ApiName api_name;
 	TestCategory category;
 	size_t num_repeat;
-	vector<ParamAttr> param;LIBSAKURA_SYMBOL(Status) expect_status;
+	vector<ParamAttr> param;
+	LIBSAKURA_SYMBOL(Status) expect_status;
 	//Func compare_func;
 	void AddParamAttr(string const name, ParamDataType const data_type,
 			ParamCategory const category, ParamValueType const value_type) {
@@ -528,7 +529,7 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 	}
 
 	if (tc.category == TestCategory_kPerformance) {
-		cout << setprecision(5) << "#x# benchmark Baseline_"
+		cout << setprecision(5) << "#x# benchmark Lsq_"
 				<< ApiNameStr[tc.api_name] << " " << time_elapsed << endl;
 	}
 }
@@ -598,12 +599,12 @@ void RunTest(ApiName const api_name) {
 }
 
 /*
- * A super class to test baseline functions
+ * A super class to test lsq functions
  */
-class Baseline: public ::testing::Test {
+class Lsq: public ::testing::Test {
 protected:
 
-	Baseline() :
+	Lsq() :
 			verbose(false) {
 	}
 
@@ -687,6 +688,6 @@ void Destroy(LIBSAKURA_SYMBOL(LSQFitContextFloat) *context, size_t status) {
 /*
  * Tests for LSQFitPolynomialFloat()
  */
-TEST_F(Baseline, LSQFitPolynomialFloat) {
+TEST_F(Lsq, LSQFitPolynomialFloat) {
 	RunTest(ApiName_kLSQFitPolynomialFloat);
 }
