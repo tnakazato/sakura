@@ -140,8 +140,7 @@ struct TestCase {
 	ApiName api_name;
 	TestCategory category;
 	size_t num_repeat;
-	vector<ParamAttr> param;
-	LIBSAKURA_SYMBOL(Status) expect_status;
+	vector<ParamAttr> param;LIBSAKURA_SYMBOL(Status) expect_status;
 	//Func compare_func;
 	void AddParamAttr(string const name, ParamDataType const data_type,
 			ParamCategory const category, ParamValueType const value_type) {
@@ -270,6 +269,22 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("orderTG", "order=4", TestCategory_kFailure, "order",
 				ParamValueType_kTooGreat,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		//#006 - dataNULL (data is a null pointer)
+		add_test_case("dataNULL", "data null pointer", TestCategory_kFailure,
+				"data", ParamValueType_kNull,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		//#007 - dataNA (data is not aligned)
+		add_test_case("dataNA", "data not aligned", TestCategory_kFailure,
+				"data", ParamValueType_kNotAligned,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		//#008 - maskNULL (mask is a null pointer)
+		add_test_case("maskNULL", "mask null pointer", TestCategory_kFailure,
+				"mask", ParamValueType_kNull,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		//#009 - maskNA (mask is not aligned)
+		add_test_case("maskNA", "mask not aligned", TestCategory_kFailure,
+				"mask", ParamValueType_kNotAligned,
+				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
 		break;
 	default:
 		assert(false);
@@ -285,6 +300,17 @@ void AllocateAligned(size_t const length, T **data, void **data_storage) {
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(T) * length, data));
 	assert(LIBSAKURA_SYMBOL(IsAligned)(*data));
+	*data_storage = storage_for_data.release();
+}
+
+template<typename T>
+void AllocateNotAligned(size_t const length, T **data, void **data_storage) {
+	*data = nullptr;
+	unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(T) * (length + 1), data));
+	++(*data);
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(*data));
 	*data_storage = storage_for_data.release();
 }
 
@@ -311,19 +337,65 @@ struct ParamSet {
 	map<string, LIBSAKURA_SYMBOL(LSQFitStatus) *> fsta;
 	map<string, void *> sto;
 
+	void SetNullPointer(string const &name) {
+		Free(name);
+		if (sto.count(name) == 1) {
+			sto[name] = nullptr;
+			assert(sto[name] == nullptr);
+		}
+		if (fptr.count(name) == 1) {
+			fptr[name] = nullptr;
+			assert(fptr[name] == nullptr);
+		}
+		if (dptr.count(name) == 1) {
+			dptr[name] = nullptr;
+			assert(dptr[name] == nullptr);
+		}
+		if (bptr.count(name) == 1) {
+			bptr[name] = nullptr;
+			assert(bptr[name] == nullptr);
+		}
+		if (ctxt.count(name) == 1) {
+			ctxt[name] = nullptr;
+			assert(ctxt[name] == nullptr);
+		}
+		if (fsta.count(name) == 1) {
+			fsta[name] = nullptr;
+			assert(fsta[name] == nullptr);
+		}
+	}
 	void AllocateAlignedFloat(string const &name, string const &length_name) {
+		Free(name);
 		AllocateAligned(size[length_name], &fptr[name], &sto[name]);
 	}
+	void AllocateNotAlignedFloat(string const &name,
+			string const &length_name) {
+		Free(name);
+		AllocateNotAligned(size[length_name], &fptr[name], &sto[name]);
+	}
 	void AllocateAlignedDouble(string const &name, string const &length_name) {
+		Free(name);
 		AllocateAligned(size[length_name], &dptr[name], &sto[name]);
 	}
+	void AllocateNotAlignedDouble(string const &name,
+			string const &length_name) {
+		Free(name);
+		AllocateNotAligned(size[length_name], &dptr[name], &sto[name]);
+	}
 	void AllocateAlignedBool(string const &name, string const &length_name) {
+		Free(name);
 		AllocateAligned(size[length_name], &bptr[name], &sto[name]);
 	}
+	void AllocateNotAlignedBool(string const &name, string const &length_name) {
+		Free(name);
+		AllocateNotAligned(size[length_name], &bptr[name], &sto[name]);
+	}
 	void AllocateFloat(string const &name) {
+		Free(name);
 		Allocate(1, &fptr[name]);
 	}
 	void AllocateStatus(string const &name) {
+		Free(name);
 		Allocate(1, &fsta[name]);
 	}
 	void AllocateContexts(string const &name, string const &defaultvalue_name) {
@@ -371,30 +443,39 @@ struct ParamSet {
 		if (sto.count(name) == 1) {
 			if (sto[name] != nullptr) {
 				LIBSAKURA_PREFIX::Memory::Free(sto[name]);
+				sto[name] = nullptr;
 			}
 		} else if (fptr.count(name) == 1) {
 			if (fptr[name] != nullptr) {
 				LIBSAKURA_PREFIX::Memory::Free(fptr[name]);
+				fptr[name] = nullptr;
 			}
 		} else if (dptr.count(name) == 1) {
 			if (dptr[name] != nullptr) {
 				LIBSAKURA_PREFIX::Memory::Free(dptr[name]);
+				dptr[name] = nullptr;
 			}
 		} else if (bptr.count(name) == 1) {
 			if (bptr[name] != nullptr) {
 				LIBSAKURA_PREFIX::Memory::Free(bptr[name]);
+				bptr[name] = nullptr;
 			}
 		} else if (fsta.count(name) == 1) {
 			if (fsta[name] != nullptr) {
 				LIBSAKURA_PREFIX::Memory::Free(fsta[name]);
+				fsta[name] = nullptr;
 			}
 		} else if (ctxt.count(name) == 1) {
 			if (ctxt[name] != nullptr) {
-				LIBSAKURA_SYMBOL(Status) status;
-				status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
-						ctxt[name]);
-				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				if ((name != "context")||(ctxt.size() == 1)) {
+					LIBSAKURA_SYMBOL(Status) status;
+					status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
+							ctxt[name]);
+					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+				}
+				ctxt[name] = nullptr;
 			}
+
 		}
 	}
 };
@@ -432,11 +513,11 @@ ParamSet CreateDefaultParameterSet(ApiName const api_name) {
 //interpret test cases, setup all parameter values to be used for testing
 void Prologue(TestCase const &tc, TestCase const &default_tc, ParamSet &ps) {
 	cout << "    {" << tc.title << ": " << tc.desc << "}   ";
-	//cout << endl;
+//cout << endl;
 	for (size_t j = 0; j < tc.param.size(); ++j) {
 		//cout << "(" << tc.param[j].name << ")" << "[" << tc.param[j].value_type << "]   ";
 	}
-	//cout << endl;
+//cout << endl;
 
 	ps = CreateDefaultParameterSet(tc.api_name);
 	ParamAttr param;
@@ -455,7 +536,8 @@ void Prologue(TestCase const &tc, TestCase const &default_tc, ParamSet &ps) {
 		if (name == "context") {
 			assert(dtype == ParamDataType_kContextPointer);
 			if (vtype == ParamValueType_kNull) {
-				ps.ctxt[name] = nullptr;
+				ps.SetNullPointer(name);
+				//ps.ctxt[name] = nullptr;
 			} else {
 				if (tc.desc.find("poly") != string::npos) {
 					ps.ctxt[name] = ps.ctxt["poly"];
@@ -474,8 +556,19 @@ void Prologue(TestCase const &tc, TestCase const &default_tc, ParamSet &ps) {
 				ps.ui16[name] = 4;
 			}
 			ps.size["num_coeff"] = ps.ui16["order"] + 1;
-			ps.Free("coeff");
 			ps.AllocateAlignedDouble("coeff", "num_coeff");
+		} else if (name == "data") {
+			if (vtype == ParamValueType_kNull) {
+				ps.SetNullPointer("data");
+			} else if (vtype == ParamValueType_kNotAligned) {
+				ps.AllocateNotAlignedFloat("data", "num_data");
+			}
+		} else if (name == "mask") {
+			if (vtype == ParamValueType_kNull) {
+				ps.SetNullPointer("mask");
+			} else if (vtype == ParamValueType_kNotAligned) {
+				ps.AllocateNotAlignedBool("mask", "num_data");
+			}
 		}
 	}
 }
@@ -536,51 +629,22 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 
 void FreeParamSet(ParamSet &ps) {
 	for (auto it = ps.sto.begin(); it != ps.sto.end(); ++it) {
-		auto key = it->first;
-		if (ps.sto[key] != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(ps.sto[key]);
-		}
+		ps.Free(it->first);
 	}
 	for (auto it = ps.fptr.begin(); it != ps.fptr.end(); ++it) {
-		auto key = it->first;
-		if ((ps.fptr[key] != nullptr) && (ps.sto.count(key) == 0)) {
-			LIBSAKURA_PREFIX::Memory::Free(ps.fptr[key]);
-		}
+		ps.Free(it->first);
 	}
 	for (auto it = ps.dptr.begin(); it != ps.dptr.end(); ++it) {
-		auto key = it->first;
-		if ((ps.dptr[key] != nullptr) && (ps.sto.count(key) == 0)) {
-			LIBSAKURA_PREFIX::Memory::Free(ps.dptr[key]);
-		}
+		ps.Free(it->first);
 	}
 	for (auto it = ps.bptr.begin(); it != ps.bptr.end(); ++it) {
-		auto key = it->first;
-		if ((ps.bptr[key] != nullptr) && (ps.sto.count(key) == 0)) {
-			LIBSAKURA_PREFIX::Memory::Free(ps.bptr[key]);
-		}
+		ps.Free(it->first);
+	}
+	for (auto it = ps.ctxt.begin(); it != ps.ctxt.end(); ++it) {
+		ps.Free(it->first);
 	}
 	for (auto it = ps.fsta.begin(); it != ps.fsta.end(); ++it) {
-		auto key = it->first;
-		if (ps.fsta[key] != nullptr) {
-			LIBSAKURA_PREFIX::Memory::Free(ps.fsta[key]);
-		}
-	}
-	if (ps.ctxt.size() > 1) {
-		for (auto it = ps.ctxt.begin(); it != ps.ctxt.end(); ++it) {
-			//ctxt["context"] need not to be free since it is a copy of one of the others.
-			auto key = it->first;
-			auto p = ps.ctxt[key];
-			if ((p != nullptr) && (key != "context")) {
-				LIBSAKURA_SYMBOL(Status) status =
-				LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(p);
-				EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
-				p = nullptr;
-			}
-		}
-	} else if (ps.ctxt.size() == 1) {
-		LIBSAKURA_SYMBOL(Status) status =
-		LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(ps.ctxt["context"]);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		ps.Free(it->first);
 	}
 }
 
@@ -619,7 +683,7 @@ protected:
 		LIBSAKURA_SYMBOL(CleanUp)();
 	}
 
-	//Set (A[0]+A[1]*x+A[2]*x*x+A[3]*x*x*x) float values into an array
+//Set (A[0]+A[1]*x+A[2]*x*x+A[3]*x*x*x) float values into an array
 	void SetFloatPolynomial(size_t num_data, float *data,
 			double *coeff_answer) {
 		for (size_t i = 0; i < num_data; ++i) {
@@ -636,7 +700,7 @@ protected:
 		}
 	}
 
-	// Check if the expected and actual values are enough close to each other
+// Check if the expected and actual values are enough close to each other
 	void CheckAlmostEqual(double expected, double actual, double tolerance) {
 		double deviation = fabs(actual - expected);
 		double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
@@ -647,12 +711,14 @@ protected:
 };
 
 //Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
-void Destroy(LIBSAKURA_SYMBOL(LSQFitContextFloat) *context, size_t status) {
-	LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyLSQFitContextFloat(
-			context);
-	EXPECT_EQ(status, destroy_status);
-	cout << "Destroy Status : " << destroy_status << endl;
-}
+/*
+ void Destroy(LIBSAKURA_SYMBOL(LSQFitContextFloat) *context, size_t status) {
+ LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyLSQFitContextFloat(
+ context);
+ EXPECT_EQ(status, destroy_status);
+ cout << "Destroy Status : " << destroy_status << endl;
+ }
+ */
 
 /*
  * Test sakura_CreateLSQFitContextFloatWithPolynomialPerformanceTest
