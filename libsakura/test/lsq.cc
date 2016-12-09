@@ -89,6 +89,8 @@ typedef enum {
 	ParamDataType_kNumElements
 } ParamDataType;
 
+vector<string> LsqFuncTypeStr = { "poly", "chebyshev", "cspline", "sinusoid" };
+
 bool IsPointer(ParamDataType const &data_type) {
 	bool res = false;
 	if ((data_type == ParamDataType_kFloatPointer)
@@ -269,19 +271,19 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("orderTG", "order=4", TestCategory_kFailure, "order",
 				ParamValueType_kTooGreat,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-		//#006 - dataNULL (data is a null pointer)
+		//#006 - dataNULL
 		add_test_case("dataNULL", "data null pointer", TestCategory_kFailure,
 				"data", ParamValueType_kNull,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-		//#007 - dataNA (data is not aligned)
+		//#007 - dataNA
 		add_test_case("dataNA", "data not aligned", TestCategory_kFailure,
 				"data", ParamValueType_kNotAligned,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-		//#008 - maskNULL (mask is a null pointer)
+		//#008 - maskNULL
 		add_test_case("maskNULL", "mask null pointer", TestCategory_kFailure,
 				"mask", ParamValueType_kNull,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
-		//#009 - maskNA (mask is not aligned)
+		//#009 - maskNA
 		add_test_case("maskNA", "mask not aligned", TestCategory_kFailure,
 				"mask", ParamValueType_kNotAligned,
 				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
@@ -467,7 +469,7 @@ struct ParamSet {
 			}
 		} else if (ctxt.count(name) == 1) {
 			if (ctxt[name] != nullptr) {
-				if ((name != "context")||(ctxt.size() == 1)) {
+				if ((name != "context") || (ctxt.size() == 1)) {
 					LIBSAKURA_SYMBOL(Status) status;
 					status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
 							ctxt[name]);
@@ -533,41 +535,31 @@ void Prologue(TestCase const &tc, TestCase const &default_tc, ParamSet &ps) {
 		assert(name == default_param.name);
 		assert(dtype == default_param.data_type);
 		vtype = param.value_type;
-		if (name == "context") {
-			assert(dtype == ParamDataType_kContextPointer);
-			if (vtype == ParamValueType_kNull) {
-				ps.SetNullPointer(name);
-				//ps.ctxt[name] = nullptr;
-			} else {
-				if (tc.desc.find("poly") != string::npos) {
-					ps.ctxt[name] = ps.ctxt["poly"];
-				} else if (tc.desc.find("chebyshev") != string::npos) {
-					ps.ctxt[name] = ps.ctxt["chebyshev"];
-				} else if (tc.desc.find("cspline") != string::npos) {
-					ps.ctxt[name] = ps.ctxt["cspline"];
-				} else if (tc.desc.find("sinusoid") != string::npos) {
-					ps.ctxt[name] = ps.ctxt["sinusoid"];
+		if (vtype == ParamValueType_kNull) {
+			ps.SetNullPointer(name);
+		} else if (vtype == ParamValueType_kNotAligned) {
+			if (name == "data") {
+				ps.AllocateNotAlignedFloat(name, "num_data");
+			} else if (name == "mask") {
+				ps.AllocateNotAlignedBool(name, "num_data");
+			}
+		} else {
+			if (name == "context") {
+				assert(dtype == ParamDataType_kContextPointer);
+				for (size_t j = 0; j < LsqFuncTypeStr.size(); ++j) {
+					if (tc.desc.find(LsqFuncTypeStr[j]) != string::npos) {
+						ps.ctxt[name] = ps.ctxt[LsqFuncTypeStr[j]];
+						break;
+					}
 				}
-			}
-		} else if (name == "order") {
-			if (vtype == ParamValueType_kLowerBound) {
-				ps.ui16[name] = 0;
-			} else if (vtype == ParamValueType_kTooGreat) {
-				ps.ui16[name] = 4;
-			}
-			ps.size["num_coeff"] = ps.ui16["order"] + 1;
-			ps.AllocateAlignedDouble("coeff", "num_coeff");
-		} else if (name == "data") {
-			if (vtype == ParamValueType_kNull) {
-				ps.SetNullPointer("data");
-			} else if (vtype == ParamValueType_kNotAligned) {
-				ps.AllocateNotAlignedFloat("data", "num_data");
-			}
-		} else if (name == "mask") {
-			if (vtype == ParamValueType_kNull) {
-				ps.SetNullPointer("mask");
-			} else if (vtype == ParamValueType_kNotAligned) {
-				ps.AllocateNotAlignedBool("mask", "num_data");
+			} else if (name == "order") {
+				if (vtype == ParamValueType_kLowerBound) {
+					ps.ui16[name] = 0;
+				} else if (vtype == ParamValueType_kTooGreat) {
+					ps.ui16[name] = 4;
+				}
+				ps.size["num_coeff"] = ps.ui16["order"] + 1;
+				ps.AllocateAlignedDouble("coeff", "num_coeff");
 			}
 		}
 	}
