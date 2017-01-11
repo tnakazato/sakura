@@ -36,7 +36,7 @@
 #include "testutil.h"
 
 /* the number of elements in input/output array to test */
-#define NUM_IN 8 // length of base data. DO NOT MODIFY!
+#define NUM_IN_EVEN 8 // length of base data. DO NOT MODIFY!
 #define NUM_IN_LONG (1 << 18) //2**18
 #define UNALIGN_OFFSET 1 // should be != ALIGNMENT
 using namespace std;
@@ -94,7 +94,7 @@ struct FuncAndAnswer {
 	typedef LIBSAKURA_SYMBOL(Status) (*FuncType)(DataType, size_t,
 			DataType const *, bool const *, DataType *);
 	FuncType function;               // function
-	DataType answer[NUM_IN];     // answer array
+	DataType answer[NUM_IN_EVEN];     // answer array
 };
 
 // a struct to store test parameters for both uint8 and uint32
@@ -313,7 +313,7 @@ protected:
 	 */
 	// Test various bit operations with an Uint8 array of length 8, 11 and zero
 	void RunVariousLengthTests() {
-		size_t const array_length[] = { NUM_IN, 11, 0 };
+		size_t const array_length[] = { NUM_IN_EVEN, 11, 0 };
 		size_t const num_test(ELEMENTSOF(array_length));
 		size_t const num_max(11);
 		//num_max = max(array_length);
@@ -375,7 +375,7 @@ protected:
 
 	// Test failure cases of various bit operations: NULL data, mask, or result array
 	void RunMiscOpFailNullArrayTests() {
-		size_t const num_data(NUM_IN);
+		size_t const num_data(NUM_IN_EVEN);
 		SIMD_ALIGN
 		DataType data[num_data];
 		SIMD_ALIGN
@@ -406,7 +406,7 @@ protected:
 	// Test failure cases of various bit operations: Unaligned data array
 	void RunMiscOpFailNotAlignedArrayTests() {
 		size_t offset(UNALIGN_OFFSET);
-		size_t const num_data(NUM_IN);
+		size_t const num_data(NUM_IN_EVEN);
 		size_t const num_elements(num_data + offset);
 		SIMD_ALIGN
 		DataType data[num_elements];
@@ -458,7 +458,7 @@ private:
 		static constexpr DataType data_[] = { 0, 1, 2, 3, 0, 1, 2, 3 };
 		/* boolean array of {F, F, F, F, T, T, T, T} */
 		static constexpr bool edit_mask_[] = { false, false, false, false, true, true, true, true };
-		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN);
+		STATIC_ASSERT(ELEMENTSOF(data_)==NUM_IN_EVEN);
 		STATIC_ASSERT(ELEMENTSOF(edit_mask_)==ELEMENTSOF(data_));
 
 		size_t const num_in(ELEMENTSOF(data_));
