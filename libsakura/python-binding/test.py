@@ -245,6 +245,9 @@ def test_baseline():
 	bestfit = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))	
 	out = libsakurapy.lsqfit_polynomial(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, bestfit, result, final_mask)
 	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
+	
+	# test for bestfit and residual being None
+	out2 = libsakurapy.lsqfit_polynomial(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, None, None, final_mask)
 	del ctxbl
 
 def test_complement():
