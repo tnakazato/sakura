@@ -77,4 +77,5 @@ def bench(cls, num_working_set, num_threads, numIters):
 		i, ws = context.wss.get()
 		cls.destroyWS(i, ws)
 
-bench(MyBench, 4, 4, 2000)
+if __name__ == "__main__":
+	bench(MyBench, 4, 4, 2000)
