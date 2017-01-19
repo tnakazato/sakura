@@ -61,10 +61,13 @@ def bench(cls, num_working_set, num_threads, numIters):
 	for thr in threads:
 		thr.start()
 
-	while context.count < numIters:
-		time.sleep(1)
-		now = time.monotonic()
-		print("{0} workingSets/sec".format(context.count / (now - start)))
+	try:
+		while context.count < numIters:
+			time.sleep(1)
+			now = time.monotonic()
+			print("{0} workingSets/sec".format(context.count / (now - start)))
+	except KeyboardInterrupt as e:
+		pass
 
 	context.stop = True
 
