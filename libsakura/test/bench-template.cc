@@ -104,7 +104,7 @@ struct StatBench {
 };
 
 template<size_t SIZE>
-struct StatLSQFit {
+struct LSQFitBench {
 	static constexpr uint16_t ORDER = 14U;
 	static constexpr size_t NUM_COEFF = ORDER + 1;
 	struct WSType {
@@ -386,7 +386,7 @@ int main(int argc, char const * const argv[]) {
 		Bench<StatBench<1000000UL> > bench(8, 4, 20000ULL);
 		bench.run();
 	} else if (true) {
-		Bench<StatLSQFit<1000000UL> > bench(8, 1, 20000ULL);
+		Bench<LSQFitBench<1000000UL> > bench(8, 1, 20000ULL);
 		bench.run();
 	}
 	sakura_CleanUp();

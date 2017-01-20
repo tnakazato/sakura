@@ -19,7 +19,7 @@ class ThreadLocalType:
 	def __init__(self, thread_id):
 		self.thread_id = thread_id
 
-class MyBench:
+class LSQFitBench:
 	@staticmethod
 	def createWS(id):
 		ws = WSType()
@@ -74,7 +74,7 @@ class MyBench:
 def main():
 	libsakurapy.initialize()
 	try:
-		bench(MyBench, 8, 1, 20000)
+		bench(LSQFitBench, 8, 1, 20000)
 	finally:
 		gc.collect(2)
 		libsakurapy.clean_up()
