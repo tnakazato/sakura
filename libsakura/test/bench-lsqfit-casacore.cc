@@ -58,7 +58,7 @@ void free_obj(T* ptr) {
 static bool do_write = true;
 
 template<size_t SIZE>
-struct StatLSQFit {
+struct LSQFitBench {
 	static constexpr uint16_t ORDER = 14U;
 	static constexpr size_t NUM_COEFF = ORDER + 1;
 	struct WSType {
@@ -331,7 +331,7 @@ public:
 
 int main(int argc, char const * const argv[]) {
 
-	Bench<StatLSQFit<1000000UL> > bench(8, 1, 20000ULL);
+	Bench<LSQFitBench<1000000UL> > bench(8, 1, 20000ULL);
 	bench.run();
 
 	return 0;
