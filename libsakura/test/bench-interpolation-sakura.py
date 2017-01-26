@@ -73,7 +73,7 @@ class InterpolationXBench:
 
 	@staticmethod
 	def run(tl, ws, id):
-		residual = libsakurapy.interpolate_float_xaxis(
+		interpolated = libsakurapy.interpolate_float_xaxis(
 			ws.TYPE, ws.ORDER, 
 			ws.NUM_BASE, ws.base_position, ws.NUM_ARRAY, ws.in_data, ws.is_valid,
 			ws.NUM_INTERPOLATED, ws.interp_position, ws.out_data, ws.is_valid_out)
