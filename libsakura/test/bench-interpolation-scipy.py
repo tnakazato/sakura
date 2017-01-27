@@ -11,6 +11,8 @@ import numpy
 import numpy.ma as ma
 import time
 from scipy import interpolate
+import matplotlib.pyplot as plt
+import os
 
 class WSType:
 	TYPE = libsakurapy.INTERPOLATION_METHOD_LINEAR # linear interpolation
@@ -18,7 +20,7 @@ class WSType:
 	NUM_BASE = 100
 	NUM_ARRAY = 1
 	NUM_INTERPOLATED = 1000000 # from bench-interpolation.cc, Release
-	#NUM_INTERPOLATED = 100000 # Debug
+	#NUM_INTERPOLATED = 500 # Debug
 	INTERP_START = 0.0
 	INTERP_END = 101.0
 	
@@ -31,7 +33,7 @@ class InterpolationXBench:
 	def createWS(id):
 		working_set = WSType()
 		# Known data
-		# xi = i - 1
+		# xi = i + 1
 		# yi = xi + amp*(-1)^i
 		known_positions = numpy.arange(1, 101, dtype=numpy.float64)
 		assert known_positions.size == working_set.NUM_BASE
@@ -57,6 +59,12 @@ class InterpolationXBench:
 		assert wanted_positions.size == working_set.NUM_INTERPOLATED
 		working_set.wanted_positions = wanted_positions
 
+		# Plot result
+		#if wanted_positions.size == 500:
+		#	wanted_values = working_set.interpolating_function(wanted_positions)
+		#	plt.plot(known_positions,known_values,'o',wanted_positions,wanted_values,'-')
+		#	plt.savefig('bench.interpolation.scipy.500.png')
+
 		return working_set
 
 	@staticmethod
@@ -81,8 +89,8 @@ class InterpolationXBench:
 def main():
 	libsakurapy.initialize()
 	try:
-		#working_sets, threads, iterations = 8,1,20000 # Release
-		working_sets, threads, iterations = 8,8,100 # Debug
+		working_sets, threads, iterations = 8,1,20000 # Release
+		#working_sets, threads, iterations = 8,8,100 # Debug
 		bench(InterpolationXBench, working_sets, threads, iterations)
 	finally:
 		gc.collect(2)
