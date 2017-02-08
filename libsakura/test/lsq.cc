@@ -720,6 +720,7 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					ps.fptr["data"][i] = 10.0f;
 					ps.bptr["mask"][i] = true;
 				}
+				ps.ui16["num_fitting_max"] = 1;
 				ps.AllocateAlignedDouble("coeff", "num_coeff");
 				ps.AllocateAlignedFloat("best_fit", "num_data");
 				ps.AllocateAlignedFloat("residual", "num_data");
