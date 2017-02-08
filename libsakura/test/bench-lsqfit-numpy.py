@@ -11,7 +11,7 @@ import time
 class WSType:
 	ORDER = 14
 	NUM_COEFF = ORDER + 1
-	N = 100#0000
+	N = 1000000
 
 class ThreadLocalType:
 	def __init__(self, thread_id):
