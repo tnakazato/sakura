@@ -40,6 +40,9 @@
  * http://docs.python.jp/2/c-api/capsule.html
  * http://docs.python.jp/2/c-api/arg.html
  *
+ * Refer to following documents for Python 3 support:
+ * https://docs.python.org/3.5/howto/cporting.html
+ *
  */
 
 #define MODULE_NAME "libsakurapy"
