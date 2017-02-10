@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ProjDirPath="`dirname $0`"
-ProjDirPath="`(cd \"$ProjDirPath\"; pwd)`"
+ProjDirPath="`(cd \"$ProjDirPath\"/..; pwd)`"
 BuildDirPath="$PWD" # "${ProjDirPath}/build"
 prefix_base="${BuildDirPath}/installed"
 

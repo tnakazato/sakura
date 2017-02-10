@@ -1850,7 +1850,7 @@ TEST(Gridding, Odd) {
 					wsum *= Square(2 * tc->kSupport + 1);
 					bool result = true;
 					for (size_t i = 0; i < ELEMENTSOF(tc->sumwt); ++i) {
-						if (!(tc->sumwt[i][0] == 0 && tc->sumwt[i][1]) == wsum * 2) {
+						if (!(tc->sumwt[i][0] == 0 && tc->sumwt[i][1] == wsum * 2)) {
 							result = false;
 						}
 						if (!all_of(&tc->sumwt[i][2], ENDOFARRAY(tc->sumwt[i]), [wsum](decltype(tc->sumwt[i][0]) v) -> bool {

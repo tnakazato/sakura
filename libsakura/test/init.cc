@@ -75,8 +75,8 @@ TEST(Global, Init) {
 		EXPECT_NE(nullptr, context);
 		status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(context);
 		EXPECT_EQ(status, sakura_Status_kOK);
-		EXPECT_LT(0, alloc_count);
-		EXPECT_LT(0, free_count);
+		EXPECT_LT(0U, alloc_count);
+		EXPECT_LT(0U, free_count);
 		EXPECT_EQ(alloc_count, free_count);
 	}
 	LIBSAKURA_SYMBOL(CleanUp)();

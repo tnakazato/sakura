@@ -85,12 +85,13 @@ void VisitWith(const DenseBase<OtherDerived> &other, Visitor &visitor) {
 	eigen_assert(
 			other.rows() == this->rows() && other.cols() == this->cols()
 					&& "DenseBase::visitWith(): inconsistent size.");
+	using EV = internal::evaluator<OtherDerived>;
 	enum {
-		unroll = SizeAtCompileTime != Dynamic && CoeffReadCost != Dynamic
+		unroll = SizeAtCompileTime != Dynamic && EV::CoeffReadCost != Dynamic
 				&& (SizeAtCompileTime == 1
 						|| internal::functor_traits < Visitor > ::Cost
 								!= Dynamic)
-				&& SizeAtCompileTime * CoeffReadCost
+				&& SizeAtCompileTime * EV::CoeffReadCost
 						+ (SizeAtCompileTime - 1) * internal::functor_traits
 						< Visitor > ::Cost <= EIGEN_UNROLLING_LIMIT
 	};
