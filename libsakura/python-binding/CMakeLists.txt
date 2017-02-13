@@ -29,7 +29,7 @@ find_package(Log4Cxx)
 if(FALSE)
   find_package(PythonLibs REQUIRED)
 else(FALSE)
- foreach(VER 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
+ foreach(VER 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
   find_path(PYTHON_INCLUDE_PATH
     NAMES Python.h
     PATHS
