@@ -35,7 +35,7 @@ class LSQFitBench:
 		x = numpy.arange(ws.N, dtype=float)
 		y = amplitude1 * numpy.sin(2.0 * numpy.pi * x / period1) \
 		    + amplitude2 * numpy.cos(2.0 * numpy.pi * x / period2)
-		edge = 0.1 * ws.N
+		edge = int(0.1 * ws.N)
 		y0 = y[:edge].mean()
 		y1 = y[-edge:].mean()
 		x0 = x[0]
