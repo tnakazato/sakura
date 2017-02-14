@@ -56,84 +56,106 @@
 
 using namespace std;
 
+//Aliases for Returned Status
+LIBSAKURA_SYMBOL(Status) Ret_kOK = LIBSAKURA_SYMBOL(Status_kOK);
+LIBSAKURA_SYMBOL(Status) Ret_kNG = LIBSAKURA_SYMBOL(Status_kNG);
+LIBSAKURA_SYMBOL(Status) Ret_kIA = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
+LIBSAKURA_SYMBOL(Status) Ret_kNM = LIBSAKURA_SYMBOL(Status_kNoMemory);
+LIBSAKURA_SYMBOL(Status) Ret_kUE = LIBSAKURA_SYMBOL(Status_kUnknownError);
+
 typedef enum {
+	ApiName_kCreateLSQFitContextPolynomialFloat,
+	ApiName_kCreateLSQFitContextCubicSplineFloat,
+	ApiName_kCreateLSQFitContextSinusoidFloat,
+	ApiName_kDestroyLSQFitContextFloat,
+	ApiName_kGetNumberOfCoefficientsFloat,
 	ApiName_kLSQFitPolynomialFloat,
 	ApiName_kLSQFitCubicSplineFloat,
 	ApiName_kLSQFitSinusoidFloat,
+	ApiName_kSubtractPolynomialFloat,
+	ApiName_kSubtractCubicSplineFloat,
+	ApiName_kSubtractSinusoidFloat,
 	ApiName_kNumElements
 } ApiName;
 
-map<ApiName, string> ApiNameStr = { { ApiName_kLSQFitPolynomialFloat,
-		"LSQFitPolynomialFloat" }, { ApiName_kLSQFitCubicSplineFloat,
-		"LSQFitCubicSplineFloat" }, { ApiName_kLSQFitSinusoidFloat,
-		"LSQFitSinusoidFloat" }, { ApiName_kNumElements, "" } };
+map<ApiName, string> ApiNameStr = { {
+		ApiName_kCreateLSQFitContextPolynomialFloat,
+		"CreateLSQFitContextPolynomialFloat" }, {
+		ApiName_kCreateLSQFitContextCubicSplineFloat,
+		"CreateLSQFitContextCubicSplineFloat" }, {
+		ApiName_kCreateLSQFitContextSinusoidFloat,
+		"CreateLSQFitContextSinusoidFloat" }, {
+		ApiName_kDestroyLSQFitContextFloat, "DestroyLSQFitContextFloat" }, {
+		ApiName_kGetNumberOfCoefficientsFloat, "GetNumberOfCoefficientsFloat" },
+		{ ApiName_kLSQFitPolynomialFloat, "LSQFitPolynomialFloat" }, {
+				ApiName_kLSQFitCubicSplineFloat, "LSQFitCubicSplineFloat" }, {
+				ApiName_kLSQFitSinusoidFloat, "LSQFitSinusoidFloat" }, {
+				ApiName_kSubtractPolynomialFloat, "SubtractPolynomialFloat" }, {
+				ApiName_kSubtractCubicSplineFloat, "SubtractCubicSplineFloat" },
+		{ ApiName_kSubtractSinusoidFloat, "SubtractSinusoidFloat" }, {
+				ApiName_kNumElements, "" } };
+
+//Test Category
+typedef enum {
+	TCat_kOK, TCat_kPF, TCat_kNG, TCat_kNumElements
+} TCat;
 
 typedef enum {
-	TestCategory_kSuccessful,
-	TestCategory_kPerformance,
-	TestCategory_kFailure,
-	TestCategory_kNumElements
-} TestCategory;
-
-typedef enum {
-	ParamDataType_kInt,
-	ParamDataType_kSizeT,
-	ParamDataType_kUInt16T,
-	ParamDataType_kFloat,
-	ParamDataType_kDouble,
-	ParamDataType_kBool,
-	ParamDataType_kFloatPointer,
-	ParamDataType_kDoublePointer,
-	ParamDataType_kBoolPointer,
-	ParamDataType_kContextPointer,
-	ParamDataType_kFitStatusPointer,
-	ParamDataType_kNumElements
-} ParamDataType;
+	PDType_kInt,
+	PDType_kSizeT,
+	PDType_kUInt16T,
+	PDType_kFloat,
+	PDType_kDouble,
+	PDType_kBool,
+	PDType_kFloatPointer,
+	PDType_kDoublePointer,
+	PDType_kBoolPointer,
+	PDType_kContextPointer,
+	PDType_kFitStatusPointer,
+	PDType_kNumElements
+} PDType;
 
 vector<string> LsqFuncTypeStr = { "poly", "chebyshev", "cspline", "sinusoid" };
 
-bool IsPointer(ParamDataType const &data_type) {
+bool IsPointer(PDType const &data_type) {
 	bool res = false;
-	if ((data_type == ParamDataType_kFloatPointer)
-			|| (data_type == ParamDataType_kDoublePointer)
-			|| (data_type == ParamDataType_kBoolPointer)
-			|| (data_type == ParamDataType_kContextPointer)
-			|| (data_type == ParamDataType_kFitStatusPointer))
+	if ((data_type == PDType_kFloatPointer)
+			|| (data_type == PDType_kDoublePointer)
+			|| (data_type == PDType_kBoolPointer)
+			|| (data_type == PDType_kContextPointer)
+			|| (data_type == PDType_kFitStatusPointer))
 		res = true;
 	return res;
 }
 
 typedef enum {
-	ParamCategory_kValid,
-	ParamCategory_kInvalid,
-	ParamCategory_kUndefined,
-	ParamCategory_kNumElements
-} ParamCategory;
+	PCat_kValid, PCat_kInvalid, PCat_kUndefined, PCat_kNumElements
+} PCat;
 
 typedef enum {
-	ParamValueType_kLowerBound,
-	ParamValueType_kUpperBound,
-	ParamValueType_kInRange,
-	ParamValueType_kAligned,
-	ParamValueType_kValidPointer,
-	ParamValueType_kTooLess,
-	ParamValueType_kTooGreat,
-	ParamValueType_kOutofRange,
-	ParamValueType_kNaN,
-	ParamValueType_kInf,
-	ParamValueType_kNegativeInf,
-	ParamValueType_kNull,
-	ParamValueType_kNotAligned,
-	ParamValueType_kUndefined,
-	ParamValueType_kNumElements
-} ParamValueType;
+	PVType_kLB, //LowerBound
+	PVType_kUB, //UpperBound
+	PVType_kIR, //InRange
+	PVType_kAL, //Aligned
+	PVType_kVP, //ValidPointer
+	PVType_kTL, //TooLess
+	PVType_kTG, //TooGreat
+	PVType_kOR, //OutofRange
+	PVType_kNAN, //NaN
+	PVType_kINF, //Inf
+	PVType_kNINF, //NegativeInf
+	PVType_kNULL, //Null
+	PVType_kNAL, //NotAligned
+	PVType_kUNDEF, //Undefined
+	PVType_kNumElements
+} PVType;
 
-struct ParamAttr {
+struct PAttr {
 	//size_t param_id;
 	string name;
-	ParamDataType data_type;
-	ParamCategory category;
-	ParamValueType value_type;
+	PDType data_type;
+	PCat category;
+	PVType value_type;
 };
 
 struct TestCase {
@@ -141,14 +163,14 @@ struct TestCase {
 	string title;
 	string desc;
 	ApiName api_name;
-	TestCategory category;
+	TCat category;
 	size_t num_repeat;
-	vector<ParamAttr> param;LIBSAKURA_SYMBOL(Status) expect_status;
+	vector<PAttr> param;LIBSAKURA_SYMBOL(Status) expect_status;
 
 	//Func compare_func;
-	void AddParamAttr(string const name, ParamDataType const data_type,
-			ParamCategory const category, ParamValueType const value_type) {
-		param.push_back( { name, data_type, category, value_type });
+	void AddParamAttr(string const name, PDType const data_type,
+			PCat const param_category, PVType const value_type) {
+		param.push_back( { name, data_type, param_category, value_type });
 	}
 	size_t GetParamAttrIndex(string const param_name) {
 		bool found = false;
@@ -165,7 +187,7 @@ struct TestCase {
 		}
 		return idx;
 	}
-	ParamAttr& GetParamAttrByName(string const param_name) {
+	PAttr& GetParamAttrByName(string const param_name) {
 		return param[GetParamAttrIndex(param_name)];
 	}
 };
@@ -176,14 +198,14 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 	test_case.title = ApiNameStr[api_name];
 	test_case.desc = "default case";
 	test_case.api_name = api_name;
-	test_case.category = TestCategory_kSuccessful;
+	test_case.category = TCat_kOK;
 	test_case.num_repeat = 1;
-	test_case.expect_status = LIBSAKURA_SYMBOL(Status_kOK);
+	test_case.expect_status = Ret_kOK;
 	test_case.param.clear();
 	size_t num_params = 0;
 	vector<string> param_name(0);
-	vector<ParamDataType> param_dtype(0);
-	vector<ParamCategory> param_category(0);
+	vector<PDType> param_dtype(0);
+	vector<PCat> param_category(0);
 
 	switch (api_name) {
 	case ApiName_kLSQFitPolynomialFloat:
@@ -196,14 +218,14 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 			"best_fit", "residual",
 			"final_mask", "rms",
 			"lsqfit_status"};
-		param_dtype = {ParamDataType_kContextPointer,
-			ParamDataType_kUInt16T, ParamDataType_kSizeT,
-			ParamDataType_kFloatPointer, ParamDataType_kBoolPointer,
-			ParamDataType_kFloat, ParamDataType_kUInt16T,
-			ParamDataType_kSizeT, ParamDataType_kDoublePointer,
-			ParamDataType_kFloatPointer, ParamDataType_kFloatPointer,
-			ParamDataType_kBoolPointer, ParamDataType_kFloatPointer,
-			ParamDataType_kFitStatusPointer};
+		param_dtype = {PDType_kContextPointer,
+			PDType_kUInt16T, PDType_kSizeT,
+			PDType_kFloatPointer, PDType_kBoolPointer,
+			PDType_kFloat, PDType_kUInt16T,
+			PDType_kSizeT, PDType_kDoublePointer,
+			PDType_kFloatPointer, PDType_kFloatPointer,
+			PDType_kBoolPointer, PDType_kFloatPointer,
+			PDType_kFitStatusPointer};
 		break;
 		case ApiName_kLSQFitCubicSplineFloat:
 		num_params = 13;
@@ -217,10 +239,8 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 	assert(param_name.size() == num_params);
 	assert(param_dtype.size() == num_params);
 	for (size_t i = 0; i < num_params; ++i) {
-		test_case.AddParamAttr(param_name[i], param_dtype[i],
-				ParamCategory_kValid,
-				(IsPointer(param_dtype[i]) ?
-						ParamValueType_kValidPointer : ParamValueType_kInRange));
+		test_case.AddParamAttr(param_name[i], param_dtype[i], PCat_kValid,
+				(IsPointer(param_dtype[i]) ? PVType_kVP : PVType_kIR));
 	}
 	return test_case;
 }
@@ -248,9 +268,9 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		return &test_cases[test_cases.size()-1];};
 	auto add_test_case = [&](string const title_suffix,
 			string const test_description,
-			TestCategory const test_category,
+			TCat const test_category,
 			string const param_name,
-			ParamValueType const param_vtype,
+			PVType const param_vtype,
 			LIBSAKURA_SYMBOL(Status) const expect_status) {
 		tc = get_working_test_case();
 		tc->test_id = test_cases.size() - 1;
@@ -266,183 +286,143 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 	switch (api_name) {
 	case ApiName_kLSQFitPolynomialFloat:
 		//#000b - contextVP (context for chebyshev)
-		add_test_case("contextVP", "context for chebyshev",
-				TestCategory_kSuccessful, "context",
-				ParamValueType_kValidPointer, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("contextVP", "context for chebyshev", TCat_kOK, "context",
+				PVType_kVP, Ret_kOK);
 		//#001 - contextNULL
-		add_test_case("contextNULL", "", TestCategory_kFailure, "context",
-				ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
 		//#002 - contextOR (context for cspline)
-		add_test_case("contextOR", "context for cspline", TestCategory_kFailure,
-				"context", ParamValueType_kOutofRange,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("contextOR", "context for cspline", TCat_kNG, "context",
+				PVType_kOR, Ret_kIA);
 		//#003 - contextOR (context for sinusoids)
-		add_test_case("contextOR", "context for sinusoid",
-				TestCategory_kFailure, "context", ParamValueType_kOutofRange,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("contextOR", "context for sinusoid", TCat_kNG, "context",
+				PVType_kOR, Ret_kIA);
 		//#004 - orderLB
-		add_test_case("orderLB", "order=0", TestCategory_kSuccessful, "order",
-				ParamValueType_kLowerBound, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("orderLB", "order=0", TCat_kOK, "order", PVType_kLB,
+				Ret_kOK);
 		//#005 - orderTG (order is larger than the one used to create context)
-		add_test_case("orderTG", "order=4", TestCategory_kFailure, "order",
-				ParamValueType_kTooGreat,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("orderTG", "order=4", TCat_kNG, "order", PVType_kTG,
+				Ret_kIA);
 		//#006 - num_dataTL
-		add_test_case("num_dataTL", "num_data=14", TestCategory_kFailure,
-				"num_data", ParamValueType_kTooLess,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		//add_test_case("num_data", "=14", PVType_kTL, TCat_kNG, Ret_kIA);
+		add_test_case("num_dataTL", "num_data=14", TCat_kNG, "num_data",
+				PVType_kTL, Ret_kIA);
 		//#007 - num_dataTG
-		add_test_case("num_dataTG", "num_data=16", TestCategory_kFailure,
-				"num_data", ParamValueType_kTooGreat,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("num_dataTG", "num_data=16", TCat_kNG, "num_data",
+				PVType_kTG, Ret_kIA);
 		//#008 - num_dataLB
-		add_test_case("num_dataLB", "num_data=2", TestCategory_kSuccessful,
-				"num_data", ParamValueType_kLowerBound,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("num_dataLB", "num_data=2", TCat_kOK, "num_data",
+				PVType_kLB, Ret_kOK);
 		//#009 - dataNULL
-		add_test_case("dataNULL", "data null pointer", TestCategory_kFailure,
-				"data", ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("dataNULL", "data null pointer", TCat_kNG, "data",
+				PVType_kNULL, Ret_kIA);
 		//#010 - dataNA
-		add_test_case("dataNA", "data not aligned", TestCategory_kFailure,
-				"data", ParamValueType_kNotAligned,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("dataNA", "data not aligned", TCat_kNG, "data",
+				PVType_kNAL, Ret_kIA);
 		//#011 - maskNULL
-		add_test_case("maskNULL", "mask null pointer", TestCategory_kFailure,
-				"mask", ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("maskNULL", "mask null pointer", TCat_kNG, "mask",
+				PVType_kNULL, Ret_kIA);
 		//#012 - maskNA
-		add_test_case("maskNA", "mask not aligned", TestCategory_kFailure,
-				"mask", ParamValueType_kNotAligned,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("maskNA", "mask not aligned", TCat_kNG, "mask",
+				PVType_kNAL, Ret_kIA);
 		//#013 - minimum required effective data
-		add_test_case("effdataLB", "minimum required effective data",
-				TestCategory_kSuccessful, "mask", ParamValueType_kValidPointer,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("effdataLB", "minimum required effective data", TCat_kOK,
+				"mask", PVType_kVP, Ret_kOK);
 		//#014 - less than minimum required effective data
 		add_test_case("effdataTL", "less than minimum required effective data",
-				TestCategory_kFailure, "mask", ParamValueType_kValidPointer,
-				LIBSAKURA_SYMBOL(Status_kNG));
+				TCat_kNG, "mask", PVType_kVP, Ret_kNG);
 		//#015 - no effective data
-		add_test_case("noeffdata", "no effective data", TestCategory_kFailure,
-				"mask", ParamValueType_kValidPointer,
-				LIBSAKURA_SYMBOL(Status_kNG));
+		add_test_case("noeffdata", "no effective data", TCat_kNG, "mask",
+				PVType_kVP, Ret_kNG);
 		//#016 - clip_threshold_sigma is negative
 		add_test_case("clip_threshold_sigmaOR", "clip_threshold_sigma<0",
-				TestCategory_kFailure, "clip_threshold_sigma",
-				ParamValueType_kOutofRange,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+				TCat_kNG, "clip_threshold_sigma", PVType_kOR, Ret_kIA);
 		//#017 - clip_threshold_sigma is zero
 		add_test_case("clip_threshold_sigmaOR", "clip_threshold_sigma=0",
-				TestCategory_kFailure, "clip_threshold_sigma",
-				ParamValueType_kOutofRange,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+				TCat_kNG, "clip_threshold_sigma", PVType_kOR, Ret_kIA);
 		//#018 - clip_threshold_sigmaUB
 		add_test_case("clip_threshold_sigmaUB", "clip_threshold_sigma=FLT_MAX",
-				TestCategory_kSuccessful, "clip_threshold_sigma",
-				ParamValueType_kUpperBound, LIBSAKURA_SYMBOL(Status_kOK));
+				TCat_kOK, "clip_threshold_sigma", PVType_kUB, Ret_kOK);
 		//#019 - clip_threshold_sigma is very small positive
 		add_test_case("clip_threshold_sigmaTL",
-				"clip_threshold_sigma is positive but too small",
-				TestCategory_kFailure, "clip_threshold_sigma",
-				ParamValueType_kTooLess, LIBSAKURA_SYMBOL(Status_kNG));
+				"clip_threshold_sigma is positive but too small", TCat_kNG,
+				"clip_threshold_sigma", PVType_kTL, Ret_kNG);
 		//#020 - num_fitting_maxLB
-		add_test_case("num_fitting_maxLB", "", TestCategory_kSuccessful,
-				"num_fitting_max", ParamValueType_kLowerBound,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("num_fitting_maxLB", "", TCat_kOK, "num_fitting_max",
+				PVType_kLB, Ret_kOK);
 		//#021 - num_fitting_maxUB
-		add_test_case("num_fitting_maxUB", "", TestCategory_kSuccessful,
-				"num_fitting_max", ParamValueType_kUpperBound,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("num_fitting_maxUB", "", TCat_kOK, "num_fitting_max",
+				PVType_kUB, Ret_kOK);
 		//#022 - num_coeffTL
-		add_test_case("num_coeffTL", "", TestCategory_kFailure, "num_coeff",
-				ParamValueType_kTooLess,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("num_coeffTL", "", TCat_kNG, "num_coeff", PVType_kTL,
+				Ret_kIA);
 		//#023 - num_coeffLB
-		add_test_case("num_coeffLB", "", TestCategory_kSuccessful, "num_coeff",
-				ParamValueType_kLowerBound, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("num_coeffLB", "", TCat_kOK, "num_coeff", PVType_kLB,
+				Ret_kOK);
 		//#024 - num_coeffUB
-		add_test_case("num_coeffUB", "", TestCategory_kSuccessful, "num_coeff",
-				ParamValueType_kUpperBound, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("num_coeffUB", "", TCat_kOK, "num_coeff", PVType_kUB,
+				Ret_kOK);
 		//#025 - num_coeffTG
-		add_test_case("num_coeffTG", "", TestCategory_kFailure, "num_coeff",
-				ParamValueType_kTooGreat,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("num_coeffTG", "", TCat_kNG, "num_coeff", PVType_kTG,
+				Ret_kIA);
 		//#026 - coeffNULL
-		add_test_case("coeffNULL", "", TestCategory_kSuccessful, "coeff",
-				ParamValueType_kNull, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("coeffNULL", "", TCat_kOK, "coeff", PVType_kNULL,
+				Ret_kOK);
 		//#027 - best_fitNULL
-		add_test_case("best_fitNULL", "", TestCategory_kSuccessful, "best_fit",
-				ParamValueType_kNull, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("best_fitNULL", "", TCat_kOK, "best_fit", PVType_kNULL,
+				Ret_kOK);
 		//#028 - residualNULL
-		add_test_case("residualNULL", "", TestCategory_kSuccessful, "residual",
-				ParamValueType_kNull, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("residualNULL", "", TCat_kOK, "residual", PVType_kNULL,
+				Ret_kOK);
 		//#029 - coeffNULLbest_fitNULL
-		add_test_case("coeffNULLbest_fitNULL", "", TestCategory_kSuccessful,
-				"coeff,best_fit", ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("coeffNULLbest_fitNULL", "", TCat_kOK, "coeff,best_fit",
+				PVType_kNULL, Ret_kOK);
 		//#030 - coeffNULLresidualNULL
-		add_test_case("coeffNULLresidualNULL", "", TestCategory_kSuccessful,
-				"coeff,residual", ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("coeffNULLresidualNULL", "", TCat_kOK, "coeff,residual",
+				PVType_kNULL, Ret_kOK);
 		//#031 - best_fitNULLresidualNULL
-		add_test_case("best_fitNULLresidualNULL", "", TestCategory_kSuccessful,
-				"best_fit,residual", ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("best_fitNULLresidualNULL", "", TCat_kOK,
+				"best_fit,residual", PVType_kNULL, Ret_kOK);
 		//#032 - coeffNULLbest_fitNULLresidualNULL
-		add_test_case("coeffNULLbest_fitNULLresidualNULL", "",
-				TestCategory_kSuccessful, "coeff,best_fit,residual",
-				ParamValueType_kNull, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("coeffNULLbest_fitNULLresidualNULL", "", TCat_kOK,
+				"coeff,best_fit,residual", PVType_kNULL, Ret_kOK);
 		//#033 - coeffNA
-		add_test_case("coeffNA", "", TestCategory_kFailure, "coeff",
-				ParamValueType_kNotAligned,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("coeffNA", "", TCat_kNG, "coeff", PVType_kNAL, Ret_kIA);
 		//#034 - best_fitNA
-		add_test_case("best_fitNA", "", TestCategory_kFailure, "best_fit",
-				ParamValueType_kNotAligned,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("best_fitNA", "", TCat_kNG, "best_fit", PVType_kNAL,
+				Ret_kIA);
 		//#035 - best_fit=data
-		add_test_case("best_fitVP", "best_fit=data", TestCategory_kSuccessful,
-				"best_fit", ParamValueType_kValidPointer,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("best_fitVP", "best_fit=data", TCat_kOK, "best_fit",
+				PVType_kVP, Ret_kOK);
 		//#036 - residualNA
-		add_test_case("residualNA", "", TestCategory_kFailure, "residual",
-				ParamValueType_kNotAligned,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("residualNA", "", TCat_kNG, "residual", PVType_kNAL,
+				Ret_kIA);
 		//#037 - residual=data
-		add_test_case("residualVP", "residual=data", TestCategory_kSuccessful,
-				"residual", ParamValueType_kValidPointer,
-				LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("residualVP", "residual=data", TCat_kOK, "residual",
+				PVType_kVP, Ret_kOK);
 		//#038 - final_maskNULL
-		add_test_case("final_maskNULL", "", TestCategory_kFailure, "final_mask",
-				ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("final_maskNULL", "", TCat_kNG, "final_mask",
+				PVType_kNULL, Ret_kIA);
 		//#039 - final_maskNA
-		add_test_case("final_maskNA", "", TestCategory_kFailure, "final_mask",
-				ParamValueType_kNotAligned,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("final_maskNA", "", TCat_kNG, "final_mask", PVType_kNAL,
+				Ret_kIA);
 		//#040 - final_mask=mask
-		add_test_case("final_maskVP", "final_mask=mask",
-				TestCategory_kSuccessful, "final_mask",
-				ParamValueType_kValidPointer, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("final_maskVP", "final_mask=mask", TCat_kOK, "final_mask",
+				PVType_kVP, Ret_kOK);
 		//#041 - rmsNULL
-		add_test_case("rmsNULL", "", TestCategory_kFailure, "rms",
-				ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("rmsNULL", "", TCat_kNG, "rms", PVType_kNULL, Ret_kIA);
 		//#042 - lsqfit_statusNULL
-		add_test_case("lsqfit_statusNULL", "", TestCategory_kFailure,
-				"lsqfit_status", ParamValueType_kNull,
-				LIBSAKURA_SYMBOL(Status_kInvalidArgument));
+		add_test_case("lsqfit_statusNULL", "", TCat_kNG, "lsqfit_status",
+				PVType_kNULL, Ret_kIA);
 		//#043 - performance_order
-		add_test_case("performance_order", "order=99", TestCategory_kPerformance,
-				"order", ParamValueType_kInRange, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("performance_order", "order=99", TCat_kPF, "order",
+				PVType_kIR, Ret_kOK);
 		//#044 - performance_num_data
-		add_test_case("performance_num_data", "num_data=10000", TestCategory_kPerformance,
-				"order", ParamValueType_kInRange, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("performance_num_data", "num_data=10000", TCat_kPF,
+				"order", PVType_kIR, Ret_kOK);
 		//#045 - performance_num_fitting_max
-		add_test_case("performance_num_fitting_max", "num_fitting_max=100", TestCategory_kPerformance,
-				"order", ParamValueType_kInRange, LIBSAKURA_SYMBOL(Status_kOK));
+		add_test_case("performance_num_fitting_max", "num_fitting_max=100",
+				TCat_kPF, "order", PVType_kIR, Ret_kOK);
 		break;
 	default:
 		assert(false);
@@ -555,7 +535,7 @@ struct ParamSet {
 		LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
 				LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), order, num_data,
 				&context_poly);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["poly"] = context_poly;
 
 		//polynomial(num_data=2,order=1)
@@ -564,7 +544,7 @@ struct ParamSet {
 		LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
 				LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), 1, 2,
 				&context_polynd2o1);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["polynd2o1"] = context_polynd2o1;
 
 		//polynomial(num_data=100,order=99)
@@ -573,7 +553,7 @@ struct ParamSet {
 		LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
 				LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), 99, 100,
 				&context_polynd100o99);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["polynd100o99"] = context_polynd100o99;
 
 		//polynomial(num_data=10000)
@@ -582,7 +562,7 @@ struct ParamSet {
 		LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
 				LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), order, 10000,
 				&context_polynd10000);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["polynd10000"] = context_polynd10000;
 
 		//chebyshev
@@ -591,7 +571,7 @@ struct ParamSet {
 		LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
 				LIBSAKURA_SYMBOL(LSQFitType_kChebyshev), order, num_data,
 				&context_chebyshev);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["chebyshev"] = context_chebyshev;
 
 		//cspline
@@ -599,7 +579,7 @@ struct ParamSet {
 		create_status =
 		LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(order, num_data,
 				&context_cspline);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["cspline"] = context_cspline;
 
 		//sinusoid
@@ -607,7 +587,7 @@ struct ParamSet {
 		create_status =
 		LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(order, num_data,
 				&context_sinusoid);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
+		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["sinusoid"] = context_sinusoid;
 
 		ctxt[name] = ctxt[defaultvalue_name];
@@ -644,7 +624,7 @@ struct ParamSet {
 					LIBSAKURA_SYMBOL(Status) status;
 					status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
 							ctxt[name]);
-					EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+					EXPECT_EQ(Ret_kOK, status);
 				}
 				ctxt[name] = nullptr;
 			}
@@ -693,20 +673,20 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	auto desc_has = [&](string const &s) {return HasString(tc.desc, s);};
 	cout << "    {" << tc.title << ": " << tc.desc << "}   " << flush << endl;
 	/*
-	cout << endl;
-	for (size_t j = 0; j < tc.param.size(); ++j) {
-		cout << "(" << tc.param[j].name << ")" << "[" << tc.param[j].value_type << "]   ";
-	}
-	cout << endl;
-	*/
+	 cout << endl;
+	 for (size_t j = 0; j < tc.param.size(); ++j) {
+	 cout << "(" << tc.param[j].name << ")" << "[" << tc.param[j].value_type << "]   ";
+	 }
+	 cout << endl;
+	 */
 
 	ps = CreateDefaultParameterSet(tc.api_name);
-	ParamAttr param;
-	ParamAttr default_param;
+	PAttr param;
+	PAttr default_param;
 	string name;
-	ParamDataType dtype;
-	ParamValueType vtype;
-	if (tc.category == TestCategory_kPerformance) {
+	PDType dtype;
+	PVType vtype;
+	if (tc.category == TCat_kPF) {
 		if (tc.api_name == ApiName_kLSQFitPolynomialFloat) {
 			if (desc_has("order=99")) {
 				tc.num_repeat = 40;
@@ -756,9 +736,9 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 		assert(name == default_param.name);
 		assert(dtype == default_param.data_type);
 		vtype = param.value_type;
-		if (vtype == ParamValueType_kNull) {
+		if (vtype == PVType_kNULL) {
 			ps.SetNullPointer(name);
-		} else if (vtype == ParamValueType_kNotAligned) {
+		} else if (vtype == PVType_kNAL) {
 			if ((name == "data") || (name == "best_fit")
 					|| (name == "residual")) {
 				ps.AllocateNotAlignedFloat(name, "num_data");
@@ -769,7 +749,7 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 			}
 		} else {
 			if (name == "context") {
-				assert(dtype == ParamDataType_kContextPointer);
+				assert(dtype == PDType_kContextPointer);
 				for (size_t j = 0; j < LsqFuncTypeStr.size(); ++j) {
 					if (desc_has(LsqFuncTypeStr[j])) {
 						ps.ctxt[name] = ps.ctxt[LsqFuncTypeStr[j]];
@@ -777,21 +757,21 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					}
 				}
 			} else if (name == "order") {
-				if (vtype == ParamValueType_kLowerBound) {
+				if (vtype == PVType_kLB) {
 					ps.ui16[name] = 0;
 					ps.size["num_coeff"] = ps.ui16[name] + 1;
 					ps.AllocateAlignedDouble("coeff", "num_coeff");
-				} else if (vtype == ParamValueType_kTooGreat) {
+				} else if (vtype == PVType_kTG) {
 					ps.ui16[name] = 4;
 					ps.size["num_coeff"] = ps.ui16[name] + 1;
 					ps.AllocateAlignedDouble("coeff", "num_coeff");
 				}
 			} else if (name == "num_data") {
-				if (vtype == ParamValueType_kTooLess) {
+				if (vtype == PVType_kTL) {
 					ps.size[name]--;
-				} else if (vtype == ParamValueType_kTooGreat) {
+				} else if (vtype == PVType_kTG) {
 					ps.size[name]++;
-				} else if (vtype == ParamValueType_kLowerBound) {
+				} else if (vtype == PVType_kLB) {
 					ps.ui16["order"] = 1;
 					ps.size["num_coeff"] = ps.ui16["order"] + 1;
 					ps.size[name] = ps.size["num_coeff"];
@@ -826,25 +806,25 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					ps.fptr["data"][0] = 1000.0;
 				}
 			} else if (name == "num_fitting_max") {
-				if (vtype == ParamValueType_kLowerBound) {
+				if (vtype == PVType_kLB) {
 					ps.ui16[name] = 0;
-				} else if (vtype == ParamValueType_kUpperBound) {
+				} else if (vtype == PVType_kUB) {
 					ps.ui16[name] = UINT16_MAX;
 				}
 			} else if (name == "num_coeff") {
-				if (vtype == ParamValueType_kTooLess) {
+				if (vtype == PVType_kTL) {
 					ps.ui16["order"] = 2;
 					ps.size[name] = 2;
 					ps.AllocateAlignedDouble("coeff", name);
-				} else if (vtype == ParamValueType_kLowerBound) {
+				} else if (vtype == PVType_kLB) {
 					ps.ui16["order"] = 2;
 					ps.size[name] = 3;
 					ps.AllocateAlignedDouble("coeff", name);
-				} else if (vtype == ParamValueType_kUpperBound) {
+				} else if (vtype == PVType_kUB) {
 					ps.ui16["order"] = 3;
 					ps.size[name] = 4;
 					ps.AllocateAlignedDouble("coeff", name);
-				} else if (vtype == ParamValueType_kTooGreat) {
+				} else if (vtype == PVType_kTG) {
 					ps.ui16["order"] = 3;
 					ps.size[name] = 5;
 					ps.AllocateAlignedDouble("coeff", name);
@@ -931,15 +911,14 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 		time_elapsed += (time_end - time_start);
 	}
 
-	if (tc.category == TestCategory_kPerformance) {
+	if (tc.category == TCat_kPF) {
 		//cout << endl;
-		cout << setprecision(5) << "#x# benchmark Lsq_"
-				<< tc.title << " " << time_elapsed << endl;
+		cout << setprecision(5) << "#x# benchmark Lsq_" << tc.title << " "
+				<< time_elapsed << endl;
 	}
 
 	CheckStatus(tc, run_status);
-	if ((tc.category == TestCategory_kSuccessful)
-			|| (tc.category == TestCategory_kPerformance)) {
+	if ((tc.category == TCat_kOK) || (tc.category == TCat_kPF)) {
 		CheckValues(tc, ps);
 	}
 }
@@ -984,7 +963,7 @@ protected:
 		// Initialize sakura
 		LIBSAKURA_SYMBOL (Status) status = LIBSAKURA_SYMBOL(Initialize)(nullptr,
 				nullptr);
-		EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), status);
+		EXPECT_EQ(Ret_kOK, status);
 	}
 
 	virtual void TearDown() {
@@ -1018,7 +997,7 @@ protected:
 	bool verbose;
 };
 
-//Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
+//Destroy(context, Ret_kOK);
 /*
  void Destroy(LIBSAKURA_SYMBOL(LSQFitContextFloat) *context, size_t status) {
  LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyLSQFitContextFloat(
@@ -1050,8 +1029,8 @@ protected:
  num_chan, &context);
  end = GetCurrentTime();
  elapsed_time += (end - start);
- EXPECT_EQ(LIBSAKURA_SYMBOL(Status_kOK), create_status);
- Destroy(context, LIBSAKURA_SYMBOL(Status_kOK));
+ EXPECT_EQ(Ret_kOK, create_status);
+ Destroy(context, Ret_kOK);
  }
  cout << setprecision(5)
  << "#x# benchmark Baseline_CreateLSQFitContextPolynomialFloatWithPolynomialPerformanceTest"
