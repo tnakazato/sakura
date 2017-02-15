@@ -56,7 +56,7 @@
 
 using namespace std;
 
-//Aliases for Returned Status
+//Aliases for returned status
 LIBSAKURA_SYMBOL(Status) Ret_kOK = LIBSAKURA_SYMBOL(Status_kOK);
 LIBSAKURA_SYMBOL(Status) Ret_kNG = LIBSAKURA_SYMBOL(Status_kNG);
 LIBSAKURA_SYMBOL(Status) Ret_kIA = LIBSAKURA_SYMBOL(Status_kInvalidArgument);
@@ -97,9 +97,13 @@ map<ApiName, string> ApiNameStr = { {
 
 //Test Category
 typedef enum {
-	TCat_kOK, TCat_kPF, TCat_kNG, TCat_kNumElements
+	TCat_kOK, //Success
+	TCat_kPF, //Performance test
+	TCat_kNG, //Fail
+	TCat_kNumElements
 } TCat;
 
+//Parameter Data Type
 typedef enum {
 	PDType_kInt,
 	PDType_kSizeT,
@@ -107,10 +111,12 @@ typedef enum {
 	PDType_kFloat,
 	PDType_kDouble,
 	PDType_kBool,
+	PDType_kLSQFitType,
 	PDType_kFloatPointer,
 	PDType_kDoublePointer,
 	PDType_kBoolPointer,
 	PDType_kContextPointer,
+	PDType_kContextPointerPointer,
 	PDType_kFitStatusPointer,
 	PDType_kNumElements
 } PDType;
@@ -128,30 +134,35 @@ bool IsPointer(PDType const &data_type) {
 	return res;
 }
 
+//Parameter Category
 typedef enum {
-	PCat_kValid, PCat_kInvalid, PCat_kUndefined, PCat_kNumElements
+	PCat_kValid, //Valid value
+	PCat_kInvalid, //Invalid value
+	PCat_kUndefined, //Parameter value is not defined
+	PCat_kNumElements
 } PCat;
 
+//Parameter Value Type
 typedef enum {
-	PVType_kLB, //LowerBound
-	PVType_kUB, //UpperBound
-	PVType_kIR, //InRange
+	PVType_kLB, //Lower bound
+	PVType_kUB, //Upper bound
+	PVType_kIR, //In range
 	PVType_kAL, //Aligned
-	PVType_kVP, //ValidPointer
-	PVType_kTL, //TooLess
-	PVType_kTG, //TooGreat
-	PVType_kOR, //OutofRange
+	PVType_kVP, //Valid pointer
+	PVType_kTL, //Too less
+	PVType_kTG, //Too great
+	PVType_kOR, //Out of range
 	PVType_kNAN, //NaN
-	PVType_kINF, //Inf
-	PVType_kNINF, //NegativeInf
+	PVType_kINF, //Infinity
+	PVType_kNINF, //Negative Infinity
 	PVType_kNULL, //Null
-	PVType_kNAL, //NotAligned
+	PVType_kNAL, //Not aligned
 	PVType_kUNDEF, //Undefined
 	PVType_kNumElements
 } PVType;
 
+//Parameter Attribute
 struct PAttr {
-	//size_t param_id;
 	string name;
 	PDType data_type;
 	PCat category;
@@ -194,7 +205,7 @@ struct TestCase {
 
 TestCase CreateDefaultTestCase(ApiName const api_name) {
 	TestCase test_case;
-	test_case.test_id = 0; //UINT_MAX;
+	test_case.test_id = 0;
 	test_case.title = ApiNameStr[api_name];
 	test_case.desc = "default case";
 	test_case.api_name = api_name;
@@ -208,7 +219,27 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 	vector<PCat> param_category(0);
 
 	switch (api_name) {
-	case ApiName_kLSQFitPolynomialFloat:
+	case ApiName_kCreateLSQFitContextPolynomialFloat:
+		num_params = 4;
+		param_name = {"lsqfit_type", "order", "num_data", "context"};
+		param_dtype = {PDType_kLSQFitType, PDType_kUInt16T, PDType_kSizeT, PDType_kContextPointerPointer};
+		break;
+		case ApiName_kCreateLSQFitContextCubicSplineFloat:
+		num_params = 3;
+		param_name = {"npiece", "num_data", "context"};
+		param_dtype = {PDType_kUInt16T, PDType_kSizeT, PDType_kContextPointerPointer};
+		break;
+		case ApiName_kCreateLSQFitContextSinusoidFloat:
+		num_params = 3;
+		param_name = {"nwave", "num_data", "context"};
+		param_dtype = {PDType_kUInt16T, PDType_kSizeT, PDType_kContextPointerPointer};
+		break;
+		case ApiName_kDestroyLSQFitContextFloat:
+		num_params = 1;
+		param_name = {"context"};
+		param_dtype = {PDType_kContextPointer};
+		break;
+		case ApiName_kLSQFitPolynomialFloat:
 		num_params = 14;
 		param_name = {"context",
 			"order", "num_data",
@@ -274,7 +305,7 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 			LIBSAKURA_SYMBOL(Status) const expect_status) {
 		tc = get_working_test_case();
 		tc->test_id = test_cases.size() - 1;
-		tc->title = ApiNameStr[api_name] + "_" + title_suffix;
+		tc->title = ApiNameStr[api_name] + " : " + title_suffix;
 		tc->desc = test_description;
 		tc->category = test_category;
 		vector<string> names = Split(param_name, ',');
@@ -284,6 +315,60 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		tc->expect_status = expect_status;
 	};
 	switch (api_name) {
+	case ApiName_kCreateLSQFitContextPolynomialFloat:
+		add_test_case("lsqfit_typeVP", "context for chebyshev", TCat_kOK,
+				"lsqfit_type", PVType_kIR, Ret_kOK);
+		add_test_case("orderLB", "=0", TCat_kOK, "order", PVType_kLB, Ret_kOK);
+		//add_test_case("orderUB", "=UINT16_MAX", TCat_kOK, "order", PVType_kUB, Ret_kNM);
+		add_test_case("orderLBnum_dataLB", "=0,1", TCat_kOK, "order",
+				PVType_kLB, Ret_kOK);
+		add_test_case("orderUBnum_dataUB", "=UINT16_MAX,SIZE_MAX", TCat_kOK,
+				"order", PVType_kUB, Ret_kNM);
+		add_test_case("num_dataTL", "=3", TCat_kNG, "num_data", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_dataLB", "=4", TCat_kOK, "num_data", PVType_kLB,
+				Ret_kOK);
+		add_test_case("num_dataUB", "=SIZE_MAX", TCat_kOK, "num_data",
+				PVType_kUB, Ret_kNM);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		break;
+	case ApiName_kCreateLSQFitContextCubicSplineFloat:
+		add_test_case("npieceLB", "=1", TCat_kOK, "npiece", PVType_kLB,
+				Ret_kOK);
+		//add_test_case("npieceUB", "=UINT16_MAX", TCat_kNG, "npiece", PVType_kUB, Ret_kNM);
+		add_test_case("npieceLBnum_dataLB", "=1,4", TCat_kOK, "npiece",
+				PVType_kLB, Ret_kOK);
+		add_test_case("npieceUBnum_dataUB", "=UINT16_MAX,SIZE_MAX", TCat_kNG,
+				"npiece", PVType_kUB, Ret_kNM);
+		add_test_case("num_dataTL", "=3", TCat_kNG, "num_data", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_dataLB", "=4", TCat_kOK, "num_data", PVType_kLB,
+				Ret_kOK);
+		add_test_case("num_dataUB", "=SIZE_MAX", TCat_kNG, "num_data",
+				PVType_kUB, Ret_kNM);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		break;
+	case ApiName_kCreateLSQFitContextSinusoidFloat:
+		add_test_case("nwaveLB", "=0", TCat_kOK, "nwave", PVType_kLB, Ret_kOK);
+		//add_test_case("nwaveUB", "=UINT16_MAX", TCat_kNG, "nwave", PVType_kUB, Ret_kNM);
+		add_test_case("nwaveLBnum_dataLB", "=0,1", TCat_kOK, "nwave",
+				PVType_kLB, Ret_kOK);
+		add_test_case("nwaveUBnum_dataUB", "=UINT16_MAX,SIZE_MAX", TCat_kNG,
+				"nwave", PVType_kUB, Ret_kNM);
+		add_test_case("num_dataTL", "=6", TCat_kNG, "num_data", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_dataLB", "=7", TCat_kOK, "num_data", PVType_kLB,
+				Ret_kOK);
+		add_test_case("num_dataUB", "=SIZE_MAX", TCat_kNG, "num_data",
+				PVType_kUB, Ret_kNM);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		break;
+	case ApiName_kDestroyLSQFitContextFloat:
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL, Ret_kIA);
+		break;
 	case ApiName_kLSQFitPolynomialFloat:
 		//#000b - contextVP (context for chebyshev)
 		add_test_case("contextVP", "context for chebyshev", TCat_kOK, "context",
@@ -471,7 +556,9 @@ struct ParamSet {
 	map<string, float *> fptr;
 	map<string, double *> dptr;
 	map<string, bool *> bptr;
+	map<string, LIBSAKURA_SYMBOL(LSQFitType)> ftyp;
 	map<string, LIBSAKURA_SYMBOL(LSQFitContextFloat) *> ctxt;
+	map<string, LIBSAKURA_SYMBOL(LSQFitContextFloat) **> cptr;
 	map<string, LIBSAKURA_SYMBOL(LSQFitStatus) *> fsta;
 	map<string, void *> sto;
 
@@ -526,8 +613,22 @@ struct ParamSet {
 	}
 	void AllocateContexts(string const &name, string const &defaultvalue_name) {
 		LIBSAKURA_SYMBOL(Status) create_status;
-		uint16_t order = ui16["order"];
-		size_t num_data = size["num_data"];
+		uint16_t order = 3;
+		if (ui16.count("order") == 1) {
+			order = ui16["order"];
+		}
+		uint16_t npiece = 3;
+		if (ui16.count("npiece") == 1) {
+			npiece = ui16["npiece"];
+		}
+		uint16_t nwave = 3;
+		if (ui16.count("nwave") == 1) {
+			nwave = ui16["nwave"];
+		}
+		size_t num_data = 15;
+		if (size.count("num_data") == 1) {
+			num_data = size["num_data"];
+		}
 
 		//polynomial
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_poly = nullptr;
@@ -577,7 +678,7 @@ struct ParamSet {
 		//cspline
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_cspline = nullptr;
 		create_status =
-		LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(order, num_data,
+		LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(npiece, num_data,
 				&context_cspline);
 		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["cspline"] = context_cspline;
@@ -585,12 +686,13 @@ struct ParamSet {
 		//sinusoid
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_sinusoid = nullptr;
 		create_status =
-		LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(order, num_data,
+		LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(nwave, num_data,
 				&context_sinusoid);
 		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["sinusoid"] = context_sinusoid;
 
 		ctxt[name] = ctxt[defaultvalue_name];
+		cptr[name] = &ctxt[name];
 	}
 	void Free(string const &name) {
 		if (sto.count(name) == 1) {
@@ -636,6 +738,25 @@ struct ParamSet {
 ParamSet CreateDefaultParameterSet(ApiName const api_name) {
 	ParamSet ps;
 	switch (api_name) {
+	case ApiName_kCreateLSQFitContextPolynomialFloat:
+		ps.ftyp["lsqfit_type"] = LIBSAKURA_SYMBOL(LSQFitType_kPolynomial);
+		ps.ui16["order"] = 3;
+		ps.size["num_data"] = 15;
+		ps.AllocateContexts("context", "poly");
+		break;
+	case ApiName_kCreateLSQFitContextCubicSplineFloat:
+		ps.ui16["npiece"] = 3;
+		ps.size["num_data"] = 15;
+		ps.AllocateContexts("context", "cspline");
+		break;
+	case ApiName_kCreateLSQFitContextSinusoidFloat:
+		ps.ui16["nwave"] = 3;
+		ps.size["num_data"] = 15;
+		ps.AllocateContexts("context", "sinusoid");
+		break;
+	case ApiName_kDestroyLSQFitContextFloat:
+		ps.AllocateContexts("context", "poly");
+		break;
 	case ApiName_kLSQFitPolynomialFloat:
 		ps.ui16["order"] = 3;
 		ps.size["num_data"] = 15;
@@ -671,7 +792,8 @@ bool HasString(string const &str, string const &key) {
 void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	auto title_has = [&](string const &s) {return HasString(tc.title, s);};
 	auto desc_has = [&](string const &s) {return HasString(tc.desc, s);};
-	cout << "    {" << tc.title << ": " << tc.desc << "}   " << flush << endl;
+	cout << "    " << tc.title << (tc.desc != "" ? (" (" + tc.desc + ") ") : "")
+			<< flush << endl;
 	/*
 	 cout << endl;
 	 for (size_t j = 0; j < tc.param.size(); ++j) {
@@ -737,7 +859,14 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 		assert(dtype == default_param.data_type);
 		vtype = param.value_type;
 		if (vtype == PVType_kNULL) {
-			ps.SetNullPointer(name);
+			if ((tc.api_name == ApiName_kCreateLSQFitContextPolynomialFloat)
+					|| (tc.api_name
+							== ApiName_kCreateLSQFitContextCubicSplineFloat)
+					|| (tc.api_name == ApiName_kCreateLSQFitContextSinusoidFloat)) {
+				ps.cptr[name] = nullptr;
+			} else {
+				ps.SetNullPointer(name);
+			}
 		} else if (vtype == PVType_kNAL) {
 			if ((name == "data") || (name == "best_fit")
 					|| (name == "residual")) {
@@ -748,34 +877,115 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				ps.AllocateNotAlignedBool(name, "num_data");
 			}
 		} else {
-			if (name == "context") {
-				assert(dtype == PDType_kContextPointer);
-				for (size_t j = 0; j < LsqFuncTypeStr.size(); ++j) {
-					if (desc_has(LsqFuncTypeStr[j])) {
-						ps.ctxt[name] = ps.ctxt[LsqFuncTypeStr[j]];
-						break;
+			if (name == "lsqfit_type") {
+				ps.ftyp[name] = LIBSAKURA_SYMBOL(LSQFitType_kChebyshev);
+			} else if (name == "context") {
+				if ((tc.api_name == ApiName_kCreateLSQFitContextPolynomialFloat)
+						|| (tc.api_name
+								== ApiName_kCreateLSQFitContextCubicSplineFloat)
+						|| (tc.api_name
+								== ApiName_kCreateLSQFitContextSinusoidFloat)) {
+					assert(dtype == PDType_kContextPointerPointer);
+				} else {
+					assert(dtype == PDType_kContextPointer);
+					for (size_t j = 0; j < LsqFuncTypeStr.size(); ++j) {
+						if (desc_has(LsqFuncTypeStr[j])) {
+							ps.ctxt[name] = ps.ctxt[LsqFuncTypeStr[j]];
+							break;
+						}
 					}
 				}
 			} else if (name == "order") {
-				if (vtype == PVType_kLB) {
+				if (tc.api_name
+						== ApiName_kCreateLSQFitContextPolynomialFloat) {
+					if (vtype == PVType_kUB) {
+						ps.ui16[name] = UINT16_MAX;
+						ps.size["num_data"] = ps.ui16[name] + 1;
+						if (title_has("num_dataUB")) {
+							ps.size["num_data"] = SIZE_MAX;
+						}
+					} else if (vtype == PVType_kLB) {
+						ps.ui16[name] = 0;
+						if (title_has("num_dataLB")) {
+							ps.size["num_data"] = ps.ui16[name] + 1;
+						}
+					}
+				} else {
+					if (vtype == PVType_kLB) {
+						ps.ui16[name] = 0;
+						ps.size["num_coeff"] = ps.ui16[name] + 1;
+						ps.AllocateAlignedDouble("coeff", "num_coeff");
+					} else if (vtype == PVType_kTG) {
+						ps.ui16[name] = 4;
+						ps.size["num_coeff"] = ps.ui16[name] + 1;
+						ps.AllocateAlignedDouble("coeff", "num_coeff");
+					}
+				}
+			} else if (name == "npiece") {
+				if (vtype == PVType_kUB) {
+					ps.ui16[name] = UINT16_MAX;
+					ps.size["num_data"] = ps.ui16[name] + 3;
+					if (title_has("num_dataUB")) {
+						ps.size["num_data"] = SIZE_MAX;
+					}
+				} else if (vtype == PVType_kLB) {
+					ps.ui16[name] = 1;
+					if (title_has("num_dataLB")) {
+						ps.size["num_data"] = ps.ui16[name] + 3;
+					}
+				}
+			} else if (name == "nwave") {
+				if (vtype == PVType_kUB) {
+					ps.ui16[name] = UINT16_MAX;
+					ps.size["num_data"] = ps.ui16[name] * 2 + 2;
+					if (title_has("num_dataUB")) {
+						ps.size["num_data"] = SIZE_MAX;
+					}
+				} else if (vtype == PVType_kLB) {
 					ps.ui16[name] = 0;
-					ps.size["num_coeff"] = ps.ui16[name] + 1;
-					ps.AllocateAlignedDouble("coeff", "num_coeff");
-				} else if (vtype == PVType_kTG) {
-					ps.ui16[name] = 4;
-					ps.size["num_coeff"] = ps.ui16[name] + 1;
-					ps.AllocateAlignedDouble("coeff", "num_coeff");
+					if (title_has("num_dataLB")) {
+						ps.size["num_data"] = ps.ui16[name] * 2 + 2;
+					}
 				}
 			} else if (name == "num_data") {
-				if (vtype == PVType_kTL) {
-					ps.size[name]--;
-				} else if (vtype == PVType_kTG) {
-					ps.size[name]++;
-				} else if (vtype == PVType_kLB) {
-					ps.ui16["order"] = 1;
-					ps.size["num_coeff"] = ps.ui16["order"] + 1;
-					ps.size[name] = ps.size["num_coeff"];
-					ps.ctxt["context"] = ps.ctxt["polynd2o1"];
+				if (tc.api_name
+						== ApiName_kCreateLSQFitContextPolynomialFloat) {
+					if (vtype == PVType_kUB) {
+						ps.size[name] = SIZE_MAX;
+					} else if (vtype == PVType_kLB) {
+						ps.size[name] = ps.ui16["order"] + 1;
+					} else if (vtype == PVType_kTL) {
+						ps.size[name] = ps.ui16["order"];
+					}
+				} else if (tc.api_name
+						== ApiName_kCreateLSQFitContextCubicSplineFloat) {
+					if (vtype == PVType_kUB) {
+						ps.size[name] = SIZE_MAX;
+					} else if (vtype == PVType_kLB) {
+						ps.size[name] = ps.ui16["npiece"] + 3;
+					} else if (vtype == PVType_kTL) {
+						ps.size[name] = ps.ui16["npiece"];
+					}
+				} else if (tc.api_name
+						== ApiName_kCreateLSQFitContextSinusoidFloat) {
+					if (vtype == PVType_kUB) {
+						ps.size[name] = SIZE_MAX;
+					} else if (vtype == PVType_kLB) {
+						ps.size[name] = ps.ui16["nwave"] * 2 + 2;
+					} else if (vtype == PVType_kTL) {
+						ps.size[name] = ps.ui16["nwave"];
+					}
+				} else {
+					if (vtype == PVType_kTL) {
+						ps.size[name]--;
+					} else if (vtype == PVType_kTG) {
+						ps.size[name]++;
+					} else if (vtype == PVType_kLB) {
+						ps.ui16["order"] = 1;
+						ps.size["num_coeff"] = ps.ui16["order"] + 1;
+						ps.size[name] = ps.size["num_coeff"];
+						ps.ctxt["context"] = ps.ctxt["polynd2o1"];
+					}
 				}
 			} else if (name == "mask") {
 				if (title_has("effdataLB")) {
@@ -847,6 +1057,29 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 void RunApi(TestCase const &tc, ParamSet &ps,
 LIBSAKURA_SYMBOL(Status) &run_status) {
 	switch (tc.api_name) {
+	case ApiName_kCreateLSQFitContextPolynomialFloat:
+		run_status = LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
+				ps.ftyp[tc.param[0].name], ps.ui16[tc.param[1].name],
+				ps.size[tc.param[2].name], ps.cptr[tc.param[3].name]);
+		break;
+	case ApiName_kCreateLSQFitContextCubicSplineFloat:
+		run_status = LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(
+				ps.ui16[tc.param[0].name], ps.size[tc.param[1].name],
+				ps.cptr[tc.param[2].name]);
+		break;
+	case ApiName_kCreateLSQFitContextSinusoidFloat:
+		run_status = LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(
+				ps.ui16[tc.param[0].name], ps.size[tc.param[1].name],
+				ps.cptr[tc.param[2].name]);
+		break;
+	case ApiName_kDestroyLSQFitContextFloat:
+		run_status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
+				ps.ctxt[tc.param[0].name]);
+		if (run_status == LIBSAKURA_SYMBOL(Status_kOK)) {
+			//ps.ctxt[tc.param[0].name] = nullptr;
+			ps.ctxt["poly"] = nullptr;
+		}
+		break;
 	case ApiName_kLSQFitPolynomialFloat:
 		run_status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
 				ps.ctxt[tc.param[0].name], ps.ui16[tc.param[1].name],
@@ -910,13 +1143,10 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 		double time_end = GetCurrentTime();
 		time_elapsed += (time_end - time_start);
 	}
-
 	if (tc.category == TCat_kPF) {
-		//cout << endl;
 		cout << setprecision(5) << "#x# benchmark Lsq_" << tc.title << " "
 				<< time_elapsed << endl;
 	}
-
 	CheckStatus(tc, run_status);
 	if ((tc.category == TCat_kOK) || (tc.category == TCat_kPF)) {
 		CheckValues(tc, ps);
@@ -936,7 +1166,6 @@ void Epilogue(ParamSet &ps) {
 	FreeParamSet(ps, ps.bptr);
 	FreeParamSet(ps, ps.ctxt);
 	FreeParamSet(ps, ps.fsta);
-	//cout << endl;
 }
 
 void RunTest(ApiName const api_name) {
@@ -1038,9 +1267,23 @@ protected:
  }
  */
 
-/*
- * Tests for LSQFitPolynomialFloat()
- */
+//Tests for CreateLSQFitContextPolynomialFloat()
+TEST_F(Lsq, CreateLSQFitContextPolynomialFloat) {
+	RunTest(ApiName_kCreateLSQFitContextPolynomialFloat);
+}
+//Tests for CreateLSQFitContextCubicSplineFloat()
+TEST_F(Lsq, CreateLSQFitContextCubicSplineFloat) {
+	RunTest(ApiName_kCreateLSQFitContextCubicSplineFloat);
+}
+//Tests for CreateLSQFitContextSinusoidFloat()
+TEST_F(Lsq, CreateLSQFitContextSinusoidFloat) {
+	RunTest(ApiName_kCreateLSQFitContextSinusoidFloat);
+}
+//Tests for DestroyLSQFitContextFloat()
+TEST_F(Lsq, DestroyLSQFitContextFloat) {
+	RunTest(ApiName_kDestroyLSQFitContextFloat);
+}
+//Tests for LSQFitPolynomialFloat()
 TEST_F(Lsq, LSQFitPolynomialFloat) {
 	RunTest(ApiName_kLSQFitPolynomialFloat);
 }
