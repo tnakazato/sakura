@@ -112,6 +112,7 @@ typedef enum {
 	PDType_kDouble,
 	PDType_kBool,
 	PDType_kLSQFitType,
+	PDType_kSizeTPointer,
 	PDType_kFloatPointer,
 	PDType_kDoublePointer,
 	PDType_kBoolPointer,
@@ -125,7 +126,8 @@ vector<string> LsqFuncTypeStr = { "poly", "chebyshev", "cspline", "sinusoid" };
 
 bool IsPointer(PDType const &data_type) {
 	bool res = false;
-	if ((data_type == PDType_kFloatPointer)
+	if ((data_type == PDType_kSizeTPointer)
+			|| (data_type == PDType_kFloatPointer)
 			|| (data_type == PDType_kDoublePointer)
 			|| (data_type == PDType_kBoolPointer)
 			|| (data_type == PDType_kContextPointer)
@@ -239,6 +241,11 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 		param_name = {"context"};
 		param_dtype = {PDType_kContextPointer};
 		break;
+		case ApiName_kGetNumberOfCoefficientsFloat:
+		num_params = 3;
+		param_name = {"context", "order", "num_coeff"};
+		param_dtype = {PDType_kContextPointer, PDType_kUInt16T, PDType_kSizeTPointer};
+		break;
 		case ApiName_kLSQFitPolynomialFloat:
 		num_params = 14;
 		param_name = {"context",
@@ -316,8 +323,8 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 	};
 	switch (api_name) {
 	case ApiName_kCreateLSQFitContextPolynomialFloat:
-		add_test_case("lsqfit_typeVP", "context for chebyshev", TCat_kOK,
-				"lsqfit_type", PVType_kIR, Ret_kOK);
+		add_test_case("lsqfit_typeVP", "chebyshev", TCat_kOK, "lsqfit_type",
+				PVType_kIR, Ret_kOK);
 		add_test_case("orderLB", "=0", TCat_kOK, "order", PVType_kLB, Ret_kOK);
 		//add_test_case("orderUB", "=UINT16_MAX", TCat_kOK, "order", PVType_kUB, Ret_kNM);
 		add_test_case("orderLBnum_dataLB", "=0,1", TCat_kOK, "order",
@@ -367,21 +374,42 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 				Ret_kIA);
 		break;
 	case ApiName_kDestroyLSQFitContextFloat:
-		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL, Ret_kIA);
-		break;
-	case ApiName_kLSQFitPolynomialFloat:
-		//#000b - contextVP (context for chebyshev)
-		add_test_case("contextVP", "context for chebyshev", TCat_kOK, "context",
-				PVType_kVP, Ret_kOK);
-		//#001 - contextNULL
+		//new_add_test_case(Ret_kIA, "context", PVType_kNULL, "");
 		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
 				Ret_kIA);
-		//#002 - contextOR (context for cspline)
-		add_test_case("contextOR", "context for cspline", TCat_kNG, "context",
-				PVType_kOR, Ret_kIA);
-		//#003 - contextOR (context for sinusoids)
-		add_test_case("contextOR", "context for sinusoid", TCat_kNG, "context",
-				PVType_kOR, Ret_kIA);
+		break;
+	case ApiName_kGetNumberOfCoefficientsFloat:
+		add_test_case("contextVP", "chebyshev", TCat_kOK, "context", PVType_kVP,
+				Ret_kOK);
+		add_test_case("contextVP", "cspline", TCat_kOK, "context", PVType_kVP,
+				Ret_kOK);
+		add_test_case("contextOR", "sinusoid", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("orderTL", "=0 for cspline", TCat_kNG, "order",
+				PVType_kTL, Ret_kIA);
+		add_test_case("orderLB", "=1 for cspline", TCat_kOK, "order",
+				PVType_kLB, Ret_kOK);
+		add_test_case("orderLB", "=0", TCat_kOK, "order", PVType_kLB, Ret_kOK);
+		add_test_case("orderUB", "=3", TCat_kOK, "order", PVType_kUB, Ret_kOK);
+		add_test_case("orderTG", "=4", TCat_kNG, "order", PVType_kTG, Ret_kIA);
+		add_test_case("num_coeffNULL", "", TCat_kNG, "num_coeff", PVType_kNULL,
+				Ret_kIA);
+		break;
+	case ApiName_kLSQFitPolynomialFloat:
+		//#000b - contextVP (chebyshev)
+		add_test_case("contextVP", "chebyshev", TCat_kOK, "context", PVType_kVP,
+				Ret_kOK);
+		//#001 - contextOR (cspline)
+		add_test_case("contextOR", "cspline", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		//#002 - contextOR (sinusoids)
+		add_test_case("contextOR", "sinusoid", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		//#003 - contextNULL
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
 		//#004 - orderLB
 		add_test_case("orderLB", "order=0", TCat_kOK, "order", PVType_kLB,
 				Ret_kOK);
@@ -389,7 +417,7 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("orderTG", "order=4", TCat_kNG, "order", PVType_kTG,
 				Ret_kIA);
 		//#006 - num_dataTL
-		//add_test_case("num_data", "=14", PVType_kTL, TCat_kNG, Ret_kIA);
+		//new_add_test_case(Ret_kIA, "num_data", PVType_kTL, "14");
 		add_test_case("num_dataTL", "num_data=14", TCat_kNG, "num_data",
 				PVType_kTL, Ret_kIA);
 		//#007 - num_dataTG
@@ -399,17 +427,13 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("num_dataLB", "num_data=2", TCat_kOK, "num_data",
 				PVType_kLB, Ret_kOK);
 		//#009 - dataNULL
-		add_test_case("dataNULL", "data null pointer", TCat_kNG, "data",
-				PVType_kNULL, Ret_kIA);
+		add_test_case("dataNULL", "", TCat_kNG, "data", PVType_kNULL, Ret_kIA);
 		//#010 - dataNA
-		add_test_case("dataNA", "data not aligned", TCat_kNG, "data",
-				PVType_kNAL, Ret_kIA);
+		add_test_case("dataNA", "", TCat_kNG, "data", PVType_kNAL, Ret_kIA);
 		//#011 - maskNULL
-		add_test_case("maskNULL", "mask null pointer", TCat_kNG, "mask",
-				PVType_kNULL, Ret_kIA);
+		add_test_case("maskNULL", "", TCat_kNG, "mask", PVType_kNULL, Ret_kIA);
 		//#012 - maskNA
-		add_test_case("maskNA", "mask not aligned", TCat_kNG, "mask",
-				PVType_kNAL, Ret_kIA);
+		add_test_case("maskNA", "", TCat_kNG, "mask", PVType_kNAL, Ret_kIA);
 		//#013 - minimum required effective data
 		add_test_case("effdataLB", "minimum required effective data", TCat_kOK,
 				"mask", PVType_kVP, Ret_kOK);
@@ -553,10 +577,11 @@ struct ParamSet {
 	map<string, size_t> size;
 	map<string, uint16_t> ui16;
 	map<string, float> fval;
+	map<string, LIBSAKURA_SYMBOL(LSQFitType)> ftyp;
+	map<string, size_t *> sptr;
 	map<string, float *> fptr;
 	map<string, double *> dptr;
 	map<string, bool *> bptr;
-	map<string, LIBSAKURA_SYMBOL(LSQFitType)> ftyp;
 	map<string, LIBSAKURA_SYMBOL(LSQFitContextFloat) *> ctxt;
 	map<string, LIBSAKURA_SYMBOL(LSQFitContextFloat) **> cptr;
 	map<string, LIBSAKURA_SYMBOL(LSQFitStatus) *> fsta;
@@ -571,6 +596,7 @@ struct ParamSet {
 	void SetNullPointer(string const &name) {
 		Free(name);
 		DoSetNullPointer(name, sto);
+		DoSetNullPointer(name, sptr);
 		DoSetNullPointer(name, fptr);
 		DoSetNullPointer(name, dptr);
 		DoSetNullPointer(name, bptr);
@@ -602,6 +628,10 @@ struct ParamSet {
 	void AllocateNotAlignedBool(string const &name, string const &length_name) {
 		Free(name);
 		AllocateNotAligned(size[length_name], &bptr[name], &sto[name]);
+	}
+	void AllocateSizeT(string const &name) {
+		Free(name);
+		Allocate(1, &sptr[name]);
 	}
 	void AllocateFloat(string const &name) {
 		Free(name);
@@ -700,6 +730,11 @@ struct ParamSet {
 				LIBSAKURA_PREFIX::Memory::Free(sto[name]);
 				sto[name] = nullptr;
 			}
+		} else if (sptr.count(name) == 1) {
+			if (sptr[name] != nullptr) {
+				LIBSAKURA_PREFIX::Memory::Free(sptr[name]);
+				sptr[name] = nullptr;
+			}
 		} else if (fptr.count(name) == 1) {
 			if (fptr[name] != nullptr) {
 				LIBSAKURA_PREFIX::Memory::Free(fptr[name]);
@@ -756,6 +791,11 @@ ParamSet CreateDefaultParameterSet(ApiName const api_name) {
 		break;
 	case ApiName_kDestroyLSQFitContextFloat:
 		ps.AllocateContexts("context", "poly");
+		break;
+	case ApiName_kGetNumberOfCoefficientsFloat:
+		ps.AllocateContexts("context", "poly");
+		ps.ui16["order"] = 2;
+		ps.AllocateSizeT("num_coeff");
 		break;
 	case ApiName_kLSQFitPolynomialFloat:
 		ps.ui16["order"] = 3;
@@ -909,6 +949,18 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 						if (title_has("num_dataLB")) {
 							ps.size["num_data"] = ps.ui16[name] + 1;
 						}
+					}
+				} else if (tc.api_name
+						== ApiName_kGetNumberOfCoefficientsFloat) {
+					if (vtype == PVType_kTL) {
+						assert(desc_has("cspline"));
+						ps.ui16[name] = 0;
+					} else if (vtype == PVType_kLB) {
+						ps.ui16[name] = desc_has("cspline") ? 1 : 0;
+					} else if (vtype == PVType_kUB) {
+						ps.ui16[name] = ps.ctxt["context"]->lsqfit_param;
+					} else if (vtype == PVType_kTG) {
+						ps.ui16[name] = ps.ctxt["context"]->lsqfit_param + 1;
 					}
 				} else {
 					if (vtype == PVType_kLB) {
@@ -1076,9 +1128,13 @@ LIBSAKURA_SYMBOL(Status) &run_status) {
 		run_status = LIBSAKURA_SYMBOL(DestroyLSQFitContextFloat)(
 				ps.ctxt[tc.param[0].name]);
 		if (run_status == LIBSAKURA_SYMBOL(Status_kOK)) {
-			//ps.ctxt[tc.param[0].name] = nullptr;
 			ps.ctxt["poly"] = nullptr;
 		}
+		break;
+	case ApiName_kGetNumberOfCoefficientsFloat:
+		run_status = LIBSAKURA_SYMBOL(GetNumberOfCoefficientsFloat)(
+				ps.ctxt[tc.param[0].name], ps.ui16[tc.param[1].name],
+				ps.sptr[tc.param[2].name]);
 		break;
 	case ApiName_kLSQFitPolynomialFloat:
 		run_status = LIBSAKURA_SYMBOL(LSQFitPolynomialFloat)(
@@ -1104,7 +1160,7 @@ template<typename T> bool HasKey(T const &m, string const &key) {
 }
 
 void CheckValues(TestCase const &tc, ParamSet &ps) {
-	if (!HasString(tc.title, "coeffNULL") && HasKey(ps.dptr, "num_coeff")
+	if (!HasString(tc.title, "coeffNULL") && HasKey(ps.dptr, "coeff")
 			&& HasKey(ps.size, "num_coeff")) {
 		//cout << "          ****coeff=[";
 		for (size_t j = 0; j < ps.size["num_coeff"]; ++j) {
@@ -1131,13 +1187,12 @@ void CheckValues(TestCase const &tc, ParamSet &ps) {
 }
 
 void Execute(TestCase const &tc, ParamSet &ps) {
+	if (tc.category != TCat_kPF) {
+		assert(tc.num_repeat == 1);
+	}
 	double time_elapsed = 0.0;
 	LIBSAKURA_SYMBOL (Status) run_status;
 	for (size_t i = 0; i < tc.num_repeat; ++i) {
-		/*
-		 cout << "####[" << tc.num_repeat << "]" << "{" << ps.ui16["order"]
-		 << "}" << "<" << ps.ctxt["context"] << ">" << "####" << endl;
-		 */
 		double time_start = GetCurrentTime();
 		RunApi(tc, ps, run_status);
 		double time_end = GetCurrentTime();
@@ -1154,13 +1209,14 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 }
 
 template<typename T> void FreeParamSet(ParamSet &ps, T &ptr) {
-	for (auto it = ptr.begin(); it != ptr.end(); ++it) {
-		ps.Free(it->first);
+	for (auto x : ptr) {
+		ps.Free(x.first);
 	}
 }
 
 void Epilogue(ParamSet &ps) {
 	FreeParamSet(ps, ps.sto);
+	FreeParamSet(ps, ps.sptr);
 	FreeParamSet(ps, ps.fptr);
 	FreeParamSet(ps, ps.dptr);
 	FreeParamSet(ps, ps.bptr);
@@ -1283,7 +1339,77 @@ TEST_F(Lsq, CreateLSQFitContextSinusoidFloat) {
 TEST_F(Lsq, DestroyLSQFitContextFloat) {
 	RunTest(ApiName_kDestroyLSQFitContextFloat);
 }
+//Tests for GetNumberOfCoefficientsFloat()
+TEST_F(Lsq, GetNumberOfCoefficientsFloat) {
+	RunTest(ApiName_kGetNumberOfCoefficientsFloat);
+}
 //Tests for LSQFitPolynomialFloat()
 TEST_F(Lsq, LSQFitPolynomialFloat) {
 	RunTest(ApiName_kLSQFitPolynomialFloat);
 }
+
+//*******************************************************
+//Test variable arguments handling
+//*******************************************************
+/*
+static map<string, PVType> params_test;
+void AddTestCase(LIBSAKURA_SYMBOL(Status) &ret_status, string const &desc,
+		string const &name, PVType const &pvtype) {
+	cout << "returned_status = " << flush;
+	string status = "undefined";
+	if (ret_status == Ret_kOK) {
+		status = "OK";
+	} else if (ret_status == Ret_kNG) {
+		status = "NG";
+	} else if (ret_status == Ret_kIA) {
+		status = "IA";
+	} else if (ret_status == Ret_kNM) {
+		status = "NM";
+	}
+	cout << status << flush << endl;
+	cout << "description = " << desc << flush << endl;
+	params_test[name] = pvtype;
+}
+template<typename ... Types>
+void AddTestCase(LIBSAKURA_SYMBOL(Status) &ret_status, string const &desc,
+		string const &name, PVType const &pvtype, Types ... tail) {
+	params_test[name] = pvtype;
+	AddTestCase(ret_status, desc, tail...);
+}
+void ShowParamsTest() {
+	cout << "specify " << params_test.size() << " parameter" << (params_test.size() > 1 ? "s" : "") << flush << endl;
+	for (auto x : params_test) {
+		cout << "{param name = " << x.first << ", type = ";
+		PVType pvtype = x.second;
+		string vtype = "undefined";
+		if (pvtype == PVType_kNULL) {
+			vtype = "NULLPointer";
+		} else if (pvtype == PVType_kNAL) {
+			vtype = "NotAligned";
+		} else if (pvtype == PVType_kLB) {
+			vtype = "LowerBoundary";
+		} else if (pvtype == PVType_kIR) {
+			vtype = "InRange";
+		} else if (pvtype == PVType_kVP) {
+			vtype = "ValidPointer";
+		}
+		cout << vtype << "}" << flush << endl;
+	}
+}
+TEST_F(Lsq, AddTestCase) {
+	cout << "----------" << flush << endl;
+	params_test.clear();
+	AddTestCase(Ret_kOK, "desc1", "data", PVType_kNULL);
+	ShowParamsTest();
+	cout << "----------" << flush << endl;
+	params_test.clear();
+	AddTestCase(Ret_kNG, "desc2", "mask", PVType_kNAL, "num_data", PVType_kIR);
+	ShowParamsTest();
+	cout << "----------" << flush << endl;
+	params_test.clear();
+	AddTestCase(Ret_kIA, "desc3", "coeff", PVType_kVP, "num_coeff", PVType_kLB,
+			"final_mask", PVType_kNULL);
+	ShowParamsTest();
+	cout << "----------" << flush << endl;
+}
+*/
