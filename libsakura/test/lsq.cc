@@ -276,6 +276,19 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 			PDType_kSizeTPointer, PDType_kFitStatusPointer};
 		break;
 		case ApiName_kLSQFitSinusoidFloat:
+		num_params = 15;
+		param_name = {"context", "num_nwave",
+				"nwave", "num_data", "data",
+				"mask", "clip_threshold_sigma", "num_fitting_max",
+				"num_coeff", "coeff", "best_fit",
+				"resudual", "final_mask",
+				"rms", "lsqfit_status"};
+		param_dtype = {PDType_kContextPointer, PDType_kSizeT,
+				PDType_kSizeTPointer, PDType_kSizeT, PDType_kFloatPointer,
+				PDType_kBoolPointer, PDType_kFloat, PDType_kUInt16T,
+				PDType_kSizeT, PDType_kDoublePointer, PDType_kFloatPointer,
+				PDType_kFloatPointer, PDType_kBoolPointer,
+				PDType_kFloatPointer, PDType_kFitStatusPointer};
 		break;
 		default:
 		assert(false);
@@ -543,6 +556,8 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 	case ApiName_kLSQFitCubicSplineFloat:
 		add_test_case("contextOR", "poly", TCat_kNG, "context", PVType_kOR,
 				Ret_kIA);
+		add_test_case("contextOR", "chebyshev", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
 		add_test_case("contextOR", "sinusoid", TCat_kNG, "context", PVType_kOR,
 				Ret_kIA);
 		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
@@ -561,6 +576,73 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("dataNA", "", TCat_kNG, "data", PVType_kNAL, Ret_kIA);
 		add_test_case("maskNULL", "", TCat_kNG, "mask", PVType_kNULL, Ret_kIA);
 		add_test_case("maskNA", "", TCat_kNG, "mask", PVType_kNAL, Ret_kIA);
+		add_test_case("effdataLB", "minimum required effective data", TCat_kOK,
+				"mask", PVType_kVP, Ret_kOK);
+		add_test_case("effdataTL", "less than minimum required effective data",
+				TCat_kNG, "mask", PVType_kVP, Ret_kNG);
+		add_test_case("noeffdata", "no effective data", TCat_kNG, "mask",
+				PVType_kVP, Ret_kNG);
+		add_test_case("clip_threshold_sigmaOR", "clip_threshold_sigma<0",
+				TCat_kNG, "clip_threshold_sigma", PVType_kOR, Ret_kIA);
+		add_test_case("clip_threshold_sigmaOR", "clip_threshold_sigma=0",
+				TCat_kNG, "clip_threshold_sigma", PVType_kOR, Ret_kIA);
+		add_test_case("clip_threshold_sigmaUB", "clip_threshold_sigma=FLT_MAX",
+				TCat_kOK, "clip_threshold_sigma", PVType_kUB, Ret_kOK);
+		add_test_case("clip_threshold_sigmaTL",
+				"clip_threshold_sigma is positive but too small", TCat_kNG,
+				"clip_threshold_sigma", PVType_kTL, Ret_kNG);
+		add_test_case("num_fitting_maxLB", "", TCat_kOK, "num_fitting_max",
+				PVType_kLB, Ret_kOK);
+		add_test_case("num_fitting_maxUB", "", TCat_kOK, "num_fitting_max",
+				PVType_kUB, Ret_kOK);
+		add_test_case("coeffNULL", "", TCat_kOK, "coeff", PVType_kNULL,
+				Ret_kOK);
+		add_test_case("best_fitNULL", "", TCat_kOK, "best_fit", PVType_kNULL,
+				Ret_kOK);
+		add_test_case("residualNULL", "", TCat_kOK, "residual", PVType_kNULL,
+				Ret_kOK);
+		add_test_case("coeffNULLbest_fitNULL", "", TCat_kOK, "coeff,best_fit",
+				PVType_kNULL, Ret_kOK);
+		add_test_case("coeffNULLresidualNULL", "", TCat_kOK, "coeff,residual",
+				PVType_kNULL, Ret_kOK);
+		add_test_case("best_fitNULLresidualNULL", "", TCat_kOK,
+				"best_fit,residual", PVType_kNULL, Ret_kOK);
+		add_test_case("coeffNULLbest_fitNULLresidualNULL", "", TCat_kOK,
+				"coeff,best_fit,residual", PVType_kNULL, Ret_kOK);
+		add_test_case("coeffNA", "", TCat_kNG, "coeff", PVType_kNAL, Ret_kIA);
+		add_test_case("best_fitNA", "", TCat_kNG, "best_fit", PVType_kNAL,
+				Ret_kIA);
+		add_test_case("best_fitVP", "best_fit=data", TCat_kOK, "best_fit",
+				PVType_kVP, Ret_kOK);
+		add_test_case("residualNA", "", TCat_kNG, "residual", PVType_kNAL,
+				Ret_kIA);
+		add_test_case("residualVP", "residual=data", TCat_kOK, "residual",
+				PVType_kVP, Ret_kOK);
+		add_test_case("final_maskNULL", "", TCat_kNG, "final_mask",
+				PVType_kNULL, Ret_kIA);
+		add_test_case("final_maskNA", "", TCat_kNG, "final_mask", PVType_kNAL,
+				Ret_kIA);
+		add_test_case("final_maskVP", "final_mask=mask", TCat_kOK, "final_mask",
+				PVType_kVP, Ret_kOK);
+		add_test_case("rmsNULL", "", TCat_kNG, "rms", PVType_kNULL, Ret_kIA);
+		add_test_case("lsqfit_statusNULL", "", TCat_kNG, "lsqfit_status",
+				PVType_kNULL, Ret_kIA);
+		add_test_case("performance_num_pieces", "num_pieces=99", TCat_kPF,
+				"num_pieces", PVType_kIR, Ret_kOK);
+		add_test_case("performance_num_data", "num_data=10000", TCat_kPF,
+				"num_pieces", PVType_kIR, Ret_kOK);
+		add_test_case("performance_num_fitting_max", "num_fitting_max=100",
+				TCat_kPF, "num_pieces", PVType_kIR, Ret_kOK);
+		break;
+	case ApiName_kLSQFitSinusoidFloat:
+		add_test_case("contextOR", "poly", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "chebyshev", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "cspline", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
 		break;
 	default:
 		assert(false);
@@ -588,13 +670,39 @@ void AllocateAligned(size_t const length, T **data, void **data_storage) {
 	*data_storage = storage_for_data.release();
 }
 
+void AllocateNotAligned(size_t const length, double (**data)[4],
+		void **data_storage) {
+	*data = nullptr;
+	unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_data(
+			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
+					sizeof(double) * (length * 4 + 1), data));
+	// ----------------------------------------------------
+	// Note: in order to get unaligned address (*data),
+	// ++(*data);
+	// keeps it 64bit-aligned in case T is double.
+	// Therefore, do as follows to shift just 1byte to
+	// get unaligned address except for pointers to char.
+	char *tmp = reinterpret_cast<char *>(*data);
+	*data = reinterpret_cast<double (*)[4]>(++tmp);
+	// ----------------------------------------------------
+	assert(!LIBSAKURA_SYMBOL(IsAligned)(*data));
+	*data_storage = storage_for_data.release();
+}
 template<typename T>
 void AllocateNotAligned(size_t const length, T **data, void **data_storage) {
 	*data = nullptr;
 	unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_data(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(T) * (length + 1), data));
-	++(*data);
+	// ----------------------------------------------------
+	// Note: in order to get unaligned address (*data),
+	// ++(*data);
+	// keeps it 64bit-aligned in case T is double.
+	// Therefore, do as follows to shift just 1byte to
+	// get unaligned address except for pointers to char.
+	char *tmp = reinterpret_cast<char *>(*data);
+	*data = reinterpret_cast<T *>(++tmp);
+	// ----------------------------------------------------
 	assert(!LIBSAKURA_SYMBOL(IsAligned)(*data));
 	*data_storage = storage_for_data.release();
 }
@@ -647,6 +755,10 @@ struct ParamSet {
 		Free(name);
 		AllocateAligned(length, &sptr[name], &sto[name]);
 	}
+	void AllocateAlignedSizeT(string const &name, string const &length_name) {
+		Free(name);
+		AllocateAligned(size[length_name], &sptr[name], &sto[name]);
+	}
 	void AllocateAlignedFloat(string const &name, string const &length_name) {
 		Free(name);
 		AllocateAligned(size[length_name], &fptr[name], &sto[name]);
@@ -690,6 +802,11 @@ struct ParamSet {
 		Free(name);
 		AllocateAligned(size[length_name], &coef[name], &sto[name]);
 	}
+	void AllocateNotAlignedCsplineCoeff(string const &name,
+			string const &length_name) {
+		Free(name);
+		AllocateNotAligned(size[length_name], &coef[name], &sto[name]);
+	}
 	void AllocateContexts(string const &name, string const &defaultvalue_name) {
 		LIBSAKURA_SYMBOL(Status) create_status;
 		uint16_t order = 3;
@@ -700,7 +817,7 @@ struct ParamSet {
 		if (ui16.count("npiece") == 1) {
 			npiece = ui16["npiece"];
 		}
-		uint16_t nwave = 3;
+		uint16_t nwave = 2;
 		if (ui16.count("nwave") == 1) {
 			nwave = ui16["nwave"];
 		}
@@ -769,6 +886,22 @@ struct ParamSet {
 				&context_csplinend4np1);
 		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["csplinend4np1"] = context_csplinend4np1;
+
+		//cspline(num_data=102,num_pieces=99)
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_csplinend102np99 = nullptr;
+		create_status =
+		LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(99, 102,
+				&context_csplinend102np99);
+		EXPECT_EQ(Ret_kOK, create_status);
+		ctxt["csplinend102np99"] = context_csplinend102np99;
+
+		//cspline(num_data=10000)
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_csplinend10000 = nullptr;
+		create_status =
+		LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(npiece, 10000,
+				&context_csplinend10000);
+		EXPECT_EQ(Ret_kOK, create_status);
+		ctxt["csplinend10000"] = context_csplinend10000;
 
 		//sinusoid
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_sinusoid = nullptr;
@@ -899,6 +1032,30 @@ ParamSet CreateDefaultParameterSet(ApiName const api_name) {
 		ps.AllocateAlignedSizeT("boundary", ps.size["num_pieces"] + 1);
 		ps.AllocateStatus("lsqfit_status");
 		break;
+	case ApiName_kLSQFitSinusoidFloat:
+		ps.size["num_nwave"] = 3;
+		ps.AllocateAlignedSizeT("nwave", "num_nwave");
+		for (size_t i = 0; i < ps.size["num_nwave"]; ++i) {
+			ps.sptr["nwave"][i] = i;
+		}
+		ps.AllocateContexts("context", "sinusoid");
+		ps.size["num_data"] = 15;
+		ps.AllocateAlignedFloat("data", "num_data");
+		ps.AllocateAlignedBool("mask", "num_data");
+		for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+			ps.fptr["data"][i] = 10.0;
+			ps.bptr["mask"][i] = true;
+		}
+		ps.fval["clip_threshold_sigma"] = 3.0;
+		ps.ui16["num_fitting_max"] = 2;
+		ps.size["num_coeff"] = ps.size["num_nwave"] * 2 - 1;
+		ps.AllocateAlignedDouble("coeff", "num_coeff");
+		ps.AllocateAlignedFloat("best_fit", "num_data");
+		ps.AllocateAlignedFloat("residual", "num_data");
+		ps.AllocateAlignedBool("final_mask", "num_data");
+		ps.AllocateFloat("rms");
+		ps.AllocateStatus("lsqfit_status");
+		break;
 	default:
 		assert(false);
 		break;
@@ -910,20 +1067,16 @@ bool HasString(string const &str, string const &key) {
 	return (str.find(key) != string::npos);
 }
 
+template<typename T> bool HasKey(T const &m, string const &key) {
+	return (m.count(key) > 0);
+}
+
 //interpret test cases, setup all parameter values to be used for testing
 void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	auto title_has = [&](string const &s) {return HasString(tc.title, s);};
 	auto desc_has = [&](string const &s) {return HasString(tc.desc, s);};
 	cout << "    " << tc.title << (tc.desc != "" ? (" (" + tc.desc + ") ") : "")
 			<< flush << endl;
-	/*
-	 cout << endl;
-	 for (size_t j = 0; j < tc.param.size(); ++j) {
-	 cout << "(" << tc.param[j].name << ")" << "[" << tc.param[j].value_type << "]   ";
-	 }
-	 cout << endl;
-	 */
-
 	ps = CreateDefaultParameterSet(tc.api_name);
 	PAttr param;
 	PAttr default_param;
@@ -936,8 +1089,8 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				tc.num_repeat = 40;
 				ps.ui16["order"] = 99;
 				ps.size["num_coeff"] = ps.ui16["order"] + 1;
-				ps.ctxt["context"] = ps.ctxt["polynd100o99"];
 				ps.size["num_data"] = ps.size["num_coeff"];
+				ps.ctxt["context"] = ps.ctxt["polynd100o99"];
 				ps.AllocateAlignedFloat("data", "num_data");
 				ps.AllocateAlignedBool("mask", "num_data");
 				for (size_t i = 0; i < ps.size["num_data"]; ++i) {
@@ -951,8 +1104,8 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				ps.AllocateAlignedBool("final_mask", "num_data");
 			} else if (desc_has("num_data=10000")) {
 				tc.num_repeat = 700;
-				ps.ctxt["context"] = ps.ctxt["polynd10000"];
 				ps.size["num_data"] = 10000;
+				ps.ctxt["context"] = ps.ctxt["polynd10000"];
 				ps.AllocateAlignedFloat("data", "num_data");
 				ps.AllocateAlignedBool("mask", "num_data");
 				for (size_t i = 0; i < ps.size["num_data"]; ++i) {
@@ -965,6 +1118,46 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				ps.AllocateAlignedBool("final_mask", "num_data");
 			} else if (desc_has("num_fitting_max=100")) {
 				tc.num_repeat = 25000;
+				ps.fval["clip_threshold_sigma"] = FLT_MAX;
+				ps.ui16["num_fitting_max"] = 100;
+				ps.fptr["data"][0] = 0.0;
+			}
+		} else if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+			if (desc_has("num_pieces=99")) {
+				tc.num_repeat = 40;
+				ps.size["num_pieces"] = 99;
+				ps.size["num_data"] = ps.size["num_pieces"] + 3;
+				ps.ctxt["context"] = ps.ctxt["csplinend102np99"];
+				ps.AllocateAlignedFloat("data", "num_data");
+				ps.AllocateAlignedBool("mask", "num_data");
+				for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+					ps.fptr["data"][i] = 10.0f;
+					ps.bptr["mask"][i] = true;
+				}
+				ps.ui16["num_fitting_max"] = 1;
+				ps.AllocateAlignedCsplineCoeff("coeff", "num_pieces");
+				ps.AllocateAlignedFloat("best_fit", "num_data");
+				ps.AllocateAlignedFloat("residual", "num_data");
+				ps.AllocateAlignedBool("final_mask", "num_data");
+				ps.AllocateAlignedSizeT("boundary", ps.size["num_pieces"] + 1);
+			} else if (desc_has("num_data=10000")) {
+				tc.num_repeat = 300;
+				ps.size["num_data"] = 10000;
+				ps.ctxt["context"] = ps.ctxt["csplinend10000"];
+				ps.AllocateAlignedFloat("data", "num_data");
+				ps.AllocateAlignedBool("mask", "num_data");
+				for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+					ps.fptr["data"][i] = 10.0f;
+					ps.bptr["mask"][i] = true;
+				}
+				ps.ui16["num_fitting_max"] = 1;
+				ps.AllocateAlignedCsplineCoeff("coeff", "num_pieces");
+				ps.AllocateAlignedFloat("best_fit", "num_data");
+				ps.AllocateAlignedFloat("residual", "num_data");
+				ps.AllocateAlignedBool("final_mask", "num_data");
+				ps.AllocateAlignedSizeT("boundary", ps.size["num_pieces"] + 1);
+			} else if (desc_has("num_fitting_max=100")) {
+				tc.num_repeat = 12000;
 				ps.fval["clip_threshold_sigma"] = FLT_MAX;
 				ps.ui16["num_fitting_max"] = 100;
 				ps.fptr["data"][0] = 0.0;
@@ -994,7 +1187,11 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					|| (name == "residual")) {
 				ps.AllocateNotAlignedFloat(name, "num_data");
 			} else if (name == "coeff") {
-				ps.AllocateNotAlignedDouble(name, "num_coeff");
+				if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+					ps.AllocateNotAlignedCsplineCoeff(name, "num_pieces");
+				} else {
+					ps.AllocateNotAlignedDouble(name, "num_coeff");
+				}
 			} else if ((name == "mask") || (name == "final_mask")) {
 				ps.AllocateNotAlignedBool(name, "num_data");
 			}
@@ -1136,13 +1333,23 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				}
 			} else if (name == "mask") {
 				if (title_has("effdataLB")) {
-					for (size_t j = ps.ui16["order"] + 1;
-							j < ps.size["num_data"]; ++j) {
+					size_t idx = 0;
+					if (tc.api_name == ApiName_kLSQFitPolynomialFloat) {
+						idx = ps.ui16["order"] + 1;
+					} else if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+						idx = ps.size["num_pieces"] + 3;
+					}
+					for (size_t j = idx; j < ps.size["num_data"]; ++j) {
 						ps.bptr[name][j] = false;
 					}
 				} else if (title_has("effdataTL")) {
-					for (size_t j = ps.ui16["order"]; j < ps.size["num_data"];
-							++j) {
+					size_t idx = 0;
+					if (tc.api_name == ApiName_kLSQFitPolynomialFloat) {
+						idx = ps.ui16["order"];
+					} else if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+						idx = ps.size["num_pieces"] + 2;
+					}
+					for (size_t j = idx; j < ps.size["num_data"]; ++j) {
 						ps.bptr[name][j] = false;
 					}
 				} else if (title_has("noeffdata")) {
@@ -1250,29 +1457,36 @@ LIBSAKURA_SYMBOL(Status) &run_status) {
 				ps.fptr[tc.param[8].name], ps.fptr[tc.param[9].name],
 				ps.bptr[tc.param[10].name], ps.fptr[tc.param[11].name],
 				ps.sptr[tc.param[12].name], ps.fsta[tc.param[13].name]);
+		break;
+	case ApiName_kLSQFitSinusoidFloat:
+		//LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
+		// size_t num_nwave,
+		// size_t const nwave[/*num_nwave*/],
+		// size_t num_data,
+		// float const data[/*num_data*/],
 
-		if (run_status == Ret_kOK) {
-			cout << "best_fit: ";
-			for (size_t i = 0; i < ps.size[tc.param[2].name]; ++i) {
-				cout << "[" << i << "] = " << ps.fptr[tc.param[8].name][i]
-						<< ", ";
-			}
-			cout << endl;
-			cout << "residual: ";
-			for (size_t i = 0; i < ps.size[tc.param[2].name]; ++i) {
-				cout << "[" << i << "] = " << ps.fptr[tc.param[9].name][i]
-						<< ", ";
-			}
-			cout << endl;
-			for (size_t j = 0; j < ps.size[tc.param[1].name]; ++j) {
-				cout << "coeff[" << j << "]: ";
-				for (size_t i = 0; i < 4; ++i) {
-					cout << "[" << i << "] = "
-							<< ps.coef[tc.param[7].name][j][i] << ", ";
-				}
-				cout << endl;
-			}
-		}
+		// bool const mask[/*num_data*/],
+		// float clip_threshold_sigma,
+		// uint16_t num_fitting_max,
+		// size_t num_coeff,
+		// double coeff[/*num_coeff*/],
+
+		// float best_fit[/*num_data*/],
+		// float residual[/*num_data*/],
+		// bool final_mask[/*num_data*/],
+		// float *rms,
+		// LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status
+
+		run_status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
+				ps.ctxt[tc.param[0].name], ps.size[tc.param[1].name],
+				ps.sptr[tc.param[2].name], ps.size[tc.param[3].name],
+				ps.fptr[tc.param[4].name], ps.bptr[tc.param[5].name],
+				ps.fval[tc.param[6].name], ps.ui16[tc.param[7].name],
+				ps.size[tc.param[8].name], ps.dptr[tc.param[9].name],
+				ps.fptr[tc.param[10].name], ps.fptr[tc.param[11].name],
+				ps.bptr[tc.param[12].name], ps.fptr[tc.param[13].name],
+				ps.fsta[tc.param[14].name]
+				);
 		break;
 	default:
 		assert(false);
@@ -1284,34 +1498,57 @@ void CheckStatus(TestCase const &tc, LIBSAKURA_SYMBOL(Status) const &status) {
 	EXPECT_EQ(tc.expect_status, status);
 }
 
-template<typename T> bool HasKey(T const &m, string const &key) {
-	return (m.count(key) > 0);
-}
-
 void CheckValues(TestCase const &tc, ParamSet &ps) {
-	if (!HasString(tc.title, "coeffNULL") && HasKey(ps.dptr, "coeff")
-			&& HasKey(ps.size, "num_coeff")) {
-		//cout << "          ****coeff=[";
-		for (size_t j = 0; j < ps.size["num_coeff"]; ++j) {
-			//cout << ps.dptr["coeff"][j] << ", ";
+	if (!HasString(tc.title, "coeffNULL")
+			&& (HasKey(ps.dptr, "coeff") || (HasKey(ps.coef, "coeff")))
+			&& (HasKey(ps.size, "num_coeff") || (HasKey(ps.size, "num_pieces")))) {
+		if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+			for (size_t i = 0; i < ps.size["num_pieces"]; ++i) {
+				cout << "        coeff[" << i << "]: ";
+				for (size_t j = 0; j < 4; ++j) {
+					if (1 <= j) {
+						cout << ", ";
+					}
+					cout << ps.coef["coeff"][i][j];
+				}
+				cout << endl;
+			}
+		} else {
+			cout << "        coeff: ";
+			for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
+				if (1 <= i) {
+					cout << ", ";
+				}
+				cout << ps.dptr["coeff"][i];
+			}
+			cout << endl;
 		}
-		//cout << "]****" << endl;
 	}
 	if (!HasString(tc.title, "best_fitNULL") && (HasKey(ps.fptr, "best_fit"))
 			&& (HasKey(ps.size, "num_data"))) {
-		//cout << "          ****best_fit=[";
-		for (size_t j = 0; j < ps.size["num_data"]; ++j) {
-			//cout << ps.fptr["best_fit"][j] << ", ";
+		if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+			cout << "        best_fit: ";
+			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+				if (1 <= i) {
+					cout << ", ";
+				}
+				cout << ps.fptr["best_fit"][i];
+			}
+			cout << endl;
 		}
-		//cout << "]****" << endl;
 	}
 	if (!HasString(tc.title, "residualNULL") && (HasKey(ps.fptr, "residual"))
 			&& (HasKey(ps.size, "num_data"))) {
-		//cout << "          ****residual=[";
-		for (size_t j = 0; j < ps.size["num_data"]; ++j) {
-			//cout << ps.fptr["residual"][j] << ", ";
+		if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+			cout << "        residual: ";
+			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+				if (1 <= i) {
+					cout << ", ";
+				}
+				cout << ps.fptr["residual"][i];
+			}
+			cout << endl;
 		}
-		//cout << "]****" << endl;
 	}
 }
 
@@ -1350,6 +1587,7 @@ void Epilogue(ParamSet &ps) {
 	FreeParamSet(ps, ps.dptr);
 	FreeParamSet(ps, ps.bptr);
 	FreeParamSet(ps, ps.ctxt);
+	FreeParamSet(ps, ps.coef);
 	FreeParamSet(ps, ps.fsta);
 }
 
@@ -1479,6 +1717,10 @@ TEST_F(Lsq, LSQFitPolynomialFloat) {
 //Tests for LSQFitCubicSplineFloat()
 TEST_F(Lsq, LSQFitCubicSplineFloat) {
 	RunTest(ApiName_kLSQFitCubicSplineFloat);
+}
+//Tests for LSQFitSinusoidFloat()
+TEST_F(Lsq, LSQFitSinusoidFloat) {
+	RunTest(ApiName_kLSQFitSinusoidFloat);
 }
 
 //*******************************************************
