@@ -27,6 +27,8 @@
  *      Author: wataru
  */
 
+#include <iostream>
+
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -780,7 +782,9 @@ inline void GetBoundariesOfPiecewiseData(size_t num_mask, bool const *mask_arg,
 			++num_unmasked_data;
 	}
 	size_t boundary_last_idx = num_boundary - 1;
-	assert(boundary_last_idx <= num_unmasked_data);
+	if (num_unmasked_data < boundary_last_idx) {
+		throw std::runtime_error("Too few unmasked data for fitting!");
+	}
 	// the first element of boundary[] must point zero, the first index of mask/data.
 	boundary[0] = 0;
 	size_t idx = 1;
@@ -1790,7 +1794,7 @@ LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_nwave,
 	*lsqfit_status = LIBSAKURA_SYMBOL(LSQFitStatus_kNG);
 	CHECK_ARGS(context != nullptr);
 	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
-	CHECK_ARGS(context->lsqfit_type == lsqfit_type);//LSQFitTypeInternal_kSinusoid);
+	CHECK_ARGS(context->lsqfit_type == lsqfit_type);
 	CHECK_ARGS(0 < num_nwave);
 	CHECK_ARGS(nwave != nullptr);
 	CHECK_ARGS(IsUniqueAndAscendingOrder(num_nwave, nwave));
