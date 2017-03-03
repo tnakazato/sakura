@@ -54,6 +54,8 @@
 #define NUM_MODEL 3
 #define NUM_REPEAT 20000
 
+constexpr size_t kNumBasesCubicSpline = 4;
+
 using namespace std;
 
 //Aliases for returned status
@@ -157,8 +159,9 @@ typedef enum {
 	PVType_kTL, //Too less
 	PVType_kTG, //Too great
 	PVType_kOR, //Out of range
-	PVType_kDUP, //Duplicate
+	PVType_kIV, //Invalid value
 	PVType_kIVO, //Invalid order
+	PVType_kDUP, //Duplicate
 	PVType_kNAN, //NaN
 	PVType_kINF, //Infinity
 	PVType_kNINF, //Negative Infinity
@@ -292,6 +295,30 @@ TestCase CreateDefaultTestCase(ApiName const api_name) {
 			PDType_kSizeT, PDType_kDoublePointer, PDType_kFloatPointer,
 			PDType_kFloatPointer, PDType_kBoolPointer,
 			PDType_kFloatPointer, PDType_kFitStatusPointer};
+		break;
+		case ApiName_kSubtractPolynomialFloat:
+		num_params = 6;
+		param_name = {"context", "num_data", "data", "num_coeff",
+			"coeff", "out"};
+		param_dtype = {PDType_kContextPointer, PDType_kSizeT,
+			PDType_kFloatPointer, PDType_kSizeT,
+			PDType_kDoublePointer, PDType_kFloatPointer};
+		break;
+		case ApiName_kSubtractCubicSplineFloat:
+		num_params = 7;
+		param_name = {"context", "num_data", "data", "num_pieces",
+			"coeff", "boundary", "out"};
+		param_dtype = {PDType_kContextPointer, PDType_kSizeT,
+			PDType_kFloatPointer, PDType_kSizeT, PDType_kCsplineCoeffPointer,
+			PDType_kSizeTPointer, PDType_kFloatPointer};
+		break;
+		case ApiName_kSubtractSinusoidFloat:
+		num_params = 8;
+		param_name = {"context", "num_data", "data", "num_nwave",
+			"nwave", "num_coeff", "coeff", "out"};
+		param_dtype = {PDType_kContextPointer, PDType_kSizeT,
+			PDType_kFloatPointer, PDType_kSizeT, PDType_kSizeTPointer,
+			PDType_kSizeT, PDType_kDoublePointer, PDType_kFloatPointer};
 		break;
 		default:
 		assert(false);
@@ -459,8 +486,8 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("clip_threshold_sigmaTL",
 				"clip_threshold_sigma is positive but too small", TCat_kNG,
 				"clip_threshold_sigma", PVType_kTL, Ret_kNG);
-		add_test_case("num_fitting_maxLB", "", TCat_kOK, "num_fitting_max",
-				PVType_kLB, Ret_kOK);
+		add_test_case("num_fitting_maxLB", "no fitting", TCat_kOK,
+				"num_fitting_max", PVType_kLB, Ret_kOK);
 		add_test_case("num_fitting_maxUB", "", TCat_kOK, "num_fitting_max",
 				PVType_kUB, Ret_kOK);
 		add_test_case("num_coeffTL", "", TCat_kNG, "num_coeff", PVType_kTL,
@@ -548,8 +575,8 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("clip_threshold_sigmaTL",
 				"clip_threshold_sigma is positive but too small", TCat_kNG,
 				"clip_threshold_sigma", PVType_kTL, Ret_kNG);
-		add_test_case("num_fitting_maxLB", "", TCat_kOK, "num_fitting_max",
-				PVType_kLB, Ret_kOK);
+		add_test_case("num_fitting_maxLB", "no fitting", TCat_kOK,
+				"num_fitting_max", PVType_kLB, Ret_kOK);
 		add_test_case("num_fitting_maxUB", "", TCat_kOK, "num_fitting_max",
 				PVType_kUB, Ret_kOK);
 		add_test_case("coeffNULL", "", TCat_kOK, "coeff", PVType_kNULL,
@@ -661,8 +688,8 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("clip_threshold_sigmaTL",
 				"clip_threshold_sigma is positive but too small", TCat_kNG,
 				"clip_threshold_sigma", PVType_kTL, Ret_kNG);
-		add_test_case("num_fitting_maxLB", "", TCat_kOK, "num_fitting_max",
-				PVType_kLB, Ret_kOK);
+		add_test_case("num_fitting_maxLB", "no fitting", TCat_kOK,
+				"num_fitting_max", PVType_kLB, Ret_kOK);
 		add_test_case("num_fitting_maxUB", "", TCat_kOK, "num_fitting_max",
 				PVType_kUB, Ret_kOK);
 		add_test_case("num_coeffTL", "", TCat_kNG, "num_coeff", PVType_kTL,
@@ -711,6 +738,129 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 				"num_nwave", PVType_kIR, Ret_kOK);
 		add_test_case("performance_num_fitting_max", "num_fitting_max=100",
 				TCat_kPF, "num_nwave", PVType_kIR, Ret_kOK);
+		break;
+	case ApiName_kSubtractPolynomialFloat:
+		add_test_case("contextVP", "chebyshev", TCat_kOK, "context", PVType_kVP,
+				Ret_kOK);
+		add_test_case("contextOR", "cspline", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "sinusoid", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("num_dataTL", "14", TCat_kNG, "num_data", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_dataTG", "16", TCat_kNG, "num_data", PVType_kTG,
+				Ret_kIA);
+		add_test_case("dataNULL", "", TCat_kNG, "data", PVType_kNULL, Ret_kIA);
+		add_test_case("dataNAL", "", TCat_kNG, "data", PVType_kNAL, Ret_kIA);
+		add_test_case("num_coeffTL", "0", TCat_kNG, "num_coeff", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_coeffLB", "1", TCat_kOK, "num_coeff", PVType_kLB,
+				Ret_kOK);
+		add_test_case("num_coeffIR", "2", TCat_kOK, "num_coeff", PVType_kIR,
+				Ret_kOK);
+		add_test_case("num_coeffTG", "5", TCat_kNG, "num_coeff", PVType_kTG,
+				Ret_kIA);
+		add_test_case("coeffNULL", "", TCat_kNG, "coeff", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("coeffNAL", "", TCat_kNG, "coeff", PVType_kNAL, Ret_kIA);
+		add_test_case("outNULL", "", TCat_kNG, "out", PVType_kNULL, Ret_kIA);
+		add_test_case("outNAL", "", TCat_kNG, "out", PVType_kNAL, Ret_kIA);
+		add_test_case("performance", "num_data=10000,num_coeff=1000", TCat_kPF,
+				"num_data", PVType_kIR, Ret_kOK);
+		break;
+	case ApiName_kSubtractCubicSplineFloat:
+		add_test_case("contextOR", "poly", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "chebyshev", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "sinusoid", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("num_dataTL", "14", TCat_kNG, "num_data", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_dataTG", "16", TCat_kNG, "num_data", PVType_kTG,
+				Ret_kIA);
+		add_test_case("dataNULL", "", TCat_kNG, "data", PVType_kNULL, Ret_kIA);
+		add_test_case("dataNAL", "", TCat_kNG, "data", PVType_kNAL, Ret_kIA);
+		add_test_case("num_piecesTL", "0", TCat_kNG, "num_pieces", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_piecesLB", "1", TCat_kOK, "num_pieces", PVType_kLB,
+				Ret_kOK);
+		add_test_case("num_piecesIR", "2", TCat_kOK, "num_pieces", PVType_kIR,
+				Ret_kOK);
+		add_test_case("num_piecesTG", "5", TCat_kNG, "num_pieces", PVType_kTG,
+				Ret_kIA);
+		add_test_case("coeffNULL", "", TCat_kNG, "coeff", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("coeffNAL", "", TCat_kNG, "coeff", PVType_kNAL, Ret_kIA);
+		add_test_case("boundaryNULL", "", TCat_kNG, "boundary", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("boundaryNAL", "", TCat_kNG, "boundary", PVType_kNAL,
+				Ret_kIA);
+		add_test_case("boundaryIV", "first value invalid", TCat_kNG, "boundary",
+				PVType_kIV, Ret_kIA);
+		add_test_case("boundaryIV", "last value invalid", TCat_kNG, "boundary",
+				PVType_kIV, Ret_kIA);
+		add_test_case("outNULL", "", TCat_kNG, "out", PVType_kNULL, Ret_kIA);
+		add_test_case("outNAL", "", TCat_kNG, "out", PVType_kNAL, Ret_kIA);
+		add_test_case("performance", "num_data=10000,num_pieces=1000", TCat_kPF,
+				"num_data", PVType_kIR, Ret_kOK);
+		break;
+	case ApiName_kSubtractSinusoidFloat:
+		add_test_case("contextOR", "poly", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "chebyshev", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextOR", "cspline", TCat_kNG, "context", PVType_kOR,
+				Ret_kIA);
+		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("num_dataTL", "14", TCat_kNG, "num_data", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_dataTG", "16", TCat_kNG, "num_data", PVType_kTG,
+				Ret_kIA);
+		add_test_case("dataNULL", "", TCat_kNG, "data", PVType_kNULL, Ret_kIA);
+		add_test_case("dataNAL", "", TCat_kNG, "data", PVType_kNAL, Ret_kIA);
+		add_test_case("num_nwaveTL", "0", TCat_kNG, "num_nwave", PVType_kTL,
+				Ret_kIA);
+		add_test_case("nwaveNULL", "", TCat_kNG, "nwave", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("nwaveDUP", "0,0,1,2", TCat_kNG, "nwave", PVType_kDUP,
+				Ret_kIA);
+		add_test_case("nwaveDUP", "0,1,1,2", TCat_kNG, "nwave", PVType_kDUP,
+				Ret_kIA);
+		add_test_case("nwaveDUP", "0,1,2,2", TCat_kNG, "nwave", PVType_kDUP,
+				Ret_kIA);
+		add_test_case("nwaveIVO", "0,2,1", TCat_kNG, "nwave", PVType_kIVO,
+				Ret_kIA);
+		add_test_case("nwaveOR", "0,1,2,3", TCat_kNG, "nwave", PVType_kOR,
+				Ret_kIA);
+		add_test_case("nwavePartial", "0", TCat_kOK, "nwave", PVType_kIR,
+				Ret_kOK);
+		add_test_case("nwavePartial", "1", TCat_kOK, "nwave", PVType_kIR,
+				Ret_kOK);
+		add_test_case("nwavePartial", "2", TCat_kOK, "nwave", PVType_kIR,
+				Ret_kOK);
+		add_test_case("nwavePartial", "0,1", TCat_kOK, "nwave", PVType_kIR,
+				Ret_kOK);
+		add_test_case("nwavePartial", "0,2", TCat_kOK, "nwave", PVType_kIR,
+				Ret_kOK);
+		add_test_case("nwavePartial", "1,2", TCat_kOK, "nwave", PVType_kIR,
+				Ret_kOK);
+		add_test_case("num_coeffTL", "0", TCat_kNG, "num_coeff", PVType_kTL,
+				Ret_kIA);
+		add_test_case("num_coeffTG", "6", TCat_kNG, "num_coeff", PVType_kTG,
+				Ret_kIA);
+		add_test_case("coeffNULL", "", TCat_kNG, "coeff", PVType_kNULL,
+				Ret_kIA);
+		add_test_case("coeffNAL", "", TCat_kNG, "coeff", PVType_kNAL, Ret_kIA);
+		add_test_case("outNULL", "", TCat_kNG, "out", PVType_kNULL, Ret_kIA);
+		add_test_case("outNAL", "", TCat_kNG, "out", PVType_kNAL, Ret_kIA);
+		add_test_case("performance", "num_data=10000,num_nwave=100", TCat_kPF,
+				"num_data", PVType_kIR, Ret_kOK);
 		break;
 	default:
 		assert(false);
@@ -827,6 +977,10 @@ struct ParamSet {
 		Free(name);
 		AllocateAligned(size[length_name], &sptr[name], &sto[name]);
 	}
+	void AllocateNotAlignedSizeT(string const &name, size_t const length) {
+		Free(name);
+		AllocateNotAligned(length, &sptr[name], &sto[name]);
+	}
 	void AllocateAlignedFloat(string const &name, string const &length_name) {
 		Free(name);
 		AllocateAligned(size[length_name], &fptr[name], &sto[name]);
@@ -869,6 +1023,10 @@ struct ParamSet {
 			string const &length_name) {
 		Free(name);
 		AllocateAligned(size[length_name], &coef[name], &sto[name]);
+	}
+	void AllocateAlignedCsplineCoeff(string const &name, size_t const &length) {
+		Free(name);
+		AllocateAligned(length, &coef[name], &sto[name]);
 	}
 	void AllocateNotAlignedCsplineCoeff(string const &name,
 			string const &length_name) {
@@ -939,6 +1097,16 @@ struct ParamSet {
 		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["chebyshev"] = context_chebyshev;
 
+		//chebyshev(num_data=10000,order=999)
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_chebyshevnd10000o999 =
+				nullptr;
+		create_status =
+		LIBSAKURA_SYMBOL(CreateLSQFitContextPolynomialFloat)(
+				LIBSAKURA_SYMBOL(LSQFitType_kChebyshev), 999, 10000,
+				&context_chebyshevnd10000o999);
+		EXPECT_EQ(Ret_kOK, create_status);
+		ctxt["chebyshevnd10000o999"] = context_chebyshevnd10000o999;
+
 		//cspline
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_cspline = nullptr;
 		create_status =
@@ -970,6 +1138,15 @@ struct ParamSet {
 				&context_csplinend10000);
 		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["csplinend10000"] = context_csplinend10000;
+
+		//cspline(num_data=10000,num_pieces=1000)
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_csplinend10000np1000 =
+				nullptr;
+		create_status =
+		LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSplineFloat)(1000, 10000,
+				&context_csplinend10000np1000);
+		EXPECT_EQ(Ret_kOK, create_status);
+		ctxt["csplinend10000np1000"] = context_csplinend10000np1000;
 
 		//sinusoid
 		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_sinusoid = nullptr;
@@ -1011,6 +1188,14 @@ struct ParamSet {
 				&context_sinusoidnd10000);
 		EXPECT_EQ(Ret_kOK, create_status);
 		ctxt["sinusoidnd10000"] = context_sinusoidnd10000;
+
+		//sinusoid(num_data=10000,nwave=99)
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_sinusoidnd10000nw99 = nullptr;
+		create_status =
+		LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(99, 10000,
+				&context_sinusoidnd10000nw99);
+		EXPECT_EQ(Ret_kOK, create_status);
+		ctxt["sinusoidnd10000nw99"] = context_sinusoidnd10000nw99;
 
 		ctxt[name] = ctxt[defaultvalue_name];
 		cptr[name] = &ctxt[name];
@@ -1068,6 +1253,7 @@ struct ParamSet {
 
 ParamSet CreateDefaultParameterSet(ApiName const api_name) {
 	ParamSet ps;
+	size_t num_boundary;
 	switch (api_name) {
 	case ApiName_kCreateLSQFitContextPolynomialFloat:
 		ps.ftyp["lsqfit_type"] = LIBSAKURA_SYMBOL(LSQFitType_kPolynomial);
@@ -1156,6 +1342,64 @@ ParamSet CreateDefaultParameterSet(ApiName const api_name) {
 		ps.AllocateAlignedBool("final_mask", "num_data");
 		ps.AllocateFloat("rms");
 		ps.AllocateStatus("lsqfit_status");
+		break;
+	case ApiName_kSubtractPolynomialFloat:
+		ps.AllocateContexts("context", "poly");
+		ps.size["num_data"] = 15;
+		ps.AllocateAlignedFloat("data", "num_data");
+		for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+			ps.fptr["data"][i] = 10.0;
+		}
+		ps.size["num_coeff"] = 4;
+		ps.AllocateAlignedDouble("coeff", "num_coeff");
+		for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
+			ps.dptr["coeff"][i] = (i == 0) ? 10.0 : 0.0;
+		}
+		ps.AllocateAlignedFloat("out", "num_data");
+		break;
+	case ApiName_kSubtractCubicSplineFloat:
+		ps.AllocateContexts("context", "cspline");
+		ps.size["num_data"] = 15;
+		ps.AllocateAlignedFloat("data", "num_data");
+		for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+			ps.fptr["data"][i] = 10.0;
+		}
+		ps.size["num_pieces"] = 3;
+		ps.AllocateAlignedCsplineCoeff("coeff", "num_pieces");
+		for (size_t i = 0; i < ps.size["num_pieces"]; ++i) {
+			for (size_t j = 0; j < kNumBasesCubicSpline; ++j) {
+				ps.coef["coeff"][i][j] = (j == 0) ? 10.0 : 0.0;
+			}
+		}
+		num_boundary = ps.size["num_pieces"] + 1;
+		ps.AllocateAlignedSizeT("boundary", num_boundary);
+		for (size_t i = 0; i < num_boundary; ++i) {
+			ps.sptr["boundary"][i] = ps.size["num_data"] / ps.size["num_pieces"]
+					* i;
+		}
+		assert(ps.sptr["boundary"][0] == 0);
+		assert(
+				ps.sptr["boundary"][ps.size["num_pieces"]] == ps.size["num_data"]);
+		ps.AllocateAlignedFloat("out", "num_data");
+		break;
+	case ApiName_kSubtractSinusoidFloat:
+		ps.size["num_nwave"] = 3;
+		ps.AllocateAlignedSizeT("nwave", "num_nwave");
+		for (size_t i = 0; i < ps.size["num_nwave"]; ++i) {
+			ps.sptr["nwave"][i] = i;
+		}
+		ps.AllocateContexts("context", "sinusoid");
+		ps.size["num_data"] = 15;
+		ps.AllocateAlignedFloat("data", "num_data");
+		for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+			ps.fptr["data"][i] = 10.0;
+		}
+		ps.size["num_coeff"] = ps.size["num_nwave"] * 2 - 1;
+		ps.AllocateAlignedDouble("coeff", "num_coeff");
+		for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
+			ps.dptr["coeff"][i] = (i == 0) ? 10.0 : 0.0;
+		}
+		ps.AllocateAlignedFloat("out", "num_data");
 		break;
 	default:
 		assert(false);
@@ -1306,6 +1550,60 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				ps.ui16["num_fitting_max"] = 100;
 				ps.fptr["data"][0] = 0.0;
 			}
+		} else if (tc.api_name == ApiName_kSubtractPolynomialFloat) {
+			tc.num_repeat = 30;
+			ps.ctxt["context"] = ps.ctxt["chebyshevnd10000o999"];
+			ps.size["num_data"] = 10000;
+			ps.AllocateAlignedFloat("data", "num_data");
+			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+				ps.fptr["data"][i] = 10.0f;
+			}
+			ps.size["num_coeff"] = 1000;
+			ps.AllocateAlignedDouble("coeff", "num_coeff");
+			for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
+				ps.dptr["coeff"][i] = (i == 0) ? 10.0 : 0.0;
+			}
+			ps.AllocateAlignedFloat("out", "num_data");
+		} else if (tc.api_name == ApiName_kSubtractCubicSplineFloat) {
+			tc.num_repeat = 7000;
+			ps.ctxt["context"] = ps.ctxt["csplinend10000np1000"];
+			ps.size["num_data"] = 10000;
+			ps.AllocateAlignedFloat("data", "num_data");
+			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+				ps.fptr["data"][i] = 10.0f;
+			}
+			ps.size["num_pieces"] = 1000;
+			ps.AllocateAlignedCsplineCoeff("coeff", ps.size["num_pieces"] + 3);
+			for (size_t i = 0; i < ps.size["num_pieces"] + 3; ++i) {
+				for (size_t j = 0; j < kNumBasesCubicSpline; ++j) {
+					ps.coef["coeff"][i][j] = (j == 0) ? 10.0 : 0.0;
+				}
+			}
+			ps.AllocateAlignedSizeT("boundary", ps.size["num_pieces"] + 1);
+			for (size_t i = 0; i < ps.size["num_pieces"] + 1; ++i) {
+				ps.sptr["boundary"][i] = i * ps.size["num_data"]
+						/ ps.size["num_pieces"];
+			}
+			ps.AllocateAlignedFloat("out", "num_data");
+		} else if (tc.api_name == ApiName_kSubtractSinusoidFloat) {
+			tc.num_repeat = 140;
+			ps.size["num_nwave"] = 100;
+			ps.AllocateAlignedSizeT("nwave", "num_nwave");
+			for (size_t i = 0; i < ps.size["num_nwave"]; ++i) {
+				ps.sptr["nwave"][i] = i;
+			}
+			ps.size["num_coeff"] = ps.size["num_nwave"] * 2 - 1;
+			ps.size["num_data"] = 10000;
+			ps.ctxt["context"] = ps.ctxt["sinusoidnd10000nw99"];
+			ps.AllocateAlignedFloat("data", "num_data");
+			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+				ps.fptr["data"][i] = 10.0f;
+			}
+			ps.AllocateAlignedDouble("coeff", "num_coeff");
+			for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
+				ps.dptr["coeff"][i] = (i == 0) ? 10.0 : 0.0;
+			}
+			ps.AllocateAlignedFloat("out", "num_data");
 		}
 		return;
 	}
@@ -1327,11 +1625,14 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				ps.SetNullPointer(name);
 			}
 		} else if (vtype == PVType_kNAL) {
-			if ((name == "data") || (name == "best_fit")
-					|| (name == "residual")) {
+			if (name == "boundary") {
+				ps.AllocateNotAlignedSizeT(name, ps.size["num_pieces"] + 1);
+			} else if ((name == "data") || (name == "best_fit")
+					|| (name == "residual") || (name == "out")) {
 				ps.AllocateNotAlignedFloat(name, "num_data");
 			} else if (name == "coeff") {
-				if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+				if ((tc.api_name == ApiName_kLSQFitCubicSplineFloat)
+						|| (tc.api_name == ApiName_kSubtractCubicSplineFloat)) {
 					ps.AllocateNotAlignedCsplineCoeff(name, "num_pieces");
 				} else {
 					ps.AllocateNotAlignedDouble(name, "num_coeff");
@@ -1413,14 +1714,33 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				if (vtype == PVType_kUB) {
 					ps.size["num_data"] = SIZE_MAX;
 					ps.size[name] = ps.size["num_data"] - 3;
+				} else if (vtype == PVType_kTL) {
+					ps.size[name] = 0;
 				} else if (vtype == PVType_kLB) {
 					ps.size[name] = 1;
 					if (title_has("num_dataLB")) {
 						ps.size["num_data"] = ps.size[name] + 3;
 						ps.ctxt["context"] = ps.ctxt["csplinend4np1"];
+					} else if (tc.api_name
+							== ApiName_kSubtractCubicSplineFloat) {
+						ps.size["num_boundary"] = ps.size[name] + 1;
+						ps.AllocateAlignedSizeT("boundary", "num_boundary");
+						ps.sptr["boundary"][0] = 0;
+						ps.sptr["boundary"][1] = ps.size["num_data"];
 					}
+				} else if (vtype == PVType_kIR) {
+					ps.size[name] = 2;
+					ps.size["num_boundary"] = ps.size[name] + 1;
+					ps.AllocateAlignedSizeT("boundary", "num_boundary");
+					ps.sptr["boundary"][0] = 0;
+					ps.sptr["boundary"][1] = ps.size["num_data"] / 2;
+					ps.sptr["boundary"][2] = ps.size["num_data"];
 				} else if (vtype == PVType_kTG) {
-					ps.size[name] = ps.size["num_data"] - 2;
+					if (tc.api_name == ApiName_kSubtractCubicSplineFloat) {
+						ps.size[name] = 5;
+					} else {
+						ps.size[name] = ps.size["num_data"] - 2;
+					}
 				}
 			} else if (name == "num_nwave") {
 				if (vtype == PVType_kTL) {
@@ -1446,7 +1766,8 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 							ps.size["num_data"] = ps.ui16[name] * 2 + 2;
 						}
 					}
-				} else if ((tc.api_name == ApiName_kLSQFitSinusoidFloat)
+				} else if (((tc.api_name == ApiName_kLSQFitSinusoidFloat)
+						|| (tc.api_name == ApiName_kSubtractSinusoidFloat))
 						&& (title_has("nwaveDUP") || (title_has("nwaveIVO"))
 								|| (title_has("nwaveOR"))
 								|| (title_has("nwavePartial")))) {
@@ -1463,6 +1784,17 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					ps.size["num_coeff"] = ps.size["num_nwave"] * 2
 							- (has_zero ? 1 : 0);
 					ps.AllocateAlignedDouble("coeff", "num_coeff");
+					if (tc.api_name == ApiName_kSubtractSinusoidFloat) {
+						size_t i = 0;
+						while (i < ps.size["num_coeff"]) {
+							if (ps.sptr[name][i] == 0) {
+								ps.dptr["coeff"][i++] = 10.0;
+							} else {
+								ps.dptr["coeff"][i++] = 0.0;
+								ps.dptr["coeff"][i++] = 0.0;
+							}
+						}
+					}
 				}
 			} else if (name == "num_data") {
 				if (tc.api_name
@@ -1587,11 +1919,12 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				}
 			} else if (name == "num_coeff") {
 				if (tc.api_name == ApiName_kLSQFitPolynomialFloat) {
-					auto set_params = [&](uint16_t const order, size_t const ncoeff){
-						ps.ui16["order"] = order;
-						ps.size[name] = ncoeff;
-						ps.AllocateAlignedDouble("coeff", name);
-					};
+					auto set_params =
+							[&](uint16_t const order, size_t const ncoeff) {
+								ps.ui16["order"] = order;
+								ps.size[name] = ncoeff;
+								ps.AllocateAlignedDouble("coeff", name);
+							};
 					if (vtype == PVType_kTL) {
 						set_params(2, 2);
 					} else if (vtype == PVType_kLB) {
@@ -1602,16 +1935,17 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 						set_params(3, 5);
 					}
 				} else if (tc.api_name == ApiName_kLSQFitSinusoidFloat) {
-					auto set_params = [&](uint16_t const nnwave, size_t const ncoeff){
-						ps.size["num_nwave"] = nnwave;
-						ps.AllocateAlignedSizeT("nwave", "num_nwave");
-						for (size_t j = 0; j < ps.size["num_nwave"]; ++j) {
-							ps.sptr["nwave"][j] = j;
-						}
-						ps.size[name] = ncoeff;
-						ps.AllocateAlignedDouble("coeff", name);
-						ps.ctxt["context"] = ps.ctxt["sinusoidnw3"];
-					};
+					auto set_params =
+							[&](uint16_t const nnwave, size_t const ncoeff) {
+								ps.size["num_nwave"] = nnwave;
+								ps.AllocateAlignedSizeT("nwave", "num_nwave");
+								for (size_t j = 0; j < ps.size["num_nwave"]; ++j) {
+									ps.sptr["nwave"][j] = j;
+								}
+								ps.size[name] = ncoeff;
+								ps.AllocateAlignedDouble("coeff", name);
+								ps.ctxt["context"] = ps.ctxt["sinusoidnw3"];
+							};
 					if (vtype == PVType_kTL) {
 						set_params(3, 4);
 					} else if (vtype == PVType_kLB) {
@@ -1620,6 +1954,26 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 						set_params(4, 7);
 					} else if (vtype == PVType_kTG) {
 						set_params(4, 8);
+					}
+				} else if (tc.api_name == ApiName_kSubtractPolynomialFloat) {
+					if (vtype == PVType_kTL) {
+						ps.size[name] = 0;
+					} else if (vtype == PVType_kLB) {
+						ps.size[name] = 1;
+					} else if (vtype == PVType_kIR) {
+						ps.size[name] = 2;
+					} else if (vtype == PVType_kTG) {
+						ps.size[name] = 5;
+					}
+					ps.AllocateAlignedDouble("coeff", name);
+					for (size_t j = 0; j < ps.size[name]; ++j) {
+						ps.dptr["coeff"][j] = (j == 0) ? 10.0 : 0.0;
+					}
+				} else if (tc.api_name == ApiName_kSubtractSinusoidFloat) {
+					if (vtype == PVType_kTL) {
+						ps.size[name] = 0;
+					} else if (vtype == PVType_kTG) {
+						ps.size[name] = 6;
 					}
 				}
 			} else if ((name == "best_fit") || (name == "residual")) {
@@ -1631,6 +1985,12 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 				if (desc_has(name + "=mask")) {
 					ps.Free(name);
 					ps.bptr[name] = ps.bptr["mask"];
+				}
+			} else if (name == "boundary") {
+				if (desc_has("first")) {
+					ps.sptr[name][0]++;
+				} else if (desc_has("last")) {
+					ps.sptr[name][ps.size["num_pieces"]]++;
 				}
 			}
 		}
@@ -1688,24 +2048,6 @@ LIBSAKURA_SYMBOL(Status) &run_status) {
 				ps.sptr[tc.param[12].name], ps.fsta[tc.param[13].name]);
 		break;
 	case ApiName_kLSQFitSinusoidFloat:
-		//LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context,
-		// size_t num_nwave,
-		// size_t const nwave[/*num_nwave*/],
-		// size_t num_data,
-		// float const data[/*num_data*/],
-
-		// bool const mask[/*num_data*/],
-		// float clip_threshold_sigma,
-		// uint16_t num_fitting_max,
-		// size_t num_coeff,
-		// double coeff[/*num_coeff*/],
-
-		// float best_fit[/*num_data*/],
-		// float residual[/*num_data*/],
-		// bool final_mask[/*num_data*/],
-		// float *rms,
-		// LIBSAKURA_SYMBOL(LSQFitStatus) *lsqfit_status
-
 		run_status = LIBSAKURA_SYMBOL(LSQFitSinusoidFloat)(
 				ps.ctxt[tc.param[0].name], ps.size[tc.param[1].name],
 				ps.sptr[tc.param[2].name], ps.size[tc.param[3].name],
@@ -1716,10 +2058,37 @@ LIBSAKURA_SYMBOL(Status) &run_status) {
 				ps.bptr[tc.param[12].name], ps.fptr[tc.param[13].name],
 				ps.fsta[tc.param[14].name]);
 		break;
+	case ApiName_kSubtractPolynomialFloat:
+		run_status = LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
+				ps.ctxt[tc.param[0].name], ps.size[tc.param[1].name],
+				ps.fptr[tc.param[2].name], ps.size[tc.param[3].name],
+				ps.dptr[tc.param[4].name], ps.fptr[tc.param[5].name]);
+		break;
+	case ApiName_kSubtractCubicSplineFloat:
+		run_status = LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
+				ps.ctxt[tc.param[0].name], ps.size[tc.param[1].name],
+				ps.fptr[tc.param[2].name], ps.size[tc.param[3].name],
+				ps.coef[tc.param[4].name], ps.sptr[tc.param[5].name],
+				ps.fptr[tc.param[6].name]);
+		break;
+	case ApiName_kSubtractSinusoidFloat:
+		run_status = LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
+				ps.ctxt[tc.param[0].name], ps.size[tc.param[1].name],
+				ps.fptr[tc.param[2].name], ps.size[tc.param[3].name],
+				ps.sptr[tc.param[4].name], ps.size[tc.param[5].name],
+				ps.dptr[tc.param[6].name], ps.fptr[tc.param[7].name]);
+		break;
 	default:
 		assert(false);
 		break;
 	}
+}
+
+template<typename T>
+void CheckAlmostEqual(T expected, T actual, T tolerance = 1e-5) {
+	double deviation = fabs(actual - expected);
+	double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
+	ASSERT_LE(deviation, val);
 }
 
 void CheckStatus(TestCase const &tc, LIBSAKURA_SYMBOL(Status) const &status) {
@@ -1727,73 +2096,53 @@ void CheckStatus(TestCase const &tc, LIBSAKURA_SYMBOL(Status) const &status) {
 }
 
 void CheckValues(TestCase const &tc, ParamSet &ps) {
-	if (!HasString(tc.title, "coeffNULL")
-			&& (HasKey(ps.dptr, "coeff") || (HasKey(ps.coef, "coeff")))
-			&& (HasKey(ps.size, "num_coeff") || (HasKey(ps.size, "num_pieces")))) {
-		if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
-			for (size_t i = 0; i < ps.size["num_pieces"]; ++i) {
-				cout << "        coeff[" << i << "]: ";
-				for (size_t j = 0; j < 4; ++j) {
-					if (1 <= j) {
-						cout << ", ";
+	if (((tc.api_name == ApiName_kLSQFitPolynomialFloat)
+			|| (tc.api_name == ApiName_kLSQFitCubicSplineFloat)
+			|| (tc.api_name == ApiName_kLSQFitSinusoidFloat))
+			&& !HasString(tc.desc, "no fitting")
+			&& !HasString(tc.desc, "residual=data")
+			&& !HasString(tc.title, "performance_num_fitting_max")
+			&& !(HasString(tc.title, "nwavePartial") && !HasString(tc.desc, "0"))
+			&& !(HasString(tc.title, "effdataLB")
+					&& HasString(tc.desc, "0_not_in_nwave"))) {
+		if (!HasString(tc.title, "coeffNULL")
+				&& (HasKey(ps.dptr, "coeff") || (HasKey(ps.coef, "coeff")))
+				&& (HasKey(ps.size, "num_coeff")
+						|| (HasKey(ps.size, "num_pieces")))) {
+			if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
+				for (size_t i = 0; i < ps.size["num_pieces"]; ++i) {
+					for (size_t j = 0; j < kNumBasesCubicSpline; ++j) {
+						CheckAlmostEqual(((j == 0) ? 10.0 : 0.0),
+								ps.coef["coeff"][i][j]);
 					}
-					cout << ps.coef["coeff"][i][j];
 				}
-				cout << endl;
-			}
-		} else {
-			cout << "        coeff: ";
-			for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
-				if (1 <= i) {
-					cout << ", ";
+			} else {
+				for (size_t i = 0; i < ps.size["num_coeff"]; ++i) {
+					CheckAlmostEqual(((i == 0) ? 10.0 : 0.0),
+							ps.dptr["coeff"][i]);
 				}
-				cout << ps.dptr["coeff"][i];
 			}
-			cout << endl;
 		}
-	}
-	if (!HasString(tc.title, "best_fitNULL") && (HasKey(ps.fptr, "best_fit"))
-			&& (HasKey(ps.size, "num_data"))) {
-		if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
-			cout << "        best_fit: ";
+		if (!HasString(tc.title, "best_fitNULL")
+				&& (HasKey(ps.fptr, "best_fit"))
+				&& (HasKey(ps.size, "num_data"))) {
 			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
-				if (1 <= i) {
-					cout << ", ";
-				}
-				cout << ps.fptr["best_fit"][i];
+				CheckAlmostEqual(ps.fptr["data"][i], ps.fptr["best_fit"][i]);
 			}
-			cout << endl;
-		} else {
-			cout << "        best_fit: ";
-			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
-				if (1 <= i) {
-					cout << ", ";
-				}
-				cout << ps.fptr["best_fit"][i];
-			}
-			cout << endl;
 		}
-	}
-	if (!HasString(tc.title, "residualNULL") && (HasKey(ps.fptr, "residual"))
-			&& (HasKey(ps.size, "num_data"))) {
-		if (tc.api_name == ApiName_kLSQFitCubicSplineFloat) {
-			cout << "        residual: ";
+		if (!HasString(tc.title, "residualNULL")
+				&& (HasKey(ps.fptr, "residual"))
+				&& (HasKey(ps.size, "num_data"))) {
 			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
-				if (1 <= i) {
-					cout << ", ";
-				}
-				cout << ps.fptr["residual"][i];
+				CheckAlmostEqual(0.0f, ps.fptr["residual"][i]);
 			}
-			cout << endl;
-		} else {
-			cout << "        residual: ";
-			for (size_t i = 0; i < ps.size["num_data"]; ++i) {
-				if (1 <= i) {
-					cout << ", ";
-				}
-				cout << ps.fptr["residual"][i];
-			}
-			cout << endl;
+		}
+	} else if (((tc.api_name == ApiName_kSubtractPolynomialFloat)
+			|| (tc.api_name == ApiName_kSubtractCubicSplineFloat)
+			|| (tc.api_name == ApiName_kSubtractSinusoidFloat))
+			&& !(HasString(tc.title, "nwavePartial") && !HasString(tc.desc, "0"))) {
+		for (size_t i = 0; i < ps.size["num_data"]; ++i) {
+			CheckAlmostEqual(0.0f, ps.fptr["out"][i]);
 		}
 	}
 }
@@ -1816,7 +2165,7 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 	}
 	CheckStatus(tc, run_status);
 	if ((tc.category == TCat_kOK) || (tc.category == TCat_kPF)) {
-		//CheckValues(tc, ps);
+		CheckValues(tc, ps);
 	}
 }
 
@@ -1886,7 +2235,8 @@ protected:
 	}
 
 // Check if the expected and actual values are enough close to each other
-	void CheckAlmostEqual(double expected, double actual, double tolerance) {
+	void CheckAlmostEqual(double expected, double actual, double tolerance =
+			1e-5) {
 		double deviation = fabs(actual - expected);
 		double val = max(fabs(actual), fabs(expected)) * tolerance + tolerance;
 		ASSERT_LE(deviation, val);
@@ -1895,78 +2245,48 @@ protected:
 	bool verbose;
 };
 
-//Destroy(context, Ret_kOK);
-/*
- void Destroy(LIBSAKURA_SYMBOL(LSQFitContextFloat) *context, size_t status) {
- LIBSAKURA_SYMBOL (Status) destroy_status = sakura_DestroyLSQFitContextFloat(
- context);
- EXPECT_EQ(status, destroy_status);
- cout << "Destroy Status : " << destroy_status << endl;
- }
- */
-
-/*
- * Test sakura_CreateLSQFitContextFloatWithPolynomialPerformanceTest
- * successful case (with normal polynomial model)
- */
-/*
- TEST_F(Baseline, CreateLSQFitContextFloatWithPolynomialPerformanceTest) {
- uint16_t const order(1000);
- size_t const num_chan(65535);
-
- LIBSAKURA_SYMBOL(LSQFitContextFloat) * context = nullptr;
-
- size_t const num_repeat(1);
- double start, end;
- double elapsed_time = 0.0;
- for (size_t i = 0; i < num_repeat; ++i) {
- start = GetCurrentTime();
- LIBSAKURA_SYMBOL (Status) create_status =
- sakura_CreateLSQFitContextPolynomialFloat(
- LIBSAKURA_SYMBOL(LSQFitType_kPolynomial), order,
- num_chan, &context);
- end = GetCurrentTime();
- elapsed_time += (end - start);
- EXPECT_EQ(Ret_kOK, create_status);
- Destroy(context, Ret_kOK);
- }
- cout << setprecision(5)
- << "#x# benchmark Baseline_CreateLSQFitContextPolynomialFloatWithPolynomialPerformanceTest"
- << " " << elapsed_time << endl;
- }
- */
-
-//Tests for CreateLSQFitContextPolynomialFloat()
 TEST_F(Lsq, CreateLSQFitContextPolynomialFloat) {
 	RunTest(ApiName_kCreateLSQFitContextPolynomialFloat);
 }
-//Tests for CreateLSQFitContextCubicSplineFloat()
+
 TEST_F(Lsq, CreateLSQFitContextCubicSplineFloat) {
 	RunTest(ApiName_kCreateLSQFitContextCubicSplineFloat);
 }
-//Tests for CreateLSQFitContextSinusoidFloat()
+
 TEST_F(Lsq, CreateLSQFitContextSinusoidFloat) {
 	RunTest(ApiName_kCreateLSQFitContextSinusoidFloat);
 }
-//Tests for DestroyLSQFitContextFloat()
+
 TEST_F(Lsq, DestroyLSQFitContextFloat) {
 	RunTest(ApiName_kDestroyLSQFitContextFloat);
 }
-//Tests for GetNumberOfCoefficientsFloat()
+
 TEST_F(Lsq, GetNumberOfCoefficientsFloat) {
 	RunTest(ApiName_kGetNumberOfCoefficientsFloat);
 }
-//Tests for LSQFitPolynomialFloat()
+
 TEST_F(Lsq, LSQFitPolynomialFloat) {
 	RunTest(ApiName_kLSQFitPolynomialFloat);
 }
-//Tests for LSQFitCubicSplineFloat()
+
 TEST_F(Lsq, LSQFitCubicSplineFloat) {
 	RunTest(ApiName_kLSQFitCubicSplineFloat);
 }
-//Tests for LSQFitSinusoidFloat()
+
 TEST_F(Lsq, LSQFitSinusoidFloat) {
 	RunTest(ApiName_kLSQFitSinusoidFloat);
+}
+
+TEST_F(Lsq, SubtractPolynomialFloat) {
+	RunTest(ApiName_kSubtractPolynomialFloat);
+}
+
+TEST_F(Lsq, SubtractCubicSplineFloat) {
+	RunTest(ApiName_kSubtractCubicSplineFloat);
+}
+
+TEST_F(Lsq, SubtractSinusoidFloat) {
+	RunTest(ApiName_kSubtractSinusoidFloat);
 }
 
 //*******************************************************

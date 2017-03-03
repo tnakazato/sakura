@@ -27,8 +27,6 @@
  *      Author: wataru
  */
 
-#include <iostream>
-
 #include <algorithm>
 #include <cassert>
 #include <climits>
@@ -1846,7 +1844,7 @@ LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_nwave,
  * user-given coefficients. This function is for fitting type
  * of polynomial and Chebyshev polynomial.
  *
- * @param[out] out_arg Model-subtracted data.
+ * @param[out] out Model-subtracted data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractPolynomialFloat)(
 LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
@@ -1885,7 +1883,7 @@ LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
  * user-given coefficients. This function is for fitting type
  * of cubic spline.
  *
- * @param[out] out_arg Model-subtracted data.
+ * @param[out] out Model-subtracted data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractCubicSplineFloat)(
 LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
@@ -1927,7 +1925,7 @@ LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
  * user-given coefficients. This function is for fitting type
  * of sinusoids.
  *
- * @param[out] out_arg Model-subtracted data.
+ * @param[out] out Model-subtracted data.
  */
 extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(SubtractSinusoidFloat)(
 LIBSAKURA_SYMBOL(LSQFitContextFloat) const *context, size_t num_data,
