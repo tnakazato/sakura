@@ -82,11 +82,6 @@ add_custom_target(logConfig
 	DEPENDS "${PROJECT_SOURCE_DIR}/libsakura.log4j"
 )
 
-add_executable(testBaseline              baseline.cc)
-add_executable(testBaselineKS            baseline_ks.cc)
-add_executable(testBaselineSK            baseline_sk.cc)
-add_executable(testBaselineWK            baseline_wk.cc)
-add_executable(testBaselineAll           baseline_all.cc)
 add_executable(testBitOperation          bit_operation.cc)
 add_executable(testBoolFilterCollection  bool_filter_collection.cc)
 add_executable(testConvolution           convolution.cc)
@@ -104,11 +99,6 @@ add_executable(testCreateMaskNearEdge    mask_edge.cc)
 
 add_library(testutil SHARED testutil.cc)
 
-target_link_libraries (testBaseline              gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testBaselineKS            gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testBaselineSK            gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testBaselineWK            gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
-target_link_libraries (testBaselineAll           gtest_main gtest sakura          -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBitOperation          gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testBoolFilterCollection  gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
 target_link_libraries (testConvolution           gtest_main gtest sakura testutil -L${PROJECT_BINARY_DIR}/../bin -Wl,-rpath,${PROJECT_BINARY_DIR}/../bin ${LIBS})
@@ -126,11 +116,6 @@ target_link_libraries (testCreateMaskNearEdge    gtest_main gtest sakura testuti
 
 add_dependencies(testInit logConfig)
 
-add_custom_target(testBaselineRun              COMMAND ./testBaseline              DEPENDS testBaseline)
-add_custom_target(testBaselineKSRun            COMMAND ./testBaselineKS            DEPENDS testBaselineKS)
-add_custom_target(testBaselineSKRun            COMMAND ./testBaselineSK            DEPENDS testBaselineSK)
-add_custom_target(testBaselineWKRun            COMMAND ./testBaselineWK            DEPENDS testBaselineWK)
-add_custom_target(testBaselineAllRun           COMMAND ./testBaselineAll           DEPENDS testBaselineAll)
 add_custom_target(testBitOperationRun          COMMAND ./testBitOperation          DEPENDS testBitOperation)
 add_custom_target(testBoolFilterCollectionRun  COMMAND ./testBoolFilterCollection  DEPENDS testBoolFilterCollection)
 add_custom_target(testConvolutionRun           COMMAND ./testConvolution           DEPENDS testConvolution)
@@ -161,11 +146,6 @@ add_custom_target(test
 	COMMAND ./testBitOperation
 	COMMAND ./testBoolFilterCollection
 	COMMAND ./testNumericOperation
-	COMMAND ./testBaseline
-	COMMAND ./testBaselineKS
-	COMMAND ./testBaselineSK
-	COMMAND ./testBaselineWK
-	COMMAND ./testBaselineAll
 	COMMAND ./testLsq
 	COMMAND ./testGridding
 	COMMAND ./testInterpolationX
