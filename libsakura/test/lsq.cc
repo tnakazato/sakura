@@ -1190,7 +1190,8 @@ struct ParamSet {
 		ctxt["sinusoidnd10000"] = context_sinusoidnd10000;
 
 		//sinusoid(num_data=10000,nwave=99)
-		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_sinusoidnd10000nw99 = nullptr;
+		LIBSAKURA_SYMBOL(LSQFitContextFloat) *context_sinusoidnd10000nw99 =
+				nullptr;
 		create_status =
 		LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoidFloat)(99, 10000,
 				&context_sinusoidnd10000nw99);
@@ -1774,15 +1775,15 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					vector<string> nw = Split(tc.desc, ',');
 					ps.size["num_nwave"] = nw.size();
 					ps.AllocateAlignedSizeT(name, "num_nwave");
-					bool has_zero = false;
+					size_t num_nwave_zero = 0;
 					for (size_t j = 0; j < ps.size["num_nwave"]; ++j) {
 						ps.sptr[name][j] = stoi(nw[j]);
 						if (ps.sptr[name][j] == 0) {
-							has_zero = true;
+							++num_nwave_zero;
 						}
 					}
 					ps.size["num_coeff"] = ps.size["num_nwave"] * 2
-							- (has_zero ? 1 : 0);
+							- num_nwave_zero;
 					ps.AllocateAlignedDouble("coeff", "num_coeff");
 					if (tc.api_name == ApiName_kSubtractSinusoidFloat) {
 						size_t i = 0;
@@ -1790,8 +1791,10 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 							if (ps.sptr[name][i] == 0) {
 								ps.dptr["coeff"][i++] = 10.0;
 							} else {
-								ps.dptr["coeff"][i++] = 0.0;
-								ps.dptr["coeff"][i++] = 0.0;
+								ps.dptr["coeff"][i++] = 0.0; //for sine terms
+								if (i < ps.size["num_coeff"]) {
+									ps.dptr["coeff"][i++] = 0.0; // for cosine terms
+								}
 							}
 						}
 					}
