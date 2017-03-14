@@ -1787,7 +1787,7 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 					ps.AllocateAlignedDouble("coeff", "num_coeff");
 					if (tc.api_name == ApiName_kSubtractSinusoidFloat) {
 						size_t i = 0;
-						while (i < ps.size["num_coeff"]) {
+						while (i < ps.size["num_nwave"]) {
 							if (ps.sptr[name][i] == 0) {
 								ps.dptr["coeff"][i++] = 10.0;
 							} else {
