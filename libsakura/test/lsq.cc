@@ -380,13 +380,13 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("orderLBnum_dataLB", "=0,1", TCat_kOK, "order",
 				PVType_kLB, Ret_kOK);
 		add_test_case("orderUBnum_dataUB", "=UINT16_MAX,SIZE_MAX", TCat_kOK,
-				"order", PVType_kUB, Ret_kNM);
+				"order", PVType_kUB, Ret_kIA);
 		add_test_case("num_dataTL", "=3", TCat_kNG, "num_data", PVType_kTL,
 				Ret_kIA);
 		add_test_case("num_dataLB", "=4", TCat_kOK, "num_data", PVType_kLB,
 				Ret_kOK);
 		add_test_case("num_dataUB", "=SIZE_MAX", TCat_kOK, "num_data",
-				PVType_kUB, Ret_kNM);
+				PVType_kUB, Ret_kIA);
 		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
 				Ret_kIA);
 		break;
@@ -397,13 +397,13 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("npieceLBnum_dataLB", "=1,4", TCat_kOK, "npiece",
 				PVType_kLB, Ret_kOK);
 		add_test_case("npieceUBnum_dataUB", "=UINT16_MAX,SIZE_MAX", TCat_kNG,
-				"npiece", PVType_kUB, Ret_kNM);
+				"npiece", PVType_kUB, Ret_kIA);
 		add_test_case("num_dataTL", "=3", TCat_kNG, "num_data", PVType_kTL,
 				Ret_kIA);
 		add_test_case("num_dataLB", "=4", TCat_kOK, "num_data", PVType_kLB,
 				Ret_kOK);
 		add_test_case("num_dataUB", "=SIZE_MAX", TCat_kNG, "num_data",
-				PVType_kUB, Ret_kNM);
+				PVType_kUB, Ret_kIA);
 		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
 				Ret_kIA);
 		break;
@@ -413,13 +413,13 @@ vector<TestCase> CreateTestCases(ApiName const api_name) {
 		add_test_case("nwaveLBnum_dataLB", "=0,1", TCat_kOK, "nwave",
 				PVType_kLB, Ret_kOK);
 		add_test_case("nwaveUBnum_dataUB", "=UINT16_MAX,SIZE_MAX", TCat_kNG,
-				"nwave", PVType_kUB, Ret_kNM);
+				"nwave", PVType_kUB, Ret_kIA);
 		add_test_case("num_dataTL", "=6", TCat_kNG, "num_data", PVType_kTL,
 				Ret_kIA);
 		add_test_case("num_dataLB", "=7", TCat_kOK, "num_data", PVType_kLB,
 				Ret_kOK);
 		add_test_case("num_dataUB", "=SIZE_MAX", TCat_kNG, "num_data",
-				PVType_kUB, Ret_kNM);
+				PVType_kUB, Ret_kIA);
 		add_test_case("contextNULL", "", TCat_kNG, "context", PVType_kNULL,
 				Ret_kIA);
 		break;

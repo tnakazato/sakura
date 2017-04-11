@@ -107,15 +107,26 @@ inline bool IsUniqueAndAscendingOrder(size_t num_array, size_t const *array) {
 inline size_t GetNumberOfContextBases(LSQFitTypeInternal const lsqfit_type,
 		uint16_t const order) {
 	size_t num_bases = 0;
+	size_t order_max = 0;
+	auto check_order = [&](){
+		if (order_max < order) {
+			throw std::runtime_error("order is too large. GetNumberOfContextBases() overflows.");
+		}
+	};
+
 	switch (lsqfit_type) {
 	case LSQFitTypeInternal_kPolynomial:
 	case LSQFitTypeInternal_kChebyshev:
+		order_max = SIZE_MAX - 1;
+		check_order();
 		num_bases = order + 1;
 		break;
 	case LSQFitTypeInternal_kCubicSpline:
 		num_bases = kNumBasesCubicSpline;
 		break;
 	case LSQFitTypeInternal_kSinusoid:
+		order_max = (SIZE_MAX - 1) / 2;
+		check_order();
 		num_bases = 2 * order + 1;
 		break;
 	default:
@@ -145,6 +156,7 @@ inline size_t GetNumberOfContextBases(LSQFitTypeInternal const lsqfit_type,
 inline size_t GetNumberOfLsqBases(LSQFitTypeInternal const lsqfit_type,
 		size_t const order) {
 	size_t num_bases = 0;
+	size_t order_max = 0;
 	switch (lsqfit_type) {
 	case LSQFitTypeInternal_kPolynomial:
 	case LSQFitTypeInternal_kChebyshev:
@@ -152,6 +164,10 @@ inline size_t GetNumberOfLsqBases(LSQFitTypeInternal const lsqfit_type,
 		num_bases = GetNumberOfContextBases(lsqfit_type, order);
 		break;
 	case LSQFitTypeInternal_kCubicSpline:
+		order_max = SIZE_MAX - kNumBasesCubicSpline + 1;
+		if (order_max < order) {
+			throw std::runtime_error("order is too large. GetNumberOfLsqBases() overflows.");
+		}
 		num_bases = kNumBasesCubicSpline - 1 + order;
 		break;
 	default:
@@ -1484,7 +1500,11 @@ LIBSAKURA_SYMBOL(LSQFitContextFloat) **context) noexcept {
 	if (lsqfit_type == LIBSAKURA_SYMBOL(LSQFitType_kChebyshev)) {
 		lsqfit_type_internal = LSQFitTypeInternal_kChebyshev;
 	}
-	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type_internal, order) <= num_data);
+
+	//CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type_internal, order) <= num_data);
+	size_t num_lsq_bases = GetNumberOfLsqBases(lsqfit_type_internal, order);
+	CHECK_ARGS(num_lsq_bases <= num_data);
+	CHECK_ARGS(num_lsq_bases <= SIZE_MAX/num_data);
 
 	try {
 		CreateLSQFitContext<LIBSAKURA_SYMBOL(LSQFitContextFloat)>(
@@ -1516,7 +1536,11 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextCubicSpl
 	*context = nullptr;
 	CHECK_ARGS(0 < npiece);
 	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kCubicSpline;
-	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, npiece) <= num_data);
+
+	//CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, npiece) <= num_data);
+	size_t num_lsq_bases = GetNumberOfLsqBases(lsqfit_type, npiece);
+	CHECK_ARGS(num_lsq_bases <= num_data);
+	CHECK_ARGS(num_lsq_bases <= SIZE_MAX/num_data);
 
 	try {
 		CreateLSQFitContext<LIBSAKURA_SYMBOL(LSQFitContextFloat)>(lsqfit_type,
@@ -1547,7 +1571,13 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(CreateLSQFitContextSinusoid
 	CHECK_ARGS(context != nullptr);
 	*context = nullptr;
 	LSQFitTypeInternal const lsqfit_type = LSQFitTypeInternal_kSinusoid;
-	CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, nwave) + 1 <= num_data);
+
+	//CHECK_ARGS(GetNumberOfLsqBases(lsqfit_type, nwave) + 1 <= num_data);
+	size_t num_lsq_bases = GetNumberOfLsqBases(lsqfit_type, nwave);
+	CHECK_ARGS(num_lsq_bases < SIZE_MAX);
+	size_t num_lsq_bases_plus_1 = num_lsq_bases + 1;
+	CHECK_ARGS(num_lsq_bases_plus_1 <= num_data);
+	CHECK_ARGS(num_lsq_bases_plus_1 <= SIZE_MAX/num_data);
 
 	try {
 		CreateLSQFitContext<LIBSAKURA_SYMBOL(LSQFitContextFloat)>(lsqfit_type,
