@@ -56,6 +56,10 @@ constexpr size_t kNumBasesCubicSpline = 4;
 
 template<typename T>
 inline void AllocateMemoryForBasisData(T *context) {
+	size_t num_bases_max = SIZE_MAX/context->num_basis_data;
+	if (num_bases_max < context->num_bases) {
+		throw std::runtime_error("num_bases * num_basis_data exceeds SIZE_MAX.");
+	}
 	size_t num_total_basis_data = context->num_bases * context->num_basis_data;
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> work_basis_data_storage(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
@@ -369,12 +373,20 @@ inline void SetBasisDataSinusoid(T *context) {
  */
 template<typename T>
 inline void AllocateWorkSpaces(T *context) {
+	auto check_size = [](size_t const v1, size_t const v2) {
+		if ((v1 == 0)||(v2 == 0)) return;
+		if (SIZE_MAX/v1 < v2) {
+			throw std::runtime_error("overflow occurs.");
+		}
+	};
 	auto const type = context->lsqfit_type;
 	context->num_lsq_bases_max = GetNumberOfLsqBases(type,
 			context->lsqfit_param);
+	check_size(context->num_lsq_bases_max, context->num_lsq_bases_max);
 	size_t num_lsq_matrix = context->num_lsq_bases_max
 			* context->num_lsq_bases_max;
 	context->lsq_matrix = nullptr;
+	check_size(sizeof(*context->lsq_matrix), num_lsq_matrix);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_matrix(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->lsq_matrix) * num_lsq_matrix,
@@ -383,6 +395,7 @@ inline void AllocateWorkSpaces(T *context) {
 	context->lsq_matrix_storage = storage_for_lsq_matrix.release();
 	size_t num_lsq_vector = context->num_lsq_bases_max;
 	context->lsq_vector = nullptr;
+	check_size(sizeof(*context->lsq_vector), num_lsq_vector);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_lsq_vector(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->lsq_vector) * num_lsq_vector,
@@ -390,6 +403,7 @@ inline void AllocateWorkSpaces(T *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->lsq_vector));
 	context->lsq_vector_storage = storage_for_lsq_vector.release();
 	context->clipped_indices = nullptr;
+	check_size(sizeof(*context->clipped_indices), context->num_basis_data);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_clipped_indices(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->clipped_indices) * context->num_basis_data,
@@ -398,6 +412,7 @@ inline void AllocateWorkSpaces(T *context) {
 	context->clipped_indices_storage = storage_for_clipped_indices.release();
 
 	context->best_fit_model = nullptr;
+	check_size(sizeof(*context->best_fit_model), context->num_basis_data);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_best_fit_model(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->best_fit_model) * context->num_basis_data,
@@ -405,6 +420,7 @@ inline void AllocateWorkSpaces(T *context) {
 	assert(LIBSAKURA_SYMBOL(IsAligned)(context->best_fit_model));
 	context->best_fit_model_storage = storage_for_best_fit_model.release();
 	context->residual_data = nullptr;
+	check_size(sizeof(*context->residual_data), context->num_basis_data);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_residual_data(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->residual_data) * context->num_basis_data,
@@ -413,6 +429,7 @@ inline void AllocateWorkSpaces(T *context) {
 	context->residual_data_storage = storage_for_residual_data.release();
 
 	context->use_bases_idx = nullptr;
+	check_size(sizeof(*context->use_bases_idx), context->num_lsq_bases_max);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_use_bases_idx(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->use_bases_idx)
@@ -432,6 +449,7 @@ inline void AllocateWorkSpaces(T *context) {
 				context->lsqfit_param, 0, nullptr);
 	}
 	context->coeff_full = nullptr;
+	check_size(sizeof(*context->coeff_full), num_coeff_full_max);
 	std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_coeff_full(
 			LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 					sizeof(*context->coeff_full) * num_coeff_full_max,
@@ -445,14 +463,19 @@ inline void AllocateWorkSpaces(T *context) {
 	context->cspline_lsq_coeff = nullptr;
 	context->cspline_lsq_coeff_storage = nullptr;
 	if (type == LSQFitTypeInternal_kCubicSpline) {
+		check_size(context->num_lsq_bases_max, context->num_basis_data);
+		size_t num_cspline_basis = context->num_lsq_bases_max * context->num_basis_data;
+		check_size(sizeof(*context->cspline_basis), num_cspline_basis);
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_basis(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(*context->cspline_basis)
-								* context->num_lsq_bases_max
-								* context->num_basis_data,
+								* num_cspline_basis,
+								//* context->num_lsq_bases_max
+								//* context->num_basis_data,
 						&context->cspline_basis));
 		assert(LIBSAKURA_SYMBOL(IsAligned)(context->cspline_basis));
 		context->cspline_basis_storage = storage_for_cspline_basis.release();
+		check_size(sizeof(*context->cspline_lsq_coeff), context->num_lsq_bases_max);
 		std::unique_ptr<void, LIBSAKURA_PREFIX::Memory> storage_for_cspline_lsq_coeff(
 				LIBSAKURA_PREFIX::Memory::AlignedAllocateOrException(
 						sizeof(*context->cspline_lsq_coeff)

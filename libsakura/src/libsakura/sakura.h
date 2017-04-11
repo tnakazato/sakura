@@ -1622,7 +1622,8 @@ struct LIBSAKURA_SYMBOL(LSQFitContextFloat);
  * @param[in] num_data Number of data to fit. It must be equal
  * to or larger than the number of model bases, which is
  * ( @a order+1 ), thus the smallest allowed value of
- * @a num_data is 1.
+ * @a num_data is 1. Note also that ( @a order+1 ) * @a num_data
+ * must not exceed SIZE_MAX.
  * @param[out] context Pointer to pointer to an object containing
  * model data. When no longer used, the object must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
@@ -1646,7 +1647,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * positive value.
  * @param[in] num_data Number of data to fit. It must be equal
  * to or larger than the number of model bases ( @a npiece+3 ),
- * thus the smallest allowed value of @a num_data is 4.
+ * thus the smallest allowed value of @a num_data is 4. Note also
+ * that ( @a npiece+3 ) * @a num_data must not exceed SIZE_MAX.
  * @param[out] context Pointer to pointer to an object containing
  * model data. When no longer used, the object must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
@@ -1671,7 +1673,8 @@ LIBSAKURA_SYMBOL(LSQFitType) const lsqfit_type, uint16_t order, size_t num_data,
  * @param[in] num_data Number of data to fit. It must be equal
  * to or larger than the number of model bases plus one,
  * which is ( @a nwave*2+2 ), thus the smallest allowed value of
- * @a num_data is 2.
+ * @a num_data is 2. Note also that ( @a nwave*2+2 ) * @a num_data
+ * must not exceed SIZE_MAX.
  * @param[out] context Pointer to pointer to an object containing
  * model data. When no longer used, the object must be destroyed by
  * @ref sakura_DestroyLSQFitContextFloat .
