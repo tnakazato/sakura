@@ -1417,6 +1417,14 @@ template<typename T> bool HasKey(T const &m, string const &key) {
 	return (m.count(key) > 0);
 }
 
+void ReplaceString(string &str, string const &from, string const &to) {
+	string::size_type pos = 0;
+	while (pos = str.find(from, pos), pos != string::npos) {
+		str.replace(pos, from.length(), to);
+		pos += to.length();
+	}
+}
+
 //interpret test cases, setup all parameter values to be used for testing
 void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	auto title_has = [&](string const &s) {return HasString(tc.title, s);};
@@ -2150,6 +2158,12 @@ void CheckValues(TestCase const &tc, ParamSet &ps) {
 	}
 }
 
+void ReportPerformance(TestCase const &tc, double const time) {
+	string title(tc.title);
+	ReplaceString(title, " : performance", "");
+	cout << setprecision(5) << "#x# benchmark Lsq_" << title << " "
+			<< time << endl;
+}
 void Execute(TestCase const &tc, ParamSet &ps) {
 	if (tc.category != TCat_kPF) {
 		assert(tc.num_repeat == 1);
@@ -2163,8 +2177,7 @@ void Execute(TestCase const &tc, ParamSet &ps) {
 		time_elapsed += (time_end - time_start);
 	}
 	if (tc.category == TCat_kPF) {
-		cout << setprecision(5) << "#x# benchmark Lsq_" << tc.title << " "
-				<< time_elapsed << endl;
+		ReportPerformance(tc, time_elapsed);
 	}
 	CheckStatus(tc, run_status);
 	if ((tc.category == TCat_kOK) || (tc.category == TCat_kPF)) {
