@@ -244,25 +244,26 @@ void DestructPyCapsuleForNP(PyObject *obj) {
     free(ptr);
 }
 
-PyObject *NewAlignedNumPyArray(PyObject *self, PyObject *args) {
+PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 	PyObject *shape = nullptr;
 	int type;
+	printf("REFCOUNT: 0 shape %ld\n", (long)Py_REFCNT(&args[1]));
 	if (!PyArg_ParseTuple(args, "iO", &type, &shape)) {
 		return nullptr;
 	}
 
 	// shape should be a tuple
-	printf("REFCOUNT: shape %ld\n", (long)Py_REFCNT(shape));
-	int isTuple = PyTuple_Check(shape);
-	if (!isTuple) {
-		Py_XDECREF(shape);
+	printf("REFCOUNT: 1 shape %ld\n", (long)Py_REFCNT(shape));
+	int is_tuple = PyTuple_Check(shape);
+	if (!is_tuple) {
+		PyErr_SetString(PyExc_ValueError, "Second argument should be a shape tuple.");
 		return nullptr;
 	}
 
 	// numpy shape
 	Py_ssize_t len = PyTuple_Size(shape);
 	printf("LOG: tuple size %ld\n", (long)len);
-	npy_intp *dims = new npy_intp[len];
+	std::unique_ptr<npy_intp[]> dims(new npy_intp[len]);
 	for (Py_ssize_t i = 0; i < len; ++i) {
 		auto item = PyTuple_GetItem(shape, i);
 		dims[i] = (npy_intp)PyInt_AsLong(item);
@@ -271,14 +272,14 @@ PyObject *NewAlignedNumPyArray(PyObject *self, PyObject *args) {
 
 	// create numpy array from alinged pointer
 	// assume type is float at this moment
-	ssize_t nelem = 1;
+	ssize_t num_elements = 1;
 	for (Py_ssize_t i = 0; i < len; ++i) {
-		nelem *= dims[i];
+		num_elements *= dims[i];
 	}
-	void *p = nullptr;
+
+	// type mapping
 	size_t element_size = 0;
 	int nptype = -1;
-
 	switch(type) {
 	case(LIBSAKURA_SYMBOL(PyTypeId_kBool)): {
 		element_size = sizeof(bool);
@@ -317,45 +318,47 @@ PyObject *NewAlignedNumPyArray(PyObject *self, PyObject *args) {
 	break;
 	default:
 		// unsupported type
-		Py_XDECREF(shape);
-		delete[] dims;
+		PyErr_SetString(PyExc_ValueError, "Unsupported data type.");
 		return nullptr;
 	}
 
-	int status = posix_memalign(&p, sakura_GetAlignment(), nelem * element_size);
+	// allocate memory with aligned pointer
+	void *p = nullptr;
+	int status = posix_memalign(&p, sakura_GetAlignment(), num_elements * element_size);
 	if (status != 0 || !sakura_IsAligned(p)) {
-		Py_XDECREF(shape);
-		delete[] dims;
+		PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory.");
 		return nullptr;
 	}
 	// encapsulate pointer
 	PyObject *capsule = PyCapsule_New(p, kAlignedBufferForNPName, DestructPyCapsuleForNP);
+	RefHolder rh_capsule(capsule);
 	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
 
 	// create array
-	PyObject *arr = PyArray_SimpleNewFromData(len, dims, nptype, p);
+	PyObject *arr = PyArray_SimpleNewFromData(len, dims.get(), nptype, p);
+	RefHolder rh_arr(arr);
 	printf("REFCOUNT: arr %ld\n", (long)Py_REFCNT(arr));
 	if (!PyArray_Check(arr)) {
-		Py_XDECREF(shape);
-		Py_XDECREF(capsule);
-		delete[] dims;
+		PyErr_SetString(PyExc_RuntimeError, "Failed to create ndarray.");
 		return nullptr;
 	}
-
-	// clean up
-	delete[] dims;
 
 	// set capsule object as a base object of the array
 	int s = PyArray_SetBaseObject((PyArrayObject *)arr, capsule);
 	if (s != 0) {
-		Py_XDECREF(arr);
-		Py_XDECREF(capsule);
+		PyErr_SetString(PyExc_RuntimeError, "Failed to set base for ndarray.");
 		return nullptr;
 	}
+
+	// give ownership of capsule object to arr
+	rh_capsule.release();
+
+	// arr is properly created so release the ownership
+	rh_arr.release();
+
 	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
 
-	Py_XDECREF(shape);
-	printf("REFCOUNT: shape %ld\n", (long)Py_REFCNT(shape));
+	printf("REFCOUNT: 2 shape %ld\n", (long)Py_REFCNT(shape));
 
 	return arr;
 }
@@ -2081,8 +2084,8 @@ PyMethodDef module_methods[] =
 				{ "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
 						"Creates a new aligned buffer." },
 
-				{ "new_aligned_numpy_array", NewAlignedNumPyArray, METH_VARARGS,
-						"Creates a new aligned array."},
+				{ "new_uninitialized_aligned_ndarray", NewUninitializedAlignedNumPyArray, METH_VARARGS,
+						"Creates a new aligned numpy ndarray."},
 
 				{ NULL, NULL, 0, NULL } /* Sentinel */
 		};
