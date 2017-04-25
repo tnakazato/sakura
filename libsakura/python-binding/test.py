@@ -27,6 +27,7 @@ import sys
 import time
 import math
 import gc
+import numpy
 from threading import *
 
 import libsakurapy
@@ -39,17 +40,46 @@ print time.time()
 
 def test_stats():
 	try:
-		libsakurapy.compute_statistics()
+		num = 4
+		mask = numpy.zeros(num, dtype=numpy.bool)
+		mask[:] = True
+		data = numpy.arange(4, dtype=numpy.float32)
+		libsakurapy.compute_statistics(num, data, mask)
 	except Exception as e:
 		print e
 
 	num = 4
-	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True,) * num)
-	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, range(num))
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (num,))
+	mask[:] = True
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (num,))
+	data[:] = range(num)
 	result = libsakurapy.compute_statistics(4, data, mask)
 	print result
 	del mask
 	del data
+	
+def test_mad():
+	num0 = 7
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (num0,))
+	data[:] = range(num0)
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (num0,))
+	mask[:5] = True
+	mask[5:] = False
+	num = libsakurapy.sort_data_densely(num0, mask, data)
+	print num0, num
+	#num = 5
+	data_in = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (num,))
+	data_in[:] = data[:5]
+	print data_in
+	data_out = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (num,))
+	result = libsakurapy.compute_mad(num, data_in, data_out)
+	print result
+	
+	del data
+	del mask
+	del data_in
+	del data_out
+	del result
 
 def test_grid():
 	def total_elements(dim):
@@ -58,35 +88,35 @@ def test_grid():
 	num_spectra = 1024*64
 	start_spectrum = 0
 	end_spectrum = num_spectra
-	spectrum_mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (num_spectra,))
-	x = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_DOUBLE, (num_spectra,))
-	y = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_DOUBLE, (num_spectra,))
+	spectrum_mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (num_spectra,))
+	x = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (num_spectra,))
+	y = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (num_spectra,))
 	support = 10
 	sampling = 2
 	num_polarizations = 4
 	num_polarizations_for_grid = 2
 	num_channels = 2048
 	num_channels_for_grid = 1024
-	polarization_map = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32,
-		map(lambda x: x % num_polarizations_for_grid, range(num_polarizations)))
-	channel_map = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32,
-		map(lambda x: x % num_channels_for_grid, range(num_channels)))
+	polarization_map = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (num_polarizations,))
+	polarization_map[:] = map(lambda x: x % num_polarizations_for_grid, range(num_polarizations))
+	channel_map = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (num_channels,))
+	channel_map[:] = map(lambda x: x % num_channels_for_grid, range(num_channels))
 
 	dim = (num_spectra, num_polarizations, num_channels)
 	print total_elements(dim)
-	mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT8, dim)
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT8, dim)
 	mask = libsakurapy.uint8_to_bool(total_elements(dim),
-		mask, libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim))
-	value = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
-	weight = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (num_spectra, num_channels))
+		mask, libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim))
+	value = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, dim)
+	weight = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (num_spectra, num_channels))
 	num_convolution_table = int(math.ceil(math.sqrt(2.)*(support+1)*sampling))
-	convolution_table = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (num_convolution_table, ))
+	convolution_table = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (num_convolution_table, ))
 
 	width, height = (160, 100)
-	weight_sum = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_DOUBLE, (num_polarizations_for_grid, num_channels_for_grid))
+	weight_sum = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (num_polarizations_for_grid, num_channels_for_grid))
 	dim = (height, width, num_polarizations_for_grid, num_channels_for_grid)
-	weight_of_grid = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
-	grid = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
+	weight_of_grid = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, dim)
+	grid = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, dim)
 
 	libsakurapy.grid_convolving(num_spectra, start_spectrum, end_spectrum,
 		spectrum_mask, x, y,
@@ -108,29 +138,54 @@ def test_logical():
 	n = 1024*1024*16
 	dim = (n,)
 	
-	buf = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
-	bl = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
+	buf = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, dim)
+	buf[0] = 1.
+	buf[1] = numpy.nan
+	bl = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim)
 	libsakurapy.set_false_float_if_nan_or_inf(n, buf, bl)
+	print 'set_false_float_if_nan_or_inf: data {0} mask {1}'.format(buf[:2], bl[:2])
 	del buf
 	del bl
 
-	ui8 = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT8, dim)
-	bl = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
+	ui8 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT8, dim)
+	ui8[0] = 0
+	ui8[1] = 1
+	bl = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim)
 	libsakurapy.uint8_to_bool(n, ui8, bl)
-	ui32 = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, dim)
+	print 'uint8_to_bool: before {0} after {1}'.format(ui8[:2], bl[:2])
+
+	ui32 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, dim)
+	ui32[0] = 0
+	ui32[1] = 1
 	libsakurapy.uint32_to_bool(n, ui32, bl)
-	bl2 = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
-	libsakurapy.invert_bool(n, bl, bl2)
-	libsakurapy.invert_bool(n, bl, bl) # in place
+	print 'uint32_to_bool: before {0} after {1}'.format(ui32[:2], bl[:2])
+	
+	arr = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim)
+	arr[:] = True
+	arr2 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim)
+	libsakurapy.invert_bool(n, arr, arr2)
+	print 'invert_bool: before {0} after {1}'.format(arr[0], arr2[0])
+	arr_save = arr[0]
+	libsakurapy.invert_bool(n, arr, arr) # in place
+	print 'invert_bool (in-place): before {0} after {1}'.format(arr_save, arr[0])
+
 	del ui8
 	del ui32
 	del bl
-	del bl2
+	del arr
+	del arr2
 
-	src1 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, False, True, False))
-	src2 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, (True, True, False, False))
-	dst = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (4,))
+	src1 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (4,))
+	src1[::2] = True
+	src1[1::2] = False
+	src2 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (4,))
+	src2[:2] = True
+	src2[2:] = False
+	dst = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (4,))
 	out = libsakurapy.logical_and(4, src1, src2, dst)
+	assert out is dst
+	print 'logical_and: \n\tsrc1 {0}\n\tsrc2 {1}\n\tdst {2}'.format(src1, src2, out)
+	
 def test_range():
 	n = 1024*1024*16
 	dim = (n,)
@@ -151,18 +206,25 @@ def test_range():
 
 def test_bit():
 	# Test operate_bits_uint8_or
-	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]*4+[False]*4)
-	data8 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT8, [0, 2, 1, 3]*2)
-	ndata = libsakurapy.get_elements_of_aligned_buffer(data8)[0]
-	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT8, (ndata,))
+	ndata = 8	
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True]*4+[False]*4
+	data8 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT8, (ndata,))
+	data8[:] = [0, 2, 1, 3]*2
+	print 'data type for data8: {0}'.format(data8.dtype)
+	#ndata = libsakurapy.get_elements_of_aligned_buffer(data8)[0]
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT8, (ndata,))
 	out = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask,result)
 	del mask, data8, result, ndata, out
 
 	# Test operate_bits_uint8_or
-	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]*4+[False]*4)
-	data32 = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, [0, 2, 1, 3]*2)
-	ndata = libsakurapy.get_elements_of_aligned_buffer(data32)[0]
-	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, (ndata,))
+	ndata = 8
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True]*4+[False]*4
+	data32 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT32, (ndata,))
+	data32[:] = [0, 2, 1, 3]*2
+	#ndata = libsakurapy.get_elements_of_aligned_buffer(data32)[0]
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT32, (ndata,))
 	out = libsakurapy.operate_bits_uint32_or(2,ndata,data32,mask,result)
 	del mask, data32, result, ndata, out
 
@@ -268,6 +330,7 @@ def test_complement():
 def testAll():
 	test_AB()
 	test_stats()
+	test_mad()
 	test_grid()
 	test_logical()
 	test_range()
@@ -278,7 +341,8 @@ def testAll():
 	test_baseline()
 	test_complement()
 
-testAll()
+#testAll()
+test_bit()
 gc.collect(2)
 
 libsakurapy.clean_up()

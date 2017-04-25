@@ -190,6 +190,147 @@ bool TotalElementsGreaterOrEqual(LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf,
 	return total_elements >= n;
 }
 
+void *GetPointer(PyArrayObject *obj) {
+
+	PyObject *base = PyArray_BASE(obj);
+
+	// check if base object is valid capsule object
+	if (!PyCapsule_IsValid(base, kAlignedBufferForNPName)) {
+		return nullptr;
+	}
+
+	// check if pointer hold by capsule is aligned
+	void *base_ptr = PyCapsule_GetPointer(base, kAlignedBufferForNPName);
+	if (!LIBSAKURA_SYMBOL(IsAligned)(base_ptr)) {
+		return nullptr;
+	}
+
+	// now we can use a pointer hold by numpy array
+	void *ptr = PyArray_DATA(obj);
+
+	return ptr;
+}
+
+LIBSAKURA_SYMBOL(PyTypeId) MapFromNumPyType(int nptype) {
+	LIBSAKURA_SYMBOL(PyTypeId) type = LIBSAKURA_SYMBOL(PyTypeId_kEnd);
+	switch(nptype) {
+	case(NPY_BOOL):
+		type = LIBSAKURA_SYMBOL(PyTypeId_kBool);
+		break;
+	case(NPY_INT8): // NPY_BYTE is equivalent
+		type = LIBSAKURA_SYMBOL(PyTypeId_kInt8);
+		break;
+	case(NPY_INT32): // NPY_INT is equivalent
+		type = LIBSAKURA_SYMBOL(PyTypeId_kInt32);
+		break;
+	case(NPY_INT64):
+	case(NPY_LONGLONG):
+		type = LIBSAKURA_SYMBOL(PyTypeId_kInt64);
+		break;
+	case(NPY_UINT8): // NPY_BYTE is equivalent
+		type = LIBSAKURA_SYMBOL(PyTypeId_kUInt8);
+		break;
+	case(NPY_UINT32): // NPY_INT is equivalent
+		type = LIBSAKURA_SYMBOL(PyTypeId_kUInt32);
+		break;
+	case(NPY_FLOAT32): // NPY_FLOAT is equivalent
+		type = LIBSAKURA_SYMBOL(PyTypeId_kFloat);
+		break;
+	case(NPY_FLOAT64): // NPY_DOUBLE is equivalent
+		type = LIBSAKURA_SYMBOL(PyTypeId_kDouble);
+		break;
+	case(NPY_LONGDOUBLE):
+		type = LIBSAKURA_SYMBOL(PyTypeId_kLongDouble);
+		break;
+	default:
+		break;
+	}
+	return type;
+}
+
+//int MapToNumPyType(LIBSAKURA_SYMBOL(PyTypeId) type) {
+//	int nptype = NPY_NOTYPE;
+//	switch(type) {
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kBool)):
+//		nptype = NPY_BOOL;
+//		break;
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kInt8)):
+//		nptype = NPY_INT8;
+//		break;
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kInt32)):
+//		nptype = NPY_INT32;
+//		break;
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kInt64)):
+//		nptype = NPY_INT64;
+//		break;
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kFloat)):
+//		nptype = NPY_FLOAT;
+//		break;
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kDouble)):
+//		nptype = NPY_DOUBLE;
+//		break;
+//	case(LIBSAKURA_SYMBOL(PyTypeId_kLongDouble)):
+//		nptype = NPY_LONGDOUBLE;
+//		break;
+//	default:
+//		break;
+//	}
+//	return nptype;
+//}
+
+bool IsValidAlignedNumPyArray(size_t num, AlignedBufferConfiguration const conf[],
+		PyObject *arr[], LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[]) {
+	for (size_t i = 0; i < num; ++i) {
+		// check if given PyObject is compatible with PyArray_Type
+		if (!PyArray_Check(arr[i])) {
+			printf("not a numpy array\n");
+			return false;
+		}
+
+		// check if PyArray has valid type
+		PyArrayObject *nparr = (PyArrayObject *)arr[i];
+		if (MapFromNumPyType(PyArray_TYPE(nparr)) != conf[i].type) {
+			printf("type is not expected (%lu): numpy type %d sakura type %d expected %d\n",
+					i, PyArray_TYPE(nparr), MapFromNumPyType(PyArray_TYPE(nparr)), conf[i].type);
+			return false;
+		}
+
+		// check if given PyObject has valid base object
+		// (otherwise, the array might not satisfy sakura requirement)
+		void *data_ptr = GetPointer(nparr);
+		if (!data_ptr) {
+			printf("failed to get pointer\n");
+			return false;
+		}
+
+		// get number of dimensions
+		int ndim = PyArray_NDIM(nparr);
+		if (ndim <= 0 || kMaxNumberOfDimensions <= (size_t)ndim ) {
+			printf("Invalid number of dimensins\n");
+			return false;
+		}
+
+		// get length of each dimension
+		npy_intp *dims = PyArray_DIMS(nparr);
+
+		// fill in PyAlignedBuffer
+		bufs[i].type = conf[i].type;
+		bufs[i].aligned_addr = data_ptr;
+		bufs[i].original_addr = data_ptr;
+		bufs[i].dimensions = ndim;
+		for (int j = 0; j < ndim; ++j) {
+			bufs[i].elements[j] = dims[j];
+		}
+
+		// user defined check function
+		if (!conf[i].pred(bufs[i])) {
+			printf("user-defined verification failed\n");
+			return false;
+		}
+	}
+	return true;
+}
+
 bool isValidAlignedBuffer(size_t num, AlignedBufferConfiguration const conf[],
 		PyObject *capsules[],
 		LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[]) {
@@ -239,21 +380,21 @@ void DestructPyCapsuleForNP(PyObject *obj) {
     if (!PyCapsule_IsValid(obj, kAlignedBufferForNPName)) {
         return;
     }
-    printf("Deallocate aligned buffer for numpy\n");
     void *ptr = PyCapsule_GetPointer(obj, kAlignedBufferForNPName);
+    printf("LOG: Deallocate aligned buffer for numpy address is %p\n", ptr);
     free(ptr);
 }
 
 PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 	PyObject *shape = nullptr;
 	int type;
-	printf("REFCOUNT: 0 shape %ld\n", (long)Py_REFCNT(&args[1]));
+//	printf("REFCOUNT: 0 shape %ld\n", (long)Py_REFCNT(&args[1]));
 	if (!PyArg_ParseTuple(args, "iO", &type, &shape)) {
 		return nullptr;
 	}
 
 	// shape should be a tuple
-	printf("REFCOUNT: 1 shape %ld\n", (long)Py_REFCNT(shape));
+//	printf("REFCOUNT: 1 shape %ld\n", (long)Py_REFCNT(shape));
 	int is_tuple = PyTuple_Check(shape);
 	if (!is_tuple) {
 		PyErr_SetString(PyExc_ValueError, "Second argument should be a shape tuple.");
@@ -262,12 +403,12 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 
 	// numpy shape
 	Py_ssize_t len = PyTuple_Size(shape);
-	printf("LOG: tuple size %ld\n", (long)len);
+//	printf("LOG: tuple size %ld\n", (long)len);
 	std::unique_ptr<npy_intp[]> dims(new npy_intp[len]);
 	for (Py_ssize_t i = 0; i < len; ++i) {
 		auto item = PyTuple_GetItem(shape, i);
 		dims[i] = (npy_intp)PyInt_AsLong(item);
-		printf("LOG: tuple item (%ld) %ld\n", i, dims[i]);
+//		printf("LOG: tuple item (%ld) %ld\n", i, dims[i]);
 	}
 
 	// create numpy array from alinged pointer
@@ -301,6 +442,16 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 		nptype = NPY_INT64;
 	}
 	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kUInt8)): {
+		element_size = sizeof(uint8_t);
+		nptype = NPY_UINT8;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kUInt32)): {
+		element_size = sizeof(uint32_t);
+		nptype = NPY_UINT32;
+	}
+	break;
 	case(LIBSAKURA_SYMBOL(PyTypeId_kFloat)): {
 		element_size = sizeof(float);
 		nptype = NPY_FLOAT;
@@ -325,6 +476,7 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 	// allocate memory with aligned pointer
 	void *p = nullptr;
 	int status = posix_memalign(&p, sakura_GetAlignment(), num_elements * element_size);
+	printf("LOG: allocate memory address is %p\n", p);
 	if (status != 0 || !sakura_IsAligned(p)) {
 		PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory.");
 		return nullptr;
@@ -332,12 +484,12 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 	// encapsulate pointer
 	PyObject *capsule = PyCapsule_New(p, kAlignedBufferForNPName, DestructPyCapsuleForNP);
 	RefHolder rh_capsule(capsule);
-	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
+//	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
 
 	// create array
 	PyObject *arr = PyArray_SimpleNewFromData(len, dims.get(), nptype, p);
 	RefHolder rh_arr(arr);
-	printf("REFCOUNT: arr %ld\n", (long)Py_REFCNT(arr));
+//	printf("REFCOUNT: arr %ld\n", (long)Py_REFCNT(arr));
 	if (!PyArray_Check(arr)) {
 		PyErr_SetString(PyExc_RuntimeError, "Failed to create ndarray.");
 		return nullptr;
@@ -356,9 +508,9 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 	// arr is properly created so release the ownership
 	rh_arr.release();
 
-	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
-
-	printf("REFCOUNT: 2 shape %ld\n", (long)Py_REFCNT(shape));
+//	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
+//
+//	printf("REFCOUNT: 2 shape %ld\n", (long)Py_REFCNT(shape));
 
 	return arr;
 }
@@ -366,17 +518,19 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 
 template<LIBSAKURA_SYMBOL(Status) (*Func)(size_t, float const *, bool const *,
 LIBSAKURA_SYMBOL(StatisticsResultFloat) *)>
-PyObject *ComputeStatisticsTemplate(PyObject *self, PyObject *args) {
+PyObject *ComputeStatisticsTemplateForNumPy(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
 		kData, kIsValid
 	};
-	PyObject *capsules[2];
+	PyObject *arr[2];
 
-	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
-			&capsules[kIsValid])) {
+	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &arr[kData],
+			&arr[kIsValid])) {
 		return nullptr;
 	}
+	printf("parsing arguments done\n");
+
 	auto num_data = static_cast<size_t>(num_data_py);
 	auto pred = [num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
 	{	return TotalElementsGreaterOrEqual(buf, num_data);};
@@ -388,18 +542,21 @@ PyObject *ComputeStatisticsTemplate(PyObject *self, PyObject *args) {
 
 	};
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[2];
-	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[2];
+	printf("argument validity check\n");
+	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
+	printf("run sakura function\n");
 	LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(num_data,
-				reinterpret_cast<float const*>(bufs[kData]->aligned_addr),
-				reinterpret_cast<bool const*>(bufs[kIsValid]->aligned_addr),
+				reinterpret_cast<float const*>(bufs[kData].aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kIsValid].aligned_addr),
 				&result);
 		SAKURA_END_ALLOW_THREADS
+	printf("check sakura status\n");
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
@@ -419,12 +576,12 @@ PyObject *ComputeStatisticsTemplate(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
-constexpr FuncForPython ComputeStatistics = ComputeStatisticsTemplate<
+constexpr FuncForPython ComputeStatisticsNP = ComputeStatisticsTemplateForNumPy<
 		sakura_ComputeStatisticsFloat>;
-constexpr FuncForPython ComputeAccurateStatistics = ComputeStatisticsTemplate<
+constexpr FuncForPython ComputeAccurateStatisticsNP = ComputeStatisticsTemplateForNumPy<
 		sakura_ComputeAccurateStatisticsFloat>;
 
-PyObject *GridConvolving(PyObject *self, PyObject *args) {
+PyObject *GridConvolvingNP(PyObject *self, PyObject *args) {
 	Py_ssize_t num_spectra_py;
 	Py_ssize_t start_spectrum_py;
 	Py_ssize_t end_spectrum_py;
@@ -453,18 +610,18 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 		kGrid,
 		kEnd
 	};
-	PyObject *capsules[kEnd];
+	PyObject *arr[kEnd];
 
 	if (!PyArg_ParseTuple(args, "nnnOOOnnnOnOOOOOnOnnnnOOO", &num_spectra_py,
-			&start_spectrum_py, &end_spectrum_py, &capsules[kSpectrumMask],
-			&capsules[kX], &capsules[kY], &support_py, &sampling_py,
-			&num_polarizations_py, &capsules[kPolarizationMap],
-			&num_channels_py, &capsules[kChannelMap], &capsules[kMask],
-			&capsules[kValue], &capsules[kWeight], &weight_only,
-			&num_convolution_table_py, &capsules[kConvolutionTable],
+			&start_spectrum_py, &end_spectrum_py, &arr[kSpectrumMask],
+			&arr[kX], &arr[kY], &support_py, &sampling_py,
+			&num_polarizations_py, &arr[kPolarizationMap],
+			&num_channels_py, &arr[kChannelMap], &arr[kMask],
+			&arr[kValue], &arr[kWeight], &weight_only,
+			&num_convolution_table_py, &arr[kConvolutionTable],
 			&num_polarizations_for_grid_py, &num_channels_for_grid_py,
-			&width_py, &height_py, &capsules[kWeightSum],
-			&capsules[kWeightOfGrid], &capsules[kGrid])) {
+			&width_py, &height_py, &arr[kWeightSum],
+			&arr[kWeightOfGrid], &arr[kGrid])) {
 		return nullptr;
 	}
 	auto num_spectra = static_cast<size_t>(num_spectra_py);
@@ -534,8 +691,8 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
-	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[kEnd];
+	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
@@ -543,23 +700,23 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 		status =
 				LIBSAKURA_SYMBOL(GridConvolvingFloat)(num_spectra,
 						start_spectrum, end_spectrum,
-						static_cast<bool const *>(bufs[kSpectrumMask]->aligned_addr),
-						static_cast<double const *>(bufs[kX]->aligned_addr),
-						static_cast<double const *>(bufs[kY]->aligned_addr),
+						static_cast<bool const *>(bufs[kSpectrumMask].aligned_addr),
+						static_cast<double const *>(bufs[kX].aligned_addr),
+						static_cast<double const *>(bufs[kY].aligned_addr),
 						support, sampling, num_polarizations,
-						static_cast<uint32_t const *>(bufs[kPolarizationMap]->aligned_addr),
+						static_cast<uint32_t const *>(bufs[kPolarizationMap].aligned_addr),
 						num_channels,
-						static_cast<uint32_t const *>(bufs[kChannelMap]->aligned_addr),
-						static_cast<bool const *>(bufs[kMask]->aligned_addr),
-						static_cast<float const *>(bufs[kValue]->aligned_addr),
-						static_cast<float const *>(bufs[kWeight]->aligned_addr),
+						static_cast<uint32_t const *>(bufs[kChannelMap].aligned_addr),
+						static_cast<bool const *>(bufs[kMask].aligned_addr),
+						static_cast<float const *>(bufs[kValue].aligned_addr),
+						static_cast<float const *>(bufs[kWeight].aligned_addr),
 						weight_only == Py_True, num_convolution_table,
-						static_cast<float const *>(bufs[kConvolutionTable]->aligned_addr),
+						static_cast<float const *>(bufs[kConvolutionTable].aligned_addr),
 						num_polarizations_for_grid, num_channels_for_grid,
 						width, height,
-						static_cast<double *>(bufs[kWeightSum]->aligned_addr),
-						static_cast<float *>(bufs[kWeightOfGrid]->aligned_addr),
-						static_cast<float *>(bufs[kGrid]->aligned_addr));
+						static_cast<double *>(bufs[kWeightSum].aligned_addr),
+						static_cast<float *>(bufs[kWeightOfGrid].aligned_addr),
+						static_cast<float *>(bufs[kGrid].aligned_addr));
 		//fprintf(stderr, "Grid\n");
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
@@ -580,15 +737,15 @@ PyObject *GridConvolving(PyObject *self, PyObject *args) {
 template<typename FromType, typename ToType,
 LIBSAKURA_SYMBOL(PyTypeId) FromTypeId, LIBSAKURA_SYMBOL(PyTypeId) ToTypeId,
 LIBSAKURA_SYMBOL(Status) (*Func)(size_t, FromType const *, ToType *)>
-PyObject *ConvertArray(PyObject *self, PyObject *args) {
+PyObject *ConvertArrayForNumPy(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
 		kData, kResult, kEnd
 	};
-	PyObject *capsules[kEnd];
+	PyObject *arr[kEnd];
 
-	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kData],
-			&capsules[kResult])) {
+	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &arr[kData],
+			&arr[kResult])) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
@@ -603,15 +760,15 @@ PyObject *ConvertArray(PyObject *self, PyObject *args) {
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
-	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[kEnd];
+	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(num_data,
-				reinterpret_cast<FromType const*>(bufs[kData]->aligned_addr),
-				reinterpret_cast<ToType *>(bufs[kResult]->aligned_addr));
+				reinterpret_cast<FromType const*>(bufs[kData].aligned_addr),
+				reinterpret_cast<ToType *>(bufs[kResult].aligned_addr));
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -620,8 +777,8 @@ PyObject *ConvertArray(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	Py_INCREF(capsules[kResult]);
-	return capsules[kResult];
+	Py_INCREF(arr[kResult]);
+	return arr[kResult];
 
 	invalid_arg:
 
@@ -629,34 +786,34 @@ PyObject *ConvertArray(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
-constexpr FuncForPython Uint8ToBool = ConvertArray<uint8_t, bool,
+constexpr FuncForPython Uint8ToBoolNP = ConvertArrayForNumPy<uint8_t, bool,
 		LIBSAKURA_SYMBOL(PyTypeId_kInt8), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 		LIBSAKURA_SYMBOL(Uint8ToBool)>;
 
-constexpr FuncForPython Uint32ToBool = ConvertArray<uint32_t, bool,
+constexpr FuncForPython Uint32ToBoolNP = ConvertArrayForNumPy<uint32_t, bool,
 		LIBSAKURA_SYMBOL(PyTypeId_kInt32), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 		LIBSAKURA_SYMBOL(Uint32ToBool)>;
 
-constexpr FuncForPython InvertBool = ConvertArray<bool, bool,
+constexpr FuncForPython InvertBoolNP = ConvertArrayForNumPy<bool, bool,
 		LIBSAKURA_SYMBOL(PyTypeId_kBool), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 		LIBSAKURA_SYMBOL(InvertBool)>;
 
-constexpr FuncForPython SetFalseFloatIfNanOrInf = ConvertArray<float, bool,
+constexpr FuncForPython SetFalseFloatIfNanOrInfNP = ConvertArrayForNumPy<float, bool,
 		LIBSAKURA_SYMBOL(PyTypeId_kFloat), LIBSAKURA_SYMBOL(PyTypeId_kBool),
 		LIBSAKURA_SYMBOL(SetFalseIfNanOrInfFloat)>;
 
-constexpr FuncForPython ComputeMAD = ConvertArray<float, float,
+constexpr FuncForPython ComputeMADNP = ConvertArrayForNumPy<float, float,
 		LIBSAKURA_SYMBOL(PyTypeId_kFloat), LIBSAKURA_SYMBOL(PyTypeId_kFloat),
 		LIBSAKURA_SYMBOL(ComputeMedianAbsoluteDeviationFloat)>;
 
-PyObject *SortValidDataDenselyFloat(PyObject *self, PyObject *args) {
+PyObject *SortValidDataDenselyFloatNP(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
 		kMask, kData, kEnd
 	};
-	PyObject *capsules[kEnd];
-	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &capsules[kMask],
-			&capsules[kData])) {
+	PyObject *arr[kEnd];
+	if (!PyArg_ParseTuple(args, "nOO", &num_data_py, &arr[kMask],
+			&arr[kData])) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
@@ -672,8 +829,8 @@ PyObject *SortValidDataDenselyFloat(PyObject *self, PyObject *args) {
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
-	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[kEnd];
+	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
 
@@ -681,8 +838,8 @@ PyObject *SortValidDataDenselyFloat(PyObject *self, PyObject *args) {
 	size_t new_num_data;
 	SAKURA_BEGIN_ALLOW_THREADS
 		status = LIBSAKURA_SYMBOL(SortValidValuesDenselyFloat)(num_data,
-				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
-				reinterpret_cast<float *>(bufs[kData]->aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kMask].aligned_addr),
+				reinterpret_cast<float *>(bufs[kData].aligned_addr),
 				&new_num_data);
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
@@ -714,15 +871,15 @@ bool const src2[], bool dst[]) {
 	}
 }
 
-PyObject *LogicalAnd(PyObject *self, PyObject *args) {
+PyObject *LogicalAndNP(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	enum {
 		kData1, kData2, kResult, kEnd
 	};
-	PyObject *capsules[kEnd];
+	PyObject *arr[kEnd];
 
-	if (!PyArg_ParseTuple(args, "nOOO", &num_data_py, &capsules[kData1],
-			&capsules[kData2], &capsules[kResult])) {
+	if (!PyArg_ParseTuple(args, "nOOO", &num_data_py, &arr[kData1],
+			&arr[kData2], &arr[kResult])) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
@@ -739,16 +896,16 @@ PyObject *LogicalAnd(PyObject *self, PyObject *args) {
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
-	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[kEnd];
+	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
 	AlignedBoolAnd(num_data,
-			reinterpret_cast<bool const*>(bufs[kData1]->aligned_addr),
-			reinterpret_cast<bool const*>(bufs[kData2]->aligned_addr),
-			reinterpret_cast<bool *>(bufs[kResult]->aligned_addr));
-	Py_INCREF(capsules[kResult]);
-	return capsules[kResult];
+			reinterpret_cast<bool const*>(bufs[kData1].aligned_addr),
+			reinterpret_cast<bool const*>(bufs[kData2].aligned_addr),
+			reinterpret_cast<bool *>(bufs[kResult].aligned_addr));
+	Py_INCREF(arr[kResult]);
+	return arr[kResult];
 
 	invalid_arg:
 
@@ -933,17 +1090,17 @@ template<typename Type,
 LIBSAKURA_SYMBOL(PyTypeId) TypeId,
 LIBSAKURA_SYMBOL(Status) (*Func)(Type, size_t, Type const *, bool const *,
 		Type *)>
-PyObject *BinaryBitOperation(PyObject *self, PyObject *args) {
+PyObject *BinaryBitOperationNP(PyObject *self, PyObject *args) {
 	Py_ssize_t num_data_py;
 	unsigned int bitmask_py;
 
 	enum {
 		kData, kMask, kResult, kEnd
 	};
-	PyObject *capsules[kEnd];
+	PyObject *arr[kEnd];
 
 	if (!PyArg_ParseTuple(args, "InOOO", &bitmask_py, &num_data_py,
-			&capsules[kData], &capsules[kMask], &capsules[kResult])) {
+			&arr[kData], &arr[kMask], &arr[kResult])) {
 		return nullptr;
 	}
 	auto num_data = static_cast<size_t>(num_data_py);
@@ -956,20 +1113,19 @@ PyObject *BinaryBitOperation(PyObject *self, PyObject *args) {
 
 	{ TypeId, predData }, { LIBSAKURA_SYMBOL(PyTypeId_kBool), predData }, {
 			TypeId, predData }
-
 	};
 	STATIC_ASSERT(ELEMENTSOF(conf) == kEnd);
 
-	LIBSAKURA_SYMBOL(PyAlignedBuffer) *bufs[kEnd];
-	if (!isValidAlignedBuffer(ELEMENTSOF(conf), conf, capsules, bufs)) {
+	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[kEnd];
+	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
 		status = Func(bitmask, num_data,
-				reinterpret_cast<Type const*>(bufs[kData]->aligned_addr),
-				reinterpret_cast<bool const*>(bufs[kMask]->aligned_addr),
-				reinterpret_cast<Type *>(bufs[kResult]->aligned_addr));
+				reinterpret_cast<Type const*>(bufs[kData].aligned_addr),
+				reinterpret_cast<bool const*>(bufs[kMask].aligned_addr),
+				reinterpret_cast<Type *>(bufs[kResult].aligned_addr));
 		SAKURA_END_ALLOW_THREADS
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
@@ -978,8 +1134,8 @@ PyObject *BinaryBitOperation(PyObject *self, PyObject *args) {
 		PyErr_SetString(PyExc_ValueError, "Unexpected error.");
 		return nullptr;
 	}
-	Py_INCREF(capsules[kResult]);
-	return capsules[kResult];
+	Py_INCREF(arr[kResult]);
+	return arr[kResult];
 
 	invalid_arg:
 
@@ -987,28 +1143,28 @@ PyObject *BinaryBitOperation(PyObject *self, PyObject *args) {
 	return nullptr;
 }
 
-constexpr FuncForPython Uint8OperateBitsOr = BinaryBitOperation<uint8_t,
-		LIBSAKURA_SYMBOL(PyTypeId_kInt8),
+constexpr FuncForPython Uint8OperateBitsOrNP = BinaryBitOperationNP<uint8_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kUInt8),
 		LIBSAKURA_SYMBOL(OperateBitwiseOrUint8)>;
 
-constexpr FuncForPython Uint32OperateBitsOr = BinaryBitOperation<uint32_t,
-		LIBSAKURA_SYMBOL(PyTypeId_kInt32),
+constexpr FuncForPython Uint32OperateBitsOrNP = BinaryBitOperationNP<uint32_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kUInt32),
 		LIBSAKURA_SYMBOL(OperateBitwiseOrUint32)>;
 
-constexpr FuncForPython Uint8OperateBitsAnd = BinaryBitOperation<uint8_t,
-		LIBSAKURA_SYMBOL(PyTypeId_kInt8),
+constexpr FuncForPython Uint8OperateBitsAndNP = BinaryBitOperationNP<uint8_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kUInt8),
 		LIBSAKURA_SYMBOL(OperateBitwiseAndUint8)>;
 
-constexpr FuncForPython Uint32OperateBitsAnd = BinaryBitOperation<uint32_t,
-		LIBSAKURA_SYMBOL(PyTypeId_kInt32),
+constexpr FuncForPython Uint32OperateBitsAndNP = BinaryBitOperationNP<uint32_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kUInt32),
 		LIBSAKURA_SYMBOL(OperateBitwiseAndUint32)>;
 
-constexpr FuncForPython Uint8OperateBitsXor = BinaryBitOperation<uint8_t,
-		LIBSAKURA_SYMBOL(PyTypeId_kInt8),
+constexpr FuncForPython Uint8OperateBitsXorNP = BinaryBitOperationNP<uint8_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kUInt8),
 		LIBSAKURA_SYMBOL(OperateBitwiseXorUint8)>;
 
-constexpr FuncForPython Uint32OperateBitsXor = BinaryBitOperation<uint32_t,
-		LIBSAKURA_SYMBOL(PyTypeId_kInt32),
+constexpr FuncForPython Uint32OperateBitsXorNP = BinaryBitOperationNP<uint32_t,
+		LIBSAKURA_SYMBOL(PyTypeId_kUInt32),
 		LIBSAKURA_SYMBOL(OperateBitwiseXorUint32)>;
 
 template<typename Type,
@@ -1761,7 +1917,8 @@ PyObject *NewUninitializedAlignedBuffer(PyObject *self, PyObject *args) {
 	}
 
 	static size_t const sizes[] = { sizeof(bool), sizeof(int8_t),
-			sizeof(int32_t), sizeof(int64_t), sizeof(float), sizeof(double),
+			sizeof(int32_t), sizeof(int64_t), sizeof(uint8_t), sizeof(uint32_t),
+			sizeof(float), sizeof(double),
 			sizeof(long double) };
 	STATIC_ASSERT(LIBSAKURA_SYMBOL(PyTypeId_kEnd) == ELEMENTSOF((sizes)));
 
@@ -1943,52 +2100,93 @@ PyObject *NewAlignedBuffer(PyObject *self, PyObject *args) {
 PyMethodDef module_methods[] =
 		{
 
-		{ "initialize", Initialize, METH_VARARGS, "Initializes libsakura." },
+				{ "initialize", Initialize, METH_VARARGS, "Initializes libsakura." },
 
-		{ "clean_up", CleanUp, METH_VARARGS, "Cleans up libsakura." },
+				{ "clean_up", CleanUp, METH_VARARGS, "Cleans up libsakura." },
 
-		{ "compute_statistics", ComputeStatistics, METH_VARARGS,
-				"Computes statistics of unmasked elements." },
+//		{ "compute_statistics", ComputeStatistics, METH_VARARGS,
+//				"Computes statistics of unmasked elements." },
+//
+//		{ "compute_accurate_statistics", ComputeAccurateStatistics,
+//		METH_VARARGS, "Computes accurate statistics of unmasked elements." },
+//
+				{ "compute_statistics", ComputeStatisticsNP, METH_VARARGS,
+						"Computes statistics of unmasked elements." },
 
-		{ "compute_accurate_statistics", ComputeAccurateStatistics,
-		METH_VARARGS, "Computes accurate statistics of unmasked elements." },
+				{ "compute_accurate_statistics", ComputeAccurateStatisticsNP,
+						METH_VARARGS, "Computes accurate statistics of unmasked elements." },
 
-		{ "compute_mad", ComputeMAD, METH_VARARGS,
-				"Computes median absolute deviation for sorted input array." },
+//		{ "compute_mad", ComputeMAD, METH_VARARGS,
+//				"Computes median absolute deviation for sorted input array." },
+//
+				{ "compute_mad", ComputeMADNP, METH_VARARGS,
+						"Computes median absolute deviation for sorted input array." },
 
-		{ "sort_data_densely", SortValidDataDenselyFloat, METH_VARARGS,
-				"Sorts valid data and return number of valid data." },
+//		{ "sort_data_densely", SortValidDataDenselyFloat, METH_VARARGS,
+//				"Sorts valid data and return number of valid data." },
+//
+				{ "sort_data_densely", SortValidDataDenselyFloatNP, METH_VARARGS,
+						"Sorts valid data and return number of valid data." },
 
-		{ "grid_convolving", GridConvolving, METH_VARARGS,
-				"Grids spectra on X-Y plane with convolving." },
+				{ "grid_convolving", GridConvolvingNP, METH_VARARGS,
+						"Grids spectra on X-Y plane with convolving." },
 
-				{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
+//				{ "uint8_to_bool", Uint8ToBool, METH_VARARGS,
+//						"Converts uint8 to bool." },
+//
+//				{ "uint32_to_bool", Uint32ToBool, METH_VARARGS,
+//						"Converts uint32 to bool." },
+//
+//				{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
+
+				{ "uint8_to_bool", Uint8ToBoolNP, METH_VARARGS,
 						"Converts uint8 to bool." },
 
-				{ "uint32_to_bool", Uint32ToBool, METH_VARARGS,
+				{ "uint32_to_bool", Uint32ToBoolNP, METH_VARARGS,
 						"Converts uint32 to bool." },
 
-				{ "invert_bool", InvertBool, METH_VARARGS, "Inverts bool." },
+				{ "invert_bool", InvertBoolNP, METH_VARARGS, "Inverts bool." },
 
-				{ "logical_and", LogicalAnd, METH_VARARGS,
+//				{ "logical_and", LogicalAnd, METH_VARARGS,
+//						"Takes logical conjunction of boolean arrays." },
+//
+				{ "logical_and", LogicalAndNP, METH_VARARGS,
 						"Takes logical conjunction of boolean arrays." },
 
-				{ "operate_bits_uint8_or", Uint8OperateBitsOr, METH_VARARGS,
+//				{ "operate_bits_uint8_or", Uint8OperateBitsOr, METH_VARARGS,
+//						"Bit operation OR between an uint8 value and uint8 array." },
+//
+//				{ "operate_bits_uint32_or", Uint32OperateBitsOr, METH_VARARGS,
+//						"Bit operation OR between an uint32 value and uint32 array." },
+//
+//				{ "operate_bits_uint8_and", Uint8OperateBitsAnd, METH_VARARGS,
+//						"Bit operation AND between an uint8 value and uint8 array." },
+//
+//				{ "operate_bits_uint32_and", Uint32OperateBitsAnd, METH_VARARGS,
+//						"Bit operation AND between an uint32 value and uint32 array." },
+//
+//				{ "operate_bits_uint8_xor", Uint8OperateBitsXor, METH_VARARGS,
+//						"Bit operation XOR between an uint8 value and uint8 array." },
+//
+//				{ "operate_bits_uint32_xor", Uint32OperateBitsXor, METH_VARARGS,
+//						"Bit operation XOR between an uint32 value and uint32 array." },
+
+				{ "operate_bits_uint8_or", Uint8OperateBitsOrNP, METH_VARARGS,
 						"Bit operation OR between an uint8 value and uint8 array." },
 
-				{ "operate_bits_uint32_or", Uint32OperateBitsOr, METH_VARARGS,
+				{ "operate_bits_uint32_or", Uint32OperateBitsOrNP, METH_VARARGS,
 						"Bit operation OR between an uint32 value and uint32 array." },
 
-				{ "operate_bits_uint8_and", Uint8OperateBitsAnd, METH_VARARGS,
+				{ "operate_bits_uint8_and", Uint8OperateBitsAndNP, METH_VARARGS,
 						"Bit operation AND between an uint8 value and uint8 array." },
 
-				{ "operate_bits_uint32_and", Uint32OperateBitsAnd, METH_VARARGS,
+				{ "operate_bits_uint32_and", Uint32OperateBitsAndNP, METH_VARARGS,
 						"Bit operation AND between an uint32 value and uint32 array." },
 
-				{ "operate_bits_uint8_xor", Uint8OperateBitsXor, METH_VARARGS,
+				{ "operate_bits_uint8_xor", Uint8OperateBitsXorNP, METH_VARARGS,
 						"Bit operation XOR between an uint8 value and uint8 array." },
 
-				{ "operate_bits_uint32_xor", Uint32OperateBitsXor, METH_VARARGS,
+				{ "operate_bits_uint32_xor", Uint32OperateBitsXorNP, METH_VARARGS,
 						"Bit operation XOR between an uint32 value and uint32 array." },
 
 				{ "operate_bits_uint8_xor", Uint8OperateBitsNot, METH_VARARGS,
@@ -2005,7 +2203,10 @@ PyMethodDef module_methods[] =
 						Int32SetTrueIntInRangesExclusive, METH_VARARGS,
 						"Sets True if the element is in at least one of ranges." },
 
-				{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf,
+//				{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInf,
+//				METH_VARARGS, "set false if float value is NaN or Inf." },
+//
+				{ "set_false_float_if_nan_or_inf", SetFalseFloatIfNanOrInfNP,
 				METH_VARARGS, "set false if float value is NaN or Inf." },
 
 				{ "set_true_float_if_greater_than", FloatSetTrueIfGreaterThan,
@@ -2274,6 +2475,9 @@ PyMODINIT_FUNC initlibsakurapy(void)
 	PyModule_AddIntConstant(mod, "TYPE_INT8", LIBSAKURA_SYMBOL(PyTypeId_kInt8));
 	PyModule_AddIntConstant(mod, "TYPE_INT32",
 			LIBSAKURA_SYMBOL(PyTypeId_kInt32));
+	PyModule_AddIntConstant(mod, "TYPE_UINT8", LIBSAKURA_SYMBOL(PyTypeId_kUInt8));
+	PyModule_AddIntConstant(mod, "TYPE_UINT32",
+			LIBSAKURA_SYMBOL(PyTypeId_kUInt32));
 	PyModule_AddIntConstant(mod, "TYPE_FLOAT",
 			LIBSAKURA_SYMBOL(PyTypeId_kFloat));
 	PyModule_AddIntConstant(mod, "TYPE_DOUBLE",
