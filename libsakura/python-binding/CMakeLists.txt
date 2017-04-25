@@ -30,6 +30,14 @@ if(FALSE)
   find_package(PythonLibs REQUIRED)
 else(FALSE)
  foreach(VER 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
+  if (PYTHON_ROOTDIR)
+   #message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
+   find_path(PYTHON_INCLUDE_PATH
+             NAMES Python.h
+             PATHS ${PYTHON_ROOTDIR}/include
+             PATH_SUFFIXES python${VER}
+             NO_DEFAULT_PATH)
+  endif(PYTHON_ROOTDIR)
   find_path(PYTHON_INCLUDE_PATH
     NAMES Python.h
     PATHS
@@ -37,6 +45,12 @@ else(FALSE)
     PATH_SUFFIXES
       python${VER}
   )
+  if(PYTHON_ROOTDIR)
+   find_library(PYTHON_LIBRARY
+                NAMES python${VER} python${VER}m
+                PATHS ${PYTHON_ROOTDIR}/lib
+                NO_DEFAULT_PATH)
+  endif(PYTHON_ROOTDIR)
   find_library(PYTHON_LIBRARY
     NAMES python${VER} python${VER}m
     PATHS
@@ -44,6 +58,20 @@ else(FALSE)
     PATH_SUFFIXES
       python${_CURRENT_VERSION}/config
   )
+  
+  # numpy include path
+  #message("PYTHON_INCLUDE_PATH is ${PYTHON_INCLUDE_PATH}")
+  #message("PYTHON_LIBRARY is ${PYTHON_LIBRARY}")
+  execute_process(COMMAND dirname ${PYTHON_LIBRARY}
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE PYTHON_LIBRARY_DIR)
+  #message("PYTHON_LIBRARY_DIR is ${PYTHON_LIBRARY_DIR}")
+  find_path(NUMPY_INCLUDE_DIR
+            NAMES numpy/arrayobject.h
+            PATHS ${PYTHON_LIBRARY_DIR}/python${VER}/site-packages/numpy/core/include
+            #PATH_SUFFIXES numpy
+            NO_DEFAULT_PATH)
+  #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
  endforeach(VER)
 endif(FALSE)
 
@@ -80,17 +108,19 @@ configure_file (
   "${PROJECT_BINARY_DIR}/libsakura/config-python.h"
   @ONLY)
 
-if(LOG4CXX_FOUND)
-    include_directories(${LOG4CXX_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR}
+set(INCLUDE_DIR ${EIGEN3_INCLUDE_DIR}
 	    ${PYTHON_INCLUDE_PATH}
 	    "${PROJECT_SOURCE_DIR}/../src" "${PROJECT_BINARY_DIR}/../bin"
 	    "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}")
-else(LOG4CXX_FOUND)
-    include_directories(${EIGEN3_INCLUDE_DIR}
-        ${PYTHON_INCLUDE_PATH}
-        "${PROJECT_SOURCE_DIR}/../src" "${PROJECT_BINARY_DIR}/../bin"
-        "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}")
+if(LOG4CXX_FOUND)
+    set(INCLUDE_DIR ${LOG4CXX_INCLUDE_DIR} "${INCLUDE_DIR}")
 endif(LOG4CXX_FOUND)
+
+if (NUMPY_INCLUDE_DIR)
+    set(INCLUDE_DIR "${INCLUDE_DIR}" ${NUMPY_INCLUDE_DIR})
+endif(NUMPY_INCLUDE_DIR)
+
+include_directories(${INCLUDE_DIR})
 
 #find_library(pthread pthread)
 add_library(sakurapy SHARED ${SOURCE})
