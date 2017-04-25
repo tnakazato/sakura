@@ -22,6 +22,8 @@
  */
 
 #include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -84,6 +86,12 @@ constexpr char const kBaselineContextName[] =
 		MODULE_NAME ".BaselineContext";
 #endif
 
+constexpr char const kAlignedBufferForNPName[] =
+#if 0
+		"AlignedBufferForNP.sakura.nao.ac.jp";
+#else
+		MODULE_NAME ".AlignedBufferForNP";
+#endif
 }
 
 extern "C" {
@@ -224,6 +232,134 @@ bool isValidAlignedBufferAllowNone(size_t num,
 	}
 	return true;
 }
+
+// For numpy array holding aligned pointer
+// destructor for PyCapsule
+void DestructPyCapsuleForNP(PyObject *obj) {
+    if (!PyCapsule_IsValid(obj, kAlignedBufferForNPName)) {
+        return;
+    }
+    printf("Deallocate aligned buffer for numpy\n");
+    void *ptr = PyCapsule_GetPointer(obj, kAlignedBufferForNPName);
+    free(ptr);
+}
+
+PyObject *NewAlignedNumPyArray(PyObject *self, PyObject *args) {
+	PyObject *shape = nullptr;
+	int type;
+	if (!PyArg_ParseTuple(args, "iO", &type, &shape)) {
+		return nullptr;
+	}
+
+	// shape should be a tuple
+	printf("REFCOUNT: shape %ld\n", (long)Py_REFCNT(shape));
+	int isTuple = PyTuple_Check(shape);
+	if (!isTuple) {
+		Py_XDECREF(shape);
+		return nullptr;
+	}
+
+	// numpy shape
+	Py_ssize_t len = PyTuple_Size(shape);
+	printf("LOG: tuple size %ld\n", (long)len);
+	npy_intp *dims = new npy_intp[len];
+	for (Py_ssize_t i = 0; i < len; ++i) {
+		auto item = PyTuple_GetItem(shape, i);
+		dims[i] = (npy_intp)PyInt_AsLong(item);
+		printf("LOG: tuple item (%ld) %ld\n", i, dims[i]);
+	}
+
+	// create numpy array from alinged pointer
+	// assume type is float at this moment
+	ssize_t nelem = 1;
+	for (Py_ssize_t i = 0; i < len; ++i) {
+		nelem *= dims[i];
+	}
+	void *p = nullptr;
+	size_t element_size = 0;
+	int nptype = -1;
+
+	switch(type) {
+	case(LIBSAKURA_SYMBOL(PyTypeId_kBool)): {
+		element_size = sizeof(bool);
+		nptype = NPY_BOOL;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kInt8)): {
+		element_size = sizeof(int8_t);
+		nptype = NPY_INT8;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kInt32)): {
+		element_size = sizeof(int32_t);
+		nptype = NPY_INT32;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kInt64)): {
+		element_size = sizeof(int64_t);
+		nptype = NPY_INT64;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kFloat)): {
+		element_size = sizeof(float);
+		nptype = NPY_FLOAT;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kDouble)): {
+		element_size = sizeof(double);
+		nptype = NPY_DOUBLE;
+	}
+	break;
+	case(LIBSAKURA_SYMBOL(PyTypeId_kLongDouble)): {
+		element_size = sizeof(long double);
+		nptype = NPY_LONGDOUBLE;
+	}
+	break;
+	default:
+		// unsupported type
+		Py_XDECREF(shape);
+		delete[] dims;
+		return nullptr;
+	}
+
+	int status = posix_memalign(&p, sakura_GetAlignment(), nelem * element_size);
+	if (status != 0 || !sakura_IsAligned(p)) {
+		Py_XDECREF(shape);
+		delete[] dims;
+		return nullptr;
+	}
+	// encapsulate pointer
+	PyObject *capsule = PyCapsule_New(p, kAlignedBufferForNPName, DestructPyCapsuleForNP);
+	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
+
+	// create array
+	PyObject *arr = PyArray_SimpleNewFromData(len, dims, nptype, p);
+	printf("REFCOUNT: arr %ld\n", (long)Py_REFCNT(arr));
+	if (!PyArray_Check(arr)) {
+		Py_XDECREF(shape);
+		Py_XDECREF(capsule);
+		delete[] dims;
+		return nullptr;
+	}
+
+	// clean up
+	delete[] dims;
+
+	// set capsule object as a base object of the array
+	int s = PyArray_SetBaseObject((PyArrayObject *)arr, capsule);
+	if (s != 0) {
+		Py_XDECREF(arr);
+		Py_XDECREF(capsule);
+		return nullptr;
+	}
+	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
+
+	Py_XDECREF(shape);
+	printf("REFCOUNT: shape %ld\n", (long)Py_REFCNT(shape));
+
+	return arr;
+}
+//
 
 template<LIBSAKURA_SYMBOL(Status) (*Func)(size_t, float const *, bool const *,
 LIBSAKURA_SYMBOL(StatisticsResultFloat) *)>
@@ -1945,6 +2081,9 @@ PyMethodDef module_methods[] =
 				{ "new_aligned_buffer", NewAlignedBuffer, METH_VARARGS,
 						"Creates a new aligned buffer." },
 
+				{ "new_aligned_numpy_array", NewAlignedNumPyArray, METH_VARARGS,
+						"Creates a new aligned array."},
+
 				{ NULL, NULL, 0, NULL } /* Sentinel */
 		};
 
@@ -2109,6 +2248,9 @@ PyMODINIT_FUNC initlibsakurapy(void)
 	if (mod == nullptr) {
 		INITERROR;
 	}
+
+	// to use NumPy C-API
+	import_array();
 
 	struct module_state *st = GETSTATE(mod);
 
