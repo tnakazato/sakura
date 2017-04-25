@@ -69,9 +69,12 @@ else(FALSE)
   find_path(NUMPY_INCLUDE_DIR
             NAMES numpy/arrayobject.h
             PATHS ${PYTHON_LIBRARY_DIR}/python${VER}/site-packages/numpy/core/include
-            #PATH_SUFFIXES numpy
+                  ${PYTHON_LIBRARY_DIR}/python${VER}/dist-packages/numpy/core/include
             NO_DEFAULT_PATH)
   #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
+  find_path(NUMPY_INCLUDE_DIR
+            NAMES numpy/arrayobject.h
+            PATH_PREFIXES python${VER})
  endforeach(VER)
 endif(FALSE)
 
