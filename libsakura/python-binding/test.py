@@ -129,10 +129,10 @@ def test_grid():
 		width, height,
 		weight_sum, weight_of_grid, grid)
 
-def test_AB():
-	buf = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (10, 20, 30, 40, 50))
-	print(libsakurapy.get_elements_of_aligned_buffer(buf))
-	del buf
+# def test_AB():
+# 	buf = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (10, 20, 30, 40, 50))
+# 	print(libsakurapy.get_elements_of_aligned_buffer(buf))
+# 	del buf
 
 def test_logical():
 	n = 1024*1024*16
@@ -187,24 +187,145 @@ def test_logical():
 	print 'logical_and: \n\tsrc1 {0}\n\tsrc2 {1}\n\tdst {2}'.format(src1, src2, out)
 	
 def test_range():
+	# Test set_true_int_in_ranges_exclusive
 	n = 1024*1024*16
 	dim = (n,)
-	data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, dim)
-	mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
-	lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (1, 100, 200))
-	upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (10, 110, 210))
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, dim)
+	data[:5] = [0, 1, 2, 205, 300]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim)
+	lower = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (3,))
+	lower[:] = (1, 100, 200)
+	upper = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (3,))
+	upper[:] = (10, 110, 210)
 	result = libsakurapy.set_true_int_in_ranges_exclusive(n, data, 3, lower, upper, mask)
+	print 'set_true_int_in_ranges_exclusive: data {0} mask {1}'.format(data[:5], mask[:5])
 	del n, dim, data, mask, lower, upper, result
-	# Test set_true_float_in_ranges_exclusive
-	dataf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, [0., 2., 1., 3.])
-	ndata = libsakurapy.get_elements_of_aligned_buffer(dataf)[0]
-	maskf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True, True, True, True])
-	lowerf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, [0.5])
-	upperf = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, [2.5])
-	result = libsakurapy.set_true_float_in_ranges_exclusive(ndata,dataf,1,lowerf,upperf,maskf)
-	del dataf, ndata, maskf, lowerf, upperf, result
 
+	# Test set_true_float_in_ranges_exclusive
+	ndata = 4
+	dataf = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	dataf[:] = [0., 2., 1., 3.]
+	maskf = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	maskf[:] = [True, True, True, True]
+	lowerf = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (1,))
+	lowerf[:] = [0.5]
+	upperf = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (1,))
+	upperf[:] = [2.5]
+	result = libsakurapy.set_true_float_in_ranges_exclusive(ndata,dataf,1,lowerf,upperf,maskf)
+	print 'set_true_float_ranges_exclusive: data {0} mask {1}'.format(dataf, maskf)
+	del dataf, ndata, maskf, lowerf, upperf, result
+	
+	# Test set_true_float_if_greater_than
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = [0., 2., 1., 3.]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.float32(1.0)
+	result = libsakurapy.set_true_float_if_greater_than(ndata, data, threshold, mask)
+	print 'set_true_float_if_greater_than: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_float_if_greater_than_or_equal
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = [0., 2., 1., 3.]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.float32(1.0)
+	result = libsakurapy.set_true_float_if_greater_than_or_equal(ndata, data, threshold, mask)
+	print 'set_true_float_if_greater_than_or_equal: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_float_if_less_than
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = [0., 2., 1., 3.]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.float32(1.0)
+	result = libsakurapy.set_true_float_if_less_than(ndata, data, threshold, mask)
+	print 'set_true_float_if_less_than: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_float_if_less_than_or_equal
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = [0., 2., 1., 3.]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.float32(1.0)
+	result = libsakurapy.set_true_float_if_less_than_or_equal(ndata, data, threshold, mask)
+	print 'set_true_float_if_less_than_or_equal: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_int_if_greater_than
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (ndata,))
+	data[:] = [0, 2, 1, 3]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.int32(1)
+	result = libsakurapy.set_true_int_if_greater_than(ndata, data, threshold, mask)
+	print 'set_true_int_if_greater_than: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_int_if_greater_than_or_equal
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (ndata,))
+	data[:] = [0, 2, 1, 3]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.int32(1)
+	result = libsakurapy.set_true_int_if_greater_than_or_equal(ndata, data, threshold, mask)
+	print 'set_true_int_if_greater_than_or_equal: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_int_if_less_than
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (ndata,))
+	data[:] = [0, 2, 1, 3]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.int32(1)
+	result = libsakurapy.set_true_int_if_less_than(ndata, data, threshold, mask)
+	print 'set_true_int_if_less_than: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
+	# Test set_true_int_if_less_than_or_equal
+	ndata = 4
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_INT32, (ndata,))
+	data[:] = [0, 2, 1, 3]
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True, True, True, True]
+	threshold = numpy.int32(1)
+	result = libsakurapy.set_true_int_if_less_than_or_equal(ndata, data, threshold, mask)
+	print 'set_true_int_if_less_than_or_equal: threshold {0} data {1} mask {2}'.format(threshold, data, mask)
+	del ndata, data, mask, threshold
+	
 def test_bit():
+	# Test operate_bits_uint8_not
+	ndata = 8	
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True]*4+[False]*4
+	data8 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT8, (ndata,))
+	data8[:] = [0, 2, 1, 3]*2
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT8, (ndata,))
+	out = libsakurapy.operate_bits_uint8_not(ndata, data8, mask, result)
+	print 'operate_bits_unit8_not: before {0} after {1}'.format(data8, result)
+	del ndata, mask, data8, result, out
+	
+	# Test operate_bits_uint32_not
+	ndata = 8	
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = [True]*4+[False]*4
+	data32 = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT32, (ndata,))
+	data32[:] = [0, 2, 1, 3]*2
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_UINT32, (ndata,))
+	out = libsakurapy.operate_bits_uint32_not(ndata, data32, mask, result)
+	print 'operate_bits_unit32_not: before {0} after {1}'.format(data32, result)
+	del ndata, mask, data32, result, out
+
 	# Test operate_bits_uint8_or
 	ndata = 8	
 	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
@@ -217,7 +338,7 @@ def test_bit():
 	out = libsakurapy.operate_bits_uint8_or(2,ndata,data8,mask,result)
 	del mask, data8, result, ndata, out
 
-	# Test operate_bits_uint8_or
+	# Test operate_bits_uint32_or
 	ndata = 8
 	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
 	mask[:] = [True]*4+[False]*4
@@ -237,14 +358,22 @@ def test_interpolate():
 	nbase = len(yin)
 	npos = len(yout)
 	order = 1
-	zindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, zin)
-	yindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, yin)
-	youtdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, yout)
-	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nchan,))
-	inmask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True]* 2 * nchan)
-	outmask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (npos, nchan,))
-	result = libsakurapy.interpolate_float_yaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, yindata, nchan, zindata, inmask, npos, youtdata, zoutdata, outmask)
+	zindata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (nbase, nchan,))
+	zindata[0] = zin[:nchan]
+	zindata[1] = zin[nchan:]
+	yindata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (nbase,))
+	yindata[:] = yin
+	youtdata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (npos,))
+	youtdata[:] = yout
+	zoutdata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (npos, nchan,))
+	inmask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (nbase, nchan,))
+	inmask[:] = True
+	outmask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (npos, nchan,))
+	result = libsakurapy.interpolate_float_yaxis(
+		libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, yindata, nchan, zindata, 
+		inmask, npos, youtdata, zoutdata, outmask)
 	# the result should be [5.25]*nchan
+	print 'interpolate_float_yaxis: output {0}'.format(zoutdata)
 	del yin, yout, zin, zindata, yindata, youtdata, zoutdata
 	# interpolate in X-axis
 	xin = [0.,1.]
@@ -254,42 +383,66 @@ def test_interpolate():
 	nrow = 3
 	zin = [float(6.0), float(5.0)]*nrow
 	order = 1
-	zindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, zin)
-	xindata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xin)
-	xoutdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_DOUBLE, xout)
-	zoutdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (npos, nrow))
-	inmask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, [True, True] * nrow)
-	outmask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (npos, nrow))
+	zindata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (nrow, nbase,))
+	zindata[:, 0] = float(6.0)
+	zindata[:, 1] = float(5.0)
+	xindata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (nbase,))
+	xindata[:] = xin
+	xoutdata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (npos,))
+	xoutdata[:] = xout
+	zoutdata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (nrow, npos,))
+	inmask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (nrow, nbase,))
+	inmask[:] = True
+	outmask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (nrow, npos,))
 	result = libsakurapy.interpolate_float_xaxis(libsakurapy.INTERPOLATION_METHOD_LINEAR, order, nbase, xindata, nrow, zindata, inmask, npos, xoutdata, zoutdata, outmask)
 	# the result should be [5.75]*nrow
-
+	print 'interpolate_float_xaxis: output {0}'.format(zoutdata)
+	
 def test_calibration():
 	ndata = 7
 	yon = [5.0 for i in range(ndata)]
 	yoff = [(on - 1.0) for on in yon]
 	factor = [float(i) for i in range(ndata)]
-	ondata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yon)
-	offdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, yoff)
-	facdata = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, factor)
-	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	ondata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	ondata[:] = yon
+	offdata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	offdata[:] = yoff
+	facdata = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	facdata[:] = factor
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
 	out = libsakurapy.apply_position_switch_calibration(ndata, facdata, ondata, offdata, result)
 	# the result should be [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5]
+	print 'calibration: result {0}'.format(out)
 	del yon, yoff, factor, ondata, offdata, facdata, result, out
 	
 
 def test_convolve1D():
+	# Test convolve1d (FFT)
 	ndata = 10
 	width = 3
 	y = [0.]*ndata
 	y[5] = 1.0
 	peak = ndata / 2
-	kernel = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	kernel = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
 	out = libsakurapy.create_gaussian_kernel_float(peak, width, ndata, kernel)
+	print 'convolve1d_fft: kernel {0} (sum {1})'.format(out, out.sum())
 	ctx1D = libsakurapy.create_convolve1d_fft_context(ndata, kernel)
-	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
-	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = y
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
 	out = libsakurapy.convolve1d_fft(ctx1D, ndata, data, result)
+	print 'convolve1d_fft: input {0} output {1}'.format(data, result)
 	del ctx1D, data, result, out
+	
+	# Test convolve1d (direct)
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	weight = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	mask[:] = True
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = y
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	out = libsakurapy.convolve1d(ndata, kernel, ndata, data, mask, result, weight)
+	print 'convolve1d: input {0} output {1} weight {2}'.format(data, out, weight)
 
 def test_baseline():
 	ndata = 8
@@ -299,36 +452,43 @@ def test_baseline():
 	m = [True]*ndata
 	y[4] += 3.
 	m[4] = False
-	data = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_FLOAT, y)
-	mask = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_BOOL, m)
-	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))
-	final_mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (ndata,))
-	coeff = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_DOUBLE, (order+1,))
-	bestfit = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (ndata,))	
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	data[:] = y
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	mask[:] = m
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))
+	final_mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, (ndata,))
+	coeff = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_DOUBLE, (order+1,))
+	bestfit = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, (ndata,))	
 	out = libsakurapy.lsqfit_polynomial(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, bestfit, result, final_mask)
 	# The result should be [0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 0.0]
+	print 'lsqfit_polynomial: input {0}'.format(data)
+	print 'lsqfit_polynomial: result {0}'.format(result)
+	print 'lsqfit_polynomial: bestfit {0}'.format(bestfit)
 	
 	# test for bestfit and residual being None
 	out2 = libsakurapy.lsqfit_polynomial(ctxbl, order, ndata, data, mask, 5., 1, order+1, coeff, None, None, final_mask)
+	print 'lsqfit_polynomial (None version): result {0}'.format(result)
 	del ctxbl
 
 def test_complement():
 	n = 1024
 	dim = (n,)
-	data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_INT32, dim)
-	mask = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, dim)
-	lower = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (0,))
-	upper = libsakurapy.new_aligned_buffer(libsakurapy.TYPE_INT32, (2100000000,))
-	result = libsakurapy.set_true_int_in_ranges_exclusive(n, data, 1, lower, upper, mask)
-	del lower, upper, data, result
-	
-	data = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
-	result = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, dim)
+	data = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, dim)
+	mask = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_BOOL, dim)
+	data[:] = 10.
+	data[5] = numpy.nan
+	mask[:] = True
+	mask[5] = False
+	mask[9] = False
+	result = libsakurapy.new_uninitialized_aligned_ndarray(libsakurapy.TYPE_FLOAT, dim)
 	libsakurapy.complement_masked_value_float(n, data, mask, result)
+	print 'complement_masked_value_float: data {0} mask {1}'.format(data[:10], mask[:10])
+	print 'complement_masked_value_float: result {0}'.format(result[:10])
 	del data, mask, result
 
 def testAll():
-	test_AB()
+	#test_AB()
 	test_stats()
 	test_mad()
 	test_grid()
@@ -341,8 +501,7 @@ def testAll():
 	test_baseline()
 	test_complement()
 
-#testAll()
-test_bit()
+testAll()
 gc.collect(2)
 
 libsakurapy.clean_up()
