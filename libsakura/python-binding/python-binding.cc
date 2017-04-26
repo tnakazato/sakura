@@ -545,37 +545,32 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 		return nullptr;
 	}
 	// encapsulate pointer
-	PyObject *capsule = PyCapsule_New(p, kAlignedBufferForNPName, DestructPyCapsuleForNP);
-	RefHolder rh_capsule(capsule);
+	RefHolder capsule(PyCapsule_New(p, kAlignedBufferForNPName, DestructPyCapsuleForNP));
 //	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
 
 	// create array
-	PyObject *arr = PyArray_SimpleNewFromData(len, dims.get(), nptype, p);
-	RefHolder rh_arr(arr);
+	RefHolder arr(PyArray_SimpleNewFromData(len, dims.get(), nptype, p));
 //	printf("REFCOUNT: arr %ld\n", (long)Py_REFCNT(arr));
-	if (!PyArray_Check(arr)) {
+	if (!PyArray_Check(arr.get())) {
 		PyErr_SetString(PyExc_RuntimeError, "Failed to create ndarray.");
 		return nullptr;
 	}
 
 	// set capsule object as a base object of the array
-	int s = PyArray_SetBaseObject((PyArrayObject *)arr, capsule);
+	int s = PyArray_SetBaseObject((PyArrayObject *)(arr.get()), capsule.get());
 	if (s != 0) {
 		PyErr_SetString(PyExc_RuntimeError, "Failed to set base for ndarray.");
 		return nullptr;
 	}
 
 	// give ownership of capsule object to arr
-	rh_capsule.release();
-
-	// arr is properly created so release the ownership
-	rh_arr.release();
+	capsule.release();
 
 //	printf("REFCOUNT: capsule %ld\n", (long)Py_REFCNT(capsule));
 //
 //	printf("REFCOUNT: 2 shape %ld\n", (long)Py_REFCNT(shape));
 
-	return arr;
+	return arr.release();
 }
 //
 
