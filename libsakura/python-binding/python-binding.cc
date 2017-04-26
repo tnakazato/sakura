@@ -470,7 +470,7 @@ PyObject *NewUninitializedAlignedNumPyArray(PyObject *self, PyObject *args) {
 	std::unique_ptr<npy_intp[]> dims(new npy_intp[len]);
 	for (Py_ssize_t i = 0; i < len; ++i) {
 		auto item = PyTuple_GetItem(shape, i);
-		dims[i] = (npy_intp)PyInt_AsLong(item);
+		dims[i] = (npy_intp)PyLong_AsLong(item);
 //		printf("LOG: tuple item (%ld) %ld\n", i, dims[i]);
 	}
 
