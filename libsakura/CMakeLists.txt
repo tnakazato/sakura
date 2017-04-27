@@ -34,6 +34,9 @@ set(libsakura_VERSION_MINOR 0)
 option(USE_LIBCXX
        "set ON to use libc++ for standard C++ library (only effective for clang)"
        ON)
+option(PYTHON_BINDING
+       "set ON to build python-binding"
+       ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -59,4 +62,6 @@ set(SAKURA_ROOT_DIR ${PROJECT_SOURCE_DIR})
 add_subdirectory(src bin)
 add_subdirectory(gtest bingtest)
 add_subdirectory(test bintest)
-add_subdirectory(python-binding python-binding)
+if(PYTHON_BINDING)
+  add_subdirectory(python-binding python-binding)
+endif(PYTHON_BINDING)
