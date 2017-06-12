@@ -38,6 +38,34 @@ option(PYTHON_BINDING
        "set ON to build python-binding"
        ON)
 
+ Fix for OSX rpath issue (after El Capitan)
+if(APPLE)
+  set(CMAKE_MACOSX_RPATH TRUE)
+
+# The following settings were copied from
+# https://cmake.org/Wiki/CMake_RPATH_handling
+# to avoid the rpath issue that appears on OS X El Capitan
+
+  # use, i.e. don't skip the full RPATH for the build tree
+  set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+  # when building, don't use the install RPATH already
+  # (but later on when installing)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) # Changed to TRUE by A.O. 
+
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+  # add the automatically determined parts of the RPATH
+  # which point to directories outside the build tree to the install RPATH
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+  # the RPATH to be used when installing, but only if it's not a system directory
+  list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+  if("${isSystemDir}" STREQUAL "-1")
+     set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  endif("${isSystemDir}" STREQUAL "-1")
+endif()
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if(USE_LIBCXX)
