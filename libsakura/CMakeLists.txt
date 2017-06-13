@@ -38,7 +38,7 @@ option(PYTHON_BINDING
        "set ON to build python-binding"
        ON)
 
- Fix for OSX rpath issue (after El Capitan)
+# Fix for OSX rpath issue (after El Capitan)
 if(APPLE)
   set(CMAKE_MACOSX_RPATH TRUE)
 
