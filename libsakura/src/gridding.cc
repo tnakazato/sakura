@@ -88,13 +88,13 @@ inline bool OnGrid(double const xy[/*2*/], integer width, integer height,
 }
 
 struct WeightOnly {
-	static inline constexpr float func(float weight, float value, float accumulator) {
+	static inline constexpr float func(float weight, float const &value, float accumulator) {
 		return weight + accumulator;
 	}
 };
 
 struct WeightedValue {
-	static inline constexpr float func(float weight, float value, float accumulator) {
+	static inline constexpr float func(float weight, float const &value, float accumulator) {
 		return weight * conj(value) + accumulator;
 	}
 };
