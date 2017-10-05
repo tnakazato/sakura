@@ -60,21 +60,24 @@ else(FALSE)
   )
   
   # numpy include path
-  #message("PYTHON_INCLUDE_PATH is ${PYTHON_INCLUDE_PATH}")
-  #message("PYTHON_LIBRARY is ${PYTHON_LIBRARY}")
-  execute_process(COMMAND dirname ${PYTHON_LIBRARY}
-                  COMMAND tr -d '\n'
-                  OUTPUT_VARIABLE PYTHON_LIBRARY_DIR)
-  #message("PYTHON_LIBRARY_DIR is ${PYTHON_LIBRARY_DIR}")
-  find_path(NUMPY_INCLUDE_DIR
-            NAMES numpy/arrayobject.h
-            PATHS ${PYTHON_LIBRARY_DIR}/python${VER}/site-packages/numpy/core/include
-                  ${PYTHON_LIBRARY_DIR}/python${VER}/dist-packages/numpy/core/include
-            NO_DEFAULT_PATH)
-  #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
-  find_path(NUMPY_INCLUDE_DIR
-            NAMES numpy/arrayobject.h
-            PATH_PREFIXES python${VER})
+  if(PYTHON_INCLUDE_PATH)
+    #message("PYTHON_INCLUDE_PATH is ${PYTHON_INCLUDE_PATH}")
+    #message("PYTHON_LIBRARY is ${PYTHON_LIBRARY}")
+    execute_process(COMMAND dirname ${PYTHON_LIBRARY}
+                    COMMAND tr -d '\n'
+                    OUTPUT_VARIABLE PYTHON_LIBRARY_DIR)
+    #message("PYTHON_LIBRARY_DIR is ${PYTHON_LIBRARY_DIR}")
+    find_path(NUMPY_INCLUDE_DIR
+              NAMES numpy/arrayobject.h
+              PATHS ${PYTHON_LIBRARY_DIR}/python${VER}/site-packages/numpy/core/include
+                    ${PYTHON_LIBRARY_DIR}/python${VER}/dist-packages/numpy/core/include
+              NO_DEFAULT_PATH)
+    #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
+    find_path(NUMPY_INCLUDE_DIR
+              NAMES numpy/arrayobject.h
+              PATH_PREFIXES python${VER})
+    #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
+  endif(PYTHON_INCLUDE_PATH)
  endforeach(VER)
 endif(FALSE)
 
