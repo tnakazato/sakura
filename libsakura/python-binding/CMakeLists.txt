@@ -31,11 +31,13 @@ option(BUNDLE_CASA_APP "Bundle python-binding to CASA release package (OSX only)
 if(APPLE)
   if(BUNDLE_CASA_APP)
     set(WITH_CASA TRUE)
-    if(CASA_APP_PATH)
-      set(PYTHON_FRAMEWORK_PATH ${CASA_APP_PATH}/Contents/Frameworks/Python.framework)
-    else(CASA_APP_PATH)
-      set(PYTHON_FRAMEWORK_PATH /Applications/CASA.app/Contents/Frameworks/Python.framework)
-    endif(CASA_APP_PATH)
+    if(NOT CASA_APP_PATH)
+      set(CASA_APP_PATH /Applications/CASA.app)
+    endif(NOT CASA_APP_PATH)
+    if(NOT EXISTS ${CASA_APP_PATH})
+      message(FATAL_ERROR "CASA package was not found at ${CASA_APP_PATH}")
+    endif(NOT EXISTS ${CASA_APP_PATH})
+    set(PYTHON_FRAMEWORK_PATH ${CASA_APP_PATH}/Contents/Frameworks/Python.framework)
     execute_process(COMMAND ls -F ${PYTHON_FRAMEWORK_PATH}/Versions
                     COMMAND grep -E "^[0-9].[0-9]"
                     COMMAND sed -e "s%\(.*\)/.*$%\1%"
