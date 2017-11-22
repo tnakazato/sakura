@@ -253,7 +253,7 @@ bool IsValidAlignedNumPyArray(size_t num, AlignedBufferConfiguration const conf[
 	for (size_t i = 0; i < num; ++i) {
 		// check if given PyObject is compatible with PyArray_Type
 		if (!PyArray_Check(arr[i])) {
-			printf("not a numpy array\n");
+			printf("(%lu): not a numpy array\n", i);
 			return false;
 		}
 
@@ -276,7 +276,7 @@ bool IsValidAlignedNumPyArray(size_t num, AlignedBufferConfiguration const conf[
 		// get number of dimensions
 		int ndim = PyArray_NDIM(nparr);
 		if (ndim <= 0 || kMaxNumberOfDimensions <= (size_t)ndim ) {
-			printf("Invalid number of dimensins\n");
+			printf("(%lu): Invalid number of dimensins\n", i);
 			return false;
 		}
 
