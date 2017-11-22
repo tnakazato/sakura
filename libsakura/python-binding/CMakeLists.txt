@@ -26,12 +26,37 @@ find_package(Threads)
 find_package(OpenMP)
 find_package(Eigen3 REQUIRED)
 find_package(Log4Cxx)
+
+option(BUNDLE_CASA_APP "Bundle python-binding to CASA release package (OSX only)" OFF)
+if(APPLE)
+  if(BUNDLE_CASA_APP)
+    set(WITH_CASA TRUE)
+    if(CASA_APP_PATH)
+      set(PYTHON_FRAMEWORK_PATH ${CASA_APP_PATH}/Contents/Frameworks/Python.framework)
+    else(CASA_APP_PATH)
+      set(PYTHON_FRAMEWORK_PATH /Applications/CASA.app/Contents/Frameworks/Python.framework)
+    endif(CASA_APP_PATH)
+    execute_process(COMMAND ls -F ${PYTHON_FRAMEWORK_PATH}/Versions
+                    COMMAND grep -E "^[0-9].[0-9]"
+                    COMMAND sed -e "s%\(.*\)/.*$%\1%"
+                    COMMAND tr -d '\n'
+                    OUTPUT_VARIABLE CASA_APP_PYTHON_VERSION)     
+    set(PYTHON_ROOTDIR ${PYTHON_FRAMEWORK_PATH}/Versions/${CASA_APP_PYTHON_VERSION})
+    message(STATUS TN_DEBUG START)
+    message(STATUS PYTHON_FRAMEWORK_PATH=${PYTHON_FRAMEWORK_PATH})
+    message(STATUS CASA_APP_PYTHON_VERSION=${CASA_APP_PYTHON_VERSION})
+    message(STATUS PYTHON_ROOTDIR=${PYTHON_ROOTDIR})
+    message(STATUS TN_DEBUG END)
+  endif(BUNDLE_CASA_APP)
+endif(APPLE)
+
 if(FALSE)
   find_package(PythonLibs REQUIRED)
 else(FALSE)
+ message(STATUS "PYTHON and NUMPY search")
  foreach(VER 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
   if (PYTHON_ROOTDIR)
-   #message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
+   message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
    find_path(PYTHON_INCLUDE_PATH
              NAMES Python.h
              PATHS ${PYTHON_ROOTDIR}/include
@@ -60,6 +85,7 @@ else(FALSE)
   )
   
   # numpy include path
+  message(STATUS PYTHON_INCLUDE_PATH=${PYTHON_INCLUDE_PATH})
   if(PYTHON_INCLUDE_PATH)
     #message("PYTHON_INCLUDE_PATH is ${PYTHON_INCLUDE_PATH}")
     #message("PYTHON_LIBRARY is ${PYTHON_LIBRARY}")
@@ -145,6 +171,12 @@ set_target_properties(sakurapy PROPERTIES
 	SUFFIX .so
 )
 
+# test
+if(WITH_CASA)
+  message(STATUS "Replace PYTHON_LIBRARY for framework with ordinary library link")
+  set(PYTHON_LIBRARY -lpython${CASA_APP_PYTHON_VERSION})
+endif(WITH_CASA)
+
 if(LOG4CXX_FOUND)
     target_link_libraries(sakurapy sakura log4cxx ${PYTHON_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 else(LOG4CXX_FOUND)
@@ -187,3 +219,10 @@ add_dependencies(pytest copyTest)
 install(TARGETS sakurapy
 	LIBRARY DESTINATION lib
 	PUBLIC_HEADER DESTINATION include/libsakura)
+
+if(WITH_CASA)
+  message(STATUS "edit dependency on Python")
+  add_custom_command(TARGET sakurapy
+                     POST_BUILD
+                     COMMAND ${PROJECT_SOURCE_DIR}/../bin/osx_python_to_casa.sh ) 
+endif(WITH_CASA)             
