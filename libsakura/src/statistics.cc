@@ -472,10 +472,10 @@ struct SIMDStats<float, double> {
 			MiddleLevelAccumulator const &accumulator) {
 		TopLevelAccumulator result;
 #if defined(__AVX2__)
-		result.count = static_cast<size_t>(AddHorizontally(
-				accumulator.count.IntValue()));
+		result.count = static_cast<size_t>(uint32_t(AddHorizontally(
+				accumulator.count.IntValue())));
 #else
-		result.count = static_cast<size_t>(AddHorizontally128(accumulator.count.IntValue()));
+		result.count = static_cast<size_t>(uint32_t(AddHorizontally128(accumulator.count.IntValue())));
 #endif
 
 		result.sum = AddHorizontally(accumulator.sum.m256d);
@@ -615,9 +615,9 @@ void ComputeStatisticsSimdFloat(size_t num_data, float const data[],
 				index_of_min, index_of_max);
 	}
 #if defined(__AVX2__)
-	size_t counted = static_cast<size_t>(AddHorizontally(count.IntValue()));
+	size_t counted = static_cast<size_t>(uint32_t(AddHorizontally(count.IntValue())));
 #else
-	size_t counted = static_cast<size_t>(AddHorizontally128(count.IntValue()));
+	size_t counted = static_cast<size_t>(uint32_t(AddHorizontally128(count.IntValue())));
 #endif
 
 	double total = AddHorizontally(sum);
