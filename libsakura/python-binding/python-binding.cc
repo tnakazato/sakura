@@ -514,7 +514,6 @@ PyObject *ComputeStatisticsTemplate(PyObject *self, PyObject *args) {
 			&arr[kIsValid])) {
 		return nullptr;
 	}
-	printf("parsing arguments done\n");
 
 	auto num_data = static_cast<size_t>(num_data_py);
 	auto pred = [num_data](LIBSAKURA_SYMBOL(PyAlignedBuffer) const &buf) -> bool
@@ -528,11 +527,9 @@ PyObject *ComputeStatisticsTemplate(PyObject *self, PyObject *args) {
 	};
 
 	LIBSAKURA_SYMBOL(PyAlignedBuffer) bufs[2];
-	printf("argument validity check\n");
 	if (!IsValidAlignedNumPyArray(ELEMENTSOF(conf), conf, arr, bufs)) {
 		goto invalid_arg;
 	}
-	printf("run sakura function\n");
 	LIBSAKURA_SYMBOL(StatisticsResultFloat) result;
 	LIBSAKURA_SYMBOL(Status) status;
 	SAKURA_BEGIN_ALLOW_THREADS
@@ -541,7 +538,6 @@ PyObject *ComputeStatisticsTemplate(PyObject *self, PyObject *args) {
 				reinterpret_cast<bool const*>(bufs[kIsValid].aligned_addr),
 				&result);
 		SAKURA_END_ALLOW_THREADS
-	printf("check sakura status\n");
 	if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
 		goto invalid_arg;
 	}
