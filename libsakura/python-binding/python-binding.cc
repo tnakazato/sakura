@@ -371,7 +371,7 @@ void DestructPyCapsuleForNP(PyObject *obj) {
         return;
     }
     void *ptr = PyCapsule_GetPointer(obj, kAlignedPyArrayName);
-    printf("LOG: Deallocate aligned buffer for numpy address is %p\n", ptr);
+    //printf("LOG: Deallocate aligned buffer for numpy address is %p\n", ptr);
     free(ptr);
 }
 
@@ -466,7 +466,7 @@ PyObject *NewUninitializedAlignedPyArray(PyObject *self, PyObject *args) {
 	// allocate memory with aligned pointer
 	void *p = nullptr;
 	int status = posix_memalign(&p, sakura_GetAlignment(), num_elements * element_size);
-	printf("LOG: allocate memory address is %p\n", p);
+	//printf("LOG: allocate memory address is %p\n", p);
 	if (status != 0 || !sakura_IsAligned(p)) {
 		PyErr_SetString(PyExc_MemoryError, "Failed to allocate memory.");
 		return nullptr;
