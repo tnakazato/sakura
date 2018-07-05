@@ -62,7 +62,7 @@ else(FALSE)
    find_path(PYTHON_INCLUDE_PATH
              NAMES Python.h
              PATHS ${PYTHON_ROOTDIR}/include
-             PATH_SUFFIXES python${VER}
+             PATH_SUFFIXES python${VER} python${VER}m
              NO_DEFAULT_PATH)
   endif(PYTHON_ROOTDIR)
   find_path(PYTHON_INCLUDE_PATH
@@ -81,7 +81,7 @@ else(FALSE)
   find_library(PYTHON_LIBRARY
     NAMES python${VER} python${VER}m
     PATHS
-      /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib /opt/share/casa/current/release/lib64
+      /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib /opt/share/casa/current/release/lib
     PATH_SUFFIXES
       python${_CURRENT_VERSION}/config
   )
