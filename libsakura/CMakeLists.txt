@@ -78,12 +78,12 @@ endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
 
-find_path(GTEST_INCLUDE_DIRS gtest/gtest.h PATHS ${PROJECT_SOURCE_DIR}/gtest/include)
+find_path(GTEST_INCLUDE_DIRS gtest/gtest.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/gtest/include)
 set(GTEST_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest.a)
 set(GTEST_MAIN_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest_main.a)
 
 # sakura root directory
-set(SAKURA_ROOT_DIR ${PROJECT_SOURCE_DIR})
+set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 #set(CMAKE_BUILD_TYPE Release)
 
