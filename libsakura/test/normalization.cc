@@ -25,7 +25,7 @@
 
 #include <sys/time.h>
 #include <stdarg.h>
-#include <math.h>
+#include <cmath>
 
 #include <iostream>
 #include <string>
@@ -100,9 +100,9 @@ struct ZeroDivisionTestHelper {
 			float expected[]) {
 		static_assert(NUM_DATA == 2 && NUM_SCALING == 1, "");
 		// Check result is inf or not.
-		EXPECT_TRUE(isinf(result[0])) << "result must be inf! (" << result[0]
+		EXPECT_TRUE(std::isinf(result[0])) << "result must be inf! (" << result[0]
 				<< ")";
-		EXPECT_TRUE(isinf(result[1])) << "result must be -inf! (" << result[1]
+		EXPECT_TRUE(std::isinf(result[1])) << "result must be -inf! (" << result[1]
 				<< ")";
 	}
 };
