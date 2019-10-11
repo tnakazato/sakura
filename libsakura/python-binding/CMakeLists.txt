@@ -56,7 +56,7 @@ if(FALSE)
   find_package(PythonLibs REQUIRED)
 else(FALSE)
  message(STATUS "PYTHON and NUMPY search")
- foreach(VER 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
+ foreach(VER 3.9 3.8 3.7 3.6 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
   if (PYTHON_ROOTDIR)
    message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
    find_path(PYTHON_INCLUDE_PATH
