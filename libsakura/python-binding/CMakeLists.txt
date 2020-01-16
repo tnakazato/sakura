@@ -70,7 +70,7 @@ else(FALSE)
     PATHS
       /usr/include /usr/local/include /opt/share/casa/current/release/include
     PATH_SUFFIXES
-      python${VER}
+      python${VER} python${VER}m
   )
   if(PYTHON_ROOTDIR)
    find_library(PYTHON_LIBRARY
