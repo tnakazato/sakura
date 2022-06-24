@@ -24,7 +24,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set(libsakura_VERSION_MAJOR 5)
-set(libsakura_VERSION_MINOR 0)
+set(libsakura_VERSION_MINOR 1)
 
 # option for C++ library
 # TODO: need to reconsider a way to select standard C++ library 
