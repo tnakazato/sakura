@@ -187,7 +187,7 @@ if(WITH_CASA)
 endif(WITH_CASA)
 
 # no need to link Python library as of 3.8
-if ("${PYTHON_VERSION}" VERSION_GREATER 3.7.99)
+if ((NOT APPLE) AND "${PYTHON_VERSION}" VERSION_GREATER 3.7.99)
   message(STATUS "PYTHON Version ${PYTHON_VERSION}: not linking libpython")
   if(LOG4CXX_FOUND)
       target_link_libraries(sakurapy sakura log4cxx ${CMAKE_THREAD_LIBS_INIT})
