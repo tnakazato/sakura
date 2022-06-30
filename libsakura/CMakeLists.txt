@@ -93,3 +93,8 @@ add_subdirectory(test bintest)
 if(PYTHON_BINDING)
   add_subdirectory(python-binding python-binding)
 endif(PYTHON_BINDING)
+
+# Install pkg-config support file
+CONFIGURE_FILE("libsakura.pc.in" "libsakura.pc" @ONLY)
+set(LIBSAKURA_PKGCONFIG_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
+INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/libsakura.pc" DESTINATION "${LIBSAKURA_PKGCONFIG_INSTALL_PREFIX}")
