@@ -77,10 +77,14 @@ endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 
+option(ENABLE_TEST "Enable tests using Google Test" ON)
 
-find_path(GTEST_INCLUDE_DIRS gtest/gtest.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/gtest/include)
-set(GTEST_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest.a)
-set(GTEST_MAIN_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest_main.a)
+
+if(ENABLE_TEST)
+    find_path(GTEST_INCLUDE_DIRS gtest/gtest.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/gtest/include)
+    set(GTEST_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest.a)
+    set(GTEST_MAIN_LIBRARIES ${PROJECT_BINARY_DIR}/bingtest/libgtest_main.a)
+endif(ENABLE_TEST)
 
 # sakura root directory
 set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -88,8 +92,12 @@ set(SAKURA_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 #set(CMAKE_BUILD_TYPE Release)
 
 add_subdirectory(src bin)
-add_subdirectory(gtest bingtest)
-add_subdirectory(test bintest)
+
+if(ENABLE_TEST)
+    add_subdirectory(gtest bingtest)
+    add_subdirectory(test bintest)
+endif(ENABLE_TEST)
+
 if(PYTHON_BINDING)
   add_subdirectory(python-binding python-binding)
 endif(PYTHON_BINDING)
