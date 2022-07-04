@@ -52,6 +52,7 @@ if(APPLE)
   endif(BUNDLE_CASA_APP)
 endif(APPLE)
 
+# use python3 module to obtain system information
 if(NOT PYTHON_INCLUDE_PATH)
   # first try python3 to get include path
   EXECUTE_PROCESS(COMMAND python3 -c "import sysconfig; print(sysconfig.get_path('include'))"
@@ -71,10 +72,20 @@ if (NOT NUMPY_INCLUDE_DIR)
 endif()
 
 if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
-  EXECUTE_PROCESS(COMMAND python3 -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')"
+  EXECUTE_PROCESS(COMMAND python3 -c "import sysconfig; print(sysconfig.get_python_version())"
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE VER)
   set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
+
+  EXECUTE_PROCESS(COMMAND echo ${PYTHON_INCLUDE_PATH}
+                  COMMAND sed -e "s|\(.*\)/include.*|\1|g"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE _PYTHON_ROOTDIR)
+  FIND_LIBRARY(PYTHON_LIBRARY
+               NAMES python${VER} python${VER}m
+               PATHS ${_PYTHON_ROOTDIR}/lib ${_PYTHON_ROOTDIR}/lib64
+               NO_DEFAULT_PATH)
+  MESSAGE(STATUS "python library path is ${PYTHON_LIBRARY}")
 endif()
 
 if(FALSE)
@@ -103,6 +114,16 @@ else(FALSE)
                 PATHS ${PYTHON_ROOTDIR}/lib
                 NO_DEFAULT_PATH)
   endif(PYTHON_ROOTDIR)
+
+  if (PYTHON_INCLUDE_PATH)
+    execute_process(COMMAND echo ${PYTHON_INCLUDE_PATH}
+                    COMMAND sed -e "s|(.*)/include.*|\1|g"
+                    COMMAND tr -d '\n'
+                    OUTPUT_VARIABLE _PYTHON_ROOTDIR)
+    find_library(PYTHON_LIBRARY
+                 NAMES)
+  endif()
+
   find_library(PYTHON_LIBRARY
     NAMES python${VER} python${VER}m
     PATHS
@@ -211,7 +232,7 @@ if(WITH_CASA)
   set(PYTHON_LIBRARY -lpython${CASA_APP_PYTHON_VERSION})
 endif(WITH_CASA)
 
-# no need to link Python library as of 3.8
+# no need to link Python library except macOS
 if ((NOT APPLE) AND (NOT PYTHON_LIBRARY))
   message(STATUS "PYTHON Version ${PYTHON_VERSION}: not linking libpython")
   if(LOG4CXX_FOUND)
