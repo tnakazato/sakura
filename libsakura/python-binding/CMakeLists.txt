@@ -52,11 +52,36 @@ if(APPLE)
   endif(BUNDLE_CASA_APP)
 endif(APPLE)
 
+if(NOT PYTHON_INCLUDE_PATH)
+  # first try python3 to get include path
+  EXECUTE_PROCESS(COMMAND python3 -c "import sysconfig; print(sysconfig.get_path('include'))"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE _PYTHON_INCLUDE_PATH)
+  set(PYTHON_INCLUDE_PATH ${_PYTHON_INCLUDE_PATH} CACHE PATH "Python include path")
+  MESSAGE(STATUS "python3 include path ${PYTHON_INCLUDE_PATH}")
+endif()
+
+if (NOT NUMPY_INCLUDE_DIR)
+  # first try python3 to get include path
+  EXECUTE_PROCESS(COMMAND python3 -c "import numpy; print(numpy.get_include())"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE _NUMPY_INCLUDE_DIR)
+  set(NUMPY_INCLUDE_DIR ${_NUMPY_INCLUDE_DIR} CACHE PATH "Numpy include path")
+  MESSAGE(STATUS "numpy include path ${NUMPY_INCLUDE_DIR}")
+endif()
+
+if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
+  EXECUTE_PROCESS(COMMAND python3 -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE VER)
+  set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
+endif()
+
 if(FALSE)
   find_package(PythonLibs REQUIRED)
 else(FALSE)
  message(STATUS "PYTHON and NUMPY search")
- foreach(VER 3.9 3.8 3.7 3.6 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
+ foreach(VER 2.7 2.6)
   if (PYTHON_ROOTDIR)
    message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
    find_path(PYTHON_INCLUDE_PATH
@@ -107,7 +132,7 @@ else(FALSE)
     #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
   endif(PYTHON_INCLUDE_PATH)
 
-  if (PYTHON_INCLUDE_PATH AND PYTHON_LIBRARY AND NUMPY_INCLUDE_DIR)
+  if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
     set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
     break()
   endif()
@@ -187,7 +212,7 @@ if(WITH_CASA)
 endif(WITH_CASA)
 
 # no need to link Python library as of 3.8
-if ((NOT APPLE) AND "${PYTHON_VERSION}" VERSION_GREATER 3.7.99)
+if ((NOT APPLE) AND (NOT PYTHON_LIBRARY))
   message(STATUS "PYTHON Version ${PYTHON_VERSION}: not linking libpython")
   if(LOG4CXX_FOUND)
       target_link_libraries(sakurapy sakura log4cxx ${CMAKE_THREAD_LIBS_INIT})
