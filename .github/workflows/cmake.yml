@@ -56,8 +56,7 @@ jobs:
       run: |
         cd ${{github.workspace}}/libsakura/ 
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
-                 -DBUILD_DOC=OFF -DNUMPY_INCLUDE_DIR=$(python3 -c "import numpy; print(numpy.get_include())")
+        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_DOC=OFF
 
     - name: Build
       # Build your program with the given configuration
