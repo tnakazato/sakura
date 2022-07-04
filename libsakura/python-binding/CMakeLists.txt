@@ -53,9 +53,13 @@ if(APPLE)
 endif(APPLE)
 
 # use python3 module to obtain system information
+EXECUTE_PROCESS(COMMAND which python3
+                COMMAND tr -d '\n'
+                OUTPUT_VARIABLE PYTHON3_EXEC)
+MESSAGE(STATUS "python3 exec: ${PYTHON3_EXEC}")
 if(NOT PYTHON_INCLUDE_PATH)
   # first try python3 to get include path
-  EXECUTE_PROCESS(COMMAND python3 -c "import sysconfig; print(sysconfig.get_path('include'))"
+  EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import sysconfig; print(sysconfig.get_path('include'))"
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE _PYTHON_INCLUDE_PATH)
   set(PYTHON_INCLUDE_PATH ${_PYTHON_INCLUDE_PATH} CACHE PATH "Python include path")
@@ -64,7 +68,7 @@ endif()
 
 if (NOT NUMPY_INCLUDE_DIR)
   # first try python3 to get include path
-  EXECUTE_PROCESS(COMMAND python3 -c "import numpy; print(numpy.get_include())"
+  EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import numpy; print(numpy.get_include())"
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE _NUMPY_INCLUDE_DIR)
   set(NUMPY_INCLUDE_DIR ${_NUMPY_INCLUDE_DIR} CACHE PATH "Numpy include path")
@@ -72,7 +76,7 @@ if (NOT NUMPY_INCLUDE_DIR)
 endif()
 
 if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
-  EXECUTE_PROCESS(COMMAND python3 -c "import sysconfig; print(sysconfig.get_python_version())"
+  EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import sysconfig; print(sysconfig.get_python_version())"
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE VER)
   set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
