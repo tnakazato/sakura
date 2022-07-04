@@ -66,6 +66,7 @@ jobs:
     
     - name: Update rpath (macOS)
       if: ${{ matrix.os == 'macos-11' }}
+      working-directory: ${{github.workspace}}/libsakura/build/bintest
       run: |
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testNumericOperation
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testLsq
