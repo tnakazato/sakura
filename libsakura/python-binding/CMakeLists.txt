@@ -4,19 +4,19 @@
 # Copyright (C) 2013-2022
 # Inter-University Research Institute Corporation, National Institutes of Natural Sciences
 # 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
-# 
+#
 # This file is part of Sakura.
-# 
+#
 # Sakura is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 3 of the License, or (at your
 # option) any later version.
-# 
+#
 # Sakura is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 # License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
@@ -42,7 +42,7 @@ if(APPLE)
                     COMMAND grep -E "^[0-9].[0-9]"
                     COMMAND sed -e "s%\(.*\)/.*$%\1%"
                     COMMAND tr -d '\n'
-                    OUTPUT_VARIABLE CASA_APP_PYTHON_VERSION)     
+                    OUTPUT_VARIABLE CASA_APP_PYTHON_VERSION)
     set(PYTHON_ROOTDIR ${PYTHON_FRAMEWORK_PATH}/Versions/${CASA_APP_PYTHON_VERSION})
     message(STATUS TN_DEBUG START)
     message(STATUS PYTHON_FRAMEWORK_PATH=${PYTHON_FRAMEWORK_PATH})
@@ -52,11 +52,51 @@ if(APPLE)
   endif(BUNDLE_CASA_APP)
 endif(APPLE)
 
+# use python3 module to obtain system information
+EXECUTE_PROCESS(COMMAND which python3
+                COMMAND tr -d '\n'
+                OUTPUT_VARIABLE PYTHON3_EXEC)
+MESSAGE(STATUS "python3 exec: ${PYTHON3_EXEC}")
+if(NOT PYTHON_INCLUDE_PATH)
+  # first try python3 to get include path
+  EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import sysconfig; print(sysconfig.get_path('include'))"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE _PYTHON_INCLUDE_PATH)
+  set(PYTHON_INCLUDE_PATH ${_PYTHON_INCLUDE_PATH} CACHE PATH "Python include path")
+  MESSAGE(STATUS "python3 include path ${PYTHON_INCLUDE_PATH}")
+endif()
+
+if (NOT NUMPY_INCLUDE_DIR)
+  # first try python3 to get include path
+  EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import numpy; print(numpy.get_include())"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE _NUMPY_INCLUDE_DIR)
+  set(NUMPY_INCLUDE_DIR ${_NUMPY_INCLUDE_DIR} CACHE PATH "Numpy include path")
+  MESSAGE(STATUS "numpy include path ${NUMPY_INCLUDE_DIR}")
+endif()
+
+if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
+  EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import sysconfig; print(sysconfig.get_python_version())"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE VER)
+  set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
+
+  EXECUTE_PROCESS(COMMAND echo ${PYTHON_INCLUDE_PATH}
+                  COMMAND sed -e "s|\(.*\)/include.*|\1|g"
+                  COMMAND tr -d '\n'
+                  OUTPUT_VARIABLE _PYTHON_ROOTDIR)
+  FIND_LIBRARY(PYTHON_LIBRARY
+               NAMES python${VER} python${VER}m
+               PATHS ${_PYTHON_ROOTDIR}/lib ${_PYTHON_ROOTDIR}/lib64
+               NO_DEFAULT_PATH)
+  MESSAGE(STATUS "python library path is ${PYTHON_LIBRARY}")
+endif()
+
 if(FALSE)
   find_package(PythonLibs REQUIRED)
 else(FALSE)
  message(STATUS "PYTHON and NUMPY search")
- foreach(VER 3.9 3.8 3.7 3.6 3.5 3.4 3.3 3.2 3.1 3.0 2.7 2.6)
+ foreach(VER 2.7 2.6)
   if (PYTHON_ROOTDIR)
    message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
    find_path(PYTHON_INCLUDE_PATH
@@ -78,6 +118,7 @@ else(FALSE)
                 PATHS ${PYTHON_ROOTDIR}/lib
                 NO_DEFAULT_PATH)
   endif(PYTHON_ROOTDIR)
+
   find_library(PYTHON_LIBRARY
     NAMES python${VER} python${VER}m
     PATHS
@@ -85,7 +126,7 @@ else(FALSE)
     PATH_SUFFIXES
       python${_CURRENT_VERSION}/config
   )
-  
+
   # numpy include path
   message(STATUS PYTHON_INCLUDE_PATH=${PYTHON_INCLUDE_PATH})
   if(PYTHON_INCLUDE_PATH)
@@ -107,7 +148,7 @@ else(FALSE)
     #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
   endif(PYTHON_INCLUDE_PATH)
 
-  if (PYTHON_INCLUDE_PATH AND PYTHON_LIBRARY AND NUMPY_INCLUDE_DIR)
+  if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
     set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
     break()
   endif()
@@ -186,8 +227,8 @@ if(WITH_CASA)
   set(PYTHON_LIBRARY -lpython${CASA_APP_PYTHON_VERSION})
 endif(WITH_CASA)
 
-# no need to link Python library as of 3.8
-if ((NOT APPLE) AND "${PYTHON_VERSION}" VERSION_GREATER 3.7.99)
+# no need to link Python library except macOS
+if ((NOT APPLE) AND (NOT PYTHON_LIBRARY))
   message(STATUS "PYTHON Version ${PYTHON_VERSION}: not linking libpython")
   if(LOG4CXX_FOUND)
       target_link_libraries(sakurapy sakura log4cxx ${CMAKE_THREAD_LIBS_INIT})
@@ -205,7 +246,7 @@ endif()
 if(BUILD_DOC)
 	find_package(Doxygen)
 	if (NOT DOXYGEN_FOUND)
-		message(FATAL_ERROR 
+		message(FATAL_ERROR
 			"Doxygen is needed to build the API documentation.")
 	endif(NOT DOXYGEN_FOUND)
 
@@ -224,7 +265,7 @@ if(BUILD_DOC)
 endif(BUILD_DOC)
 
 add_custom_target(copyTest
-	COMMAND cp -f "${PROJECT_SOURCE_DIR}/test.*" "${PROJECT_BINARY_DIR}" 
+	COMMAND cp -f "${PROJECT_SOURCE_DIR}/test.*" "${PROJECT_BINARY_DIR}"
 	DEPENDS "${PROJECT_SOURCE_DIR}/test.*"
 )
 
@@ -243,5 +284,5 @@ if(WITH_CASA)
   message(STATUS "edit dependency on Python")
   add_custom_command(TARGET sakurapy
                      POST_BUILD
-                     COMMAND ${PROJECT_SOURCE_DIR}/../bin/osx_python_to_casa.sh ) 
-endif(WITH_CASA)             
+                     COMMAND ${PROJECT_SOURCE_DIR}/../bin/osx_python_to_casa.sh )
+endif(WITH_CASA)
