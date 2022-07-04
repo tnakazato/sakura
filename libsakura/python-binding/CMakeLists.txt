@@ -4,19 +4,19 @@
 # Copyright (C) 2013-2022
 # Inter-University Research Institute Corporation, National Institutes of Natural Sciences
 # 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
-# 
+#
 # This file is part of Sakura.
-# 
+#
 # Sakura is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 3 of the License, or (at your
 # option) any later version.
-# 
+#
 # Sakura is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 # License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
@@ -42,7 +42,7 @@ if(APPLE)
                     COMMAND grep -E "^[0-9].[0-9]"
                     COMMAND sed -e "s%\(.*\)/.*$%\1%"
                     COMMAND tr -d '\n'
-                    OUTPUT_VARIABLE CASA_APP_PYTHON_VERSION)     
+                    OUTPUT_VARIABLE CASA_APP_PYTHON_VERSION)
     set(PYTHON_ROOTDIR ${PYTHON_FRAMEWORK_PATH}/Versions/${CASA_APP_PYTHON_VERSION})
     message(STATUS TN_DEBUG START)
     message(STATUS PYTHON_FRAMEWORK_PATH=${PYTHON_FRAMEWORK_PATH})
@@ -110,7 +110,7 @@ else(FALSE)
     PATH_SUFFIXES
       python${_CURRENT_VERSION}/config
   )
-  
+
   # numpy include path
   message(STATUS PYTHON_INCLUDE_PATH=${PYTHON_INCLUDE_PATH})
   if(PYTHON_INCLUDE_PATH)
@@ -230,7 +230,7 @@ endif()
 if(BUILD_DOC)
 	find_package(Doxygen)
 	if (NOT DOXYGEN_FOUND)
-		message(FATAL_ERROR 
+		message(FATAL_ERROR
 			"Doxygen is needed to build the API documentation.")
 	endif(NOT DOXYGEN_FOUND)
 
@@ -249,7 +249,7 @@ if(BUILD_DOC)
 endif(BUILD_DOC)
 
 add_custom_target(copyTest
-	COMMAND cp -f "${PROJECT_SOURCE_DIR}/test.*" "${PROJECT_BINARY_DIR}" 
+	COMMAND cp -f "${PROJECT_SOURCE_DIR}/test.*" "${PROJECT_BINARY_DIR}"
 	DEPENDS "${PROJECT_SOURCE_DIR}/test.*"
 )
 
@@ -268,5 +268,5 @@ if(WITH_CASA)
   message(STATUS "edit dependency on Python")
   add_custom_command(TARGET sakurapy
                      POST_BUILD
-                     COMMAND ${PROJECT_SOURCE_DIR}/../bin/osx_python_to_casa.sh ) 
-endif(WITH_CASA)             
+                     COMMAND ${PROJECT_SOURCE_DIR}/../bin/osx_python_to_casa.sh )
+endif(WITH_CASA)
