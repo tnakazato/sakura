@@ -115,15 +115,6 @@ else(FALSE)
                 NO_DEFAULT_PATH)
   endif(PYTHON_ROOTDIR)
 
-  if (PYTHON_INCLUDE_PATH)
-    execute_process(COMMAND echo ${PYTHON_INCLUDE_PATH}
-                    COMMAND sed -e "s|(.*)/include.*|\1|g"
-                    COMMAND tr -d '\n'
-                    OUTPUT_VARIABLE _PYTHON_ROOTDIR)
-    find_library(PYTHON_LIBRARY
-                 NAMES)
-  endif()
-
   find_library(PYTHON_LIBRARY
     NAMES python${VER} python${VER}m
     PATHS
