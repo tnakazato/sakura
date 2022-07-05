@@ -62,7 +62,7 @@ jobs:
     
     - name: Build test code
       working-directory: ${{github.workspace}}/libsakura/build/bintest
-      run: make testInit testNumericOperation testLsq
+      run: make testInit testNumericOperation testLsq testStatistics testCreateMaskNearEdge testBoolFilterCollection
     
     - name: Update rpath (macOS)
       if: ${{ matrix.os == 'macos-11' }}
@@ -78,5 +78,8 @@ jobs:
       run: |
         ./testInit
         ./testNumericOperation --gtest_filter="*LMFit*:*SolveSimultaneous*:-*Big*"
+        ./testStatistics --gtest_filter="*SortValidValuesDensely*"
+        ./testCreateMaskNearEdge --gtest_filter="-*Performance*"
+        ./testBoolFilterCollection --gtest_filter="-*Performance*"
         # ./testLsq
 
