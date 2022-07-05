@@ -60,10 +60,6 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/libsakura/build --config ${{env.BUILD_TYPE}}
     
-    - name: Build test code
-      working-directory: ${{github.workspace}}/libsakura/build/bintest
-      run: make testInit testNumericOperation testLsq testStatistics testCreateMaskNearEdge testBoolFilterCollection
-    
     - name: Update rpath (macOS)
       if: ${{ matrix.os == 'macos-11' }}
       working-directory: ${{github.workspace}}/libsakura/build/bintest
