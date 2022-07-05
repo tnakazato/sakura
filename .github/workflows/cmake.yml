@@ -70,6 +70,9 @@ jobs:
       run: |
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testNumericOperation
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testLsq
+        install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testStatistics
+        install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testBoolFilterCollection
+        install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testCreateMaskNearEdge
 
     - name: Test
       working-directory: ${{github.workspace}}/libsakura/build/bintest
@@ -77,6 +80,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         ./testInit
+        ./testCInterface
         ./testNumericOperation --gtest_filter="*LMFit*:*SolveSimultaneous*:-*Big*"
         ./testStatistics --gtest_filter="*SortValidValuesDensely*"
         ./testCreateMaskNearEdge --gtest_filter="-*Performance*"
