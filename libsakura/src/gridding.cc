@@ -3,19 +3,19 @@
  * Copyright (C) 2013-2022
  * Inter-University Research Institute Corporation, National Institutes of Natural Sciences
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
- * 
+ *
  * This file is part of Sakura.
- * 
+ *
  * Sakura is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * Sakura is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
@@ -357,7 +357,8 @@ inline void InternalGrid(size_t num_spectra, size_t start_spectrum,
 							integral_radius[ir] = static_cast<size_t>(sqrt(
 									Square(relative_location_x)
 											+ Square(relative_location_y)));
-							assert(integral_radius[ir] < num_convolution_table);
+                            assert(0 <= num_convolution_table);
+							assert(integral_radius[ir] < static_cast<size_t>(num_convolution_table));
 							++ir;
 						}
 					}
