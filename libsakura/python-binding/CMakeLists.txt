@@ -40,7 +40,7 @@ if(APPLE)
     set(PYTHON_FRAMEWORK_PATH ${CASA_APP_PATH}/Contents/Frameworks/Python.framework)
     execute_process(COMMAND ls -F ${PYTHON_FRAMEWORK_PATH}/Versions
                     COMMAND grep -E "^[0-9].[0-9]"
-                    COMMAND sed -e "s%\(.*\)/.*$%\1%"
+                    COMMAND sed -e "s|\\(.*\\)/.*$|\\1|"
                     COMMAND tr -d '\n'
                     OUTPUT_VARIABLE CASA_APP_PYTHON_VERSION)
     set(PYTHON_ROOTDIR ${PYTHON_FRAMEWORK_PATH}/Versions/${CASA_APP_PYTHON_VERSION})
@@ -82,7 +82,7 @@ if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
   set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
 
   EXECUTE_PROCESS(COMMAND echo ${PYTHON_INCLUDE_PATH}
-                  COMMAND sed -e "s|\(.*\)/include.*|\1|g"
+                  COMMAND sed -e "s|\\(.*\\)/include.*|\\1|g"
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE _PYTHON_ROOTDIR)
   FIND_LIBRARY(PYTHON_LIBRARY
