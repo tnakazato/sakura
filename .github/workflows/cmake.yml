@@ -16,6 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-11]
+        arch: [SSE4, NATIVE]
 
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
@@ -54,15 +55,11 @@ jobs:
       run: |
         cd ${{github.workspace}}/libsakura/
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_DOC=OFF
+        cmake .. -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_DOC=OFF -DSIMD_ARCH=${{ matrix.arch }}
 
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/libsakura/build --config ${{env.BUILD_TYPE}}
-    
-    - name: Build test code
-      working-directory: ${{github.workspace}}/libsakura/build/bintest
-      run: make testInit testNumericOperation testLsq
     
     - name: Update rpath (macOS)
       if: ${{ matrix.os == 'macos-11' }}
@@ -70,6 +67,9 @@ jobs:
       run: |
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testNumericOperation
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testLsq
+        install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testStatistics
+        install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testBoolFilterCollection
+        install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testCreateMaskNearEdge
 
     - name: Test
       working-directory: ${{github.workspace}}/libsakura/build/bintest
@@ -77,6 +77,10 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         ./testInit
+        ./testCInterface
         ./testNumericOperation --gtest_filter="*LMFit*:*SolveSimultaneous*:-*Big*"
+        ./testStatistics --gtest_filter="*SortValidValuesDensely*"
+        ./testCreateMaskNearEdge --gtest_filter="-*Performance*"
+        ./testBoolFilterCollection --gtest_filter="-*Performance*"
         # ./testLsq
 
