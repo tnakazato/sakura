@@ -16,6 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-11]
+        arch: [SSE4, NATIVE]
 
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
@@ -54,7 +55,7 @@ jobs:
       run: |
         cd ${{github.workspace}}/libsakura/
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBUILD_DOC=OFF
+        cmake .. -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_DOC=OFF -DSIMD_ARCH=${{ matrix.arch }}
 
     - name: Build
       # Build your program with the given configuration
