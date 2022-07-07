@@ -3,19 +3,19 @@
  * Copyright (C) 2013-2022
  * Inter-University Research Institute Corporation, National Institutes of Natural Sciences
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
- * 
+ *
  * This file is part of Sakura.
- * 
+ *
  * Sakura is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * Sakura is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
@@ -160,7 +160,7 @@ struct SquareShapeInitializer {
 
 		constexpr size_t kNumSquare = 10;
 		ASSERT_GT(num_data, kNumSquare);
-		ASSERT_EQ(0, num_data % kNumSquare);
+		ASSERT_EQ(0u, num_data % kNumSquare);
 		size_t const num_data_per_square = num_data / kNumSquare;
 
 		// outer square
@@ -392,7 +392,7 @@ struct CircularShapeInitializer {
 		constexpr size_t kNumAngle = 100;
 		double const deg2rad = 2.0 * const_pi / 360.0;
 		ASSERT_GT(num_data, kNumAngle);
-		ASSERT_EQ(0, num_data % kNumAngle);
+		ASSERT_EQ(0u, num_data % kNumAngle);
 		size_t const num_radius = num_data / kNumAngle;
 		SIMD_ALIGN
 		double angle[kNumAngle];
@@ -457,7 +457,7 @@ struct NumDataTwoInitializer {
 			double const y_in[], bool const mask_in[], double **x_out,
 			double **y_out, bool **mask_out, bool mask_expected[],
 			sakura_Status *status_expected) {
-		ASSERT_EQ(num_data, 2);
+		ASSERT_EQ(num_data, 2u);
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
 		(*x_out)[0] = -5.0;
@@ -475,7 +475,7 @@ struct NumDataThreeInitializer {
 			double const y_in[], bool const mask_in[], double **x_out,
 			double **y_out, bool **mask_out, bool mask_expected[],
 			sakura_Status *status_expected) {
-		ASSERT_EQ(num_data, 3);
+		ASSERT_EQ(num_data, 3u);
 		BaseInitializer::Initialize(num_data, fraction, x_in, y_in, mask_in,
 				x_out, y_out, mask_out, mask_expected, status_expected);
 		(*x_out)[0] = -5.0;
