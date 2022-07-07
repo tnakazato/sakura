@@ -25,8 +25,6 @@ cmake_minimum_required(VERSION 2.6)
 
 project(libsakura)
 
-set(CMAKE_MODULE_PATH ../cmake-modules CACHE STRING "List of directories to search for CMake modules")
-
 find_package(Threads)
 find_package(Eigen3 3.2.0 REQUIRED)
 find_package(Log4Cxx)
