@@ -23,6 +23,9 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+# List of directories to search for CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
+
 set(libsakura_VERSION_MAJOR 5)
 set(libsakura_VERSION_MINOR 1)
 
