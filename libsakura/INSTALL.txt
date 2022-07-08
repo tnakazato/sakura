@@ -88,7 +88,7 @@ ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/releases/latest_src
 
 Above command creates a libsakura directory in your working directory. 
 
-3.2 Setup a Google Test framework for Sakura
+3.2 Setup a Google Test framework for Sakura (optional)
 
 Sakura library uses Google Test framework (gtest) to run unit tests.
 
@@ -107,6 +107,7 @@ In this step, you run cmake to generate Sakura build system.
 
 You might typically have to customize the cmake command line to specify:
 - where you want Sakura to be installed
+- whether you want to enable the tests
 - and where the fftw3 and Eigen libraries are installed in your system
 
 In the simplest case where compliant versions of fftw3 and Eigen are automatically found by cmake, you simply have to run:
@@ -154,6 +155,10 @@ BUILD_DOC
   Enable/disable Doxygen generation of Sakura API HTML documentation
   To disable documentation generation, add to cmake command line: -D BUILD_DOC:BOOL=OFF
 
+ENABLE_TEST
+  Enable/disable tests. You need Google test framework as explained above.
+  To disable tests add to cmake command line: -D ENABLE_TEST:BOOL=OFF
+
 3.4 Build Sakura
 
 [build]$ make
@@ -168,6 +173,7 @@ You can skip this step if you specified -D BUILD_DOC:BOOL=OFF on cmake command l
 ----------
 
 This step allows you to verify that your installation of Sakura is working correctly.
+The ENABLE_TEST option must be ON.
 
 [build]$ make test
 
