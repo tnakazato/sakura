@@ -99,7 +99,7 @@ public:
 	 */
 	template<typename T>
 	static inline void *AlignedAllocateOrException(size_t size_in_bytes,
-			T **aligned_address) throw (std::bad_alloc) {
+			T **aligned_address) /* throw (std::bad_alloc) */ {
 		assert(aligned_address != nullptr);
 		size_t alignment = LIBSAKURA_SYMBOL(GetAlignment)();
 

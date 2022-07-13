@@ -55,15 +55,15 @@ public:
 
 class Mutex {
 public:
-	Mutex() throw (int);
+	Mutex() /* throw (int) */;
 	virtual ~Mutex();
-	void Lock() throw (int);
+	void Lock() /* throw (int) */;
 	/**
 	 * Returns true if this thread could lock.
 	 * Returns false if already locked.
 	 */
-	bool TryLock() throw (int);
-	void Unlock() throw (int);
+	bool TryLock() /* throw (int) */;
+	void Unlock() /* throw (int) */;
 private:
 	Mutex(Mutex const &other);
 	Mutex &operator =(Mutex const &other);
@@ -73,10 +73,10 @@ private:
 
 class Semaphore {
 public:
-	explicit Semaphore(unsigned initial = 0U) throw (int);
+	explicit Semaphore(unsigned initial = 0U) /* throw (int) */;
 	virtual ~Semaphore();
-	void Up(unsigned amount = 1U) throw (int);
-	void Down(unsigned amount = 1U) throw (int);
+	void Up(unsigned amount = 1U) /* throw (int) */;
+	void Down(unsigned amount = 1U) /* throw (int) */;
 private:
 	Semaphore(Semaphore const &other);
 	Semaphore &operator =(Semaphore const &other);
@@ -144,7 +144,7 @@ public:
 		Reset();
 	}
 
-	virtual void Put(T const &value) throw (FullException) {
+	virtual void Put(T const &value) /* throw (FullException) */ {
 		size_t new_tail = Wrap(tail_ + 1);
 		if (head_ == new_tail) {
 			throw FullException();
@@ -153,7 +153,7 @@ public:
 		tail_ = new_tail;
 	}
 
-	virtual T Get() throw (EmptyException) {
+	virtual T Get() /* throw (EmptyException) */ {
 		if (head_ == tail_) {
 			throw EmptyException();
 		}
@@ -200,35 +200,35 @@ private:
 
 class Broker {
 public:
-	Broker(bool (*producer)(void *context) throw (PCException),
-	void (*consumer)(void *context) throw (PCException));
+	Broker(bool (*producer)(void *context) /* throw (PCException) */,
+	void (*consumer)(void *context) /* throw (PCException) */ );
 	virtual ~Broker();
 	static void EnableNested();
 	static void DisableNested();
 	static void SetNestedState(bool nested);
 	static bool GetNestedState();
 
-	virtual void Run(void *context, unsigned do_ahead = 1) throw (PCException);
+	virtual void Run(void *context, unsigned do_ahead = 1) /* throw (PCException) */;
 	virtual void RunProducerAsMasterThread(void *context, unsigned do_ahead = 1)
-			throw (PCException);
+			/* throw (PCException) */;
 	virtual void RunConsumerAsMasterThread(void *context, unsigned do_ahead = 1)
-			throw (PCException);
-	virtual void RunSequential(void *context) throw (PCException);
+			/* throw (PCException) */;
+	virtual void RunSequential(void *context) /* throw (PCException) */;
 protected:
 	enum ThreadSpec {
 		kProdAsMaster, kConsAsMaster, kUnspecified
 	};
-	bool (*producer_)(void *context) throw (PCException);
-	void (*consumer_)(void *context) throw (PCException);
+	bool (*producer_)(void *context) /* throw (PCException) */;
+	void (*consumer_)(void *context) /* throw (PCException) */;
 	virtual void _Run(void *context, unsigned do_ahead, ThreadSpec thread_spec)
-			throw (PCException);
+			/* throw (PCException) */;
 };
 
 #if 1
 template<class Context, class Product>
 class Producer {
 public:
-	virtual Product Produce(Context *ctx) throw (PCException) = 0;
+	virtual Product Produce(Context *ctx) /* throw (PCException) */ = 0;
 	virtual ~Producer() {
 	}
 };
@@ -237,7 +237,7 @@ template<class Context, class Product>
 class Consumer {
 public:
 	virtual void Consume(Context *ctx, Product const*product)
-			throw (PCException) = 0;
+			/* throw (PCException) */ = 0;
 	virtual ~Consumer() {
 	}
 };
@@ -247,10 +247,10 @@ public:
 	virtual ~ProdCons() {
 	}
 
-	virtual void RunProducerAsMasterThread(void *context) throw (PCException) = 0;
-	virtual void RunConsumerAsMasterThread(void *context) throw (PCException) = 0;
-	virtual void Produce(void *context) throw (PCException) = 0;
-	virtual void Consume(void *context) throw (PCException) = 0;
+	virtual void RunProducerAsMasterThread(void *context) /* throw (PCException) */ = 0;
+	virtual void RunConsumerAsMasterThread(void *context) /* throw (PCException) */ = 0;
+	virtual void Produce(void *context) /* throw (PCException) */ = 0;
+	virtual void Consume(void *context) /* throw (PCException) */ = 0;
 
 	/**
 	 * @ref Produce() should  call this method to
