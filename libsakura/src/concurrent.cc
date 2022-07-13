@@ -48,7 +48,7 @@
 
 namespace concurrent {
 /* ======================= Mutex ======================= */
-Mutex::Mutex() throw (int) {
+Mutex::Mutex() /* throw (int) */ {
 	int result = pthread_mutex_init(&mutex_, NULL);
 	if (result != 0) {
 		LOG(result);
@@ -63,7 +63,7 @@ Mutex::~Mutex() {
 	}
 }
 
-void Mutex::Lock() throw (int) {
+void Mutex::Lock() /* throw (int) */ {
 	int result = pthread_mutex_lock(&mutex_);
 	if (result != 0) {
 		LOG(result);
@@ -71,7 +71,7 @@ void Mutex::Lock() throw (int) {
 	}
 }
 
-bool Mutex::TryLock() throw (int) {
+bool Mutex::TryLock() /* throw (int) */ {
 	int result = pthread_mutex_trylock(&mutex_);
 	if (result == 0) {
 		return true;
@@ -83,7 +83,7 @@ bool Mutex::TryLock() throw (int) {
 	throw result;
 }
 
-void Mutex::Unlock() throw (int) {
+void Mutex::Unlock() /* throw (int) */ {
 	int result = pthread_mutex_unlock(&mutex_);
 	if (result != 0) {
 		LOG(result);
@@ -92,7 +92,7 @@ void Mutex::Unlock() throw (int) {
 }
 
 /* ======================= Semaphore ======================= */
-Semaphore::Semaphore(unsigned initial) throw (int) {
+Semaphore::Semaphore(unsigned initial) /* throw (int) */ {
 	//mutex_ = PTHREAD_MUTEX_INITIALIZER;
 	//condition_ = PTHREAD_COND_INITIALIZER;
 	semaphore_ = initial;
@@ -117,7 +117,7 @@ Semaphore::~Semaphore() {
 	result = pthread_cond_destroy(&condition_);
 }
 
-void Semaphore::Up(unsigned amount) throw (int) {
+void Semaphore::Up(unsigned amount) /* throw (int) */ {
 	assert(0 < amount && amount <= UINT_MAX - semaphore_);
 	int result = pthread_mutex_lock(&mutex_);
 	if (result == 0) {
@@ -139,7 +139,7 @@ void Semaphore::Up(unsigned amount) throw (int) {
 	throw result;
 }
 
-void Semaphore::Down(unsigned amount) throw (int) {
+void Semaphore::Down(unsigned amount) /* throw (int) */ {
 	assert(0 < amount);
 	int result = pthread_mutex_lock(&mutex_);
 	if (result == 0) {
@@ -170,8 +170,8 @@ void Semaphore::Down(unsigned amount) throw (int) {
 }
 
 /* ======================= Broker ======================= */
-Broker::Broker(bool (*producer)(void *context) throw (PCException),
-void (*consumer)(void *context) throw (PCException)) {
+Broker::Broker(bool (*producer)(void *context) /* throw (PCException) */ ,
+void (*consumer)(void *context) /* throw (PCException) */ ) {
 	this->producer_ = producer;
 	this->consumer_ = consumer;
 }
@@ -206,21 +206,21 @@ bool Broker::GetNestedState() {
 }
 
 void Broker::RunProducerAsMasterThread(void *context, unsigned do_ahead)
-		throw (PCException) {
+		/* throw (PCException) */ {
 	_Run(context, do_ahead, kProdAsMaster);
 }
 
 void Broker::RunConsumerAsMasterThread(void *context, unsigned do_ahead)
-		throw (PCException) {
+		/* throw (PCException) */ {
 	_Run(context, do_ahead, kConsAsMaster);
 }
 
-void Broker::Run(void *context, unsigned do_ahead) throw (PCException) {
+void Broker::Run(void *context, unsigned do_ahead) /* throw (PCException) */ {
 	_Run(context, do_ahead, kUnspecified);
 }
 
 void Broker::_Run(void *context, unsigned do_ahead, ThreadSpec thread_spec)
-		throw (PCException) {
+		/* throw (PCException) */ {
 	assert(do_ahead > 0);
 #if defined(_OPENMP)
 	PCException const *prod_ex = NULL;
@@ -313,7 +313,7 @@ void Broker::_Run(void *context, unsigned do_ahead, ThreadSpec thread_spec)
 #endif
 }
 
-void Broker::RunSequential(void *context) throw (PCException) {
+void Broker::RunSequential(void *context) /* throw (PCException) */ {
 	for (;;) {
 		bool produced = producer_(context);
 		if (!produced) {
