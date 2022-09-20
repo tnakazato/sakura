@@ -440,4 +440,74 @@ typedef LIBSAKURA_SYMBOL(SimdPacketMMX) LIBSAKURA_SYMBOL(SimdPacketNative);
 
 #endif /* defined(__MMX__) || defined(__x86_64__) */
 
+#if defined(__ARM_NEON)
+/* for ARM64 chips (like Apple M1) */
+
+#include "sse2neon.h"
+
+union LIBSAKURA_SYMBOL(SimdPacketSSEForNEON) {
+	enum {
+		kSize = sizeof(__m128 ),
+		kNumFloat = kSize / sizeof(float),
+		kNumDouble = kSize / sizeof(double),
+		kNumInt32 = kSize / sizeof(int32_t),
+		kNumInt64 = kSize / sizeof(int64_t),
+	};
+	typedef __m128 RawFloat;
+	typedef __m128d RawDouble;
+	typedef __m128i RawInt32;
+	typedef __m128i RawInt64;
+	RawInt64 raw_int64;
+	RawFloat raw_float;
+	RawDouble raw_double;
+	RawInt32 raw_int32;
+
+	inline void set1(double value) {
+		raw_double = _mm_set1_pd(value);
+	}
+	inline void set1(float value) {
+		raw_float = _mm_set1_ps(value);
+	}
+	inline void set1(int8_t value) {
+		raw_int32 = _mm_set1_epi8(value);
+	}
+	inline void set1(int16_t value) {
+		raw_int32 = _mm_set1_epi16(value);
+	}
+	inline void set1(int32_t value) {
+		raw_int32 = _mm_set1_epi32(value);
+	}
+	inline void set1(int64_t value) {
+		raw_int64 = _mm_set1_epi64x(value);
+	}
+
+	typedef struct {
+		float v[kNumFloat];
+	} VFloat;
+	typedef struct {
+		double v[kNumDouble];
+	} VDouble;
+	typedef struct {
+		int32_t v[kNumInt32];
+	} VInt32;
+	typedef struct {
+		int64_t v[kNumInt64];
+	} VInt64;
+	VFloat v_float;
+	VDouble v_double;
+	VInt32 v_int32;
+	VInt64 v_int64;
+
+};
+
+typedef struct {
+	typedef LIBSAKURA_SYMBOL(SimdPacketSSEForNEON) PacketType;
+}LIBSAKURA_SYMBOL(SimdArchNEON);
+typedef LIBSAKURA_SYMBOL(SimdArchNEON) LIBSAKURA_SYMBOL(SimdArchNative);
+
+typedef LIBSAKURA_SYMBOL(SimdPacketSSEForNEON) LIBSAKURA_SYMBOL(SimdPacketNative);
+#define LIBSAKURA_PACKET_NATIVE_DEFINED 1
+
+#endif /* __ARM_NEON */
+
 #endif /* LIBSAKURA_LIBSAKURA_PACKED_TYPE_H_ */
