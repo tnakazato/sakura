@@ -26,7 +26,7 @@ Please refer to the Installation Procedure section below for details.
 Supported Platforms
 -------------------
 
-Sakura should work on any platform fulfilling the prerequisites listed in the Installation Procedure. 
+Sakura should work on any platform fulfilling the prerequisites listed in the Installation Procedure.
 
 Tested Platforms
 ----------------
@@ -54,7 +54,7 @@ Sakura installation procedure is broken into 5 steps:
 
 1.1 Prerequisites common to Linux and Apple OS X Operating Systems
 1.1.1 Prerequisites coming from dependencies of the build system on software tools
-* cmake 2.8 or higher
+* cmake 2.8.12 or higher
 * doxygen 1.8 or higher
 * gtest 1.7 or higher
 
@@ -63,7 +63,7 @@ Mandatory prerequisites:
 * eigen 3.2 or higher
 * fftw 3.3.2 or higher. If you build fftw from source, use the configure options "--enable-shared" to build libfftw as a shared library.
 Optional prerequisites:
-* lib4cxx. This library adds a logging feature to Sakura, allowing messages from Sakura to be logged at run-time. 
+* lib4cxx. This library adds a logging feature to Sakura, allowing messages from Sakura to be logged at run-time.
 
 1.2 Linux specific Prerequisites
 * C++ compiler with C++11 support (gcc/g++ 4.8 or higher or clang/clang++ 3.5 or higher). Note: default gcc/g++ on RHEL5 and some versions of RHEL6 is not compliant with this requirement, so you must install a compliant compiler to build Sakura on these operating systems.
@@ -86,7 +86,7 @@ ftp://anonymous:ftp@alma-dl.mtk.nao.ac.jp/sakura/releases/latest_src
 
 [work]$ tar -xvzf libsakura-src-X.Y.Z.tar.gz
 
-Above command creates a libsakura directory in your working directory. 
+Above command creates a libsakura directory in your working directory.
 
 3.2 Setup a Google Test framework for Sakura (optional)
 
@@ -96,8 +96,8 @@ Sakura library uses Google Test framework (gtest) to run unit tests.
 
 [work]$ unzip gtest-1.7.0.zip -d libsakura
 
-3.2.2 Create in the libsakura directory a symbolic link named gtest, pointing to the expanded gtest bundle:  
-   
+3.2.2 Create in the libsakura directory a symbolic link named gtest, pointing to the expanded gtest bundle:
+
 [work]$ cd libsakura
 [libsakura]$ ln -s gtest-1.7.0 gtest
 
@@ -122,10 +122,10 @@ clang: (especially for Mac users)
 
 A typical customized cmake command would look like:
 [build]$ cmake -D CMAKE_INSTALL_PREFIX=/path/to/sakura/installation_dir -D FFTW3_ROOT_DIR=/path/to/my_system/fftw3 -D EIGEN3_INCLUDE_DIR=/path/to/my_system/eigen ..
- 
+
 cmake options you may want to customize:
 CMAKE_INSTALL_PREFIX
-  Specifies the directory where to install Sakura. 
+  Specifies the directory where to install Sakura.
   Add to cmake command line e.g: -D CMAKE_INSTALL_PREFIX=/usr/local/lib/sakura
 
 FFTW3_ROOT_DIR
@@ -146,8 +146,8 @@ CMAKE_BUILD_TYPE
 SIMD_ARCH
   Specify an optimization option. Allowed values:
   * SSE4   Most conservative optimization
-  * AVX    Use AVX instruction set 
-  * AVX2   Use AVX2 instruction set 
+  * AVX    Use AVX instruction set
+  * AVX2   Use AVX2 instruction set
   * NATIVE Use appropriate instruction set on your machine
   Add to cmake command line e.g: -D SIMD_ARCH=SSE4
 
@@ -166,7 +166,7 @@ ENABLE_TEST
 3.5 Generate Sakura API HTML documentation
 
 You can skip this step if you specified -D BUILD_DOC:BOOL=OFF on cmake command line.
- 
+
 [build]$ make apidoc
 
 4. Testing
@@ -190,7 +190,7 @@ If you need to install Sakura library in a directory such as /usr/local which re
 
 
 
- 
+
 
 
 

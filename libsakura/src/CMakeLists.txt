@@ -4,24 +4,24 @@
 # Copyright (C) 2013-2022
 # Inter-University Research Institute Corporation, National Institutes of Natural Sciences
 # 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
-# 
+#
 # This file is part of Sakura.
-# 
+#
 # Sakura is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 3 of the License, or (at your
 # option) any later version.
-# 
+#
 # Sakura is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 # License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
 #
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(libsakura)
 
@@ -81,8 +81,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "${UNROLL_OPTION} -O3 -DNDEBUG ${VECT_VERB} ${PROF_M
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g ${UNROLL_OPTION} -O3 -DNDEBUG ${VECT_VERB} ${PROF_MODE}")
 message("CMAKE_CXX_FLAGS_RELEASE was set to ${CMAKE_CXX_FLAGS_RELEASE}")
 
-set(SOURCES baseline.cc bit_operation.cc bool_filter_collection.cc 
-	convolution.cc gridding.cc interpolation.cc 
+set(SOURCES baseline.cc bit_operation.cc bool_filter_collection.cc
+	convolution.cc gridding.cc interpolation.cc
 	normalization.cc numeric_operation.cc statistics.cc fft.cc
 	gen_util.cc concurrent.cc mask_edge.cc
 	)
@@ -94,7 +94,7 @@ configure_file (
 if(BUILD_DOC)
 	find_package(Doxygen)
 	if (NOT DOXYGEN_FOUND)
-		message(FATAL_ERROR 
+		message(FATAL_ERROR
 			"Doxygen is needed to build the API documentation.")
 	endif(NOT DOXYGEN_FOUND)
 	if (${DOXYGEN_VERSION} MATCHES "^1\\.6.*$")

@@ -4,24 +4,24 @@
 # Copyright (C) 2013-2022
 # Inter-University Research Institute Corporation, National Institutes of Natural Sciences
 # 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
-# 
+#
 # This file is part of Sakura.
-# 
+#
 # Sakura is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the
 # Free Software Foundation, either version 3 of the License, or (at your
 # option) any later version.
-# 
+#
 # Sakura is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 # FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 # License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public License
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
 #
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.12)
 find_package(Threads)
 find_package(OpenMP)
 find_package(FFTW3)
@@ -32,7 +32,7 @@ include(SetArchFlags)
 message("GTEST_INCLUDE_DIRS was set to ${GTEST_INCLUDE_DIRS}")
 message("GTEST_LIBRARIES was set to ${GTEST_LIBRARIES}")
 
-# Embed into test executables directory paths implicitely searched by the C++ compiler 
+# Embed into test executables directory paths implicitely searched by the C++ compiler
 foreach(dir ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
   set(CMAKE_C_LINK_FLAGS   "${CMAKE_C_LINK_FLAGS} ${CMAKE_EXECUTABLE_RUNTIME_C_FLAG}${dir}")
   set(CMAKE_CXX_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} ${CMAKE_EXECUTABLE_RUNTIME_CXX_FLAG}${dir}")
@@ -139,7 +139,7 @@ add_custom_target(testCreateMaskNearEdgeRun    COMMAND ./testCreateMaskNearEdge 
 # 1 Low-level tests (prerequisistes to other tests, initialization, log, memory management)
 # 2 Stable tests (debugging done, no fail)
 # 3 Short tests
-# 4 New stable tests 
+# 4 New stable tests
 add_custom_target(test
 	COMMAND ./testInit
 	COMMAND ./testStatistics

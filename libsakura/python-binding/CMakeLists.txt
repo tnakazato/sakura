@@ -21,7 +21,7 @@
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
 #
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.12)
 find_package(Threads)
 find_package(OpenMP)
 find_package(Eigen3 REQUIRED)
