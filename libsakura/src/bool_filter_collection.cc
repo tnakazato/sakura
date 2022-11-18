@@ -3,19 +3,19 @@
  * Copyright (C) 2013-2022
  * Inter-University Research Institute Corporation, National Institutes of Natural Sciences
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
- * 
+ *
  * This file is part of Sakura.
- * 
+ *
  * Sakura is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * Sakura is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
@@ -903,7 +903,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		data = &data[end];
 		result = &result[end];
 		num_data -= end;
-		auto operation_for_element = [kZero](decltype(data[0]) data_value) {
+		auto operation_for_element = [](decltype(data[0]) data_value) {
 			return (data_value != kZero);
 		};
 		return DoElementFuncBoolFilter(operation_for_element, num_data, data, result);
@@ -917,7 +917,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint8ToBool)(
 		size_t num_data, uint8_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint8_t kZero = 0;
-	auto operation_for_element = [kZero](decltype(data[0]) data_value) {
+	auto operation_for_element = [](decltype(data[0]) data_value) {
 		return (data_value != kZero);
 	};
 	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
@@ -929,7 +929,7 @@ extern "C" LIBSAKURA_SYMBOL(Status) LIBSAKURA_SYMBOL(Uint32ToBool)(
 		size_t num_data, uint32_t const data[/*num_data*/],
 		bool result[/*num_data*/]) noexcept {
 	constexpr uint8_t kZero = 0;
-	auto operation_for_element = [kZero](decltype(data[0]) data_value) {
+	auto operation_for_element = [](decltype(data[0]) data_value) {
 		return (data_value != kZero);
 	};
 	return DoElementFuncBoolFilter(operation_for_element, num_data, data,
