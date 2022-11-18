@@ -1618,10 +1618,9 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	for (size_t i = 0; i < tc.param.size(); ++i) {
 		param = tc.param[i];
 		name = param.name;
-		PDType const dtype = param.data_type;
 		default_param = default_tc.param[i];
 		assert(name == default_param.name);
-		assert(dtype == default_param.data_type);
+		assert(param.data_type == default_param.data_type);
 		vtype = param.value_type;
 		if (vtype == PVType_kNULL) {
 			if ((tc.api_name == ApiName_kCreateLSQFitContextPolynomialFloat)
@@ -1657,9 +1656,9 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 								== ApiName_kCreateLSQFitContextCubicSplineFloat)
 						|| (tc.api_name
 								== ApiName_kCreateLSQFitContextSinusoidFloat)) {
-					assert(dtype == PDType_kContextPointerPointer);
+					assert(param.data_type == PDType_kContextPointerPointer);
 				} else {
-					assert(dtype == PDType_kContextPointer);
+					assert(param.data_type == PDType_kContextPointer);
 					for (size_t j = 0; j < LsqFuncTypeStr.size(); ++j) {
 						if (desc_has(LsqFuncTypeStr[j])) {
 							ps.ctxt[name] = ps.ctxt[LsqFuncTypeStr[j]];
