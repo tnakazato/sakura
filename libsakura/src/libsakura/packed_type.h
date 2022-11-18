@@ -3,19 +3,19 @@
  * Copyright (C) 2013-2022
  * Inter-University Research Institute Corporation, National Institutes of Natural Sciences
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
- * 
+ *
  * This file is part of Sakura.
- * 
+ *
  * Sakura is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * Sakura is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
@@ -187,7 +187,7 @@ union LIBSAKURA_SYMBOL(SimdPacketMMX) {
 /**
  * SIMDアーキテクチャーを識別する型(MMX)
  */
-typedef struct {
+typedef struct LIBSAKURA_SYMBOL(SimdArchMMX) {
 	// 64bit
 	/**
 	 * @~japanese
@@ -195,7 +195,7 @@ typedef struct {
 	 * このアーキテクチャーにおけるPacket型
 	 */
 	typedef LIBSAKURA_SYMBOL(SimdPacketMMX) PacketType;
-}LIBSAKURA_SYMBOL(SimdArchMMX);
+} LIBSAKURA_SYMBOL(SimdArchMMX);
 
 #if defined(__SSE4_2__)
 
@@ -278,7 +278,7 @@ union LIBSAKURA_SYMBOL(SimdPacketSSE) {
 /**
  * SIMDアーキテクチャーを識別する型(SSE)
  */
-typedef struct {
+typedef struct LIBSAKURA_SYMBOL(SimdArchSSE) {
 	// 128bit
 	/**
 	 * @~japanese
@@ -292,7 +292,7 @@ typedef struct {
 	 * 前の世代のSIMDアーキテクチャーの型
 	 */
 	typedef LIBSAKURA_SYMBOL(SimdArchMMX) PriorArch;
-}LIBSAKURA_SYMBOL(SimdArchSSE);
+} LIBSAKURA_SYMBOL(SimdArchSSE);
 
 #if defined(__AVX__)
 
@@ -376,7 +376,7 @@ union LIBSAKURA_SYMBOL(SimdPacketAVX) {
 /**
  * SIMDアーキテクチャーを識別する型(AVX)
  */
-typedef struct {
+typedef struct LIBSAKURA_SYMBOL(SimdArchAVX) {
 	// 256bit
 	/**
 	 * @~japanese
@@ -390,7 +390,7 @@ typedef struct {
 	 * 前の世代のSIMDアーキテクチャーの型
 	 */
 	typedef LIBSAKURA_SYMBOL(SimdArchSSE) PriorArch;
-}LIBSAKURA_SYMBOL(SimdArchAVX);
+} LIBSAKURA_SYMBOL(SimdArchAVX);
 #endif /* defined(__AVX__) */
 
 #if defined(__AVX__)

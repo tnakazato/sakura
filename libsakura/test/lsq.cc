@@ -3,19 +3,19 @@
  * Copyright (C) 2013-2022
  * Inter-University Research Institute Corporation, National Institutes of Natural Sciences
  * 2-21-1, Osawa, Mitaka, Tokyo, 181-8588, Japan.
- * 
+ *
  * This file is part of Sakura.
- * 
+ *
  * Sakura is free software: you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
- * 
+ *
  * Sakura is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
  * License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
  * @SAKURA_LICENSE_HEADER_END@
@@ -1435,7 +1435,6 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	PAttr param;
 	PAttr default_param;
 	string name;
-	PDType dtype;
 	PVType vtype;
 	if (tc.category == TCat_kPF) {
 		if (tc.api_name == ApiName_kLSQFitPolynomialFloat) {
@@ -1619,10 +1618,9 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 	for (size_t i = 0; i < tc.param.size(); ++i) {
 		param = tc.param[i];
 		name = param.name;
-		dtype = param.data_type;
 		default_param = default_tc.param[i];
 		assert(name == default_param.name);
-		assert(dtype == default_param.data_type);
+		assert(param.data_type == default_param.data_type);
 		vtype = param.value_type;
 		if (vtype == PVType_kNULL) {
 			if ((tc.api_name == ApiName_kCreateLSQFitContextPolynomialFloat)
@@ -1658,9 +1656,9 @@ void Prologue(TestCase &tc, TestCase const &default_tc, ParamSet &ps) {
 								== ApiName_kCreateLSQFitContextCubicSplineFloat)
 						|| (tc.api_name
 								== ApiName_kCreateLSQFitContextSinusoidFloat)) {
-					assert(dtype == PDType_kContextPointerPointer);
+					assert(param.data_type == PDType_kContextPointerPointer);
 				} else {
-					assert(dtype == PDType_kContextPointer);
+					assert(param.data_type == PDType_kContextPointer);
 					for (size_t j = 0; j < LsqFuncTypeStr.size(); ++j) {
 						if (desc_has(LsqFuncTypeStr[j])) {
 							ps.ctxt[name] = ps.ctxt[LsqFuncTypeStr[j]];
