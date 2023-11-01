@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload entire repository
-          path: '${{github.workspace}}/libsakura/build/bin/docs/'
+          path: '${{github.workspace}}/libsakura/build/bin/docs/api/html'
 
       - name: Deploy to GitHub Pages
         id: deployment
