@@ -81,6 +81,11 @@
 # undef LIBSAKURA_ALIGNMENT
 # define LIBSAKURA_ALIGNMENT (256u/* avx 256bits */ / 8u)
 #endif
+#if defined(__ARM_NEON)
+# undef LIBSAKURA_ALIGNMENT
+# define LIBSAKURA_ALIGNMENT (128u/* neon 256bits */ / 8u)
+#endif
+
 
 #if defined(__cplusplus)
 
