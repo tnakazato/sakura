@@ -51,14 +51,26 @@ endif(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 option(SCALAR "Disable auto-vectorization by compiler" OFF)
 option(BUILD_DOC "Enable/disable Doxygen generation of Sakura API HTML documentation" ON)
 
-set(SIMD_ARCH "NATIVE" CACHE STRING "SIMD architecture: one of NATIVE SSE4 AVX AVX2" )
+set(SIMD_ARCH "NATIVE" CACHE STRING "SIMD architecture: one of NATIVE SSE4 AVX AVX2 ARM" )
+
+if(SIMD_ARCH STREQUAL "NATIVE")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+elseif(SIMD_ARCH STREQUAL "SSE4")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
+elseif(SIMD_ARCH STREQUAL "AVX")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
+elseif(SIMD_ARCH STREQUAL "AVX2")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+elseif(SIMD_ARCH STREQUAL "ARM")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv8-a")
+endif()
 
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -Wno-deprecated-register -fPIC -pipe")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-register -fPIC -pipe")
 
 message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
 
