@@ -51,7 +51,8 @@ endif(LOG4CXX_FOUND AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 option(SCALAR "Disable auto-vectorization by compiler" OFF)
 option(BUILD_DOC "Enable/disable Doxygen generation of Sakura API HTML documentation" ON)
 
-set(SIMD_ARCH "NATIVE" CACHE STRING "SIMD architecture: one of NATIVE SSE4 AVX AVX2" )
+set(SIMD_ARCH "NATIVE" CACHE STRING "SIMD architecture: one of NATIVE SSE4 AVX AVX2 ARM" )
+
 
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 
