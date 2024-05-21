@@ -36,7 +36,7 @@ jobs:
       run: sudo apt-get install -y libfftw3-bin libfftw3-dev libeigen3-dev
 
     - name: Install dependencies (macOS)
-      if: ${{ matrix.os == 'macos-11' }}
+      if: ${{ matrix.os == 'macos-12' }}
       run: brew install fftw eigen
 
     - name: Install numpy
@@ -62,7 +62,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/libsakura/build --config ${{env.BUILD_TYPE}}
     
     - name: Update rpath (macOS)
-      if: ${{ matrix.os == 'macos-11' }}
+      if: ${{ matrix.os == 'macos-12' }}
       working-directory: ${{github.workspace}}/libsakura/build/bintest
       run: |
         install_name_tool -change "@rpath/libtestutil.dylib" "libtestutil.dylib" testNumericOperation
