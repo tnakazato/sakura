@@ -171,7 +171,7 @@ message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -m64 -Wall -fPIC")
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ -arch x86_64 -Wall")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++ -Wall")
 endif(APPLE)
 message("default CMAKE_CXX_FLAGS_RELEASE is ${CMAKE_CXX_FLAGS_RELEASE}")
 message("default CMAKE_CXX_FLAGS_DEBUG is ${CMAKE_CXX_FLAGS_DEBUG}")
