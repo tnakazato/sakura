@@ -60,7 +60,7 @@ jobs:
       run: |
         cd ${{github.workspace}}/libsakura/
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_DOC=OFF -DSIMD_ARCH=${{ matrix.arch }} -DOSX_ARCHITECTURES=${{ matrix.os == 'macos-14' && 'arm64' || 'x86_64' }}
+        cmake .. -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_DOC=OFF -DSIMD_ARCH=${{ matrix.arch }}
 
     - name: Build
       # Build your program with the given configuration
