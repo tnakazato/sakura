@@ -92,69 +92,6 @@ if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
   MESSAGE(STATUS "python library path is ${PYTHON_LIBRARY}")
 endif()
 
-if(FALSE)
-  find_package(PythonLibs REQUIRED)
-else(FALSE)
- message(STATUS "PYTHON and NUMPY search")
- foreach(VER 2.7 2.6)
-  if (PYTHON_ROOTDIR)
-   message("PYTHON_ROOTDIR is specified: ${PYTHON_ROOTDIR}")
-   find_path(PYTHON_INCLUDE_PATH
-             NAMES Python.h
-             PATHS ${PYTHON_ROOTDIR}/include
-             PATH_SUFFIXES python${VER} python${VER}m
-             NO_DEFAULT_PATH)
-  endif(PYTHON_ROOTDIR)
-  find_path(PYTHON_INCLUDE_PATH
-    NAMES Python.h
-    PATHS
-      /usr/include /usr/local/include /opt/share/casa/current/release/include
-    PATH_SUFFIXES
-      python${VER} python${VER}m
-  )
-  if(PYTHON_ROOTDIR)
-   find_library(PYTHON_LIBRARY
-                NAMES python${VER} python${VER}m
-                PATHS ${PYTHON_ROOTDIR}/lib
-                NO_DEFAULT_PATH)
-  endif(PYTHON_ROOTDIR)
-
-  find_library(PYTHON_LIBRARY
-    NAMES python${VER} python${VER}m
-    PATHS
-      /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib /opt/share/casa/current/release/lib
-    PATH_SUFFIXES
-      python${_CURRENT_VERSION}/config
-  )
-
-  # numpy include path
-  message(STATUS PYTHON_INCLUDE_PATH=${PYTHON_INCLUDE_PATH})
-  if(PYTHON_INCLUDE_PATH)
-    #message("PYTHON_INCLUDE_PATH is ${PYTHON_INCLUDE_PATH}")
-    #message("PYTHON_LIBRARY is ${PYTHON_LIBRARY}")
-    execute_process(COMMAND dirname ${PYTHON_LIBRARY}
-                    COMMAND tr -d '\n'
-                    OUTPUT_VARIABLE PYTHON_LIBRARY_DIR)
-    #message("PYTHON_LIBRARY_DIR is ${PYTHON_LIBRARY_DIR}")
-    find_path(NUMPY_INCLUDE_DIR
-              NAMES numpy/arrayobject.h
-              PATHS ${PYTHON_LIBRARY_DIR}/python${VER}/site-packages/numpy/core/include
-                    ${PYTHON_LIBRARY_DIR}/python${VER}/dist-packages/numpy/core/include
-              NO_DEFAULT_PATH)
-    #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
-    find_path(NUMPY_INCLUDE_DIR
-              NAMES numpy/arrayobject.h
-              PATH_PREFIXES python${VER})
-    #message("NUMPY_INCLUDE_DIR is ${NUMPY_INCLUDE_DIR}")
-  endif(PYTHON_INCLUDE_PATH)
-
-  if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
-    set(PYTHON_VERSION "${VER}" CACHE STRING "Python version")
-    break()
-  endif()
- endforeach(VER)
-endif(FALSE)
-
 message(STATUS "PYTHON_VERSION = ${PYTHON_VERSION}")
 
 if(EIGEN3_FOUND)
