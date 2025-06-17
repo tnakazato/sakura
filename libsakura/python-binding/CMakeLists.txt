@@ -63,8 +63,8 @@ if(NOT PYTHON_INCLUDE_PATH)
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE _PYTHON_INCLUDE_PATH)
   set(PYTHON_INCLUDE_PATH ${_PYTHON_INCLUDE_PATH} CACHE PATH "Python include path")
-  MESSAGE(STATUS "python3 include path ${PYTHON_INCLUDE_PATH}")
 endif()
+MESSAGE(STATUS "python3 include path ${PYTHON_INCLUDE_PATH}")
 
 if (NOT NUMPY_INCLUDE_DIR)
   # first try python3 to get include path
@@ -72,8 +72,8 @@ if (NOT NUMPY_INCLUDE_DIR)
                   COMMAND tr -d '\n'
                   OUTPUT_VARIABLE _NUMPY_INCLUDE_DIR)
   set(NUMPY_INCLUDE_DIR ${_NUMPY_INCLUDE_DIR} CACHE PATH "Numpy include path")
-  MESSAGE(STATUS "numpy include path ${NUMPY_INCLUDE_DIR}")
 endif()
+MESSAGE(STATUS "numpy include path ${NUMPY_INCLUDE_DIR}")
 
 if (PYTHON_INCLUDE_PATH AND NUMPY_INCLUDE_DIR)
   EXECUTE_PROCESS(COMMAND ${PYTHON3_EXEC} -c "import sysconfig; print(sysconfig.get_python_version())"
