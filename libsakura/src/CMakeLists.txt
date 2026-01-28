@@ -59,7 +59,7 @@ message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 set(VECT_VERB "" CACHE STRING "vectorization verbose compile option, such as -fopt-info-vec-optimized -fopt-info-vec-missed -ftree-vectorizer-verbose=2")
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall -Wno-deprecated-register -fPIC -pipe")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-register -fPIC -pipe")
 
 message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
 

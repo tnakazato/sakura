@@ -59,7 +59,7 @@ enable_testing()
 
 set(PROF_MODE "" CACHE STRING "-fprofile-generate or -fprofile-use -fprofile-correction for GCC")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -Wall ${PROF_MODE} -pipe")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall ${PROF_MODE} -pipe")
 set_cxx_flags_from_arch(${SIMD_ARCH})
 message("CMAKE_CXX_FLAGS is ${CMAKE_CXX_FLAGS}")
 
