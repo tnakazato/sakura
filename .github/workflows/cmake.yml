@@ -62,7 +62,7 @@ jobs:
       run: |
         cd ${{github.workspace}}/libsakura/
         mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_DOC=OFF -DSIMD_ARCH=${{ matrix.arch }} -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_INCLUDE_PATH=/opt/homebrew/opt/eigen@3
+        cmake .. -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DBUILD_DOC=OFF -DSIMD_ARCH=${{ matrix.arch }} -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_PREFIX_PATH=/opt/homebrew/opt/eigen@3
 
     - name: Build
       # Build your program with the given configuration
