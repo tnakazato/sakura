@@ -21,11 +21,10 @@
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
 #
-cmake_minimum_required(VERSION 2.8.12)
 find_package(Threads)
 find_package(OpenMP)
 find_package(FFTW3)
-find_package(Log4Cxx)
+find_package(LOG4CXX)
 find_library(pthread pthread)
 include(SetArchFlags)
 
