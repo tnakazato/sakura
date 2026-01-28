@@ -21,13 +21,11 @@
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
 #
-cmake_minimum_required(VERSION 2.8.12)
-
-project(libsakura)
+project(libsakura VERSION 5.3.2)
 
 find_package(Threads)
-find_package(Eigen3 3.2.0 REQUIRED)
-find_package(Log4Cxx)
+find_package(EIGEN3 3.2.0 REQUIRED)
+find_package(LOG4CXX)
 find_package(FFTW3 3.3.2 REQUIRED)
 include(SetArchFlags)
 
@@ -134,7 +132,7 @@ set(public_headers
 	)
 
 set_target_properties(sakura PROPERTIES
-	VERSION ${libsakura_VERSION_MAJOR}.${libsakura_VERSION_MINOR}
+	VERSION ${libsakura_VERSION}
 	SOVERSION ${libsakura_VERSION_MAJOR}
 	PUBLIC_HEADER "${public_headers}"
 )

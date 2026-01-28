@@ -21,11 +21,9 @@
 # @SAKURA_LICENSE_HEADER_END@
 #
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.12)
 
 project(sakura)
-set(libsakura_VERSION_MAJOR 5)
-set(libsakura_VERSION_MINOR 2)
 
 # List of directories to search for CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")

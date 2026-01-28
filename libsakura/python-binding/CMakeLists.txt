@@ -21,11 +21,10 @@
 # along with Sakura.  If not, see <http://www.gnu.org/licenses/>.
 # @SAKURA_LICENSE_HEADER_END@
 #
-cmake_minimum_required(VERSION 2.8.12)
 find_package(Threads)
 find_package(OpenMP)
-find_package(Eigen3 REQUIRED)
-find_package(Log4Cxx)
+find_package(EIGEN3 REQUIRED)
+find_package(LOG4CXX)
 
 option(BUNDLE_CASA_APP "Bundle python-binding to CASA release package (OSX only)" OFF)
 if(APPLE)
