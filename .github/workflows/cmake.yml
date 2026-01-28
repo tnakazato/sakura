@@ -44,7 +44,7 @@ jobs:
 
     - name: Install dependencies (macOS)
       if: ${{ startsWith(matrix.os, 'macos-') }}
-      run: brew install fftw eigen
+      run: brew install fftw eigen@3
 
     - name: Install numpy
       run: python3 -m pip install --upgrade pip numpy
