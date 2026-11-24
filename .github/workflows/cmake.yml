@@ -19,12 +19,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-14, macos-15]
+        os: [ubuntu-latest, macos-15]
         arch: [SSE4, NATIVE]
         python: ['3.10', '3.12']
         exclude:
-          - os: macos-14
-            python: '3.10'
           - os: macos-15
             python: '3.10'
 
@@ -34,13 +32,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python }}
-        architecture: ${{ matrix.os == 'macos-14' && 'ARM64' || 'x64' }}
+        architecture: ${{ startswith(matrix.os, 'macos-') && 'ARM64' || 'x64' }}
 
     - name: Install dependencies (Ubuntu)
       if: ${{ matrix.os == 'ubuntu-latest' }}
