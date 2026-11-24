@@ -156,8 +156,8 @@ set(libsakura_VERSION_MAJOR 0)
 set(libsakura_VERSION_MINOR 1)
 
 set_target_properties(sakurapy PROPERTIES
-	VERSION ${libsakura_VERSION_MAJOR}.${libsakura_VERSION_MINOR}
-	SOVERSION ${libsakura_VERSION_MAJOR}
+	VERSION "${libsakura_VERSION_MAJOR}.${libsakura_VERSION_MINOR}"
+	SOVERSION "${libsakura_VERSION_MAJOR}"
 	PUBLIC_HEADER "${public_headers}"
 	SUFFIX .so
 )
