@@ -38,7 +38,7 @@ jobs:
       uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python }}
-        architecture: ${{ matrix.os == 'macos-15' && 'ARM64' || 'x64' }}
+        architecture: ${{ startswith(matrix.os, 'macos-') && 'ARM64' || 'x64' }}
 
     - name: Install dependencies (Ubuntu)
       if: ${{ matrix.os == 'ubuntu-latest' }}
