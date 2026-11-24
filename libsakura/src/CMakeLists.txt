@@ -132,8 +132,8 @@ set(public_headers
 	)
 
 set_target_properties(sakura PROPERTIES
-	VERSION ${libsakura_VERSION}
-	SOVERSION ${libsakura_VERSION_MAJOR}
+	VERSION "${libsakura_VERSION}"
+	SOVERSION "${libsakura_VERSION_MAJOR}"
 	PUBLIC_HEADER "${public_headers}"
 )
 
